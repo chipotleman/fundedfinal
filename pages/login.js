@@ -10,15 +10,15 @@ export default function Login() {
   const router = useRouter();
 
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
         router.push('/dashboard');
       }
     });
 
-    return () => {
-      listener?.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, [router]);
 
   return (
