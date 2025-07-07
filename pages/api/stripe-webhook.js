@@ -56,8 +56,3 @@ export default async function handler(req, res) {
 
   res.json({ received: true });
 }
-<<<<<<< HEAD
-=======
-
-
->>>>>>> 251e154 (Add working Stripe webhook for RollrFunded)
