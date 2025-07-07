@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import nodemailer from 'nodemailer';
 
 export default function Admin() {
   const [passwordInput, setPasswordInput] = useState('');
@@ -36,24 +35,6 @@ export default function Admin() {
     }
   };
 
-  const sendNotificationEmail = async (userEmail, totalPnl) => {
-    try {
-      const res = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: 'mathewbaldwin98@icloud.com',
-          subject: 'User Passed RollrFunded Evaluation',
-          text: `User ${userEmail} has PASSED with total PnL: ${totalPnl}.`
-        }),
-      });
-      if (!res.ok) throw new Error(await res.text());
-      console.log('Notification email sent.');
-    } catch (err) {
-      console.error('Error sending notification email:', err);
-    }
-  };
-
   const updatePnl = async () => {
     if (!evaluation) {
       alert('Fetch a user first.');
@@ -65,9 +46,10 @@ export default function Admin() {
 
     if (newTotalPnl >= 20) {
       newStatus = 'passed';
-      await sendNotificationEmail(email, newTotalPnl);
+      alert(`${email} has PASSED with PnL ${newTotalPnl}%`);
     } else if (newTotalPnl <= -10) {
       newStatus = 'failed';
+      alert(`${email} has FAILED with PnL ${newTotalPnl}%`);
     }
 
     const { error } = await supabase
