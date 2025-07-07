@@ -65,8 +65,8 @@ export default function Dashboard() {
 
   return (
     <div style={{
-      backgroundColor: "#000",
-      color: "#fff",
+      backgroundColor: "#000",  // black background
+      color: "#fff",            // white text
       minHeight: "100vh",
       display: "flex",
       flexDirection: "column",
@@ -76,6 +76,21 @@ export default function Dashboard() {
       padding: "20px",
       textAlign: "center"
     }}>
+      <h1 style={{ fontSize: "2rem", color: "#a020f0", textShadow: "0 0 10px #a020f0" }}>
+        Welcome, {user?.email || "User"}
+      </h1>
+      <p style={{ color: "#ccc", marginTop: "20px" }}>
+        Funded Balance: $5,000
+      </p>
+      <p style={{ color: "#ccc", marginTop: "10px" }}>
+        Evaluation Period ends: {evaluation.evaluation_end_date ? new Date(evaluation.evaluation_end_date).toLocaleDateString() : "N/A"}
+      </p>
+      <p style={{ color: "#ccc", marginTop: "10px" }}>
+        Status: {evaluation.status || "N/A"}
+      </p>
+    </div>
+);
+
       <h1 style={{ fontSize: "2rem", color: "#a020f0", textShadow: "0 0 10px #a020f0" }}>
         Welcome, {user?.email || "User"}
       </h1>
