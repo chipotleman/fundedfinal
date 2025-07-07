@@ -12,44 +12,32 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-        if (sessionError) {
-          console.error('Session error:', sessionError.message);
-        }
-
-        if (!session) {
-          router.push('/login');
-          return;
-        }
-
-        setUser(session.user);
-
-        const { data, error: evalError } = await supabase
-          .from('evaluations')
-          .select('*')
-          .eq('email', session.user.email)
-          .maybeSingle();
-
-        if (evalError) {
-          console.error('Evaluation fetch error:', evalError.message);
-        }
-
-        setEvaluation(data);
-      } catch (err) {
-        console.error('Unexpected error:', err);
-      } finally {
-        setLoading(false);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/login');
+        return;
       }
-    };
+      setUser(session.user);
 
+      const { data, error } = await supabase
+        .from('evaluations')
+        .select('*')
+        .eq('email', session.user.email)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching evaluation:', error);
+      } else {
+        setEvaluation(data);
+      }
+      setLoading(false);
+    };
     fetchData();
   }, [router]);
 
   if (loading) {
     return (
-      <div style={{ color: 'white', textAlign: 'center', marginTop: '50px' }}>
+      <div style={{ background: '#000', color: '#fff', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
         Loading your dashboard...
       </div>
     );
@@ -57,7 +45,7 @@ export default function Dashboard() {
 
   if (!evaluation) {
     return (
-      <div style={{ color: 'white', textAlign: 'center', marginTop: '50px' }}>
+      <div style={{ background: '#000', color: '#fff', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '20px' }}>
         No funded evaluation found for your account.
       </div>
     );
@@ -65,8 +53,8 @@ export default function Dashboard() {
 
   return (
     <div style={{
-      backgroundColor: "#000",  // black background
-      color: "#fff",            // white text
+      backgroundColor: "#000",
+      color: "#fff",
       minHeight: "100vh",
       display: "flex",
       flexDirection: "column",
@@ -76,21 +64,6 @@ export default function Dashboard() {
       padding: "20px",
       textAlign: "center"
     }}>
-      <h1 style={{ fontSize: "2rem", color: "#a020f0", textShadow: "0 0 10px #a020f0" }}>
-        Welcome, {user?.email || "User"}
-      </h1>
-      <p style={{ color: "#ccc", marginTop: "20px" }}>
-        Funded Balance: $5,000
-      </p>
-      <p style={{ color: "#ccc", marginTop: "10px" }}>
-        Evaluation Period ends: {evaluation.evaluation_end_date ? new Date(evaluation.evaluation_end_date).toLocaleDateString() : "N/A"}
-      </p>
-      <p style={{ color: "#ccc", marginTop: "10px" }}>
-        Status: {evaluation.status || "N/A"}
-      </p>
-    </div>
-);
-
       <h1 style={{ fontSize: "2rem", color: "#a020f0", textShadow: "0 0 10px #a020f0" }}>
         Welcome, {user?.email || "User"}
       </h1>
