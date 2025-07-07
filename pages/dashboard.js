@@ -1,4 +1,33 @@
+// pages/dashboard.js
+
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
+
 export default function Dashboard() {
+  const [userEmail, setUserEmail] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data, error } = await supabase.auth.getUser();
+      if (data?.user) {
+        setUserEmail(data.user.email);
+      } else {
+        setUserEmail('Guest');
+      }
+      setLoading(false);
+    };
+    fetchUser();
+  }, []);
+
+  if (loading) {
+    return (
+      <div style={{ color: 'white', textAlign: 'center', marginTop: '50px' }}>
+        Loading your dashboard...
+      </div>
+    );
+  }
+
   return (
     <div style={{
       backgroundColor: "#000",
@@ -12,16 +41,20 @@ export default function Dashboard() {
       padding: "20px",
       textAlign: "center"
     }}>
-      <h1 style={{
-        fontSize: "2rem",
-        color: "#a020f0",
-        textShadow: "0 0 10px #a020f0"
-      }}>Welcome to RollrFunded</h1>
+      <h1 style={{ fontSize: "2rem", color: "#a020f0", textShadow: "0 0 10px #a020f0" }}>
+        Welcome to RollrFunded
+      </h1>
       <p style={{ color: "#ccc", maxWidth: "400px", marginTop: "20px" }}>
-        Your 14-day funded evaluation has started. You have a $5,000 simulated bankroll.
+        User: {userEmail}
       </p>
       <p style={{ color: "#ccc", marginTop: "10px" }}>
-        We will track your bets, profit, and evaluation progress here.
+        Funded Balance: $5,000
+      </p>
+      <p style={{ color: "#ccc", marginTop: "10px" }}>
+        Evaluation Period: 14 days remaining
+      </p>
+      <p style={{ color: "#ccc", marginTop: "10px" }}>
+        Status: Active
       </p>
     </div>
   )
