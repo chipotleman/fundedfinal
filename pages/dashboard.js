@@ -2,28 +2,50 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { useRouter } from 'next/router';
 
 export default function Dashboard() {
-  const [userEmail, setUserEmail] = useState('');
+  const [user, setUser] = useState(null);
+  const [evaluation, setEvaluation] = useState(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const { data, error } = await supabase.auth.getUser();
-      if (data?.user) {
-        setUserEmail(data.user.email);
-      } else {
-        setUserEmail('Guest');
+    const getUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/login');
+        return;
       }
+
+      setUser(session.user);
+
+      const { data, error } = await supabase
+        .from('evaluations')
+        .select('*')
+        .eq('email', session.user.email)
+        .single();
+
+      if (error) {
+        console.error(error);
+      } else {
+        setEvaluation(data);
+      }
+
       setLoading(false);
     };
-    fetchUser();
-  }, []);
+
+    getUser();
+  }, [router]);
 
   if (loading) {
+    return <div style={{ color: 'white', textAlign: 'center', marginTop: '50px' }}>Loading your dashboard...</div>;
+  }
+
+  if (!evaluation) {
     return (
       <div style={{ color: 'white', textAlign: 'center', marginTop: '50px' }}>
-        Loading your dashboard...
+        No evaluation found for your account.
       </div>
     );
   }
@@ -42,20 +64,17 @@ export default function Dashboard() {
       textAlign: "center"
     }}>
       <h1 style={{ fontSize: "2rem", color: "#a020f0", textShadow: "0 0 10px #a020f0" }}>
-        Welcome to RollrFunded
+        Welcome, {user.email}
       </h1>
       <p style={{ color: "#ccc", maxWidth: "400px", marginTop: "20px" }}>
-        User: {userEmail}
-      </p>
-      <p style={{ color: "#ccc", marginTop: "10px" }}>
         Funded Balance: $5,000
       </p>
       <p style={{ color: "#ccc", marginTop: "10px" }}>
-        Evaluation Period: 14 days remaining
+        Evaluation Period ends: {new Date(evaluation.evaluation_end_date).toLocaleDateString()}
       </p>
       <p style={{ color: "#ccc", marginTop: "10px" }}>
-        Status: Active
+        Status: {evaluation.status}
       </p>
     </div>
-  )
+  );
 }
