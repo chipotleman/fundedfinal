@@ -20,11 +20,12 @@ export default function Dashboard() {
 
       setUser(session.user);
 
-      const { data, error } = await supabase
-        .from('evaluations')
-        .select('*')
-        .eq('email', session.user.email)
-        .single();
+      const { data, error: evalError } = await supabase
+  .from('evaluations')
+  .select('*')
+  .eq('email', session.user.email)
+  .maybeSingle();
+
 
       if (error) {
         console.error(error);
