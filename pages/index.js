@@ -31,23 +31,28 @@ export default function Home() {
       }}>
         Risk-free. Keep 80% of profits. Prove your skill in 14 days with RollrFunded and bet with real odds without risking your own cash.
       </p>
-      <button
-        style={{
-          marginTop: "30px",
-          padding: "15px 30px",
-          fontSize: "1rem",
-          fontWeight: "bold",
-          color: "#fff",
-          backgroundColor: "#a020f0",
-          border: "none",
-          borderRadius: "8px",
-          cursor: "pointer",
-          boxShadow: "0 0 15px #a020f0"
-        }}
-        onClick={() => window.location.href = "https://discord.gg/Swj6nsybjd"}
-      >
-        Get Funded Now
-      </button>
+    <button
+  style={{
+    marginTop: "30px",
+    padding: "15px 30px",
+    fontSize: "1rem",
+    fontWeight: "bold",
+    color: "#fff",
+    backgroundColor: "#a020f0",
+    border: "none",
+    borderRadius: "8px",
+    cursor: "pointer",
+    boxShadow: "0 0 15px #a020f0"
+  }}
+  onClick={async () => {
+    const res = await fetch('/api/checkout_sessions', { method: 'POST' });
+    const data = await res.json();
+    window.location.href = data.url;
+  }}
+>
+  Get Funded Now - $199
+</button>
+
 
       <div style={{ marginTop: "60px", maxWidth: "500px" }}>
         <h2 style={{
