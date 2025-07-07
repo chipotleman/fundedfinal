@@ -44,12 +44,11 @@ export default function Dashboard() {
   }
 
   if (!evaluation) {
-    return (
-      <div style={{ color: 'white', textAlign: 'center', marginTop: '50px' }}>
-        No evaluation found for your account.
-      </div>
-    );
-  }
+  return (
+    <div> ... </div>
+  );
+}
+
 
   return (
     <div style={{
