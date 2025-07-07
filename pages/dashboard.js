@@ -11,36 +11,40 @@ export default function Dashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    const getUserAndEvaluation = async () => {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    const fetchData = async () => {
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-      if (sessionError) {
-        console.error('Error getting session:', sessionError.message);
-      }
+        if (sessionError) {
+          console.error('Session error:', sessionError.message);
+        }
 
-      if (!session) {
-        router.push('/login');
-        return;
-      }
+        if (!session) {
+          router.push('/login');
+          return;
+        }
 
-      setUser(session.user);
+        setUser(session.user);
 
-      const { data, error: evalError } = await supabase
-        .from('evaluations')
-        .select('*')
-        .eq('email', session.user.email)
-        .maybeSingle();
+        const { data, error: evalError } = await supabase
+          .from('evaluations')
+          .select('*')
+          .eq('email', session.user.email)
+          .maybeSingle();
 
-      if (evalError) {
-        console.error('Error fetching evaluation:', evalError.message);
-      } else {
+        if (evalError) {
+          console.error('Evaluation fetch error:', evalError.message);
+        }
+
         setEvaluation(data);
+      } catch (err) {
+        console.error('Unexpected error:', err);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
-    getUserAndEvaluation();
+    fetchData();
   }, [router]);
 
   if (loading) {
@@ -73,16 +77,16 @@ export default function Dashboard() {
       textAlign: "center"
     }}>
       <h1 style={{ fontSize: "2rem", color: "#a020f0", textShadow: "0 0 10px #a020f0" }}>
-        Welcome, {user.email}
+        Welcome, {user?.email || "User"}
       </h1>
       <p style={{ color: "#ccc", marginTop: "20px" }}>
         Funded Balance: $5,000
       </p>
       <p style={{ color: "#ccc", marginTop: "10px" }}>
-        Evaluation Period ends: {new Date(evaluation.evaluation_end_date).toLocaleDateString()}
+        Evaluation Period ends: {evaluation.evaluation_end_date ? new Date(evaluation.evaluation_end_date).toLocaleDateString() : "N/A"}
       </p>
       <p style={{ color: "#ccc", marginTop: "10px" }}>
-        Status: {evaluation.status}
+        Status: {evaluation.status || "N/A"}
       </p>
     </div>
   );
