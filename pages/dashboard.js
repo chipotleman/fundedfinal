@@ -1,6 +1,7 @@
 // pages/dashboard.js
 import BetSelector from '../components/BetSelector';
 console.log('Logged-in user email:', user?.email);
+console.log('🪐 User email in dashboard:', user?.email);
 
 
 import { useEffect, useState } from 'react';
@@ -19,8 +20,10 @@ export default function Dashboard() {
       if (!session) {
         router.push('/login');
         <BetSelector user={user} />
+console.log('🪐 Evaluation returned from Supabase:', evaluation);
 
         return;
+        
       }
       setUser(session.user);
 
