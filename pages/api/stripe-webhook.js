@@ -61,16 +61,23 @@ if (error) {
   return res.status(500).json({ error: error.message });
 }
 
+const { data, error } = await supabase.from('evaluations').insert([
+  {
+    email: customerEmail,
+    status: 'active',
+    total_pnl: 0,
+    evaluation_start_date: new Date(),
+    evaluation_end_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
+  },
+]);
+
+if (error) {
+  console.error('❌ Supabase insertion error:', error);
+  return res.status(500).json({ error: error.message });
+}
+
 console.log(`✅ Funded pass created for ${customerEmail}.`, data);
 
-      ]);
-
-      if (error) {
-        console.error('❌ Supabase insertion error:', error);
-        return res.status(500).json({ error: 'Supabase insertion failed' });
-      }
-
-      console.log(`✅ Funded pass created for ${customerEmail}.`);
     }
 
     res.status(200).json({ received: true });
