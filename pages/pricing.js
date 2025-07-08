@@ -7,7 +7,7 @@ export default function Pricing() {
 
   const handleCheckout = async () => {
     // Redirect to your Stripe checkout or Pass Purchase URL
-    window.location.href = 'https://buy.stripe.com/test_bJe3cv6Af8kvfjwdkU0kE00;
+    window.location.href = 'https://buy.stripe.com/test_bJe3cv6Af8kvfjwdkU0kE00';
   };
 
   return (
