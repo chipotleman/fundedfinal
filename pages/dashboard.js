@@ -1,90 +1,62 @@
-// pages/dashboard.js
-import BetSelector from '../components/BetSelector';
-console.log('Logged-in user email:', user?.email);
-console.log('🪐 User email in dashboard:', user?.email);
-console.log('🪐 User object in dashboard:', user);
-
-
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import { useRouter } from 'next/router';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 export default function Dashboard() {
-  const [user, setUser] = useState(null);
-  const [evaluation, setEvaluation] = useState(null);
+  const [evaluations, setEvaluations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
 
   useEffect(() => {
-    const fetchData = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push('/login');
-        <BetSelector user={user} />
-console.log('🪐 Evaluation returned from Supabase:', evaluation);
-
-        return;
-        
-      }
-      setUser(session.user);
-
+    const fetchEvaluations = async () => {
       const { data, error } = await supabase
         .from('evaluations')
         .select('*')
-       .ilike('email', user.email)
-        .maybeSingle();
+        .limit(10);
 
       if (error) {
-        console.error('Error fetching evaluation:', error);
+        console.error('❌ Supabase fetch error:', error);
       } else {
-        setEvaluation(data);
+        console.log('✅ Supabase evaluations:', data);
+        setEvaluations(data);
       }
       setLoading(false);
     };
-    fetchData();
-  }, [router]);
+
+    fetchEvaluations();
+  }, []);
 
   if (loading) {
     return (
       <div style={{ background: '#000', color: '#fff', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        Loading your dashboard...
+        Loading...
       </div>
     );
   }
 
-  if (!evaluation) {
+  if (!evaluations || evaluations.length === 0) {
     return (
-      <div style={{ background: '#000', color: '#fff', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', textAlign: 'center', padding: '20px' }}>
-        No funded evaluation found for your account.
+      <div style={{ background: '#000', color: '#fff', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        No evaluations found.
       </div>
     );
   }
 
   return (
-    <div style={{
-      backgroundColor: "#000",
-      color: "#fff",
-      minHeight: "100vh",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
-      alignItems: "center",
-      fontFamily: "sans-serif",
-      padding: "20px",
-      textAlign: "center"
-    }}>
-      <h1 style={{ fontSize: "2rem", color: "#a020f0", textShadow: "0 0 10px #a020f0" }}>
-        Welcome, {user?.email || "User"}
-      </h1>
-      <p style={{ color: "#ccc", marginTop: "20px" }}>
-        Funded Balance: $5,000
-      </p>
-      <p style={{ color: "#ccc", marginTop: "10px" }}>
-        Evaluation Period ends: {evaluation.evaluation_end_date ? new Date(evaluation.evaluation_end_date).toLocaleDateString() : "N/A"}
-      </p>
-      <p style={{ color: "#ccc", marginTop: "10px" }}>
-        Status: {evaluation.status || "N/A"}
-      </p>
+    <div style={{ background: '#000', color: '#fff', minHeight: '100vh', padding: '20px' }}>
+      <h1>Funded Evaluations</h1>
+      {evaluations.map((evalItem) => (
+        <div key={evalItem.id} style={{ border: '1px solid #444', borderRadius: '8px', padding: '10px', marginBottom: '10px' }}>
+          <p>Email: {evalItem.email}</p>
+          <p>Status: {evalItem.status}</p>
+          <p>PNL: {evalItem.total_pnl}</p>
+          <p>Start: {new Date(evalItem.evaluation_start_date).toLocaleDateString()}</p>
+          <p>End: {new Date(evalItem.evaluation_end_date).toLocaleDateString()}</p>
+        </div>
+      ))}
     </div>
   );
 }
