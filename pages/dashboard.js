@@ -16,6 +16,8 @@ export default function Dashboard() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         router.push('/login');
+        <BetSelector user={user} />
+
         return;
       }
       setUser(session.user);
