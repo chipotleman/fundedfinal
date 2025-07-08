@@ -1,70 +1,46 @@
 // pages/dashboard.js
 
-import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
-
 export default function Dashboard() {
-  const [evaluations, setEvaluations] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchEvaluations = async () => {
-      const { data, error } = await supabase
-        .from('evaluations')
-        .select('*')
-        .order('evaluation_start_date', { ascending: false });
-
-      if (error) {
-        console.error('❌ Supabase fetch error:', error);
-      } else {
-        console.log('✅ Evaluations:', data);
-        setEvaluations(data);
-      }
-      setLoading(false);
-    };
-
-    fetchEvaluations();
-  }, []);
-
-  if (loading) {
-    return (
-      <div style={{ background: '#000', color: '#fff', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        Loading...
-      </div>
-    );
-  }
+  const games = [
+    { sport: 'NBA', matchup: 'Lakers vs Warriors', odds: '-110', time: '7:00 PM' },
+    { sport: 'NFL', matchup: 'Cowboys vs Eagles', odds: '+125', time: '8:30 PM' },
+    { sport: 'MLB', matchup: 'Yankees vs Red Sox', odds: '-135', time: '6:45 PM' },
+    { sport: 'NBA', matchup: 'Celtics vs Heat', odds: '+105', time: '9:00 PM' },
+    { sport: 'NFL', matchup: 'Packers vs Bears', odds: '-150', time: '4:25 PM' },
+  ];
 
   return (
-    <div style={{ background: '#000', color: '#fff', minHeight: '100vh', padding: '20px' }}>
-      <h1 style={{ color: '#a020f0', textAlign: 'center' }}>📊 RollrFunded Evaluations (Public View)</h1>
-      {evaluations.length === 0 ? (
-        <p style={{ textAlign: 'center', marginTop: '20px' }}>No evaluations found.</p>
-      ) : (
-        evaluations.map((evaluation) => (
-          <div
-            key={evaluation.id}
-            style={{
-              border: '1px solid #a020f0',
-              borderRadius: '8px',
-              padding: '10px',
-              margin: '10px auto',
-              maxWidth: '400px',
-              background: '#111'
-            }}
-          >
-            <p><strong>Email:</strong> {evaluation.email}</p>
-            <p><strong>Status:</strong> {evaluation.status}</p>
-            <p><strong>PNL:</strong> {evaluation.total_pnl}</p>
-            <p><strong>Start:</strong> {new Date(evaluation.evaluation_start_date).toLocaleDateString()}</p>
-            <p><strong>End:</strong> {new Date(evaluation.evaluation_end_date).toLocaleDateString()}</p>
+    <div style={{
+      backgroundColor: '#000',
+      color: '#a020f0',
+      minHeight: '100vh',
+      padding: '20px',
+      fontFamily: 'sans-serif'
+    }}>
+      <h1 style={{ textAlign: 'center', fontSize: '2rem', marginBottom: '20px', textShadow: '0 0 10px #a020f0' }}>
+        🏈 RollrFunded Sportsbook Slate
+      </h1>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+        gap: '15px'
+      }}>
+        {games.map((game, index) => (
+          <div key={index} style={{
+            backgroundColor: '#111',
+            border: '1px solid #a020f0',
+            borderRadius: '8px',
+            padding: '15px',
+            textAlign: 'center',
+            boxShadow: '0 0 15px #a020f0'
+          }}>
+            <h2 style={{ margin: '0 0 10px 0', color: '#fff' }}>{game.sport}</h2>
+            <p style={{ margin: '5px 0', fontSize: '1.1rem', color: '#ccc' }}>{game.matchup}</p>
+            <p style={{ margin: '5px 0', fontSize: '1rem', color: '#a020f0' }}>Odds: {game.odds}</p>
+            <p style={{ margin: '5px 0', fontSize: '0.9rem', color: '#888' }}>{game.time}</p>
           </div>
-        ))
-      )}
+        ))}
+      </div>
     </div>
   );
 }
