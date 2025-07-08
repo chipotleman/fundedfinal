@@ -1,3 +1,5 @@
+// pages/dashboard.js
+
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
@@ -15,12 +17,12 @@ export default function Dashboard() {
       const { data, error } = await supabase
         .from('evaluations')
         .select('*')
-        .limit(10);
+        .order('evaluation_start_date', { ascending: false });
 
       if (error) {
         console.error('❌ Supabase fetch error:', error);
       } else {
-        console.log('✅ Supabase evaluations:', data);
+        console.log('✅ Evaluations:', data);
         setEvaluations(data);
       }
       setLoading(false);
@@ -37,26 +39,32 @@ export default function Dashboard() {
     );
   }
 
-  if (!evaluations || evaluations.length === 0) {
-    return (
-      <div style={{ background: '#000', color: '#fff', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        No evaluations found.
-      </div>
-    );
-  }
-
   return (
     <div style={{ background: '#000', color: '#fff', minHeight: '100vh', padding: '20px' }}>
-      <h1>Funded Evaluations</h1>
-      {evaluations.map((evalItem) => (
-        <div key={evalItem.id} style={{ border: '1px solid #444', borderRadius: '8px', padding: '10px', marginBottom: '10px' }}>
-          <p>Email: {evalItem.email}</p>
-          <p>Status: {evalItem.status}</p>
-          <p>PNL: {evalItem.total_pnl}</p>
-          <p>Start: {new Date(evalItem.evaluation_start_date).toLocaleDateString()}</p>
-          <p>End: {new Date(evalItem.evaluation_end_date).toLocaleDateString()}</p>
-        </div>
-      ))}
+      <h1 style={{ color: '#a020f0', textAlign: 'center' }}>📊 RollrFunded Evaluations (Public View)</h1>
+      {evaluations.length === 0 ? (
+        <p style={{ textAlign: 'center', marginTop: '20px' }}>No evaluations found.</p>
+      ) : (
+        evaluations.map((evaluation) => (
+          <div
+            key={evaluation.id}
+            style={{
+              border: '1px solid #a020f0',
+              borderRadius: '8px',
+              padding: '10px',
+              margin: '10px auto',
+              maxWidth: '400px',
+              background: '#111'
+            }}
+          >
+            <p><strong>Email:</strong> {evaluation.email}</p>
+            <p><strong>Status:</strong> {evaluation.status}</p>
+            <p><strong>PNL:</strong> {evaluation.total_pnl}</p>
+            <p><strong>Start:</strong> {new Date(evaluation.evaluation_start_date).toLocaleDateString()}</p>
+            <p><strong>End:</strong> {new Date(evaluation.evaluation_end_date).toLocaleDateString()}</p>
+          </div>
+        ))
+      )}
     </div>
   );
 }
