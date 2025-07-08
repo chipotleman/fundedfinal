@@ -1,11 +1,18 @@
-import Stripe from 'stripe';
+// pages/api/stripe-webhook.js
+
 import { buffer } from 'micro';
+import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+// Initialize Stripe with your secret key
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  apiVersion: '2023-08-16',
+});
+
+// Initialize Supabase with service role key for secure insert
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 export const config = {
@@ -15,44 +22,51 @@ export const config = {
 };
 
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return res.status(405).end('Method Not Allowed');
-  }
-
-  const sig = req.headers['stripe-signature'];
-  let event;
-
-  try {
+  if (req.method === 'POST') {
+    const sig = req.headers['stripe-signature'];
     const buf = await buffer(req);
-    event = stripe.webhooks.constructEvent(buf, sig, process.env.STRIPE_WEBHOOK_SECRET);
-  } catch (err) {
-    console.error('Webhook Error:', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
 
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const customerEmail = session.customer_details?.email || session.customer_email;
-    const purchaseDate = new Date().toISOString();
-    const evaluationEndDate = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+    let event;
 
-    const { error } = await supabase.from('evaluations').insert([
-      {
-        email: customerEmail,
-        purchase_date: purchaseDate,
-        status: 'active',
-        evaluation_end_date: evaluationEndDate,
-      },
-    ]);
-
-    if (error) {
-      console.error('Supabase Insert Error:', error);
-      return res.status(500).json({ error: error.message });
+    try {
+      event = stripe.webhooks.constructEvent(
+        buf,
+        sig,
+        process.env.STRIPE_WEBHOOK_SECRET
+      );
+    } catch (err) {
+      console.error('❌ Webhook signature verification failed:', err.message);
+      return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    console.log(`✅ Evaluation created for ${customerEmail}`);
-  }
+    // Handle successful checkout session completion
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+      const customerEmail = session.customer_details.email;
 
-  res.json({ received: true });
+      console.log(`✅ Payment completed by ${customerEmail}. Creating funded pass...`);
+
+      const { error } = await supabase.from('evaluations').insert([
+        {
+          email: customerEmail,
+          status: 'active',
+          total_pnl: 0,
+          evaluation_start_date: new Date(),
+          evaluation_end_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days from now
+        },
+      ]);
+
+      if (error) {
+        console.error('❌ Supabase insertion error:', error);
+        return res.status(500).json({ error: 'Supabase insertion failed' });
+      }
+
+      console.log(`✅ Funded pass created for ${customerEmail}.`);
+    }
+
+    res.status(200).json({ received: true });
+  } else {
+    res.setHeader('Allow', 'POST');
+    res.status(405).end('Method Not Allowed');
+  }
 }
