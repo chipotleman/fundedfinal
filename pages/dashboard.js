@@ -1,5 +1,7 @@
 // pages/dashboard.js
 import BetSelector from '../components/BetSelector';
+console.log('Logged-in user email:', user?.email);
+
 
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
