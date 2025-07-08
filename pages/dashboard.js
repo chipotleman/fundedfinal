@@ -27,7 +27,7 @@ export default function Dashboard() {
       const { data, error } = await supabase
         .from('evaluations')
         .select('*')
-        .eq('email', session.user.email)
+       .ilike('email', user.email)
         .maybeSingle();
 
       if (error) {
