@@ -11,6 +11,7 @@ const supabase = createClient(
 export default function Dashboard() {
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     const fetchGames = async () => {
@@ -22,7 +23,6 @@ export default function Dashboard() {
       if (error) {
         console.error('❌ Supabase fetch error:', error);
       } else {
-        console.log('✅ Game slates fetched:', data);
         setGames(data);
       }
       setLoading(false);
@@ -30,6 +30,26 @@ export default function Dashboard() {
 
     fetchGames();
   }, []);
+
+  const handleSelectBet = async (game) => {
+    const { error } = await supabase.from('user_bets').insert([
+      {
+        email: "guest", // replace with user email once auth added
+        game: game.matchup,
+        odds: game.odds,
+      },
+    ]);
+
+    if (error) {
+      console.error('❌ Failed to place bet:', error);
+      setMessage("Failed to place bet.");
+    } else {
+      console.log('✅ Bet placed:', game.matchup);
+      setMessage(`✅ Bet placed on ${game.matchup}`);
+    }
+
+    setTimeout(() => setMessage(""), 3000);
+  };
 
   if (loading) {
     return (
@@ -50,6 +70,7 @@ export default function Dashboard() {
       <h1 style={{ textAlign: 'center', fontSize: '2rem', marginBottom: '20px', textShadow: '0 0 10px #a020f0' }}>
         🏈 RollrFunded Live Sportsbook
       </h1>
+      {message && <p style={{ textAlign: 'center', color: '#0f0' }}>{message}</p>}
       {games.length === 0 ? (
         <p style={{ textAlign: 'center' }}>No games available. Fetch slates to populate games.</p>
       ) : (
@@ -71,6 +92,19 @@ export default function Dashboard() {
               <p style={{ margin: '5px 0', fontSize: '1.1rem', color: '#ccc' }}>{game.matchup}</p>
               <p style={{ margin: '5px 0', fontSize: '1rem', color: '#a020f0' }}>Odds: {game.odds}</p>
               <p style={{ margin: '5px 0', fontSize: '0.9rem', color: '#888' }}>{new Date(game.game_time).toLocaleString()}</p>
+              <button
+                onClick={() => handleSelectBet(game)}
+                style={{
+                  marginTop: '10px',
+                  padding: '8px 12px',
+                  backgroundColor: '#a020f0',
+                  border: 'none',
+                  borderRadius: '4px',
+                  color: '#fff',
+                  cursor: 'pointer'
+                }}>
+                Select Bet
+              </button>
             </div>
           ))}
         </div>
