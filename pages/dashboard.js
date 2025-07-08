@@ -2,6 +2,7 @@
 import BetSelector from '../components/BetSelector';
 console.log('Logged-in user email:', user?.email);
 console.log('🪐 User email in dashboard:', user?.email);
+console.log('🪐 User object in dashboard:', user);
 
 
 import { useEffect, useState } from 'react';
