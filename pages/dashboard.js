@@ -50,27 +50,20 @@ export default function Dashboard() {
     const fetchData = async () => {
       setLoading(true);
 
-      const { data: betsData, error: betsError } = await supabase
+      const { data: betsData } = await supabase
         .from('user_bets')
         .select('*')
         .eq('id', userId)
         .order('created_at', { ascending: false });
 
-      const { data: balanceData, error: balanceError } = await supabase
+      const { data: balanceData } = await supabase
         .from('user_balances')
         .select('balance')
         .eq('id', userId)
         .single();
 
-      if (betsError) console.error('Error fetching bets:', betsError.message);
-      else setBets(betsData);
-
-      if (balanceError && balanceError.code !== 'PGRST116') {
-        console.error('Error fetching balance:', balanceError.message);
-      } else {
-        setBalance(balanceData ? parseFloat(balanceData.balance) : 0);
-      }
-
+      setBets(betsData || []);
+      setBalance(balanceData ? parseFloat(balanceData.balance) : 0);
       setLoading(false);
     };
 
@@ -112,7 +105,6 @@ export default function Dashboard() {
     });
 
     if (betError) {
-      console.error(betError);
       setMessage(`❌ Error placing bet: ${betError.message}`);
     } else {
       const newBalance = balance - parsedStake;
@@ -121,7 +113,6 @@ export default function Dashboard() {
         .upsert({ id: userId, balance: newBalance }, { onConflict: 'id' });
 
       if (updateError) {
-        console.error(updateError);
         setMessage(`❌ Error updating balance: ${updateError.message}`);
       } else {
         setBalance(newBalance);
@@ -136,21 +127,21 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4 text-white bg-black min-h-screen">
+    <div className="bg-gradient-to-b from-black to-gray-900 min-h-screen text-white p-4">
       <header className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold text-neon-green">⚡ RollrFunded Sportsbook</h1>
+        <h1 className="text-2xl font-bold text-neon-green">⚡ RollrFunded</h1>
         <div className="text-right">
-          <p className="text-sm text-gray-400">Available Balance</p>
-          <p className="text-lg font-bold text-neon-green">${balance.toFixed(2)}</p>
+          <p className="text-sm text-gray-400">Balance</p>
+          <p className="text-xl font-bold text-neon-green">${balance.toFixed(2)}</p>
         </div>
       </header>
 
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div className="grid md:grid-cols-2 gap-4 mb-6">
         {matchups.map((m) => (
           <div
             key={m.name}
-            className={`border rounded p-4 cursor-pointer transition ${
-              selectedMatchup?.name === m.name ? 'border-neon-green bg-gray-900' : 'border-gray-700 bg-black'
+            className={`rounded-lg p-4 bg-gray-800 hover:bg-gray-700 transition cursor-pointer ${
+              selectedMatchup?.name === m.name ? 'ring-2 ring-neon-green' : ''
             }`}
             onClick={() => {
               setSelectedMatchup(m);
@@ -158,7 +149,7 @@ export default function Dashboard() {
             }}
           >
             <h2 className="text-lg font-bold mb-2">{m.name}</h2>
-            <div className="flex justify-between">
+            <div className="flex gap-2">
               {m.teams.map((team) => (
                 <button
                   key={team}
@@ -167,7 +158,7 @@ export default function Dashboard() {
                     setSelectedMatchup(m);
                     setSelectedTeam(team);
                   }}
-                  className={`px-3 py-1 rounded border text-sm ${
+                  className={`flex-1 py-2 rounded border ${
                     selectedTeam === team && selectedMatchup?.name === m.name
                       ? 'bg-neon-blue text-black border-neon-blue'
                       : 'border-gray-600 text-white'
@@ -179,11 +170,11 @@ export default function Dashboard() {
             </div>
           </div>
         ))}
-      </section>
+      </div>
 
       {selectedMatchup && selectedTeam && (
-        <div className="bg-gray-900 p-4 rounded mb-4">
-          <h3 className="text-lg font-bold text-neon-blue mb-2">📝 Bet Slip</h3>
+        <div className="sticky bottom-0 bg-gray-900 p-4 rounded-t-lg shadow-xl">
+          <h3 className="text-lg font-bold text-neon-blue mb-2">🎟️ Bet Slip</h3>
           <p>
             <span className="font-semibold">{selectedTeam}</span> @{' '}
             <span className="text-neon-green">{decimalToAmerican(selectedMatchup.odds[selectedTeam])}</span>
@@ -193,61 +184,23 @@ export default function Dashboard() {
             placeholder="Enter stake ($10 - $100)"
             value={stake}
             onChange={(e) => setStake(e.target.value)}
-            className="w-full mb-2 mt-2 p-2 rounded bg-black border border-gray-700 text-white placeholder-gray-400"
+            className="w-full mt-2 mb-2 p-2 rounded bg-black border border-gray-600 text-white"
           />
           {stake && (
-            <p className="text-sm text-gray-400 mb-2">
+            <p className="text-sm text-gray-400">
               Potential Payout: <span className="text-neon-green">${calculatePotentialPayout()}</span>
             </p>
           )}
           <button
             onClick={handlePlaceBet}
             disabled={placing}
-            className="bg-neon-green text-black px-4 py-2 rounded w-full hover:bg-green-400"
+            className="bg-neon-green text-black w-full mt-2 py-2 rounded hover:bg-green-400 transition"
           >
             {placing ? 'Placing...' : 'Place Bet'}
           </button>
-          {message && <p className="mt-2 text-center">{message}</p>}
+          {message && <p className="text-center mt-2">{message}</p>}
         </div>
       )}
 
-      <div>
-        <h2 className="text-lg font-bold text-neon-blue mb-2">💰 My Bets</h2>
-        {loading ? (
-          <p>Loading bets...</p>
-        ) : (
-          <table className="min-w-full border text-sm">
-            <thead className="bg-gray-800 text-neon-green">
-              <tr>
-                <th className="px-2 py-1 border">Created</th>
-                <th className="px-2 py-1 border">Status</th>
-                <th className="px-2 py-1 border">PNL</th>
-                <th className="px-2 py-1 border">Selection</th>
-                <th className="px-2 py-1 border">Stake</th>
-                <th className="px-2 py-1 border">Odds</th>
-                <th className="px-2 py-1 border">Matchup</th>
-              </tr>
-            </thead>
-            <tbody>
-              {bets.map((bet) => (
-                <tr key={bet.id} className="text-center">
-                  <td className="border px-2 py-1">{new Date(bet.created_at).toLocaleString()}</td>
-                  <td className="border px-2 py-1">{bet.status}</td>
-                  <td className="border px-2 py-1">
-                    {bet.pnl !== null ? `$${bet.pnl.toFixed(2)}` : '-'}
-                  </td>
-                  <td className="border px-2 py-1">{bet.selection || '-'}</td>
-                  <td className="border px-2 py-1">{bet.stake !== null ? `$${bet.stake}` : '-'}</td>
-                  <td className="border px-2 py-1">
-                    {bet.odds ? decimalToAmerican(bet.odds) : '-'}
-                  </td>
-                  <td className="border px-2 py-1">{bet.matchup_name || '-'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-    </div>
-  );
-}
+      <div className="mt-8">
+        <h2 className="text-lg font-bold te
