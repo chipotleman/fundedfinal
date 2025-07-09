@@ -23,6 +23,8 @@ export default function PlaceBet({ matchup }) {
     }
 
     setLoading(true);
+    
+console.log("matchup.teams:", matchup.teams);
 
     try {
       const res = await fetch('/api/placeBet', {
