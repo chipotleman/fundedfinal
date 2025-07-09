@@ -14,6 +14,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
     }
 
+    // Fetch all open bets for this matchup and market type
     const { data: bets, error } = await supabase
       .from('user_bets')
       .select('*')
@@ -30,6 +31,7 @@ export async function POST(req: Request) {
       const won = bet.selection === winner;
       const pnl = won ? bet.stake * (bet.odds - 1) : -bet.stake;
 
+      // Update bet to settled
       const { error: updateError } = await supabase
         .from('user_bets')
         .update({
@@ -44,16 +46,16 @@ export async function POST(req: Request) {
         continue;
       }
 
-      // ✅ Payout logic using correct identifier
-      if (bet.ID && pnl !== 0) {
+      // Update user balance using correct lowercase 'id'
+      if (bet.id && pnl !== 0) {
         const { data: existingBalance, error: fetchBalanceError } = await supabase
           .from('user_balances')
           .select('balance')
-          .eq('ID', bet.ID)
+          .eq('id', bet.id)
           .single();
 
         if (fetchBalanceError && fetchBalanceError.code !== 'PGRST116') {
-          console.error(`Error fetching balance for ID ${bet.ID}:`, fetchBalanceError.message);
+          console.error(`Error fetching balance for id ${bet.id}:`, fetchBalanceError.message);
           continue;
         }
 
@@ -62,12 +64,12 @@ export async function POST(req: Request) {
 
         const { error: updateBalanceError } = await supabase
           .from('user_balances')
-          .upsert({ ID: bet.ID, balance: newBalance }, { onConflict: 'ID' });
+          .upsert({ id: bet.id, balance: newBalance }, { onConflict: 'id' });
 
         if (updateBalanceError) {
-          console.error(`Error updating balance for ID ${bet.ID}:`, updateBalanceError.message);
+          console.error(`Error updating balance for id ${bet.id}:`, updateBalanceError.message);
         } else {
-          console.log(`✅ Updated balance for ID ${bet.ID}: $${newBalance.toFixed(2)}`);
+          console.log(`✅ Updated balance for id ${bet.id}: $${newBalance.toFixed(2)}`);
         }
       }
 
