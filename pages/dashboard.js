@@ -8,6 +8,7 @@ const supabase = createClient(
 
 export default function Dashboard() {
   const [bets, setBets] = useState([]);
+  const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
   const [matchups, setMatchups] = useState([
     {
@@ -29,25 +30,39 @@ export default function Dashboard() {
   const [placing, setPlacing] = useState(false);
   const [message, setMessage] = useState('');
 
+  // ✅ TEST ID: Replace with your real user ID when ready
+  const userId = '00000000-0000-0000-0000-000000000001';
+
   useEffect(() => {
-    const fetchBets = async () => {
+    const fetchData = async () => {
       setLoading(true);
-      const { data, error } = await supabase
+
+      const { data: betsData, error: betsError } = await supabase
         .from('user_bets')
         .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
+        .eq('ID', userId)
+        .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Error fetching bets:', error.message);
+      const { data: balanceData, error: balanceError } = await supabase
+        .from('user_balances')
+        .select('balance')
+        .eq('ID', userId)
+        .single();
+
+      if (betsError) console.error('Error fetching bets:', betsError.message);
+      else setBets(betsData);
+
+      if (balanceError && balanceError.code !== 'PGRST116') {
+        console.error('Error fetching balance:', balanceError.message);
       } else {
-        setBets(data);
+        setBalance(balanceData ? parseFloat(balanceData.balance) : 0);
       }
+
       setLoading(false);
     };
 
-    fetchBets();
-  }, []);
+    fetchData();
+  }, [userId]);
 
   const handlePlaceBet = async () => {
     setMessage('');
@@ -55,36 +70,55 @@ export default function Dashboard() {
       setMessage('⚠️ Please select a matchup and team.');
       return;
     }
+
     const parsedStake = parseFloat(stake);
     if (isNaN(parsedStake) || parsedStake < 10 || parsedStake > 100) {
       setMessage('⚠️ Stake must be between $10 and $100.');
       return;
     }
 
+    if (parsedStake > balance) {
+      setMessage('⚠️ Not enough balance.');
+      return;
+    }
+
     setPlacing(true);
 
-    const { name, market_type, odds } = selectedMatchup;
+    const { name, market_type, odds, teams } = selectedMatchup;
     const selectedOdds = odds[selectedTeam];
 
-   const { error } = await supabase.from('user_bets').insert({
-  selection: selectedTeam,
-  stake: parsedStake,
-  odds: selectedOdds,
-  market_type,
-  matchup_name: name,
-  status: 'open',
-  teams: selectedMatchup.teams, // ✅ ADD THIS LINE
-});
+    // Insert bet
+    const { error: betError } = await supabase.from('user_bets').insert({
+      ID: userId,
+      selection: selectedTeam,
+      stake: parsedStake,
+      odds: selectedOdds,
+      market_type,
+      matchup_name: name,
+      status: 'open',
+      teams,
+    });
 
-
-    if (error) {
-      console.error(error);
-      setMessage(`❌ Error placing bet: ${error.message}`);
+    if (betError) {
+      console.error(betError);
+      setMessage(`❌ Error placing bet: ${betError.message}`);
     } else {
-      setMessage(`✅ Bet placed on ${selectedTeam} for $${parsedStake}.`);
-      setStake('');
-      setSelectedMatchup(null);
-      setSelectedTeam('');
+      // Deduct stake from balance
+      const newBalance = balance - parsedStake;
+      const { error: updateError } = await supabase
+        .from('user_balances')
+        .upsert({ ID: userId, balance: newBalance }, { onConflict: 'ID' });
+
+      if (updateError) {
+        console.error(updateError);
+        setMessage(`❌ Error updating balance: ${updateError.message}`);
+      } else {
+        setBalance(newBalance);
+        setMessage(`✅ Bet placed on ${selectedTeam} for $${parsedStake}.`);
+        setStake('');
+        setSelectedMatchup(null);
+        setSelectedTeam('');
+      }
     }
 
     setPlacing(false);
@@ -92,13 +126,18 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-5xl mx-auto p-4 text-white bg-black min-h-screen">
-      <h1 className="text-2xl font-bold mb-4 text-neon-green">⚡ RollrFunded Dashboard</h1>
+      <h1 className="text-2xl font-bold mb-4 text-neon-green">⚡ RollrFunded Sportsbook</h1>
 
-      {/* BET PLACEMENT AREA */}
+      {/* BALANCE DISPLAY */}
+      <div className="bg-gray-900 p-4 rounded mb-6 flex justify-between items-center">
+        <span className="text-lg">Available Balance:</span>
+        <span className="text-xl font-bold text-neon-green">${balance.toFixed(2)}</span>
+      </div>
+
+      {/* BET PLACEMENT */}
       <div className="bg-gray-900 p-4 rounded mb-6">
         <h2 className="text-lg font-bold mb-2 text-neon-blue">🎯 Place a Bet</h2>
 
-        {/* MATCHUP SELECTION */}
         <div className="flex flex-wrap gap-2 mb-3">
           {matchups.map((m) => (
             <button
@@ -118,7 +157,6 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* TEAM SELECTION */}
         {selectedMatchup && (
           <div className="flex gap-2 mb-3">
             {selectedMatchup.teams.map((team) => (
@@ -137,7 +175,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* STAKE INPUT */}
         <input
           type="number"
           placeholder="Enter stake ($10 - $100)"
@@ -157,11 +194,12 @@ export default function Dashboard() {
         {message && <p className="mt-2 text-center">{message}</p>}
       </div>
 
-      {/* EXISTING BETS TABLE */}
+      {/* BETS TABLE */}
       {loading ? (
         <p>Loading bets...</p>
       ) : (
         <div className="overflow-x-auto">
+          <h2 className="text-lg font-bold mb-2 text-neon-blue">💰 My Bets</h2>
           <table className="min-w-full border text-sm">
             <thead className="bg-gray-800 text-neon-green">
               <tr>
