@@ -85,26 +85,26 @@ export default function AdminSettle() {
         ))}
       </select>
 
-      {/* WINNER SELECT */}
-      {selectedMatchup && (
-        <>
-          <label className="block mb-2">Select Winner:</label>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {matchups.find(m => `${m.matchup_name} | ${m.market_type}` === selectedMatchup)
-              ?.selections.map((s, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setWinner(s)}
-                  className={`px-3 py-1 rounded border ${
-                    winner === s ? 'bg-neon-blue text-black' : 'bg-gray-800 text-white border-gray-600'
-                  }`}
-                >
-                  {s}
-                </button>
-              ))}
-          </div>
-        </>
-      )}
+      {/* WINNER SELECT (DROPDOWN) */}
+{selectedMatchup && (
+  <>
+    <label className="block mb-2">Select Winner:</label>
+    <select
+      className="w-full p-2 mb-4 bg-gray-900 border border-gray-700 rounded text-white"
+      value={winner}
+      onChange={(e) => setWinner(e.target.value)}
+    >
+      <option value="">-- Select winning team/player --</option>
+      {matchups.find(m => `${m.matchup_name} | ${m.market_type}` === selectedMatchup)
+        ?.teams.map((team, idx) => (
+          <option key={idx} value={team}>
+            {team}
+          </option>
+        ))}
+    </select>
+  </>
+)}
+
 
       <button
         onClick={handleSettle}
