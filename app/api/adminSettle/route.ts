@@ -14,7 +14,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing required fields." }, { status: 400 });
     }
 
-    // Fetch all open bets matching this matchup and market
     const { data: bets, error } = await supabase
       .from('user_bets')
       .select('*')
@@ -31,7 +30,6 @@ export async function POST(req: Request) {
       const won = bet.selection === winner;
       const pnl = won ? bet.stake * (bet.odds - 1) : -bet.stake;
 
-      // Update the bet to settled
       const { error: updateError } = await supabase
         .from('user_bets')
         .update({
@@ -42,4 +40,43 @@ export async function POST(req: Request) {
         .eq('id', bet.id);
 
       if (updateError) {
-        console.error(`Error settling bet
+        console.error(`Error settling bet ${bet.id}:`, updateError.message);
+        continue;
+      }
+
+      // ✅ Payout logic using correct identifier
+      if (bet.ID && pnl !== 0) {
+        const { data: existingBalance, error: fetchBalanceError } = await supabase
+          .from('user_balances')
+          .select('balance')
+          .eq('ID', bet.ID)
+          .single();
+
+        if (fetchBalanceError && fetchBalanceError.code !== 'PGRST116') {
+          console.error(`Error fetching balance for ID ${bet.ID}:`, fetchBalanceError.message);
+          continue;
+        }
+
+        const currentBalance = existingBalance ? parseFloat(existingBalance.balance) : 0;
+        const newBalance = currentBalance + pnl;
+
+        const { error: updateBalanceError } = await supabase
+          .from('user_balances')
+          .upsert({ ID: bet.ID, balance: newBalance }, { onConflict: 'ID' });
+
+        if (updateBalanceError) {
+          console.error(`Error updating balance for ID ${bet.ID}:`, updateBalanceError.message);
+        } else {
+          console.log(`✅ Updated balance for ID ${bet.ID}: $${newBalance.toFixed(2)}`);
+        }
+      }
+
+      console.log(`✅ Bet ${bet.id} settled. Won: ${won}, PNL: ${pnl}`);
+    }
+
+    return NextResponse.json({ message: `Settlement completed for ${matchup_name}.` });
+  } catch (err) {
+    console.error("Server error in adminSettle:", err);
+    return NextResponse.json({ error: "Server error." }, { status: 500 });
+  }
+}
