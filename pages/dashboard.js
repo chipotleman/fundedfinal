@@ -45,3 +45,38 @@ export default function Dashboard() {
                 <th className="px-2 py-1 border">Created</th>
                 <th className="px-2 py-1 border">Status</th>
                 <th className="px-2 py-1 border">PNL</th>
+                <th className="px-2 py-1 border">Selection</th>
+                <th className="px-2 py-1 border">Stake</th>
+                <th className="px-2 py-1 border">Odds</th>
+                <th className="px-2 py-1 border">Market Type</th>
+                <th className="px-2 py-1 border">Matchup</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bets.map((bet) => (
+                <tr key={bet.id} className="text-center">
+                  <td className="border px-2 py-1">
+                    {new Date(bet.created_at).toLocaleString()}
+                  </td>
+                  <td className="border px-2 py-1">{bet.status}</td>
+                  <td className="border px-2 py-1">
+                    {bet.pnl !== null ? `$${bet.pnl.toFixed(2)}` : '-'}
+                  </td>
+                  <td className="border px-2 py-1">{bet.selection || '-'}</td>
+                  <td className="border px-2 py-1">
+                    {bet.stake !== null ? `$${bet.stake}` : '-'}
+                  </td>
+                  <td className="border px-2 py-1">
+                    {bet.odds !== null ? bet.odds : '-'}
+                  </td>
+                  <td className="border px-2 py-1">{bet.market_type || '-'}</td>
+                  <td className="border px-2 py-1">{bet.matchup_name || '-'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
