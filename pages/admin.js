@@ -10,85 +10,69 @@ const supabase = createClient(
 
 export default function Admin() {
   const [bets, setBets] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [pnlUpdates, setPnlUpdates] = useState({});
 
   useEffect(() => {
-    const fetchBets = async () => {
-      const { data, error } = await supabase
-        .from('user_bets')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('❌ Supabase fetch error:', error);
-      } else {
-        setBets(data);
-      }
-      setLoading(false);
-    };
-
     fetchBets();
   }, []);
+
+  const fetchBets = async () => {
+    const { data, error } = await supabase.from('user_bets').select('*').order('created_at', { ascending: false });
+    if (error) {
+      console.error('Error fetching bets:', error);
+    } else {
+      setBets(data);
+    }
+  };
 
   const handlePnlChange = (id, value) => {
     setPnlUpdates({ ...pnlUpdates, [id]: value });
   };
 
   const updatePnl = async (id) => {
-    const pnl = parseFloat(pnlUpdates[id]);
-    if (isNaN(pnl)) {
-      alert("Invalid PnL value.");
+    const pnlValue = parseFloat(pnlUpdates[id]);
+    if (isNaN(pnlValue)) {
+      alert('Please enter a valid number.');
       return;
     }
 
-    const { error } = await supabase
-      .from('user_bets')
-      .update({ pnl })
-      .eq('id', id);
+    const response = await fetch('/api/update-pnl', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, pnl: pnlValue }),
+    });
 
-    if (error) {
-      console.error('❌ Update PnL error:', error);
+    if (response.ok) {
+      alert('✅ PnL updated successfully.');
+      fetchBets();
     } else {
-      alert("PnL updated.");
-      window.location.reload();
+      const errorData = await response.json();
+      alert(`❌ Failed to update PnL: ${errorData.error}`);
     }
   };
 
-  if (loading) {
-    return (
-      <div style={{ background: '#000', color: '#fff', height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        Loading...
-      </div>
-    );
-  }
-
   return (
-    <div style={{ background: '#000', color: '#fff', minHeight: '100vh', padding: '20px' }}>
-      <h1 style={{ textAlign: 'center', color: '#a020f0' }}>Admin PnL Tracking Panel</h1>
-      {bets.length === 0 ? (
-        <p style={{ textAlign: 'center' }}>No bets found.</p>
-      ) : (
-        bets.map(bet => (
-          <div key={bet.id} style={{ background: '#111', margin: '10px 0', padding: '10px', borderRadius: '5px' }}>
-            <p><strong>Email:</strong> {bet.email}</p>
-            <p><strong>Game:</strong> {bet.game}</p>
-            <p><strong>Odds:</strong> {bet.odds}</p>
-            <p><strong>Status:</strong> {bet.status}</p>
-            <p><strong>PnL:</strong> {bet.pnl}</p>
-            <input
-              type="number"
-              placeholder="Enter PnL"
-              value={pnlUpdates[bet.id] || ""}
-              onChange={(e) => handlePnlChange(bet.id, e.target.value)}
-              style={{ marginRight: '10px' }}
-            />
-            <button onClick={() => updatePnl(bet.id)} style={{ background: '#a020f0', color: '#fff', border: 'none', padding: '5px 10px', borderRadius: '3px' }}>
-              Update PnL
-            </button>
-          </div>
-        ))
-      )}
+    <div style={{ padding: '20px', background: '#000', color: '#fff', minHeight: '100vh' }}>
+      <h1 style={{ fontSize: '1.5rem', marginBottom: '20px', color: '#a020f0' }}>Admin: PnL Tracking + Payouts</h1>
+      {bets.map((bet) => (
+        <div key={bet.id} style={{ marginBottom: '15px', padding: '10px', border: '1px solid #333', borderRadius: '8px' }}>
+          <div><strong>Email:</strong> {bet.email || 'N/A'}</div>
+          <div><strong>Game:</strong> {bet.game || 'N/A'}</div>
+          <div><strong>Odds:</strong> {bet.odds || 'N/A'}</div>
+          <div><strong>Status:</strong> {bet.status || 'N/A'}</div>
+          <div><strong>PnL:</strong> {bet.pnl ?? 'N/A'}</div>
+          <input
+            type="number"
+            placeholder="Enter PnL"
+            value={pnlUpdates[bet.id] || ''}
+            onChange={(e) => handlePnlChange(bet.id, e.target.value)}
+            style={{ marginTop: '8px', marginRight: '8px', padding: '5px', borderRadius: '4px' }}
+          />
+          <button onClick={() => updatePnl(bet.id)} style={{ padding: '5px 10px', borderRadius: '4px', background: '#a020f0', color: '#fff', border: 'none' }}>
+            Update PnL
+          </button>
+        </div>
+      ))}
     </div>
   );
 }
