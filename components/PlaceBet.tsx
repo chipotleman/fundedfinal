@@ -5,66 +5,97 @@ import { useState } from 'react';
 export default function PlaceBet({ matchup }) {
   const [selection, setSelection] = useState('');
   const [stake, setStake] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
 
   const handlePlaceBet = async () => {
+    setMessage('');
     const parsedStake = parseFloat(stake);
+
     if (!selection) {
-      alert('Please select a team/player to bet on.');
+      setMessage('⚠️ Please select a team/player.');
       return;
     }
+
     if (isNaN(parsedStake) || parsedStake < 10 || parsedStake > 100) {
-      alert('Stake must be between $10 and $100.');
+      setMessage('⚠️ Stake must be between $10 and $100.');
       return;
     }
 
-    const res = await fetch('/api/placeBet', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        selection,
-        stake: parsedStake,
-        odds: matchup.odds[selection],
-        market_id: matchup.id,
-      }),
-    });
+    setLoading(true);
 
-    const data = await res.json();
-    if (res.ok) {
-      alert('Bet placed successfully!');
-    } else {
-      alert(`Error: ${data.error}`);
+    try {
+      const res = await fetch('/api/placeBet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          selection,
+          stake: parsedStake,
+          odds: matchup.odds[selection],
+          market_type: matchup.market_type,
+          matchup_name: matchup.name,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setMessage('✅ Bet placed successfully!');
+        setStake('');
+        setSelection('');
+      } else {
+        setMessage(`❌ Error: ${data.error}`);
+      }
+    } catch (error) {
+      console.error(error);
+      setMessage('❌ An error occurred.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="p-4 rounded border">
-      <h2 className="text-lg font-bold mb-2">{matchup.name}</h2>
-      <div className="flex space-x-2 mb-2">
+    <div className="max-w-md mx-auto p-4 border rounded bg-white shadow">
+      <h2 className="text-lg font-bold mb-3">{matchup.name}</h2>
+      <p className="text-sm text-gray-600 mb-2">{matchup.market_type}</p>
+
+      <div className="flex space-x-2 mb-4">
         {matchup.teams.map((team) => (
           <button
             key={team}
             onClick={() => setSelection(team)}
-            className={`px-3 py-1 rounded ${
-              selection === team ? 'bg-blue-500 text-white' : 'bg-gray-200'
+            className={`px-3 py-1 rounded border ${
+              selection === team ? 'bg-blue-600 text-white' : 'bg-gray-100'
             }`}
           >
             {team}
           </button>
         ))}
       </div>
+
       <input
         type="number"
+        min="10"
+        max="100"
         placeholder="Enter stake ($10-$100)"
         value={stake}
         onChange={(e) => setStake(e.target.value)}
-        className="border rounded px-2 py-1 mb-2 w-full"
+        className="w-full px-3 py-2 border rounded mb-3"
       />
+
       <button
         onClick={handlePlaceBet}
-        className="bg-green-500 text-white px-4 py-2 rounded w-full"
+        disabled={loading}
+        className="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600"
       >
-        Place Bet
+        {loading ? 'Placing Bet...' : 'Place Bet'}
       </button>
+
+      {message && (
+        <p className="mt-3 text-center text-sm">
+          {message}
+        </p>
+      )}
     </div>
   );
 }
