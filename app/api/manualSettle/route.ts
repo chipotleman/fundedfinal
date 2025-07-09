@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // ensure you use service role for write access
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export async function POST(req: Request) {
@@ -13,9 +13,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'bet_id is required' }, { status: 400 });
   }
 
-  // Fetch the bet
+  // ✅ Corrected: Fetch from user_bets
   const { data: bet, error } = await supabase
-    .from('bets')
+    .from('user_bets')
     .select('*')
     .eq('id', bet_id)
     .single();
@@ -28,14 +28,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: 'Bet already settled' });
   }
 
-  // PnL calculation example
-  const odds = bet.odds; // e.g., 2.5
-  const stake = bet.stake ?? 10; // default stake
-  const pnl = stake * (odds - 1); // e.g., 10 * (2.5 - 1) = 15 profit
+  const odds = bet.odds;
+  const stake = bet.stake ?? 10;
+  const pnl = stake * (odds - 1);
 
-  // Update the bet to settled
   const { error: updateError } = await supabase
-    .from('bets')
+    .from('user_bets')
     .update({
       status: 'settled',
       pnl: pnl,
