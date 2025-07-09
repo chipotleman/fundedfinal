@@ -16,10 +16,13 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing id or pnl' });
   }
 
-  // Convert pnl to number explicitly
-  const numericPnl = parseFloat(pnl);
+  // Convert to number safely
+  const numericPnl = Number(pnl);
+  if (isNaN(numericPnl)) {
+    return res.status(400).json({ error: 'Invalid pnl value' });
+  }
 
-  // Determine status
+  // Determine new status based on numeric pnl
   let newStatus = 'open';
   if (numericPnl >= 20) {
     newStatus = 'paid';
@@ -27,7 +30,7 @@ export default async function handler(req, res) {
     newStatus = 'failed';
   }
 
-  // Update both pnl and status
+  // Update pnl and status atomically
   const { data, error } = await supabase
     .from('user_bets')
     .update({ pnl: numericPnl, status: newStatus })
@@ -39,5 +42,6 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Failed to update PnL and status' });
   }
 
+  console.log(`✅ PnL and status updated for ID ${id}: PnL ${numericPnl}, Status ${newStatus}`);
   res.status(200).json({ success: true, data });
 }
