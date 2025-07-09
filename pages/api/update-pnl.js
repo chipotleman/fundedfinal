@@ -16,23 +16,27 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing id or pnl' });
   }
 
-  // Determine new status
+  // Convert pnl to number explicitly
+  const numericPnl = parseFloat(pnl);
+
+  // Determine status
   let newStatus = 'open';
-  if (pnl >= 20) {
+  if (numericPnl >= 20) {
     newStatus = 'paid';
-  } else if (pnl <= -10) {
+  } else if (numericPnl <= -10) {
     newStatus = 'failed';
   }
 
+  // Update both pnl and status
   const { data, error } = await supabase
     .from('user_bets')
-    .update({ pnl, status: newStatus })
+    .update({ pnl: numericPnl, status: newStatus })
     .eq('id', id)
     .select();
 
   if (error) {
-    console.error(error);
-    return res.status(500).json({ error: 'Failed to update PnL' });
+    console.error('❌ Supabase update error:', error);
+    return res.status(500).json({ error: 'Failed to update PnL and status' });
   }
 
   res.status(200).json({ success: true, data });
