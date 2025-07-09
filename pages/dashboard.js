@@ -53,7 +53,7 @@ export default function Dashboard() {
       const { data: betsData } = await supabase
         .from('user_bets')
         .select('*')
-        .eq('id', userId)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       const { data: balanceData } = await supabase
@@ -94,7 +94,7 @@ export default function Dashboard() {
     const selectedOdds = odds[selectedTeam];
 
     const { error: betError } = await supabase.from('user_bets').insert({
-      id: userId,
+      user_id: userId,
       selection: selectedTeam,
       stake: parsedStake,
       odds: selectedOdds,
@@ -128,120 +128,120 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-gray-900 to-black text-white font-sans">
-      {/* Top Nav */}
-      <header className="sticky top-0 bg-black bg-opacity-80 backdrop-blur p-4 flex justify-between items-center z-50 shadow-md">
-        <h1 className="text-xl md:text-2xl font-bold text-neon-green">⚡ RollrFunded</h1>
+      <header className="sticky top-0 bg-black bg-opacity-90 backdrop-blur p-4 flex justify-between items-center shadow-md z-50">
+        <h1 className="text-xl md:text-2xl font-bold text-green-400">⚡ RollrFunded</h1>
         <div className="text-right">
           <p className="text-xs text-gray-400">Available Balance</p>
-          <p className="text-lg md:text-xl font-bold text-neon-green">${balance.toFixed(2)}</p>
+          <p className="text-lg md:text-xl font-bold text-green-400">${balance.toFixed(2)}</p>
         </div>
       </header>
 
-      {/* Matchup Grid */}
-      <div className="grid md:grid-cols-2 gap-4 p-4 max-w-4xl mx-auto">
-        {matchups.map((m) => (
-          <div
-            key={m.name}
-            className={`p-4 rounded-lg bg-gray-800 hover:bg-gray-700 transition relative border ${
-              selectedMatchup?.name === m.name ? 'border-neon-green ring-2 ring-neon-green' : 'border-gray-700'
-            }`}
-            onClick={() => {
-              setSelectedMatchup(m);
-              setSelectedTeam('');
-            }}
-          >
-            <h2 className="text-lg font-semibold mb-2">{m.name}</h2>
-            <div className="flex gap-2">
-              {m.teams.map((team) => (
-                <button
-                  key={team}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedMatchup(m);
-                    setSelectedTeam(team);
-                  }}
-                  className={`flex-1 py-2 rounded text-sm font-medium border transition ${
-                    selectedTeam === team && selectedMatchup?.name === m.name
-                      ? 'bg-neon-blue text-black border-neon-blue'
-                      : 'bg-black border-gray-600 text-white hover:bg-gray-700'
-                  }`}
-                >
-                  {team} ({decimalToAmerican(m.odds[team])})
-                </button>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Bet Slip */}
-      {selectedMatchup && selectedTeam && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gray-900 p-4 border-t border-neon-green z-50 shadow-inner">
-          <h3 className="text-lg font-bold text-neon-blue mb-2">🎟️ Bet Slip</h3>
-          <div className="flex justify-between mb-1">
-            <span>{selectedTeam}</span>
-            <span className="text-neon-green">{decimalToAmerican(selectedMatchup.odds[selectedTeam])}</span>
-          </div>
-          <input
-            type="number"
-            placeholder="Stake ($10 - $100)"
-            value={stake}
-            onChange={(e) => setStake(e.target.value)}
-            className="w-full p-2 rounded bg-black border border-gray-600 text-white mb-2"
-          />
-          {stake && (
-            <p className="text-sm text-gray-400">
-              Potential Payout:{' '}
-              <span className="text-neon-green">${calculatePotentialPayout()}</span>
-            </p>
-          )}
-          <button
-            onClick={handlePlaceBet}
-            disabled={placing}
-            className="mt-2 w-full py-2 rounded bg-neon-green text-black font-semibold hover:bg-green-400 transition"
-          >
-            {placing ? 'Placing...' : 'Place Bet'}
-          </button>
-          {message && <p className="mt-2 text-center">{message}</p>}
-        </div>
-      )}
-
-      {/* My Bets */}
-      <div className="p-4 max-w-4xl mx-auto mt-8">
-        <h2 className="text-lg font-bold text-neon-blue mb-2">📄 My Bets</h2>
-        {loading ? (
-          <p>Loading bets...</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm bg-gray-800 rounded">
-              <thead className="bg-gray-700 text-neon-green">
-                <tr>
-                  <th className="px-2 py-1">Created</th>
-                  <th className="px-2 py-1">Status</th>
-                  <th className="px-2 py-1">PNL</th>
-                  <th className="px-2 py-1">Selection</th>
-                  <th className="px-2 py-1">Stake</th>
-                  <th className="px-2 py-1">Odds</th>
-                  <th className="px-2 py-1">Matchup</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bets.map((bet) => (
-                  <tr key={bet.id} className="text-center border-t border-gray-700">
-                    <td className="px-2 py-1">{new Date(bet.created_at).toLocaleString()}</td>
-                    <td className="px-2 py-1">{bet.status}</td>
-                    <td className="px-2 py-1">{bet.pnl !== null ? `$${bet.pnl.toFixed(2)}` : '-'}</td>
-                    <td className="px-2 py-1">{bet.selection || '-'}</td>
-                    <td className="px-2 py-1">{bet.stake !== null ? `$${bet.stake}` : '-'}</td>
-                    <td className="px-2 py-1">{bet.odds ? decimalToAmerican(bet.odds) : '-'}</td>
-                    <td className="px-2 py-1">{bet.matchup_name || '-'}</td>
-                  </tr>
+      <main className="max-w-4xl mx-auto p-4 space-y-6">
+        {/* Matchup Grid */}
+        <div className="grid md:grid-cols-2 gap-4">
+          {matchups.map((m) => (
+            <div
+              key={m.name}
+              className={`p-4 rounded-lg bg-gray-800 hover:bg-gray-700 transition cursor-pointer border ${
+                selectedMatchup?.name === m.name ? 'border-green-400 ring-2 ring-green-400' : 'border-gray-700'
+              }`}
+              onClick={() => {
+                setSelectedMatchup(m);
+                setSelectedTeam('');
+              }}
+            >
+              <h2 className="text-lg font-semibold mb-2">{m.name}</h2>
+              <div className="flex gap-2">
+                {m.teams.map((team) => (
+                  <button
+                    key={team}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedMatchup(m);
+                      setSelectedTeam(team);
+                    }}
+                    className={`flex-1 py-2 rounded text-sm font-medium border transition ${
+                      selectedTeam === team && selectedMatchup?.name === m.name
+                        ? 'bg-green-400 text-black border-green-400'
+                        : 'bg-black border-gray-600 text-white hover:bg-gray-700'
+                    }`}
+                  >
+                    {team} ({decimalToAmerican(m.odds[team])})
+                  </button>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Bet Slip */}
+        {selectedMatchup && selectedTeam && (
+          <div className="fixed bottom-0 left-0 right-0 bg-gray-900 p-4 border-t border-green-400 z-50 shadow-inner">
+            <h3 className="text-lg font-bold text-green-400 mb-2">🎟️ Bet Slip</h3>
+            <div className="flex justify-between mb-1">
+              <span>{selectedTeam}</span>
+              <span className="text-green-400">{decimalToAmerican(selectedMatchup.odds[selectedTeam])}</span>
+            </div>
+            <input
+              type="number"
+              placeholder="Stake ($10 - $100)"
+              value={stake}
+              onChange={(e) => setStake(e.target.value)}
+              className="w-full p-2 rounded bg-black border border-gray-600 text-white mb-2"
+            />
+            {stake && (
+              <p className="text-sm text-gray-400">
+                Potential Payout: <span className="text-green-400">${calculatePotentialPayout()}</span>
+              </p>
+            )}
+            <button
+              onClick={handlePlaceBet}
+              disabled={placing}
+              className="mt-2 w-full py-2 rounded bg-green-400 text-black font-semibold hover:bg-green-300 transition"
+            >
+              {placing ? 'Placing...' : 'Place Bet'}
+            </button>
+            {message && <p className="mt-2 text-center">{message}</p>}
           </div>
         )}
-      </div>
+
+        {/* My Bets */}
+        <div>
+          <h2 className="text-lg font-bold text-green-400 mb-2">📄 My Bets</h2>
+          {loading ? (
+            <p>Loading bets...</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm bg-gray-800 rounded">
+                <thead className="bg-gray-700 text-green-400">
+                  <tr>
+                    <th className="px-2 py-1">Created</th>
+                    <th className="px-2 py-1">Status</th>
+                    <th className="px-2 py-1">PNL</th>
+                    <th className="px-2 py-1">Selection</th>
+                    <th className="px-2 py-1">Stake</th>
+                    <th className="px-2 py-1">Odds</th>
+                    <th className="px-2 py-1">Matchup</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bets.map((bet) => (
+                    <tr key={bet.id} className="text-center border-t border-gray-700">
+                      <td className="px-2 py-1">{new Date(bet.created_at).toLocaleString()}</td>
+                      <td className="px-2 py-1">{bet.status}</td>
+                      <td className="px-2 py-1">{bet.pnl !== null ? `$${bet.pnl.toFixed(2)}` : '-'}</td>
+                      <td className="px-2 py-1">{bet.selection || '-'}</td>
+                      <td className="px-2 py-1">{bet.stake !== null ? `$${bet.stake}` : '-'}</td>
+                      <td className="px-2 py-1">{bet.odds ? decimalToAmerican(bet.odds) : '-'}</td>
+                      <td className="px-2 py-1">{bet.matchup_name || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </main>
     </div>
   );
 }
