@@ -26,16 +26,18 @@ export default function PlaceBet({ matchup }) {
 
     try {
       const res = await fetch('/api/placeBet', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          selection,
-          stake: parsedStake,
-          odds: matchup.odds[selection],
-          market_type: matchup.market_type,
-          matchup_name: matchup.name,
-        }),
-      });
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    selection,
+    stake: parsedStake,
+    odds: matchup.odds[selection],
+    market_type: matchup.market_type,
+    matchup_name: matchup.name,
+    teams: matchup.teams, // ✅ add this
+  }),
+});
+
 
       const data = await res.json();
 
