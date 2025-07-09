@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
+// ✅ Init Supabase
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
@@ -16,27 +17,28 @@ export default function AdminSettle() {
     const fetchMatchups = async () => {
       const { data, error } = await supabase
         .from('user_bets')
-        .select('matchup_name, market_type, selection')
+        .select('matchup_name, market_type, teams')
         .eq('status', 'open');
 
       if (error) {
-        console.error(error);
+        console.error("❌ Error fetching open bets:", error);
       } else {
-        // Group matchups by name and market_type
+        console.log("✅ Open bets fetched:", data);
+
         const grouped = {};
-data.forEach((bet) => {
-  const key = `${bet.matchup_name} | ${bet.market_type}`;
-  if (!grouped[key]) {
-    grouped[key] = {
-      matchup_name: bet.matchup_name,
-      market_type: bet.market_type,
-      teams: Array.isArray(bet.teams) ? bet.teams : ["Team A", "Team B"],
-
+        data.forEach((bet) => {
+          const key = `${bet.matchup_name} | ${bet.market_type}`;
+          if (!grouped[key]) {
+            grouped[key] = {
+              matchup_name: bet.matchup_name,
+              market_type: bet.market_type,
+              teams: Array.isArray(bet.teams) ? bet.teams : ["Team A", "Team B"],
+            };
+          }
+        });
+        setMatchups(Object.values(grouped));
+      }
     };
-  }
-});
-setMatchups(Object.values(grouped));
-
 
     fetchMatchups();
   }, []);
@@ -85,26 +87,23 @@ setMatchups(Object.values(grouped));
         ))}
       </select>
 
-      {/* WINNER SELECT (DROPDOWN) */}
-{selectedMatchup && (
-  <>
-    <label className="block mb-2">Select Winner:</label>
-    <select
-      className="w-full p-2 mb-4 bg-gray-900 border border-gray-700 rounded text-white"
-      value={winner}
-      onChange={(e) => setWinner(e.target.value)}
-    >
-      <option value="">-- Select winning team/player --</option>
-      {matchups.find(m => `${m.matchup_name} | ${m.market_type}` === selectedMatchup)
-        ?.teams.map((team, idx) => (
-          <option key={idx} value={team}>
-            {team}
-          </option>
-        ))}
-    </select>
-  </>
-)}
-
+      {/* WINNER SELECT */}
+      {selectedMatchup && (
+        <>
+          <label className="block mb-2">Select Winner:</label>
+          <select
+            className="w-full p-2 mb-4 bg-gray-900 border border-gray-700 rounded text-white"
+            value={winner}
+            onChange={(e) => setWinner(e.target.value)}
+          >
+            <option value="">-- Select winning team/player --</option>
+            {matchups.find(m => `${m.matchup_name} | ${m.market_type}` === selectedMatchup)
+              ?.teams.map((team, idx) => (
+                <option key={idx} value={team}>{team}</option>
+              ))}
+          </select>
+        </>
+      )}
 
       <button
         onClick={handleSettle}
