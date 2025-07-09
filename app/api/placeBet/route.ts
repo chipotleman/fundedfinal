@@ -14,13 +14,15 @@ export async function POST(req: Request) {
   }
 
   const { error } = await supabase.from('user_bets').insert({
-    selection,
-    stake,
-    odds,
-    market_type,
-    matchup_name,
-    status: 'open',
-  });
+  selection,
+  stake,
+  odds,
+  market_type,
+  matchup_name,
+  status: 'open',
+  teams, // add this line
+});
+
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
