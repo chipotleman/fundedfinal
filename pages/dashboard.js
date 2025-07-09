@@ -30,7 +30,7 @@ export default function Dashboard() {
   const [placing, setPlacing] = useState(false);
   const [message, setMessage] = useState('');
 
-  // ✅ TEST ID: Replace with your real user ID when ready
+  // ✅ TEST USER ID (replace with your actual test UUID)
   const userId = '00000000-0000-0000-0000-000000000001';
 
   useEffect(() => {
@@ -40,13 +40,13 @@ export default function Dashboard() {
       const { data: betsData, error: betsError } = await supabase
         .from('user_bets')
         .select('*')
-        .eq('ID', userId)
+        .eq('id', userId)
         .order('created_at', { ascending: false });
 
       const { data: balanceData, error: balanceError } = await supabase
         .from('user_balances')
         .select('balance')
-        .eq('ID', userId)
+        .eq('id', userId)
         .single();
 
       if (betsError) console.error('Error fetching bets:', betsError.message);
@@ -87,9 +87,8 @@ export default function Dashboard() {
     const { name, market_type, odds, teams } = selectedMatchup;
     const selectedOdds = odds[selectedTeam];
 
-    // Insert bet
     const { error: betError } = await supabase.from('user_bets').insert({
-      ID: userId,
+      id: userId,
       selection: selectedTeam,
       stake: parsedStake,
       odds: selectedOdds,
@@ -103,11 +102,10 @@ export default function Dashboard() {
       console.error(betError);
       setMessage(`❌ Error placing bet: ${betError.message}`);
     } else {
-      // Deduct stake from balance
       const newBalance = balance - parsedStake;
       const { error: updateError } = await supabase
         .from('user_balances')
-        .upsert({ ID: userId, balance: newBalance }, { onConflict: 'ID' });
+        .upsert({ id: userId, balance: newBalance }, { onConflict: 'id' });
 
       if (updateError) {
         console.error(updateError);
@@ -128,13 +126,11 @@ export default function Dashboard() {
     <div className="max-w-5xl mx-auto p-4 text-white bg-black min-h-screen">
       <h1 className="text-2xl font-bold mb-4 text-neon-green">⚡ RollrFunded Sportsbook</h1>
 
-      {/* BALANCE DISPLAY */}
       <div className="bg-gray-900 p-4 rounded mb-6 flex justify-between items-center">
         <span className="text-lg">Available Balance:</span>
         <span className="text-xl font-bold text-neon-green">${balance.toFixed(2)}</span>
       </div>
 
-      {/* BET PLACEMENT */}
       <div className="bg-gray-900 p-4 rounded mb-6">
         <h2 className="text-lg font-bold mb-2 text-neon-blue">🎯 Place a Bet</h2>
 
@@ -194,7 +190,6 @@ export default function Dashboard() {
         {message && <p className="mt-2 text-center">{message}</p>}
       </div>
 
-      {/* BETS TABLE */}
       {loading ? (
         <p>Loading bets...</p>
       ) : (
