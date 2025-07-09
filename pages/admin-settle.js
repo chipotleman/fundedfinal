@@ -24,19 +24,18 @@ export default function AdminSettle() {
       } else {
         // Group matchups by name and market_type
         const grouped = {};
-        data.forEach((bet) => {
-          const key = `${bet.matchup_name} | ${bet.market_type}`;
-          if (!grouped[key]) {
-            grouped[key] = { matchup_name: bet.matchup_name, market_type: bet.market_type, selections: new Set() };
-          }
-          grouped[key].selections.add(bet.selection);
-        });
-        setMatchups(Object.values(grouped).map(m => ({
-          ...m,
-          selections: Array.from(m.selections),
-        })));
-      }
+data.forEach((bet) => {
+  const key = `${bet.matchup_name} | ${bet.market_type}`;
+  if (!grouped[key]) {
+    grouped[key] = {
+      matchup_name: bet.matchup_name,
+      market_type: bet.market_type,
+      teams: bet.teams || [], // ✅ pulls full teams array from Supabase
     };
+  }
+});
+setMatchups(Object.values(grouped));
+
 
     fetchMatchups();
   }, []);
