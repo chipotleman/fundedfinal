@@ -30,7 +30,8 @@ data.forEach((bet) => {
     grouped[key] = {
       matchup_name: bet.matchup_name,
       market_type: bet.market_type,
-      teams: bet.teams || [], // ✅ pulls full teams array from Supabase
+      teams: Array.isArray(bet.teams) ? bet.teams : ["Team A", "Team B"],
+
     };
   }
 });
