@@ -66,14 +66,16 @@ export default function Dashboard() {
     const { name, market_type, odds } = selectedMatchup;
     const selectedOdds = odds[selectedTeam];
 
-    const { error } = await supabase.from('user_bets').insert({
-      selection: selectedTeam,
-      stake: parsedStake,
-      odds: selectedOdds,
-      market_type,
-      matchup_name: name,
-      status: 'open',
-    });
+   const { error } = await supabase.from('user_bets').insert({
+  selection: selectedTeam,
+  stake: parsedStake,
+  odds: selectedOdds,
+  market_type,
+  matchup_name: name,
+  status: 'open',
+  teams: selectedMatchup.teams, // ✅ ADD THIS LINE
+});
+
 
     if (error) {
       console.error(error);
