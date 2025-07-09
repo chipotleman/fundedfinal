@@ -7,7 +7,7 @@ const supabase = createClient(
 );
 
 export async function POST(req: Request) {
-  const { selection, stake, odds, market_type, matchup_name } = await req.json();
+  const { selection, stake, odds, market_type, matchup_name, teams } = await req.json();
 
   if (!selection || !stake || !odds || !market_type || !matchup_name) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
