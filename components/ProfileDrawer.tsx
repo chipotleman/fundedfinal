@@ -31,7 +31,7 @@ export default function ProfileDrawer() {
 
   return (
     <div
-      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50"
+      className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50"
       ref={drawerRef}
     >
       {/* Profile Icon */}
