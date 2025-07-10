@@ -20,8 +20,9 @@ export default function Dashboard() {
   const [message, setMessage] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawMessage, setWithdrawMessage] = useState('');
+  const [showWithdrawInput, setShowWithdrawInput] = useState(false);
 
-  const userId = '00000000-0000-0000-0000-000000000001'; // Replace with your user's id for testing
+  const userId = '00000000-0000-0000-0000-000000000001'; // Replace with your user ID
 
   const decimalToAmerican = (decimal) => {
     const d = parseFloat(decimal);
@@ -91,7 +92,7 @@ export default function Dashboard() {
     }
     const parsedStake = parseFloat(stake);
     if (isNaN(parsedStake) || parsedStake < 10 || parsedStake > 100) {
-      setMessage('⚠️ Stake must be between $10 - $100.');
+      setMessage('⚠️ Stake must be between $10 and $100.');
       return;
     }
     if (parsedStake > balance) {
@@ -132,7 +133,6 @@ export default function Dashboard() {
         setSelectedTeam('');
       }
     }
-
     setPlacing(false);
   };
 
@@ -159,6 +159,7 @@ export default function Dashboard() {
     } else {
       setWithdrawMessage(`✅ Withdrawal request for $${amount.toFixed(2)} submitted.`);
       setWithdrawAmount('');
+      setShowWithdrawInput(false);
     }
   };
 
@@ -166,118 +167,30 @@ export default function Dashboard() {
     <div className="min-h-screen bg-black text-white font-sans">
       <header className="sticky top-0 bg-black bg-opacity-90 p-4 flex flex-col items-center shadow z-50">
         <img src="/rollr-logo.png" alt="Rollr Logo" className="h-16 md:h-20 w-auto mb-2" />
-        <div className="text-center">
+        <div className="text-center mb-2">
           <p className="text-xs text-gray-400">Available Balance</p>
           <p className="text-lg font-bold text-green-400">${balance.toFixed(2)}</p>
         </div>
-      </header>
-
-      <main className="max-w-5xl mx-auto p-4">
-        {matchups.length === 0 ? (
-          <p className="text-center text-gray-400">No live games available.</p>
-        ) : (
-          matchups.map((m) => (
-            <div key={m.name} className="bg-gray-800 rounded p-4 mb-4 shadow">
-              <h2 className="text-lg font-bold text-green-400 mb-2">{m.name}</h2>
-              <div className="flex flex-wrap gap-2">
-                {m.teams.map((team) => (
-                  <button
-                    key={team}
-                    onClick={() => {
-                      setSelectedMatchup(m);
-                      setSelectedTeam(team);
-                    }}
-                    className={`px-3 py-1 rounded border ${
-                      selectedMatchup?.name === m.name && selectedTeam === team
-                        ? 'bg-green-400 text-black'
-                        : 'bg-black text-white border-gray-700'
-                    }`}
-                  >
-                    {team} ({m.odds[team]})
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))
-        )}
-      </main>
-
-      {selectedMatchup && selectedTeam && (
-        <div className="max-w-md mx-auto p-4 bg-gray-800 rounded shadow mb-4">
-          <h3 className="text-green-400 font-bold mb-2">
-            Bet on {selectedTeam} ({selectedMatchup.odds[selectedTeam]})
-          </h3>
-          <input
-            type="number"
-            placeholder="Enter stake ($10 - $100)"
-            value={stake}
-            onChange={(e) => setStake(e.target.value)}
-            className="w-full mb-3 p-2 rounded bg-black border border-gray-700 text-white placeholder-gray-400"
-          />
-          <button
-            onClick={handlePlaceBet}
-            disabled={placing}
-            className="bg-green-400 text-black px-4 py-2 rounded w-full hover:bg-green-300"
-          >
-            {placing ? 'Placing...' : 'Place Bet'}
-          </button>
-          {message && <p className="mt-2 text-center">{message}</p>}
-        </div>
-      )}
-
-      <section className="max-w-md mx-auto p-4 bg-gray-800 rounded shadow mb-8">
-        <h2 className="text-green-400 font-bold mb-2">💸 Request Withdrawal</h2>
-        <input
-          type="number"
-          placeholder="Enter amount ($10 min)"
-          value={withdrawAmount}
-          onChange={(e) => setWithdrawAmount(e.target.value)}
-          className="w-full mb-3 p-2 rounded bg-black border border-gray-700 text-white placeholder-gray-400"
-        />
         <button
-          onClick={handleWithdrawRequest}
-          className="bg-green-400 text-black px-4 py-2 rounded w-full hover:bg-green-300"
+          onClick={() => setShowWithdrawInput(!showWithdrawInput)}
+          className="bg-green-400 text-black px-4 py-2 rounded hover:bg-green-300 transition"
         >
           Request Withdrawal
         </button>
-        {withdrawMessage && <p className="mt-2 text-center">{withdrawMessage}</p>}
-      </section>
-
-      <section className="max-w-6xl mx-auto p-4 mt-8">
-        <h2 className="text-lg font-bold text-green-400 mb-2">📄 My Bets</h2>
-        {loading ? (
-          <p>Loading bets...</p>
-        ) : (
-          <div className="overflow-x-auto rounded shadow">
-            <table className="min-w-full text-sm bg-gray-800 rounded">
-              <thead className="bg-gray-700 text-green-400">
-                <tr>
-                  <th className="px-2 py-2">Created</th>
-                  <th className="px-2 py-2">Status</th>
-                  <th className="px-2 py-2">PNL</th>
-                  <th className="px-2 py-2">Selection</th>
-                  <th className="px-2 py-2">Stake</th>
-                  <th className="px-2 py-2">Odds</th>
-                  <th className="px-2 py-2">Matchup</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bets.map((bet) => (
-                  <tr key={bet.id} className="text-center border-t border-gray-700">
-                    <td className="px-2 py-2">{new Date(bet.created_at).toLocaleString()}</td>
-                    <td className="px-2 py-2">{bet.status}</td>
-                    <td className="px-2 py-2">{bet.pnl !== null ? `$${bet.pnl.toFixed(2)}` : '-'}</td>
-                    <td className="px-2 py-2">{bet.selection || '-'}</td>
-                    <td className="px-2 py-2">{bet.stake !== null ? `$${bet.stake}` : '-'}</td>
-                    <td className="px-2 py-2">{bet.odds ? bet.odds : '-'}</td>
-                    <td className="px-2 py-2">{bet.matchup_name || '-'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {showWithdrawInput && (
+          <div className="w-full max-w-xs mt-2">
+            <input
+              type="number"
+              placeholder="Enter amount ($10 min)"
+              value={withdrawAmount}
+              onChange={(e) => setWithdrawAmount(e.target.value)}
+              className="w-full mb-2 p-2 rounded bg-black border border-gray-700 text-white placeholder-gray-400"
+            />
+            <button
+              onClick={handleWithdrawRequest}
+              className="bg-green-400 text-black px-4 py-2 rounded w-full hover:bg-green-300"
+            >
+              Submit Withdrawal
+            </button>
+            {withdrawMessage && <p className="mt-1 text-center text-sm">{withdrawMessage}</p>}
           </div>
-        )}
-      </section>
-    </div>
-  );
-}
