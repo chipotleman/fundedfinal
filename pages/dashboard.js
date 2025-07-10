@@ -94,15 +94,16 @@ export default function Dashboard() {
       {/* Sidebar */}
       <div className={`${sidebarOpen ? "w-44 sm:w-48 md:w-56" : "w-16"} bg-black p-2 flex flex-col justify-start transition-all relative`}>
 
-        {/* Spacer for vertical alignment with logo */}
+        {/* Balance box with label */}
         <div className="mt-14 flex justify-center">
-          <div className="border border-green-400 rounded-lg px-4 py-2 text-green-400 text-lg text-center bg-zinc-900/60 shadow">
-            💰 ${bankroll}
+          <div className="border border-green-400 rounded-lg px-4 py-3 text-green-400 text-center bg-zinc-900/60 shadow w-11/12">
+            <div className="text-sm text-green-300">Balance</div>
+            <div className="text-xl font-semibold">💰 ${bankroll}</div>
           </div>
         </div>
 
-        {/* League Filters shifted to halfway down */}
-        <div className="flex flex-col space-y-2 mt-20">
+        {/* League Filters shifted lower */}
+        <div className="flex flex-col space-y-2 mt-16">
           {leagues.map((item) => (
             <button
               key={item.league}
@@ -119,16 +120,16 @@ export default function Dashboard() {
               {sidebarOpen && <span>{item.league}</span>}
             </button>
           ))}
-        </div>
 
-        {/* Expansion Arrow placed on separator, no border */}
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="fixed top-1/2 -translate-y-1/2 left-[calc(3.5rem)] md:left-[calc(5rem)] lg:left-[calc(6rem)] text-green-400 text-2xl z-50"
-          style={{ background: 'transparent', border: 'none' }}
-        >
-          {sidebarOpen ? '⇤' : '⇥'}
-        </button>
+          {/* Expansion Arrow below leagues */}
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="mt-6 self-center text-green-400 text-2xl transition"
+            style={{ background: 'transparent', border: 'none' }}
+          >
+            {sidebarOpen ? '⇤' : '⇥'}
+          </button>
+        </div>
       </div>
 
       {/* Main content */}
