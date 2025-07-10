@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import ProfileDrawer from '../components/ProfileDrawer';
+import Image from 'next/image';
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -34,7 +35,6 @@ export default function Dashboard() {
 
       const user = session.user;
       setUser(user);
-      console.log('Logged in user:', user);
 
       const { data: evalData } = await supabase
         .from('evaluations')
@@ -58,15 +58,11 @@ export default function Dashboard() {
         .single();
       setPnl(pnlData?.pnl || 0);
 
-      const { data: gamesData, error } = await supabase
+      const { data: gamesData } = await supabase
         .from('games')
         .select('*')
         .eq('status', 'active');
-      if (error) {
-        console.error("Error fetching games:", error.message);
-      } else {
-        setGames(gamesData || []);
-      }
+      setGames(gamesData || []);
 
       setLoading(false);
     };
@@ -82,26 +78,35 @@ export default function Dashboard() {
     }
   };
 
+  const getCombinedDecimal = () => {
+    return selectedBets.reduce((acc, bet) => acc * bet.odds, 1);
+  };
+
   const placeBets = async () => {
     if (!selectedBets.length) {
       alert("No bets selected.");
       return;
     }
-    for (const bet of selectedBets) {
-      const { error } = await supabase.from('bets').insert([{
-        user_id: user.id,
-        game_id: bet.id,
-        amount: bet.amount,
-        odds: bet.odds,
-        status: 'open'
-      }]);
-      if (error) {
-        console.error("Error placing bet:", error.message);
-        alert(`Error placing bet on ${bet.home_team} vs ${bet.away_team}`);
-      }
+
+    const combinedDecimal = getCombinedDecimal();
+
+    const { error } = await supabase.from('bets').insert([{
+      user_id: user.id,
+      game_id: null,
+      amount: selectedBets[0].amount,
+      odds: combinedDecimal,
+      status: 'open',
+      type: 'parlay',
+      parlay_games: selectedBets.map(b => b.id)
+    }]);
+
+    if (error) {
+      console.error("Error placing parlay:", error.message);
+      alert(`Error placing parlay bet`);
+    } else {
+      alert("Parlay bet placed!");
+      setSelectedBets([]);
     }
-    alert("Bets placed!");
-    setSelectedBets([]);
   };
 
   if (loading) {
@@ -114,12 +119,14 @@ export default function Dashboard() {
 
   const progress = Math.min((pnl / pnlTarget) * 100, 100).toFixed(1);
   const remaining = pnlTarget - pnl;
+  const combinedDecimal = getCombinedDecimal();
+  const combinedUS = decimalToAmerican(combinedDecimal);
 
   return (
     <div className="relative min-h-screen bg-black text-white p-4 font-mono">
       {/* Logo */}
-      <div className="absolute top-4 left-4 text-purple-400 text-xl font-bold">
-        fundedfinal
+      <div className="absolute top-4 left-4 flex items-center">
+        <Image src="/rollr-logo.png" alt="Rollr Logo" width={120} height={40} />
       </div>
 
       {/* Profile Drawer */}
@@ -145,21 +152,22 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Bet Slip */}
+      {/* Parlay Bet Slip */}
       {selectedBets.length > 0 && (
         <div className="fixed bottom-4 left-4 bg-zinc-900 border border-green-400 rounded-lg p-4 w-72">
-          <h2 className="text-lg font-semibold text-green-400 mb-2">Bet Slip</h2>
+          <h2 className="text-lg font-semibold text-green-400 mb-2">Parlay Slip</h2>
           {selectedBets.map((bet, index) => (
             <div key={index} className="flex justify-between text-sm text-green-300 mb-1">
               <span>{bet.home_team} vs {bet.away_team}</span>
-              <span>Odds: {decimalToAmerican(bet.odds)}</span>
+              <span>{decimalToAmerican(bet.odds)}</span>
             </div>
           ))}
+          <p className="text-green-400 mt-2">Combined Odds: {combinedUS}</p>
           <button
             onClick={placeBets}
             className="mt-2 w-full bg-green-400 text-black font-bold py-2 rounded hover:bg-green-500"
           >
-            Place Bets
+            Place Parlay
           </button>
         </div>
       )}
