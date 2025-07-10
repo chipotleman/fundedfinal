@@ -52,7 +52,7 @@ export default async function handler(req, res) {
         .eq('id', game.id);
 
       // Call your settleBets API
-      await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/settleBets`, {
+      await fetch(`${process.env.SITE_URL}/api/settleBets`, { ... });
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
