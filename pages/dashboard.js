@@ -18,8 +18,10 @@ export default function Dashboard() {
   const [stake, setStake] = useState('');
   const [placing, setPlacing] = useState(false);
   const [message, setMessage] = useState('');
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawMessage, setWithdrawMessage] = useState('');
 
-  const userId = '00000000-0000-0000-0000-000000000001'; // replace with your actual user id
+  const userId = '00000000-0000-0000-0000-000000000001'; // Replace with your user's id for testing
 
   const decimalToAmerican = (decimal) => {
     const d = parseFloat(decimal);
@@ -87,18 +89,15 @@ export default function Dashboard() {
       setMessage('⚠️ Please select a matchup and team.');
       return;
     }
-
     const parsedStake = parseFloat(stake);
     if (isNaN(parsedStake) || parsedStake < 10 || parsedStake > 100) {
       setMessage('⚠️ Stake must be between $10 - $100.');
       return;
     }
-
     if (parsedStake > balance) {
       setMessage('⚠️ Insufficient balance.');
       return;
     }
-
     setPlacing(true);
 
     const { name, market_type, odds, teams } = selectedMatchup;
@@ -137,14 +136,36 @@ export default function Dashboard() {
     setPlacing(false);
   };
 
+  const handleWithdrawRequest = async () => {
+    setWithdrawMessage('');
+    const amount = parseFloat(withdrawAmount);
+    if (isNaN(amount) || amount < 10) {
+      setWithdrawMessage('⚠️ Withdrawal must be at least $10.');
+      return;
+    }
+    if (amount > balance) {
+      setWithdrawMessage('⚠️ Withdrawal amount exceeds available balance.');
+      return;
+    }
+
+    const { error } = await supabase.from('withdrawal_requests').insert({
+      user_id: userId,
+      amount,
+      status: 'pending',
+    });
+
+    if (error) {
+      setWithdrawMessage(`❌ Error submitting withdrawal: ${error.message}`);
+    } else {
+      setWithdrawMessage(`✅ Withdrawal request for $${amount.toFixed(2)} submitted.`);
+      setWithdrawAmount('');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white font-sans">
       <header className="sticky top-0 bg-black bg-opacity-90 p-4 flex flex-col items-center shadow z-50">
-        <img
-          src="/rollr-logo.png"
-          alt="Rollr Logo"
-          className="h-16 md:h-20 w-auto mb-2"
-        />
+        <img src="/rollr-logo.png" alt="Rollr Logo" className="h-16 md:h-20 w-auto mb-2" />
         <div className="text-center">
           <p className="text-xs text-gray-400">Available Balance</p>
           <p className="text-lg font-bold text-green-400">${balance.toFixed(2)}</p>
@@ -203,6 +224,24 @@ export default function Dashboard() {
           {message && <p className="mt-2 text-center">{message}</p>}
         </div>
       )}
+
+      <section className="max-w-md mx-auto p-4 bg-gray-800 rounded shadow mb-8">
+        <h2 className="text-green-400 font-bold mb-2">💸 Request Withdrawal</h2>
+        <input
+          type="number"
+          placeholder="Enter amount ($10 min)"
+          value={withdrawAmount}
+          onChange={(e) => setWithdrawAmount(e.target.value)}
+          className="w-full mb-3 p-2 rounded bg-black border border-gray-700 text-white placeholder-gray-400"
+        />
+        <button
+          onClick={handleWithdrawRequest}
+          className="bg-green-400 text-black px-4 py-2 rounded w-full hover:bg-green-300"
+        >
+          Request Withdrawal
+        </button>
+        {withdrawMessage && <p className="mt-2 text-center">{withdrawMessage}</p>}
+      </section>
 
       <section className="max-w-6xl mx-auto p-4 mt-8">
         <h2 className="text-lg font-bold text-green-400 mb-2">📄 My Bets</h2>
