@@ -87,6 +87,7 @@ export default function Dashboard() {
         <ProfileDrawer />
       </div>
 
+      {/* Evaluation info */}
       <div style={{
         display: "flex",
         flexDirection: "column",
@@ -107,6 +108,22 @@ export default function Dashboard() {
         <p style={{ color: "#ccc", marginTop: "10px" }}>
           Status: {evaluation.status}
         </p>
+      </div>
+
+      {/* Bet Slip Placeholder - keep your bet slip functionality here */}
+      <div id="bet-slip" style={{
+        marginTop: "40px",
+        width: "100%",
+        maxWidth: "600px",
+        margin: "0 auto",
+        padding: "20px",
+        backgroundColor: "#111",
+        borderRadius: "8px",
+        boxShadow: "0 0 10px #a020f0"
+      }}>
+        {/* Your existing bet slip component or logic should go here */}
+        <h3 style={{ color: "#a020f0", marginBottom: "10px" }}>Your Bet Slip</h3>
+        {/* Insert your bet slip rendering logic here */}
       </div>
     </div>
   );
