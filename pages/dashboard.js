@@ -14,7 +14,7 @@ export default function Dashboard() {
   const [withdrawMessage, setWithdrawMessage] = useState('');
   const [showWithdrawInput, setShowWithdrawInput] = useState(false);
 
-  const userId = '00000000-0000-0000-0000-000000000001'; // replace with your user_id
+  const userId = '00000000-0000-0000-0000-000000000001'; // replace with your real user_id if needed
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -24,7 +24,6 @@ export default function Dashboard() {
         .eq('id', userId)
         .single();
 
-      console.log("Fetched balance data:", data, "Error:", error);
       if (data) {
         setBalance(parseFloat(data.balance));
       }
@@ -61,16 +60,15 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6">
 
-      <h1 className="text-white text-2xl mb-4">WITHDRAWAL BUTTON DEBUG TEST</h1>
-
-      <p className="text-green-400">Balance State: ${balance.toFixed(2)}</p>
-      <p className="text-green-400">Show Withdraw Input: {showWithdrawInput ? 'true' : 'false'}</p>
+      <img src="/rollr-logo.png" alt="Rollr Logo" className="h-24 w-auto mb-4" />
+      <p className="text-[#39FF14] text-sm">Available Balance</p>
+      <p className="text-[#39FF14] text-4xl font-bold mb-6">${balance.toFixed(2)}</p>
 
       <button
         onClick={() => setShowWithdrawInput(!showWithdrawInput)}
-        className="bg-green-400 text-black px-6 py-3 rounded-lg text-lg font-semibold hover:bg-green-300 transition mb-4"
+        className="bg-[#39FF14] text-black px-6 py-3 rounded-lg text-lg font-semibold hover:bg-green-300 transition mb-4"
       >
         Request Withdrawal
       </button>
@@ -82,15 +80,15 @@ export default function Dashboard() {
             placeholder="Enter amount ($10 min)"
             value={withdrawAmount}
             onChange={(e) => setWithdrawAmount(e.target.value)}
-            className="w-full mb-3 p-3 rounded bg-black border border-gray-700 text-white placeholder-gray-400"
+            className="w-full mb-3 p-3 rounded bg-black border border-[#39FF14] text-[#39FF14] placeholder-gray-400"
           />
           <button
             onClick={handleWithdrawRequest}
-            className="bg-green-400 text-black px-4 py-2 rounded w-full hover:bg-green-300"
+            className="bg-[#39FF14] text-black px-4 py-2 rounded w-full hover:bg-green-300"
           >
             Submit Withdrawal
           </button>
-          {withdrawMessage && <p className="mt-2 text-green-400">{withdrawMessage}</p>}
+          {withdrawMessage && <p className="mt-2 text-[#39FF14]">{withdrawMessage}</p>}
         </div>
       )}
     </div>
