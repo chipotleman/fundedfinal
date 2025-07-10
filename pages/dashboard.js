@@ -10,7 +10,7 @@ export default function Dashboard() {
   const [selectedBets, setSelectedBets] = useState([]);
   const [showBetSlipModal, setShowBetSlipModal] = useState(false);
   const [selectedLeague, setSelectedLeague] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // starts collapsed
+  const [sidebarOpen, setSidebarOpen] = useState(false); // collapsed by default
 
   const leagues = [
     { league: 'MLB', emoji: '⚾' },
@@ -60,6 +60,14 @@ export default function Dashboard() {
     }
   };
 
+  const removeBetLeg = (id) => {
+    setSelectedBets(selectedBets.filter(b => b.id !== id));
+  };
+
+  const clearParlay = () => {
+    setSelectedBets([]);
+  };
+
   const placeBets = async () => {
     if (!selectedBets.length) {
       alert("No bets selected.");
@@ -79,7 +87,7 @@ export default function Dashboard() {
       alert("Error placing parlay bet.");
     } else {
       alert("Parlay bet placed!");
-      setSelectedBets([]);
+      clearParlay();
       setShowBetSlipModal(false);
     }
   };
@@ -123,7 +131,7 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* ProfileDrawer fixed bottom-center inside sidebar, always visible */}
+        {/* ProfileDrawer fixed bottom-center inside sidebar */}
         <div
           className="fixed bottom-4 z-50 transition-all"
           style={{
@@ -140,9 +148,7 @@ export default function Dashboard() {
 
         {/* Header with balance in top-right */}
         <div className="flex justify-between items-center p-4 relative">
-
           <Image src="/rollr-logo.png" alt="Rollr Logo" width={130} height={40} priority />
-
           <div className="border border-green-400 rounded-lg px-4 py-2 text-green-400 text-center bg-zinc-900/60 shadow">
             <div className="text-sm text-green-300">Balance</div>
             <div className="text-xl font-semibold">${bankroll}</div>
@@ -169,17 +175,17 @@ export default function Dashboard() {
           })}
         </div>
 
-        {/* Rocket Floating Button */}
+        {/* Floating bet slip button with receipt emoji */}
         {selectedBets.length > 0 && !showBetSlipModal && (
           <button
             onClick={() => setShowBetSlipModal(true)}
-            className="fixed bottom-6 right-6 text-9xl text-green-400 hover:scale-105 transition-transform z-50"
+            className="fixed bottom-6 right-6 text-7xl text-green-400 hover:scale-105 transition-transform z-50"
           >
-            🚀
+            🧾
           </button>
         )}
 
-        {/* Betslip Modal */}
+        {/* Betslip Modal with remove individual legs and clear parlay */}
         {showBetSlipModal && (
           <div
             onClick={() => setShowBetSlipModal(false)}
@@ -195,9 +201,14 @@ export default function Dashboard() {
               ) : (
                 <>
                   {selectedBets.map((bet, idx) => (
-                    <div key={idx} className="flex justify-between text-sm text-green-300 mb-1">
-                      <span>{bet.matchup}</span>
-                      <span>{decimalToAmerican(bet.odds)}</span>
+                    <div key={idx} className="flex justify-between items-center text-sm text-green-300 mb-1">
+                      <span>{bet.matchup} ({decimalToAmerican(bet.odds)})</span>
+                      <button
+                        onClick={() => removeBetLeg(bet.id)}
+                        className="text-red-400 hover:text-red-500 ml-2"
+                      >
+                        ❌
+                      </button>
                     </div>
                   ))}
                   <p className="text-green-400 mt-2">
@@ -208,6 +219,12 @@ export default function Dashboard() {
                     className="mt-2 w-full bg-green-400 text-black font-bold py-2 rounded hover:bg-green-500 transition"
                   >
                     Place Parlay
+                  </button>
+                  <button
+                    onClick={clearParlay}
+                    className="mt-2 w-full bg-red-500 text-white font-bold py-2 rounded hover:bg-red-600 transition"
+                  >
+                    Clear Parlay
                   </button>
                 </>
               )}
