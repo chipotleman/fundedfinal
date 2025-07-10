@@ -24,6 +24,7 @@ export default function Dashboard() {
         .eq('id', userId)
         .single();
 
+      console.log("Fetched balance data:", data, "Error:", error);
       if (data) {
         setBalance(parseFloat(data.balance));
       }
@@ -61,9 +62,11 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6">
-      <img src="/rollr-logo.png" alt="Rollr Logo" className="h-20 w-auto mb-4" />
-      <p className="text-gray-400 text-sm">Available Balance</p>
-      <p className="text-green-400 text-3xl font-bold mb-4">${balance.toFixed(2)}</p>
+
+      <h1 className="text-white text-2xl mb-4">WITHDRAWAL BUTTON DEBUG TEST</h1>
+
+      <p className="text-green-400">Balance State: ${balance.toFixed(2)}</p>
+      <p className="text-green-400">Show Withdraw Input: {showWithdrawInput ? 'true' : 'false'}</p>
 
       <button
         onClick={() => setShowWithdrawInput(!showWithdrawInput)}
