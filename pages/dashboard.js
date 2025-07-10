@@ -31,7 +31,9 @@ export default function Dashboard() {
         .from('evaluations')
         .select('*')
         .eq('email', session.user.email)
-        .maybeSingle();
+        .order('evaluation_end_date', { ascending: false })
+        .limit(1)
+        .single();
 
       console.log('Supabase returned evaluation data:', data);
       console.log('Supabase returned evaluation error:', evalError);
