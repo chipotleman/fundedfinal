@@ -94,14 +94,6 @@ export default function Dashboard() {
       {/* Sidebar */}
       <div className={`${sidebarOpen ? "w-44 sm:w-48 md:w-56" : "w-16"} bg-black p-2 flex flex-col items-center transition-all relative`}>
 
-        {/* Balance box aligned with logo */}
-        <div className="flex flex-col justify-center h-20">
-          <div className="border border-green-400 rounded-lg px-4 py-3 text-green-400 text-center bg-zinc-900/60 shadow w-40">
-            <div className="text-sm text-green-300">Balance</div>
-            <div className="text-xl font-semibold">💰 ${bankroll}</div>
-          </div>
-        </div>
-
         {/* League Filters */}
         <div className="flex flex-col space-y-2 mt-12">
           {leagues.map((item) => (
@@ -135,9 +127,16 @@ export default function Dashboard() {
       {/* Main content */}
       <div className="flex-1 flex flex-col">
 
-        {/* Header */}
-        <div className="flex justify-between items-center p-4">
+        {/* Header with centered balance */}
+        <div className="flex justify-between items-center p-4 relative">
+
           <Image src="/rollr-logo.png" alt="Rollr Logo" width={130} height={40} priority />
+
+          <div className="absolute left-1/2 transform -translate-x-1/2 border border-green-400 rounded-lg px-4 py-2 text-green-400 text-center bg-zinc-900/60 shadow">
+            <div className="text-sm text-green-300">Balance</div>
+            <div className="text-xl font-semibold">💰 ${bankroll}</div>
+          </div>
+
           <ProfileDrawer />
         </div>
 
