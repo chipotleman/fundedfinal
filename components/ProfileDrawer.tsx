@@ -1,28 +1,33 @@
 'use client'
 
+import { supabase } from '@/lib/supabaseClient'
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabaseClient'
-import type { User } from '@supabase/supabase-js'
 
 export default function ProfileDrawer() {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<any>(null)
   const [open, setOpen] = useState(false)
   const [bankroll, setBankroll] = useState(0)
-  const [challengeTarget] = useState(1000)
+  const [challengeTarget, setChallengeTarget] = useState(1000)
 
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser()
+      console.log('ProfileDrawer user:', user);
       setUser(user)
 
       if (user) {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('user_balances')
           .select('balance')
-          .eq('user_id', user.id)
+          .eq('id', user.id) // ✅ corrected from 'user_id' to 'id'
           .single()
 
-        setBankroll(data?.balance || 0)
+        if (error) {
+          console.error('Error fetching bankroll:', error.message)
+        } else {
+          console.log('Bankroll fetched:', data);
+          setBankroll(data?.balance || 0)
+        }
       }
     }
     getUser()
@@ -50,7 +55,7 @@ export default function ProfileDrawer() {
           <h2 className="text-lg font-bold mb-2">Profile</h2>
           <p>Email: {user?.email}</p>
           <p>Bankroll: ${bankroll}</p>
-          <p>Challenge Progress:</p>
+          <p className="mt-2">Challenge Progress:</p>
           <div className="w-full bg-green-900 rounded h-3 mb-2">
             <div
               className="bg-green-400 h-3 rounded"
