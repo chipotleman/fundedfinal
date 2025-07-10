@@ -56,8 +56,8 @@ export async function POST(req: Request) {
     const newPnL = Number(pnlData?.total_pnl || 0) + pnl;
 
     const { error: pnlUpdateError } = await supabase
-      .from('user_pnl')
-      .upsert({ id: bet.user_id, total_pnl: newPnL });
+  .from('user_pnl')
+  .upsert({ id: bet.user_id, user_id: bet.user_id, pnl: newPnL, updated_at: new Date().toISOString() }, { onConflict: 'id' });
 
     if (pnlUpdateError) {
       return NextResponse.json({ message: 'Error updating PnL.' }, { status: 500 });
