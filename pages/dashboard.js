@@ -19,7 +19,7 @@ export default function Dashboard() {
   const [placing, setPlacing] = useState(false);
   const [message, setMessage] = useState('');
 
-  const userId = '00000000-0000-0000-0000-000000000001'; // Replace with your actual user ID
+  const userId = '00000000-0000-0000-0000-000000000001'; // replace with your actual user id
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,13 +45,14 @@ export default function Dashboard() {
       if (slatesData) {
         const formatted = slatesData.map((game) => {
           const oddsObj = {};
-          game.odds.split(',').forEach((pair) => {
-            const [team, odd] = pair.trim().split(':');
-            if (team && odd) {
-              oddsObj[team.trim()] = odd.trim();
-            }
-          });
-
+          if (game.odds) {
+            game.odds.split(',').forEach((pair) => {
+              const [team, odd] = pair.trim().split(':');
+              if (team && odd) {
+                oddsObj[team.trim()] = odd.trim();
+              }
+            });
+          }
           return {
             name: game.matchup,
             market_type: game.sport,
@@ -128,7 +129,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white font-sans">
-      {/* Large Logo with Balance */}
+      {/* Header with large Rollr logo and balance */}
       <header className="sticky top-0 bg-black bg-opacity-90 p-4 flex flex-col items-center shadow z-50">
         <img
           src="/rollr-logo.png"
@@ -141,34 +142,38 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Live Matchups */}
+      {/* Live matchups */}
       <main className="max-w-5xl mx-auto p-4">
-        {matchups.map((m) => (
-          <div key={m.name} className="bg-gray-800 rounded p-4 mb-4 shadow">
-            <h2 className="text-lg font-bold text-green-400 mb-2">{m.name}</h2>
-            <div className="flex flex-wrap gap-2">
-              {m.teams.map((team) => (
-                <button
-                  key={team}
-                  onClick={() => {
-                    setSelectedMatchup(m);
-                    setSelectedTeam(team);
-                  }}
-                  className={`px-3 py-1 rounded border ${
-                    selectedMatchup?.name === m.name && selectedTeam === team
-                      ? 'bg-green-400 text-black'
-                      : 'bg-black text-white border-gray-700'
-                  }`}
-                >
-                  {team} ({m.odds[team]})
-                </button>
-              ))}
+        {matchups.length === 0 ? (
+          <p className="text-center text-gray-400">No live games available.</p>
+        ) : (
+          matchups.map((m) => (
+            <div key={m.name} className="bg-gray-800 rounded p-4 mb-4 shadow">
+              <h2 className="text-lg font-bold text-green-400 mb-2">{m.name}</h2>
+              <div className="flex flex-wrap gap-2">
+                {m.teams.map((team) => (
+                  <button
+                    key={team}
+                    onClick={() => {
+                      setSelectedMatchup(m);
+                      setSelectedTeam(team);
+                    }}
+                    className={`px-3 py-1 rounded border ${
+                      selectedMatchup?.name === m.name && selectedTeam === team
+                        ? 'bg-green-400 text-black'
+                        : 'bg-black text-white border-gray-700'
+                    }`}
+                  >
+                    {team} ({m.odds[team]})
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </main>
 
-      {/* Stake Input & Place Bet */}
+      {/* Bet slip */}
       {selectedMatchup && selectedTeam && (
         <div className="max-w-md mx-auto p-4 bg-gray-800 rounded shadow mb-4">
           <h3 className="text-green-400 font-bold mb-2">
@@ -192,7 +197,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* My Bets Table */}
+      {/* Bets table */}
       <section className="max-w-6xl mx-auto p-4 mt-8">
         <h2 className="text-lg font-bold text-green-400 mb-2">📄 My Bets</h2>
         {loading ? (
