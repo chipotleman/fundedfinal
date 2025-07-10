@@ -8,6 +8,14 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
+  // ✅ Secure your endpoint if CRON_SECRET is set
+  if (
+    process.env.CRON_SECRET &&
+    req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`
+  ) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -51,7 +59,7 @@ export default async function handler(req, res) {
         .update({ result: randomWinner })
         .eq('id', game.id);
 
-      // Call your settleBets API with correct fetch syntax
+      // Call your settleBets API
       await fetch(`${process.env.SITE_URL}/api/settleBets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
