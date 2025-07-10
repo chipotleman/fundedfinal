@@ -13,6 +13,8 @@ export default function Dashboard() {
   const [games, setGames] = useState([]);
   const [selectedBets, setSelectedBets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedLeague, setSelectedLeague] = useState(null);
+  const [leagues, setLeagues] = useState([]);
 
   const pnlTarget = 1000;
 
@@ -23,6 +25,14 @@ export default function Dashboard() {
     } else {
       return `${Math.round(-100 / (decimal - 1))}`;
     }
+  };
+
+  const getLeagueEmoji = (league) => {
+    if (league.includes('NBA')) return '🏀';
+    if (league === 'KBO' || league === 'MLB') return '⚾️';
+    if (league === 'MLS') return '⚽️';
+    if (league === 'WTA') return '🎾';
+    return '';
   };
 
   useEffect(() => {
@@ -59,10 +69,13 @@ export default function Dashboard() {
       setPnl(pnlData?.pnl || 0);
 
       const { data: gamesData } = await supabase
-        .from('games')
+        .from('game_slates')
         .select('*')
-        .eq('status', 'active');
+        .order('game_time', { ascending: true });
       setGames(gamesData || []);
+
+      const uniqueLeagues = [...new Set((gamesData || []).map(game => game.sport))];
+      setLeagues(uniqueLeagues);
 
       setLoading(false);
     };
@@ -74,7 +87,8 @@ export default function Dashboard() {
     if (selectedBets.find(b => b.id === game.id)) {
       setSelectedBets(selectedBets.filter(b => b.id !== game.id));
     } else {
-      setSelectedBets([...selectedBets, { ...game, amount: 10 }]);
+      const odds = parseFloat(game.odds);
+      setSelectedBets([...selectedBets, { ...game, amount: 10, odds: odds }]);
     }
   };
 
@@ -102,7 +116,7 @@ export default function Dashboard() {
 
     if (error) {
       console.error("Error placing parlay:", error.message);
-      alert(`Error placing parlay bet`);
+      alert("Error placing parlay bet.");
     } else {
       alert("Parlay bet placed!");
       setSelectedBets([]);
@@ -113,9 +127,9 @@ export default function Dashboard() {
     return <div className="text-center text-green-400 mt-10">Loading your dashboard...</div>;
   }
 
-  if (!evaluation) {
-    return <div className="text-center text-red-400 mt-10">No funded evaluation found for your account.</div>;
-  }
+  const filteredGames = selectedLeague
+    ? games.filter((game) => game.sport === selectedLeague)
+    : games;
 
   const progress = Math.min((pnl / pnlTarget) * 100, 100).toFixed(1);
   const remaining = pnlTarget - pnl;
@@ -123,30 +137,44 @@ export default function Dashboard() {
   const combinedUS = decimalToAmerican(combinedDecimal);
 
   return (
-    <div className="relative min-h-screen bg-black text-white p-4 font-mono">
-      {/* Logo */}
-      <div className="absolute top-4 left-4 flex items-center">
+    <div className="relative min-h-screen bg-black text-white font-mono">
+      {/* Header */}
+      <div className="flex justify-between items-center p-4">
         <Image src="/rollr-logo.png" alt="Rollr Logo" width={120} height={40} />
-      </div>
-
-      {/* Profile Drawer */}
-      <div className="absolute top-4 right-4">
         <ProfileDrawer />
       </div>
 
-      {/* Games */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-16">
-        {games.map((game) => (
+      {/* Sidebar */}
+      <div className="fixed top-20 left-4 flex flex-col space-y-2">
+        {leagues.map((league) => (
+          <button
+            key={league}
+            onClick={() => setSelectedLeague(league === selectedLeague ? null : league)}
+            className={`px-4 py-2 rounded ${
+              selectedLeague === league ? 'bg-green-600' : 'bg-zinc-800'
+            }`}
+          >
+            <span className="text-lg">{getLeagueEmoji(league)}</span> {league}
+          </button>
+        ))}
+      </div>
+
+      {/* Games grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4 ml-36 mt-4">
+        {filteredGames.map((game) => (
           <div
             key={game.id}
-            className={`p-4 rounded-lg border cursor-pointer ${selectedBets.find(b => b.id === game.id) ? 'border-green-400' : 'border-zinc-700'} hover:border-green-400`}
+            className={`p-4 rounded-lg border cursor-pointer ${
+              selectedBets.find(b => b.id === game.id) ? 'border-green-400' : 'border-zinc-700'
+            } hover:border-green-400`}
             onClick={() => handleBetSelect(game)}
           >
-            <h3 className="text-lg text-green-400">
-              {game.home_team} vs {game.away_team}
-            </h3>
+            <h3 className="text-lg text-green-400">{game.matchup}</h3>
             <p className="text-sm text-gray-400">
-              Odds: {decimalToAmerican(game.odds)}
+              Odds: {decimalToAmerican(parseFloat(game.odds))}
+            </p>
+            <p className="text-xs text-gray-500">
+              {new Date(game.game_time).toLocaleString()}
             </p>
           </div>
         ))}
@@ -158,7 +186,7 @@ export default function Dashboard() {
           <h2 className="text-lg font-semibold text-green-400 mb-2">Parlay Slip</h2>
           {selectedBets.map((bet, index) => (
             <div key={index} className="flex justify-between text-sm text-green-300 mb-1">
-              <span>{bet.home_team} vs {bet.away_team}</span>
+              <span>{bet.matchup}</span>
               <span>{decimalToAmerican(bet.odds)}</span>
             </div>
           ))}
@@ -179,7 +207,6 @@ export default function Dashboard() {
         <p className="text-green-300 text-sm">PnL: ${pnl}</p>
         <p className="text-green-300 text-sm">Target: ${pnlTarget}</p>
         <p className="text-green-300 text-sm">Remaining: ${remaining}</p>
-        <p className="text-green-300 text-sm">Ends: {new Date(evaluation.evaluation_end_date).toLocaleDateString()}</p>
         <p className="text-green-300 text-sm mb-2">Status: {evaluation.status}</p>
         <div className="w-full bg-green-900 rounded-full h-3">
           <div
