@@ -51,8 +51,8 @@ export default async function handler(req, res) {
         .update({ result: randomWinner })
         .eq('id', game.id);
 
-      // Call your settleBets API
-      await fetch(`${process.env.SITE_URL}/api/settleBets`, { ... });
+      // Call your settleBets API with correct fetch syntax
+      await fetch(`${process.env.SITE_URL}/api/settleBets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
