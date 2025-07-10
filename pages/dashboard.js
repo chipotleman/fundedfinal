@@ -1,5 +1,3 @@
-// pages/dashboard.js
-
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import ProfileDrawer from '../components/ProfileDrawer';
@@ -11,8 +9,8 @@ export default function Dashboard() {
   const [games, setGames] = useState([]);
   const [selectedBets, setSelectedBets] = useState([]);
   const [showBetSlipModal, setShowBetSlipModal] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [selectedLeague, setSelectedLeague] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const leagues = [
     { league: 'MLB', emoji: '⚾' },
@@ -50,7 +48,6 @@ export default function Dashboard() {
         .select('*')
         .order('game_time', { ascending: true });
       setGames(gamesData || []);
-      setLoading(false);
     };
     fetchData();
   }, []);
@@ -91,27 +88,37 @@ export default function Dashboard() {
     ? games.filter((game) => game.sport === selectedLeague)
     : games;
 
-  if (loading) {
-    return <div className="text-center text-green-400 mt-10">Loading your dashboard...</div>;
-  }
-
   return (
-    <div className="relative min-h-screen bg-black text-white font-mono flex">
+    <div className="flex bg-black text-white min-h-screen font-mono">
 
       {/* Sidebar */}
-      <div className="w-48 bg-zinc-900 border-r border-zinc-700 flex flex-col p-4 space-y-3">
-        {leagues.map((item) => (
+      <div className={`${sidebarOpen ? "w-44 sm:w-48 md:w-56" : "w-16"} bg-black border-r border-zinc-800 p-2 flex flex-col justify-between transition-all`}>
+        <div className="flex flex-col space-y-2">
           <button
-            key={item.league}
-            onClick={() => setSelectedLeague(item.league === selectedLeague ? null : item.league)}
-            className={`flex items-center space-x-2 text-left text-sm p-2 rounded hover:bg-zinc-800 transition ${
-              item.league === selectedLeague ? 'bg-green-800 text-green-300' : 'text-white'
-            }`}
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="text-green-400 text-2xl self-center"
           >
-            <span className="text-xl">{item.emoji}</span>
-            <span>{item.league}</span>
+            {sidebarOpen ? '⇤' : '⇥'}
           </button>
-        ))}
+
+          {leagues.map((item) => (
+            <button
+              key={item.league}
+              onClick={() => setSelectedLeague(item.league === selectedLeague ? null : item.league)}
+              className={`flex items-center space-x-2 p-2 rounded transition ${
+                item.league === selectedLeague ? 'bg-green-900 text-green-300' : 'text-white hover:bg-zinc-900'
+              }`}
+            >
+              <span className="text-xl">{item.emoji}</span>
+              {sidebarOpen && <span>{item.league}</span>}
+            </button>
+          ))}
+        </div>
+
+        {/* Balance */}
+        <div className="text-green-400 text-center text-xl mb-2">
+          💰 ${bankroll}
+        </div>
       </div>
 
       {/* Main content */}
@@ -119,16 +126,11 @@ export default function Dashboard() {
 
         {/* Header */}
         <div className="flex justify-between items-center p-4">
-          <Image src="/rollr-logo.png" alt="Rollr Logo" width={120} height={40} />
-
-          <div className="text-center text-green-300 text-2xl font-semibold">
-            💰 ${bankroll}
-          </div>
-
+          <Image src="/rollr-logo.png" alt="Rollr Logo" width={130} height={40} priority />
           <ProfileDrawer />
         </div>
 
-        {/* Games Grid */}
+        {/* Games */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
           {filteredGames.map((game) => {
             const isSelected = selectedBets.find(b => b.id === game.id);
@@ -136,8 +138,8 @@ export default function Dashboard() {
               <div
                 key={game.id}
                 onClick={() => handleBetSelect(game)}
-                className={`p-4 rounded-lg border transition cursor-pointer ${
-                  isSelected ? 'border-green-400 bg-zinc-800' : 'border-zinc-700 hover:border-green-600'
+                className={`p-4 rounded-lg border cursor-pointer transition ${
+                  isSelected ? 'border-green-400 bg-zinc-800' : 'border-zinc-700'
                 }`}
               >
                 <h3 className="text-lg text-green-400">{game.matchup}</h3>
@@ -148,11 +150,11 @@ export default function Dashboard() {
           })}
         </div>
 
-        {/* Enlarged Rocket Floating Button */}
+        {/* Rocket Floating Button */}
         {selectedBets.length > 0 && !showBetSlipModal && (
           <button
             onClick={() => setShowBetSlipModal(true)}
-            className="fixed bottom-6 right-6 text-7xl text-green-400 hover:scale-105 transition-transform"
+            className="fixed bottom-6 right-6 text-9xl text-green-400 hover:scale-105 transition-transform z-50"
           >
             🚀
           </button>
