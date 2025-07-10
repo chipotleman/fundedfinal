@@ -20,7 +20,7 @@ export default function Dashboard() {
     const [placing, setPlacing] = useState(false);
     const [message, setMessage] = useState('');
 
-    const userId = '00000000-0000-0000-0000-000000000001'; // Replace with your real user ID if needed
+    const userId = '00000000-0000-0000-0000-000000000001'; // Replace with your actual user ID if needed
 
     const matchups = [
         {
@@ -124,19 +124,16 @@ export default function Dashboard() {
 
     return (
         <div className="min-h-screen bg-black text-white font-sans">
-            {/* Header with Rollr Logo */}
-            <header className="sticky top-0 bg-black bg-opacity-90 p-4 flex justify-between items-center shadow z-50">
-                <div className="flex items-center gap-3">
-                    <img src="/rollr-logo.png" alt="Rollr Logo" className="h-10 w-auto" />
-                    <h1 className="text-xl md:text-2xl font-bold text-green-400">RollrFunded Sportsbook</h1>
-                </div>
-                <div className="text-right">
-                    <p className="text-xs text-gray-400">Available Balance</p>
-                    <p className="text-lg font-bold text-green-400">${balance.toFixed(2)}</p>
-                </div>
+            {/* Large centered Rollr logo */}
+            <header className="sticky top-0 bg-black bg-opacity-90 p-4 flex justify-center items-center shadow z-50">
+                <img
+                    src="/rollr-logo.png"
+                    alt="Rollr Logo"
+                    className="h-16 md:h-20 w-auto"
+                />
             </header>
 
-            {/* Matchups grid */}
+            {/* Matchups Grid */}
             <main className="max-w-6xl mx-auto p-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {matchups.map((matchup) => (
                     <MatchupCard
@@ -148,7 +145,7 @@ export default function Dashboard() {
                 ))}
             </main>
 
-            {/* Bet slip */}
+            {/* Bet Slip */}
             <BetSlip
                 selectedMatchup={selectedMatchup}
                 selectedTeam={selectedTeam}
