@@ -11,7 +11,7 @@ export default function Dashboard() {
   const [pnl, setPnl] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const pnlTarget = 1000; // Example target for challenge completion
+  const pnlTarget = 1000; // Example target
 
   useEffect(() => {
     const fetchData = async () => {
@@ -71,32 +71,29 @@ export default function Dashboard() {
   const remaining = pnlTarget - pnl;
 
   return (
-    <div className="min-h-screen bg-black text-green-400 flex flex-col items-center p-4 font-mono">
-      <div className="w-full max-w-2xl flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-purple-400 drop-shadow">Funded Dashboard</h1>
-        <ProfileDrawer />
-      </div>
+    <div className="relative min-h-screen bg-black text-white p-4 font-mono">
+      {/* ✅ Existing betting UI (do not remove, your betslip + active games rendering here) */}
+      {/* KEEP YOUR EXISTING BET SLIP FUNCTIONALITY HERE */}
 
-      <div className="w-full max-w-md bg-zinc-900 rounded-xl p-6 shadow-lg">
-        <h2 className="text-xl text-purple-400 font-semibold text-center mb-4">Welcome, {user.email}</h2>
-        <p className="text-green-300 text-center">Funded Balance: ${bankroll}</p>
-        <p className="text-green-300 text-center mt-1">Current PnL: ${pnl}</p>
-        <p className="text-green-300 text-center mt-1">PnL Target: ${pnlTarget}</p>
-        <p className="text-green-300 text-center mt-1">Remaining to Target: ${remaining}</p>
-        <p className="text-green-300 text-center mt-1">
-          Evaluation Ends: {new Date(evaluation.evaluation_end_date).toLocaleDateString()}
-        </p>
-        <p className="text-green-300 text-center mt-1">Status: {evaluation.status}</p>
+      <ProfileDrawer />
 
-        <div className="mt-4">
-          <div className="w-full bg-green-900 rounded-full h-4">
-            <div
-              className="bg-green-400 h-4 rounded-full"
-              style={{ width: `${progress}%` }}
-            ></div>
-          </div>
-          <p className="text-center mt-1 text-sm text-green-300">{progress}% to target</p>
+      {/* ✅ PnL HUD fixed in bottom-right */}
+      <div className="fixed bottom-4 right-4 bg-zinc-900 border border-green-400 rounded-lg p-4 shadow-lg w-64 z-50">
+        <h2 className="text-lg font-semibold text-green-400 mb-2">PnL Progress</h2>
+        <p className="text-green-300 text-sm">Bankroll: ${bankroll}</p>
+        <p className="text-green-300 text-sm">PnL: ${pnl}</p>
+        <p className="text-green-300 text-sm">Target: ${pnlTarget}</p>
+        <p className="text-green-300 text-sm">Remaining: ${remaining}</p>
+        <p className="text-green-300 text-sm">Ends: {new Date(evaluation.evaluation_end_date).toLocaleDateString()}</p>
+        <p className="text-green-300 text-sm mb-2">Status: {evaluation.status}</p>
+
+        <div className="w-full bg-green-900 rounded-full h-3">
+          <div
+            className="bg-green-400 h-3 rounded-full"
+            style={{ width: `${progress}%` }}
+          ></div>
         </div>
+        <p className="text-green-300 text-xs text-center mt-1">{progress}% to target</p>
       </div>
     </div>
   );
