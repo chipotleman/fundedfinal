@@ -92,28 +92,27 @@ export default function Dashboard() {
     <div className="flex bg-black text-white min-h-screen font-mono">
 
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? "w-44 sm:w-48 md:w-56" : "w-16"} bg-black border-r border-zinc-800 p-2 flex flex-col justify-start transition-all`}>
-        <div className="flex flex-col space-y-2">
-          {/* Balance at top */}
-          <div className="text-green-400 text-center text-xl mb-2">
+      <div className={`${sidebarOpen ? "w-44 sm:w-48 md:w-56" : "w-16"} bg-black border-r border-zinc-800 p-2 flex flex-col justify-start transition-all relative`}>
+
+        {/* Balance container aligned with logo */}
+        <div className="flex justify-center mt-4">
+          <div className="border border-green-400 rounded-lg px-4 py-2 text-green-400 text-lg text-center bg-zinc-900/60 shadow">
             💰 ${bankroll}
           </div>
+        </div>
 
-          {/* Expand/Collapse Arrow */}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-green-400 text-2xl self-center"
-          >
-            {sidebarOpen ? '⇤' : '⇥'}
-          </button>
-
-          {/* League Filters */}
+        {/* League Filters */}
+        <div className="flex flex-col space-y-2 mt-6">
           {leagues.map((item) => (
             <button
               key={item.league}
-              onClick={() => setSelectedLeague(item.league === selectedLeague ? null : item.league)}
+              onClick={() =>
+                setSelectedLeague(item.league === selectedLeague ? null : item.league)
+              }
               className={`flex items-center space-x-2 p-2 rounded transition ${
-                item.league === selectedLeague ? 'bg-green-900 text-green-300' : 'text-white hover:bg-zinc-900'
+                item.league === selectedLeague
+                  ? 'bg-green-900 text-green-300'
+                  : 'text-white hover:bg-zinc-900'
               }`}
             >
               <span className="text-xl">{item.emoji}</span>
@@ -121,6 +120,14 @@ export default function Dashboard() {
             </button>
           ))}
         </div>
+
+        {/* Expansion Arrow - halfway down, positioned on sidebar border */}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="fixed top-1/2 -translate-y-1/2 left-[calc(3.5rem)] md:left-[calc(5rem)] lg:left-[calc(6rem)] text-green-400 text-2xl z-50 bg-black rounded-full border border-green-400 p-1 shadow hover:bg-zinc-900 transition"
+        >
+          {sidebarOpen ? '⇤' : '⇥'}
+        </button>
       </div>
 
       {/* Main content */}
