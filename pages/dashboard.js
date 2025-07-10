@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [games, setGames] = useState([]);
   const [selectedBets, setSelectedBets] = useState([]);
   const [showBetSlipModal, setShowBetSlipModal] = useState(false);
+  const [showBalanceModal, setShowBalanceModal] = useState(false);
   const [selectedLeague, setSelectedLeague] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false); // collapsed by default
 
@@ -96,6 +97,11 @@ export default function Dashboard() {
     ? games.filter((game) => game.sport === selectedLeague)
     : games;
 
+  const startingBankroll = 1000;
+  const challengeGoal = 2500;
+  const pnl = bankroll - startingBankroll;
+  const progressPercent = Math.min(100, Math.max(0, (bankroll / challengeGoal) * 100));
+
   return (
     <div className="flex bg-black text-white min-h-screen font-mono">
 
@@ -146,10 +152,14 @@ export default function Dashboard() {
       {/* Main content */}
       <div className="flex-1 flex flex-col">
 
-        {/* Header with balance in top-right */}
+        {/* Header with clickable balance */}
         <div className="flex justify-between items-center p-4 relative">
           <Image src="/rollr-logo.png" alt="Rollr Logo" width={130} height={40} priority />
-          <div className="border border-green-400 rounded-lg px-4 py-2 text-green-400 text-center bg-zinc-900/60 shadow">
+
+          <div
+            onClick={() => setShowBalanceModal(true)}
+            className="border border-green-400 rounded-lg px-4 py-2 text-green-400 text-center bg-zinc-900/60 shadow cursor-pointer hover:bg-zinc-800 transition"
+          >
             <div className="text-sm text-green-300">Balance</div>
             <div className="text-xl font-semibold">${bankroll}</div>
           </div>
@@ -175,7 +185,7 @@ export default function Dashboard() {
           })}
         </div>
 
-        {/* Floating bet slip button with receipt emoji */}
+        {/* Floating bet slip button */}
         {selectedBets.length > 0 && !showBetSlipModal && (
           <button
             onClick={() => setShowBetSlipModal(true)}
@@ -185,7 +195,7 @@ export default function Dashboard() {
           </button>
         )}
 
-        {/* Betslip Modal with remove individual legs and clear parlay */}
+        {/* Betslip Modal */}
         {showBetSlipModal && (
           <div
             onClick={() => setShowBetSlipModal(false)}
@@ -228,6 +238,35 @@ export default function Dashboard() {
                   </button>
                 </>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* Balance Modal */}
+        {showBalanceModal && (
+          <div
+            onClick={() => setShowBalanceModal(false)}
+            className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex justify-center items-center z-50"
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="bg-zinc-900 rounded-lg border border-green-400 p-6 w-80 flex flex-col items-center"
+            >
+              <h2 className="text-lg font-semibold text-green-400 mb-2">Challenge Progress</h2>
+              <p className="text-green-300 mb-2">PnL: ${pnl}</p>
+              <div className="w-full bg-zinc-800 rounded-full h-4 overflow-hidden">
+                <div
+                  className="bg-green-400 h-4 transition-all"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <p className="text-green-300 mt-2">{progressPercent.toFixed(1)}% to ${challengeGoal} goal</p>
+              <button
+                onClick={() => setShowBalanceModal(false)}
+                className="mt-4 bg-green-400 text-black font-bold py-2 px-4 rounded hover:bg-green-500 transition"
+              >
+                Close
+              </button>
             </div>
           </div>
         )}
