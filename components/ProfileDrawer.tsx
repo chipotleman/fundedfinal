@@ -3,8 +3,8 @@ import { supabase } from '../lib/supabaseClient';
 
 export default function ProfileDrawer() {
   const [open, setOpen] = useState(false);
-  const [userEmail, setUserEmail] = useState('');
-  const drawerRef = useRef();
+  const [userEmail, setUserEmail] = useState<string>('');
+  const drawerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -15,8 +15,8 @@ export default function ProfileDrawer() {
     };
     fetchUser();
 
-    const handleClickOutside = (e) => {
-      if (drawerRef.current && !drawerRef.current.contains(e.target)) {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (drawerRef.current && !drawerRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     };
