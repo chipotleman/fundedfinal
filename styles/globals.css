@@ -3,36 +3,7 @@
 @tailwind utilities;
 
 html, body {
-    background-color: #0a0a0a;
-    color: white;
-    font-family: 'Inter', system-ui, sans-serif;
-    min-height: 100vh;
-}
-
-.text-neon-green {
-    color: #39FF14;
-}
-
-.bg-neon-green {
-    background-color: #39FF14;
-}
-
-.text-neon-blue {
-    color: #00FFFF;
-}
-
-.bg-neon-blue {
-    background-color: #00FFFF;
-}
-
-.btn {
-    @apply rounded px-4 py-2 font-semibold transition;
-}
-
-.btn-green {
-    @apply bg-neon-green text-black hover:bg-green-300;
-}
-
-.btn-blue {
-    @apply bg-neon-blue text-black hover:bg-blue-300;
+  background-color: #0a0a0a;
+  color: #39FF14;
+  font-family: 'Inter', sans-serif;
 }
