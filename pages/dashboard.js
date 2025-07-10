@@ -12,6 +12,16 @@ export default function Dashboard() {
   const [selectedBets, setSelectedBets] = useState([]);
   const [showBetSlipModal, setShowBetSlipModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [selectedLeague, setSelectedLeague] = useState(null);
+
+  const leagueEmojis = [
+    { league: 'MLB', emoji: '⚾' },
+    { league: 'NBA', emoji: '🏀' },
+    { league: 'MLS', emoji: '⚽' },
+    { league: 'WTA', emoji: '🎾' },
+    { league: 'KBO', emoji: '⚾' },
+    { league: 'NFL', emoji: '🏈' },
+  ];
 
   const decimalToAmerican = (decimal) => {
     if (!decimal || isNaN(decimal)) return "N/A";
@@ -77,6 +87,10 @@ export default function Dashboard() {
     }
   };
 
+  const filteredGames = selectedLeague
+    ? games.filter((game) => game.sport === selectedLeague)
+    : games;
+
   if (loading) {
     return <div className="text-center text-green-400 mt-10">Loading your dashboard...</div>;
   }
@@ -85,48 +99,43 @@ export default function Dashboard() {
     <div className="relative min-h-screen bg-black text-white font-mono">
 
       {/* Header */}
-      <div className="flex items-center justify-between p-4">
+      <div className="flex justify-between items-center px-4 py-3">
         <Image src="/rollr-logo.png" alt="Rollr Logo" width={100} height={30} />
-        <div className="flex items-center space-x-2">
-          {/* User Balance */}
-          <div className="flex items-center space-x-1 bg-zinc-800 px-3 py-1 rounded-full border border-green-500">
-            <span className="text-green-400">💰</span>
-            <span className="text-green-300 text-sm">${bankroll}</span>
-          </div>
-          {/* Betslip Toggle */}
-          <button
-            onClick={() => setShowBetSlipModal(!showBetSlipModal)}
-            className="px-3 py-1 rounded flex items-center space-x-1 bg-zinc-700 hover:bg-zinc-600"
-          >
-            <span>Betslip</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
-          {/* Progress Toggle */}
-          <button
-            onClick={() => alert("PnL Progress modal coming next if you want it here too")}
-            className="px-3 py-1 rounded flex items-center space-x-1 bg-zinc-700 hover:bg-zinc-600"
-          >
-            <span>Progress</span>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+
+        {/* Centered League Emoji Filters */}
+        <div className="flex space-x-4">
+          {leagueEmojis.map((item) => (
+            <button
+              key={item.league}
+              onClick={() => setSelectedLeague(item.league === selectedLeague ? null : item.league)}
+              className={`text-2xl transition-transform ${
+                item.league === selectedLeague ? 'scale-125 text-green-400' : 'text-white'
+              }`}
+            >
+              {item.emoji}
+            </button>
+          ))}
+        </div>
+
+        {/* Profile + Balance */}
+        <div className="flex items-center space-x-3">
+          <span className="text-green-400 text-xl flex items-center space-x-1">
+            💰 <span className="text-green-300 text-sm">${bankroll}</span>
+          </span>
           <ProfileDrawer />
         </div>
       </div>
 
       {/* Games Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
-        {games.map((game) => {
+        {filteredGames.map((game) => {
           const isSelected = selectedBets.find(b => b.id === game.id);
           return (
             <div
               key={game.id}
               onClick={() => handleBetSelect(game)}
-              className={`p-4 rounded-lg border transition ${
-                isSelected ? 'border-green-400 bg-zinc-800' : 'border-zinc-700'
+              className={`p-4 rounded-lg border transition cursor-pointer ${
+                isSelected ? 'border-green-400 bg-zinc-800' : 'border-zinc-700 hover:border-green-600'
               }`}
             >
               <h3 className="text-lg text-green-400">{game.matchup}</h3>
@@ -137,11 +146,12 @@ export default function Dashboard() {
         })}
       </div>
 
-      {/* Rocket Floating Button */}
+      {/* Enlarged Rocket Floating Button */}
       {selectedBets.length > 0 && !showBetSlipModal && (
         <button
           onClick={() => setShowBetSlipModal(true)}
-          className="fixed bottom-6 right-6 bg-green-400 bg-opacity-30 hover:bg-opacity-50 p-3 rounded-full transition shadow-lg"
+          className="fixed bottom-6 right-6 text-8xl transition-transform transform hover:scale-95"
+          style={{ color: 'rgba(34, 197, 94, 0.5)' }} // neon green with transparency
         >
           🚀
         </button>
