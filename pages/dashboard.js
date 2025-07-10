@@ -122,22 +122,25 @@ export default function Dashboard() {
             {sidebarOpen ? '⇤' : '⇥'}
           </button>
         </div>
+
+        {/* Profile Drawer in bottom left */}
+        <div className="fixed bottom-4 left-4">
+          <ProfileDrawer />
+        </div>
       </div>
 
       {/* Main content */}
       <div className="flex-1 flex flex-col">
 
-        {/* Header with centered balance */}
+        {/* Header with balance in top-right */}
         <div className="flex justify-between items-center p-4 relative">
 
           <Image src="/rollr-logo.png" alt="Rollr Logo" width={130} height={40} priority />
 
-          <div className="absolute left-1/2 transform -translate-x-1/2 border border-green-400 rounded-lg px-4 py-2 text-green-400 text-center bg-zinc-900/60 shadow">
+          <div className="border border-green-400 rounded-lg px-4 py-2 text-green-400 text-center bg-zinc-900/60 shadow">
             <div className="text-sm text-green-300">Balance</div>
             <div className="text-xl font-semibold">💰 ${bankroll}</div>
           </div>
-
-          <ProfileDrawer />
         </div>
 
         {/* Games */}
