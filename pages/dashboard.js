@@ -10,7 +10,7 @@ export default function Dashboard() {
   const [selectedBets, setSelectedBets] = useState([]);
   const [showBetSlipModal, setShowBetSlipModal] = useState(false);
   const [selectedLeague, setSelectedLeague] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false); // starts collapsed
 
   const leagues = [
     { league: 'MLB', emoji: '⚾' },
@@ -127,7 +127,7 @@ export default function Dashboard() {
         <div
           className="fixed bottom-4 z-50 transition-all"
           style={{
-            left: sidebarOpen ? '6rem' : '2rem', // centers within open/closed sidebar
+            left: sidebarOpen ? '6rem' : '2rem',
             transform: 'translateX(-50%)'
           }}
         >
@@ -145,7 +145,7 @@ export default function Dashboard() {
 
           <div className="border border-green-400 rounded-lg px-4 py-2 text-green-400 text-center bg-zinc-900/60 shadow">
             <div className="text-sm text-green-300">Balance</div>
-            <div className="text-xl font-semibold">💰 ${bankroll}</div>
+            <div className="text-xl font-semibold">${bankroll}</div>
           </div>
         </div>
 
