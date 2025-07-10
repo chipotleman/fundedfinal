@@ -32,6 +32,7 @@ export async function POST(req: Request) {
       const pnl = won ? bet.stake * (parseInt(bet.odds.replace('+', '')) / 100) : -bet.stake;
       const status = 'settled';
 
+      // Update bet record
       const { error: updateError } = await supabase
         .from('user_bets')
         .update({ status, pnl, settled_at: new Date().toISOString() })
@@ -42,6 +43,7 @@ export async function POST(req: Request) {
         continue;
       }
 
+      // Fetch user balance
       const { data: userBalanceData, error: balanceFetchError } = await supabase
         .from('user_balances')
         .select('balance')
@@ -55,6 +57,7 @@ export async function POST(req: Request) {
 
       const newBalance = (userBalanceData?.balance || 0) + pnl;
 
+      // Update user balance
       const { error: balanceUpdateError } = await supabase
         .from('user_balances')
         .update({ balance: newBalance })
@@ -63,9 +66,47 @@ export async function POST(req: Request) {
       if (balanceUpdateError) {
         console.error(`Error updating balance for user ${bet.user_id}:`, balanceUpdateError.message);
       }
+
+      // Fetch or create user_pnl record
+      const { data: userPnlData, error: pnlFetchError } = await supabase
+        .from('user_pnl')
+        .select('pnl')
+        .eq('user_id', bet.user_id)
+        .single();
+
+      if (pnlFetchError && pnlFetchError.code !== 'PGRST116') {
+        console.error(`Error fetching PnL for user ${bet.user_id}:`, pnlFetchError.message);
+        continue;
+      }
+
+      if (userPnlData) {
+        // Update existing PnL
+        const updatedPnl = (userPnlData?.pnl || 0) + pnl;
+        const { error: pnlUpdateError } = await supabase
+          .from('user_pnl')
+          .update({ pnl: updatedPnl, updated_at: new Date().toISOString() })
+          .eq('user_id', bet.user_id);
+
+        if (pnlUpdateError) {
+          console.error(`Error updating PnL for user ${bet.user_id}:`, pnlUpdateError.message);
+        }
+      } else {
+        // Create new PnL record
+        const { error: pnlInsertError } = await supabase
+          .from('user_pnl')
+          .insert({
+            user_id: bet.user_id,
+            pnl: pnl,
+            updated_at: new Date().toISOString(),
+          });
+
+        if (pnlInsertError) {
+          console.error(`Error inserting PnL for user ${bet.user_id}:`, pnlInsertError.message);
+        }
+      }
     }
 
-    return NextResponse.json({ message: 'Bets settled successfully' });
+    return NextResponse.json({ message: 'Bets settled and PnL updated successfully' });
   } catch (error: any) {
     console.error('❌ Settle error:', error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
