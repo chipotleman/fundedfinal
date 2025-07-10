@@ -92,17 +92,17 @@ export default function Dashboard() {
     <div className="flex bg-black text-white min-h-screen font-mono">
 
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? "w-44 sm:w-48 md:w-56" : "w-16"} bg-black border-r border-zinc-800 p-2 flex flex-col justify-start transition-all relative`}>
+      <div className={`${sidebarOpen ? "w-44 sm:w-48 md:w-56" : "w-16"} bg-black p-2 flex flex-col justify-start transition-all relative`}>
 
-        {/* Balance container aligned with logo */}
-        <div className="flex justify-center mt-4">
+        {/* Spacer for vertical alignment with logo */}
+        <div className="mt-14 flex justify-center">
           <div className="border border-green-400 rounded-lg px-4 py-2 text-green-400 text-lg text-center bg-zinc-900/60 shadow">
             💰 ${bankroll}
           </div>
         </div>
 
-        {/* League Filters */}
-        <div className="flex flex-col space-y-2 mt-6">
+        {/* League Filters shifted to halfway down */}
+        <div className="flex flex-col space-y-2 mt-20">
           {leagues.map((item) => (
             <button
               key={item.league}
@@ -121,10 +121,11 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Expansion Arrow - halfway down, positioned on sidebar border */}
+        {/* Expansion Arrow placed on separator, no border */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="fixed top-1/2 -translate-y-1/2 left-[calc(3.5rem)] md:left-[calc(5rem)] lg:left-[calc(6rem)] text-green-400 text-2xl z-50 bg-black rounded-full border border-green-400 p-1 shadow hover:bg-zinc-900 transition"
+          className="fixed top-1/2 -translate-y-1/2 left-[calc(3.5rem)] md:left-[calc(5rem)] lg:left-[calc(6rem)] text-green-400 text-2xl z-50"
+          style={{ background: 'transparent', border: 'none' }}
         >
           {sidebarOpen ? '⇤' : '⇥'}
         </button>
