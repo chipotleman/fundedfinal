@@ -7,13 +7,22 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+function decimalToAmerican(decimal) {
+  if (!decimal || decimal <= 1) return null;
+  return decimal >= 2
+    ? `+${Math.round((decimal - 1) * 100)}`
+    : `${Math.round(-100 / (decimal - 1))}`;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
-    const response = await fetch(`https://api.the-odds-api.com/v4/sports/upcoming/odds/?regions=us&apiKey=eac5530694937d832146f4be09a72b55`);
+    const response = await fetch(
+      `https://api.the-odds-api.com/v4/sports/upcoming/odds/?regions=us&apiKey=eac5530694937d832146f4be09a72b55`
+    );
     const data = await response.json();
 
     if (!Array.isArray(data)) {
@@ -21,23 +30,30 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: 'Invalid data from OddsAPI', data });
     }
 
-    const formattedGames = data.slice(0, 20).map(game => ({
-      sport: game.sport_title,
-      matchup: `${game.home_team} vs ${game.away_team}`,
-      odds: game.bookmakers?.[0]?.markets?.[0]?.outcomes?.map(o => `${o.name}: ${o.price}`).join(', ') || 'N/A',
-      game_time: game.commence_time,
-    }));
+    const formattedGames = data.slice(0, 20).map((game) => {
+      const market = game.bookmakers?.[0]?.markets?.find(
+        (m) => m.key === 'h2h'
+      );
 
-    const { error } = await supabase.from('game_slates').insert(formattedGames);
+      const odds = {};
+      market?.outcomes?.forEach((o) => {
+        odds[o.name] = decimalToAmerican(o.price);
+      });
 
-    if (error) {
-      console.error('❌ Supabase insert error:', error);
-      return res.status(500).json({ error: 'Supabase insert failed', details: error });
-    }
+      return {
+        sport: game.sport_title,
+        matchup: `${game.home_team} vs ${game.away_team}`,
+        home_team: game.home_team,
+        away_team: game.away_team,
+        odds,
+        game_time: game.commence_time,
+      };
+    });
 
-    res.status(200).json({ message: 'Slates fetched and stored', count: formattedGames.length });
-  } catch (error) {
-    console.error('❌ Fetch error:', error);
-    res.status(500).json({ error: error.message });
-  }
-}
+    for (const game of formattedGames) {
+      const { error } = await supabase
+        .from('game_slates')
+        .upsert(game, { onConflict: 'matchup' });
+
+      if (error) {
+        c
