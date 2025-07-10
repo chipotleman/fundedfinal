@@ -8,6 +8,8 @@ import ProfileDrawer from '../components/ProfileDrawer';
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [evaluation, setEvaluation] = useState(null);
+  const [games, setGames] = useState([]);
+  const [selectedBets, setSelectedBets] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -43,11 +45,56 @@ export default function Dashboard() {
         setEvaluation(data[0]);
       }
 
+      // Fetch games for betting
+      const { data: gamesData, error: gamesError } = await supabase
+        .from('games')
+        .select('*')
+        .eq('status', 'active');
+
+      if (gamesError) {
+        console.error('Error fetching games:', gamesError.message);
+      } else {
+        setGames(gamesData || []);
+      }
+
       setLoading(false);
     };
 
     getUserAndEvaluation();
   }, [router]);
+
+  const handleBetSelect = (game) => {
+    if (selectedBets.find(bet => bet.id === game.id)) {
+      setSelectedBets(selectedBets.filter(bet => bet.id !== game.id));
+    } else {
+      setSelectedBets([...selectedBets, game]);
+    }
+  };
+
+  const placeBets = async () => {
+    if (!selectedBets.length) {
+      alert('No bets selected.');
+      return;
+    }
+
+    const betsToPlace = selectedBets.map(bet => ({
+      user_id: user.id,
+      game_id: bet.id,
+      amount: 100, // default bet amount
+      odds: bet.odds,
+      status: 'open',
+    }));
+
+    const { error } = await supabase.from('bets').insert(betsToPlace);
+
+    if (error) {
+      console.error('Error placing bets:', error.message);
+      alert('Error placing bets.');
+    } else {
+      alert('Bets placed successfully!');
+      setSelectedBets([]);
+    }
+  };
 
   if (loading) {
     return (
@@ -73,10 +120,9 @@ export default function Dashboard() {
       display: "flex",
       flexDirection: "column",
       fontFamily: "sans-serif",
-      padding: "20px",
-      textAlign: "center"
+      padding: "20px"
     }}>
-      {/* Header with Profile Drawer */}
+      {/* Header */}
       <div style={{
         display: "flex",
         justifyContent: "space-between",
@@ -92,43 +138,81 @@ export default function Dashboard() {
         <ProfileDrawer />
       </div>
 
-      {/* Evaluation info */}
+      {/* Evaluation Info */}
       <div style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        width: "100%",
-        maxWidth: "600px",
-        margin: "0 auto"
+        textAlign: "center",
+        marginBottom: "30px"
       }}>
-        <h2 style={{ fontSize: "1.5rem", color: "#a020f0", textShadow: "0 0 8px #a020f0" }}>
-          Welcome, {user.email}
-        </h2>
-        <p style={{ color: "#ccc", marginTop: "20px" }}>
-          Funded Balance: $5,000
-        </p>
-        <p style={{ color: "#ccc", marginTop: "10px" }}>
-          Evaluation Period ends: {new Date(evaluation.evaluation_end_date).toLocaleDateString()}
-        </p>
-        <p style={{ color: "#ccc", marginTop: "10px" }}>
-          Status: {evaluation.status}
-        </p>
+        <h2>Welcome, {user.email}</h2>
+        <p>Evaluation ends: {new Date(evaluation.evaluation_end_date).toLocaleDateString()}</p>
+        <p>Status: {evaluation.status}</p>
       </div>
 
-      {/* Bet Slip Placeholder */}
-      <div id="bet-slip" style={{
-        marginTop: "40px",
-        width: "100%",
-        maxWidth: "600px",
-        margin: "0 auto",
-        padding: "20px",
-        backgroundColor: "#111",
-        borderRadius: "8px",
-        boxShadow: "0 0 10px #a020f0"
+      {/* Game Listing */}
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+        gap: "20px",
+        maxWidth: "1000px",
+        margin: "0 auto"
       }}>
-        <h3 style={{ color: "#a020f0", marginBottom: "10px" }}>Your Bet Slip</h3>
-        {/* Insert your bet slip rendering logic here */}
+        {games.length > 0 ? games.map(game => (
+          <div key={game.id} style={{
+            border: selectedBets.find(bet => bet.id === game.id) ? "2px solid #00ff00" : "1px solid #444",
+            borderRadius: "8px",
+            padding: "10px",
+            cursor: "pointer",
+            backgroundColor: "#111",
+            boxShadow: "0 0 10px #a020f0"
+          }}
+            onClick={() => handleBetSelect(game)}
+          >
+            <h3 style={{ color: "#a020f0" }}>{game.home_team} vs {game.away_team}</h3>
+            <p>Date: {new Date(game.start_time).toLocaleString()}</p>
+            <p>Odds: {game.odds}</p>
+          </div>
+        )) : (
+          <p style={{ textAlign: "center", width: "100%" }}>No active games available for betting.</p>
+        )}
       </div>
+
+      {/* Bet Slip */}
+      {selectedBets.length > 0 && (
+        <div style={{
+          position: "fixed",
+          bottom: "20px",
+          right: "20px",
+          backgroundColor: "#111",
+          border: "2px solid #a020f0",
+          borderRadius: "8px",
+          padding: "15px",
+          boxShadow: "0 0 10px #a020f0",
+          maxWidth: "300px",
+          color: "#fff"
+        }}>
+          <h3 style={{ color: "#a020f0" }}>Your Bet Slip</h3>
+          {selectedBets.map(bet => (
+            <div key={bet.id} style={{ borderBottom: "1px solid #333", padding: "5px 0" }}>
+              {bet.home_team} vs {bet.away_team} @ {bet.odds}
+            </div>
+          ))}
+          <button
+            onClick={placeBets}
+            style={{
+              backgroundColor: "#a020f0",
+              color: "#fff",
+              padding: "10px",
+              border: "none",
+              borderRadius: "4px",
+              cursor: "pointer",
+              marginTop: "10px",
+              width: "100%"
+            }}
+          >
+            Place Bets
+          </button>
+        </div>
+      )}
     </div>
   );
 }
