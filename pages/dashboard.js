@@ -129,7 +129,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white font-sans">
-      {/* Header with large Rollr logo and balance */}
+      {/* Header with logo and balance */}
       <header className="sticky top-0 bg-black bg-opacity-90 p-4 flex flex-col items-center shadow z-50">
         <img
           src="/rollr-logo.png"
@@ -142,7 +142,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Live matchups */}
+      {/* Matchups */}
       <main className="max-w-5xl mx-auto p-4">
         {matchups.length === 0 ? (
           <p className="text-center text-gray-400">No live games available.</p>
@@ -197,7 +197,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Bets table */}
+      {/* Bets Table */}
       <section className="max-w-6xl mx-auto p-4 mt-8">
         <h2 className="text-lg font-bold text-green-400 mb-2">📄 My Bets</h2>
         {loading ? (
