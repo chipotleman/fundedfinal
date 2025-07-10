@@ -24,6 +24,7 @@ export default function Dashboard() {
         return;
       }
 
+      console.log('Logged in user:', session.user);
       setUser(session.user);
 
       const { data, error: evalError } = await supabase
@@ -32,9 +33,12 @@ export default function Dashboard() {
         .eq('email', session.user.email)
         .maybeSingle();
 
+      console.log('Supabase returned evaluation data:', data);
+      console.log('Supabase returned evaluation error:', evalError);
+
       if (evalError) {
         console.error('Error fetching evaluation:', evalError.message);
-      } else {
+      } else if (data) {
         setEvaluation(data);
       }
 
@@ -110,7 +114,7 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* Bet Slip Placeholder - keep your bet slip functionality here */}
+      {/* Bet Slip Placeholder */}
       <div id="bet-slip" style={{
         marginTop: "40px",
         width: "100%",
@@ -121,7 +125,6 @@ export default function Dashboard() {
         borderRadius: "8px",
         boxShadow: "0 0 10px #a020f0"
       }}>
-        {/* Your existing bet slip component or logic should go here */}
         <h3 style={{ color: "#a020f0", marginBottom: "10px" }}>Your Bet Slip</h3>
         {/* Insert your bet slip rendering logic here */}
       </div>
