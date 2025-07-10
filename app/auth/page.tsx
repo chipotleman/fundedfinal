@@ -70,7 +70,7 @@ export default function AuthPage() {
           className="text-center text-green-500 cursor-pointer underline"
           onClick={() => setIsLogin(!isLogin)}
         >
-          {isLogin ? \"Don't have an account? Sign Up\" : \"Already have an account? Log In\"}
+          {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Log In"}
         </p>
       </form>
     </main>
