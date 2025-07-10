@@ -13,7 +13,16 @@ export default function Dashboard() {
   const [selectedBets, setSelectedBets] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const pnlTarget = 1000; // example target
+  const pnlTarget = 1000;
+
+  const decimalToAmerican = (decimal) => {
+    if (!decimal || isNaN(decimal)) return "N/A";
+    if (decimal >= 2) {
+      return `+${Math.round((decimal - 1) * 100)}`;
+    } else {
+      return `${Math.round(-100 / (decimal - 1))}`;
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -27,7 +36,6 @@ export default function Dashboard() {
       setUser(user);
       console.log('Logged in user:', user);
 
-      // Fetch evaluation
       const { data: evalData } = await supabase
         .from('evaluations')
         .select('*')
@@ -36,7 +44,6 @@ export default function Dashboard() {
         .limit(1);
       setEvaluation(evalData ? evalData[0] : null);
 
-      // Fetch bankroll
       const { data: balanceData } = await supabase
         .from('user_balances')
         .select('balance')
@@ -44,7 +51,6 @@ export default function Dashboard() {
         .single();
       setBankroll(balanceData?.balance || 0);
 
-      // Fetch PnL
       const { data: pnlData } = await supabase
         .from('user_pnl')
         .select('pnl')
@@ -52,12 +58,15 @@ export default function Dashboard() {
         .single();
       setPnl(pnlData?.pnl || 0);
 
-      // Fetch active games
-      const { data: gamesData } = await supabase
+      const { data: gamesData, error } = await supabase
         .from('games')
         .select('*')
         .eq('status', 'active');
-      setGames(gamesData || []);
+      if (error) {
+        console.error("Error fetching games:", error.message);
+      } else {
+        setGames(gamesData || []);
+      }
 
       setLoading(false);
     };
@@ -88,7 +97,7 @@ export default function Dashboard() {
       }]);
       if (error) {
         console.error("Error placing bet:", error.message);
-        alert(`Error placing bet on ${bet.team1} vs ${bet.team2}`);
+        alert(`Error placing bet on ${bet.home_team} vs ${bet.away_team}`);
       }
     }
     alert("Bets placed!");
@@ -108,17 +117,17 @@ export default function Dashboard() {
 
   return (
     <div className="relative min-h-screen bg-black text-white p-4 font-mono">
-      {/* Logo in top-left */}
+      {/* Logo */}
       <div className="absolute top-4 left-4 text-purple-400 text-xl font-bold">
         fundedfinal
       </div>
 
-      {/* Profile Drawer in top-right */}
+      {/* Profile Drawer */}
       <div className="absolute top-4 right-4">
         <ProfileDrawer />
       </div>
 
-      {/* Games display */}
+      {/* Games */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-16">
         {games.map((game) => (
           <div
@@ -126,8 +135,12 @@ export default function Dashboard() {
             className={`p-4 rounded-lg border cursor-pointer ${selectedBets.find(b => b.id === game.id) ? 'border-green-400' : 'border-zinc-700'} hover:border-green-400`}
             onClick={() => handleBetSelect(game)}
           >
-            <h3 className="text-lg text-green-400">{game.team1} vs {game.team2}</h3>
-            <p className="text-sm text-gray-400">Odds: {game.odds}</p>
+            <h3 className="text-lg text-green-400">
+              {game.home_team} vs {game.away_team}
+            </h3>
+            <p className="text-sm text-gray-400">
+              Odds: {decimalToAmerican(game.odds)}
+            </p>
           </div>
         ))}
       </div>
@@ -138,8 +151,8 @@ export default function Dashboard() {
           <h2 className="text-lg font-semibold text-green-400 mb-2">Bet Slip</h2>
           {selectedBets.map((bet, index) => (
             <div key={index} className="flex justify-between text-sm text-green-300 mb-1">
-              <span>{bet.team1} vs {bet.team2}</span>
-              <span>Odds: {bet.odds}</span>
+              <span>{bet.home_team} vs {bet.away_team}</span>
+              <span>Odds: {decimalToAmerican(bet.odds)}</span>
             </div>
           ))}
           <button
