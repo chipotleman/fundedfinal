@@ -124,13 +124,17 @@ export default function Dashboard() {
 
     return (
         <div className="min-h-screen bg-black text-white font-sans">
-            {/* Large centered Rollr logo */}
-            <header className="sticky top-0 bg-black bg-opacity-90 p-4 flex justify-center items-center shadow z-50">
+            {/* Header with large Rollr logo and centered balance */}
+            <header className="sticky top-0 bg-black bg-opacity-90 p-4 flex flex-col items-center shadow z-50">
                 <img
                     src="/rollr-logo.png"
                     alt="Rollr Logo"
-                    className="h-16 md:h-20 w-auto"
+                    className="h-16 md:h-20 w-auto mb-2"
                 />
+                <div className="text-center">
+                    <p className="text-xs text-gray-400">Available Balance</p>
+                    <p className="text-lg font-bold text-green-400">${balance.toFixed(2)}</p>
+                </div>
             </header>
 
             {/* Matchups Grid */}
