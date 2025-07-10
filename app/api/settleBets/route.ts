@@ -1,53 +1,17 @@
 // app/api/settleBets/route.ts
 
-import { createClient } from '@supabase/supabase-js';
-import { NextResponse } from 'next/server';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { supabase } from '@/lib/supabaseClient';
 
 export async function POST(req: Request) {
   try {
-    const { matchup_name, winner } = await req.json();
+    const bets = await req.json();
 
-    if (!matchup_name || !winner) {
-      return NextResponse.json({ error: 'Missing matchup_name or winner' }, { status: 400 });
-    }
-
-    const { data: openBets, error } = await supabase
-      .from('user_bets')
-      .select('*')
-      .eq('matchup_name', matchup_name)
-      .eq('status', 'open');
-
-    if (error) {
-      console.error('Error fetching open bets:', error.message);
-      return NextResponse.json({ error: 'Error fetching open bets' }, { status: 500 });
-    }
-
-    for (const bet of openBets) {
-      const won = bet.selection === winner;
-      const pnl = won ? bet.stake * (parseInt(bet.odds.replace('+', '')) / 100) : -bet.stake;
-      const status = 'settled';
-
-      // Update bet record
-      const { error: updateError } = await supabase
-        .from('user_bets')
-        .update({ status, pnl, settled_at: new Date().toISOString() })
-        .eq('id', bet.id);
-
-      if (updateError) {
-        console.error(`Error updating bet ${bet.id}:`, updateError.message);
-        continue;
-      }
-
-      // Fetch user balance
-      const { data: userBalanceData, error: balanceFetchError } = await supabase
+    for (const bet of bets) {
+      // Fetch current balance
+      const { data: balanceData, error: balanceFetchError } = await supabase
         .from('user_balances')
         .select('balance')
-        .eq('id', bet.user_id)
+        .eq('id', bet.user_id) // ✅ fixed from 'user_id' to 'id'
         .single();
 
       if (balanceFetchError) {
@@ -55,23 +19,25 @@ export async function POST(req: Request) {
         continue;
       }
 
-      const newBalance = (userBalanceData?.balance || 0) + pnl;
+      const currentBalance = balanceData?.balance ?? 0;
+      const updatedBalance = currentBalance + bet.payout;
 
       // Update user balance
       const { error: balanceUpdateError } = await supabase
         .from('user_balances')
-        .update({ balance: newBalance })
-        .eq('id', bet.user_id);
+        .update({ balance: updatedBalance })
+        .eq('id', bet.user_id); // ✅ fixed
 
       if (balanceUpdateError) {
         console.error(`Error updating balance for user ${bet.user_id}:`, balanceUpdateError.message);
+        continue;
       }
 
-      // Fetch or create user_pnl record
-      const { data: userPnlData, error: pnlFetchError } = await supabase
+      // Update PnL tracking
+      const { data: pnlData, error: pnlFetchError } = await supabase
         .from('user_pnl')
-        .select('pnl')
-        .eq('user_id', bet.user_id)
+        .select('total_pnl')
+        .eq('id', bet.user_id) // ✅ fixed from 'user_id' to 'id'
         .single();
 
       if (pnlFetchError && pnlFetchError.code !== 'PGRST116') {
@@ -79,36 +45,47 @@ export async function POST(req: Request) {
         continue;
       }
 
-      if (userPnlData) {
-        // Update existing PnL
-        const updatedPnl = (userPnlData?.pnl || 0) + pnl;
+      const currentPnL = pnlData?.total_pnl ?? 0;
+      const updatedPnL = currentPnL + bet.payout;
+
+      if (pnlData) {
         const { error: pnlUpdateError } = await supabase
           .from('user_pnl')
-          .update({ pnl: updatedPnl, updated_at: new Date().toISOString() })
-          .eq('user_id', bet.user_id);
+          .update({ total_pnl: updatedPnL })
+          .eq('id', bet.user_id); // ✅ fixed
 
         if (pnlUpdateError) {
           console.error(`Error updating PnL for user ${bet.user_id}:`, pnlUpdateError.message);
+          continue;
         }
       } else {
-        // Create new PnL record
         const { error: pnlInsertError } = await supabase
           .from('user_pnl')
           .insert({
-            user_id: bet.user_id,
-            pnl: pnl,
-            updated_at: new Date().toISOString(),
+            id: bet.user_id, // ✅ fixed from 'user_id' to 'id'
+            total_pnl: bet.payout,
           });
 
         if (pnlInsertError) {
           console.error(`Error inserting PnL for user ${bet.user_id}:`, pnlInsertError.message);
+          continue;
         }
+      }
+
+      // Mark bet as settled
+      const { error: settleError } = await supabase
+        .from('bets')
+        .update({ status: 'settled' })
+        .eq('id', bet.id);
+
+      if (settleError) {
+        console.error(`Error settling bet ${bet.id}:`, settleError.message);
       }
     }
 
-    return NextResponse.json({ message: 'Bets settled and PnL updated successfully' });
-  } catch (error: any) {
-    console.error('❌ Settle error:', error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return new Response(JSON.stringify({ message: 'Bets settled successfully' }), { status: 200 });
+  } catch (error) {
+    console.error('Error in settleBets route:', error);
+    return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
   }
 }
