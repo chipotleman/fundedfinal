@@ -21,6 +21,16 @@ export default function Dashboard() {
 
   const userId = '00000000-0000-0000-0000-000000000001'; // replace with your actual user id
 
+  const decimalToAmerican = (decimal) => {
+    const d = parseFloat(decimal);
+    if (isNaN(d) || d <= 1) return 'N/A';
+    if (d >= 2) {
+      return `+${Math.round((d - 1) * 100)}`;
+    } else {
+      return `${Math.round(-100 / (d - 1))}`;
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
@@ -49,7 +59,7 @@ export default function Dashboard() {
             game.odds.split(',').forEach((pair) => {
               const [team, odd] = pair.trim().split(':');
               if (team && odd) {
-                oddsObj[team.trim()] = odd.trim();
+                oddsObj[team.trim()] = decimalToAmerican(odd.trim());
               }
             });
           }
@@ -80,7 +90,7 @@ export default function Dashboard() {
 
     const parsedStake = parseFloat(stake);
     if (isNaN(parsedStake) || parsedStake < 10 || parsedStake > 100) {
-      setMessage('⚠️ Stake must be between $10 and $100.');
+      setMessage('⚠️ Stake must be between $10 - $100.');
       return;
     }
 
@@ -129,7 +139,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-black text-white font-sans">
-      {/* Header with logo and balance */}
       <header className="sticky top-0 bg-black bg-opacity-90 p-4 flex flex-col items-center shadow z-50">
         <img
           src="/rollr-logo.png"
@@ -142,7 +151,6 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Matchups */}
       <main className="max-w-5xl mx-auto p-4">
         {matchups.length === 0 ? (
           <p className="text-center text-gray-400">No live games available.</p>
@@ -173,7 +181,6 @@ export default function Dashboard() {
         )}
       </main>
 
-      {/* Bet slip */}
       {selectedMatchup && selectedTeam && (
         <div className="max-w-md mx-auto p-4 bg-gray-800 rounded shadow mb-4">
           <h3 className="text-green-400 font-bold mb-2">
@@ -197,7 +204,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Bets Table */}
       <section className="max-w-6xl mx-auto p-4 mt-8">
         <h2 className="text-lg font-bold text-green-400 mb-2">📄 My Bets</h2>
         {loading ? (
