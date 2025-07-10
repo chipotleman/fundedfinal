@@ -1,6 +1,6 @@
 // app/api/settleBets/route.ts
 
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '../../lib/supabaseClient';
 
 export async function POST(req: Request) {
   try {
