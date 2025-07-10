@@ -144,14 +144,14 @@ export default function Dashboard() {
         <ProfileDrawer />
       </div>
 
-      {/* Sidebar */}
-      <div className="fixed top-20 left-4 flex flex-col space-y-2">
+      {/* Top Menu Bar */}
+      <div className="flex overflow-x-auto space-x-2 p-2 mx-4 mt-2 bg-zinc-800/70 backdrop-blur-md rounded-lg border border-green-400/20">
         {leagues.map((league) => (
           <button
             key={league}
             onClick={() => setSelectedLeague(league === selectedLeague ? null : league)}
-            className={`px-4 py-2 rounded ${
-              selectedLeague === league ? 'bg-green-600' : 'bg-zinc-800'
+            className={`px-4 py-2 rounded whitespace-nowrap transition transform ${
+              selectedLeague === league ? 'bg-green-600 scale-105' : 'bg-zinc-700 hover:bg-zinc-600'
             }`}
           >
             <span className="text-lg">{getLeagueEmoji(league)}</span> {league}
@@ -159,8 +159,8 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Games grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4 ml-36 mt-4">
+      {/* Games Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4 mt-6">
         {filteredGames.map((game) => (
           <div
             key={game.id}
@@ -182,7 +182,7 @@ export default function Dashboard() {
 
       {/* Parlay Bet Slip */}
       {selectedBets.length > 0 && (
-        <div className="fixed bottom-4 left-4 bg-zinc-900 border border-green-400 rounded-lg p-4 w-72">
+        <div className="fixed bottom-4 left-4 bg-zinc-900 border border-green-400 rounded-lg p-4 w-72 z-50">
           <h2 className="text-lg font-semibold text-green-400 mb-2">Parlay Slip</h2>
           {selectedBets.map((bet, index) => (
             <div key={index} className="flex justify-between text-sm text-green-300 mb-1">
