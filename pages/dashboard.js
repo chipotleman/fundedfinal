@@ -123,10 +123,8 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Profile Drawer in bottom center of sidebar */}
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2">
-          <ProfileDrawer align="up-right" />
-        </div>
+        {/* Profile Drawer bottom-center in sidebar */}
+        <ProfileDrawer />
       </div>
 
       {/* Main content */}
@@ -199,7 +197,7 @@ export default function Dashboard() {
                   </p>
                   <button
                     onClick={placeBets}
-                    className="mt-2 w-full bg-green-400 text-black font-bold py-2 rounded hover:bg-green-500"
+                    className="mt-2 w-full bg-green-400 text-black font-bold py-2 rounded hover:bg-green-500 transition"
                   >
                     Place Parlay
                   </button>
