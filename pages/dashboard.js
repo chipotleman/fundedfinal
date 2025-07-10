@@ -126,28 +126,28 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-black to-gray-900 text-white">
+    <div className="min-h-screen bg-black text-white font-sans">
       {/* Header */}
-      <header className="sticky top-0 bg-black bg-opacity-80 backdrop-blur p-4 flex justify-between items-center shadow-md z-50">
-        <h1 className="text-2xl font-bold text-green-400">⚡ RollrFunded</h1>
+      <header className="sticky top-0 bg-black bg-opacity-90 backdrop-blur p-4 flex justify-between items-center shadow z-50">
+        <h1 className="text-xl md:text-2xl font-bold text-green-400">⚡ RollrFunded</h1>
         <div className="text-right">
           <p className="text-xs text-gray-400">Available Balance</p>
           <p className="text-lg font-bold text-green-400">${balance.toFixed(2)}</p>
         </div>
       </header>
 
-      {/* Matchup Grid */}
-      <div className="max-w-5xl mx-auto p-4 grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {/* Matchups */}
+      <main className="max-w-5xl mx-auto p-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {matchups.map((m) => (
           <div
             key={m.name}
-            className={`bg-gray-800 rounded-lg shadow hover:shadow-lg transition-transform transform hover:-translate-y-1 border border-gray-700 hover:border-green-400 cursor-pointer p-4`}
+            className="bg-gray-800 rounded-xl shadow-lg hover:shadow-green-400 transition transform hover:-translate-y-1 cursor-pointer p-4 border border-gray-700 hover:border-green-400"
             onClick={() => {
               setSelectedMatchup(m);
               setSelectedTeam('');
             }}
           >
-            <h2 className="text-lg font-bold mb-2 text-center">{m.name}</h2>
+            <h2 className="text-lg font-bold text-center mb-3">{m.name}</h2>
             <div className="flex justify-center gap-2">
               {m.teams.map((team) => (
                 <button
@@ -157,43 +157,39 @@ export default function Dashboard() {
                     setSelectedMatchup(m);
                     setSelectedTeam(team);
                   }}
-                  className={`flex-1 py-2 rounded font-semibold transition border ${
+                  className={`flex-1 py-2 rounded font-semibold border transition ${
                     selectedTeam === team && selectedMatchup?.name === m.name
                       ? 'bg-green-400 text-black border-green-400'
-                      : 'bg-gray-900 text-white border-gray-600 hover:bg-gray-700'
+                      : 'bg-black text-white border-gray-600 hover:bg-gray-700'
                   }`}
                 >
-                  {team} <br /> ({decimalToAmerican(m.odds[team])})
+                  {team} <br /> {decimalToAmerican(m.odds[team])}
                 </button>
               ))}
             </div>
           </div>
         ))}
-      </div>
+      </main>
 
-      {/* Bet Slip Drawer */}
+      {/* Bet Slip */}
       {selectedMatchup && selectedTeam && (
-        <div className="fixed bottom-0 left-0 right-0 bg-gray-900 p-4 border-t border-green-400 z-50 shadow-lg">
-          <h3 className="text-lg font-bold text-green-400 mb-2 text-center">🎟️ Bet Slip</h3>
+        <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-green-400 p-4 shadow-xl z-50">
+          <h3 className="text-center text-green-400 font-bold mb-2">🎟️ Bet Slip</h3>
           <div className="text-center mb-2">
-            <p>
-              <span className="font-bold">{selectedTeam}</span> @{' '}
-              <span className="text-green-400">{decimalToAmerican(selectedMatchup.odds[selectedTeam])}</span>
-            </p>
+            <p className="text-lg font-semibold">{selectedTeam} @ {decimalToAmerican(selectedMatchup.odds[selectedTeam])}</p>
           </div>
           <div className="flex justify-center">
             <input
               type="number"
-              placeholder="Enter stake ($10 - $100)"
+              placeholder="Enter stake ($10-$100)"
               value={stake}
               onChange={(e) => setStake(e.target.value)}
-              className="w-40 p-2 rounded bg-black border border-gray-600 text-center text-white"
+              className="w-40 p-2 rounded bg-black border border-gray-600 text-center"
             />
           </div>
           {stake && (
-            <p className="text-center text-sm text-gray-400 mt-1">
-              Potential Payout:{' '}
-              <span className="text-green-400 font-bold">${calculatePotentialPayout()}</span>
+            <p className="text-center text-sm text-gray-300 mt-1">
+              Potential Payout: <span className="text-green-400">${calculatePotentialPayout()}</span>
             </p>
           )}
           <button
@@ -207,8 +203,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* My Bets Section */}
-      <div className="max-w-5xl mx-auto p-4">
+      {/* My Bets */}
+      <section className="max-w-5xl mx-auto p-4 mt-8">
         <h2 className="text-lg font-bold text-green-400 mb-2">📄 My Bets</h2>
         {loading ? (
           <p>Loading bets...</p>
@@ -242,7 +238,7 @@ export default function Dashboard() {
             </table>
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }
