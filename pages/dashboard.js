@@ -1,24 +1,169 @@
-'use client'
+// pages/dashboard.js
 
-import ProfileDrawer from '../components/ProfileDrawer'
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { useRouter } from 'next/router';
 
-export default function DashboardPage() {
+export default function Dashboard() {
+  const [user, setUser] = useState(null);
+  const [evaluation, setEvaluation] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const getUserAndEvaluation = async () => {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError) {
+        console.error('Error getting session:', sessionError.message);
+      }
+
+      if (!session) {
+        router.push('/login');
+        return;
+      }
+
+      setUser(session.user);
+
+      const { data, error: evalError } = await supabase
+        .from('evaluations')
+        .select('*')
+        .eq('email', session.user.email)
+        .maybeSingle();
+
+      if (evalError) {
+        console.error('Error fetching evaluation:', evalError.message);
+      } else {
+        setEvaluation(data);
+      }
+
+      setLoading(false);
+    };
+
+    getUserAndEvaluation();
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div style={{ color: 'white', textAlign: 'center', marginTop: '50px' }}>
+        Loading your dashboard...
+      </div>
+    );
+  }
+
+  if (!evaluation) {
+    return (
+      <div style={{ color: 'white', textAlign: 'center', marginTop: '50px' }}>
+        No funded evaluation found for your account.
+      </div>
+    );
+  }
+
   return (
-    <main className="min-h-screen bg-black text-green-400">
-      <header className="flex justify-between items-center p-4 border-b border-green-800">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
-        <ProfileDrawer />
-      </header>
+    <div style={{
+      backgroundColor: "#000",
+      color: "#fff",
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      alignItems: "center",
+      fontFamily: "sans-serif",
+      padding: "20px",
+      textAlign: "center"
+    }}>
+      <h1 style={{ fontSize: "2rem", color: "#a020f0", textShadow: "0 0 10px #a020f0" }}>
+        Welcome, {user.email}
+      </h1>
+      <p style={{ color: "#ccc", marginTop: "20px" }}>
+        Funded Balance: $5,000
+      </p>
+      <p style={{ color: "#ccc", marginTop: "10px" }}>
+        Evaluation Period ends: {new Date(evaluation.evaluation_end_date).toLocaleDateString()}
+      </p>
+      <p style={{ color: "#ccc", marginTop: "10px" }}>
+        Status: {evaluation.status}
+      </p>
+    </div>
+  );
+}
+// pages/dashboard.js
 
-      <section className="p-6">
-        {/* Replace this with your actual dashboard content */}
-        <div className="bg-zinc-900 p-6 rounded-xl shadow-lg text-green-400">
-          <h2 className="text-xl font-semibold mb-2">Welcome to your funded dashboard</h2>
-          <p className="text-green-500">
-            Track your challenge, view your bankroll, and place your performance bets here.
-          </p>
-        </div>
-      </section>
-    </main>
-  )
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
+import { useRouter } from 'next/router';
+
+export default function Dashboard() {
+  const [user, setUser] = useState(null);
+  const [evaluation, setEvaluation] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push('/login');
+        return;
+      }
+
+      setUser(session.user);
+
+      const { data, error: evalError } = await supabase
+  .from('evaluations')
+  .select('*')
+  .eq('email', session.user.email)
+  .maybeSingle();
+
+
+      if (error) {
+        console.error(error);
+      } else {
+        setEvaluation(data);
+      }
+
+      setLoading(false);
+    };
+
+    getUser();
+  }, [router]);
+
+  if (loading) {
+    return <div style={{ color: 'white', textAlign: 'center', marginTop: '50px' }}>Loading your dashboard...</div>;
+  }
+
+  if (!evaluation) {
+  return (
+    <div> ... </div>
+  );
+}
+
+
+  return (
+    <div style={{
+      backgroundColor: "#000",
+      color: "#fff",
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      alignItems: "center",
+      fontFamily: "sans-serif",
+      padding: "20px",
+      textAlign: "center"
+    }}>
+      <h1 style={{ fontSize: "2rem", color: "#a020f0", textShadow: "0 0 10px #a020f0" }}>
+        Welcome, {user.email}
+      </h1>
+      <p style={{ color: "#ccc", maxWidth: "400px", marginTop: "20px" }}>
+        Funded Balance: $5,000
+      </p>
+      <p style={{ color: "#ccc", marginTop: "10px" }}>
+        Evaluation Period ends: {new Date(evaluation.evaluation_end_date).toLocaleDateString()}
+      </p>
+      <p style={{ color: "#ccc", marginTop: "10px" }}>
+        Status: {evaluation.status}
+      </p>
+    </div>
+  );
 }
