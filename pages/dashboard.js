@@ -92,8 +92,14 @@ export default function Dashboard() {
     <div className="flex bg-black text-white min-h-screen font-mono">
 
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? "w-44 sm:w-48 md:w-56" : "w-16"} bg-black border-r border-zinc-800 p-2 flex flex-col justify-between transition-all`}>
+      <div className={`${sidebarOpen ? "w-44 sm:w-48 md:w-56" : "w-16"} bg-black border-r border-zinc-800 p-2 flex flex-col justify-start transition-all`}>
         <div className="flex flex-col space-y-2">
+          {/* Balance at top */}
+          <div className="text-green-400 text-center text-xl mb-2">
+            💰 ${bankroll}
+          </div>
+
+          {/* Expand/Collapse Arrow */}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="text-green-400 text-2xl self-center"
@@ -101,6 +107,7 @@ export default function Dashboard() {
             {sidebarOpen ? '⇤' : '⇥'}
           </button>
 
+          {/* League Filters */}
           {leagues.map((item) => (
             <button
               key={item.league}
@@ -113,11 +120,6 @@ export default function Dashboard() {
               {sidebarOpen && <span>{item.league}</span>}
             </button>
           ))}
-        </div>
-
-        {/* Balance */}
-        <div className="text-green-400 text-center text-xl mb-2">
-          💰 ${bankroll}
         </div>
       </div>
 
