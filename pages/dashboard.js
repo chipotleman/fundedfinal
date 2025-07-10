@@ -94,15 +94,15 @@ export default function Dashboard() {
       {/* Sidebar */}
       <div className={`${sidebarOpen ? "w-44 sm:w-48 md:w-56" : "w-16"} bg-black p-2 flex flex-col justify-start transition-all relative`}>
 
-        {/* Balance box with label */}
-        <div className="mt-14 flex justify-center">
+        {/* Balance box with centered alignment with logo */}
+        <div className="flex justify-center mt-[60px]">
           <div className="border border-green-400 rounded-lg px-4 py-3 text-green-400 text-center bg-zinc-900/60 shadow w-11/12">
             <div className="text-sm text-green-300">Balance</div>
             <div className="text-xl font-semibold">💰 ${bankroll}</div>
           </div>
         </div>
 
-        {/* League Filters shifted lower */}
+        {/* League Filters */}
         <div className="flex flex-col space-y-2 mt-16">
           {leagues.map((item) => (
             <button
@@ -121,7 +121,7 @@ export default function Dashboard() {
             </button>
           ))}
 
-          {/* Expansion Arrow below leagues */}
+          {/* Expansion Arrow placed under leagues */}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="mt-6 self-center text-green-400 text-2xl transition"
