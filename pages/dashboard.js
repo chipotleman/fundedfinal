@@ -123,11 +123,11 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* ProfileDrawer fixed bottom-center inside sidebar */}
+        {/* ProfileDrawer fixed bottom-center inside sidebar, always visible */}
         <div
-          className="fixed bottom-4 z-50"
+          className="fixed bottom-4 z-50 transition-all"
           style={{
-            left: sidebarOpen ? '12rem' : '2.5rem', // adjust based on open/closed sidebar width
+            left: sidebarOpen ? '6rem' : '2rem', // centers within open/closed sidebar
             transform: 'translateX(-50%)'
           }}
         >
