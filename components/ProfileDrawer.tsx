@@ -1,76 +1,58 @@
-'use client'
-
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { useEffect, useState } from 'react'
 
 export default function ProfileDrawer() {
-  const [user, setUser] = useState<any>(null)
-  const [open, setOpen] = useState(false)
-  const [bankroll, setBankroll] = useState(0)
-  const [challengeTarget, setChallengeTarget] = useState(1000)
+  const [open, setOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
+  const drawerRef = useRef();
 
   useEffect(() => {
-    const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser()
-      console.log('ProfileDrawer user:', user);
-      setUser(user)
-
-      if (user) {
-        const { data, error } = await supabase
-          .from('user_balances')
-          .select('balance')
-          .eq('id', user.id) // ✅ corrected from 'user_id' to 'id'
-          .single()
-
-        if (error) {
-          console.error('Error fetching bankroll:', error.message)
-        } else {
-          console.log('Bankroll fetched:', data);
-          setBankroll(data?.balance || 0)
-        }
+    const fetchUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user?.email) {
+        setUserEmail(session.user.email);
       }
-    }
-    getUser()
-  }, [])
+    };
+    fetchUser();
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut()
-    window.location.href = '/auth'
-  }
+    const handleClickOutside = (e) => {
+      if (drawerRef.current && !drawerRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
-  const progress = bankroll
-  const remaining = challengeTarget - progress
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/login';
+  };
 
   return (
-    <div className="relative">
+    <div className="relative" ref={drawerRef}>
+      {/* Profile Icon */}
       <button
         onClick={() => setOpen(!open)}
-        className="rounded-full bg-green-400 text-black px-4 py-2 font-bold"
+        className="bg-green-400 text-black rounded-full w-10 h-10 flex items-center justify-center font-bold hover:bg-green-500 transition"
       >
-        {user?.email?.charAt(0).toUpperCase() || 'U'}
+        {userEmail ? userEmail[0].toUpperCase() : 'U'}
       </button>
 
+      {/* Drawer */}
       {open && (
-        <div className="absolute right-0 mt-2 w-64 bg-black border border-green-400 text-green-400 p-4 rounded shadow-xl z-50">
-          <h2 className="text-lg font-bold mb-2">Profile</h2>
-          <p>Email: {user?.email}</p>
-          <p>Bankroll: ${bankroll}</p>
-          <p className="mt-2">Challenge Progress:</p>
-          <div className="w-full bg-green-900 rounded h-3 mb-2">
-            <div
-              className="bg-green-400 h-3 rounded"
-              style={{ width: `${Math.min((progress / challengeTarget) * 100, 100)}%` }}
-            ></div>
-          </div>
-          <p>${remaining} left to complete</p>
+        <div
+          className="absolute bottom-12 left-1/2 -translate-x-1/2 translate-y-full bg-zinc-900 border border-green-400 rounded-lg shadow-lg p-4 w-48 z-50"
+        >
+          <p className="text-green-300 text-sm mb-2 break-words text-center">{userEmail}</p>
           <button
-            onClick={handleLogout}
-            className="mt-4 bg-green-400 text-black font-bold px-4 py-2 rounded w-full"
+            onClick={handleSignOut}
+            className="w-full bg-green-400 text-black font-semibold py-1 rounded hover:bg-green-500 transition"
           >
-            Log Out
+            Sign Out
           </button>
         </div>
       )}
     </div>
-  )
+  );
 }
