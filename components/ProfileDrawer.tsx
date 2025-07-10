@@ -1,12 +1,11 @@
-// components/ProfileDrawer.tsx
-
 'use client'
 
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabaseClient'
+import type { User } from '@supabase/supabase-js'
 
 export default function ProfileDrawer() {
-  const [user, setUser] = useState(null)
+  const [user, setUser] = useState<User | null>(null)
   const [open, setOpen] = useState(false)
   const [bankroll, setBankroll] = useState(0)
   const [challengeTarget] = useState(1000)
@@ -47,7 +46,7 @@ export default function ProfileDrawer() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-64 bg-black border border-green-400 text-green-400 p-4 rounded shadow-xl">
+        <div className="absolute right-0 mt-2 w-64 bg-black border border-green-400 text-green-400 p-4 rounded shadow-xl z-50">
           <h2 className="text-lg font-bold mb-2">Profile</h2>
           <p>Email: {user?.email}</p>
           <p>Bankroll: ${bankroll}</p>
