@@ -32,7 +32,6 @@ export async function POST(req: Request) {
       const pnl = won ? bet.stake * (parseInt(bet.odds.replace('+', '')) / 100) : -bet.stake;
       const status = 'settled';
 
-      // Update bet status and pnl
       const { error: updateError } = await supabase
         .from('user_bets')
         .update({ status, pnl, settled_at: new Date().toISOString() })
@@ -40,9 +39,9 @@ export async function POST(req: Request) {
 
       if (updateError) {
         console.error(`Error updating bet ${bet.id}:`, updateError.message);
+        continue;
       }
 
-      // Update user balance
       const { data: userBalanceData, error: balanceFetchError } = await supabase
         .from('user_balances')
         .select('balance')
@@ -62,4 +61,13 @@ export async function POST(req: Request) {
         .eq('id', bet.user_id);
 
       if (balanceUpdateError) {
-        console.error(`Error updating balance for user ${bet.user_id}:_
+        console.error(`Error updating balance for user ${bet.user_id}:`, balanceUpdateError.message);
+      }
+    }
+
+    return NextResponse.json({ message: 'Bets settled successfully' });
+  } catch (error: any) {
+    console.error('❌ Settle error:', error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
