@@ -2,14 +2,14 @@
 
 'use client'
 
-import { supabase } from '@/lib/supabaseClient'
 import { useEffect, useState } from 'react'
+import { supabase } from '../lib/supabaseClient'
 
 export default function ProfileDrawer() {
   const [user, setUser] = useState(null)
   const [open, setOpen] = useState(false)
   const [bankroll, setBankroll] = useState(0)
-  const [challengeTarget, setChallengeTarget] = useState(1000)
+  const [challengeTarget] = useState(1000)
 
   useEffect(() => {
     const getUser = async () => {
