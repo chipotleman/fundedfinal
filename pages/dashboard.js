@@ -123,9 +123,9 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Profile Drawer in bottom left */}
-        <div className="fixed bottom-4 left-4">
-          <ProfileDrawer />
+        {/* Profile Drawer in bottom center of sidebar */}
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2">
+          <ProfileDrawer align="up-right" />
         </div>
       </div>
 
