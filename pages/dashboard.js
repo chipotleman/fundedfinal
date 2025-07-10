@@ -9,80 +9,28 @@ const supabase = createClient(
 );
 
 export default function Dashboard() {
-  const [bets, setBets] = useState([]);
   const [balance, setBalance] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [matchups, setMatchups] = useState([]);
-  const [selectedMatchup, setSelectedMatchup] = useState(null);
-  const [selectedTeam, setSelectedTeam] = useState('');
-  const [stake, setStake] = useState('');
-  const [placing, setPlacing] = useState(false);
-  const [message, setMessage] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawMessage, setWithdrawMessage] = useState('');
   const [showWithdrawInput, setShowWithdrawInput] = useState(false);
 
   const userId = '00000000-0000-0000-0000-000000000001'; // replace with your user_id
 
-  const decimalToAmerican = (decimal) => {
-    const d = parseFloat(decimal);
-    if (isNaN(d) || d <= 1) return 'N/A';
-    if (d >= 2) {
-      return `+${Math.round((d - 1) * 100)}`;
-    } else {
-      return `${Math.round(-100 / (d - 1))}`;
-    }
-  };
-
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-
-      const { data: betsData } = await supabase
-        .from('user_bets')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-      const { data: balanceData } = await supabase
+    const fetchBalance = async () => {
+      const { data, error } = await supabase
         .from('user_balances')
         .select('balance')
         .eq('id', userId)
         .single();
 
-      const { data: slatesData } = await supabase
-        .from('game_slates')
-        .select('*')
-        .order('game_time', { ascending: true });
-
-      if (slatesData) {
-        const formatted = slatesData.map((game) => {
-          const oddsObj = {};
-          if (game.odds) {
-            game.odds.split(',').forEach((pair) => {
-              const [team, odd] = pair.trim().split(':');
-              if (team && odd) {
-                oddsObj[team.trim()] = decimalToAmerican(odd.trim());
-              }
-            });
-          }
-          return {
-            name: game.matchup,
-            market_type: game.sport,
-            teams: Object.keys(oddsObj),
-            odds: oddsObj,
-          };
-        });
-        setMatchups(formatted);
+      if (data) {
+        setBalance(parseFloat(data.balance));
       }
-
-      setBets(betsData || []);
-      setBalance(balanceData ? parseFloat(balanceData.balance) : 0);
-      setLoading(false);
     };
 
-    fetchData();
-  }, [userId]);
+    fetchBalance();
+  }, []);
 
   const handleWithdrawRequest = async () => {
     setWithdrawMessage('');
@@ -112,41 +60,36 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <header className="p-4 flex flex-col items-center">
-        <img src="/rollr-logo.png" alt="Rollr Logo" className="h-16 w-auto mb-2" />
-        <p className="text-sm text-gray-400">Available Balance</p>
-        <p className="text-2xl font-bold text-green-400 mb-2">${balance.toFixed(2)}</p>
-        
-        <button
-          onClick={() => setShowWithdrawInput(!showWithdrawInput)}
-          className="bg-green-400 text-black px-4 py-2 rounded hover:bg-green-300 transition mb-2"
-        >
-          Request Withdrawal
-        </button>
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6">
+      <img src="/rollr-logo.png" alt="Rollr Logo" className="h-20 w-auto mb-4" />
+      <p className="text-gray-400 text-sm">Available Balance</p>
+      <p className="text-green-400 text-3xl font-bold mb-4">${balance.toFixed(2)}</p>
 
-        {showWithdrawInput && (
-          <div className="w-full max-w-xs text-center">
-            <input
-              type="number"
-              placeholder="Enter amount ($10 min)"
-              value={withdrawAmount}
-              onChange={(e) => setWithdrawAmount(e.target.value)}
-              className="w-full mb-2 p-2 rounded bg-black border border-gray-700 text-white placeholder-gray-400"
-            />
-            <button
-              onClick={handleWithdrawRequest}
-              className="bg-green-400 text-black px-4 py-2 rounded w-full hover:bg-green-300"
-            >
-              Submit Withdrawal
-            </button>
-            {withdrawMessage && <p className="mt-1 text-green-400">{withdrawMessage}</p>}
-          </div>
-        )}
-      </header>
+      <button
+        onClick={() => setShowWithdrawInput(!showWithdrawInput)}
+        className="bg-green-400 text-black px-6 py-3 rounded-lg text-lg font-semibold hover:bg-green-300 transition mb-4"
+      >
+        Request Withdrawal
+      </button>
 
-      {/* You can continue your matchups, betting, and bet history sections here unchanged */}
-
+      {showWithdrawInput && (
+        <div className="w-full max-w-xs text-center">
+          <input
+            type="number"
+            placeholder="Enter amount ($10 min)"
+            value={withdrawAmount}
+            onChange={(e) => setWithdrawAmount(e.target.value)}
+            className="w-full mb-3 p-3 rounded bg-black border border-gray-700 text-white placeholder-gray-400"
+          />
+          <button
+            onClick={handleWithdrawRequest}
+            className="bg-green-400 text-black px-4 py-2 rounded w-full hover:bg-green-300"
+          >
+            Submit Withdrawal
+          </button>
+          {withdrawMessage && <p className="mt-2 text-green-400">{withdrawMessage}</p>}
+        </div>
+      )}
     </div>
   );
 }
