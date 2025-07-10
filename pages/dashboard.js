@@ -32,16 +32,15 @@ export default function Dashboard() {
         .select('*')
         .eq('email', session.user.email)
         .order('evaluation_end_date', { ascending: false })
-        .limit(1)
-        .single();
+        .limit(1);
 
       console.log('Supabase returned evaluation data:', data);
       console.log('Supabase returned evaluation error:', evalError);
 
       if (evalError) {
         console.error('Error fetching evaluation:', evalError.message);
-      } else if (data) {
-        setEvaluation(data);
+      } else if (data && data.length > 0) {
+        setEvaluation(data[0]);
       }
 
       setLoading(false);
