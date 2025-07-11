@@ -147,14 +147,16 @@ export default function Dashboard() {
           <Image src="/rollr-logo.png" alt="Rollr Logo" width={130} height={40} priority />
 
           <div className="flex space-x-4 items-center">
-            {/* Bet Slip Counter */}
-            <div
-              onClick={() => setShowBetSlipModal(true)}
-              className="border border-green-400 rounded-lg px-4 py-2 text-green-400 text-center bg-zinc-900/60 shadow cursor-pointer hover:bg-zinc-800 transition"
-            >
-              <div className="text-sm text-green-300">Slip</div>
-              <div className="text-xl font-semibold">{selectedBets.length}</div>
-            </div>
+            {/* Bet Slip Counter - only show if slip has bets */}
+            {selectedBets.length > 0 && (
+              <div
+                onClick={() => setShowBetSlipModal(true)}
+                className="border border-green-400 rounded-lg px-4 py-2 text-green-400 text-center bg-zinc-900/60 shadow cursor-pointer hover:bg-zinc-800 transition"
+              >
+                <div className="text-sm text-green-300">Slip</div>
+                <div className="text-xl font-semibold">{selectedBets.length}</div>
+              </div>
+            )}
 
             {/* Balance */}
             <div
@@ -167,7 +169,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Banner */}
+        {/* Banner Carousel */}
         <div className="px-4">
           <BannerCarousel />
         </div>
