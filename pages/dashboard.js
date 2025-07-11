@@ -12,7 +12,7 @@ export default function Dashboard() {
   const [showBetSlipModal, setShowBetSlipModal] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
   const [selectedLeague, setSelectedLeague] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(false); // collapsed by default
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const leagues = [
     { league: 'MLB', emoji: '⚾' },
@@ -54,16 +54,26 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
-  const handleBetSelect = (game) => {
-    if (selectedBets.find(b => b.id === game.id)) {
-      setSelectedBets(selectedBets.filter(b => b.id !== game.id));
-    } else {
-      setSelectedBets([...selectedBets, { ...game, odds: parseFloat(game.odds) }]);
-    }
-  };
+  const handleTeamSelect = (game, team) => {
+    const existingBet = selectedBets.find(b => b.game_id === game.id);
 
-  const removeBetLeg = (id) => {
-    setSelectedBets(selectedBets.filter(b => b.id !== id));
+    if (existingBet && existingBet.team === team) {
+      // Remove the bet if clicking the same team again
+      setSelectedBets(selectedBets.filter(b => b.game_id !== game.id));
+    } else {
+      // Replace with new selection
+      const newBet = {
+        game_id: game.id,
+        team: team,
+        matchup: game.matchup,
+        odds: parseFloat(game.odds),
+      };
+      setSelectedBets(prev =>
+        existingBet
+          ? prev.map(b => (b.game_id === game.id ? newBet : b))
+          : [...prev, newBet]
+      );
+    }
   };
 
   const clearParlay = () => {
@@ -83,7 +93,8 @@ export default function Dashboard() {
       odds: combinedDecimal,
       status: 'open',
       type: 'parlay',
-      parlay_games: selectedBets.map(b => b.id)
+      parlay_games: selectedBets.map(b => b.game_id),
+      teams: selectedBets.map(b => b.team),
     }]);
     if (error) {
       alert("Error placing parlay bet.");
@@ -105,30 +116,21 @@ export default function Dashboard() {
 
   return (
     <div className="flex bg-black text-white min-h-screen font-mono">
-
       {/* Sidebar */}
       <div className={`${sidebarOpen ? "w-44 sm:w-48 md:w-56" : "w-16"} bg-black p-2 flex flex-col items-center transition-all relative`}>
-
-        {/* League Filters */}
         <div className="flex flex-col space-y-2 mt-12">
           {leagues.map((item) => (
             <button
               key={item.league}
-              onClick={() =>
-                setSelectedLeague(item.league === selectedLeague ? null : item.league)
-              }
+              onClick={() => setSelectedLeague(item.league === selectedLeague ? null : item.league)}
               className={`flex items-center space-x-2 p-2 rounded transition ${
-                item.league === selectedLeague
-                  ? 'bg-green-900 text-green-300'
-                  : 'text-white hover:bg-zinc-900'
+                item.league === selectedLeague ? 'bg-green-900 text-green-300' : 'text-white hover:bg-zinc-900'
               }`}
             >
               <span className="text-xl">{item.emoji}</span>
               {sidebarOpen && <span>{item.league}</span>}
             </button>
           ))}
-
-          {/* Expansion Arrow */}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="mt-6 self-center text-green-400 text-2xl transition"
@@ -137,23 +139,14 @@ export default function Dashboard() {
             {sidebarOpen ? '⇤' : '⇥'}
           </button>
         </div>
-
-        {/* ProfileDrawer pinned bottom-center */}
-        <div
-          className="fixed bottom-4 z-50 transition-all"
-          style={{
-            left: sidebarOpen ? '6rem' : '2rem',
-            transform: 'translateX(-50%)'
-          }}
-        >
+        <div className="fixed bottom-4 z-50 transition-all" style={{ left: sidebarOpen ? '6rem' : '2rem', transform: 'translateX(-50%)' }}>
           <ProfileDrawer />
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-
-        {/* Header with clickable balance */}
+        {/* Header */}
         <div className="flex justify-between items-center p-4 relative">
           <Image src="/rollr-logo.png" alt="Rollr Logo" width={130} height={40} priority />
           <div
@@ -168,26 +161,37 @@ export default function Dashboard() {
         {/* Games */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
           {filteredGames.map((game) => {
-            const isSelected = selectedBets.find(b => b.id === game.id);
             const [team1, team2] = game.matchup.split(" vs ");
+            const selectedBet = selectedBets.find(b => b.game_id === game.id);
+
             return (
-              <div
-                key={game.id}
-                onClick={() => handleBetSelect(game)}
-                className={`p-4 rounded-lg border cursor-pointer transition ${
-                  isSelected ? 'border-green-400 bg-zinc-800' : 'border-zinc-700'
-                }`}
-              >
-                <div className="flex items-center justify-center space-x-2 mb-2">
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-zinc-800 text-green-400 text-xl font-bold">
+              <div key={game.id} className="p-4 rounded-lg border border-zinc-700 bg-zinc-900 transition">
+                <div className="flex items-center justify-center space-x-8">
+                  {/* Team 1 */}
+                  <div
+                    onClick={() => handleTeamSelect(game, team1.trim())}
+                    className={`flex items-center justify-center w-16 h-16 rounded-full cursor-pointer transition ${
+                      selectedBet?.team === team1.trim()
+                        ? 'bg-green-900 text-green-300 border border-green-400'
+                        : 'bg-zinc-800 text-green-400'
+                    } text-2xl font-bold`}
+                  >
                     {team1.trim().charAt(0)}
                   </div>
-                  <span className="text-green-400">vs</span>
-                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-zinc-800 text-green-400 text-xl font-bold">
+                  <span className="text-green-400 text-lg font-semibold">vs</span>
+                  {/* Team 2 */}
+                  <div
+                    onClick={() => handleTeamSelect(game, team2.trim())}
+                    className={`flex items-center justify-center w-16 h-16 rounded-full cursor-pointer transition ${
+                      selectedBet?.team === team2.trim()
+                        ? 'bg-green-900 text-green-300 border border-green-400'
+                        : 'bg-zinc-800 text-green-400'
+                    } text-2xl font-bold`}
+                  >
                     {team2.trim().charAt(0)}
                   </div>
                 </div>
-                <p className="text-sm text-green-300 text-center">{game.matchup}</p>
+                <p className="text-sm text-green-300 text-center mt-2">{game.matchup}</p>
                 <p className="text-sm text-gray-400 text-center">Odds: {decimalToAmerican(parseFloat(game.odds))}</p>
                 <p className="text-xs text-gray-500 text-center">{new Date(game.game_time).toLocaleString()}</p>
               </div>
@@ -207,14 +211,8 @@ export default function Dashboard() {
 
         {/* Bet slip modal */}
         {showBetSlipModal && (
-          <div
-            onClick={() => setShowBetSlipModal(false)}
-            className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex justify-center items-center z-50"
-          >
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="bg-zinc-900/95 rounded-lg border border-green-400 p-6 w-80 max-h-[80%] overflow-y-auto"
-            >
+          <div onClick={() => setShowBetSlipModal(false)} className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex justify-center items-center z-50">
+            <div onClick={(e) => e.stopPropagation()} className="bg-zinc-900/95 rounded-lg border border-green-400 p-6 w-80 max-h-[80%] overflow-y-auto">
               <h2 className="text-lg font-semibold text-green-400 mb-2">Parlay Slip</h2>
               {selectedBets.length === 0 ? (
                 <p className="text-green-300 text-sm">No bets selected.</p>
@@ -222,28 +220,17 @@ export default function Dashboard() {
                 <>
                   {selectedBets.map((bet, idx) => (
                     <div key={idx} className="flex justify-between items-center text-sm text-green-300 mb-1">
-                      <span>{bet.matchup} ({decimalToAmerican(bet.odds)})</span>
-                      <button
-                        onClick={() => removeBetLeg(bet.id)}
-                        className="text-red-400 hover:text-red-500 ml-2"
-                      >
-                        ❌
-                      </button>
+                      <span>{bet.team} Moneyline ({decimalToAmerican(bet.odds)})</span>
+                      <button onClick={() => removeBetLeg(bet.game_id)} className="text-red-400 hover:text-red-500 ml-2">❌</button>
                     </div>
                   ))}
                   <p className="text-green-400 mt-2">
                     Combined Odds: {decimalToAmerican(selectedBets.reduce((acc, bet) => acc * bet.odds, 1))}
                   </p>
-                  <button
-                    onClick={placeBets}
-                    className="mt-2 w-full bg-green-400 text-black font-bold py-2 rounded hover:bg-green-500 transition"
-                  >
+                  <button onClick={placeBets} className="mt-2 w-full bg-green-400 text-black font-bold py-2 rounded hover:bg-green-500 transition">
                     Place Parlay
                   </button>
-                  <button
-                    onClick={clearParlay}
-                    className="mt-2 w-full bg-red-500 text-white font-bold py-2 rounded hover:bg-red-600 transition"
-                  >
+                  <button onClick={clearParlay} className="mt-2 w-full bg-red-500 text-white font-bold py-2 rounded hover:bg-red-600 transition">
                     Clear Parlay
                   </button>
                 </>
