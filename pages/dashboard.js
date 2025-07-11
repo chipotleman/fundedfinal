@@ -145,9 +145,9 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex justify-between items-center p-4">
           <Image src="/rollr-logo.png" alt="Rollr Logo" width={130} height={40} priority />
-          
+
           <div className="flex space-x-4 items-center">
-            {/* Bet Slip Legs Count */}
+            {/* Bet Slip Counter */}
             <div
               onClick={() => setShowBetSlipModal(true)}
               className="border border-green-400 rounded-lg px-4 py-2 text-green-400 text-center bg-zinc-900/60 shadow cursor-pointer hover:bg-zinc-800 transition"
@@ -167,14 +167,75 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Banner Carousel */}
+        {/* Banner */}
         <div className="px-4">
           <BannerCarousel />
         </div>
 
         {/* Games Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
-          {/* your existing card mapping remains unchanged here */}
+          {filteredGames.map((game) => {
+            const [team1, team2] = game.matchup.split(" vs ");
+            const selectedBet = selectedBets.find(b => b.game_id === game.id);
+
+            return (
+              <div key={game.id} className="rounded-lg border border-zinc-700 bg-zinc-900 overflow-hidden flex">
+                {/* Team 1 */}
+                <div
+                  onClick={() => handleTeamSelect(game, team1.trim())}
+                  className={`flex flex-col items-center justify-center w-1/2 p-4 cursor-pointer transition ${
+                    selectedBet?.team === team1.trim() ? 'bg-[#4fe870]' : ''
+                  }`}
+                >
+                  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-black">
+                    {selectedBet?.team === team1.trim() ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#4fe870]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      <span className="text-green-400 text-2xl font-bold">{team1.trim().charAt(0)}</span>
+                    )}
+                  </div>
+                  <p className={`mt-1 text-sm text-center ${
+                    selectedBet?.team === team1.trim() ? 'text-black' : 'text-green-300'
+                  }`}>{team1.trim()}</p>
+                  <p className={`text-xs ${
+                    selectedBet?.team === team1.trim() ? 'text-black' : 'text-gray-400'
+                  }`}>Odds: {decimalToAmerican(parseFloat(game.odds))}</p>
+                  <p className={`text-[10px] ${
+                    selectedBet?.team === team1.trim() ? 'text-black' : 'text-gray-500'
+                  }`}>{new Date(game.game_time).toLocaleString()}</p>
+                </div>
+
+                {/* Team 2 */}
+                <div
+                  onClick={() => handleTeamSelect(game, team2.trim())}
+                  className={`flex flex-col items-center justify-center w-1/2 p-4 cursor-pointer transition ${
+                    selectedBet?.team === team2.trim() ? 'bg-[#4fe870]' : ''
+                  }`}
+                >
+                  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-black">
+                    {selectedBet?.team === team2.trim() ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#4fe870]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      <span className="text-green-400 text-2xl font-bold">{team2.trim().charAt(0)}</span>
+                    )}
+                  </div>
+                  <p className={`mt-1 text-sm text-center ${
+                    selectedBet?.team === team2.trim() ? 'text-black' : 'text-green-300'
+                  }`}>{team2.trim()}</p>
+                  <p className={`text-xs ${
+                    selectedBet?.team === team2.trim() ? 'text-black' : 'text-gray-400'
+                  }`}>Odds: {decimalToAmerican(parseFloat(game.odds))}</p>
+                  <p className={`text-[10px] ${
+                    selectedBet?.team === team2.trim() ? 'text-black' : 'text-gray-500'
+                  }`}>{new Date(game.game_time).toLocaleString()}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
         {/* Bet Slip Modal */}
