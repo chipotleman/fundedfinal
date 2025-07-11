@@ -162,44 +162,38 @@ export default function Dashboard() {
 
             return (
               <div key={game.id} className="rounded-lg border border-zinc-700 transition overflow-hidden">
-                <div className="flex h-full">
-                  {/* Team 1 Half */}
-                  <div
-                    onClick={() => handleTeamSelect(game, team1.trim())}
-                    className={`flex flex-col items-center justify-center w-1/2 p-4 cursor-pointer transition ${
-                      selectedBet?.team === team1.trim() ? '' : ''
-                    }`}
-                    style={{ backgroundColor: selectedBet?.team === team1.trim() ? '#4fe870' : 'transparent' }}
-                  >
-                    <div className={`flex items-center justify-center w-16 h-16 rounded-full bg-zinc-800 text-2xl font-bold ${
-                      selectedBet?.team === team1.trim() ? 'text-black' : 'text-green-400'
-                    }`}>
-                      {team1.trim().charAt(0)}
-                    </div>
-                    <p className={`mt-1 text-xs text-center ${
-                      selectedBet?.team === team1.trim() ? 'text-black' : ''
-                    }`}>{team1.trim()}</p>
-                  </div>
-
-                  {/* Team 2 Half */}
-                  <div
-                    onClick={() => handleTeamSelect(game, team2.trim())}
-                    className={`flex flex-col items-center justify-center w-1/2 p-4 cursor-pointer transition ${
-                      selectedBet?.team === team2.trim() ? '' : ''
-                    }`}
-                    style={{ backgroundColor: selectedBet?.team === team2.trim() ? '#4fe870' : 'transparent' }}
-                  >
-                    <div className={`flex items-center justify-center w-16 h-16 rounded-full bg-zinc-800 text-2xl font-bold ${
-                      selectedBet?.team === team2.trim() ? 'text-black' : 'text-green-400'
-                    }`}>
-                      {team2.trim().charAt(0)}
-                    </div>
-                    <p className={`mt-1 text-xs text-center ${
-                      selectedBet?.team === team2.trim() ? 'text-black' : ''
-                    }`}>{team2.trim()}</p>
+                {/* Team 1 Top */}
+                <div
+                  onClick={() => handleTeamSelect(game, team1.trim())}
+                  className={`flex flex-col items-center justify-center w-full p-4 cursor-pointer transition ${
+                    selectedBet?.team === team1.trim() ? '' : ''
+                  }`}
+                  style={{ backgroundColor: selectedBet?.team === team1.trim() ? '#4fe870' : 'transparent' }}
+                >
+                  <div className={`text-2xl font-bold ${selectedBet?.team === team1.trim() ? 'text-black' : 'text-green-400'} font-pacifico`}>
+                    {team1.trim()}
                   </div>
                 </div>
-                <div className="text-center p-2">
+
+                {/* VS Divider */}
+                <div className="flex justify-center items-center p-1 bg-black">
+                  <span className="text-green-400 text-lg font-bold animate-pulse">VS</span>
+                </div>
+
+                {/* Team 2 Bottom */}
+                <div
+                  onClick={() => handleTeamSelect(game, team2.trim())}
+                  className={`flex flex-col items-center justify-center w-full p-4 cursor-pointer transition ${
+                    selectedBet?.team === team2.trim() ? '' : ''
+                  }`}
+                  style={{ backgroundColor: selectedBet?.team === team2.trim() ? '#4fe870' : 'transparent' }}
+                >
+                  <div className={`text-2xl font-bold ${selectedBet?.team === team2.trim() ? 'text-black' : 'text-green-400'} font-pacifico`}>
+                    {team2.trim()}
+                  </div>
+                </div>
+
+                <div className="text-center p-2 bg-zinc-900">
                   <p className="text-sm text-green-300">{game.matchup}</p>
                   <p className="text-sm text-gray-400">Odds: {decimalToAmerican(parseFloat(game.odds))}</p>
                   <p className="text-xs text-gray-500">{new Date(game.game_time).toLocaleString()}</p>
