@@ -161,46 +161,51 @@ export default function Dashboard() {
             const selectedBet = selectedBets.find(b => b.game_id === game.id);
 
             return (
-              <div key={game.id} className="rounded-lg border border-zinc-700 bg-zinc-900 transition overflow-hidden">
-                <div className="flex">
-                  {/* Team 1 */}
-                  <div
-                    onClick={() => handleTeamSelect(game, team1.trim())}
-                    className={`flex flex-col items-center justify-center w-1/2 p-4 cursor-pointer transition ${
-                      selectedBet?.team === team1.trim() ? 'bg-[#4fe870] text-black' : ''
-                    }`}
-                  >
-                    <div className={`flex items-center justify-center w-16 h-16 rounded-full bg-zinc-800 text-2xl font-bold ${
-                      selectedBet?.team === team1.trim() ? 'text-black' : 'text-green-400'
-                    }`}>
-                      {team1.trim().charAt(0)}
-                    </div>
-                    <p className={`mt-1 text-sm text-center ${
-                      selectedBet?.team === team1.trim() ? 'text-black' : 'text-green-300'
-                    }`}>{team1.trim()}</p>
+              <div key={game.id} className="rounded-lg border border-zinc-700 bg-zinc-900 overflow-hidden flex">
+                {/* Team 1 */}
+                <div
+                  onClick={() => handleTeamSelect(game, team1.trim())}
+                  className={`flex flex-col items-center justify-center w-1/2 p-4 cursor-pointer transition ${
+                    selectedBet?.team === team1.trim() ? 'bg-[#4fe870]' : ''
+                  }`}
+                >
+                  <div className={`flex items-center justify-center w-16 h-16 rounded-full bg-black text-2xl font-bold ${
+                    selectedBet?.team === team1.trim() ? 'text-black' : 'text-green-400'
+                  }`}>
+                    {team1.trim().charAt(0)}
                   </div>
-
-                  {/* Team 2 */}
-                  <div
-                    onClick={() => handleTeamSelect(game, team2.trim())}
-                    className={`flex flex-col items-center justify-center w-1/2 p-4 cursor-pointer transition ${
-                      selectedBet?.team === team2.trim() ? 'bg-[#4fe870] text-black' : ''
-                    }`}
-                  >
-                    <div className={`flex items-center justify-center w-16 h-16 rounded-full bg-zinc-800 text-2xl font-bold ${
-                      selectedBet?.team === team2.trim() ? 'text-black' : 'text-green-400'
-                    }`}>
-                      {team2.trim().charAt(0)}
-                    </div>
-                    <p className={`mt-1 text-sm text-center ${
-                      selectedBet?.team === team2.trim() ? 'text-black' : 'text-green-300'
-                    }`}>{team2.trim()}</p>
-                  </div>
+                  <p className={`mt-1 text-sm text-center ${
+                    selectedBet?.team === team1.trim() ? 'text-black' : 'text-green-300'
+                  }`}>{team1.trim()}</p>
+                  <p className={`text-xs ${
+                    selectedBet?.team === team1.trim() ? 'text-black' : 'text-gray-400'
+                  }`}>Odds: {decimalToAmerican(parseFloat(game.odds))}</p>
+                  <p className={`text-[10px] ${
+                    selectedBet?.team === team1.trim() ? 'text-black' : 'text-gray-500'
+                  }`}>{new Date(game.game_time).toLocaleString()}</p>
                 </div>
-                <div className="text-center p-2">
-                  <p className="text-sm text-green-300">{game.matchup}</p>
-                  <p className="text-xs text-gray-400">Odds: {decimalToAmerican(parseFloat(game.odds))}</p>
-                  <p className="text-xs text-gray-500">{new Date(game.game_time).toLocaleString()}</p>
+
+                {/* Team 2 */}
+                <div
+                  onClick={() => handleTeamSelect(game, team2.trim())}
+                  className={`flex flex-col items-center justify-center w-1/2 p-4 cursor-pointer transition ${
+                    selectedBet?.team === team2.trim() ? 'bg-[#4fe870]' : ''
+                  }`}
+                >
+                  <div className={`flex items-center justify-center w-16 h-16 rounded-full bg-black text-2xl font-bold ${
+                    selectedBet?.team === team2.trim() ? 'text-black' : 'text-green-400'
+                  }`}>
+                    {team2.trim().charAt(0)}
+                  </div>
+                  <p className={`mt-1 text-sm text-center ${
+                    selectedBet?.team === team2.trim() ? 'text-black' : 'text-green-300'
+                  }`}>{team2.trim()}</p>
+                  <p className={`text-xs ${
+                    selectedBet?.team === team2.trim() ? 'text-black' : 'text-gray-400'
+                  }`}>Odds: {decimalToAmerican(parseFloat(game.odds))}</p>
+                  <p className={`text-[10px] ${
+                    selectedBet?.team === team2.trim() ? 'text-black' : 'text-gray-500'
+                  }`}>{new Date(game.game_time).toLocaleString()}</p>
                 </div>
               </div>
             );
