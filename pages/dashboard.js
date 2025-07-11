@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import ProfileDrawer from '../components/ProfileDrawer';
 import ChallengeModal from '../components/ChallengeModal';
+import BannerCarousel from '../components/BannerCarousel';
 import Image from 'next/image';
 
 export default function Dashboard() {
@@ -56,7 +57,6 @@ export default function Dashboard() {
 
   const handleTeamSelect = (game, team) => {
     const existingBet = selectedBets.find(b => b.game_id === game.id);
-
     if (existingBet && existingBet.team === team) {
       setSelectedBets(selectedBets.filter(b => b.game_id !== game.id));
     } else {
@@ -154,7 +154,12 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Games */}
+        {/* Banner Carousel */}
+        <div className="px-4">
+          <BannerCarousel />
+        </div>
+
+        {/* Games Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
           {filteredGames.map((game) => {
             const [team1, team2] = game.matchup.split(" vs ");
@@ -169,7 +174,7 @@ export default function Dashboard() {
                     selectedBet?.team === team1.trim() ? 'bg-[#4fe870]' : ''
                   }`}
                 >
-                  <div className={`flex items-center justify-center w-16 h-16 rounded-full bg-black`}>
+                  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-black">
                     {selectedBet?.team === team1.trim() ? (
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#4fe870]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -196,7 +201,7 @@ export default function Dashboard() {
                     selectedBet?.team === team2.trim() ? 'bg-[#4fe870]' : ''
                   }`}
                 >
-                  <div className={`flex items-center justify-center w-16 h-16 rounded-full bg-black`}>
+                  <div className="flex items-center justify-center w-16 h-16 rounded-full bg-black">
                     {selectedBet?.team === team2.trim() ? (
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#4fe870]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -220,7 +225,7 @@ export default function Dashboard() {
           })}
         </div>
 
-        {/* Bet slip and modals remain unchanged */}
+        {/* Existing modals and bet slip remain unchanged */}
       </div>
     </div>
   );
