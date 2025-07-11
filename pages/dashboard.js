@@ -58,10 +58,8 @@ export default function Dashboard() {
     const existingBet = selectedBets.find(b => b.game_id === game.id);
 
     if (existingBet && existingBet.team === team) {
-      // Remove the bet if clicking the same team again
       setSelectedBets(selectedBets.filter(b => b.game_id !== game.id));
     } else {
-      // Replace with new selection
       const newBet = {
         game_id: game.id,
         team: team,
@@ -165,35 +163,43 @@ export default function Dashboard() {
             const selectedBet = selectedBets.find(b => b.game_id === game.id);
 
             return (
-              <div key={game.id} className="p-4 rounded-lg border border-zinc-700 bg-zinc-900 transition">
-                <div className="flex items-center justify-center space-x-8">
-                  {/* Team 1 */}
+              <div key={game.id} className="rounded-lg border border-zinc-700 bg-zinc-900 transition overflow-hidden">
+                <div className="flex">
+                  {/* Team 1 Half */}
                   <div
                     onClick={() => handleTeamSelect(game, team1.trim())}
-                    className={`flex items-center justify-center w-16 h-16 rounded-full cursor-pointer transition ${
-                      selectedBet?.team === team1.trim()
-                        ? 'bg-green-900 text-green-300 border border-green-400'
-                        : 'bg-zinc-800 text-green-400'
-                    } text-2xl font-bold`}
+                    className={`flex flex-col items-center justify-center w-1/2 p-4 cursor-pointer transition ${
+                      selectedBet?.team === team1.trim() ? 'bg-green-900' : ''
+                    }`}
                   >
-                    {team1.trim().charAt(0)}
+                    <div className={`flex items-center justify-center w-16 h-16 rounded-full transition ${
+                      selectedBet?.team === team1.trim() ? 'text-green-300' : 'text-green-400'
+                    } text-2xl font-bold bg-zinc-800`}>
+                      {team1.trim().charAt(0)}
+                    </div>
+                    <p className="mt-1 text-xs text-center">{team1.trim()}</p>
                   </div>
-                  <span className="text-green-400 text-lg font-semibold">vs</span>
-                  {/* Team 2 */}
+
+                  {/* Team 2 Half */}
                   <div
                     onClick={() => handleTeamSelect(game, team2.trim())}
-                    className={`flex items-center justify-center w-16 h-16 rounded-full cursor-pointer transition ${
-                      selectedBet?.team === team2.trim()
-                        ? 'bg-green-900 text-green-300 border border-green-400'
-                        : 'bg-zinc-800 text-green-400'
-                    } text-2xl font-bold`}
+                    className={`flex flex-col items-center justify-center w-1/2 p-4 cursor-pointer transition ${
+                      selectedBet?.team === team2.trim() ? 'bg-green-900' : ''
+                    }`}
                   >
-                    {team2.trim().charAt(0)}
+                    <div className={`flex items-center justify-center w-16 h-16 rounded-full transition ${
+                      selectedBet?.team === team2.trim() ? 'text-green-300' : 'text-green-400'
+                    } text-2xl font-bold bg-zinc-800`}>
+                      {team2.trim().charAt(0)}
+                    </div>
+                    <p className="mt-1 text-xs text-center">{team2.trim()}</p>
                   </div>
                 </div>
-                <p className="text-sm text-green-300 text-center mt-2">{game.matchup}</p>
-                <p className="text-sm text-gray-400 text-center">Odds: {decimalToAmerican(parseFloat(game.odds))}</p>
-                <p className="text-xs text-gray-500 text-center">{new Date(game.game_time).toLocaleString()}</p>
+                <div className="text-center p-2">
+                  <p className="text-sm text-green-300">{game.matchup}</p>
+                  <p className="text-sm text-gray-400">Odds: {decimalToAmerican(parseFloat(game.odds))}</p>
+                  <p className="text-xs text-gray-500">{new Date(game.game_time).toLocaleString()}</p>
+                </div>
               </div>
             );
           })}
@@ -221,7 +227,7 @@ export default function Dashboard() {
                   {selectedBets.map((bet, idx) => (
                     <div key={idx} className="flex justify-between items-center text-sm text-green-300 mb-1">
                       <span>{bet.team} Moneyline ({decimalToAmerican(bet.odds)})</span>
-                      <button onClick={() => removeBetLeg(bet.game_id)} className="text-red-400 hover:text-red-500 ml-2">❌</button>
+                      <button onClick={() => setSelectedBets(selectedBets.filter(b => b.game_id !== bet.game_id))} className="text-red-400 hover:text-red-500 ml-2">❌</button>
                     </div>
                   ))}
                   <p className="text-green-400 mt-2">
