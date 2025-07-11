@@ -203,7 +203,9 @@ export default function Dashboard() {
                   <p className={`text-xs ${
                     selectedBet?.team === team1.trim() ? 'text-black' : 'text-gray-400'
                   }`}>
-                    Odds: {decimalToAmerican(parseFloat(game.odds_team1))}
+                    Odds: {game.odds_team1 && !isNaN(game.odds_team1)
+                      ? decimalToAmerican(parseFloat(game.odds_team1))
+                      : 'N/A'}
                   </p>
                   <p className={`text-[10px] ${
                     selectedBet?.team === team1.trim() ? 'text-black' : 'text-gray-500'
@@ -234,7 +236,9 @@ export default function Dashboard() {
                   <p className={`text-xs ${
                     selectedBet?.team === team2.trim() ? 'text-black' : 'text-gray-400'
                   }`}>
-                    Odds: {decimalToAmerican(parseFloat(game.odds_team2))}
+                    Odds: {game.odds_team2 && !isNaN(game.odds_team2)
+                      ? decimalToAmerican(parseFloat(game.odds_team2))
+                      : 'N/A'}
                   </p>
                   <p className={`text-[10px] ${
                     selectedBet?.team === team2.trim() ? 'text-black' : 'text-gray-500'
