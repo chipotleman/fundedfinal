@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import ProfileDrawer from '../components/ProfileDrawer';
 import ChallengeModal from '../components/ChallengeModal';
+import MatchupCard from '../components/MatchupCard';
 import Image from 'next/image';
 
 export default function Dashboard() {
@@ -157,48 +158,14 @@ export default function Dashboard() {
         {/* Games */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
           {filteredGames.map((game) => {
-            const [team1, team2] = game.matchup.split(" vs ");
             const selectedBet = selectedBets.find(b => b.game_id === game.id);
-
             return (
-              <div key={game.id} className="rounded-lg border border-zinc-700 transition overflow-hidden">
-                {/* Team 1 Top */}
-                <div
-                  onClick={() => handleTeamSelect(game, team1.trim())}
-                  className={`flex flex-col items-center justify-center w-full p-4 cursor-pointer transition ${
-                    selectedBet?.team === team1.trim() ? '' : ''
-                  }`}
-                  style={{ backgroundColor: selectedBet?.team === team1.trim() ? '#4fe870' : 'transparent' }}
-                >
-                  <div className={`text-2xl font-bold ${selectedBet?.team === team1.trim() ? 'text-black' : 'text-green-400'} font-pacifico`}>
-                    {team1.trim()}
-                  </div>
-                </div>
-
-                {/* VS Divider */}
-                <div className="flex justify-center items-center p-1 bg-black">
-                  <span className="text-green-400 text-lg font-bold animate-pulse">VS</span>
-                </div>
-
-                {/* Team 2 Bottom */}
-                <div
-                  onClick={() => handleTeamSelect(game, team2.trim())}
-                  className={`flex flex-col items-center justify-center w-full p-4 cursor-pointer transition ${
-                    selectedBet?.team === team2.trim() ? '' : ''
-                  }`}
-                  style={{ backgroundColor: selectedBet?.team === team2.trim() ? '#4fe870' : 'transparent' }}
-                >
-                  <div className={`text-2xl font-bold ${selectedBet?.team === team2.trim() ? 'text-black' : 'text-green-400'} font-pacifico`}>
-                    {team2.trim()}
-                  </div>
-                </div>
-
-                <div className="text-center p-2 bg-zinc-900">
-                  <p className="text-sm text-green-300">{game.matchup}</p>
-                  <p className="text-sm text-gray-400">Odds: {decimalToAmerican(parseFloat(game.odds))}</p>
-                  <p className="text-xs text-gray-500">{new Date(game.game_time).toLocaleString()}</p>
-                </div>
-              </div>
+              <MatchupCard
+                key={game.id}
+                game={game}
+                selectedBet={selectedBet}
+                handleTeamSelect={handleTeamSelect}
+              />
             );
           })}
         </div>
