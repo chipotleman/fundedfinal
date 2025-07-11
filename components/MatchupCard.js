@@ -1,30 +1,52 @@
-export default function MatchupCard({ matchup, onSelectTeam, selectedTeam }) {
-    const decimalToAmerican = (decimal) => {
-        if (decimal >= 2) {
-            return `+${Math.round((decimal - 1) * 100)}`;
-        } else {
-            return `${Math.round(-100 / (decimal - 1))}`;
-        }
-    };
+// components/MatchupCard.js
 
-    return (
-        <div className="bg-gray-900 rounded-xl shadow-lg hover:shadow-green-400 transition transform hover:-translate-y-1 p-4 border border-gray-700 hover:border-green-400">
-            <h2 className="text-lg font-bold text-center mb-3">{matchup.name}</h2>
-            <div className="flex gap-2">
-                {matchup.teams.map((team) => (
-                    <button
-                        key={team}
-                        onClick={() => onSelectTeam(matchup, team)}
-                        className={`flex-1 py-3 rounded font-semibold border text-lg transition ${
-                            selectedTeam === team
-                                ? 'bg-green-400 text-black border-green-400'
-                                : 'bg-black text-white border-gray-600 hover:bg-gray-800'
-                        }`}
-                    >
-                        {team} ({decimalToAmerican(matchup.odds[team])})
-                    </button>
-                ))}
-            </div>
-        </div>
-    );
+import React from 'react';
+
+export default function MatchupCard({ game, selectedBet, handleTeamSelect }) {
+  const [team1, team2] = game.matchup.split(' vs ');
+
+  return (
+    <div className="relative rounded-xl border border-[#4fe870] bg-black overflow-hidden shadow-[0_0_20px_#4fe87055]">
+      {/* Grid glow background (optional, add bg-grid-pattern in Tailwind if you want) */}
+      {/* <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div> */}
+
+      {/* Team 1 Top Half */}
+      <div
+        onClick={() => handleTeamSelect(game, team1.trim())}
+        className={`flex items-center justify-center h-24 cursor-pointer transition relative ${
+          selectedBet?.team === team1.trim() ? 'bg-[#4fe870] text-black' : 'bg-transparent text-[#4fe870]'
+        }`}
+      >
+        <span className="text-2xl font-pacifico tracking-wide drop-shadow-[0_0_5px_#4fe870]">
+          {team1.trim()}
+        </span>
+      </div>
+
+      {/* VS Divider */}
+      <div className="flex justify-center items-center h-10 bg-black">
+        <span className="text-[#4fe870] text-xl font-bold animate-pulse drop-shadow-[0_0_5px_#4fe870]">
+          VS
+        </span>
+      </div>
+
+      {/* Team 2 Bottom Half */}
+      <div
+        onClick={() => handleTeamSelect(game, team2.trim())}
+        className={`flex items-center justify-center h-24 cursor-pointer transition relative ${
+          selectedBet?.team === team2.trim() ? 'bg-[#4fe870] text-black' : 'bg-transparent text-[#4fe870]'
+        }`}
+      >
+        <span className="text-2xl font-pacifico tracking-wide drop-shadow-[0_0_5px_#4fe870]">
+          {team2.trim()}
+        </span>
+      </div>
+
+      {/* Game Info */}
+      <div className="text-center p-2 bg-black border-t border-[#4fe870]/30">
+        <p className="text-sm text-[#4fe870]">{game.matchup}</p>
+        <p className="text-xs text-gray-400">Odds: {game.odds}</p>
+        <p className="text-xs text-gray-500">{new Date(game.game_time).toLocaleString()}</p>
+      </div>
+    </div>
+  );
 }
