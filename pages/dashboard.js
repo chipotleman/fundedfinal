@@ -168,7 +168,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Banner */}
+        {/* Banner Carousel */}
         <div className="px-4">
           <BannerCarousel />
         </div>
@@ -194,7 +194,11 @@ export default function Dashboard() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     ) : (
-                      <span className="text-green-400 text-2xl font-bold">{team1.trim().charAt(0)}</span>
+                      <span className="text-green-400 text-xl font-bold">
+                        {game.odds_team1 && !isNaN(game.odds_team1)
+                          ? decimalToAmerican(parseFloat(game.odds_team1))
+                          : 'N/A'}
+                      </span>
                     )}
                   </div>
                   <p className={`mt-1 text-sm text-center ${
@@ -227,7 +231,11 @@ export default function Dashboard() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     ) : (
-                      <span className="text-green-400 text-2xl font-bold">{team2.trim().charAt(0)}</span>
+                      <span className="text-green-400 text-xl font-bold">
+                        {game.odds_team2 && !isNaN(game.odds_team2)
+                          ? decimalToAmerican(parseFloat(game.odds_team2))
+                          : 'N/A'}
+                      </span>
                     )}
                   </div>
                   <p className={`mt-1 text-sm text-center ${
