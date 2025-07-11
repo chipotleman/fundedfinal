@@ -13,7 +13,6 @@ export default function Dashboard() {
   const [showBalanceModal, setShowBalanceModal] = useState(false);
   const [selectedLeague, setSelectedLeague] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(false); // collapsed by default
-  const [teamLogos, setTeamLogos] = useState({});
 
   const leagues = [
     { league: 'MLB', emoji: '⚾' },
@@ -54,33 +53,6 @@ export default function Dashboard() {
     };
     fetchData();
   }, []);
-
-  // Fetch team logos automatically
-  useEffect(() => {
-    const fetchLogos = async () => {
-      const logos = {};
-      for (const game of games) {
-        const [team1, team2] = game.matchup.split(" vs ");
-        for (const team of [team1, team2]) {
-          if (!logos[team]) {
-            try {
-              const res = await fetch("/api/fetch-team-logo", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ team_name: team }),
-              });
-              const data = await res.json();
-              logos[team] = data.logo_url || "/team-logos/default.png";
-            } catch {
-              logos[team] = "/team-logos/default.png";
-            }
-          }
-        }
-      }
-      setTeamLogos(logos);
-    };
-    if (games.length) fetchLogos();
-  }, [games]);
 
   const handleBetSelect = (game) => {
     if (selectedBets.find(b => b.id === game.id)) {
@@ -207,21 +179,13 @@ export default function Dashboard() {
                 }`}
               >
                 <div className="flex items-center justify-center space-x-2 mb-2">
-                  <Image
-                    src={teamLogos[team1] || "/team-logos/default.png"}
-                    alt={team1}
-                    width={36}
-                    height={36}
-                    className="rounded-full bg-zinc-800 p-1"
-                  />
+                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-zinc-800 text-green-400 text-xl font-bold">
+                    {team1.trim().charAt(0)}
+                  </div>
                   <span className="text-green-400">vs</span>
-                  <Image
-                    src={teamLogos[team2] || "/team-logos/default.png"}
-                    alt={team2}
-                    width={36}
-                    height={36}
-                    className="rounded-full bg-zinc-800 p-1"
-                  />
+                  <div className="flex items-center justify-center w-12 h-12 rounded-full bg-zinc-800 text-green-400 text-xl font-bold">
+                    {team2.trim().charAt(0)}
+                  </div>
                 </div>
                 <p className="text-sm text-green-300 text-center">{game.matchup}</p>
                 <p className="text-sm text-gray-400 text-center">Odds: {decimalToAmerican(parseFloat(game.odds))}</p>
