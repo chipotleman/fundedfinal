@@ -1,4 +1,3 @@
-// everything preserved from your previous code including imports
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import ProfileDrawer from '../components/ProfileDrawer';
@@ -59,17 +58,20 @@ export default function Dashboard() {
 
   const handleTeamSelect = (game, team) => {
     const existingBet = selectedBets.find(b => b.game_id === game.id);
+    const newOdds = team === game.matchup.split(" vs ")[0].trim()
+      ? parseFloat(game.odds_team1)
+      : parseFloat(game.odds_team2);
+
+    const newBet = {
+      game_id: game.id,
+      team: team,
+      matchup: game.matchup,
+      odds: newOdds,
+    };
+
     if (existingBet && existingBet.team === team) {
       setSelectedBets(selectedBets.filter(b => b.game_id !== game.id));
     } else {
-      const newBet = {
-        game_id: game.id,
-        team: team,
-        matchup: game.matchup,
-        odds: team === game.matchup.split(" vs ")[0].trim()
-          ? parseFloat(game.odds_team1)
-          : parseFloat(game.odds_team2),
-      };
       setSelectedBets(prev =>
         existingBet
           ? prev.map(b => (b.game_id === game.id ? newBet : b))
@@ -111,7 +113,6 @@ export default function Dashboard() {
   const challengeGoal = 2500;
   const pnl = bankroll - startingBankroll;
   const progressPercent = Math.min(100, Math.max(0, (bankroll / challengeGoal) * 100));
-
   const combinedDecimal = selectedBets.reduce((acc, bet) => acc * bet.odds, 1);
   const payout = (combinedDecimal * wager).toFixed(2);
   const simulatedProgress = ((parseFloat(payout) + bankroll - startingBankroll) / (challengeGoal - startingBankroll)) * 100;
@@ -152,7 +153,6 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex justify-between items-center p-4">
           <Image src="/rollr-logo.png" alt="Rollr Logo" width={130} height={40} priority />
-
           <div className="flex space-x-4 items-center">
             {selectedBets.length > 0 && (
               <div
@@ -173,14 +173,57 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Banner Carousel */}
+        {/* Banner */}
         <div className="px-4">
           <BannerCarousel />
         </div>
 
-        {/* Games Grid */}
+        {/* Game Matchups */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
-          {/* Keep your game cards exactly as is, not repeating here to save length */}
+          {filteredGames.map((game) => {
+            const [team1, team2] = game.matchup.split(" vs ");
+            const selectedBet = selectedBets.find(b => b.game_id === game.id);
+
+            return (
+              <div key={game.id} className="rounded-lg border border-zinc-700 bg-zinc-900 overflow-hidden flex">
+                {[team1, team2].map((team, index) => {
+                  const isSelected = selectedBet?.team === team.trim();
+                  const odds = index === 0 ? game.odds_team1 : game.odds_team2;
+
+                  return (
+                    <div
+                      key={team}
+                      onClick={() => handleTeamSelect(game, team.trim())}
+                      className={`flex flex-col items-center justify-center w-1/2 p-4 cursor-pointer transition ${
+                        isSelected ? 'bg-[#4fe870]' : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-center w-16 h-16 rounded-full bg-black">
+                        {isSelected ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#4fe870]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        ) : (
+                          <span className="text-green-400 text-xl font-bold">
+                            {odds ? decimalToAmerican(parseFloat(odds)) : 'N/A'}
+                          </span>
+                        )}
+                      </div>
+                      <p className={`mt-1 text-sm text-center ${isSelected ? 'text-black' : 'text-green-300'}`}>
+                        {team.trim()}
+                      </p>
+                      <p className={`text-xs ${isSelected ? 'text-black' : 'text-gray-400'}`}>
+                        Odds: {odds ? decimalToAmerican(parseFloat(odds)) : 'N/A'}
+                      </p>
+                      <p className={`text-[10px] ${isSelected ? 'text-black' : 'text-gray-500'}`}>
+                        {new Date(game.game_time).toLocaleString()}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
         </div>
 
         {/* Bet Slip Modal */}
@@ -229,7 +272,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Challenge Modal */}
         {showBalanceModal && (
           <ChallengeModal
             pnl={pnl}
