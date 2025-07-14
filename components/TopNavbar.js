@@ -1,7 +1,6 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import logo from "../public/rollrlogowide.png";
 
 const TopNavbar = ({
   selectedBets = [],
@@ -14,7 +13,7 @@ const TopNavbar = ({
         {/* Left: Logo */}
         <Link href="/">
           <div className="flex items-center gap-2 cursor-pointer">
-            <Image src={logo} alt="Logo" width={120} height={40} />
+            <Image src="/rollr-logo.png" alt="Rollr Logo" width={120} height={40} />
           </div>
         </Link>
 
@@ -24,9 +23,7 @@ const TopNavbar = ({
             <span className="hover:text-white cursor-pointer">Dashboard</span>
           </Link>
           <Link href="/how-it-works">
-            <span className="hover:text-white cursor-pointer">
-              How It Works
-            </span>
+            <span className="hover:text-white cursor-pointer">How It Works</span>
           </Link>
           <Link href="/rules">
             <span className="hover:text-white cursor-pointer">Rules</span>
@@ -35,9 +32,9 @@ const TopNavbar = ({
 
         {/* Right: Balance and Bet Slip */}
         <div className="flex items-center gap-4">
-          {/* Clickable Balance */}
+          {/* Balance */}
           <div
-            onClick={() => setShowWalletModal(true)}
+            onClick={() => setShowWalletModal?.(true)}
             className="bg-gray-800 px-3 py-1 rounded-xl text-sm text-green-400 font-semibold cursor-pointer hover:bg-gray-700 transition"
           >
             💰 ${bankroll}
