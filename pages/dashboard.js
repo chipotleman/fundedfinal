@@ -106,7 +106,7 @@ export default function Dashboard() {
   return (
     <div className="bg-black text-white min-h-screen font-mono pt-20 flex">
       {/* Sidebar (Desktop Only) */}
-      <div className={`hidden sm:flex transition-all ${sidebarOpen ? "w-44 sm:w-48 md:w-56" : "w-16"} bg-black p-2 flex-col items-center`}>
+      <div className="hidden sm:flex transition-all bg-black p-2 flex-col items-center w-44 sm:w-48 md:w-56">
         <div className="flex flex-col space-y-2 mt-12">
           {leagues.map((item) => (
             <button
@@ -117,25 +117,18 @@ export default function Dashboard() {
               }`}
             >
               <span className="text-xl">{item.emoji}</span>
-              {sidebarOpen && <span>{item.league}</span>}
+              <span>{item.league}</span>
             </button>
           ))}
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="mt-6 self-center text-green-400 text-2xl transition"
-          >
-            {sidebarOpen ? '⇤' : '⇥'}
-          </button>
         </div>
-        <div className="fixed bottom-4 z-50 transition-all"
-          style={{ left: sidebarOpen ? '6rem' : '2rem', transform: 'translateX(-50%)' }}>
+        <div className="fixed bottom-4 z-50 transition-all left-20">
           <ProfileDrawer />
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
+        {/* Navbar */}
         <TopNavbar
           selectedBets={selectedBets}
           bankroll={bankroll}
@@ -143,7 +136,7 @@ export default function Dashboard() {
           onShowBalance={() => setShowBalanceModal(true)}
         />
 
-        {/* Mobile League Bubbles */}
+        {/* League Bubbles (Mobile Only) */}
         <div className="sm:hidden px-4 mt-4">
           <div className="flex space-x-4 overflow-x-auto scrollbar-hide">
             {leagues.map((item) => (
@@ -164,23 +157,24 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Banner Carousel */}
-        <div className="px-4 mt-4">
-          <BannerCarousel />
+        {/* Banner Carousel with Padding */}
+        <div className="px-4 mt-4 mb-6">
+          <div className="rounded-lg overflow-hidden border border-zinc-700">
+            <BannerCarousel />
+          </div>
         </div>
 
         {/* Games */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
           {filteredGames.map((game) => {
             const [team1, team2] = game.matchup.split(" vs ");
             const selectedBet = selectedBets.find(b => b.game_id === game.id);
-
             const isSelected = (team) => selectedBet?.team === team;
 
             const renderTeamBox = (team, odds) => (
               <div
                 onClick={() => handleTeamSelect(game, team.trim())}
-                className={`flex flex-col items-center justify-center w-full sm:w-1/2 p-4 cursor-pointer transition ${
+                className={`flex flex-col items-center justify-center w-1/2 p-4 cursor-pointer transition ${
                   isSelected(team.trim()) ? 'bg-[#4fe870]' : ''
                 }`}
               >
@@ -190,7 +184,7 @@ export default function Dashboard() {
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   ) : (
-                    <span className="text-green-400 text-xl font-bold">
+                    <span className="text-green-400 text-lg sm:text-xl font-bold">
                       {odds && !isNaN(odds) ? decimalToAmerican(parseFloat(odds)) : 'N/A'}
                     </span>
                   )}
@@ -216,7 +210,7 @@ export default function Dashboard() {
           })}
         </div>
 
-        {/* Modals */}
+        {/* Bet Slip Modal */}
         {showBetSlipModal && (
           <div onClick={() => setShowBetSlipModal(false)} className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex justify-center items-center z-50">
             <div onClick={(e) => e.stopPropagation()} className="bg-zinc-900/95 rounded-lg border border-green-400 p-6 w-80 max-h-[80%] overflow-y-auto">
@@ -260,6 +254,7 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* Balance Modal */}
         {showBalanceModal && (
           <ChallengeModal
             pnl={pnl}
