@@ -17,7 +17,7 @@ export default function BannerCarousel() {
   }, []);
 
   return (
-    <div className="w-full overflow-hidden relative rounded-lg mb-4">
+    <div className="w-full overflow-hidden relative rounded-lg">
       {banners.map((src, idx) => (
         <img
           key={idx}
