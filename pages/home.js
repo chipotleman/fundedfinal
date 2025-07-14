@@ -1,25 +1,20 @@
-import TopNavbar from '../components/TopNavbar';
+// pages/home.js
+import React from "react";
 
-export default function Home({ bankroll = 0, selectedBets = [] }) {
+const Home = ({ selectedBets = [], bankroll = 1000 }) => {
   return (
-    <div className="bg-black text-white min-h-screen font-mono">
-      <TopNavbar bankroll={bankroll} selectedBets={selectedBets} />
-      <div className="pt-[80px] px-4">
-        <h1 className="text-3xl font-bold text-green-400 mb-4">Welcome to Funded Final</h1>
-        <p className="text-zinc-300 mb-4">
-          Compete in betting challenges with real odds, simulated money, and climb your way to becoming a funded bettor. Track your performance, challenge friends, and earn the right to play with real house money.
-        </p>
-        <div className="grid sm:grid-cols-2 gap-6 mt-8">
-          <div className="bg-zinc-900 p-4 rounded-lg border border-zinc-700">
-            <h2 className="text-xl text-green-300 font-semibold mb-2">Start a Challenge</h2>
-            <p className="text-zinc-400">Choose your league, place bets, and try to reach the goal to get funded.</p>
-          </div>
-          <div className="bg-zinc-900 p-4 rounded-lg border border-zinc-700">
-            <h2 className="text-xl text-green-300 font-semibold mb-2">Track Progress</h2>
-            <p className="text-zinc-400">See your bankroll grow or shrink with every bet. Make smart picks and manage your risk.</p>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen bg-black text-white pt-24 px-6 sm:px-12 lg:px-32 text-center">
+      <h1 className="text-4xl sm:text-5xl font-extrabold neon-text mb-4">
+        Welcome to the Challenge
+      </h1>
+      <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto">
+        Bet with zero risk. Compete in performance-based challenges. Win real payouts.
+      </p>
+      <p className="text-green-400 mt-6 font-semibold">
+        Your current bankroll: ${bankroll}
+      </p>
     </div>
   );
-}
+};
+
+export default Home;
