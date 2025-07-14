@@ -130,13 +130,11 @@ export default function Dashboard() {
       <div className="flex-1 flex flex-col">
         {/* Navbar */}
         <TopNavbar
-  selectedBets={selectedBets}
-  bankroll={bankroll}
-  onShowBetSlip={() => setShowBetSlipModal(true)}
-  onShowBalance={() => setShowBalanceModal(true)}
-  progressPercent={progressPercent}
-/>
-
+          selectedBets={selectedBets}
+          bankroll={bankroll}
+          onShowBetSlip={() => setShowBetSlipModal(true)}
+          onShowBalance={() => setShowBalanceModal(true)}
+        />
 
         {/* League Bubbles (Mobile Only) */}
         <div className="sm:hidden px-4 mt-4">
@@ -144,9 +142,7 @@ export default function Dashboard() {
             {leagues.map((item) => (
               <button
                 key={item.league}
-                onClick={() =>
-                  setSelectedLeague(item.league === selectedLeague ? null : item.league)
-                }
+                onClick={() => setSelectedLeague(item.league === selectedLeague ? null : item.league)}
                 className={`flex-shrink-0 w-14 h-14 rounded-full text-2xl flex items-center justify-center transition border-2 ${
                   item.league === selectedLeague
                     ? 'bg-green-700 text-black border-green-400'
@@ -159,7 +155,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Banner Carousel with Padding */}
+        {/* Banner */}
         <div className="px-4 mt-4 mb-6">
           <div className="rounded-lg overflow-hidden border border-zinc-700">
             <BannerCarousel />
@@ -173,40 +169,40 @@ export default function Dashboard() {
             const selectedBet = selectedBets.find(b => b.game_id === game.id);
             const isSelected = (team) => selectedBet?.team === team;
 
-            const renderTeamBox = (team, odds) => (
+            const renderTeamBox = (team, odds, isTeam1) => (
               <div
                 onClick={() => handleTeamSelect(game, team.trim())}
-                className={`flex flex-col items-center justify-center w-1/2 p-4 cursor-pointer transition ${
-                  isSelected(team.trim()) ? 'bg-[#4fe870]' : ''
-                }`}
+                className={`flex flex-col items-center justify-center w-full p-3 sm:w-1/2 cursor-pointer transition rounded-b-lg sm:rounded-none ${
+                  isSelected(team.trim()) ? 'bg-[#4fe870] text-black' : 'bg-zinc-900 text-green-300'
+                } ${isTeam1 ? 'rounded-tl-lg sm:rounded-none' : 'rounded-tr-lg sm:rounded-none'}`}
               >
-                <div className="flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-black">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center border-2 ${
+                  isSelected(team.trim()) ? 'border-black' : 'border-green-400'
+                } bg-black shadow-md`}>
                   {isSelected(team.trim()) ? (
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#4fe870]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   ) : (
-                    <span className="text-green-400 text-lg sm:text-xl font-bold">
-                      {odds && !isNaN(odds) ? decimalToAmerican(parseFloat(odds)) : 'N/A'}
-                    </span>
+                    <span className="text-green-400 font-extrabold text-xl">{decimalToAmerican(parseFloat(odds))}</span>
                   )}
                 </div>
-                <p className={`mt-1 text-sm text-center ${isSelected(team.trim()) ? 'text-black' : 'text-green-300'}`}>
-                  {team.trim()}
-                </p>
-                <p className={`text-xs ${isSelected(team.trim()) ? 'text-black' : 'text-gray-400'}`}>
-                  Odds: {odds && !isNaN(odds) ? decimalToAmerican(parseFloat(odds)) : 'N/A'}
-                </p>
-                <p className={`text-[10px] ${isSelected(team.trim()) ? 'text-black' : 'text-gray-500'}`}>
-                  {new Date(game.game_time).toLocaleString()}
-                </p>
+                <div className="mt-2 font-bold text-sm text-center uppercase">{team.trim()}</div>
+                <div className="text-[11px] text-gray-400">Odds: {decimalToAmerican(parseFloat(odds))}</div>
+                <div className="text-[10px] text-gray-500">{new Date(game.game_time).toLocaleString()}</div>
               </div>
             );
 
             return (
-              <div key={game.id} className="rounded-lg border border-zinc-700 bg-zinc-900 overflow-hidden flex flex-col sm:flex-row">
-                {renderTeamBox(team1, game.odds_team1)}
-                {renderTeamBox(team2, game.odds_team2)}
+              <div
+                key={game.id}
+                className="rounded-xl border-2 border-green-600 overflow-hidden shadow-lg sm:flex bg-zinc-900"
+              >
+                <div className="flex sm:flex-row flex-col w-full">
+                  {renderTeamBox(team1, game.odds_team1, true)}
+                  <div className="w-full h-[2px] sm:h-full sm:w-[2px] bg-green-500 opacity-30 sm:mx-0" />
+                  {renderTeamBox(team2, game.odds_team2, false)}
+                </div>
               </div>
             );
           })}
