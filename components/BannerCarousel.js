@@ -28,14 +28,6 @@ export default function BannerCarousel() {
           }`}
         />
       ))}
-      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
-        {banners.map((_, idx) => (
-          <div
-            key={idx}
-            className={`w-2 h-2 rounded-full ${idx === current ? 'bg-[#4fe870]' : 'bg-gray-500'}`}
-          />
-        ))}
-      </div>
     </div>
   );
 }
