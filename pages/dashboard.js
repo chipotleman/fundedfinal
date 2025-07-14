@@ -33,7 +33,10 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return (window.location.href = '/login');
+      if (!session) {
+        window.location.href = '/login';
+        return;
+      }
       setUser(session.user);
 
       const { data: balanceData } = await supabase
@@ -49,27 +52,20 @@ export default function Dashboard() {
         .order('game_time', { ascending: true });
       setGames(gamesData || []);
     };
-
     fetchData();
-
-    // Collapse sidebar on small screens
-    const handleResize = () => setSidebarOpen(window.innerWidth >= 640);
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const handleTeamSelect = (game, team) => {
-    const existing = selectedBets.find(b => b.game_id === game.id);
+    const existingBet = selectedBets.find(b => b.game_id === game.id);
     const odds = team === game.matchup.split(" vs ")[0].trim()
       ? parseFloat(game.odds_team1)
       : parseFloat(game.odds_team2);
 
-    if (existing && existing.team === team) {
+    if (existingBet && existingBet.team === team) {
       setSelectedBets(selectedBets.filter(b => b.game_id !== game.id));
     } else {
       const newBet = { game_id: game.id, team, odds };
-      setSelectedBets(existing
+      setSelectedBets(existingBet
         ? selectedBets.map(b => b.game_id === game.id ? newBet : b)
         : [...selectedBets, newBet]);
     }
@@ -79,11 +75,11 @@ export default function Dashboard() {
 
   const placeBets = async () => {
     if (!selectedBets.length) return alert("No bets selected.");
-    const combinedDecimal = selectedBets.reduce((acc, b) => acc * b.odds, 1);
+    const combinedDecimal = selectedBets.reduce((acc, bet) => acc * bet.odds, 1);
     const { error } = await supabase.from('bets').insert([{
       user_id: user.id,
       game_id: null,
-      amount: selectedBets[0]?.amount || 10,
+      amount: selectedBets[0].amount || 10,
       odds: combinedDecimal,
       status: 'open',
       type: 'parlay',
@@ -99,7 +95,7 @@ export default function Dashboard() {
   };
 
   const filteredGames = selectedLeague
-    ? games.filter(g => g.sport === selectedLeague)
+    ? games.filter((game) => game.sport === selectedLeague)
     : games;
 
   const startingBankroll = 1000;
@@ -108,15 +104,15 @@ export default function Dashboard() {
   const progressPercent = Math.min(100, Math.max(0, (bankroll / challengeGoal) * 100));
 
   return (
-    <div className="bg-black text-white min-h-screen font-mono pt-20 flex flex-col sm:flex-row">
-      {/* Sidebar */}
-      <div className={`transition-all ${sidebarOpen ? "w-full sm:w-48 md:w-56" : "w-16"} bg-black p-2 flex sm:flex-col items-center sm:items-start`}>
-        <div className="flex sm:flex-col space-x-2 sm:space-x-0 sm:space-y-2 mt-4 sm:mt-12 w-full justify-center sm:justify-start">
+    <div className="bg-black text-white min-h-screen font-mono pt-20 flex">
+      {/* Sidebar (Desktop Only) */}
+      <div className={`hidden sm:flex transition-all ${sidebarOpen ? "w-44 sm:w-48 md:w-56" : "w-16"} bg-black p-2 flex-col items-center`}>
+        <div className="flex flex-col space-y-2 mt-12">
           {leagues.map((item) => (
             <button
               key={item.league}
               onClick={() => setSelectedLeague(item.league === selectedLeague ? null : item.league)}
-              className={`flex items-center space-x-2 p-2 rounded w-full justify-center sm:justify-start transition ${
+              className={`flex items-center space-x-2 p-2 rounded transition ${
                 item.league === selectedLeague ? 'bg-green-900 text-green-300' : 'text-white hover:bg-zinc-900'
               }`}
             >
@@ -124,20 +120,22 @@ export default function Dashboard() {
               {sidebarOpen && <span>{item.league}</span>}
             </button>
           ))}
-        </div>
-        <div className="mt-4 sm:mt-6 sm:self-center text-green-400 text-2xl">
-          <button onClick={() => setSidebarOpen(!sidebarOpen)}>
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="mt-6 self-center text-green-400 text-2xl transition"
+          >
             {sidebarOpen ? '⇤' : '⇥'}
           </button>
         </div>
-        <div className="fixed bottom-4 z-50"
+        <div className="fixed bottom-4 z-50 transition-all"
           style={{ left: sidebarOpen ? '6rem' : '2rem', transform: 'translateX(-50%)' }}>
           <ProfileDrawer />
         </div>
       </div>
 
-      {/* Main */}
+      {/* Main Content */}
       <div className="flex-1 flex flex-col">
+        {/* Header */}
         <TopNavbar
           selectedBets={selectedBets}
           bankroll={bankroll}
@@ -145,11 +143,33 @@ export default function Dashboard() {
           onShowBalance={() => setShowBalanceModal(true)}
         />
 
+        {/* Mobile League Bubbles */}
+        <div className="sm:hidden px-4 mt-4">
+          <div className="flex space-x-4 overflow-x-auto scrollbar-hide">
+            {leagues.map((item) => (
+              <button
+                key={item.league}
+                onClick={() =>
+                  setSelectedLeague(item.league === selectedLeague ? null : item.league)
+                }
+                className={`flex-shrink-0 w-14 h-14 rounded-full text-2xl flex items-center justify-center transition border-2 ${
+                  item.league === selectedLeague
+                    ? 'bg-green-700 text-black border-green-400'
+                    : 'bg-zinc-800 text-green-300 border-zinc-700'
+                }`}
+              >
+                {item.emoji}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Banner Carousel */}
         <div className="px-4 mt-4">
           <BannerCarousel />
         </div>
 
-        {/* Matchups */}
+        {/* Games */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
           {filteredGames.map((game) => {
             const [team1, team2] = game.matchup.split(" vs ");
@@ -160,26 +180,26 @@ export default function Dashboard() {
             const renderTeamBox = (team, odds) => (
               <div
                 onClick={() => handleTeamSelect(game, team.trim())}
-                className={`flex flex-col items-center justify-center w-full sm:w-1/2 p-3 cursor-pointer transition ${
+                className={`flex flex-col items-center justify-center w-full sm:w-1/2 p-4 cursor-pointer transition ${
                   isSelected(team.trim()) ? 'bg-[#4fe870]' : ''
                 }`}
               >
-                <div className="flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-black">
+                <div className="flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-black">
                   {isSelected(team.trim()) ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 sm:h-8 sm:w-8 text-[#4fe870]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#4fe870]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                   ) : (
-                    <span className="text-green-400 text-base sm:text-xl font-bold">
+                    <span className="text-green-400 text-xl font-bold">
                       {odds && !isNaN(odds) ? decimalToAmerican(parseFloat(odds)) : 'N/A'}
                     </span>
                   )}
                 </div>
-                <p className={`mt-1 text-xs sm:text-sm text-center ${isSelected(team.trim()) ? 'text-black' : 'text-green-300'}`}>
+                <p className={`mt-1 text-sm text-center ${isSelected(team.trim()) ? 'text-black' : 'text-green-300'}`}>
                   {team.trim()}
                 </p>
-                <p className={`text-[10px] sm:text-xs ${isSelected(team.trim()) ? 'text-black' : 'text-gray-400'}`}>
-                  Odds: {decimalToAmerican(odds)}
+                <p className={`text-xs ${isSelected(team.trim()) ? 'text-black' : 'text-gray-400'}`}>
+                  Odds: {odds && !isNaN(odds) ? decimalToAmerican(parseFloat(odds)) : 'N/A'}
                 </p>
                 <p className={`text-[10px] ${isSelected(team.trim()) ? 'text-black' : 'text-gray-500'}`}>
                   {new Date(game.game_time).toLocaleString()}
@@ -199,7 +219,7 @@ export default function Dashboard() {
         {/* Modals */}
         {showBetSlipModal && (
           <div onClick={() => setShowBetSlipModal(false)} className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex justify-center items-center z-50">
-            <div onClick={(e) => e.stopPropagation()} className="bg-zinc-900/95 rounded-lg border border-green-400 p-6 w-[90vw] max-w-sm max-h-[80%] overflow-y-auto">
+            <div onClick={(e) => e.stopPropagation()} className="bg-zinc-900/95 rounded-lg border border-green-400 p-6 w-80 max-h-[80%] overflow-y-auto">
               <h2 className="text-lg font-semibold text-green-400 mb-2">Parlay Slip</h2>
               {selectedBets.length === 0 ? (
                 <p className="text-green-300 text-sm">No bets selected.</p>
