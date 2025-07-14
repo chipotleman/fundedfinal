@@ -89,7 +89,7 @@ const HowItWorks = ({ selectedBets = [], bankroll = 1000 }) => {
         </div>
       </section>
 
-      {/* FAQ Section */}
+      {/* FAQ */}
       <section className="space-y-6 pb-24">
         <h2 className="text-3xl font-bold text-center neon-text">Frequently Asked Questions</h2>
         <div className="space-y-4 max-w-3xl mx-auto">
