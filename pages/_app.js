@@ -1,5 +1,5 @@
-import '@/styles/globals.css';
-import TopNavbar from '@/components/TopNavbar';
+import '../styles/globals.css';
+import TopNavbar from '../components/TopNavbar';
 import { useState } from 'react';
 
 export default function App({ Component, pageProps }) {
