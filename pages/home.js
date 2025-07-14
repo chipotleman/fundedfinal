@@ -1,44 +1,27 @@
-import TopNavBar from '../components/TopNavBar';
-import Image from 'next/image';
-import Link from 'next/link';
+import TopNavbar from '../components/TopNavbar';
 
 export default function Home() {
   return (
-    <div className="bg-black text-white min-h-screen font-mono">
-      <TopNavBar />
-
-      {/* Hero Section */}
-      <div className="flex flex-col items-center justify-center text-center px-6 py-20 bg-[url('/banner2.jpg')] bg-cover bg-center">
-        <h1 className="text-5xl sm:text-6xl font-extrabold text-green-400 drop-shadow-lg mb-4 animate-fade-in">
-          TAKE THE CHALLENGE TO GET FUNDED
-        </h1>
-        <p className="text-xl sm:text-2xl text-gray-200 max-w-2xl mb-6 animate-fade-in">
-          Bet with no risk. Prove your skills. Get a real bankroll.
+    <div className="bg-black text-white min-h-screen">
+      <TopNavbar />
+      <section className="px-6 py-12 text-center">
+        <h1 className="text-4xl font-extrabold text-[#4fe870] mb-4">Do You Have What It Takes?</h1>
+        <p className="text-lg text-zinc-400 mb-10">
+          Welcome to the ultimate betting challenge. Climb the ladder, grow your bankroll, and prove you're the best.
         </p>
-        <Link href="/dashboard">
-          <button className="bg-green-400 hover:bg-green-500 text-black font-bold px-8 py-3 rounded-lg text-lg transition animate-fade-in">
-            Enter the Sportsbook
-          </button>
-        </Link>
-      </div>
-
-      {/* How It Works Preview */}
-      <div className="px-8 py-16">
-        <h2 className="text-3xl text-green-400 font-bold mb-6 text-center">How It Works</h2>
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
           {[
-            { title: 'Start Free', text: 'We fund your account to start.', emoji: '🎁' },
-            { title: 'Hit Targets', text: 'Climb the challenge to get funded.', emoji: '📊' },
-            { title: 'Win Real Cash', text: 'Profit? We back you with real funds.', emoji: '💵' }
+            { title: '1. Get Funded', desc: 'Start with a free bankroll and no risk.' },
+            { title: '2. Bet Smart', desc: 'Use real-time odds and pick winners.' },
+            { title: '3. Get Paid', desc: 'Reach the target and cash out real rewards.' },
           ].map((step, i) => (
-            <div key={i} className="bg-zinc-900 border border-green-400 rounded-lg p-6 text-center animate-fade-in">
-              <div className="text-5xl mb-2">{step.emoji}</div>
-              <h3 className="text-xl font-bold text-green-300">{step.title}</h3>
-              <p className="text-gray-300 mt-2">{step.text}</p>
+            <div key={i} className="border border-zinc-700 rounded-lg p-6 bg-zinc-900 hover:bg-zinc-800 transition">
+              <h2 className="text-xl text-[#4fe870] font-bold mb-2">{step.title}</h2>
+              <p className="text-zinc-400 text-sm">{step.desc}</p>
             </div>
           ))}
         </div>
-      </div>
+      </section>
     </div>
   );
 }
