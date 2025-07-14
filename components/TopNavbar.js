@@ -1,7 +1,12 @@
+// components/TopNavbar.js
 import React from "react";
 import Link from "next/link";
 
-const TopNavbar = ({ bankroll = 1000, selectedBets = [], setShowWalletModal }) => {
+const TopNavbar = ({
+  bankroll = 1000,
+  selectedBets = [],
+  setShowWalletModal = null,
+}) => {
   return (
     <div className="fixed top-0 left-0 w-full bg-black border-b border-gray-800 z-50 px-6 sm:px-12 lg:px-24 py-4 flex justify-between items-center shadow-lg">
       {/* Left - Logo */}
@@ -28,14 +33,8 @@ const TopNavbar = ({ bankroll = 1000, selectedBets = [], setShowWalletModal }) =
       <div className="flex items-center gap-4 text-white">
         {/* Balance (clickable) */}
         <div
+          onClick={() => setShowWalletModal?.(true)}
           className="bg-gray-800 px-3 py-1 rounded-xl text-sm text-green-400 font-semibold cursor-pointer hover:bg-gray-700 transition-all"
-          onClick={() => {
-            if (setShowWalletModal) {
-              setShowWalletModal(true);
-            } else {
-              alert(`Bankroll: $${bankroll}`);
-            }
-          }}
         >
           💰 ${bankroll}
         </div>
