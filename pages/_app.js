@@ -1,17 +1,27 @@
 // pages/_app.js
-
-import Head from 'next/head';
-import '../styles/globals.css';
+import "@/styles/globals.css";
+import TopNavbar from "@/components/TopNavbar";
+import { useState } from "react";
 
 function MyApp({ Component, pageProps }) {
+  // Ensure consistent default props (avoids crashing on refresh)
+  const [selectedBets, setSelectedBets] = useState([]);
+  const [bankroll, setBankroll] = useState(1000);
+
   return (
     <>
-      <Head>
-        <title>RollrFunded Sportsbook</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="description" content="Funded sports betting platform by RollrFunded" />
-      </Head>
-      <Component {...pageProps} />
+      <TopNavbar
+        selectedBets={selectedBets}
+        setSelectedBets={setSelectedBets}
+        bankroll={bankroll}
+      />
+      <Component
+        {...pageProps}
+        selectedBets={selectedBets}
+        setSelectedBets={setSelectedBets}
+        bankroll={bankroll}
+        setBankroll={setBankroll}
+      />
     </>
   );
 }
