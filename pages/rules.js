@@ -2,33 +2,17 @@ import TopNavbar from '../components/TopNavbar';
 
 export default function Rules() {
   return (
-    <>
+    <div className="bg-black min-h-screen text-green-300 font-mono">
       <TopNavbar />
-      <div className="pt-24 px-6 sm:px-12 text-green-300 font-mono max-w-3xl mx-auto">
-        <h1 className="text-3xl sm:text-5xl font-bold mb-6">📜 Rules of the Challenge</h1>
-
-        <ol className="list-decimal ml-6 space-y-4 text-lg">
-          <li>
-            Start with a funded bankroll (e.g., $1,000) — this is your challenge capital.
-          </li>
-          <li>
-            Bet using real-time odds from the daily game slate.
-          </li>
-          <li>
-            Reach the goal (e.g., $2,500) without violating risk parameters.
-          </li>
-          <li>
-            No overbetting — stay within your daily loss limits and wager sizing.
-          </li>
-          <li>
-            Once funded, you’ll be able to bet with real payouts based on performance.
-          </li>
+      <div className="pt-24 px-6 max-w-4xl mx-auto text-left space-y-4">
+        <h1 className="text-3xl font-bold text-[#4fe870]">How It Works</h1>
+        <ol className="list-decimal list-inside space-y-2 text-lg">
+          <li>Start with a funded virtual bankroll.</li>
+          <li>Place bets using real-time odds across different leagues.</li>
+          <li>Build parlays or place single bets—track your growth.</li>
+          <li>Reach the challenge goal to unlock real-world funding.</li>
         </ol>
-
-        <div className="mt-10 text-sm text-gray-400">
-          Subject to verification and fair play checks.
-        </div>
       </div>
-    </>
+    </div>
   );
 }
