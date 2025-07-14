@@ -1,47 +1,56 @@
-import Link from 'next/link';
-import Image from 'next/image';
+import React from "react";
+import Link from "next/link";
 
-export default function TopNavbar({ selectedBets = [], bankroll = 0, onShowBetSlip, onShowBalance }) {
+const TopNavbar = ({ bankroll = 1000, selectedBets = [], setShowWalletModal }) => {
   return (
-    <div className="fixed top-0 left-0 w-full z-50 bg-black text-white h-20 px-4 flex items-center justify-between border-b border-transparent">
-      {/* Logo */}
-      <div className="flex items-center">
-        <Image
-          src="/rollr-logo.png"
-          alt="Rollr Logo"
-          width={130}
-          height={40}
-          priority
-        />
+    <div className="fixed top-0 left-0 w-full bg-black border-b border-gray-800 z-50 px-6 sm:px-12 lg:px-24 py-4 flex justify-between items-center shadow-lg">
+      {/* Left - Logo */}
+      <Link href="/">
+        <span className="text-white text-xl sm:text-2xl font-bold cursor-pointer hover:text-green-400">
+          🕹️ FundedBets
+        </span>
+      </Link>
+
+      {/* Center - Navigation */}
+      <div className="hidden sm:flex gap-8 text-gray-300 font-medium">
+        <Link href="/dashboard">
+          <span className="hover:text-white cursor-pointer">Dashboard</span>
+        </Link>
+        <Link href="/how-it-works">
+          <span className="hover:text-white cursor-pointer">How It Works</span>
+        </Link>
+        <Link href="/rules">
+          <span className="hover:text-white cursor-pointer">Rules</span>
+        </Link>
       </div>
 
-      {/* Navigation */}
-      <div className="flex space-x-6 text-sm sm:text-base font-semibold text-green-300">
-        <Link href="/home" className="hover:text-green-400 transition">Home</Link>
-        <Link href="/dashboard" className="hover:text-green-400 transition">Dashboard</Link>
-        <Link href="/rules" className="hover:text-green-400 transition">Rules</Link>
-        <Link href="/how-it-works" className="hover:text-green-400 transition">How it Works</Link>
-      </div>
-
-      {/* Right Actions */}
-      <div className="flex items-center space-x-4">
-        {selectedBets.length > 0 && (
-          <div
-            onClick={onShowBetSlip}
-            className="border border-green-400 rounded-lg px-4 py-2 text-green-400 text-center bg-zinc-900/60 shadow cursor-pointer hover:bg-zinc-800 transition"
-          >
-            <div className="text-sm text-green-300">Slip</div>
-            <div className="text-xl font-semibold">{selectedBets.length}</div>
-          </div>
-        )}
+      {/* Right - Balance & Bet Slip */}
+      <div className="flex items-center gap-4 text-white">
+        {/* Balance (clickable) */}
         <div
-          onClick={onShowBalance}
-          className="border border-green-400 rounded-lg px-4 py-2 text-green-400 text-center bg-zinc-900/60 shadow cursor-pointer hover:bg-zinc-800 transition"
+          className="bg-gray-800 px-3 py-1 rounded-xl text-sm text-green-400 font-semibold cursor-pointer hover:bg-gray-700 transition-all"
+          onClick={() => {
+            if (setShowWalletModal) {
+              setShowWalletModal(true);
+            } else {
+              alert(`Bankroll: $${bankroll}`);
+            }
+          }}
         >
-          <div className="text-sm text-green-300">Balance</div>
-          <div className="text-xl font-semibold">${bankroll}</div>
+          💰 ${bankroll}
         </div>
+
+        {/* Bet Slip */}
+        {selectedBets.length > 0 && (
+          <Link href="/dashboard">
+            <div className="bg-green-600 hover:bg-green-500 transition-all px-3 py-1 rounded-xl text-sm font-bold cursor-pointer">
+              Bet Slip ({selectedBets.length})
+            </div>
+          </Link>
+        )}
       </div>
     </div>
   );
-}
+};
+
+export default TopNavbar;
