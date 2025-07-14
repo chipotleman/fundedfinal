@@ -1,24 +1,17 @@
 import Link from 'next/link';
-import { useRouter } from 'next/router';
+import Image from 'next/image';
 
 export default function TopNavbar() {
-  const router = useRouter();
-
-  const linkClass = (path) =>
-    router.pathname === path
-      ? 'text-[#4fe870] font-bold'
-      : 'text-white hover:text-[#4fe870]';
-
   return (
-    <nav className="sticky top-0 z-50 bg-black border-b border-zinc-800 px-6 py-4 flex items-center justify-between">
-      <Link href="/" className="text-2xl text-white font-bold">
-        🥊 Rollr
+    <div className="fixed top-0 left-0 right-0 z-50 bg-black border-b border-zinc-800 h-16 flex items-center justify-between px-6">
+      <Link href="/home" className="flex items-center space-x-2">
+        <Image src="/rollr-logo.png" alt="Rollr" width={110} height={30} />
       </Link>
-      <div className="space-x-6 text-sm">
-        <Link href="/home" className={linkClass('/home')}>Home</Link>
-        <Link href="/dashboard" className={linkClass('/dashboard')}>Dashboard</Link>
-        <Link href="/rules" className={linkClass('/rules')}>Rules</Link>
+      <div className="flex space-x-6 text-green-300 font-semibold text-sm">
+        <Link href="/home" className="hover:text-[#4fe870] transition">Home</Link>
+        <Link href="/dashboard" className="hover:text-[#4fe870] transition">Dashboard</Link>
+        <Link href="/rules" className="hover:text-[#4fe870] transition">Rules</Link>
       </div>
-    </nav>
+    </div>
   );
 }
