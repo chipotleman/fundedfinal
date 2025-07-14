@@ -3,10 +3,12 @@ import Image from 'next/image';
 
 export default function TopNavbar() {
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 bg-black border-b border-zinc-800 h-16 flex items-center justify-between px-6">
-      <Link href="/home" className="flex items-center space-x-2">
-        <Image src="/rollr-logo.png" alt="Rollr" width={110} height={30} />
-      </Link>
+    <div className="fixed top-0 left-0 right-0 z-50 bg-black h-16 flex items-center justify-between px-6 border-b border-zinc-800">
+      <div className="flex items-center">
+        <Link href="/home" className="flex items-center space-x-2">
+          <Image src="/rollr-logo.png" alt="Rollr" width={110} height={30} />
+        </Link>
+      </div>
       <div className="flex space-x-6 text-green-300 font-semibold text-sm">
         <Link href="/home" className="hover:text-[#4fe870] transition">Home</Link>
         <Link href="/dashboard" className="hover:text-[#4fe870] transition">Dashboard</Link>
