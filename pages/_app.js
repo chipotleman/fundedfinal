@@ -1,10 +1,9 @@
 // pages/_app.js
-import "@/styles/globals.css";
-import TopNavbar from "@/components/TopNavbar";
+import "../styles/globals.css";
+import TopNavbar from "../components/TopNavbar";
 import { useState } from "react";
 
 function MyApp({ Component, pageProps }) {
-  // Ensure consistent default props (avoids crashing on refresh)
   const [selectedBets, setSelectedBets] = useState([]);
   const [bankroll, setBankroll] = useState(1000);
 
