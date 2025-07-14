@@ -1,23 +1,24 @@
-import { useState } from 'react';
 import TopNavbar from '../components/TopNavbar';
 
-export default function Home() {
-  const [bankroll] = useState(1000); // placeholder
-  const [betCount] = useState(0); // placeholder
-
+export default function Home({ bankroll = 0, selectedBets = [] }) {
   return (
-    <div className="bg-black text-white min-h-screen">
-      <TopNavbar bankroll={bankroll} betCount={betCount} />
-      <div className="pt-[100px] px-6">
-        <h1 className="text-3xl text-green-400 font-bold mb-4">Welcome to Rollr</h1>
-        <p className="text-green-200 text-lg mb-6">
-          Take the challenge to get funded. Test your betting skills without risking real money.
+    <div className="bg-black text-white min-h-screen font-mono">
+      <TopNavbar bankroll={bankroll} selectedBets={selectedBets} />
+      <div className="pt-[80px] px-4">
+        <h1 className="text-3xl font-bold text-green-400 mb-4">Welcome to Funded Final</h1>
+        <p className="text-zinc-300 mb-4">
+          Compete in betting challenges with real odds, simulated money, and climb your way to becoming a funded bettor. Track your performance, challenge friends, and earn the right to play with real house money.
         </p>
-        <ul className="list-disc list-inside text-green-300 space-y-2">
-          <li>Join the challenge with virtual cash.</li>
-          <li>Make smart bets and grow your balance.</li>
-          <li>Hit the funding goal and earn real cash prizes.</li>
-        </ul>
+        <div className="grid sm:grid-cols-2 gap-6 mt-8">
+          <div className="bg-zinc-900 p-4 rounded-lg border border-zinc-700">
+            <h2 className="text-xl text-green-300 font-semibold mb-2">Start a Challenge</h2>
+            <p className="text-zinc-400">Choose your league, place bets, and try to reach the goal to get funded.</p>
+          </div>
+          <div className="bg-zinc-900 p-4 rounded-lg border border-zinc-700">
+            <h2 className="text-xl text-green-300 font-semibold mb-2">Track Progress</h2>
+            <p className="text-zinc-400">See your bankroll grow or shrink with every bet. Make smart picks and manage your risk.</p>
+          </div>
+        </div>
       </div>
     </div>
   );
