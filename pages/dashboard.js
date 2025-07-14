@@ -127,7 +127,7 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Top Navbar */}
+        {/* Navbar */}
         <TopNavbar
           selectedBets={selectedBets}
           bankroll={bankroll}
@@ -163,7 +163,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Matchups */}
+        {/* Games */}
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
           {filteredGames.map((game) => {
             const [team1, team2] = game.matchup.split(" vs ");
@@ -192,7 +192,7 @@ export default function Dashboard() {
                   {team.trim()}
                 </p>
                 <p className={`text-xs ${isSelected(team.trim()) ? 'text-black' : 'text-gray-400'}`}>
-                  Odds: {decimalToAmerican(odds)}
+                  Odds: {odds && !isNaN(odds) ? decimalToAmerican(parseFloat(odds)) : 'N/A'}
                 </p>
                 <p className={`text-[10px] ${isSelected(team.trim()) ? 'text-black' : 'text-gray-500'}`}>
                   {new Date(game.game_time).toLocaleString()}
@@ -209,7 +209,7 @@ export default function Dashboard() {
           })}
         </div>
 
-        {/* Bet Slip Modal */}
+        {/* Modals (BetSlip and Challenge) */}
         {showBetSlipModal && (
           <div onClick={() => setShowBetSlipModal(false)} className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex justify-center items-center z-50">
             <div onClick={(e) => e.stopPropagation()} className="bg-zinc-900/95 rounded-lg border border-green-400 p-6 w-80 max-h-[80%] overflow-y-auto">
@@ -252,8 +252,6 @@ export default function Dashboard() {
             </div>
           </div>
         )}
-
-        {/* Balance Modal */}
         {showBalanceModal && (
           <ChallengeModal
             pnl={pnl}
