@@ -10,7 +10,6 @@ export default function Dashboard() {
   const [bankroll, setBankroll] = useState(0);
   const [games, setGames] = useState([]);
   const [selectedBets, setSelectedBets] = useState([]);
-  const [wager, setWager] = useState(10);
   const [showBetSlipModal, setShowBetSlipModal] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
   const [selectedLeague, setSelectedLeague] = useState(null);
@@ -58,20 +57,20 @@ export default function Dashboard() {
 
   const handleTeamSelect = (game, team) => {
     const existingBet = selectedBets.find(b => b.game_id === game.id);
-    const newOdds = team === game.matchup.split(" vs ")[0].trim()
-      ? parseFloat(game.odds_team1)
-      : parseFloat(game.odds_team2);
-
-    const newBet = {
-      game_id: game.id,
-      team: team,
-      matchup: game.matchup,
-      odds: newOdds,
-    };
+    const odds =
+      team === game.matchup.split(" vs ")[0].trim()
+        ? parseFloat(game.odds_team1)
+        : parseFloat(game.odds_team2);
 
     if (existingBet && existingBet.team === team) {
       setSelectedBets(selectedBets.filter(b => b.game_id !== game.id));
     } else {
+      const newBet = {
+        game_id: game.id,
+        team: team,
+        matchup: game.matchup,
+        odds: odds,
+      };
       setSelectedBets(prev =>
         existingBet
           ? prev.map(b => (b.game_id === game.id ? newBet : b))
@@ -81,15 +80,19 @@ export default function Dashboard() {
   };
 
   const clearParlay = () => setSelectedBets([]);
+  const combinedOdds = selectedBets.reduce((acc, bet) => acc * bet.odds, 1);
+  const estimatedPayout = (amount) => (amount * combinedOdds).toFixed(2);
 
   const placeBets = async () => {
-    if (!selectedBets.length) return alert("No bets selected.");
-    const combinedDecimal = selectedBets.reduce((acc, bet) => acc * bet.odds, 1);
+    if (!selectedBets.length) {
+      alert("No bets selected.");
+      return;
+    }
     const { error } = await supabase.from('bets').insert([{
       user_id: user.id,
       game_id: null,
-      amount: wager,
-      odds: combinedDecimal,
+      amount: selectedBets[0].amount || 10,
+      odds: combinedOdds,
       status: 'open',
       type: 'parlay',
       parlay_games: selectedBets.map(b => b.game_id),
@@ -100,7 +103,6 @@ export default function Dashboard() {
     } else {
       alert("Parlay bet placed!");
       clearParlay();
-      setWager(10);
       setShowBetSlipModal(false);
     }
   };
@@ -113,10 +115,6 @@ export default function Dashboard() {
   const challengeGoal = 2500;
   const pnl = bankroll - startingBankroll;
   const progressPercent = Math.min(100, Math.max(0, (bankroll / challengeGoal) * 100));
-  const combinedDecimal = selectedBets.reduce((acc, bet) => acc * bet.odds, 1);
-  const payout = (combinedDecimal * wager).toFixed(2);
-  const simulatedProgress = ((parseFloat(payout) + bankroll - startingBankroll) / (challengeGoal - startingBankroll)) * 100;
-  const progressChange = Math.max(0, Math.min(100, simulatedProgress)) - progressPercent;
 
   return (
     <div className="flex bg-black text-white min-h-screen font-mono">
@@ -173,12 +171,11 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Banner */}
         <div className="px-4">
           <BannerCarousel />
         </div>
 
-        {/* Game Matchups */}
+        {/* Game Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
           {filteredGames.map((game) => {
             const [team1, team2] = game.matchup.split(" vs ");
@@ -205,7 +202,7 @@ export default function Dashboard() {
                           </svg>
                         ) : (
                           <span className="text-green-400 text-xl font-bold">
-                            {odds ? decimalToAmerican(parseFloat(odds)) : 'N/A'}
+                            {odds && !isNaN(odds) ? decimalToAmerican(parseFloat(odds)) : 'N/A'}
                           </span>
                         )}
                       </div>
@@ -213,7 +210,7 @@ export default function Dashboard() {
                         {team.trim()}
                       </p>
                       <p className={`text-xs ${isSelected ? 'text-black' : 'text-gray-400'}`}>
-                        Odds: {odds ? decimalToAmerican(parseFloat(odds)) : 'N/A'}
+                        Odds: {odds && !isNaN(odds) ? decimalToAmerican(parseFloat(odds)) : 'N/A'}
                       </p>
                       <p className={`text-[10px] ${isSelected ? 'text-black' : 'text-gray-500'}`}>
                         {new Date(game.game_time).toLocaleString()}
@@ -229,43 +226,42 @@ export default function Dashboard() {
         {/* Bet Slip Modal */}
         {showBetSlipModal && (
           <div onClick={() => setShowBetSlipModal(false)} className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex justify-center items-center z-50">
-            <div onClick={(e) => e.stopPropagation()} className="bg-zinc-900/95 rounded-lg border border-green-400 p-6 w-[360px] max-h-[80%] overflow-y-auto">
+            <div onClick={(e) => e.stopPropagation()} className="bg-zinc-900/95 rounded-lg border border-green-400 p-6 w-96 max-h-[80%] overflow-y-auto">
               <h2 className="text-lg font-semibold text-green-400 mb-2">Parlay Slip</h2>
               {selectedBets.length === 0 ? (
                 <p className="text-green-300 text-sm">No bets selected.</p>
               ) : (
                 <>
                   {selectedBets.map((bet, idx) => (
-                    <div key={idx} className="border border-zinc-700 rounded p-2 mb-2 text-green-300 flex justify-between items-center text-sm">
-                      <div className="flex flex-col">
-                        <span className="font-semibold">{bet.team} Moneyline</span>
-                        <span className="text-xs text-gray-400">{decimalToAmerican(bet.odds)}</span>
-                      </div>
-                      <button onClick={() => setSelectedBets(selectedBets.filter(b => b.game_id !== bet.game_id))} className="text-red-400 hover:text-red-500 text-lg">×</button>
+                    <div key={idx} className="flex justify-between items-center text-sm text-green-300 mb-1 border-b border-zinc-700 pb-1">
+                      <span>{bet.team} ML ({decimalToAmerican(bet.odds)})</span>
+                      <button onClick={() => setSelectedBets(selectedBets.filter(b => b.game_id !== bet.game_id))} className="text-red-400 hover:text-red-500 ml-2">❌</button>
                     </div>
                   ))}
-                  <div className="mt-3 space-y-2">
-                    <label className="text-green-300 text-sm">Wager:</label>
+                  <div className="mt-3">
+                    <label className="text-green-300 text-sm">Wager ($)</label>
                     <input
                       type="number"
-                      min="1"
-                      value={wager}
-                      onChange={(e) => setWager(e.target.value)}
-                      className="w-full px-2 py-1 rounded bg-zinc-800 text-green-300 border border-green-400 focus:outline-none"
+                      min={1}
+                      defaultValue={10}
+                      onChange={e => {
+                        const amt = parseFloat(e.target.value);
+                        selectedBets[0].amount = isNaN(amt) ? 10 : amt;
+                      }}
+                      className="w-full mt-1 px-3 py-2 bg-black border border-green-400 rounded text-green-300 focus:outline-none"
                     />
-                    <p className="text-green-400 text-sm">Payout: ${payout}</p>
-                    <p className="text-green-500 text-xs">
-                      {progressChange >= 0
-                        ? `🏆 +${progressChange.toFixed(1)}% closer to funded`
-                        : `💸 ${progressChange.toFixed(1)}% loss`}
-                    </p>
-                    <button onClick={placeBets} className="w-full bg-green-400 text-black font-bold py-2 rounded hover:bg-green-500 transition">
-                      Place Parlay
-                    </button>
-                    <button onClick={clearParlay} className="w-full bg-red-500 text-white font-bold py-2 rounded hover:bg-red-600 transition">
-                      Clear Parlay
-                    </button>
                   </div>
+                  <p className="text-green-400 mt-2">
+                    Payout: ${estimatedPayout(selectedBets[0].amount || 10)}
+                  </p>
+                  <p className="text-green-300 text-xs mt-1">Progress if you win: {Math.min(100, progressPercent + 10)}%</p>
+
+                  <button onClick={placeBets} className="mt-4 w-full bg-green-400 text-black font-bold py-2 rounded hover:bg-green-500 transition">
+                    Place Parlay
+                  </button>
+                  <button onClick={clearParlay} className="mt-2 w-full bg-red-500 text-white font-bold py-2 rounded hover:bg-red-600 transition">
+                    Clear Parlay
+                  </button>
                 </>
               )}
             </div>
