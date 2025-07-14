@@ -10,7 +10,7 @@ const TopNavbar = ({
   return (
     <>
       <div className="fixed top-0 left-0 w-full z-50 bg-black border-b border-gray-800 px-4 sm:px-8 py-4 flex justify-between items-center">
-        {/* Left - Logo */}
+        {/* Left: Logo */}
         <Link href="/">
           <div className="flex items-center gap-2 cursor-pointer">
             <Image
@@ -23,7 +23,7 @@ const TopNavbar = ({
           </div>
         </Link>
 
-        {/* Center - Navigation */}
+        {/* Center: Navigation */}
         <div className="hidden sm:flex gap-8 text-gray-300 font-medium absolute left-1/2 transform -translate-x-1/2">
           <Link href="/dashboard">
             <span className="hover:text-white cursor-pointer">Dashboard</span>
@@ -36,15 +36,15 @@ const TopNavbar = ({
           </Link>
         </div>
 
-        {/* Right - Balance + Bet Slip */}
+        {/* Right: Balance and Bet Slip */}
         <div className="flex items-center gap-4">
-          {/* Balance (fully styled, clickable container) */}
-          <button
+          {/* ✅ THIS is the styled, containered, clickable balance you had */}
+          <div
+            className="px-4 py-1.5 bg-gray-900 border border-green-500 rounded-xl text-green-400 text-sm font-semibold cursor-pointer hover:bg-gray-800 transition select-none"
             onClick={() => setShowWalletModal(true)}
-            className="flex items-center gap-1 bg-gradient-to-br from-green-600 to-green-700 text-sm font-bold text-white px-3 py-1.5 rounded-xl border border-green-500 shadow hover:brightness-110 active:scale-95 transition"
           >
             💰 ${bankroll}
-          </button>
+          </div>
 
           {/* Bet Slip */}
           {selectedBets.length > 0 && (
@@ -57,7 +57,7 @@ const TopNavbar = ({
         </div>
       </div>
 
-      {/* Spacer to prevent overlap */}
+      {/* Prevent overlap */}
       <div className="h-20" />
     </>
   );
