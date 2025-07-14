@@ -130,11 +130,13 @@ export default function Dashboard() {
       <div className="flex-1 flex flex-col">
         {/* Navbar */}
         <TopNavbar
-          selectedBets={selectedBets}
-          bankroll={bankroll}
-          onShowBetSlip={() => setShowBetSlipModal(true)}
-          onShowBalance={() => setShowBalanceModal(true)}
-        />
+  selectedBets={selectedBets}
+  bankroll={bankroll}
+  onShowBetSlip={() => setShowBetSlipModal(true)}
+  onShowBalance={() => setShowBalanceModal(true)}
+  progressPercent={progressPercent}
+/>
+
 
         {/* League Bubbles (Mobile Only) */}
         <div className="sm:hidden px-4 mt-4">
