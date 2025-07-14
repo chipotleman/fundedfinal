@@ -37,13 +37,16 @@ const TopNavbar = ({
 
         {/* Right - Balance + Bet Slip */}
         <div className="flex items-center gap-4">
+          {/* Balance - styled container */}
           <div
+            className="flex items-center gap-2 bg-gray-900 px-4 py-1.5 rounded-xl border border-green-600 text-green-400 text-sm font-semibold cursor-pointer hover:bg-gray-800 transition"
             onClick={() => setShowWalletModal(true)}
-            className="bg-gray-800 px-3 py-1 rounded-xl text-sm text-green-400 font-semibold cursor-pointer hover:bg-gray-700 transition"
           >
-            💰 ${bankroll}
+            <span>💰</span>
+            <span>${bankroll}</span>
           </div>
 
+          {/* Bet Slip */}
           {selectedBets.length > 0 && (
             <Link href="/dashboard">
               <div className="bg-green-600 hover:bg-green-500 transition px-3 py-1 rounded-xl text-sm font-bold cursor-pointer">
@@ -54,7 +57,7 @@ const TopNavbar = ({
         </div>
       </div>
 
-      {/* Spacer to prevent overlap */}
+      {/* Spacer to prevent navbar overlap */}
       <div className="h-20" />
     </>
   );
