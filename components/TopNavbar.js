@@ -2,23 +2,20 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import logo from "../public/logo.png"; // ✅ Make sure this path is correct and logo exists
+import logo from "../public/rollrlogowide.png";
 
-const TopNavbar = ({ bankroll = 1000, selectedBets = [] }) => {
+const TopNavbar = ({ selectedBets = [], bankroll = 1000 }) => {
   return (
-    <div className="fixed top-0 left-0 w-full bg-black border-b border-gray-800 z-50 px-6 sm:px-12 lg:px-24 py-4 flex items-center justify-between shadow-md">
-      {/* Left - Logo */}
+    <div className="fixed top-0 left-0 w-full z-50 bg-black border-b border-gray-800 px-4 sm:px-8 py-4 flex justify-between items-center">
+      {/* Logo */}
       <Link href="/">
         <div className="flex items-center gap-2 cursor-pointer">
-          <Image src={logo} alt="Funded Logo" width={36} height={36} />
-          <span className="text-white text-xl font-extrabold hover:text-green-400">
-            FundedBets
-          </span>
+          <Image src={logo} alt="Logo" width={120} height={40} />
         </div>
       </Link>
 
-      {/* Center - Nav Links */}
-      <div className="absolute left-1/2 transform -translate-x-1/2 hidden sm:flex gap-8 text-gray-300 font-medium">
+      {/* Navigation */}
+      <div className="hidden sm:flex gap-8 text-gray-300 font-medium absolute left-1/2 transform -translate-x-1/2">
         <Link href="/dashboard">
           <span className="hover:text-white cursor-pointer">Dashboard</span>
         </Link>
@@ -30,17 +27,15 @@ const TopNavbar = ({ bankroll = 1000, selectedBets = [] }) => {
         </Link>
       </div>
 
-      {/* Right - Balance & Bet Slip */}
+      {/* Balance and Bet Slip */}
       <div className="flex items-center gap-4">
-        {/* Balance */}
-        <div className="bg-gray-800 px-3 py-1 rounded-xl text-sm text-green-400 font-semibold cursor-pointer">
+        <div className="bg-gray-800 px-3 py-1 rounded-xl text-sm text-green-400 font-semibold">
           💰 ${bankroll}
         </div>
 
-        {/* Bet Slip */}
         {selectedBets.length > 0 && (
           <Link href="/dashboard">
-            <div className="bg-green-600 hover:bg-green-500 transition px-3 py-1 rounded-xl text-sm font-bold cursor-pointer">
+            <div className="bg-green-600 hover:bg-green-500 transition-all px-3 py-1 rounded-xl text-sm font-bold cursor-pointer">
               Bet Slip ({selectedBets.length})
             </div>
           </Link>
