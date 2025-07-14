@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -16,6 +16,8 @@ export default function Dashboard({
   showBetSlip,
   setShowBetSlip,
 }) {
+  const [matchups, setMatchups] = useState([]);
+
   useEffect(() => {
     const fetchUserBalance = async () => {
       const {
@@ -44,7 +46,21 @@ export default function Dashboard({
       }
     };
 
+    const fetchMatchups = async () => {
+      const { data, error } = await supabase
+        .from('matchups')
+        .select('*')
+        .order('start_time', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching matchups:', error.message);
+      } else {
+        setMatchups(data);
+      }
+    };
+
     fetchUserBalance();
+    fetchMatchups();
   }, []);
 
   const handleSelectBet = (matchupId, team, odds) => {
@@ -66,69 +82,56 @@ export default function Dashboard({
     }
   };
 
-  const sampleMatchups = [
-    {
-      id: 'matchup-1',
-      teamA: 'Yankees',
-      teamB: 'Red Sox',
-      oddsA: '+120',
-      oddsB: '-140',
-    },
-    {
-      id: 'matchup-2',
-      teamA: 'Dodgers',
-      teamB: 'Giants',
-      oddsA: '-110',
-      oddsB: '+105',
-    },
-  ];
-
   return (
     <div className="min-h-screen bg-black text-white pt-24 px-4 sm:px-8">
       <h1 className="text-3xl font-bold text-green-400 mb-6 font-mono">Dashboard</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {sampleMatchups.map((matchup) => (
-          <div
-            key={matchup.id}
-            className="bg-zinc-900 border border-green-700 rounded-xl p-4 shadow-lg"
-          >
-            <div className="text-green-300 font-mono text-sm mb-2">
-              {matchup.teamA} vs {matchup.teamB}
+      {matchups.length === 0 ? (
+        <div className="text-center text-zinc-400">Loading matchups...</div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {matchups.map((matchup) => (
+            <div
+              key={matchup.id}
+              className="bg-zinc-900 border border-green-700 rounded-xl p-4 shadow-lg"
+            >
+              <div className="text-green-300 font-mono text-sm mb-2">
+                {matchup.team_a} vs {matchup.team_b}
+              </div>
+              <div className="flex flex-col gap-4">
+                <button
+                  onClick={() =>
+                    handleSelectBet(matchup.id, matchup.team_a, matchup.odds_a)
+                  }
+                  className={`${
+                    selectedBets.some(
+                      (b) => b.matchupId === matchup.id && b.team === matchup.team_a
+                    )
+                      ? 'bg-green-600 text-black'
+                      : 'bg-black text-green-300'
+                  } border border-green-600 rounded-full px-6 py-3 text-lg font-bold font-mono hover:bg-green-500 hover:text-black transition`}
+                >
+                  {matchup.team_a} ({matchup.odds_a})
+                </button>
+                <button
+                  onClick={() =>
+                    handleSelectBet(matchup.id, matchup.team_b, matchup.odds_b)
+                  }
+                  className={`${
+                    selectedBets.some(
+                      (b) => b.matchupId === matchup.id && b.team === matchup.team_b
+                    )
+                      ? 'bg-green-600 text-black'
+                      : 'bg-black text-green-300'
+                  } border border-green-600 rounded-full px-6 py-3 text-lg font-bold font-mono hover:bg-green-500 hover:text-black transition`}
+                >
+                  {matchup.team_b} ({matchup.odds_b})
+                </button>
+              </div>
             </div>
-            <div className="flex flex-col gap-4">
-              <button
-                onClick={() =>
-                  handleSelectBet(matchup.id, matchup.teamA, matchup.oddsA)
-                }
-                className={`${
-                  selectedBets.some(
-                    (b) => b.matchupId === matchup.id && b.team === matchup.teamA
-                  )
-                    ? 'bg-green-600 text-black'
-                    : 'bg-black text-green-300'
-                } border border-green-600 rounded-full px-6 py-3 text-lg font-bold font-mono hover:bg-green-500 hover:text-black transition`}
-              >
-                {matchup.teamA} ({matchup.oddsA})
-              </button>
-              <button
-                onClick={() =>
-                  handleSelectBet(matchup.id, matchup.teamB, matchup.oddsB)
-                }
-                className={`${
-                  selectedBets.some(
-                    (b) => b.matchupId === matchup.id && b.team === matchup.teamB
-                  )
-                    ? 'bg-green-600 text-black'
-                    : 'bg-black text-green-300'
-                } border border-green-600 rounded-full px-6 py-3 text-lg font-bold font-mono hover:bg-green-500 hover:text-black transition`}
-              >
-                {matchup.teamB} ({matchup.oddsB})
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
