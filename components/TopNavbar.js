@@ -5,7 +5,7 @@ import Image from "next/image";
 const TopNavbar = ({
   selectedBets = [],
   bankroll = 1000,
-  setShowWalletModal,
+  setShowWalletModal = () => {},
 }) => {
   return (
     <>
@@ -18,6 +18,7 @@ const TopNavbar = ({
               alt="Rollr Logo"
               width={120}
               height={40}
+              priority
             />
           </div>
         </Link>
@@ -37,19 +38,18 @@ const TopNavbar = ({
 
         {/* Right - Balance + Bet Slip */}
         <div className="flex items-center gap-4">
-          {/* Balance - styled container */}
-          <div
-            className="flex items-center gap-2 bg-gray-900 px-4 py-1.5 rounded-xl border border-green-600 text-green-400 text-sm font-semibold cursor-pointer hover:bg-gray-800 transition"
+          {/* Balance (fully styled, clickable container) */}
+          <button
             onClick={() => setShowWalletModal(true)}
+            className="flex items-center gap-1 bg-gradient-to-br from-green-600 to-green-700 text-sm font-bold text-white px-3 py-1.5 rounded-xl border border-green-500 shadow hover:brightness-110 active:scale-95 transition"
           >
-            <span>💰</span>
-            <span>${bankroll}</span>
-          </div>
+            💰 ${bankroll}
+          </button>
 
           {/* Bet Slip */}
           {selectedBets.length > 0 && (
             <Link href="/dashboard">
-              <div className="bg-green-600 hover:bg-green-500 transition px-3 py-1 rounded-xl text-sm font-bold cursor-pointer">
+              <div className="bg-green-600 hover:bg-green-500 transition px-3 py-1 rounded-xl text-sm font-bold cursor-pointer shadow">
                 Bet Slip ({selectedBets.length})
               </div>
             </Link>
@@ -57,7 +57,7 @@ const TopNavbar = ({
         </div>
       </div>
 
-      {/* Spacer to prevent navbar overlap */}
+      {/* Spacer to prevent overlap */}
       <div className="h-20" />
     </>
   );
