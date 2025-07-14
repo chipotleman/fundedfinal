@@ -2,7 +2,6 @@
 import React from "react";
 import Link from "next/link";
 import Image from "next/image";
-import logo from "../public/rollrlogowide.png";
 
 const TopNavbar = ({ selectedBets = [], bankroll = 1000 }) => {
   return (
@@ -10,7 +9,7 @@ const TopNavbar = ({ selectedBets = [], bankroll = 1000 }) => {
       {/* Logo */}
       <Link href="/">
         <div className="flex items-center gap-2 cursor-pointer">
-          <Image src={logo} alt="Logo" width={120} height={40} />
+          <Image src="/rollr-logo.png" alt="Rollr Logo" width={120} height={40} />
         </div>
       </Link>
 
