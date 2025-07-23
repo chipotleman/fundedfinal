@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import teamLogos from '../utils/teamLogos';
 import ProfileDrawer from '../components/ProfileDrawer';
 import ChallengeModal from '../components/ChallengeModal';
 import BannerCarousel from '../components/BannerCarousel';
 import TopNavbar from '../components/TopNavbar';
+import teamLogos from '../utils/teamLogos';
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -26,9 +26,8 @@ export default function Dashboard() {
 
   const decimalToAmerican = (decimal) => {
     if (!decimal || isNaN(decimal)) return "N/A";
-    return decimal >= 2
-      ? `+${Math.round((decimal - 1) * 100)}`
-      : `${Math.round(-100 / (decimal - 1))}`;
+    if (decimal >= 2) return `+${Math.round((decimal - 1) * 100)}`;
+    return `${Math.round(-100 / (decimal - 1))}`;
   };
 
   useEffect(() => {
@@ -44,27 +43,23 @@ export default function Dashboard() {
         .single();
       setBankroll(balanceData?.balance || 0);
 
-      const todayStart = new Date();
-      todayStart.setHours(0, 0, 0, 0);
-      const todayEnd = new Date();
-      todayEnd.setHours(23, 59, 59, 999);
+      const start = new Date();
+      start.setHours(0, 0, 0, 0);
+      const end = new Date();
+      end.setHours(23, 59, 59, 999);
 
       const { data: gamesData } = await supabase
         .from('game_slates')
         .select('*')
-        .gte('game_time', todayStart.toISOString())
-        .lte('game_time', todayEnd.toISOString());
+        .gte('game_time', start.toISOString())
+        .lte('game_time', end.toISOString());
 
       if (gamesData) {
         const now = new Date();
-        const sorted = [...gamesData].sort((a, b) => {
-          const aStarted = new Date(a.game_time) < now;
-          const bStarted = new Date(b.game_time) < now;
-          if (aStarted === bStarted) {
-            return new Date(a.game_time) - new Date(b.game_time);
-          }
-          return aStarted ? 1 : -1;
-        });
+        const sorted = [
+          ...gamesData.filter(g => new Date(g.game_time) > now),
+          ...gamesData.filter(g => new Date(g.game_time) <= now),
+        ];
         setGames(sorted);
       }
     };
@@ -72,9 +67,7 @@ export default function Dashboard() {
   }, []);
 
   const handleTeamSelect = (game, team) => {
-    const now = new Date();
-    if (new Date(game.game_time) < now) return;
-
+    if (new Date(game.game_time) <= new Date()) return;
     const existingBet = selectedBets.find(b => b.game_id === game.id);
     const odds = team === game.matchup.split(" vs ")[0].trim()
       ? parseFloat(game.odds_team1)
@@ -89,6 +82,10 @@ export default function Dashboard() {
         : [...selectedBets, newBet]);
     }
   };
+
+  const filteredGames = selectedLeague
+    ? games.filter(game => game.sport === selectedLeague)
+    : games;
 
   const clearParlay = () => setSelectedBets([]);
 
@@ -113,19 +110,15 @@ export default function Dashboard() {
     }
   };
 
-  const filteredGames = selectedLeague
-    ? games.filter((game) => game.sport === selectedLeague)
-    : games;
-
   const startingBankroll = 1000;
   const challengeGoal = 2500;
   const pnl = bankroll - startingBankroll;
-  const progressPercent = Math.min(100, (bankroll / challengeGoal) * 100);
+  const progressPercent = Math.min(100, Math.max(0, (bankroll / challengeGoal) * 100));
 
   return (
     <div className="bg-black text-white min-h-screen font-mono pt-20 flex">
       {/* Sidebar */}
-      <div className="hidden sm:flex transition-all bg-black p-2 flex-col items-center w-44 sm:w-48 md:w-56">
+      <div className="hidden sm:flex bg-black p-2 flex-col items-center w-44 sm:w-48 md:w-56">
         <div className="flex flex-col space-y-2 mt-12">
           {leagues.map((item) => (
             <button
@@ -154,7 +147,7 @@ export default function Dashboard() {
           onShowBalance={() => setShowBalanceModal(true)}
         />
 
-        {/* Mobile League Bubbles */}
+        {/* League Bubbles (Mobile) */}
         <div className="sm:hidden px-4 mt-4">
           <div className="flex space-x-4 overflow-x-auto scrollbar-hide">
             {leagues.map((item) => (
@@ -180,30 +173,43 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Matchups */}
+        {/* Games */}
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-4 p-4">
           {filteredGames.map((game) => {
-            const [team1, team2] = game.matchup.split(" vs ");
-            const isStarted = new Date(game.game_time) < new Date();
+            const [team1, team2] = game.matchup.split(" vs ").map(s => s.trim());
+            const isStarted = new Date(game.game_time) <= new Date();
             const selectedBet = selectedBets.find(b => b.game_id === game.id);
             const isSelected = (team) => selectedBet?.team === team;
 
             const renderTeamBox = (team, odds, isTeam1) => (
               <div
-                onClick={() => handleTeamSelect(game, team.trim())}
-                className={`flex flex-col items-center justify-center w-full p-3 sm:w-1/2 cursor-pointer transition rounded-b-lg sm:rounded-none ${
-                  isSelected(team.trim()) ? 'bg-[#4fe870] text-black' : 'bg-zinc-900 text-green-300'
+                onClick={() => handleTeamSelect(game, team)}
+                className={`flex flex-col items-center justify-center w-full p-3 sm:w-1/2 cursor-pointer transition ${
+                  isSelected(team) ? 'bg-[#4fe870] text-black' : 'bg-zinc-900 text-green-300'
                 } ${isTeam1 ? 'rounded-tl-lg sm:rounded-none' : 'rounded-tr-lg sm:rounded-none'} ${
-                  isStarted ? 'opacity-30 pointer-events-none' : ''
+                  isStarted ? 'opacity-40 pointer-events-none' : ''
                 }`}
               >
                 <img
-                  src={teamLogos[team.trim()] || '/logos/mlb/default.png'}
+                  src={teamLogos[team]}
                   alt={team}
                   className="w-10 h-10 object-contain mb-1"
                 />
-                <div className="mt-1 font-bold text-xs text-center uppercase">{team.trim()}</div>
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center border-2 ${
+                  isSelected(team) ? 'border-black' : 'border-green-400'
+                } bg-black shadow-md`}>
+                  {isSelected(team) ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#4fe870]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : (
+                    <span className="text-green-400 font-extrabold text-xl">{decimalToAmerican(parseFloat(odds))}</span>
+                  )}
+                </div>
+                <div className="mt-1 font-bold text-sm text-center uppercase">{team}</div>
                 <div className="text-[11px] text-gray-400">Odds: {decimalToAmerican(parseFloat(odds))}</div>
+                <div className="text-[10px] text-gray-500">{new Date(game.game_time).toLocaleString()}</div>
+                {isStarted && <div className="text-red-500 text-[11px] font-bold mt-1">Game Started</div>}
               </div>
             );
 
@@ -214,16 +220,12 @@ export default function Dashboard() {
                   <div className="w-full h-[2px] sm:h-full sm:w-[2px] bg-green-500 opacity-30 sm:mx-0" />
                   {renderTeamBox(team2, game.odds_team2, false)}
                 </div>
-                <div className="text-center text-xs text-gray-400 py-1">
-                  {new Date(game.game_time).toLocaleString()}
-                  {isStarted && <span className="text-red-400 ml-2">Game Started</span>}
-                </div>
               </div>
             );
           })}
         </div>
 
-        {/* Modals */}
+        {/* Bet Slip Modal */}
         {showBetSlipModal && (
           <div onClick={() => setShowBetSlipModal(false)} className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex justify-center items-center z-50">
             <div onClick={(e) => e.stopPropagation()} className="bg-zinc-900/95 rounded-lg border border-green-400 p-6 w-80 max-h-[80%] overflow-y-auto">
@@ -252,7 +254,7 @@ export default function Dashboard() {
                       }}
                     />
                     <p>Combined Odds: {decimalToAmerican(selectedBets.reduce((acc, bet) => acc * bet.odds, 1))}</p>
-                    <p>Estimated Payout: ${(selectedBets[0]?.amount || 0 * selectedBets.reduce((acc, bet) => acc * bet.odds, 1)).toFixed(2)}</p>
+                    <p>Estimated Payout: ${(selectedBets[0]?.amount || 0) * selectedBets.reduce((acc, bet) => acc * bet.odds, 1)}</p>
                     <p>Progress: {progressPercent.toFixed(2)}%</p>
                   </div>
                   <button onClick={placeBets} className="mt-3 w-full bg-green-400 text-black font-bold py-2 rounded hover:bg-green-500 transition">
@@ -267,6 +269,7 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* Balance Modal */}
         {showBalanceModal && (
           <ChallengeModal
             pnl={pnl}
