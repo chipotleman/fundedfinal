@@ -4,6 +4,7 @@ import ProfileDrawer from '../components/ProfileDrawer';
 import ChallengeModal from '../components/ChallengeModal';
 import BannerCarousel from '../components/BannerCarousel';
 import TopNavbar from '../components/TopNavbar';
+import teamLogos from '../utils/teamLogos';
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -49,7 +50,9 @@ export default function Dashboard() {
       const { data: gamesData } = await supabase
         .from('game_slates')
         .select('*')
+        .gt('game_time', new Date().toISOString())
         .order('game_time', { ascending: true });
+
       setGames(gamesData || []);
     };
     fetchData();
@@ -128,7 +131,6 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Navbar */}
         <TopNavbar
           selectedBets={selectedBets}
           bankroll={bankroll}
@@ -155,7 +157,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Banner */}
         <div className="px-4 mt-4 mb-6">
           <div className="rounded-lg overflow-hidden border border-zinc-700">
             <BannerCarousel />
@@ -252,7 +253,6 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Balance Modal */}
         {showBalanceModal && (
           <ChallengeModal
             pnl={pnl}
