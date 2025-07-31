@@ -150,13 +150,32 @@ export default function AuthPage() {
       // Get current user
       const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
       
-      // Update user with challenge info
+      // Update user with challenge info and personal data
       const updatedUser = {
         ...currentUser,
         challenge: selectedChallenge,
         bankroll: selectedChallenge.startingBalance,
         challengeStartDate: new Date().toISOString(),
-        status: 'active'
+        status: 'active',
+        pnl: 0,
+        totalBets: 0,
+        winRate: 0,
+        betsHistory: [],
+        challengePhase: 1,
+        dailyLoss: 0,
+        maxDailyLoss: selectedChallenge.startingBalance * 0.08, // 8% daily loss limit
+        lastBetDate: null,
+        bettingDays: 0,
+        achievements: [],
+        profileStats: {
+          totalWins: 0,
+          totalLosses: 0,
+          biggestWin: 0,
+          biggestLoss: 0,
+          averageBetSize: 0,
+          longestWinStreak: 0,
+          currentWinStreak: 0
+        }
       };
 
       // Save updated user

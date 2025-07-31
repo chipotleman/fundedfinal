@@ -7,7 +7,16 @@ import { supabase } from '../lib/supabaseClient';
 export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const router = useRouter();
+
+  useEffect(() => {
+    // Get current user data
+    const userData = localStorage.getItem('current_user');
+    if (userData) {
+      setCurrentUser(JSON.parse(userData));
+    }
+  }, []);
 
   const handleSignOut = async () => {
     // Clear any stored user data
@@ -121,10 +130,12 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                         </svg>
                       </div>
                       <div>
-                        <p className="text-white font-bold text-lg">Demo Bettor</p>
+                        <p className="text-white font-bold text-lg">{currentUser?.username || 'User'}</p>
                         <div className="flex items-center space-x-2">
                           <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                          <p className="text-green-400 text-sm font-medium">Challenge Active</p>
+                          <p className="text-green-400 text-sm font-medium">
+                            {currentUser?.challenge ? `${currentUser.challenge.name} Active` : 'No Challenge'}
+                          </p>
                         </div>
                       </div>
                     </div>

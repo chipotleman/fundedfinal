@@ -15,11 +15,26 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [challengePhase, setChallengePhase] = useState(1);
   const [totalChallenges] = useState(3);
+  const [currentUser, setCurrentUser] = useState(null);
 
   const sports = ['NFL', 'NBA', 'MLB', 'NHL', 'UFC', 'SOCCER'];
 
-  const challengeGoal = 25000;
-  const startingBankroll = 10000;
+  useEffect(() => {
+    // Load user data
+    const userData = localStorage.getItem('current_user');
+    if (userData) {
+      const parsedUser = JSON.parse(userData);
+      setCurrentUser(parsedUser);
+      setUser(parsedUser);
+      setBankroll(parsedUser.bankroll || 10000);
+      setPnl(parsedUser.pnl || 0);
+      setChallengePhase(parsedUser.challengePhase || 1);
+      setBets(parsedUser.betsHistory || []);
+    }
+  }, []);
+
+  const challengeGoal = currentUser?.challenge?.target || 25000;
+  const startingBankroll = currentUser?.challenge?.startingBalance || 10000;
   const progressPercent = ((bankroll - startingBankroll) / (challengeGoal - startingBankroll)) * 100;
 
   // Mock games data
@@ -102,7 +117,7 @@ export default function Dashboard() {
               <h3 className="text-lg font-bold text-white mb-4 flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-                  Challenge Progress
+                  {currentUser?.challenge?.name || 'Challenge'} Progress
                 </div>
                 <div className="text-sm text-gray-400">
                   Phase {challengePhase} of {totalChallenges}
@@ -141,8 +156,10 @@ export default function Dashboard() {
                 <h4 className="text-white font-semibold text-sm mb-2">Phase {challengePhase} Requirements:</h4>
                 <div className="text-xs text-gray-400 space-y-1">
                   <div>• Reach ${challengeGoal.toLocaleString()} profit target</div>
+                  <div>• Maximum ${currentUser?.challenge?.maxBet || 100} per bet</div>
                   <div>• Maximum 8% daily loss limit</div>
                   <div>• Minimum 10 betting days</div>
+                  <div>• Complete within {currentUser?.challenge?.duration || '30 days'}</div>
                 </div>
               </div>
             </div>
