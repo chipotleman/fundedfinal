@@ -87,31 +87,45 @@ export default function AuthPage() {
 
     try {
       if (isSignUp) {
-        // Sign up user
+        // Sign up user with email confirmation disabled
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: undefined,
+            data: {
+              email_confirm: false
+            }
+          }
         });
 
         if (error) {
           if (error.message.includes('User already registered')) {
             setError('An account with this email already exists. Please sign in instead.');
+            setIsSignUp(false);
           } else {
             throw error;
           }
         } else if (data.user) {
-          // Account created successfully, now sign them in automatically
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
-          
-          if (signInError) {
-            // If sign in fails, show error but don't mention email confirmation
-            setError('Account created but unable to sign in automatically. Please try signing in manually.');
-            setIsSignUp(false); // Switch to sign in mode
-          } else if (signInData.user) {
-            // Successfully signed in after signup
+          // If user was created but session is null, it means email confirmation is required
+          // Let's try to sign them in immediately
+          if (!data.session) {
+            // Try to sign in immediately after signup
+            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+              email,
+              password,
+            });
+            
+            if (signInError) {
+              // Account was created but can't sign in yet - likely needs confirmation
+              setError('Account created successfully! Please try signing in with your credentials.');
+              setIsSignUp(false); // Switch to sign in mode
+            } else if (signInData.user) {
+              // Successfully signed in after signup
+              setStep('challenge');
+            }
+          } else {
+            // User was created and signed in automatically
             setStep('challenge');
           }
         }
@@ -124,7 +138,9 @@ export default function AuthPage() {
 
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
-            setError('Invalid email or password. Please check your credentials or create a new account.');
+            setError('Invalid email or password. Please check your credentials and try again.');
+          } else if (error.message.includes('Email not confirmed')) {
+            setError('Please check your email and confirm your account, or try creating a new account.');
           } else {
             throw error;
           }
