@@ -1,48 +1,205 @@
-export default function BetSlip({ selectedMatchup, selectedTeam, stake, setStake, onPlaceBet, placing, message }) {
-    const decimalToAmerican = (decimal) => {
-        if (decimal >= 2) {
-            return `+${Math.round((decimal - 1) * 100)}`;
-        } else {
-            return `${Math.round(-100 / (decimal - 1))}`;
-        }
-    };
 
-    const calculatePotentialPayout = () => {
-        if (!selectedMatchup || !selectedTeam || !stake) return 0;
-        const decimal = selectedMatchup.odds[selectedTeam];
-        return (parseFloat(stake) * decimal).toFixed(2);
-    };
+import { useState } from 'react';
 
-    if (!selectedMatchup || !selectedTeam) return null;
+export default function BetSlip({ bets, setBets, bankroll, onClose }) {
+  const [isPlacing, setIsPlacing] = useState(false);
+  
+  const updateStake = (betId, stake) => {
+    setBets(bets.map(bet => 
+      bet.id === betId ? { ...bet, stake: parseFloat(stake) || 0 } : bet
+    ));
+  };
 
-    return (
-        <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-green-400 p-4 shadow-xl z-50">
-            <h3 className="text-center text-green-400 font-bold mb-2">🎟️ Bet Slip</h3>
-            <div className="text-center mb-2">
-                <p className="text-lg font-semibold">{selectedTeam} @ {decimalToAmerican(selectedMatchup.odds[selectedTeam])}</p>
-            </div>
-            <div className="flex justify-center">
-                <input
-                    type="number"
-                    placeholder="Stake ($10 - $100)"
-                    value={stake}
-                    onChange={(e) => setStake(e.target.value)}
-                    className="w-40 p-2 rounded bg-black border border-gray-600 text-center text-white"
-                />
-            </div>
-            {stake && (
-                <p className="text-center text-sm text-gray-300 mt-1">
-                    Potential Payout: <span className="text-green-400 font-bold">${calculatePotentialPayout()}</span>
-                </p>
-            )}
-            <button
-                onClick={onPlaceBet}
-                disabled={placing}
-                className="mt-3 w-full py-3 rounded bg-green-400 text-black font-bold hover:bg-green-300 transition"
-            >
-                {placing ? 'Placing...' : 'Place Bet'}
-            </button>
-            {message && <p className="text-center mt-2">{message}</p>}
+  const removeBet = (betId) => {
+    setBets(bets.filter(bet => bet.id !== betId));
+  };
+
+  const calculatePayout = (odds, stake) => {
+    if (odds > 0) {
+      return (stake * odds / 100) + stake;
+    } else {
+      return (stake * (100 / Math.abs(odds))) + stake;
+    }
+  };
+
+  const totalStake = bets.reduce((sum, bet) => sum + (bet.stake || 0), 0);
+  const totalPayout = bets.reduce((sum, bet) => 
+    sum + (bet.stake ? calculatePayout(bet.odds, bet.stake) : 0), 0
+  );
+  const potentialProfit = totalPayout - totalStake;
+
+  const placeBets = async () => {
+    if (totalStake === 0 || totalStake > bankroll) return;
+    
+    setIsPlacing(true);
+    
+    // Simulate bet placement
+    setTimeout(() => {
+      alert(`${bets.length} bet(s) placed successfully!`);
+      setBets([]);
+      setIsPlacing(false);
+      onClose();
+    }, 1500);
+  };
+
+  const formatOdds = (odds) => {
+    return odds > 0 ? `+${odds}` : odds.toString();
+  };
+
+  return (
+    <div className="w-96 bg-slate-800 border-l border-slate-700 min-h-screen flex flex-col">
+      {/* Header */}
+      <div className="p-6 border-b border-slate-700">
+        <div className="flex items-center justify-between">
+          <h2 className="text-xl font-bold text-white flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+            Bet Slip ({bets.length})
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
-    );
+      </div>
+
+      {/* Bets */}
+      <div className="flex-1 overflow-y-auto">
+        {bets.length === 0 ? (
+          <div className="p-6 text-center">
+            <svg className="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <p className="text-gray-400 text-lg font-medium mb-2">Your bet slip is empty</p>
+            <p className="text-gray-500 text-sm">Click on odds to add bets</p>
+          </div>
+        ) : (
+          <div className="p-4 space-y-4">
+            {bets.map((bet) => (
+              <div key={bet.id} className="bg-slate-700 rounded-xl p-4 border border-slate-600">
+                {/* Bet Header */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <div className="text-white font-semibold text-sm mb-1">{bet.matchup}</div>
+                    <div className="text-gray-300 text-sm">{bet.selection}</div>
+                    <div className="text-gray-400 text-xs">{bet.betType}</div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded text-sm font-semibold">
+                      {formatOdds(bet.odds)}
+                    </span>
+                    <button
+                      onClick={() => removeBet(bet.id)}
+                      className="text-gray-400 hover:text-red-400 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Stake Input */}
+                <div className="space-y-2">
+                  <label className="text-gray-300 text-sm font-medium">Stake</label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">$</span>
+                    <input
+                      type="number"
+                      value={bet.stake || ''}
+                      onChange={(e) => updateStake(bet.id, e.target.value)}
+                      className="w-full pl-8 pr-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-green-400 transition-colors"
+                      placeholder="0.00"
+                      min="0"
+                      max={bankroll}
+                      step="0.01"
+                    />
+                  </div>
+                  {bet.stake > 0 && (
+                    <div className="text-right">
+                      <div className="text-green-400 text-sm font-semibold">
+                        To Win: ${(calculatePayout(bet.odds, bet.stake) - bet.stake).toFixed(2)}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {/* Quick Bet Amounts */}
+            <div className="bg-slate-700/50 rounded-xl p-4">
+              <h3 className="text-white font-semibold mb-3">Quick Amounts</h3>
+              <div className="grid grid-cols-3 gap-2">
+                {[25, 50, 100].map((amount) => (
+                  <button
+                    key={amount}
+                    onClick={() => {
+                      if (bets.length === 1) {
+                        updateStake(bets[0].id, amount);
+                      }
+                    }}
+                    disabled={bets.length !== 1}
+                    className="bg-slate-800 hover:bg-green-500 disabled:bg-slate-800/50 text-white font-semibold py-2 px-3 rounded-lg transition-colors text-sm disabled:cursor-not-allowed"
+                  >
+                    ${amount}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      {bets.length > 0 && (
+        <div className="p-6 border-t border-slate-700 space-y-4">
+          {/* Totals */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-gray-300">
+              <span>Total Stake:</span>
+              <span className="font-semibold">${totalStake.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-gray-300">
+              <span>Potential Payout:</span>
+              <span className="font-semibold">${totalPayout.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-green-400 font-bold text-lg border-t border-slate-600 pt-2">
+              <span>Potential Profit:</span>
+              <span>${potentialProfit.toFixed(2)}</span>
+            </div>
+          </div>
+
+          {/* Balance Check */}
+          {totalStake > bankroll && (
+            <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3">
+              <p className="text-red-400 text-sm font-medium">
+                Insufficient balance. Available: ${bankroll.toFixed(2)}
+              </p>
+            </div>
+          )}
+
+          {/* Place Bet Button */}
+          <button
+            onClick={placeBets}
+            disabled={totalStake === 0 || totalStake > bankroll || isPlacing}
+            className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-4 rounded-xl transition-all duration-300 disabled:cursor-not-allowed"
+          >
+            {isPlacing ? (
+              <div className="flex items-center justify-center space-x-2">
+                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <span>Placing Bets...</span>
+              </div>
+            ) : (
+              `Place ${bets.length} Bet${bets.length > 1 ? 's' : ''}`
+            )}
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }

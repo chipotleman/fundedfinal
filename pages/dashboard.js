@@ -1,319 +1,293 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import ProfileDrawer from '../components/ProfileDrawer';
-import ChallengeModal from '../components/ChallengeModal';
-import BannerCarousel from '../components/BannerCarousel';
 import TopNavbar from '../components/TopNavbar';
-import teamLogos from '../utils/teamLogos';
+import BetSlip from '../components/BetSlip';
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
-  const [bankroll, setBankroll] = useState(0);
+  const [bankroll, setBankroll] = useState(10000);
+  const [pnl, setPnl] = useState(0);
+  const [bets, setBets] = useState([]);
   const [games, setGames] = useState([]);
-  const [selectedBets, setSelectedBets] = useState([]);
-  const [showBetSlipModal, setShowBetSlipModal] = useState(false);
-  const [showBalanceModal, setShowBalanceModal] = useState(false);
-  const [selectedLeague, setSelectedLeague] = useState(null);
-  const [userStats, setUserStats] = useState({
-    totalBets: 0,
-    winRate: 0,
-    totalPnL: 0,
-    currentStreak: 0
-  });
+  const [betSlip, setBetSlip] = useState([]);
+  const [showBetSlip, setShowBetSlip] = useState(false);
+  const [selectedSport, setSelectedSport] = useState('NFL');
+  const [loading, setLoading] = useState(true);
 
-  const leagues = [
-    { league: 'MLB', emoji: '⚾', color: 'bg-orange-500' },
-    { league: 'NBA', emoji: '🏀', color: 'bg-orange-600' },
-    { league: 'MLS', emoji: '⚽', color: 'bg-green-600' },
-    { league: 'WTA', emoji: '🎾', color: 'bg-yellow-500' },
-    { league: 'KBO', emoji: '⚾', color: 'bg-red-500' },
-    { league: 'NFL', emoji: '🏈', color: 'bg-purple-600' },
-  ];
+  const sports = ['NFL', 'NBA', 'MLB', 'NHL', 'UFC', 'SOCCER'];
+  
+  const challengeGoal = 25000;
+  const startingBankroll = 10000;
+  const progressPercent = ((bankroll - startingBankroll) / (challengeGoal - startingBankroll)) * 100;
 
-  const decimalToAmerican = (decimal) => {
-    if (!decimal || isNaN(decimal)) return "N/A";
-    if (decimal >= 2) return `+${Math.round((decimal - 1) * 100)}`;
-    return `${Math.round(-100 / (decimal - 1))}`;
+  // Mock games data
+  const mockGames = {
+    NFL: [
+      {
+        id: 1,
+        homeTeam: 'Chiefs',
+        awayTeam: 'Bills',
+        homeSpread: -3.5,
+        awaySpread: 3.5,
+        homeML: -165,
+        awayML: +145,
+        total: 47.5,
+        overOdds: -110,
+        underOdds: -110,
+        gameTime: '8:20 PM ET',
+        status: 'Today'
+      },
+      {
+        id: 2,
+        homeTeam: 'Cowboys',
+        awayTeam: 'Eagles',
+        homeSpread: -7,
+        awaySpread: 7,
+        homeML: -310,
+        awayML: +260,
+        total: 51.5,
+        overOdds: -105,
+        underOdds: -115,
+        gameTime: '4:25 PM ET',
+        status: 'Today'
+      }
+    ],
+    NBA: [
+      {
+        id: 3,
+        homeTeam: 'Lakers',
+        awayTeam: 'Warriors',
+        homeSpread: -2.5,
+        awaySpread: 2.5,
+        homeML: -125,
+        awayML: +105,
+        total: 225.5,
+        overOdds: -110,
+        underOdds: -110,
+        gameTime: '10:00 PM ET',
+        status: 'Tonight'
+      }
+    ]
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        window.location.href = '/login';
-        return;
-      }
-      setUser(session.user);
+    setGames(mockGames[selectedSport] || []);
+    setLoading(false);
+  }, [selectedSport]);
 
-      const { data: balanceData } = await supabase
-        .from('user_balances')
-        .select('balance')
-        .eq('id', session.user.id)
-        .single();
-      setBankroll(balanceData?.balance || 1000);
-
-      const start = new Date();
-      start.setHours(0, 0, 0, 0);
-      const end = new Date();
-      end.setHours(23, 59, 59, 999);
-
-      const { data: gamesData } = await supabase
-        .from('game_slates')
-        .select('*')
-        .gte('game_time', start.toISOString())
-        .lte('game_time', end.toISOString());
-
-      if (gamesData) {
-        const now = new Date();
-        const sorted = [...gamesData].sort((a, b) => {
-          const aStarted = new Date(a.game_time) <= now;
-          const bStarted = new Date(b.game_time) <= now;
-          if (aStarted === bStarted) {
-            return new Date(a.game_time) - new Date(b.game_time);
-          }
-          return aStarted ? 1 : -1;
-        });
-        setGames(sorted);
-      }
+  const addToBetSlip = (game, betType, odds, selection) => {
+    const newBet = {
+      id: Date.now(),
+      gameId: game.id,
+      matchup: `${game.awayTeam} @ ${game.homeTeam}`,
+      betType,
+      selection,
+      odds,
+      stake: 0
     };
-
-    fetchData();
-  }, []);
-
-  const handleTeamSelect = (game, team) => {
-    const gameStarted = new Date(game.game_time) <= new Date();
-    if (gameStarted) return;
-
-    const existingBet = selectedBets.find(b => b.game_id === game.id);
-    const odds = team === game.matchup.split(" vs ")[0].trim()
-      ? parseFloat(game.odds_team1)
-      : parseFloat(game.odds_team2);
-
-    if (existingBet && existingBet.team === team) {
-      setSelectedBets(selectedBets.filter(b => b.game_id !== game.id));
-    } else {
-      const newBet = { game_id: game.id, team, odds };
-      setSelectedBets(existingBet
-        ? selectedBets.map(b => b.game_id === game.id ? newBet : b)
-        : [...selectedBets, newBet]);
-    }
+    
+    setBetSlip([...betSlip, newBet]);
+    setShowBetSlip(true);
   };
 
-  const filteredGames = selectedLeague
-    ? games.filter((g) => g.sport === selectedLeague)
-    : games;
-
-  const getTeamLogo = (team) => {
-    return teamLogos[team] || null;
+  const formatOdds = (odds) => {
+    return odds > 0 ? `+${odds}` : odds.toString();
   };
-
-  const startingBankroll = 1000;
-  const challengeGoal = 2500;
-  const pnl = bankroll - startingBankroll;
-  const progressPercent = Math.min(100, Math.max(0, (bankroll / challengeGoal) * 100));
 
   return (
-    <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white min-h-screen">
-      {/* Top Navigation */}
-      <TopNavbar
-        selectedBets={selectedBets}
+    <div className="min-h-screen bg-slate-900">
+      <TopNavbar 
+        user={user}
         bankroll={bankroll}
-        onShowBetSlip={() => setShowBetSlipModal(true)}
-        onShowBalance={() => setShowBalanceModal(true)}
-        progressPercent={progressPercent}
+        pnl={pnl}
+        betSlipCount={betSlip.length}
+        onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
 
-      <div className="flex pt-20">
+      <div className="flex pt-16">
         {/* Sidebar */}
-        <div className="hidden lg:flex w-64 bg-slate-800/50 min-h-screen flex-col p-6">
+        <div className="hidden lg:flex w-80 bg-slate-800 min-h-screen flex-col border-r border-slate-700">
           {/* Challenge Progress */}
-          <div className="bg-slate-800 rounded-xl p-6 mb-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Challenge Progress</h3>
-            <div className="relative h-3 bg-slate-700 rounded-full mb-3">
-              <div 
-                className="absolute h-3 bg-gradient-to-r from-emerald-400 to-emerald-500 rounded-full transition-all duration-500"
-                style={{ width: `${progressPercent}%` }}
-              />
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-400">${startingBankroll}</span>
-              <span className="text-emerald-400 font-semibold">${bankroll}</span>
-              <span className="text-gray-400">${challengeGoal}</span>
-            </div>
-            <div className="mt-4 p-3 bg-slate-700 rounded-lg">
-              <div className="text-center">
-                <div className={`text-2xl font-bold ${pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {pnl >= 0 ? '+' : ''}${pnl}
+          <div className="p-6 border-b border-slate-700">
+            <div className="bg-gradient-to-r from-slate-800 to-slate-700 rounded-2xl p-6">
+              <h3 className="text-lg font-bold text-white mb-4 flex items-center">
+                <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
+                Challenge Progress
+              </h3>
+              
+              <div className="relative h-4 bg-slate-700 rounded-full mb-4 overflow-hidden">
+                <div 
+                  className="absolute h-4 bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 rounded-full transition-all duration-1000 shadow-lg"
+                  style={{ width: `${Math.max(5, progressPercent)}%` }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse"></div>
+              </div>
+              
+              <div className="flex justify-between text-sm mb-4">
+                <span className="text-gray-400">${startingBankroll.toLocaleString()}</span>
+                <span className="text-green-400 font-bold">${bankroll.toLocaleString()}</span>
+                <span className="text-gray-400">${challengeGoal.toLocaleString()}</span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-slate-800 rounded-xl p-4 text-center">
+                  <div className={`text-2xl font-black ${pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                    {pnl >= 0 ? '+' : ''}${pnl.toLocaleString()}
+                  </div>
+                  <div className="text-gray-400 text-sm font-medium">Current P&L</div>
                 </div>
-                <div className="text-gray-400 text-sm">Current P&L</div>
+                <div className="bg-slate-800 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-black text-blue-400">{progressPercent.toFixed(1)}%</div>
+                  <div className="text-gray-400 text-sm font-medium">Complete</div>
+                </div>
               </div>
             </div>
           </div>
 
-          {/* League Filter */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Sports</h3>
+          {/* Sports Navigation */}
+          <div className="p-6">
+            <h3 className="text-white font-bold mb-4">Sports</h3>
             <div className="space-y-2">
-              {leagues.map((item) => (
+              {sports.map((sport) => (
                 <button
-                  key={item.league}
-                  onClick={() => setSelectedLeague(item.league === selectedLeague ? null : item.league)}
-                  className={`w-full flex items-center space-x-3 p-3 rounded-lg transition ${
-                    item.league === selectedLeague 
-                      ? 'bg-emerald-500 text-white' 
-                      : 'text-gray-300 hover:bg-slate-700'
+                  key={sport}
+                  onClick={() => setSelectedSport(sport)}
+                  className={`w-full text-left px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
+                    selectedSport === sport
+                      ? 'bg-green-500 text-white shadow-lg'
+                      : 'text-gray-300 hover:bg-slate-700 hover:text-white'
                   }`}
                 >
-                  <span className="text-xl">{item.emoji}</span>
-                  <span className="font-medium">{item.league}</span>
+                  {sport}
                 </button>
               ))}
-            </div>
-          </div>
-
-          {/* User Stats */}
-          <div className="bg-slate-800 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Your Stats</h3>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Total Bets:</span>
-                <span className="text-white font-medium">{userStats.totalBets}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Win Rate:</span>
-                <span className="text-emerald-400 font-medium">{userStats.winRate}%</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Total P&L:</span>
-                <span className={`font-medium ${userStats.totalPnL >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {userStats.totalPnL >= 0 ? '+' : ''}${userStats.totalPnL}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Current Streak:</span>
-                <span className="text-white font-medium">{userStats.currentStreak}</span>
-              </div>
             </div>
           </div>
         </div>
 
         {/* Main Content */}
         <div className="flex-1 p-6">
-          {/* Mobile League Filter */}
-          <div className="lg:hidden mb-6">
-            <div className="flex space-x-3 overflow-x-auto scrollbar-hide pb-2">
-              {leagues.map((item) => (
-                <button
-                  key={item.league}
-                  onClick={() => setSelectedLeague(item.league === selectedLeague ? null : item.league)}
-                  className={`flex-shrink-0 flex items-center space-x-2 px-4 py-2 rounded-lg transition ${
-                    item.league === selectedLeague
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
-                  }`}
-                >
-                  <span className="text-lg">{item.emoji}</span>
-                  <span className="font-medium">{item.league}</span>
-                </button>
-              ))}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <h1 className="text-3xl font-black text-white">{selectedSport} Betting</h1>
+              <div className="flex items-center space-x-4">
+                <div className="bg-slate-800 px-4 py-2 rounded-lg">
+                  <span className="text-gray-400 text-sm">Live Lines</span>
+                  <div className="flex items-center ml-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Games Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredGames.map((game) => {
-              const [team1, team2] = game.matchup.split(" vs ");
-              const gameStarted = new Date(game.game_time) <= new Date();
-              const gameTime = new Date(game.game_time);
-
-              return (
-                <div key={game.id} className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden hover:border-slate-600 transition-all">
+          <div className="space-y-4">
+            {games.map((game) => (
+              <div key={game.id} className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden hover:border-slate-600 transition-all duration-300">
+                <div className="p-6">
                   {/* Game Header */}
-                  <div className="p-4 border-b border-slate-700 bg-slate-700/50">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-medium text-emerald-400 uppercase tracking-wide">
-                        {game.sport}
-                      </span>
-                      <span className="text-xs text-gray-400">
-                        {gameStarted ? 'Live' : gameTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center space-x-4">
+                      <div className="text-white font-bold text-lg">
+                        {game.awayTeam} @ {game.homeTeam}
+                      </div>
+                      <span className="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm font-medium">
+                        {game.status}
                       </span>
                     </div>
+                    <div className="text-gray-400 font-medium">{game.gameTime}</div>
                   </div>
 
-                  {/* Teams */}
-                  <div className="p-4 space-y-3">
-                    {[team1.trim(), team2.trim()].map((team, index) => {
-                      const odds = index === 0 ? parseFloat(game.odds_team1) : parseFloat(game.odds_team2);
-                      const isSelected = selectedBets.find(b => b.game_id === game.id)?.team === team;
-                      const logo = getTeamLogo(team);
-
-                      return (
+                  {/* Betting Options */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Spread */}
+                    <div className="bg-slate-700/50 rounded-xl p-4">
+                      <h4 className="text-gray-300 font-semibold mb-3 text-center">Spread</h4>
+                      <div className="space-y-2">
                         <button
-                          key={team}
-                          onClick={() => handleTeamSelect(game, team)}
-                          disabled={gameStarted}
-                          className={`w-full flex items-center justify-between p-3 rounded-lg transition-all ${
-                            isSelected
-                              ? 'bg-emerald-500 text-white scale-105'
-                              : gameStarted
-                              ? 'bg-slate-700 text-gray-500 cursor-not-allowed'
-                              : 'bg-slate-700 text-white hover:bg-slate-600 hover:scale-102'
-                          }`}
+                          onClick={() => addToBetSlip(game, 'Spread', -110, `${game.awayTeam} ${formatOdds(game.awaySpread)}`)}
+                          className="w-full bg-slate-800 hover:bg-green-500 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex justify-between items-center group"
                         >
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center overflow-hidden">
-                              {logo ? (
-                                <img src={logo} alt={team} className="w-6 h-6 object-contain" />
-                              ) : (
-                                <span className="text-xs text-white">?</span>
-                              )}
-                            </div>
-                            <span className="font-medium">{team}</span>
-                          </div>
-                          <div className="text-right">
-                            <div className="font-bold">
-                              {gameStarted ? "Started" : decimalToAmerican(odds)}
-                            </div>
-                            {!gameStarted && (
-                              <div className="text-xs opacity-75">
-                                Decimal: {odds?.toFixed(2)}
-                              </div>
-                            )}
-                          </div>
+                          <span>{game.awayTeam} {formatOdds(game.awaySpread)}</span>
+                          <span className="text-gray-300 group-hover:text-white">-110</span>
                         </button>
-                      );
-                    })}
+                        <button
+                          onClick={() => addToBetSlip(game, 'Spread', -110, `${game.homeTeam} ${formatOdds(game.homeSpread)}`)}
+                          className="w-full bg-slate-800 hover:bg-green-500 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex justify-between items-center group"
+                        >
+                          <span>{game.homeTeam} {formatOdds(game.homeSpread)}</span>
+                          <span className="text-gray-300 group-hover:text-white">-110</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Moneyline */}
+                    <div className="bg-slate-700/50 rounded-xl p-4">
+                      <h4 className="text-gray-300 font-semibold mb-3 text-center">Moneyline</h4>
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => addToBetSlip(game, 'Moneyline', game.awayML, `${game.awayTeam} ML`)}
+                          className="w-full bg-slate-800 hover:bg-green-500 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex justify-between items-center group"
+                        >
+                          <span>{game.awayTeam}</span>
+                          <span className="text-gray-300 group-hover:text-white">{formatOdds(game.awayML)}</span>
+                        </button>
+                        <button
+                          onClick={() => addToBetSlip(game, 'Moneyline', game.homeML, `${game.homeTeam} ML`)}
+                          className="w-full bg-slate-800 hover:bg-green-500 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex justify-between items-center group"
+                        >
+                          <span>{game.homeTeam}</span>
+                          <span className="text-gray-300 group-hover:text-white">{formatOdds(game.homeML)}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Total */}
+                    <div className="bg-slate-700/50 rounded-xl p-4">
+                      <h4 className="text-gray-300 font-semibold mb-3 text-center">Total</h4>
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => addToBetSlip(game, 'Total', game.overOdds, `Over ${game.total}`)}
+                          className="w-full bg-slate-800 hover:bg-green-500 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex justify-between items-center group"
+                        >
+                          <span>Over {game.total}</span>
+                          <span className="text-gray-300 group-hover:text-white">{formatOdds(game.overOdds)}</span>
+                        </button>
+                        <button
+                          onClick={() => addToBetSlip(game, 'Total', game.underOdds, `Under ${game.total}`)}
+                          className="w-full bg-slate-800 hover:bg-green-500 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex justify-between items-center group"
+                        >
+                          <span>Under {game.total}</span>
+                          <span className="text-gray-300 group-hover:text-white">{formatOdds(game.underOdds)}</span>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
 
-          {filteredGames.length === 0 && (
+          {loading && (
             <div className="text-center py-12">
-              <div className="text-6xl mb-4">🏆</div>
-              <h3 className="text-xl font-semibold text-white mb-2">No games available</h3>
-              <p className="text-gray-400">Check back later for more betting opportunities</p>
+              <div className="w-12 h-12 border-4 border-green-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-gray-400">Loading games...</p>
             </div>
           )}
         </div>
-      </div>
 
-      {/* Profile Drawer */}
-      <div className="fixed bottom-6 left-6 z-50">
-        <ProfileDrawer />
+        {/* Bet Slip */}
+        {showBetSlip && (
+          <BetSlip 
+            bets={betSlip}
+            setBets={setBetSlip}
+            bankroll={bankroll}
+            onClose={() => setShowBetSlip(false)}
+          />
+        )}
       </div>
-
-      {/* Modals */}
-      {showBalanceModal && (
-        <ChallengeModal
-          pnl={pnl}
-          progressPercent={progressPercent}
-          challengeGoal={challengeGoal}
-          onClose={() => setShowBalanceModal(false)}
-        />
-      )}
     </div>
   );
 }
