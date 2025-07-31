@@ -1,6 +1,7 @@
 import '../styles/globals.css';
 import TopNavbar from '../components/TopNavbar';
 import { BetSlipProvider } from '../contexts/BetSlipContext';
+import { UserProfilesProvider } from '../contexts/UserProfilesContext';
 import { useState } from 'react';
 
 export default function App({ Component, pageProps }) {
@@ -14,17 +15,19 @@ export default function App({ Component, pageProps }) {
 
   return (
     <BetSlipProvider>
-      <Component
-        {...pageProps}
-        bankroll={bankroll}
-        setBankroll={setBankroll}
-        selectedBets={selectedBets}
-        setSelectedBets={setSelectedBets}
-        showWalletModal={showWalletModal}
-        setShowWalletModal={setShowWalletModal}
-        showBetSlip={showBetSlip}
-        setShowBetSlip={setShowBetSlip}
-      />
+      <UserProfilesProvider>
+        <Component
+          {...pageProps}
+          bankroll={bankroll}
+          setBankroll={setBankroll}
+          selectedBets={selectedBets}
+          setSelectedBets={setSelectedBets}
+          showWalletModal={showWalletModal}
+          setShowWalletModal={setShowWalletModal}
+          showBetSlip={showBetSlip}
+          setShowBetSlip={setShowBetSlip}
+        />
+      </UserProfilesProvider>
     </BetSlipProvider>
   );
 }

@@ -13,7 +13,7 @@ export default function TopNavbar({ user, bankroll, pnl, betSlipCount, onBetSlip
             <img 
               src="/fundmybet-logo.svg" 
               alt="FundMyBet" 
-              className="h-8 w-auto brightness-100"
+              className="h-12 w-auto brightness-100"
             />
           </Link>
 
@@ -27,6 +27,9 @@ export default function TopNavbar({ user, bankroll, pnl, betSlipCount, onBetSlip
             </Link>
             <Link href="/leaderboard" className="text-gray-300 hover:text-white font-medium transition-colors">
               Leaderboard
+            </Link>
+            <Link href="/promos" className="text-gray-300 hover:text-white font-medium transition-colors">
+              Promos
             </Link>
           </div>
 

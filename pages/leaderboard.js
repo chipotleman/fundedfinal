@@ -2,10 +2,13 @@
 import React, { useState } from "react";
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
+import ProfileModal from '../components/ProfileModal';
 import { useBetSlip } from '../contexts/BetSlipContext';
+import { useUserProfiles } from '../contexts/UserProfilesContext';
 
 const Leaderboard = () => {
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
+  const { selectedProfile, showProfileModal, setShowProfileModal, openProfile } = useUserProfiles();
   const [timeframe, setTimeframe] = useState('monthly');
   const [category, setCategory] = useState('all');
 
@@ -186,7 +189,12 @@ const Leaderboard = () => {
                 } backdrop-blur-lg rounded-2xl p-8 border text-center ${index === 0 ? 'transform scale-105' : ''}`}>
                   
                   <div className="text-6xl mb-4">{getRankIcon(user.rank)}</div>
-                  <div className="text-2xl font-bold text-white mb-2">{user.username}</div>
+                  <button 
+                    onClick={() => openProfile(user.username)}
+                    className="text-2xl font-bold text-white mb-2 hover:text-blue-400 transition-colors cursor-pointer"
+                  >
+                    {user.username}
+                  </button>
                   <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium mb-4 ${getTierColor(user.tier)}`}>
                     {user.tier}
                   </div>
@@ -234,7 +242,12 @@ const Leaderboard = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-lg font-semibold text-white">{user.username}</div>
+                        <button 
+                          onClick={() => openProfile(user.username)}
+                          className="text-lg font-semibold text-white hover:text-blue-400 transition-colors cursor-pointer"
+                        >
+                          {user.username}
+                        </button>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getTierColor(user.tier)}`}>
@@ -302,6 +315,12 @@ const Leaderboard = () => {
           </div>
         </div>
       </div>
+
+      <ProfileModal 
+        profile={selectedProfile}
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+      />
     </div>
   );
 };
