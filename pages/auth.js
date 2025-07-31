@@ -87,13 +87,10 @@ export default function AuthPage() {
 
     try {
       if (isSignUp) {
-        // Sign up user with autoConfirm option
+        // Sign up user
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: {
-            emailRedirectTo: undefined, // Disable email confirmation flow
-          }
         });
 
         if (error) {
@@ -104,12 +101,13 @@ export default function AuthPage() {
             throw error;
           }
         } else if (data.user) {
-          // Always try to sign in immediately after signup, regardless of confirmation
-          setError('Account created! Signing you in...');
-          setIsSignUp(false); // Switch to sign in mode
+          // Account created successfully - show success message and switch to sign-in
+          setError('✅ Account created successfully! Now signing you in...');
+          setIsSignUp(false);
           
-          // Small delay to allow the account to be fully created
+          // Wait a moment then try to sign in
           setTimeout(async () => {
+            setLoading(true);
             try {
               const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
                 email,
@@ -117,15 +115,21 @@ export default function AuthPage() {
               });
               
               if (signInError) {
-                console.log('Sign-in error after signup:', signInError.message);
-                setError('Account created! Please try signing in manually with your credentials.');
+                if (signInError.message.includes('Email not confirmed')) {
+                  // Email confirmation is still required - provide clear instructions
+                  setError('Account created! Please check your email and click the confirmation link, then try signing in again.');
+                } else {
+                  setError('Account created! Please try signing in with your email and password.');
+                }
               } else if (signInData.user) {
                 setStep('challenge');
               }
             } catch (err) {
-              setError('Account created! Please try signing in manually with your credentials.');
+              setError('Account created! Please try signing in with your email and password.');
+            } finally {
+              setLoading(false);
             }
-          }, 1000);
+          }, 1500);
         }
       } else {
         // Sign in existing user
@@ -139,10 +143,12 @@ export default function AuthPage() {
           if (error.message.includes('Invalid login credentials')) {
             setError('Invalid email or password. Please check your credentials and try again.');
           } else if (error.message.includes('Email not confirmed')) {
-            // Instead of blocking, provide helpful guidance
-            setError('Account not confirmed yet. Please try creating a new account if you just signed up, or contact support.');
+            setError('⚠️ Your email needs to be confirmed. Please check your email inbox (including spam) for a confirmation link, then try signing in again. If you don\'t see it, try creating a new account.');
+          } else if (error.message.includes('Email link is invalid or has expired')) {
+            setError('The confirmation link has expired. Please create a new account.');
+            setIsSignUp(true);
           } else {
-            setError('Sign-in failed. Please try again or create a new account.');
+            setError(`Sign-in failed: ${error.message}`);
           }
         } else if (data.user) {
           setStep('challenge');
