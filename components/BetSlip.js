@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 export default function BetSlip({ bets, setBets, bankroll, onClose }) {
   const [isPlacing, setIsPlacing] = useState(false);
+  const [betType, setBetType] = useState('single');
   
   const updateStake = (betId, stake) => {
     setBets(bets.map(bet => 
@@ -135,13 +136,34 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
             <div className="bg-slate-700/50 rounded-xl p-4 mb-4">
               <h3 className="text-white font-semibold mb-3">Bet Type</h3>
               <div className="grid grid-cols-2 gap-2">
-                <button className="bg-green-500 text-white font-semibold py-2 px-3 rounded-lg text-sm">
+                <button 
+                  onClick={() => setBetType('single')}
+                  className={`font-semibold py-2 px-3 rounded-lg text-sm transition-colors ${
+                    betType === 'single' 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-slate-800 hover:bg-slate-700 text-white'
+                  }`}
+                >
                   Singles
                 </button>
-                <button className="bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2 px-3 rounded-lg transition-colors text-sm">
+                <button 
+                  onClick={() => setBetType('parlay')}
+                  className={`font-semibold py-2 px-3 rounded-lg text-sm transition-colors ${
+                    betType === 'parlay' 
+                      ? 'bg-green-500 text-white' 
+                      : 'bg-slate-800 hover:bg-slate-700 text-white'
+                  }`}
+                >
                   Parlay
                 </button>
               </div>
+              {betType === 'parlay' && bets.length > 1 && (
+                <div className="mt-3 p-3 bg-blue-500/20 rounded-lg">
+                  <p className="text-blue-400 text-sm font-medium">
+                    Parlay Odds: {((bets.reduce((acc, bet) => acc * (bet.odds > 0 ? (bet.odds/100 + 1) : (100/Math.abs(bet.odds) + 1)), 1) - 1) * 100).toFixed(0) > 0 ? '+' : ''}{((bets.reduce((acc, bet) => acc * (bet.odds > 0 ? (bet.odds/100 + 1) : (100/Math.abs(bet.odds) + 1)), 1) - 1) * 100).toFixed(0)}
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Quick Bet Amounts */}
@@ -153,8 +175,18 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
                     key={amount}
                     onClick={() => {
                       if (bets.length >= 1) {
-                        // Apply to all bets if multiple, or just the single bet
-                        bets.forEach(bet => updateStake(bet.id, amount));
+                        if (betType === 'parlay') {
+                          // For parlay, set the same amount on all bets
+                          bets.forEach(bet => updateStake(bet.id, amount));
+                        } else {
+                          // For singles, set amount on the first bet or all if only one
+                          if (bets.length === 1) {
+                            updateStake(bets[0].id, amount);
+                          } else {
+                            // Set on first bet if multiple singles
+                            updateStake(bets[0].id, amount);
+                          }
+                        }
                       }
                     }}
                     disabled={bets.length === 0}
@@ -170,7 +202,18 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
                     key={amount}
                     onClick={() => {
                       if (bets.length >= 1) {
-                        bets.forEach(bet => updateStake(bet.id, amount));
+                        if (betType === 'parlay') {
+                          // For parlay, set the same amount on all bets
+                          bets.forEach(bet => updateStake(bet.id, amount));
+                        } else {
+                          // For singles, set amount on the first bet or all if only one
+                          if (bets.length === 1) {
+                            updateStake(bets[0].id, amount);
+                          } else {
+                            // Set on first bet if multiple singles
+                            updateStake(bets[0].id, amount);
+                          }
+                        }
                       }
                     }}
                     disabled={bets.length === 0}

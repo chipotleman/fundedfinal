@@ -176,10 +176,16 @@ export default function Dashboard() {
             <div className="flex items-center justify-between mb-4">
               <h1 className="text-3xl font-black text-white">{selectedSport} Betting</h1>
               <div className="flex items-center space-x-4">
-                <div className="bg-slate-800 px-4 py-2 rounded-lg">
-                  <span className="text-gray-400 text-sm">Live Lines</span>
-                  <div className="flex items-center ml-2">
+                <div className="bg-slate-800 px-4 py-2 rounded-lg border border-slate-700">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-gray-400 text-sm">Live Lines</span>
                     <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  </div>
+                </div>
+                <div className="bg-slate-800 px-4 py-2 rounded-lg border border-slate-700">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                    <span className="text-green-400 text-sm font-medium">ALL SYSTEMS FUNCTIONAL</span>
                   </div>
                 </div>
               </div>
