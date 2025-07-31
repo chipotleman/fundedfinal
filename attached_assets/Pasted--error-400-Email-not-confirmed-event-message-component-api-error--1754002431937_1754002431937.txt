@@ -1,0 +1,872 @@
+[
+  {
+    "error": "400: Email not confirmed",
+    "event_message": "{\"component\":\"api\",\"error\":\"400: Email not confirmed\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"400: Email not confirmed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680abf353f4c341-EWR\",\"time\":\"2025-07-31T22:53:24Z\"}",
+    "id": "4ef2f221-dcba-4ad7-89b9-2d52480d725a",
+    "level": "info",
+    "msg": "400: Email not confirmed",
+    "path": "/token",
+    "status": null,
+    "timestamp": 1754002404000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"duration\":83194932,\"error_code\":\"email_not_confirmed\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680abf353f4c341-EWR\",\"status\":400,\"time\":\"2025-07-31T22:53:24Z\"}",
+    "id": "83488e30-66c9-44a0-aea1-b34f0312b8d6",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/token",
+    "status": "400",
+    "timestamp": 1754002404000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"auth_event\":{\"action\":\"user_confirmation_requested\",\"actor_id\":\"bc042a6f-6022-4b76-879d-40e3564e7f6a\",\"actor_username\":\"loiglda@yahoo.com\",\"actor_via_sso\":false,\"log_type\":\"user\",\"traits\":{\"provider\":\"email\"}},\"component\":\"api\",\"duration\":557558128,\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680abda33b3c341-EWR\",\"status\":200,\"time\":\"2025-07-31T22:53:21Z\"}",
+    "id": "85ad4651-8c75-47c0-a3bb-d4903043edf0",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/signup",
+    "status": "200",
+    "timestamp": 1754002401000000
+  },
+  {
+    "error": "400: Email not confirmed",
+    "event_message": "{\"component\":\"api\",\"error\":\"400: Email not confirmed\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"400: Email not confirmed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680abdeb53bc341-EWR\",\"time\":\"2025-07-31T22:53:21Z\"}",
+    "id": "183bb728-6d0d-4a5f-8942-d2333b10ffff",
+    "level": "info",
+    "msg": "400: Email not confirmed",
+    "path": "/token",
+    "status": null,
+    "timestamp": 1754002401000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"duration\":84213417,\"error_code\":\"email_not_confirmed\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680abdeb53bc341-EWR\",\"status\":400,\"time\":\"2025-07-31T22:53:21Z\"}",
+    "id": "965e17a3-ec31-4b96-8ccd-78836ec5e7f4",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/token",
+    "status": "400",
+    "timestamp": 1754002401000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"event\":\"mail.send\",\"level\":\"info\",\"mail_from\":\"noreply@mail.app.supabase.io\",\"mail_to\":\"loiglda@yahoo.com\",\"mail_type\":\"confirm\",\"msg\":\"mail.send\",\"time\":\"2025-07-31T22:53:21Z\"}",
+    "id": "e08326d3-753d-4962-bf60-846284d382ab",
+    "level": "info",
+    "msg": "mail.send",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002401000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"event\":\"mail.send\",\"level\":\"info\",\"mail_from\":\"noreply@mail.app.supabase.io\",\"mail_to\":\"chipotleman1@yahoo.com\",\"mail_type\":\"confirm\",\"msg\":\"mail.send\",\"time\":\"2025-07-31T22:51:34Z\"}",
+    "id": "169c1869-dbc8-4682-ad8d-3c7a30c91dcc",
+    "level": "info",
+    "msg": "mail.send",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002294000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"duration\":87194216,\"error_code\":\"email_not_confirmed\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680a9457442c341-EWR\",\"status\":400,\"time\":\"2025-07-31T22:51:34Z\"}",
+    "id": "02e121c2-8acb-4c49-8904-b1a1f6286865",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/token",
+    "status": "400",
+    "timestamp": 1754002294000000
+  },
+  {
+    "error": "400: Email not confirmed",
+    "event_message": "{\"component\":\"api\",\"error\":\"400: Email not confirmed\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"400: Email not confirmed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680a9457442c341-EWR\",\"time\":\"2025-07-31T22:51:34Z\"}",
+    "id": "4c5f25cd-3133-4359-9ef7-686b4db47635",
+    "level": "info",
+    "msg": "400: Email not confirmed",
+    "path": "/token",
+    "status": null,
+    "timestamp": 1754002294000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"auth_event\":{\"action\":\"user_confirmation_requested\",\"actor_id\":\"6992639c-21bc-4a4c-8dee-026511c6567b\",\"actor_username\":\"chipotleman1@yahoo.com\",\"actor_via_sso\":false,\"log_type\":\"user\",\"traits\":{\"provider\":\"email\"}},\"component\":\"api\",\"duration\":762209257,\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680a93f824fc341-EWR\",\"status\":200,\"time\":\"2025-07-31T22:51:34Z\"}",
+    "id": "dcb78d3d-7252-4551-960b-d82e04e9fd99",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/signup",
+    "status": "200",
+    "timestamp": 1754002294000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"level\":\"warning\",\"msg\":\"DEPRECATION NOTICE: GOTRUE_JWT_DEFAULT_GROUP_NAME not supported by Supabase's GoTrue, will be removed soon\",\"time\":\"2025-07-31T22:49:45Z\"}",
+    "id": "4c6418e4-44f3-4a5d-8e9d-2d69fe3021c9",
+    "level": "warning",
+    "msg": "DEPRECATION NOTICE: GOTRUE_JWT_DEFAULT_GROUP_NAME not supported by Supabase's GoTrue, will be removed soon",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002185000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"level\":\"warning\",\"msg\":\"DEPRECATION NOTICE: GOTRUE_JWT_ADMIN_GROUP_NAME not supported by Supabase's GoTrue, will be removed soon\",\"time\":\"2025-07-31T22:49:45Z\"}",
+    "id": "abd4bbd7-2d89-46c0-baf8-f48e23ee5efc",
+    "level": "warning",
+    "msg": "DEPRECATION NOTICE: GOTRUE_JWT_ADMIN_GROUP_NAME not supported by Supabase's GoTrue, will be removed soon",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002185000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"count\":0,\"level\":\"info\",\"msg\":\"GoTrue migrations applied successfully\",\"time\":\"2025-07-31T22:49:45Z\"}",
+    "id": "65ac32b1-df4a-4f14-a867-27530347bc12",
+    "level": "info",
+    "msg": "GoTrue migrations applied successfully",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002185000000
+  },
+  {
+    "error": "http: Server closed",
+    "event_message": "{\"component\":\"api\",\"error\":\"http: Server closed\",\"level\":\"fatal\",\"msg\":\"http server serve failed\",\"time\":\"2025-07-31T22:49:45Z\"}",
+    "id": "caa6ab3f-c451-4a0b-950a-fdf386764e4e",
+    "level": "fatal",
+    "msg": "http server serve failed",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002185000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"level\":\"info\",\"msg\":\"GoTrue API started on: localhost:9999\",\"time\":\"2025-07-31T22:49:45Z\",\"version\":\"v2.176.1\"}",
+    "id": "58a39f04-fc82-488f-a0d6-036c71e145dd",
+    "level": "info",
+    "msg": "GoTrue API started on: localhost:9999",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002185000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"level\":\"info\",\"msg\":\"received graceful shutdown signal\",\"time\":\"2025-07-31T22:49:45Z\"}",
+    "id": "2bb23d36-10a2-472c-b4c0-87d04b485ed1",
+    "level": "info",
+    "msg": "received graceful shutdown signal",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002185000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"level\":\"info\",\"msg\":\"Go runtime metrics collection started\",\"time\":\"2025-07-31T22:49:45Z\"}",
+    "id": "f108afd6-9910-4f19-adf9-8f1ffcb9149a",
+    "level": "info",
+    "msg": "Go runtime metrics collection started",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002185000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"level\":\"info\",\"msg\":\"prometheus server listening on 0.0.0.0:9122\",\"time\":\"2025-07-31T22:49:45Z\"}",
+    "id": "95f3842e-9963-41ec-97d7-122b4c8d78de",
+    "level": "info",
+    "msg": "prometheus server listening on 0.0.0.0:9122",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002185000000
+  },
+  {
+    "error": "400: Email not confirmed",
+    "event_message": "{\"component\":\"api\",\"error\":\"400: Email not confirmed\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"400: Email not confirmed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680a5a4b678c341-EWR\",\"time\":\"2025-07-31T22:49:06Z\"}",
+    "id": "88ee04e7-13ab-4f90-8202-4bf189954bef",
+    "level": "info",
+    "msg": "400: Email not confirmed",
+    "path": "/token",
+    "status": null,
+    "timestamp": 1754002146000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"duration\":88054387,\"error_code\":\"email_not_confirmed\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680a5a4b678c341-EWR\",\"status\":400,\"time\":\"2025-07-31T22:49:06Z\"}",
+    "id": "9a7706a1-6931-4cc0-8c72-40d47c3ff1ee",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/token",
+    "status": "400",
+    "timestamp": 1754002146000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"event\":\"mail.send\",\"level\":\"info\",\"mail_from\":\"noreply@mail.app.supabase.io\",\"mail_to\":\"mathewbaldwin981@yahoo.com\",\"mail_type\":\"confirm\",\"msg\":\"mail.send\",\"time\":\"2025-07-31T22:49:05Z\"}",
+    "id": "608a81a0-f8e0-47de-9111-182f6d88f5fd",
+    "level": "info",
+    "msg": "mail.send",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002145000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"auth_event\":{\"action\":\"user_confirmation_requested\",\"actor_id\":\"031aa701-e643-4188-90ec-1672b5c763ab\",\"actor_username\":\"mathewbaldwin981@yahoo.com\",\"actor_via_sso\":false,\"log_type\":\"user\",\"traits\":{\"provider\":\"email\"}},\"component\":\"api\",\"duration\":757263613,\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680a59f1426c341-EWR\",\"status\":200,\"time\":\"2025-07-31T22:49:05Z\"}",
+    "id": "ed77e5d6-2ff4-4be5-8bba-33c8779cc47c",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/signup",
+    "status": "200",
+    "timestamp": 1754002145000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"level\":\"warning\",\"msg\":\"DEPRECATION NOTICE: GOTRUE_JWT_ADMIN_GROUP_NAME not supported by Supabase's GoTrue, will be removed soon\",\"time\":\"2025-07-31T22:48:38Z\"}",
+    "id": "5b41f7ee-a75c-4cfe-8925-6d24c28198b0",
+    "level": "warning",
+    "msg": "DEPRECATION NOTICE: GOTRUE_JWT_ADMIN_GROUP_NAME not supported by Supabase's GoTrue, will be removed soon",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002118000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"level\":\"info\",\"msg\":\"Go runtime metrics collection started\",\"time\":\"2025-07-31T22:48:38Z\"}",
+    "id": "88b3e319-d9ce-4e46-ace1-f833c95b7d06",
+    "level": "info",
+    "msg": "Go runtime metrics collection started",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002118000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"count\":0,\"level\":\"info\",\"msg\":\"GoTrue migrations applied successfully\",\"time\":\"2025-07-31T22:48:38Z\"}",
+    "id": "2fec57ac-af51-4594-91ca-e47cd8e3f3e0",
+    "level": "info",
+    "msg": "GoTrue migrations applied successfully",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002118000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"level\":\"info\",\"msg\":\"GoTrue API started on: localhost:9999\",\"time\":\"2025-07-31T22:48:38Z\",\"version\":\"v2.176.1\"}",
+    "id": "67129a0b-8d13-4e88-b638-72325c651802",
+    "level": "info",
+    "msg": "GoTrue API started on: localhost:9999",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002118000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"level\":\"info\",\"msg\":\"received graceful shutdown signal\",\"time\":\"2025-07-31T22:48:38Z\"}",
+    "id": "431fd326-3238-4f47-8853-8e9ddd3fed7c",
+    "level": "info",
+    "msg": "received graceful shutdown signal",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002118000000
+  },
+  {
+    "error": "http: Server closed",
+    "event_message": "{\"component\":\"api\",\"error\":\"http: Server closed\",\"level\":\"fatal\",\"msg\":\"http server serve failed\",\"time\":\"2025-07-31T22:48:38Z\"}",
+    "id": "9ec5b1f8-6516-4b08-8763-c95a28787820",
+    "level": "fatal",
+    "msg": "http server serve failed",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002118000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"level\":\"info\",\"msg\":\"prometheus server listening on 0.0.0.0:9122\",\"time\":\"2025-07-31T22:48:38Z\"}",
+    "id": "5e65d5f6-a2e1-4bae-94c0-148741ef2009",
+    "level": "info",
+    "msg": "prometheus server listening on 0.0.0.0:9122",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002118000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"level\":\"warning\",\"msg\":\"DEPRECATION NOTICE: GOTRUE_JWT_DEFAULT_GROUP_NAME not supported by Supabase's GoTrue, will be removed soon\",\"time\":\"2025-07-31T22:48:38Z\"}",
+    "id": "c6853ede-72d1-4a2c-809e-49724084b47b",
+    "level": "warning",
+    "msg": "DEPRECATION NOTICE: GOTRUE_JWT_DEFAULT_GROUP_NAME not supported by Supabase's GoTrue, will be removed soon",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002118000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"duration\":1471147,\"error_code\":\"email_provider_disabled\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680a47c20b0c341-EWR\",\"status\":400,\"time\":\"2025-07-31T22:48:18Z\"}",
+    "id": "ab7c91f1-fce9-4e64-9707-1e917bb9bfc7",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/signup",
+    "status": "400",
+    "timestamp": 1754002098000000
+  },
+  {
+    "error": "400: Email signups are disabled",
+    "event_message": "{\"component\":\"api\",\"error\":\"400: Email signups are disabled\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"400: Email signups are disabled\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680a47c20b0c341-EWR\",\"time\":\"2025-07-31T22:48:18Z\"}",
+    "id": "3b009dfc-9ef2-475f-b77e-6c2c85decd75",
+    "level": "info",
+    "msg": "400: Email signups are disabled",
+    "path": "/signup",
+    "status": null,
+    "timestamp": 1754002098000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"level\":\"info\",\"msg\":\"prometheus server listening on 0.0.0.0:9122\",\"time\":\"2025-07-31T22:47:30Z\"}",
+    "id": "832e6879-c6ea-4362-a4f5-de1f9695cfc1",
+    "level": "info",
+    "msg": "prometheus server listening on 0.0.0.0:9122",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002050000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"level\":\"info\",\"msg\":\"Go runtime metrics collection started\",\"time\":\"2025-07-31T22:47:30Z\"}",
+    "id": "5b291d2e-bde1-4805-b515-2a5b4469052c",
+    "level": "info",
+    "msg": "Go runtime metrics collection started",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002050000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"level\":\"info\",\"msg\":\"GoTrue API started on: localhost:9999\",\"time\":\"2025-07-31T22:47:30Z\",\"version\":\"v2.176.1\"}",
+    "id": "9010c033-ac71-4823-82d5-956aa94c1a8d",
+    "level": "info",
+    "msg": "GoTrue API started on: localhost:9999",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002050000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"level\":\"warning\",\"msg\":\"DEPRECATION NOTICE: GOTRUE_JWT_DEFAULT_GROUP_NAME not supported by Supabase's GoTrue, will be removed soon\",\"time\":\"2025-07-31T22:47:30Z\"}",
+    "id": "3b8d30ca-f18b-4eab-9a51-a97cf23ba53b",
+    "level": "warning",
+    "msg": "DEPRECATION NOTICE: GOTRUE_JWT_DEFAULT_GROUP_NAME not supported by Supabase's GoTrue, will be removed soon",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002050000000
+  },
+  {
+    "error": "http: Server closed",
+    "event_message": "{\"component\":\"api\",\"error\":\"http: Server closed\",\"level\":\"fatal\",\"msg\":\"http server serve failed\",\"time\":\"2025-07-31T22:47:30Z\"}",
+    "id": "b2cb5c7c-d65b-4b65-8689-3f2333dafe05",
+    "level": "fatal",
+    "msg": "http server serve failed",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002050000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"level\":\"warning\",\"msg\":\"DEPRECATION NOTICE: GOTRUE_JWT_ADMIN_GROUP_NAME not supported by Supabase's GoTrue, will be removed soon\",\"time\":\"2025-07-31T22:47:30Z\"}",
+    "id": "2883d60a-e831-4965-b360-48c084fdbe73",
+    "level": "warning",
+    "msg": "DEPRECATION NOTICE: GOTRUE_JWT_ADMIN_GROUP_NAME not supported by Supabase's GoTrue, will be removed soon",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002050000000
+  },
+  {
+    "error": "http: Server closed",
+    "event_message": "{\"error\":\"http: Server closed\",\"level\":\"error\",\"msg\":\"prometheus server (0.0.0.0:9122) shut down\",\"time\":\"2025-07-31T22:47:30Z\"}",
+    "id": "29b15357-4a6c-4123-bbcf-56bc39db4f44",
+    "level": "error",
+    "msg": "prometheus server (0.0.0.0:9122) shut down",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002050000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"count\":0,\"level\":\"info\",\"msg\":\"GoTrue migrations applied successfully\",\"time\":\"2025-07-31T22:47:30Z\"}",
+    "id": "89d87a79-be52-4742-98b8-ce932966a396",
+    "level": "info",
+    "msg": "GoTrue migrations applied successfully",
+    "path": null,
+    "status": null,
+    "timestamp": 1754002050000000
+  },
+  {
+    "error": "400: Email not confirmed",
+    "event_message": "{\"component\":\"api\",\"error\":\"400: Email not confirmed\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"400: Email not confirmed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96809d4ee1768c83-EWR\",\"time\":\"2025-07-31T22:43:24Z\"}",
+    "id": "92263ac5-209e-41c5-97b3-2fd3d7715cd1",
+    "level": "info",
+    "msg": "400: Email not confirmed",
+    "path": "/token",
+    "status": null,
+    "timestamp": 1754001804000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"duration\":84250447,\"error_code\":\"email_not_confirmed\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96809d4ee1768c83-EWR\",\"status\":400,\"time\":\"2025-07-31T22:43:24Z\"}",
+    "id": "daf294a4-388c-402c-8502-a37cecbe9ccc",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/token",
+    "status": "400",
+    "timestamp": 1754001804000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"event\":\"mail.send\",\"level\":\"info\",\"mail_from\":\"noreply@mail.app.supabase.io\",\"mail_to\":\"chipotleman@yahoo.com\",\"mail_type\":\"confirm\",\"msg\":\"mail.send\",\"time\":\"2025-07-31T22:43:18Z\"}",
+    "id": "3c660a95-2f98-4494-9fa8-c7f50731932a",
+    "level": "info",
+    "msg": "mail.send",
+    "path": null,
+    "status": null,
+    "timestamp": 1754001798000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"event\":\"mail.send\",\"level\":\"info\",\"mail_from\":\"noreply@mail.app.supabase.io\",\"mail_to\":\"chipotleman@yahoo.com\",\"mail_type\":\"confirm\",\"msg\":\"mail.send\",\"time\":\"2025-07-31T22:43:18Z\"}",
+    "id": "1c7b90f6-399d-4569-9695-ad6cf22ca9c5",
+    "level": "info",
+    "msg": "mail.send",
+    "path": null,
+    "status": null,
+    "timestamp": 1754001798000000
+  },
+  {
+    "error": "400: Email not confirmed",
+    "event_message": "{\"component\":\"api\",\"error\":\"400: Email not confirmed\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"400: Email not confirmed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96809d2653078c83-EWR\",\"time\":\"2025-07-31T22:43:18Z\"}",
+    "id": "017dd7cf-7ce6-45f5-807d-d0585a9d887f",
+    "level": "info",
+    "msg": "400: Email not confirmed",
+    "path": "/token",
+    "status": null,
+    "timestamp": 1754001798000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"duration\":87724518,\"error_code\":\"email_not_confirmed\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96809d2653078c83-EWR\",\"status\":400,\"time\":\"2025-07-31T22:43:18Z\"}",
+    "id": "21e9748b-30a2-41ff-9a55-668359882565",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/token",
+    "status": "400",
+    "timestamp": 1754001798000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"auth_event\":{\"action\":\"user_confirmation_requested\",\"actor_id\":\"fd08ace5-9c18-4062-b028-98ade673ddbd\",\"actor_username\":\"chipotleman@yahoo.com\",\"actor_via_sso\":false,\"log_type\":\"user\",\"traits\":{\"provider\":\"email\"}},\"component\":\"api\",\"duration\":643681300,\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96809d21615c8c83-EWR\",\"status\":200,\"time\":\"2025-07-31T22:43:18Z\"}",
+    "id": "96f6ca01-eed7-46e6-a159-8f7d478a8522",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/signup",
+    "status": "200",
+    "timestamp": 1754001798000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"auth_event\":{\"action\":\"user_confirmation_requested\",\"actor_id\":\"fd08ace5-9c18-4062-b028-98ade673ddbd\",\"actor_username\":\"chipotleman@yahoo.com\",\"actor_via_sso\":false,\"log_type\":\"user\",\"traits\":{\"provider\":\"email\"}},\"component\":\"api\",\"duration\":643681300,\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96809d21615c8c83-EWR\",\"status\":200,\"time\":\"2025-07-31T22:43:18Z\"}",
+    "id": "4bf5d1d4-3bf2-4876-a669-8eb1cae7a931",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/signup",
+    "status": "200",
+    "timestamp": 1754001798000000
+  },
+  {
+    "error": "400: Email not confirmed",
+    "event_message": "{\"component\":\"api\",\"error\":\"400: Email not confirmed\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"400: Email not confirmed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96809d2653078c83-EWR\",\"time\":\"2025-07-31T22:43:18Z\"}",
+    "id": "f3a8d431-7873-4b1e-8ccd-25592459162e",
+    "level": "info",
+    "msg": "400: Email not confirmed",
+    "path": "/token",
+    "status": null,
+    "timestamp": 1754001798000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"duration\":87724518,\"error_code\":\"email_not_confirmed\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96809d2653078c83-EWR\",\"status\":400,\"time\":\"2025-07-31T22:43:18Z\"}",
+    "id": "a6c55bb4-d3e1-4f18-bb6d-7d9504cb9269",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/token",
+    "status": "400",
+    "timestamp": 1754001798000000
+  },
+  {
+    "error": "400: Invalid login credentials",
+    "event_message": "{\"component\":\"api\",\"error\":\"400: Invalid login credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"400: Invalid login credentials\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"968099d413d88c83-EWR\",\"time\":\"2025-07-31T22:41:02Z\"}",
+    "id": "9a5260ca-6049-4d13-8148-fcff84fbb41b",
+    "level": "info",
+    "msg": "400: Invalid login credentials",
+    "path": "/token",
+    "status": null,
+    "timestamp": 1754001662000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"duration\":82959822,\"error_code\":\"invalid_credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"968099d413d88c83-EWR\",\"status\":400,\"time\":\"2025-07-31T22:41:02Z\"}",
+    "id": "98cd2693-01df-4e03-8880-2a7ff0463082",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/token",
+    "status": "400",
+    "timestamp": 1754001662000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"auth_event\":{\"action\":\"user_repeated_signup\",\"actor_id\":\"653994f2-24cb-4f96-b62c-2b09f00dcf2e\",\"actor_username\":\"mathewbaldwin98@icloud.com\",\"actor_via_sso\":false,\"log_type\":\"user\",\"traits\":{\"provider\":\"email\"}},\"component\":\"api\",\"duration\":4027262,\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"968099cb30f38c83-EWR\",\"status\":200,\"time\":\"2025-07-31T22:41:00Z\"}",
+    "id": "83140fe0-f3ca-4d01-bfb8-4ccd15059eeb",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/signup",
+    "status": "200",
+    "timestamp": 1754001660000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"duration\":83036138,\"error_code\":\"invalid_credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"968099cc11568c83-EWR\",\"status\":400,\"time\":\"2025-07-31T22:41:00Z\"}",
+    "id": "5dffd838-5b68-43b1-b8ee-acc68713704b",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/token",
+    "status": "400",
+    "timestamp": 1754001660000000
+  },
+  {
+    "error": "400: Invalid login credentials",
+    "event_message": "{\"component\":\"api\",\"error\":\"400: Invalid login credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"400: Invalid login credentials\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"968099cc11568c83-EWR\",\"time\":\"2025-07-31T22:41:00Z\"}",
+    "id": "d5d27aaa-16f8-4f53-bbb2-40375612a1e1",
+    "level": "info",
+    "msg": "400: Invalid login credentials",
+    "path": "/token",
+    "status": null,
+    "timestamp": 1754001660000000
+  },
+  {
+    "error": "400: Invalid login credentials",
+    "event_message": "{\"component\":\"api\",\"error\":\"400: Invalid login credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"400: Invalid login credentials\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"968099bbc2e88c83-EWR\",\"time\":\"2025-07-31T22:40:58Z\"}",
+    "id": "90bce3c1-06b6-4267-9cba-98e9d78a80d0",
+    "level": "info",
+    "msg": "400: Invalid login credentials",
+    "path": "/token",
+    "status": null,
+    "timestamp": 1754001658000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"duration\":82685804,\"error_code\":\"invalid_credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"968099bbc2e88c83-EWR\",\"status\":400,\"time\":\"2025-07-31T22:40:58Z\"}",
+    "id": "b34f3332-4a7a-482d-8b56-edc33b9c7a30",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/token",
+    "status": "400",
+    "timestamp": 1754001658000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"auth_event\":{\"action\":\"user_repeated_signup\",\"actor_id\":\"653994f2-24cb-4f96-b62c-2b09f00dcf2e\",\"actor_username\":\"mathewbaldwin98@icloud.com\",\"actor_via_sso\":false,\"log_type\":\"user\",\"traits\":{\"provider\":\"email\"}},\"component\":\"api\",\"duration\":10416216,\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96809985508e8c83-EWR\",\"status\":200,\"time\":\"2025-07-31T22:40:49Z\"}",
+    "id": "ad1d61a8-8cb1-4c2e-98c7-843c27bc397b",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/signup",
+    "status": "200",
+    "timestamp": 1754001649000000
+  },
+  {
+    "error": "400: Invalid login credentials",
+    "event_message": "{\"component\":\"api\",\"error\":\"400: Invalid login credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"400: Invalid login credentials\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96809986a1168c83-EWR\",\"time\":\"2025-07-31T22:40:49Z\"}",
+    "id": "d7add467-5d15-40d4-8adf-b3eca22178fa",
+    "level": "info",
+    "msg": "400: Invalid login credentials",
+    "path": "/token",
+    "status": null,
+    "timestamp": 1754001649000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"auth_event\":{\"action\":\"user_repeated_signup\",\"actor_id\":\"653994f2-24cb-4f96-b62c-2b09f00dcf2e\",\"actor_username\":\"mathewbaldwin98@icloud.com\",\"actor_via_sso\":false,\"log_type\":\"user\",\"traits\":{\"provider\":\"email\"}},\"component\":\"api\",\"duration\":10416216,\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96809985508e8c83-EWR\",\"status\":200,\"time\":\"2025-07-31T22:40:49Z\"}",
+    "id": "f6631e2c-c872-49c8-849c-bc7d88aa0813",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/signup",
+    "status": "200",
+    "timestamp": 1754001649000000
+  },
+  {
+    "error": "400: Invalid login credentials",
+    "event_message": "{\"component\":\"api\",\"error\":\"400: Invalid login credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"400: Invalid login credentials\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96809986a1168c83-EWR\",\"time\":\"2025-07-31T22:40:49Z\"}",
+    "id": "de71b2e1-5fb5-46ff-bc41-b27ced3acee5",
+    "level": "info",
+    "msg": "400: Invalid login credentials",
+    "path": "/token",
+    "status": null,
+    "timestamp": 1754001649000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"duration\":86414007,\"error_code\":\"invalid_credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96809986a1168c83-EWR\",\"status\":400,\"time\":\"2025-07-31T22:40:49Z\"}",
+    "id": "78e24931-edf4-4ce2-846e-8140fbdea521",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/token",
+    "status": "400",
+    "timestamp": 1754001649000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"duration\":86414007,\"error_code\":\"invalid_credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96809986a1168c83-EWR\",\"status\":400,\"time\":\"2025-07-31T22:40:49Z\"}",
+    "id": "6777ea3d-d105-4bbc-b8a0-673266f8234c",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/token",
+    "status": "400",
+    "timestamp": 1754001649000000
+  },
+  {
+    "error": "400: Invalid login credentials",
+    "event_message": "{\"component\":\"api\",\"error\":\"400: Invalid login credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"400: Invalid login credentials\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680956d04748c83-EWR\",\"time\":\"2025-07-31T22:38:01Z\"}",
+    "id": "44c3e7dd-15c6-4189-abd5-1b4a109fe119",
+    "level": "info",
+    "msg": "400: Invalid login credentials",
+    "path": "/token",
+    "status": null,
+    "timestamp": 1754001481000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"duration\":83346864,\"error_code\":\"invalid_credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680956d04748c83-EWR\",\"status\":400,\"time\":\"2025-07-31T22:38:01Z\"}",
+    "id": "b00284f5-ec23-4975-bd02-c5480438397e",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/token",
+    "status": "400",
+    "timestamp": 1754001481000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"auth_event\":{\"action\":\"user_repeated_signup\",\"actor_id\":\"653994f2-24cb-4f96-b62c-2b09f00dcf2e\",\"actor_username\":\"mathewbaldwin98@icloud.com\",\"actor_via_sso\":false,\"log_type\":\"user\",\"traits\":{\"provider\":\"email\"}},\"component\":\"api\",\"duration\":15844964,\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680953e64e08c83-EWR\",\"status\":200,\"time\":\"2025-07-31T22:37:54Z\"}",
+    "id": "a76cc66d-abe3-4a3a-a71f-a0cc985a7187",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/signup",
+    "status": "200",
+    "timestamp": 1754001474000000
+  },
+  {
+    "error": "400: Invalid login credentials",
+    "event_message": "{\"component\":\"api\",\"error\":\"400: Invalid login credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"400: Invalid login credentials\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680953f55268c83-EWR\",\"time\":\"2025-07-31T22:37:54Z\"}",
+    "id": "e2619bcf-f09a-44df-82cf-0b9c47fcf351",
+    "level": "info",
+    "msg": "400: Invalid login credentials",
+    "path": "/token",
+    "status": null,
+    "timestamp": 1754001474000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"duration\":85375439,\"error_code\":\"invalid_credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680953f55268c83-EWR\",\"status\":400,\"time\":\"2025-07-31T22:37:54Z\"}",
+    "id": "ea536880-71f0-43fa-9fab-d0994383b0fc",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/token",
+    "status": "400",
+    "timestamp": 1754001474000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"duration\":83673275,\"error_code\":\"invalid_credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96808790d034c337-EWR\",\"status\":400,\"time\":\"2025-07-31T22:28:34Z\"}",
+    "id": "54230306-8445-4135-aa61-594835a01b7a",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/token",
+    "status": "400",
+    "timestamp": 1754000914000000
+  },
+  {
+    "error": "400: Invalid login credentials",
+    "event_message": "{\"component\":\"api\",\"error\":\"400: Invalid login credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"400: Invalid login credentials\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96808790d034c337-EWR\",\"time\":\"2025-07-31T22:28:34Z\"}",
+    "id": "3eb44794-23e1-47e8-964b-118f171750b7",
+    "level": "info",
+    "msg": "400: Invalid login credentials",
+    "path": "/token",
+    "status": null,
+    "timestamp": 1754000914000000
+  },
+  {
+    "error": "400: Invalid login credentials",
+    "event_message": "{\"component\":\"api\",\"error\":\"400: Invalid login credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"400: Invalid login credentials\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96808790d034c337-EWR\",\"time\":\"2025-07-31T22:28:34Z\"}",
+    "id": "b79530b1-7f0e-4321-a2b7-205dfdc2fc7d",
+    "level": "info",
+    "msg": "400: Invalid login credentials",
+    "path": "/token",
+    "status": null,
+    "timestamp": 1754000914000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"duration\":83673275,\"error_code\":\"invalid_credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96808790d034c337-EWR\",\"status\":400,\"time\":\"2025-07-31T22:28:34Z\"}",
+    "id": "88968b61-1557-471d-8017-581d701704fe",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/token",
+    "status": "400",
+    "timestamp": 1754000914000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"auth_event\":{\"action\":\"user_repeated_signup\",\"actor_id\":\"653994f2-24cb-4f96-b62c-2b09f00dcf2e\",\"actor_username\":\"mathewbaldwin98@icloud.com\",\"actor_via_sso\":false,\"log_type\":\"user\",\"traits\":{\"provider\":\"email\"}},\"component\":\"api\",\"duration\":5236476,\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680878fe7cac337-EWR\",\"status\":200,\"time\":\"2025-07-31T22:28:33Z\"}",
+    "id": "99a557e8-79a5-4a0c-95ca-49e101711e9c",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/signup",
+    "status": "200",
+    "timestamp": 1754000913000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"auth_event\":{\"action\":\"user_repeated_signup\",\"actor_id\":\"653994f2-24cb-4f96-b62c-2b09f00dcf2e\",\"actor_username\":\"mathewbaldwin98@icloud.com\",\"actor_via_sso\":false,\"log_type\":\"user\",\"traits\":{\"provider\":\"email\"}},\"component\":\"api\",\"duration\":5236476,\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680878fe7cac337-EWR\",\"status\":200,\"time\":\"2025-07-31T22:28:33Z\"}",
+    "id": "182c5e5c-e81e-409b-b8a0-35b4a254052c",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/signup",
+    "status": "200",
+    "timestamp": 1754000913000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"duration\":85332897,\"error_code\":\"invalid_credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"968087874548c337-EWR\",\"status\":400,\"time\":\"2025-07-31T22:28:32Z\"}",
+    "id": "9e700860-5b8b-4282-aca2-998ab3efc1ae",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/token",
+    "status": "400",
+    "timestamp": 1754000912000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"auth_event\":{\"action\":\"user_repeated_signup\",\"actor_id\":\"653994f2-24cb-4f96-b62c-2b09f00dcf2e\",\"actor_username\":\"mathewbaldwin98@icloud.com\",\"actor_via_sso\":false,\"log_type\":\"user\",\"traits\":{\"provider\":\"email\"}},\"component\":\"api\",\"duration\":8648949,\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680878654fbc337-EWR\",\"status\":200,\"time\":\"2025-07-31T22:28:32Z\"}",
+    "id": "589fcde2-cbb7-4da0-8128-6a6823a5be8c",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/signup",
+    "status": "200",
+    "timestamp": 1754000912000000
+  },
+  {
+    "error": "400: Invalid login credentials",
+    "event_message": "{\"component\":\"api\",\"error\":\"400: Invalid login credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"400: Invalid login credentials\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"968087874548c337-EWR\",\"time\":\"2025-07-31T22:28:32Z\"}",
+    "id": "aa0d1c4a-64e2-4065-9ae3-a59ccae188b3",
+    "level": "info",
+    "msg": "400: Invalid login credentials",
+    "path": "/token",
+    "status": null,
+    "timestamp": 1754000912000000
+  },
+  {
+    "error": "400: Invalid login credentials",
+    "event_message": "{\"component\":\"api\",\"error\":\"400: Invalid login credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"400: Invalid login credentials\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96808750050fc337-EWR\",\"time\":\"2025-07-31T22:28:23Z\"}",
+    "id": "1434373a-39e2-4070-bba4-463de9fa3ad0",
+    "level": "info",
+    "msg": "400: Invalid login credentials",
+    "path": "/token",
+    "status": null,
+    "timestamp": 1754000903000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"auth_event\":{\"action\":\"user_repeated_signup\",\"actor_id\":\"653994f2-24cb-4f96-b62c-2b09f00dcf2e\",\"actor_username\":\"mathewbaldwin98@icloud.com\",\"actor_via_sso\":false,\"log_type\":\"user\",\"traits\":{\"provider\":\"email\"}},\"component\":\"api\",\"duration\":13094726,\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"9680874ed4a4c337-EWR\",\"status\":200,\"time\":\"2025-07-31T22:28:23Z\"}",
+    "id": "947ba8e8-5f99-4d1a-94b3-8d848badf861",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/signup",
+    "status": "200",
+    "timestamp": 1754000903000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"component\":\"api\",\"duration\":95467040,\"error_code\":\"invalid_credentials\",\"grant_type\":\"password\",\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/token\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96808750050fc337-EWR\",\"status\":400,\"time\":\"2025-07-31T22:28:23Z\"}",
+    "id": "3ecf6757-75ab-4b2c-b4a0-fcd5ed39abbe",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/token",
+    "status": "400",
+    "timestamp": 1754000903000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"auth_event\":{\"action\":\"user_repeated_signup\",\"actor_id\":\"653994f2-24cb-4f96-b62c-2b09f00dcf2e\",\"actor_username\":\"mathewbaldwin98@icloud.com\",\"actor_via_sso\":false,\"log_type\":\"user\",\"traits\":{\"provider\":\"email\"}},\"component\":\"api\",\"duration\":14505895,\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"968085ba623ec337-EWR\",\"status\":200,\"time\":\"2025-07-31T22:27:18Z\"}",
+    "id": "edc691cd-2224-42ee-b8d4-8b31acdbea17",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/signup",
+    "status": "200",
+    "timestamp": 1754000838000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"auth_event\":{\"action\":\"user_repeated_signup\",\"actor_id\":\"653994f2-24cb-4f96-b62c-2b09f00dcf2e\",\"actor_username\":\"mathewbaldwin98@icloud.com\",\"actor_via_sso\":false,\"log_type\":\"user\",\"traits\":{\"provider\":\"email\"}},\"component\":\"api\",\"duration\":14342579,\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"968066f3f2b141d2-EWR\",\"status\":200,\"time\":\"2025-07-31T22:06:18Z\"}",
+    "id": "29c780b9-2a9f-4752-8aed-244f856e4fe9",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/signup",
+    "status": "200",
+    "timestamp": 1753999578000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"auth_event\":{\"action\":\"user_repeated_signup\",\"actor_id\":\"653994f2-24cb-4f96-b62c-2b09f00dcf2e\",\"actor_username\":\"mathewbaldwin98@icloud.com\",\"actor_via_sso\":false,\"log_type\":\"user\",\"traits\":{\"provider\":\"email\"}},\"component\":\"api\",\"duration\":8726599,\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96805f2be6278c41-EWR\",\"status\":200,\"time\":\"2025-07-31T22:00:59Z\"}",
+    "id": "b6fee2ff-bbb5-440e-b680-3bba45b32b4b",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/signup",
+    "status": "200",
+    "timestamp": 1753999259000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"auth_event\":{\"action\":\"user_repeated_signup\",\"actor_id\":\"653994f2-24cb-4f96-b62c-2b09f00dcf2e\",\"actor_username\":\"mathewbaldwin98@icloud.com\",\"actor_via_sso\":false,\"log_type\":\"user\",\"traits\":{\"provider\":\"email\"}},\"component\":\"api\",\"duration\":19855339,\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96805f2522bc8c41-EWR\",\"status\":200,\"time\":\"2025-07-31T22:00:58Z\"}",
+    "id": "9103f154-b417-4f4d-bf3b-bd49568be410",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/signup",
+    "status": "200",
+    "timestamp": 1753999258000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"auth_event\":{\"action\":\"user_repeated_signup\",\"actor_id\":\"653994f2-24cb-4f96-b62c-2b09f00dcf2e\",\"actor_username\":\"mathewbaldwin98@icloud.com\",\"actor_via_sso\":false,\"log_type\":\"user\",\"traits\":{\"provider\":\"email\"}},\"component\":\"api\",\"duration\":6042520,\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"968058d6d520427c-EWR\",\"status\":200,\"time\":\"2025-07-31T21:56:40Z\"}",
+    "id": "42a56e1f-904d-42aa-ba01-55c9ac2f73a2",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/signup",
+    "status": "200",
+    "timestamp": 1753999000000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"auth_event\":{\"action\":\"user_repeated_signup\",\"actor_id\":\"653994f2-24cb-4f96-b62c-2b09f00dcf2e\",\"actor_username\":\"mathewbaldwin98@icloud.com\",\"actor_via_sso\":false,\"log_type\":\"user\",\"traits\":{\"provider\":\"email\"}},\"component\":\"api\",\"duration\":4014928,\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"96805895172c427c-EWR\",\"status\":200,\"time\":\"2025-07-31T21:56:29Z\"}",
+    "id": "984ccce6-fb63-4378-a34b-7104590e1237",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/signup",
+    "status": "200",
+    "timestamp": 1753998989000000
+  },
+  {
+    "error": null,
+    "event_message": "{\"auth_event\":{\"action\":\"user_repeated_signup\",\"actor_id\":\"653994f2-24cb-4f96-b62c-2b09f00dcf2e\",\"actor_username\":\"mathewbaldwin98@icloud.com\",\"actor_via_sso\":false,\"log_type\":\"user\",\"traits\":{\"provider\":\"email\"}},\"component\":\"api\",\"duration\":19810963,\"level\":\"info\",\"method\":\"POST\",\"msg\":\"request completed\",\"path\":\"/signup\",\"referer\":\"https://fundedfinal.vercel.app\",\"remote_addr\":\"96.246.38.74\",\"request_id\":\"968058852788427c-EWR\",\"status\":200,\"time\":\"2025-07-31T21:56:27Z\"}",
+    "id": "996fa022-18ec-40da-b888-2b62e960bce3",
+    "level": "info",
+    "msg": "request completed",
+    "path": "/signup",
+    "status": "200",
+    "timestamp": 1753998987000000
+  }
+]
