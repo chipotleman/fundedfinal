@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
+import { useBetSlip } from '../contexts/BetSlipContext';
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
@@ -10,8 +11,7 @@ export default function Dashboard() {
   const [pnl, setPnl] = useState(0);
   const [bets, setBets] = useState([]);
   const [games, setGames] = useState([]);
-  const [betSlip, setBetSlip] = useState([]);
-  const [showBetSlip, setShowBetSlip] = useState(false);
+  const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
   const [selectedSport, setSelectedSport] = useState('NFL');
   const [loading, setLoading] = useState(true);
   const [challengePhase, setChallengePhase] = useState(1);
@@ -78,34 +78,7 @@ export default function Dashboard() {
     setLoading(false);
   }, [selectedSport]);
 
-  const addToBetSlip = (game, betType, odds, selection) => {
-    const betId = `${game.id}-${betType}-${selection}`;
-    const existingBetIndex = betSlip.findIndex(bet => bet.id === betId);
-    
-    if (existingBetIndex >= 0) {
-      // Remove bet if it already exists (toggle off)
-      setBetSlip(betSlip.filter(bet => bet.id !== betId));
-    } else {
-      // Add new bet
-      const newBet = {
-        id: betId,
-        gameId: game.id,
-        matchup: `${game.awayTeam} @ ${game.homeTeam}`,
-        betType,
-        selection,
-        odds,
-        stake: 0
-      };
-      
-      setBetSlip([...betSlip, newBet]);
-      setShowBetSlip(true);
-    }
-  };
-
-  const isBetInSlip = (game, betType, selection) => {
-    const betId = `${game.id}-${betType}-${selection}`;
-    return betSlip.some(bet => bet.id === betId);
-  };
+  
 
   const formatOdds = (odds) => {
     return odds > 0 ? `+${odds}` : odds.toString();

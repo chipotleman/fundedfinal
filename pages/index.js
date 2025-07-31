@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
+import LiveFeed from '../components/LiveFeed';
 
 export default function Home() {
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -94,6 +95,66 @@ export default function Home() {
               <div>
                 <div className="text-4xl font-black text-orange-400 mb-2">24/7</div>
                 <div className="text-gray-400">Live Support</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Live Feed Section */}
+        <div className="relative max-w-7xl mx-auto px-6 py-16">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-white mb-4">
+              See Real <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Winners</span>
+            </h2>
+            <p className="text-gray-300 text-lg max-w-2xl mx-auto">
+              Watch as traders like you win real money in real-time. Click any user to see their full profile and betting history.
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <LiveFeed />
+            
+            {/* Stats Panel */}
+            <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl border border-slate-700 p-8">
+              <h3 className="text-2xl font-bold text-white mb-6">Community Stats</h3>
+              <div className="space-y-6">
+                <div className="flex items-center justify-between p-4 bg-slate-700/30 rounded-xl">
+                  <div>
+                    <div className="text-2xl font-bold text-green-400">$2.4M+</div>
+                    <div className="text-gray-300">Total Payouts</div>
+                  </div>
+                  <div className="text-green-400 text-2xl">💰</div>
+                </div>
+                
+                <div className="flex items-center justify-between p-4 bg-slate-700/30 rounded-xl">
+                  <div>
+                    <div className="text-2xl font-bold text-blue-400">12,847</div>
+                    <div className="text-gray-300">Active Traders</div>
+                  </div>
+                  <div className="text-blue-400 text-2xl">👥</div>
+                </div>
+                
+                <div className="flex items-center justify-between p-4 bg-slate-700/30 rounded-xl">
+                  <div>
+                    <div className="text-2xl font-bold text-purple-400">68.5%</div>
+                    <div className="text-gray-300">Average Win Rate</div>
+                  </div>
+                  <div className="text-purple-400 text-2xl">📈</div>
+                </div>
+                
+                <div className="flex items-center justify-between p-4 bg-slate-700/30 rounded-xl">
+                  <div>
+                    <div className="text-2xl font-bold text-orange-400">24/7</div>
+                    <div className="text-gray-300">Live Betting</div>
+                  </div>
+                  <div className="text-orange-400 text-2xl">⚡</div>
+                </div>
+              </div>
+              
+              <div className="mt-8 text-center">
+                <Link href="/auth" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 inline-block">
+                  Join the Winners
+                </Link>
               </div>
             </div>
           </div>

@@ -11,9 +11,9 @@ export default function TopNavbar({ user, bankroll, pnl, betSlipCount, onBetSlip
           {/* Logo */}
           <Link href="/" className="flex items-center">
             <img 
-              src="/fundmybet-logo.png" 
+              src="/fundmybet-logo.svg" 
               alt="FundMyBet" 
-              className="h-8 w-auto"
+              className="h-8 w-auto brightness-100"
             />
           </Link>
 

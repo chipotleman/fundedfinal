@@ -2,8 +2,10 @@
 import React, { useState } from "react";
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
+import { useBetSlip } from '../contexts/BetSlipContext';
 
 const Leaderboard = () => {
+  const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const [timeframe, setTimeframe] = useState('monthly');
   const [category, setCategory] = useState('all');
 
@@ -75,8 +77,8 @@ const Leaderboard = () => {
       <TopNavbar 
         bankroll={10000}
         pnl={0}
-        betSlipCount={0}
-        onBetSlipClick={() => {}}
+        betSlipCount={betSlip.length}
+        onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
 
       <div className="pt-20 pb-16">

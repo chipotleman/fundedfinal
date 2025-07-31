@@ -1,5 +1,6 @@
 import '../styles/globals.css';
 import TopNavbar from '../components/TopNavbar';
+import { BetSlipProvider } from '../contexts/BetSlipContext';
 import { useState } from 'react';
 
 export default function App({ Component, pageProps }) {
@@ -12,13 +13,7 @@ export default function App({ Component, pageProps }) {
   const handleShowBetSlip = () => setShowBetSlip(true);
 
   return (
-    <>
-      <TopNavbar
-        bankroll={bankroll}
-        selectedBets={selectedBets}
-        onShowBalance={handleShowBalance}
-        onShowBetSlip={handleShowBetSlip}
-      />
+    <BetSlipProvider>
       <Component
         {...pageProps}
         bankroll={bankroll}
@@ -30,6 +25,6 @@ export default function App({ Component, pageProps }) {
         showBetSlip={showBetSlip}
         setShowBetSlip={setShowBetSlip}
       />
-    </>
+    </BetSlipProvider>
   );
 }
