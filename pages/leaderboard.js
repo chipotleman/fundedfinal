@@ -237,7 +237,11 @@ const Leaderboard = () => {
                     <tr 
                       key={user.rank} 
                       className="hover:bg-slate-700/30 transition-colors cursor-pointer"
-                      onClick={() => openProfile(user.username)}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        openProfile(user.username);
+                      }}
                     >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
@@ -246,9 +250,16 @@ const Leaderboard = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-lg font-semibold text-white hover:text-blue-400 transition-colors">
+                        <button 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            openProfile(user.username);
+                          }}
+                          className="text-lg font-semibold text-white hover:text-blue-400 transition-colors bg-transparent border-none cursor-pointer"
+                        >
                           {user.username}
-                        </span>
+                        </button>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getTierColor(user.tier)}`}>
