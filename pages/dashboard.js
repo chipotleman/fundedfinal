@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import TopNavbar from '../components/TopNavbar';
@@ -18,7 +17,7 @@ export default function Dashboard() {
   const [totalChallenges] = useState(3);
 
   const sports = ['NFL', 'NBA', 'MLB', 'NHL', 'UFC', 'SOCCER'];
-  
+
   const challengeGoal = 25000;
   const startingBankroll = 10000;
   const progressPercent = ((bankroll - startingBankroll) / (challengeGoal - startingBankroll)) * 100;
@@ -78,7 +77,7 @@ export default function Dashboard() {
     setLoading(false);
   }, [selectedSport]);
 
-  
+
 
   const formatOdds = (odds) => {
     return odds > 0 ? `+${odds}` : odds.toString();
@@ -109,7 +108,7 @@ export default function Dashboard() {
                   Phase {challengePhase} of {totalChallenges}
                 </div>
               </h3>
-              
+
               <div className="relative h-4 bg-slate-700 rounded-full mb-4 overflow-hidden">
                 <div 
                   className="absolute h-4 bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 rounded-full transition-all duration-1000 shadow-lg"
@@ -117,13 +116,13 @@ export default function Dashboard() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse"></div>
               </div>
-              
+
               <div className="flex justify-between text-sm mb-4">
                 <span className="text-gray-400">${startingBankroll.toLocaleString()}</span>
                 <span className="text-green-400 font-bold">${bankroll.toLocaleString()}</span>
                 <span className="text-gray-400">${challengeGoal.toLocaleString()}</span>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="bg-slate-800 rounded-xl p-4 text-center">
                   <div className={`text-2xl font-black ${pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -143,7 +142,7 @@ export default function Dashboard() {
                 <div className="text-xs text-gray-400 space-y-1">
                   <div>• Reach ${challengeGoal.toLocaleString()} profit target</div>
                   <div>• Maximum 8% daily loss limit</div>
-                  <div>• Minimum 10 trading days</div>
+                  <div>• Minimum 10 betting days</div>
                 </div>
               </div>
             </div>
@@ -160,7 +159,7 @@ export default function Dashboard() {
                   className={`w-full text-left px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
                     selectedSport === sport
                       ? 'bg-green-500 text-white shadow-lg'
-                      : 'text-gray-300 hover:bg-slate-700 hover:text-white'
+                      : 'bg-slate-700 hover:bg-white text-gray-300 hover:text-black'
                   }`}
                 >
                   {sport}
@@ -213,7 +212,7 @@ export default function Dashboard() {
                   {/* Betting Options */}
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Spread */}
-                    <div className="bg-slate-700/50 rounded-xl p-4">
+                    <div className="bg-gray-800/50 rounded-xl p-4">
                       <h4 className="text-gray-300 font-semibold mb-3 text-center">Spread</h4>
                       <div className="space-y-2">
                         <button
@@ -221,28 +220,28 @@ export default function Dashboard() {
                           className={`w-full font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex justify-between items-center group ${
                             isBetInSlip(game, 'Spread', `${game.awayTeam} ${formatOdds(game.awaySpread)}`)
                               ? 'bg-green-500 text-white'
-                              : 'bg-slate-800 hover:bg-green-500 text-white'
+                              : 'bg-gray-900 hover:bg-green-500 text-white'
                           }`}
                         >
                           <span>{game.awayTeam} {formatOdds(game.awaySpread)}</span>
-                          <span className="text-gray-300 group-hover:text-white">-110</span>
+                          <span className="text-gray-200 group-hover:text-white">-110</span>
                         </button>
                         <button
                           onClick={() => addToBetSlip(game, 'Spread', -110, `${game.homeTeam} ${formatOdds(game.homeSpread)}`)}
                           className={`w-full font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex justify-between items-center group ${
                             isBetInSlip(game, 'Spread', `${game.homeTeam} ${formatOdds(game.homeSpread)}`)
                               ? 'bg-green-500 text-white'
-                              : 'bg-slate-800 hover:bg-green-500 text-white'
+                              : 'bg-gray-900 hover:bg-green-500 text-white'
                           }`}
                         >
                           <span>{game.homeTeam} {formatOdds(game.homeSpread)}</span>
-                          <span className="text-gray-300 group-hover:text-white">-110</span>
+                          <span className="text-gray-200 group-hover:text-white">-110</span>
                         </button>
                       </div>
                     </div>
 
                     {/* Moneyline */}
-                    <div className="bg-slate-700/50 rounded-xl p-4">
+                    <div className="bg-gray-800/50 rounded-xl p-4">
                       <h4 className="text-gray-300 font-semibold mb-3 text-center">Moneyline</h4>
                       <div className="space-y-2">
                         <button
@@ -250,28 +249,28 @@ export default function Dashboard() {
                           className={`w-full font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex justify-between items-center group ${
                             isBetInSlip(game, 'Moneyline', `${game.awayTeam} ML`)
                               ? 'bg-green-500 text-white'
-                              : 'bg-slate-800 hover:bg-green-500 text-white'
+                              : 'bg-gray-900 hover:bg-green-500 text-white'
                           }`}
                         >
                           <span>{game.awayTeam}</span>
-                          <span className="text-gray-300 group-hover:text-white">{formatOdds(game.awayML)}</span>
+                          <span className="text-gray-200 group-hover:text-white">{formatOdds(game.awayML)}</span>
                         </button>
                         <button
                           onClick={() => addToBetSlip(game, 'Moneyline', game.homeML, `${game.homeTeam} ML`)}
                           className={`w-full font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex justify-between items-center group ${
                             isBetInSlip(game, 'Moneyline', `${game.homeTeam} ML`)
                               ? 'bg-green-500 text-white'
-                              : 'bg-slate-800 hover:bg-green-500 text-white'
+                              : 'bg-gray-900 hover:bg-green-500 text-white'
                           }`}
                         >
                           <span>{game.homeTeam}</span>
-                          <span className="text-gray-300 group-hover:text-white">{formatOdds(game.homeML)}</span>
+                          <span className="text-gray-200 group-hover:text-white">{formatOdds(game.homeML)}</span>
                         </button>
                       </div>
                     </div>
 
                     {/* Total */}
-                    <div className="bg-slate-700/50 rounded-xl p-4">
+                    <div className="bg-gray-800/50 rounded-xl p-4">
                       <h4 className="text-gray-300 font-semibold mb-3 text-center">Total</h4>
                       <div className="space-y-2">
                         <button
@@ -279,22 +278,22 @@ export default function Dashboard() {
                           className={`w-full font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex justify-between items-center group ${
                             isBetInSlip(game, 'Total', `Over ${game.total}`)
                               ? 'bg-green-500 text-white'
-                              : 'bg-slate-800 hover:bg-green-500 text-white'
+                              : 'bg-gray-900 hover:bg-green-500 text-white'
                           }`}
                         >
                           <span>Over {game.total}</span>
-                          <span className="text-gray-300 group-hover:text-white">{formatOdds(game.overOdds)}</span>
+                          <span className="text-gray-200 group-hover:text-white">{formatOdds(game.overOdds)}</span>
                         </button>
                         <button
                           onClick={() => addToBetSlip(game, 'Total', game.underOdds, `Under ${game.total}`)}
                           className={`w-full font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex justify-between items-center group ${
                             isBetInSlip(game, 'Total', `Under ${game.total}`)
                               ? 'bg-green-500 text-white'
-                              : 'bg-slate-800 hover:bg-green-500 text-white'
+                              : 'bg-gray-900 hover:bg-green-500 text-white'
                           }`}
                         >
                           <span>Under {game.total}</span>
-                          <span className="text-gray-300 group-hover:text-white">{formatOdds(game.underOdds)}</span>
+                          <span className="text-gray-200 group-hover:text-white">{formatOdds(game.underOdds)}</span>
                         </button>
                       </div>
                     </div>

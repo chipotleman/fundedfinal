@@ -45,7 +45,7 @@ const Rules = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-gray-950">
       <TopNavbar 
         bankroll={10000}
         pnl={0}
@@ -74,7 +74,7 @@ const Rules = () => {
           <h2 className="text-3xl font-bold text-white text-center mb-12">Challenge Tiers</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {challengeTiers.map((tier, index) => (
-              <div key={index} className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-8 border border-slate-700 hover:border-green-500/50 transition-all duration-300 group">
+              <div key={index} className="bg-gray-900/50 backdrop-blur-lg rounded-2xl p-8 border border-gray-700 hover:border-green-500/50 transition-all duration-300 group">
                 <div className="text-center">
                   <h3 className="text-2xl font-bold text-white mb-4">{tier.name}</h3>
                   <div className="text-4xl font-black text-green-400 mb-2">${tier.bankroll.toLocaleString()}</div>

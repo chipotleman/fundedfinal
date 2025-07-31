@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
+import BalanceModal from './BalanceModal';
 
 export default function TopNavbar({ user, bankroll, pnl, betSlipCount, onBetSlipClick }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showBalanceModal, setShowBalanceModal] = useState(false);
 
   return (
     <nav className="fixed top-0 left-0 right-0 bg-slate-900/95 backdrop-blur-lg border-b border-slate-700 z-50">
@@ -37,7 +39,10 @@ export default function TopNavbar({ user, bankroll, pnl, betSlipCount, onBetSlip
           <div className="flex items-center space-x-4">
             {/* Balance Display */}
             <div className="hidden sm:flex items-center space-x-4">
-              <div className="bg-slate-800 rounded-xl px-4 py-2 border border-slate-700">
+              <button
+                onClick={() => setShowBalanceModal(true)}
+                className="bg-slate-800 hover:bg-slate-700 rounded-xl px-4 py-2 border border-slate-700 hover:border-slate-600 transition-colors"
+              >
                 <div className="flex items-center space-x-2">
                   <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
@@ -45,7 +50,7 @@ export default function TopNavbar({ user, bankroll, pnl, betSlipCount, onBetSlip
                   </svg>
                   <span className="text-white font-bold">${bankroll?.toLocaleString() || '10,000'}</span>
                 </div>
-              </div>
+              </button>
 
               <div className="bg-slate-800 rounded-xl px-4 py-2 border border-slate-700">
                 <div className="flex items-center space-x-2">
@@ -96,7 +101,7 @@ export default function TopNavbar({ user, bankroll, pnl, betSlipCount, onBetSlip
                         </svg>
                       </div>
                       <div>
-                        <p className="text-white font-bold text-lg">Demo User</p>
+                        <p className="text-white font-bold text-lg">Demo Bettor</p>
                         <div className="flex items-center space-x-2">
                           <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                           <p className="text-green-400 text-sm font-medium">Challenge Active</p>
@@ -131,6 +136,18 @@ export default function TopNavbar({ user, bankroll, pnl, betSlipCount, onBetSlip
           </div>
         </div>
       </div>
+
+      <BalanceModal
+        isOpen={showBalanceModal}
+        onClose={() => setShowBalanceModal(false)}
+        bankroll={bankroll || 10000}
+        pnl={pnl || 0}
+        challengePhase={1}
+        totalChallenges={3}
+        progressPercent={((bankroll || 10000) - 10000) / (25000 - 10000) * 100}
+        challengeGoal={25000}
+        startingBankroll={10000}
+      />
     </nav>
   );
 }
