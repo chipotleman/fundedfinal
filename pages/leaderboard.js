@@ -1,7 +1,4 @@
-` tags.
 
-```python
-<replit_final_file>
 import React, { useState } from "react";
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
@@ -289,7 +286,7 @@ const Leaderboard = () => {
               <div className="text-gray-300">Total Profits</div>
             </div>
             <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 border border-slate-700 text-center">
-              <div className="text-3xl font-black text-blue-400 mb-2">{68.4.toFixed(1)}%</div>
+              <div className="text-3xl font-black text-blue-400 mb-2">{(68.4).toFixed(1)}%</div>
               <div className="text-gray-300">Avg Win Rate</div>
             </div>
             <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 border border-slate-700 text-center">
