@@ -2,50 +2,135 @@
 
 import React from 'react';
 
-export default function MatchupCard({ game, selectedBet, handleTeamSelect }) {
+export default function MatchupCard({ game, selectedBet, handleTeamSelect, onBetSelect }) {
   const [team1, team2] = game.matchup.split(' vs ');
 
   return (
-    <div className="relative rounded-xl border border-[#4fe870] bg-black overflow-hidden shadow-[0_0_20px_#4fe87055]">
-      {/* Grid glow background (optional, add bg-grid-pattern in Tailwind if you want) */}
-      {/* <div className="absolute inset-0 bg-grid-pattern opacity-10 pointer-events-none"></div> */}
-
-      {/* Team 1 Top Half */}
-      <div
-        onClick={() => handleTeamSelect(game, team1.trim())}
-        className={`flex items-center justify-center h-24 cursor-pointer transition relative ${
-          selectedBet?.team === team1.trim() ? 'bg-[#4fe870] text-black' : 'bg-transparent text-[#4fe870]'
-        }`}
-      >
-        <span className="text-2xl font-pacifico tracking-wide drop-shadow-[0_0_5px_#4fe870]">
-          {team1.trim()}
-        </span>
+    <div className="modern-card hover:scale-[1.02] transition-all duration-300">
+      <div className="flex justify-between items-center mb-4">
+        <div className="text-sm text-gray-400">{game.date} • {game.time}</div>
+        <div className="text-sm text-blue-400 font-medium">{game.league}</div>
       </div>
 
-      {/* VS Divider */}
-      <div className="flex justify-center items-center h-10 bg-black">
-        <span className="text-[#4fe870] text-xl font-bold animate-pulse drop-shadow-[0_0_5px_#4fe870]">
-          VS
-        </span>
+      <div className="grid grid-cols-3 gap-4 items-center">
+        {/* Away Team */}
+        <div className="text-center">
+          <div className="text-lg font-bold text-white">{game.awayTeam}</div>
+          <div className="text-sm text-gray-400">{game.awayRecord}</div>
+        </div>
+
+        {/* VS */}
+        <div className="text-center">
+          <div className="text-gray-400 font-bold text-lg">@</div>
+        </div>
+
+        {/* Home Team */}
+        <div className="text-center">
+          <div className="text-lg font-bold text-white">{game.homeTeam}</div>
+          <div className="text-sm text-gray-400">{game.homeRecord}</div>
+        </div>
       </div>
 
-      {/* Team 2 Bottom Half */}
-      <div
-        onClick={() => handleTeamSelect(game, team2.trim())}
-        className={`flex items-center justify-center h-24 cursor-pointer transition relative ${
-          selectedBet?.team === team2.trim() ? 'bg-[#4fe870] text-black' : 'bg-transparent text-[#4fe870]'
-        }`}
-      >
-        <span className="text-2xl font-pacifico tracking-wide drop-shadow-[0_0_5px_#4fe870]">
-          {team2.trim()}
-        </span>
-      </div>
+      {/* Betting Lines */}
+      <div className="mt-6 space-y-3">
+        {/* Spread */}
+        <div className="flex justify-between items-center">
+          <span className="text-gray-300 font-medium">Spread</span>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => onBetSelect({
+                id: `${game.id}-away-spread`,
+                game: `${game.awayTeam} @ ${game.homeTeam}`,
+                type: 'Spread',
+                selection: `${game.awayTeam} ${game.lines.spread.away.point}`,
+                odds: game.lines.spread.away.odds,
+                gameId: game.id
+              })}
+              className="glass-button px-3 py-2 text-white text-sm font-medium"
+            >
+              {game.awayTeam} {game.lines.spread.away.point} ({game.lines.spread.away.odds})
+            </button>
+            <button
+              onClick={() => onBetSelect({
+                id: `${game.id}-home-spread`,
+                game: `${game.awayTeam} @ ${game.homeTeam}`,
+                type: 'Spread',
+                selection: `${game.homeTeam} ${game.lines.spread.home.point}`,
+                odds: game.lines.spread.home.odds,
+                gameId: game.id
+              })}
+              className="glass-button px-3 py-2 text-white text-sm font-medium"
+            >
+              {game.homeTeam} {game.lines.spread.home.point} ({game.lines.spread.home.odds})
+            </button>
+          </div>
+        </div>
 
-      {/* Game Info */}
-      <div className="text-center p-2 bg-black border-t border-[#4fe870]/30">
-        <p className="text-sm text-[#4fe870]">{game.matchup}</p>
-        <p className="text-xs text-gray-400">Odds: {game.odds}</p>
-        <p className="text-xs text-gray-500">{new Date(game.game_time).toLocaleString()}</p>
+        {/* Moneyline */}
+        <div className="flex justify-between items-center">
+          <span className="text-gray-300 font-medium">Moneyline</span>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => onBetSelect({
+                id: `${game.id}-away-ml`,
+                game: `${game.awayTeam} @ ${game.homeTeam}`,
+                type: 'Moneyline',
+                selection: game.awayTeam,
+                odds: game.lines.moneyline.away,
+                gameId: game.id
+              })}
+              className="btn-success px-3 py-2 text-white text-sm font-medium"
+            >
+              {game.awayTeam} ({game.lines.moneyline.away})
+            </button>
+            <button
+              onClick={() => onBetSelect({
+                id: `${game.id}-home-ml`,
+                game: `${game.awayTeam} @ ${game.homeTeam}`,
+                type: 'Moneyline',
+                selection: game.homeTeam,
+                odds: game.lines.moneyline.home,
+                gameId: game.id
+              })}
+              className="btn-success px-3 py-2 text-white text-sm font-medium"
+            >
+              {game.homeTeam} ({game.lines.moneyline.home})
+            </button>
+          </div>
+        </div>
+
+        {/* Over/Under */}
+        <div className="flex justify-between items-center">
+          <span className="text-gray-300 font-medium">Total</span>
+          <div className="flex space-x-2">
+            <button
+              onClick={() => onBetSelect({
+                id: `${game.id}-over`,
+                game: `${game.awayTeam} @ ${game.homeTeam}`,
+                type: 'Total',
+                selection: `Over ${game.lines.total.line}`,
+                odds: game.lines.total.over,
+                gameId: game.id
+              })}
+              className="btn-primary px-3 py-2 text-white text-sm font-medium"
+            >
+              Over {game.lines.total.line} ({game.lines.total.over})
+            </button>
+            <button
+              onClick={() => onBetSelect({
+                id: `${game.id}-under`,
+                game: `${game.awayTeam} @ ${game.homeTeam}`,
+                type: 'Total',
+                selection: `Under ${game.lines.total.line}`,
+                odds: game.lines.total.under,
+                gameId: game.id
+              })}
+              className="btn-primary px-3 py-2 text-white text-sm font-medium"
+            >
+              Under {game.lines.total.line} ({game.lines.total.under})
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );

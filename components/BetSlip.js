@@ -1,10 +1,9 @@
-
 import { useState } from 'react';
 
 export default function BetSlip({ bets, setBets, bankroll, onClose }) {
   const [isPlacing, setIsPlacing] = useState(false);
   const [betType, setBetType] = useState('single');
-  
+
   const updateStake = (betId, stake) => {
     setBets(bets.map(bet => 
       bet.id === betId ? { ...bet, stake: parseFloat(stake) || 0 } : bet
@@ -31,9 +30,9 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
 
   const placeBets = async () => {
     if (totalStake === 0 || totalStake > bankroll) return;
-    
+
     setIsPlacing(true);
-    
+
     // Simulate bet placement
     setTimeout(() => {
       alert(`${bets.length} bet(s) placed successfully!`);
