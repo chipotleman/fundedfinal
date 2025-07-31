@@ -85,8 +85,8 @@ const mockUserProfiles = {
       roi: 112.5
     },
     achievements: [
-      { name: "Volume Trader", description: "High bet count", icon: "🔢" },
-      { name: "Elite Trader", description: "Reached Elite tier", icon: "🏆" }
+      { name: "Volume Bettor", description: "High bet count", icon: "🔢" },
+      { name: "Elite Bettor", description: "Reached Elite tier", icon: "🏆" }
     ],
     recentBets: [
       { game: "Dodgers vs Padres", bet: "Dodgers ML", odds: "-140", result: "won", amount: 600 },

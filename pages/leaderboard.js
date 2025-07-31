@@ -1,4 +1,7 @@
+` tags.
 
+```python
+<replit_final_file>
 import React, { useState } from "react";
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
@@ -29,12 +32,12 @@ const Leaderboard = () => {
   // Filter data based on selected filters
   const getFilteredData = () => {
     let filteredData = [...allLeaderboardData];
-    
+
     // Filter by tier/category
     if (category !== 'all') {
       filteredData = filteredData.filter(user => user.tier.toLowerCase() === category);
     }
-    
+
     // Simulate different data for different timeframes
     if (timeframe === 'weekly') {
       // Simulate weekly data with slightly different profits
@@ -51,7 +54,7 @@ const Leaderboard = () => {
         roi: user.roi * 0.7
       }));
     }
-    
+
     return filteredData;
   };
 
@@ -91,7 +94,7 @@ const Leaderboard = () => {
           <div className="absolute inset-0 opacity-20" style={{
             backgroundImage: "url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22m36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"
           }}></div>
-          
+
           <div className="relative max-w-7xl mx-auto px-6 py-24 text-center">
             <h1 className="text-5xl md:text-7xl font-black text-white mb-6">
               <span className="bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">Leaderboard</span>
@@ -138,7 +141,7 @@ const Leaderboard = () => {
                   All Time
                 </button>
               </div>
-              
+
               <div className="flex gap-2">
                 <button
                   onClick={() => setCategory('all')}
@@ -187,7 +190,7 @@ const Leaderboard = () => {
                     ? 'from-gray-400/20 to-gray-600/20 border-gray-400/30'
                     : 'from-orange-600/20 to-orange-800/20 border-orange-600/30'
                 } backdrop-blur-lg rounded-2xl p-8 border text-center ${index === 0 ? 'transform scale-105' : ''}`}>
-                  
+
                   <div className="text-6xl mb-4">{getRankIcon(user.rank)}</div>
                   <button 
                     onClick={() => openProfile(user.username)}
@@ -201,10 +204,10 @@ const Leaderboard = () => {
                   <div className="space-y-2">
                     <div className="text-3xl font-black text-green-400">${user.profit.toLocaleString()}</div>
                     <div className="text-gray-300">Profit</div>
-                    <div className="text-xl font-bold text-blue-400">{user.roi}%</div>
+                    <div className="text-xl font-bold text-blue-400">{user.roi.toFixed(2)}%</div>
                     <div className="text-gray-300">ROI</div>
                     <div className="text-lg text-white">{user.wins}/{user.totalBets}</div>
-                    <div className="text-gray-300">Win Rate: {((user.wins/user.totalBets) * 100).toFixed(1)}%</div>
+                    <div className="text-gray-300">Win Rate: {((user.wins/user.totalBets) * 100).toFixed(2)}%</div>
                   </div>
                 </div>
               </div>
@@ -218,7 +221,7 @@ const Leaderboard = () => {
             <div className="p-6 border-b border-slate-700">
               <h2 className="text-2xl font-bold text-white">Full Rankings</h2>
             </div>
-            
+
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-slate-700/50">
@@ -258,10 +261,10 @@ const Leaderboard = () => {
                         <span className="text-lg font-bold text-green-400">${user.profit.toLocaleString()}</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <span className="text-lg font-semibold text-blue-400">{user.roi}%</span>
+                        <span className="text-lg font-semibold text-blue-400">{user.roi.toFixed(2)}%</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <span className="text-white font-medium">{((user.wins/user.totalBets) * 100).toFixed(1)}%</span>
+                        <span className="text-white font-medium">{((user.wins/user.totalBets) * 100).toFixed(2)}%</span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <span className="text-gray-300">{user.totalBets}</span>
@@ -286,7 +289,7 @@ const Leaderboard = () => {
               <div className="text-gray-300">Total Profits</div>
             </div>
             <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 border border-slate-700 text-center">
-              <div className="text-3xl font-black text-blue-400 mb-2">68.4%</div>
+              <div className="text-3xl font-black text-blue-400 mb-2">{68.4.toFixed(1)}%</div>
               <div className="text-gray-300">Avg Win Rate</div>
             </div>
             <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 border border-slate-700 text-center">

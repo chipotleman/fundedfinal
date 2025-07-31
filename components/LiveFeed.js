@@ -10,7 +10,7 @@ export default function LiveFeed() {
     'SharpShooter99': { 
       avatar: '🎯', 
       tier: 'Elite', 
-      winRate: 72.3, 
+      winRate: 72.30, 
       totalProfit: 24500, 
       currentStreak: 8,
       challengePhase: 3,
@@ -24,7 +24,7 @@ export default function LiveFeed() {
     'BetMaster2024': { 
       avatar: '👑', 
       tier: 'Pro', 
-      winRate: 68.9, 
+      winRate: 68.90, 
       totalProfit: 18750, 
       currentStreak: 5,
       challengePhase: 2,
@@ -37,7 +37,7 @@ export default function LiveFeed() {
     'OddsWhisperer': { 
       avatar: '🔮', 
       tier: 'Elite', 
-      winRate: 75.1, 
+      winRate: 75.10, 
       totalProfit: 31200, 
       currentStreak: 12,
       challengePhase: 3,
@@ -50,7 +50,7 @@ export default function LiveFeed() {
     'ValueFinder': { 
       avatar: '💎', 
       tier: 'Pro', 
-      winRate: 65.4, 
+      winRate: 65.40, 
       totalProfit: 15800, 
       currentStreak: 3,
       challengePhase: 2,

@@ -34,7 +34,7 @@ export default function Profile() {
   }
 
   const stats = currentUser.profileStats || {};
-  const winRate = currentUser.totalBets > 0 ? (stats.totalWins / currentUser.totalBets * 100).toFixed(1) : 0;
+  const winRate = currentUser.totalBets > 0 ? (stats.totalWins / currentUser.totalBets * 100).toFixed(2) : 0;
 
   return (
     <div className="min-h-screen bg-slate-900">
