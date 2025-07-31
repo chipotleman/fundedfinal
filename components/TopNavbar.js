@@ -13,7 +13,8 @@ export default function TopNavbar({ user, bankroll, pnl, betSlipCount, onBetSlip
             <img 
               src="/fundmybet-logo.png" 
               alt="FundMyBet" 
-              className="h-8 w-auto filter brightness-0 invert"
+              className="h-8 w-auto"
+              style={{ filter: 'brightness(0) invert(1)' }}
             />
           </Link>
 
@@ -22,7 +23,7 @@ export default function TopNavbar({ user, bankroll, pnl, betSlipCount, onBetSlip
             <Link href="/dashboard" className="text-gray-300 hover:text-white font-medium transition-colors">
               Dashboard
             </Link>
-            <Link href="/how-it-works" className="text-gray-300 hover:text-white font-medium transition-colors">
+            <Link href="/rules" className="text-gray-300 hover:text-white font-medium transition-colors">
               Rules
             </Link>
             <Link href="/leaderboard" className="text-gray-300 hover:text-white font-medium transition-colors">

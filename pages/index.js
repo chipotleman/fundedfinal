@@ -34,7 +34,7 @@ export default function Home() {
               <Link href="/auth" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-2xl">
                 Start Challenge - $49
               </Link>
-              <Link href="/how-it-works" className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-700">
+              <Link href="/rules" className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-700">
                 How It Works
               </Link>
             </div>

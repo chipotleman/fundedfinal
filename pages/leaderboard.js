@@ -254,11 +254,14 @@ const Leaderboard = () => {
             <h2 className="text-3xl font-bold text-white mb-4">Ready to Climb the Rankings?</h2>
             <p className="text-gray-300 mb-8 text-lg">Join the competition and prove you belong among the elite traders.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/auth" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg">
+              <Link href="/auth" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg hover:scale-105 transform">
                 Start Your Journey
               </Link>
-              <Link href="/dashboard" className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-600">
+              <Link href="/dashboard" className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-600 hover:border-slate-500">
                 View Dashboard
+              </Link>
+              <Link href="/rules" className="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg">
+                View Rules
               </Link>
             </div>
           </div>

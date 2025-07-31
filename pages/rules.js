@@ -73,7 +73,7 @@ const Rules = ({ selectedBets = [], bankroll = 10000 }) => {
           <h2 className="text-3xl font-bold text-white text-center mb-12">Challenge Tiers</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {challengeTiers.map((tier, index) => (
-              <div key={index} className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-8 border border-slate-700 hover:border-green-500/50 transition-all duration-300">
+              <div key={index} className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-8 border border-slate-700 hover:border-green-500/50 transition-all duration-300 group">
                 <div className="text-center">
                   <h3 className="text-2xl font-bold text-white mb-4">{tier.name}</h3>
                   <div className="text-4xl font-black text-green-400 mb-2">${tier.bankroll.toLocaleString()}</div>
@@ -94,7 +94,7 @@ const Rules = ({ selectedBets = [], bankroll = 10000 }) => {
                     </div>
                   </div>
 
-                  <Link href="/auth" className="mt-6 w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 inline-block text-center">
+                  <Link href="/auth" className="mt-6 w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 inline-block text-center group-hover:scale-105 transform">
                     Start {tier.name}
                   </Link>
                 </div>
@@ -108,10 +108,10 @@ const Rules = ({ selectedBets = [], bankroll = 10000 }) => {
           <h2 className="text-3xl font-bold text-white text-center mb-12">How It Works</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {rules.map((rule, index) => (
-              <div key={index} className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-8 border border-slate-700 hover:border-blue-500/50 transition-all duration-300 group">
+              <div key={index} className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-8 border border-slate-700 hover:border-blue-500/50 transition-all duration-300 group cursor-pointer">
                 <div className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">{rule.icon}</div>
-                <h3 className="text-xl font-bold text-white mb-4">{rule.title}</h3>
-                <p className="text-gray-300 leading-relaxed">{rule.description}</p>
+                <h3 className="text-xl font-bold text-white mb-4 group-hover:text-blue-400 transition-colors">{rule.title}</h3>
+                <p className="text-gray-300 leading-relaxed group-hover:text-white transition-colors">{rule.description}</p>
               </div>
             ))}
           </div>
@@ -119,25 +119,25 @@ const Rules = ({ selectedBets = [], bankroll = 10000 }) => {
 
         {/* Key Guidelines */}
         <div className="max-w-4xl mx-auto px-6 py-16">
-          <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-8 border border-slate-700">
+          <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-8 border border-slate-700 hover:border-purple-500/50 transition-colors">
             <h2 className="text-2xl font-bold text-white mb-6 text-center">Key Guidelines</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <div className="flex items-start space-x-3">
+                <div className="flex items-start space-x-3 hover:bg-slate-700/30 p-3 rounded-lg transition-colors">
                   <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
                   <div>
                     <div className="text-white font-semibold">Maximum Bet Size</div>
                     <div className="text-gray-300 text-sm">5% of current balance per bet</div>
                   </div>
                 </div>
-                <div className="flex items-start space-x-3">
+                <div className="flex items-start space-x-3 hover:bg-slate-700/30 p-3 rounded-lg transition-colors">
                   <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
                   <div>
                     <div className="text-white font-semibold">Daily Loss Limit</div>
                     <div className="text-gray-300 text-sm">10% of starting balance</div>
                   </div>
                 </div>
-                <div className="flex items-start space-x-3">
+                <div className="flex items-start space-x-3 hover:bg-slate-700/30 p-3 rounded-lg transition-colors">
                   <div className="w-2 h-2 bg-green-400 rounded-full mt-2 flex-shrink-0"></div>
                   <div>
                     <div className="text-white font-semibold">Minimum Odds</div>
@@ -146,21 +146,21 @@ const Rules = ({ selectedBets = [], bankroll = 10000 }) => {
                 </div>
               </div>
               <div className="space-y-4">
-                <div className="flex items-start space-x-3">
+                <div className="flex items-start space-x-3 hover:bg-slate-700/30 p-3 rounded-lg transition-colors">
                   <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
                   <div>
                     <div className="text-white font-semibold">Challenge Duration</div>
                     <div className="text-gray-300 text-sm">No time limit - bet at your pace</div>
                   </div>
                 </div>
-                <div className="flex items-start space-x-3">
+                <div className="flex items-start space-x-3 hover:bg-slate-700/30 p-3 rounded-lg transition-colors">
                   <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
                   <div>
                     <div className="text-white font-semibold">Sports Coverage</div>
                     <div className="text-gray-300 text-sm">NFL, NBA, MLB, NHL, UFC, Soccer+</div>
                   </div>
                 </div>
-                <div className="flex items-start space-x-3">
+                <div className="flex items-start space-x-3 hover:bg-slate-700/30 p-3 rounded-lg transition-colors">
                   <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"></div>
                   <div>
                     <div className="text-white font-semibold">Bet Types</div>
@@ -172,17 +172,42 @@ const Rules = ({ selectedBets = [], bankroll = 10000 }) => {
           </div>
         </div>
 
+        {/* Interactive FAQ Section */}
+        <div className="max-w-4xl mx-auto px-6 py-16">
+          <h2 className="text-3xl font-bold text-white text-center mb-12">Frequently Asked Questions</h2>
+          <div className="space-y-4">
+            {[
+              { q: "What happens if I lose my challenge?", a: "You can restart immediately with no penalties. Learn from your mistakes and try again." },
+              { q: "How fast do I get paid?", a: "Payouts are processed monthly via PayPal, Zelle, or cryptocurrency." },
+              { q: "Can I bet on any sport?", a: "Yes! We cover NFL, NBA, MLB, NHL, UFC, Soccer, Tennis, and many more." },
+              { q: "Is there a time limit?", a: "No time limits. Take your time and bet strategically at your own pace." }
+            ].map((item, index) => (
+              <details key={index} className="bg-slate-800/50 backdrop-blur-lg rounded-xl border border-slate-700 group">
+                <summary className="p-6 cursor-pointer hover:bg-slate-700/30 transition-colors">
+                  <span className="text-white font-semibold text-lg">{item.q}</span>
+                </summary>
+                <div className="px-6 pb-6 text-gray-300 leading-relaxed">
+                  {item.a}
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+
         {/* CTA Section */}
         <div className="max-w-4xl mx-auto px-6 py-16 text-center">
-          <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 backdrop-blur-lg rounded-2xl p-12 border border-green-500/30">
+          <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 backdrop-blur-lg rounded-2xl p-12 border border-green-500/30 hover:border-green-400/50 transition-colors">
             <h2 className="text-3xl font-bold text-white mb-4">Ready to Get Funded?</h2>
             <p className="text-gray-300 mb-8 text-lg">Join thousands of successful bettors who've proven their skills and earned funding.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/auth" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg">
+              <Link href="/auth" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg hover:scale-105 transform">
                 Start Challenge
               </Link>
-              <Link href="/dashboard" className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-600">
+              <Link href="/dashboard" className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-600 hover:border-slate-500">
                 View Dashboard
+              </Link>
+              <Link href="/leaderboard" className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg">
+                See Leaderboard
               </Link>
             </div>
           </div>
