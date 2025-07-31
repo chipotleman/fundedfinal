@@ -134,7 +134,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                         <div className="flex items-center space-x-2">
                           <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                           <p className="text-green-400 text-sm font-medium">
-                            {currentUser?.challenge ? `${currentUser.challenge.name} Active` : 'No Challenge'}
+                            {currentUser?.challenge ? 'Challenge Active' : 'No Challenge'}
                           </p>
                         </div>
                       </div>

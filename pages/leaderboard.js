@@ -234,7 +234,11 @@ const Leaderboard = () => {
                 </thead>
                 <tbody className="divide-y divide-slate-700">
                   {leaderboardData.map((user, index) => (
-                    <tr key={user.rank} className="hover:bg-slate-700/30 transition-colors">
+                    <tr 
+                      key={user.rank} 
+                      className="hover:bg-slate-700/30 transition-colors cursor-pointer"
+                      onClick={() => openProfile(user.username)}
+                    >
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <span className="text-2xl mr-2">{getRankIcon(user.rank)}</span>
@@ -242,12 +246,9 @@ const Leaderboard = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <button 
-                          onClick={() => openProfile(user.username)}
-                          className="text-lg font-semibold text-white hover:text-blue-400 transition-colors cursor-pointer"
-                        >
+                        <span className="text-lg font-semibold text-white hover:text-blue-400 transition-colors">
                           {user.username}
-                        </button>
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getTierColor(user.tier)}`}>
