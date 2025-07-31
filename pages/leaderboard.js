@@ -240,6 +240,7 @@ const Leaderboard = () => {
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        console.log('Clicked user:', user.username, 'Rank:', user.rank);
                         openProfile(user.username);
                       }}
                     >
