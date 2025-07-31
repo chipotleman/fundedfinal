@@ -21,16 +21,16 @@ export default function TopNavbar({ user, bankroll, pnl, betSlipCount, onBetSlip
 
           {/* Center Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="/dashboard" className="text-gray-300 hover:text-white font-medium transition-colors">
+            <Link href="/dashboard" className="text-gray-300 hover:text-white font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105">
               Dashboard
             </Link>
-            <Link href="/rules" className="text-gray-300 hover:text-white font-medium transition-colors">
+            <Link href="/rules" className="text-gray-300 hover:text-white font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105">
               Rules
             </Link>
-            <Link href="/leaderboard" className="text-gray-300 hover:text-white font-medium transition-colors">
+            <Link href="/leaderboard" className="text-gray-300 hover:text-white font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105">
               Leaderboard
             </Link>
-            <Link href="/promos" className="text-gray-300 hover:text-white font-medium transition-colors">
+            <Link href="/promos" className="text-gray-300 hover:text-white font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105">
               Promos
             </Link>
           </div>

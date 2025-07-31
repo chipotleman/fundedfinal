@@ -32,7 +32,7 @@ export default function BalanceModal({
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-900 rounded-3xl border border-slate-700 max-w-4xl w-full max-h-[90vh] overflow-hidden">
+      <div className="bg-slate-900 rounded-3xl border border-slate-700 max-w-4xl w-full max-h-[80vh] overflow-hidden my-auto">
         {/* Header */}
         <div className="p-6 border-b border-slate-700 bg-gradient-to-r from-slate-800 to-slate-900">
           <div className="flex items-center justify-between">
