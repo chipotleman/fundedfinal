@@ -87,16 +87,10 @@ export default function AuthPage() {
 
     try {
       if (isSignUp) {
-        // Sign up user with email confirmation disabled
+        // Sign up user
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: {
-            emailRedirectTo: undefined,
-            data: {
-              email_confirm: false
-            }
-          }
         });
 
         if (error) {
@@ -107,26 +101,30 @@ export default function AuthPage() {
             throw error;
           }
         } else if (data.user) {
-          // If user was created but session is null, it means email confirmation is required
-          // Let's try to sign them in immediately
-          if (!data.session) {
-            // Try to sign in immediately after signup
+          // Check if we got a session (meaning user is confirmed and signed in)
+          if (data.session) {
+            // User was created and signed in automatically
+            setStep('challenge');
+          } else {
+            // User was created but needs confirmation, try signing in immediately
+            // This works if email confirmation is disabled in Supabase settings
             const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
               email,
               password,
             });
             
             if (signInError) {
-              // Account was created but can't sign in yet - likely needs confirmation
-              setError('Account created successfully! Please try signing in with your credentials.');
+              // Email confirmation is required - provide clear instructions
+              if (signInError.message.includes('Email not confirmed')) {
+                setError('Account created! Email confirmation is required. Please check your email and click the confirmation link, then try signing in.');
+              } else {
+                setError('Account created successfully! Please try signing in with your credentials.');
+              }
               setIsSignUp(false); // Switch to sign in mode
             } else if (signInData.user) {
               // Successfully signed in after signup
               setStep('challenge');
             }
-          } else {
-            // User was created and signed in automatically
-            setStep('challenge');
           }
         }
       } else {
@@ -140,7 +138,7 @@ export default function AuthPage() {
           if (error.message.includes('Invalid login credentials')) {
             setError('Invalid email or password. Please check your credentials and try again.');
           } else if (error.message.includes('Email not confirmed')) {
-            setError('Please check your email and confirm your account, or try creating a new account.');
+            setError('Please check your email and click the confirmation link to verify your account before signing in.');
           } else {
             throw error;
           }
