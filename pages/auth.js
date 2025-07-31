@@ -1,12 +1,16 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useRouter } from 'next/router';
 
 export default function AuthPage() {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
   const [selectedChallenge, setSelectedChallenge] = useState(null);
   const [step, setStep] = useState('auth');
+  const [error, setError] = useState('');
   const router = useRouter();
 
   // Clear any existing sessions when component mounts
@@ -69,44 +73,51 @@ export default function AuthPage() {
     return () => subscription.unsubscribe();
   }, [step]);
 
-  const handleQuickAuth = async (e) => {
+  const handleAuth = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setError('');
+
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters long');
+      setLoading(false);
+      return;
+    }
 
     try {
-      // Create a temporary user account with email only
-      const tempPassword = Math.random().toString(36).substring(2, 15);
-      const { error } = await supabase.auth.signUp({
-        email,
-        password: tempPassword,
-      });
-
-      if (error && error.message.includes('already registered')) {
-        // If user exists, sign them in
-        const { error: signInError } = await supabase.auth.signInWithPassword({
+      if (isSignUp) {
+        const { data, error } = await supabase.auth.signUp({
           email,
-          password: tempPassword,
+          password,
         });
 
-        if (signInError) {
-          // Try magic link as fallback
-          const { error: magicError } = await supabase.auth.signInWithOtp({
-            email,
-            options: {
-              shouldCreateUser: true
-            }
-          });
-          if (!magicError) {
-            alert('Check your email for the login link!');
-          }
+        if (error) throw error;
+
+        if (data.user && !data.user.email_confirmed_at) {
+          setError('Please check your email and click the confirmation link before signing in.');
+          setIsSignUp(false);
+        } else {
+          setStep('challenge');
         }
-      } else if (error) {
-        throw error;
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) {
+          if (error.message.includes('Invalid login credentials')) {
+            setError('Invalid email or password. Please check your credentials or sign up for a new account.');
+          } else {
+            throw error;
+          }
+        } else {
+          setStep('challenge');
+        }
       }
     } catch (error) {
       console.log('Auth error:', error.message);
-      // Continue anyway for demo purposes
-      setStep('challenge');
+      setError(error.message);
     } finally {
       setLoading(false);
     }
@@ -121,13 +132,29 @@ export default function AuthPage() {
     setLoading(true);
 
     try {
-      // Create demo user data
-      const userId = 'demo_' + Math.random().toString(36).substring(2, 15);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        // Store the user's challenge selection
+        const { error } = await supabase
+          .from('user_challenges')
+          .insert({
+            user_id: session.user.id,
+            challenge_id: selectedChallenge.id,
+            starting_balance: selectedChallenge.startingBalance,
+            target: selectedChallenge.target,
+            max_bet: selectedChallenge.maxBet,
+            status: 'active'
+          });
+
+        if (error) {
+          console.log('Challenge storage error:', error.message);
+        }
+      }
 
       router.push('/dashboard');
     } catch (error) {
       console.log('Challenge start error:', error.message);
-      // Continue to dashboard anyway for demo
       router.push('/dashboard');
     } finally {
       setLoading(false);
@@ -252,11 +279,21 @@ export default function AuthPage() {
                 <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
               </svg>
             </div>
-            <h1 className="text-3xl font-black text-white mb-2">Get Started</h1>
-            <p className="text-gray-400 font-medium">Enter your email to begin your funded challenge</p>
+            <h1 className="text-3xl font-black text-white mb-2">
+              {isSignUp ? 'Create Account' : 'Welcome Back'}
+            </h1>
+            <p className="text-gray-400 font-medium">
+              {isSignUp ? 'Join our funded challenge platform' : 'Sign in to your account'}
+            </p>
           </div>
 
-          <form onSubmit={handleQuickAuth} className="space-y-6">
+          {error && (
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
+              <p className="text-red-400 text-sm font-medium">{error}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleAuth} className="space-y-6">
             <div>
               <label className="block text-sm font-semibold text-gray-300 mb-3">
                 Email Address
@@ -271,6 +308,22 @@ export default function AuthPage() {
               />
             </div>
 
+            <div>
+              <label className="block text-sm font-semibold text-gray-300 mb-3">
+                Password
+              </label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-4 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium"
+                placeholder="Enter your password"
+                minLength="8"
+                required
+              />
+              <p className="text-gray-400 text-xs mt-2">Minimum 8 characters required</p>
+            </div>
+
             <button
               type="submit"
               disabled={loading}
@@ -279,18 +332,24 @@ export default function AuthPage() {
               {loading ? (
                 <div className="flex items-center justify-center space-x-2">
                   <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Please wait...</span>
+                  <span>{isSignUp ? 'Creating Account...' : 'Signing In...'}</span>
                 </div>
               ) : (
-                'Continue to Challenges'
+                isSignUp ? 'Create Account' : 'Sign In'
               )}
             </button>
           </form>
 
           <div className="mt-6 text-center">
-            <p className="text-gray-400 text-sm">
-              No passwords required • Start trading in seconds
-            </p>
+            <button
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                setError('');
+              }}
+              className="text-green-400 hover:text-green-300 font-medium transition-colors"
+            >
+              {isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
+            </button>
           </div>
         </div>
       </div>
