@@ -1,10 +1,30 @@
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
 import BalanceModal from './BalanceModal';
+import { supabase } from '../lib/supabaseClient';
 
-export default function TopNavbar({ user, bankroll, pnl, betSlipCount, onBetSlipClick }) {
+export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
+  const router = useRouter();
+
+  const handleSignOut = async () => {
+    // Clear any stored user data
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('demo_user');
+      localStorage.removeItem('user_session');
+      sessionStorage.clear();
+    }
+
+    // Sign out from Supabase if authenticated
+    if (typeof supabase !== 'undefined') {
+      await supabase.auth.signOut();
+    }
+
+    // Redirect to auth page
+    router.push('/auth');
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 bg-slate-900/95 backdrop-blur-lg border-b border-slate-700 z-50">
@@ -123,7 +143,10 @@ export default function TopNavbar({ user, bankroll, pnl, betSlipCount, onBetSlip
                       <span className="font-medium">Settings</span>
                     </Link>
                     <div className="border-t border-slate-600/50 my-2"></div>
-                    <button className="w-full flex items-center space-x-3 px-4 py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all duration-200 group">
+                    <button 
+                      onClick={handleSignOut}
+                      className="w-full flex items-center space-x-3 px-4 py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all duration-200 group"
+                    >
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
                       </svg>

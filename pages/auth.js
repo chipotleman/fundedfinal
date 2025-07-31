@@ -9,6 +9,19 @@ export default function AuthPage() {
   const [step, setStep] = useState('auth');
   const router = useRouter();
 
+  // Clear any existing sessions when component mounts
+  useEffect(() => {
+    const clearSession = async () => {
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('demo_user');
+        localStorage.removeItem('user_session');
+        sessionStorage.clear();
+      }
+      await supabase.auth.signOut();
+    };
+    clearSession();
+  }, []);
+
   const challenges = [
     {
       id: 1,
