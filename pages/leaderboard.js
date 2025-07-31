@@ -8,7 +8,7 @@ const Leaderboard = () => {
   const [category, setCategory] = useState('all');
 
   // Mock leaderboard data - replace with real data from your backend
-  const leaderboardData = [
+  const allLeaderboardData = [
     { rank: 1, username: "BetMaster2024", profit: 15420, roi: 154.2, wins: 89, totalBets: 127, tier: "Elite", badge: "🏆" },
     { rank: 2, username: "SharpShooter", profit: 12890, roi: 128.9, wins: 76, totalBets: 115, tier: "Pro", badge: "🥈" },
     { rank: 3, username: "SportsSage", profit: 11250, roi: 112.5, wins: 82, totalBets: 134, tier: "Elite", badge: "🥉" },
@@ -20,6 +20,37 @@ const Leaderboard = () => {
     { rank: 9, username: "ProfitPro", profit: 6210, roi: 62.1, wins: 49, totalBets: 81, tier: "Starter", badge: "⭐" },
     { rank: 10, username: "WinStreaker", profit: 5875, roi: 58.8, wins: 47, totalBets: 76, tier: "Starter", badge: "⭐" }
   ];
+
+  // Filter data based on selected filters
+  const getFilteredData = () => {
+    let filteredData = [...allLeaderboardData];
+    
+    // Filter by tier/category
+    if (category !== 'all') {
+      filteredData = filteredData.filter(user => user.tier.toLowerCase() === category);
+    }
+    
+    // Simulate different data for different timeframes
+    if (timeframe === 'weekly') {
+      // Simulate weekly data with slightly different profits
+      filteredData = filteredData.map(user => ({
+        ...user,
+        profit: Math.floor(user.profit * 0.3),
+        roi: user.roi * 0.3
+      }));
+    } else if (timeframe === 'monthly') {
+      // Use current data as monthly
+      filteredData = filteredData.map(user => ({
+        ...user,
+        profit: Math.floor(user.profit * 0.7),
+        roi: user.roi * 0.7
+      }));
+    }
+    
+    return filteredData;
+  };
+
+  const leaderboardData = getFilteredData();
 
   const getTierColor = (tier) => {
     switch(tier) {
@@ -52,7 +83,9 @@ const Leaderboard = () => {
         {/* Hero Section */}
         <div className="relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900"></div>
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22m36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
+          <div className="absolute inset-0 opacity-20" style={{
+            backgroundImage: "url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22m36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"
+          }}></div>
           
           <div className="relative max-w-7xl mx-auto px-6 py-24 text-center">
             <h1 className="text-5xl md:text-7xl font-black text-white mb-6">

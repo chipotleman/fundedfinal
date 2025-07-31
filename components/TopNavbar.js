@@ -14,7 +14,6 @@ export default function TopNavbar({ user, bankroll, pnl, betSlipCount, onBetSlip
               src="/fundmybet-logo.png" 
               alt="FundMyBet" 
               className="h-8 w-auto"
-              style={{ filter: 'brightness(0) invert(1)' }}
             />
           </Link>
 
