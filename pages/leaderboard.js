@@ -250,16 +250,9 @@ const Leaderboard = () => {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <button 
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            openProfile(user.username);
-                          }}
-                          className="text-lg font-semibold text-white hover:text-blue-400 transition-colors bg-transparent border-none cursor-pointer"
-                        >
+                        <span className="text-lg font-semibold text-white hover:text-blue-400 transition-colors">
                           {user.username}
-                        </button>
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getTierColor(user.tier)}`}>
