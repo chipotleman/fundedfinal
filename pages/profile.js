@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
@@ -16,7 +15,7 @@ export default function Profile() {
       router.push('/auth');
       return;
     }
-    
+
     const parsedUser = JSON.parse(userData);
     setCurrentUser(parsedUser);
     setLoading(false);
@@ -77,14 +76,15 @@ export default function Profile() {
           {currentUser.challenge && (
             <div className="bg-slate-800 rounded-2xl p-8 mb-8 border border-slate-700">
               <h2 className="text-2xl font-bold text-white mb-6">Current Challenge</h2>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              
+<div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="bg-slate-700/50 rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold text-green-400">${currentUser.bankroll.toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-green-400">${currentUser.bankroll?.toLocaleString() || 0}</div>
                   <div className="text-gray-400 text-sm">Current Balance</div>
                 </div>
                 <div className="bg-slate-700/50 rounded-xl p-4 text-center">
                   <div className={`text-2xl font-bold ${currentUser.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {currentUser.pnl >= 0 ? '+' : ''}${currentUser.pnl.toLocaleString()}
+                    ${(currentUser.pnl || 0).toLocaleString()}
                   </div>
                   <div className="text-gray-400 text-sm">P&L</div>
                 </div>
@@ -97,7 +97,7 @@ export default function Profile() {
                   <div className="text-gray-400 text-sm">Betting Days</div>
                 </div>
               </div>
-            </div>
+</div>
           )}
 
           {/* Betting Statistics */}
