@@ -1,6 +1,7 @@
 import React from "react";
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
+import { useBetSlip } from '../contexts/BetSlipContext';
 
 const Rules = () => {
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
@@ -46,10 +47,10 @@ const Rules = () => {
   return (
     <div className="min-h-screen bg-slate-900">
       <TopNavbar 
-        bankroll={bankroll}
+        bankroll={10000}
         pnl={0}
-        betSlipCount={selectedBets.length}
-        onBetSlipClick={() => {}}
+        betSlipCount={betSlip.length}
+        onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
 
       <div className="pt-20">
