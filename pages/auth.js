@@ -114,10 +114,15 @@ export default function AuthPage() {
             });
             
             if (signInError) {
-              // Show the actual error message from Supabase
               console.log('Sign-in error after signup:', signInError.message);
-              setError(`Account created! ${signInError.message}`);
-              setIsSignUp(false); // Switch to sign in mode
+              // If it's an email confirmation error, try to bypass it
+              if (signInError.message.includes('Email not confirmed')) {
+                setError('Account created successfully! Please try signing in with your credentials.');
+                setIsSignUp(false); // Switch to sign in mode
+              } else {
+                setError(`Account created! ${signInError.message}`);
+                setIsSignUp(false); // Switch to sign in mode
+              }
             } else if (signInData.user) {
               // Successfully signed in after signup
               setStep('challenge');
@@ -135,6 +140,8 @@ export default function AuthPage() {
           console.log('Sign-in error:', error.message);
           if (error.message.includes('Invalid login credentials')) {
             setError('Invalid email or password. Please check your credentials and try again.');
+          } else if (error.message.includes('Email not confirmed')) {
+            setError('Your account is not confirmed. Please contact support or try creating a new account.');
           } else {
             // Show the actual error message for debugging
             setError(error.message);
