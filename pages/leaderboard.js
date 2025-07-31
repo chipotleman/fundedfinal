@@ -224,7 +224,7 @@ const Leaderboard = () => {
                 <thead className="bg-slate-700/50">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Rank</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Trader</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Bettor</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Tier</th>
                     <th className="px-6 py-4 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Profit</th>
                     <th className="px-6 py-4 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">ROI</th>
@@ -279,7 +279,7 @@ const Leaderboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 border border-slate-700 text-center">
               <div className="text-3xl font-black text-purple-400 mb-2">2,847</div>
-              <div className="text-gray-300">Active Traders</div>
+              <div className="text-gray-300">Active Bettors</div>
             </div>
             <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 border border-slate-700 text-center">
               <div className="text-3xl font-black text-green-400 mb-2">$1.2M</div>
@@ -300,7 +300,7 @@ const Leaderboard = () => {
         <div className="max-w-4xl mx-auto px-6 py-16 text-center">
           <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-lg rounded-2xl p-12 border border-purple-500/30">
             <h2 className="text-3xl font-bold text-white mb-4">Ready to Climb the Rankings?</h2>
-            <p className="text-gray-300 mb-8 text-lg">Join the competition and prove you belong among the elite traders.</p>
+            <p className="text-gray-300 mb-8 text-lg">Join the competition and prove you belong among the elite bettors.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/auth" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg hover:scale-105 transform">
                 Start Your Journey
