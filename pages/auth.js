@@ -100,25 +100,19 @@ export default function AuthPage() {
             throw error;
           }
         } else if (data.user) {
-          // Check if email confirmation is required
-          if (data.user.email_confirmed_at) {
-            // User is confirmed, proceed to challenge selection
+          // Account created successfully, now sign them in automatically
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+          
+          if (signInError) {
+            // If sign in fails, show error but don't mention email confirmation
+            setError('Account created but unable to sign in automatically. Please try signing in manually.');
+            setIsSignUp(false); // Switch to sign in mode
+          } else if (signInData.user) {
+            // Successfully signed in after signup
             setStep('challenge');
-          } else {
-            // User needs email confirmation, but for development we'll auto-confirm
-            // In production, you'd want to handle email confirmation properly
-            const { error: signInError } = await supabase.auth.signInWithPassword({
-              email,
-              password,
-            });
-            
-            if (signInError) {
-              // If auto sign-in fails, it might be due to email confirmation
-              setError('Account created successfully! Please check your email for confirmation, then sign in.');
-              setIsSignUp(false); // Switch to sign in mode
-            } else {
-              setStep('challenge');
-            }
           }
         }
       } else {
@@ -131,8 +125,6 @@ export default function AuthPage() {
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
             setError('Invalid email or password. Please check your credentials or create a new account.');
-          } else if (error.message.includes('Email not confirmed')) {
-            setError('Please check your email and confirm your account before signing in.');
           } else {
             throw error;
           }
