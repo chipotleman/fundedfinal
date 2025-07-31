@@ -114,12 +114,9 @@ export default function AuthPage() {
             });
             
             if (signInError) {
-              // Email confirmation is required - provide clear instructions
-              if (signInError.message.includes('Email not confirmed')) {
-                setError('Account created! Email confirmation is required. Please check your email and click the confirmation link, then try signing in.');
-              } else {
-                setError('Account created successfully! Please try signing in with your credentials.');
-              }
+              // Show the actual error message from Supabase
+              console.log('Sign-in error after signup:', signInError.message);
+              setError(`Account created! ${signInError.message}`);
               setIsSignUp(false); // Switch to sign in mode
             } else if (signInData.user) {
               // Successfully signed in after signup
@@ -135,12 +132,12 @@ export default function AuthPage() {
         });
 
         if (error) {
+          console.log('Sign-in error:', error.message);
           if (error.message.includes('Invalid login credentials')) {
             setError('Invalid email or password. Please check your credentials and try again.');
-          } else if (error.message.includes('Email not confirmed')) {
-            setError('Please check your email and click the confirmation link to verify your account before signing in.');
           } else {
-            throw error;
+            // Show the actual error message for debugging
+            setError(error.message);
           }
         } else if (data.user) {
           setStep('challenge');
