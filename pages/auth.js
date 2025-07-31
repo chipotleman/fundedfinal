@@ -1,10 +1,9 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
 import { useRouter } from 'next/router';
 
 export default function AuthPage() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -20,9 +19,9 @@ export default function AuthPage() {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('demo_user');
         localStorage.removeItem('user_session');
+        localStorage.removeItem('current_user');
         sessionStorage.clear();
       }
-      await supabase.auth.signOut();
     };
     clearSession();
   }, []);
@@ -64,99 +63,76 @@ export default function AuthPage() {
     }
   ];
 
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session && step === 'auth') {
-        setStep('challenge');
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [step]);
-
   const handleAuth = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters long');
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      setLoading(false);
+      return;
+    }
+
+    if (username.length < 3) {
+      setError('Username must be at least 3 characters long');
       setLoading(false);
       return;
     }
 
     try {
       if (isSignUp) {
-        // Sign up user
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-        });
-
-        if (error) {
-          if (error.message.includes('User already registered')) {
-            setError('An account with this email already exists. Please sign in instead.');
-            setIsSignUp(false);
-          } else {
-            throw error;
-          }
-        } else if (data.user) {
-          // Account created successfully - show success message and switch to sign-in
-          setError('✅ Account created successfully! Now signing you in...');
-          setIsSignUp(false);
-          
-          // Wait a moment then try to sign in
-          setTimeout(async () => {
-            setLoading(true);
-            try {
-              const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-              });
-              
-              if (signInError) {
-                if (signInError.message.includes('Email not confirmed')) {
-                  // Email confirmation is still required - provide clear instructions
-                  setError('Account created! Please check your email and click the confirmation link, then try signing in again.');
-                } else {
-                  setError('Account created! Please try signing in with your email and password.');
-                }
-              } else if (signInData.user) {
-                setStep('challenge');
-              }
-            } catch (err) {
-              setError('Account created! Please try signing in with your email and password.');
-            } finally {
-              setLoading(false);
-            }
-          }, 1500);
+        // Get existing users from localStorage
+        const existingUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
+        
+        // Check if username already exists
+        if (existingUsers.find(user => user.username === username)) {
+          setError('Username already exists. Please choose a different username.');
+          setLoading(false);
+          return;
         }
+
+        // Create new user
+        const newUser = {
+          id: Date.now().toString(),
+          username,
+          password,
+          createdAt: new Date().toISOString(),
+          bankroll: 0,
+          challenge: null
+        };
+
+        // Save user
+        existingUsers.push(newUser);
+        localStorage.setItem('app_users', JSON.stringify(existingUsers));
+        localStorage.setItem('current_user', JSON.stringify(newUser));
+
+        setError('✅ Account created successfully! Please select a challenge.');
+        setStep('challenge');
       } else {
         // Sign in existing user
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+        const existingUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
+        const user = existingUsers.find(u => u.username === username && u.password === password);
 
-        if (error) {
-          console.log('Sign-in error:', error.message);
-          if (error.message.includes('Invalid login credentials')) {
-            setError('Invalid email or password. Please check your credentials and try again.');
-          } else if (error.message.includes('Email not confirmed')) {
-            setError('⚠️ Your email needs to be confirmed. Please check your email inbox (including spam) for a confirmation link, then try signing in again. If you don\'t see it, try creating a new account.');
-          } else if (error.message.includes('Email link is invalid or has expired')) {
-            setError('The confirmation link has expired. Please create a new account.');
-            setIsSignUp(true);
-          } else {
-            setError(`Sign-in failed: ${error.message}`);
-          }
-        } else if (data.user) {
+        if (!user) {
+          setError('Invalid username or password. Please check your credentials.');
+          setLoading(false);
+          return;
+        }
+
+        // Set current user
+        localStorage.setItem('current_user', JSON.stringify(user));
+        
+        // If user already has a challenge, go to dashboard
+        if (user.challenge) {
+          router.push('/dashboard');
+        } else {
           setStep('challenge');
         }
       }
     } catch (error) {
       console.log('Auth error:', error.message);
-      setError(error.message);
+      setError('Authentication failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -171,30 +147,33 @@ export default function AuthPage() {
     setLoading(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      // Get current user
+      const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
       
-      if (session?.user) {
-        // Store the user's challenge selection
-        const { error } = await supabase
-          .from('user_challenges')
-          .insert({
-            user_id: session.user.id,
-            challenge_id: selectedChallenge.id,
-            starting_balance: selectedChallenge.startingBalance,
-            target: selectedChallenge.target,
-            max_bet: selectedChallenge.maxBet,
-            status: 'active'
-          });
+      // Update user with challenge info
+      const updatedUser = {
+        ...currentUser,
+        challenge: selectedChallenge,
+        bankroll: selectedChallenge.startingBalance,
+        challengeStartDate: new Date().toISOString(),
+        status: 'active'
+      };
 
-        if (error) {
-          console.log('Challenge storage error:', error.message);
-        }
+      // Save updated user
+      localStorage.setItem('current_user', JSON.stringify(updatedUser));
+
+      // Update in users array
+      const existingUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
+      const userIndex = existingUsers.findIndex(u => u.id === currentUser.id);
+      if (userIndex !== -1) {
+        existingUsers[userIndex] = updatedUser;
+        localStorage.setItem('app_users', JSON.stringify(existingUsers));
       }
 
       router.push('/dashboard');
     } catch (error) {
       console.log('Challenge start error:', error.message);
-      router.push('/dashboard');
+      setError('Failed to start challenge. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -335,14 +314,15 @@ export default function AuthPage() {
           <form onSubmit={handleAuth} className="space-y-6">
             <div>
               <label className="block text-sm font-semibold text-gray-300 mb-3">
-                Email Address
+                Username
               </label>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="w-full px-4 py-4 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium"
-                placeholder="Enter your email"
+                placeholder="Enter your username"
+                minLength="3"
                 required
               />
             </div>
@@ -358,7 +338,7 @@ export default function AuthPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-4 py-4 pr-12 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium"
                   placeholder="Enter your password"
-                  minLength="8"
+                  minLength="6"
                   required
                 />
                 <button
@@ -378,7 +358,7 @@ export default function AuthPage() {
                   )}
                 </button>
               </div>
-              <p className="text-gray-400 text-xs mt-2">Minimum 8 characters required</p>
+              <p className="text-gray-400 text-xs mt-2">Minimum 6 characters required</p>
             </div>
 
             <button
