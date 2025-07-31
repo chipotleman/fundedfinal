@@ -131,19 +131,49 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
               </div>
             ))}
 
+            {/* Bet Type Toggle */}
+            <div className="bg-slate-700/50 rounded-xl p-4 mb-4">
+              <h3 className="text-white font-semibold mb-3">Bet Type</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <button className="bg-green-500 text-white font-semibold py-2 px-3 rounded-lg text-sm">
+                  Singles
+                </button>
+                <button className="bg-slate-800 hover:bg-slate-700 text-white font-semibold py-2 px-3 rounded-lg transition-colors text-sm">
+                  Parlay
+                </button>
+              </div>
+            </div>
+
             {/* Quick Bet Amounts */}
             <div className="bg-slate-700/50 rounded-xl p-4">
               <h3 className="text-white font-semibold mb-3">Quick Amounts</h3>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-2 mb-3">
                 {[25, 50, 100].map((amount) => (
                   <button
                     key={amount}
                     onClick={() => {
-                      if (bets.length === 1) {
-                        updateStake(bets[0].id, amount);
+                      if (bets.length >= 1) {
+                        // Apply to all bets if multiple, or just the single bet
+                        bets.forEach(bet => updateStake(bet.id, amount));
                       }
                     }}
-                    disabled={bets.length !== 1}
+                    disabled={bets.length === 0}
+                    className="bg-slate-800 hover:bg-green-500 disabled:bg-slate-800/50 text-white font-semibold py-2 px-3 rounded-lg transition-colors text-sm disabled:cursor-not-allowed"
+                  >
+                    ${amount}
+                  </button>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {[250, 500].map((amount) => (
+                  <button
+                    key={amount}
+                    onClick={() => {
+                      if (bets.length >= 1) {
+                        bets.forEach(bet => updateStake(bet.id, amount));
+                      }
+                    }}
+                    disabled={bets.length === 0}
                     className="bg-slate-800 hover:bg-green-500 disabled:bg-slate-800/50 text-white font-semibold py-2 px-3 rounded-lg transition-colors text-sm disabled:cursor-not-allowed"
                   >
                     ${amount}

@@ -1,223 +1,104 @@
-
-import Link from 'next/link';
 import { useState } from 'react';
+import Link from 'next/link';
+import TopNavbar from '../components/TopNavbar';
 
-export default function LandingPage() {
-  const [selectedTier, setSelectedTier] = useState(null);
-
-  const challengeTiers = [
-    {
-      id: 1,
-      name: "Starter Challenge",
-      startingBalance: 1000,
-      target: 2500,
-      maxBet: 100,
-      payout: 500,
-      duration: "30 days",
-      description: "Perfect for beginners to prove their betting skills"
-    },
-    {
-      id: 2,
-      name: "Pro Challenge",
-      startingBalance: 5000,
-      target: 12500,
-      maxBet: 500,
-      payout: 2500,
-      duration: "45 days",
-      description: "For experienced bettors ready for bigger stakes",
-      popular: true
-    },
-    {
-      id: 3,
-      name: "Elite Challenge",
-      startingBalance: 10000,
-      target: 25000,
-      maxBet: 1000,
-      payout: 5000,
-      duration: "60 days",
-      description: "The ultimate test for professional bettors"
-    }
-  ];
+export default function Home() {
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
-      {/* Navigation */}
-      <nav className="absolute top-0 w-full z-50 px-6 py-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="text-2xl font-bold text-white">
-            Rollr<span className="text-emerald-400">Funded</span>
-          </div>
-          <div className="flex space-x-6">
-            <Link href="/login" className="text-gray-300 hover:text-white transition">
-              Login
-            </Link>
-            <Link href="/auth" className="bg-emerald-500 text-white px-6 py-2 rounded-lg hover:bg-emerald-600 transition">
-              Get Started
-            </Link>
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-slate-900">
+      <TopNavbar 
+        bankroll={null}
+        pnl={null}
+        betSlipCount={0}
+        onBetSlipClick={() => {}}
+      />
 
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6">
-            Bet Smart,
-            <span className="text-emerald-400 block">Get Funded</span>
-          </h1>
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            Prove your betting skills with zero risk. Complete challenges to earn real payouts 
-            without risking your own money.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/auth" className="bg-emerald-500 text-white px-8 py-4 rounded-lg font-semibold hover:bg-emerald-600 transition text-lg">
-              Start Free Challenge
-            </Link>
-            <Link href="/how-it-works" className="border border-gray-400 text-white px-8 py-4 rounded-lg font-semibold hover:bg-gray-800 transition text-lg">
-              How It Works
-            </Link>
-          </div>
-        </div>
-      </section>
+      <div className="pt-16">
+        {/* Hero Section */}
+        <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900"></div>
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22m36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
 
-      {/* Stats Section */}
-      <section className="py-16 px-6 bg-slate-800/50">
-        <div className="max-w-6xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-3xl font-bold text-emerald-400">$2.5M+</div>
-              <div className="text-gray-300">Payouts Distributed</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-emerald-400">15,000+</div>
-              <div className="text-gray-300">Active Traders</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-emerald-400">72%</div>
-              <div className="text-gray-300">Success Rate</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-emerald-400">$500</div>
-              <div className="text-gray-300">Avg. First Payout</div>
-            </div>
-          </div>
-        </div>
-      </section>
+          <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
+            <h1 className="text-5xl md:text-7xl font-black text-white mb-6 leading-tight">
+              Get <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Funded</span> to Bet
+            </h1>
 
-      {/* Challenge Tiers */}
-      <section className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-white mb-4">Choose Your Challenge</h2>
-            <p className="text-xl text-gray-300">Select the tier that matches your skill level</p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {challengeTiers.map((tier) => (
-              <div
-                key={tier.id}
-                className={`relative bg-slate-800 rounded-2xl p-8 border-2 transition-all cursor-pointer ${
-                  tier.popular
-                    ? 'border-emerald-400 scale-105'
-                    : selectedTier === tier.id
-                    ? 'border-emerald-400'
-                    : 'border-gray-600 hover:border-gray-500'
-                }`}
-                onClick={() => setSelectedTier(tier.id)}
-              >
-                {tier.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-emerald-400 text-black px-4 py-1 rounded-full text-sm font-semibold">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-                
-                <div className="text-center">
-                  <h3 className="text-2xl font-bold text-white mb-2">{tier.name}</h3>
-                  <p className="text-gray-400 mb-6">{tier.description}</p>
-                  
-                  <div className="space-y-4 mb-8">
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Starting Balance:</span>
-                      <span className="text-emerald-400 font-semibold">${tier.startingBalance.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Profit Target:</span>
-                      <span className="text-emerald-400 font-semibold">${tier.target.toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Max Bet Size:</span>
-                      <span className="text-white">${tier.maxBet}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-300">Duration:</span>
-                      <span className="text-white">{tier.duration}</span>
-                    </div>
-                  </div>
-                  
-                  <div className="text-center mb-6">
-                    <div className="text-3xl font-bold text-emerald-400">${tier.payout.toLocaleString()}</div>
-                    <div className="text-gray-300">Payout on Success</div>
-                  </div>
-                  
-                  <Link href="/auth" className="w-full bg-emerald-500 text-white py-3 rounded-lg font-semibold hover:bg-emerald-600 transition block text-center">
-                    Start Challenge
-                  </Link>
+            <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
+              Prove your betting skills in our challenges and get funded up to <span className="text-green-400 font-bold">$25,000</span> to bet with. Keep 80% of your profits.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+              <Link href="/auth" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-2xl">
+                Start Challenge - $49
+              </Link>
+              <Link href="/how-it-works" className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-700">
+                How It Works
+              </Link>
+            </div>
+
+            {/* Features Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+              <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-8 border border-slate-700">
+                <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-blue-500 rounded-xl flex items-center justify-center mb-6 mx-auto">
+                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                  </svg>
                 </div>
+                <h3 className="text-xl font-bold text-white mb-4">No Risk Betting</h3>
+                <p className="text-gray-400">Bet with our money, not yours. Prove your skills in simulated challenges first.</p>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* How It Works */}
-      <section className="py-20 px-6 bg-slate-800/30">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-white text-center mb-16">How It Works</h2>
-          
-          <div className="grid md:grid-cols-3 gap-12">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-white">1</span>
+              <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-8 border border-slate-700">
+                <div className="w-16 h-16 bg-gradient-to-r from-purple-400 to-pink-500 rounded-xl flex items-center justify-center mb-6 mx-auto">
+                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-4">Real Payouts</h3>
+                <p className="text-gray-400">Keep 80% of your profits. Monthly payouts via PayPal, Zelle, or Bitcoin.</p>
               </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Choose Challenge</h3>
-              <p className="text-gray-300">Select your preferred challenge tier based on your experience and risk tolerance.</p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-white">2</span>
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Trade & Profit</h3>
-              <p className="text-gray-300">Use our virtual bankroll to place bets on real sports events with live odds.</p>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-2xl font-bold text-white">3</span>
-              </div>
-              <h3 className="text-xl font-semibold text-white mb-4">Get Paid</h3>
-              <p className="text-gray-300">Reach your profit target and receive real money payouts to your preferred method.</p>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* Footer */}
-      <footer className="py-12 px-6 bg-slate-900">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="text-2xl font-bold text-white mb-4">
-            Rollr<span className="text-emerald-400">Funded</span>
-          </div>
-          <p className="text-gray-400 mb-6">Risk-free sports betting challenges with real payouts</p>
-          <div className="flex justify-center space-x-8">
-            <Link href="/rules" className="text-gray-400 hover:text-white transition">Rules</Link>
-            <Link href="/how-it-works" className="text-gray-400 hover:text-white transition">How It Works</Link>
-            <Link href="/pricing" className="text-gray-400 hover:text-white transition">Pricing</Link>
+              <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-8 border border-slate-700">
+                <div className="w-16 h-16 bg-gradient-to-r from-orange-400 to-red-500 rounded-xl flex items-center justify-center mb-6 mx-auto">
+                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-white mb-4">All Sports</h3>
+                <p className="text-gray-400">NFL, NBA, MLB, NHL, UFC, Soccer and more. Live lines updated every second.</p>
+              </div>
+            </div>
           </div>
         </div>
-      </footer>
+
+        {/* Stats Section */}
+        <div className="bg-slate-800 py-16">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
+              <div>
+                <div className="text-4xl font-black text-green-400 mb-2">$2.1M+</div>
+                <div className="text-gray-400">Total Payouts</div>
+              </div>
+              <div>
+                <div className="text-4xl font-black text-blue-400 mb-2">15,000+</div>
+                <div className="text-gray-400">Active Traders</div>
+              </div>
+              <div>
+                <div className="text-4xl font-black text-purple-400 mb-2">78%</div>
+                <div className="text-gray-400">Success Rate</div>
+              </div>
+              <div>
+                <div className="text-4xl font-black text-orange-400 mb-2">24/7</div>
+                <div className="text-gray-400">Live Support</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
