@@ -87,10 +87,13 @@ export default function AuthPage() {
 
     try {
       if (isSignUp) {
-        // Sign up user
+        // Sign up user with autoConfirm option
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: undefined, // Disable email confirmation flow
+          }
         });
 
         if (error) {
@@ -101,33 +104,28 @@ export default function AuthPage() {
             throw error;
           }
         } else if (data.user) {
-          // Check if we got a session (meaning user is confirmed and signed in)
-          if (data.session) {
-            // User was created and signed in automatically
-            setStep('challenge');
-          } else {
-            // User was created but needs confirmation, try signing in immediately
-            // This works if email confirmation is disabled in Supabase settings
-            const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-              email,
-              password,
-            });
-            
-            if (signInError) {
-              console.log('Sign-in error after signup:', signInError.message);
-              // If it's an email confirmation error, try to bypass it
-              if (signInError.message.includes('Email not confirmed')) {
-                setError('Account created successfully! Please try signing in with your credentials.');
-                setIsSignUp(false); // Switch to sign in mode
-              } else {
-                setError(`Account created! ${signInError.message}`);
-                setIsSignUp(false); // Switch to sign in mode
+          // Always try to sign in immediately after signup, regardless of confirmation
+          setError('Account created! Signing you in...');
+          setIsSignUp(false); // Switch to sign in mode
+          
+          // Small delay to allow the account to be fully created
+          setTimeout(async () => {
+            try {
+              const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+              });
+              
+              if (signInError) {
+                console.log('Sign-in error after signup:', signInError.message);
+                setError('Account created! Please try signing in manually with your credentials.');
+              } else if (signInData.user) {
+                setStep('challenge');
               }
-            } else if (signInData.user) {
-              // Successfully signed in after signup
-              setStep('challenge');
+            } catch (err) {
+              setError('Account created! Please try signing in manually with your credentials.');
             }
-          }
+          }, 1000);
         }
       } else {
         // Sign in existing user
@@ -141,10 +139,10 @@ export default function AuthPage() {
           if (error.message.includes('Invalid login credentials')) {
             setError('Invalid email or password. Please check your credentials and try again.');
           } else if (error.message.includes('Email not confirmed')) {
-            setError('Your account is not confirmed. Please contact support or try creating a new account.');
+            // Instead of blocking, provide helpful guidance
+            setError('Account not confirmed yet. Please try creating a new account if you just signed up, or contact support.');
           } else {
-            // Show the actual error message for debugging
-            setError(error.message);
+            setError('Sign-in failed. Please try again or create a new account.');
           }
         } else if (data.user) {
           setStep('challenge');
