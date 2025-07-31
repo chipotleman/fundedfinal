@@ -117,10 +117,10 @@ export default function Dashboard() {
               <h3 className="text-lg font-bold text-white mb-4 flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="w-2 h-2 bg-green-400 rounded-full mr-2 animate-pulse"></div>
-                  {currentUser?.challenge?.name || 'Challenge'} Progress
+                  Challenge Active
                 </div>
                 <div className="text-sm text-gray-400">
-                  Phase {challengePhase} of {totalChallenges}
+                  Phase {challengePhase}/{totalChallenges}
                 </div>
               </h3>
 
