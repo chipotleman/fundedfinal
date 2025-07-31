@@ -86,17 +86,25 @@ export default function AuthPage() {
 
     try {
       if (isSignUp) {
+        // Sign up and automatically confirm
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: undefined // Disable email confirmation
+          }
         });
 
         if (error) throw error;
 
-        if (data.user && !data.user.email_confirmed_at) {
-          setError('Please check your email and click the confirmation link before signing in.');
-          setIsSignUp(false);
-        } else {
+        // Automatically sign in after signup
+        if (data.user) {
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          });
+          
+          if (signInError) throw signInError;
           setStep('challenge');
         }
       } else {
