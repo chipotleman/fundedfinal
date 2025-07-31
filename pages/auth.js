@@ -11,6 +11,7 @@ export default function AuthPage() {
   const [selectedChallenge, setSelectedChallenge] = useState(null);
   const [step, setStep] = useState('auth');
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   // Clear any existing sessions when component mounts
@@ -86,28 +87,42 @@ export default function AuthPage() {
 
     try {
       if (isSignUp) {
-        // Sign up and automatically confirm
+        // Sign up user
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: {
-            emailRedirectTo: undefined // Disable email confirmation
-          }
         });
 
-        if (error) throw error;
-
-        // Automatically sign in after signup
-        if (data.user) {
-          const { error: signInError } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-          });
-          
-          if (signInError) throw signInError;
-          setStep('challenge');
+        if (error) {
+          if (error.message.includes('User already registered')) {
+            setError('An account with this email already exists. Please sign in instead.');
+          } else {
+            throw error;
+          }
+        } else if (data.user) {
+          // Check if email confirmation is required
+          if (data.user.email_confirmed_at) {
+            // User is confirmed, proceed to challenge selection
+            setStep('challenge');
+          } else {
+            // User needs email confirmation, but for development we'll auto-confirm
+            // In production, you'd want to handle email confirmation properly
+            const { error: signInError } = await supabase.auth.signInWithPassword({
+              email,
+              password,
+            });
+            
+            if (signInError) {
+              // If auto sign-in fails, it might be due to email confirmation
+              setError('Account created successfully! Please check your email for confirmation, then sign in.');
+              setIsSignUp(false); // Switch to sign in mode
+            } else {
+              setStep('challenge');
+            }
+          }
         }
       } else {
+        // Sign in existing user
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -115,11 +130,13 @@ export default function AuthPage() {
 
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
-            setError('Invalid email or password. Please check your credentials or sign up for a new account.');
+            setError('Invalid email or password. Please check your credentials or create a new account.');
+          } else if (error.message.includes('Email not confirmed')) {
+            setError('Please check your email and confirm your account before signing in.');
           } else {
             throw error;
           }
-        } else {
+        } else if (data.user) {
           setStep('challenge');
         }
       }
@@ -320,15 +337,33 @@ export default function AuthPage() {
               <label className="block text-sm font-semibold text-gray-300 mb-3">
                 Password
               </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-4 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium"
-                placeholder="Enter your password"
-                minLength="8"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-4 py-4 pr-12 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium"
+                  placeholder="Enter your password"
+                  minLength="8"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors"
+                >
+                  {showPassword ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
               <p className="text-gray-400 text-xs mt-2">Minimum 8 characters required</p>
             </div>
 
