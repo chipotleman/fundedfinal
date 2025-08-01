@@ -49,7 +49,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                 <img 
                   src="/fundmybet-logo.svg" 
                   alt="FundMyBet" 
-                  className="h-10 sm:h-12 w-auto brightness-100 sm:relative absolute left-1/2 transform -translate-x-1/2 sm:left-auto sm:transform-none"
+                  className="h-12 sm:h-14 w-auto brightness-100 sm:relative absolute left-1/2 transform -translate-x-1/2 translate-x-4 sm:left-auto sm:transform-none sm:translate-x-0"
                 />
               </Link>
             </div>
