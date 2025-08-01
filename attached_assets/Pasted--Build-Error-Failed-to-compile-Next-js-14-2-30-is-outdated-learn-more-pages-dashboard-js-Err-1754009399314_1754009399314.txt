@@ -1,0 +1,111 @@
+
+Build Error
+
+Failed to compile
+
+Next.js (14.2.30) is outdated (learn more)
+./pages/dashboard.js
+Error: 
+  × the name `addToBetSlip` is defined multiple times
+     ╭─[/home/runner/workspace/pages/dashboard.js:10:1]
+  10 │   const [pnl, setPnl] = useState(0);
+  11 │   const [bets, setBets] = useState([]);
+  12 │   const [games, setGames] = useState([]);
+  13 │   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
+     ·                                                             ──────┬─────
+     ·                                                                   ╰── previous definition of `addToBetSlip` here
+  14 │   const [selectedSport, setSelectedSport] = useState('NFL');
+  15 │   const [loading, setLoading] = useState(true);
+  16 │   const [challengePhase, setChallengePhase] = useState(1);
+  17 │   const [totalChallenges] = useState(3);
+  18 │   const [currentUser, setCurrentUser] = useState(null);
+  19 │ 
+  20 │   const sports = ['NFL', 'NBA', 'MLB', 'NHL', 'UFC', 'SOCCER'];
+  21 │ 
+  22 │   useEffect(() => {
+  23 │     // Load user data
+  24 │     const userData = localStorage.getItem('current_user');
+  25 │     if (userData) {
+  26 │       const parsedUser = JSON.parse(userData);
+  27 │       setCurrentUser(parsedUser);
+  28 │       setUser(parsedUser);
+  29 │       setBankroll(parsedUser.bankroll || 10000);
+  30 │       setPnl(parsedUser.pnl || 0);
+  31 │       setChallengePhase(parsedUser.challengePhase || 1);
+  32 │       setBets(parsedUser.betsHistory || []);
+  33 │     }
+  34 │   }, []);
+  35 │ 
+  36 │   const challengeGoal = currentUser?.challenge?.target || 25000;
+  37 │   const startingBankroll = currentUser?.challenge?.startingBalance || 10000;
+  38 │   const progressPercent = ((bankroll - startingBankroll) / (challengeGoal - startingBankroll)) * 100;
+  39 │ 
+  40 │   // Mock games data
+  41 │   const mockGames = {
+  42 │     NFL: [
+  43 │       {
+  44 │         id: 1,
+  45 │         homeTeam: 'Chiefs',
+  46 │         awayTeam: 'Bills',
+  47 │         homeSpread: -3.5,
+  48 │         awaySpread: 3.5,
+  49 │         homeML: -165,
+  50 │         awayML: +145,
+  51 │         total: 47.5,
+  52 │         overOdds: -110,
+  53 │         underOdds: -110,
+  54 │         gameTime: '8:20 PM ET',
+  55 │         status: 'Today'
+  56 │       },
+  57 │       {
+  58 │         id: 2,
+  59 │         homeTeam: 'Cowboys',
+  60 │         awayTeam: 'Eagles',
+  61 │         homeSpread: -7,
+  62 │         awaySpread: 7,
+  63 │         homeML: -310,
+  64 │         awayML: +260,
+  65 │         total: 51.5,
+  66 │         overOdds: -105,
+  67 │         underOdds: -115,
+  68 │         gameTime: '4:25 PM ET',
+  69 │         status: 'Today'
+  70 │       }
+  71 │     ],
+  72 │     NBA: [
+  73 │       {
+  74 │         id: 3,
+  75 │         homeTeam: 'Lakers',
+  76 │         awayTeam: 'Warriors',
+  77 │         homeSpread: -2.5,
+  78 │         awaySpread: 2.5,
+  79 │         homeML: -125,
+  80 │         awayML: +105,
+  81 │         total: 225.5,
+  82 │         overOdds: -110,
+  83 │         underOdds: -110,
+  84 │         gameTime: '10:00 PM ET',
+  85 │         status: 'Tonight'
+  86 │       }
+  87 │     ]
+  88 │   };
+  89 │ 
+  90 │   useEffect(() => {
+  91 │     setGames(mockGames[selectedSport] || []);
+  92 │     setLoading(false);
+  93 │   }, [selectedSport]);
+  94 │ 
+  95 │ 
+  96 │ 
+  97 │   const formatOdds = (odds) => {
+  98 │     return odds > 0 ? `+${odds}` : odds.toString();
+  99 │   };
+ 100 │ 
+ 101 │   const addToBetSlip = (game, betType, odds, selection) => {
+     ·         ──────┬─────
+     ·               ╰── `addToBetSlip` redefined here
+ 102 │     const newBet = {
+ 103 │       id: `${game.id}-${betType}-${selection}`,
+ 104 │       game_id: game.id,
+     ╰────
+This error occurred during the build process and can only be dismissed by fixing the error.
