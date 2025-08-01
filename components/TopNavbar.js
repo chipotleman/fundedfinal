@@ -44,13 +44,15 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
         <div className="px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center justify-center sm:justify-start space-x-3 flex-1 sm:flex-none">
-              <img 
-                src="/fundmybet-logo.svg" 
-                alt="FundMyBet" 
-                className="h-10 sm:h-12 w-auto brightness-100"
-              />
-            </Link>
+            <div className="flex-1 flex justify-center sm:justify-start sm:flex-none">
+              <Link href="/" className="flex items-center">
+                <img 
+                  src="/fundmybet-logo.svg" 
+                  alt="FundMyBet" 
+                  className="h-10 sm:h-12 w-auto brightness-100"
+                />
+              </Link>
+            </div>
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-8">

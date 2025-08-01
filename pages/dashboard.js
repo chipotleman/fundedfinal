@@ -98,6 +98,35 @@ export default function Dashboard() {
     return odds > 0 ? `+${odds}` : odds.toString();
   };
 
+  const addToBetSlip = (game, betType, odds, selection) => {
+    const newBet = {
+      id: `${game.id}-${betType}-${selection}`,
+      game_id: game.id,
+      matchup: `${game.awayTeam} @ ${game.homeTeam}`,
+      selection: selection,
+      betType: betType,
+      odds: odds,
+      stake: 0
+    };
+
+    setBetSlip(prev => {
+      const existing = prev.find(bet => bet.id === newBet.id);
+      if (existing) {
+        // If clicking the same bet, remove it
+        return prev.filter(bet => bet.id !== newBet.id);
+      }
+
+      // Check if there's already a bet for the same game and bet type
+      const sameGameBet = prev.find(bet => bet.game_id === game.id && bet.betType === betType);
+      if (sameGameBet) {
+        // Remove the existing bet for this game and bet type, then add the new one
+        return prev.filter(bet => !(bet.game_id === game.id && bet.betType === betType)).concat(newBet);
+      }
+
+      return [...prev, newBet];
+    });
+  };
+
   return (
     <div className="min-h-screen bg-slate-900">
       <TopNavbar 
