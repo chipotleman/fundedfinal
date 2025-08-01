@@ -268,15 +268,15 @@ export default function Dashboard() {
                 {/* Betting Options - Compact DraftKings Style */}
                 <div className="overflow-x-auto">
                   {/* Header Row */}
-                  <div className="grid grid-cols-7 gap-2 px-4 py-2 text-xs text-gray-400 font-medium uppercase tracking-wider border-b border-slate-600">
-                    <div className="col-span-1"></div>
-                    <div className="col-span-2 text-center">Spread</div>
-                    <div className="col-span-2 text-center">Total</div>
-                    <div className="col-span-2 text-center">Moneyline</div>
+                  <div className="grid grid-cols-4 gap-4 px-4 py-2 text-xs text-gray-400 font-medium uppercase tracking-wider border-b border-slate-600">
+                    <div className="text-left">Team</div>
+                    <div className="text-center">Spread</div>
+                    <div className="text-center">Total</div>
+                    <div className="text-center">Moneyline</div>
                   </div>
 
                   {/* Away Team Row */}
-                  <div className="grid grid-cols-7 gap-2 px-4 py-3 border-b border-slate-600/50">
+                  <div className="grid grid-cols-4 gap-4 px-4 py-3 border-b border-slate-600/50">
                     <div className="flex items-center">
                       <div className="text-white font-bold text-sm">{game.awayTeam}</div>
                     </div>
@@ -312,11 +312,10 @@ export default function Dashboard() {
                     >
                       <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.moneyline.away)}</div>
                     </button>
-                    <div></div>
                   </div>
 
                   {/* Home Team Row */}
-                  <div className="grid grid-cols-7 gap-2 px-4 py-3">
+                  <div className="grid grid-cols-4 gap-4 px-4 py-3">
                     <div className="flex items-center">
                       <div className="text-white font-bold text-sm">{game.homeTeam}</div>
                     </div>
@@ -352,7 +351,6 @@ export default function Dashboard() {
                     >
                       <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.moneyline.home)}</div>
                     </button>
-                    <div></div>
                   </div>
                 </div>
               </div>
