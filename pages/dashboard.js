@@ -1,3 +1,7 @@
+tags.
+
+```
+<replit_final_file>
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import TopNavbar from '../components/TopNavbar';
@@ -48,6 +52,8 @@ export default function Dashboard() {
         awaySpread: 3.5,
         homeML: -165,
         awayML: +145,
+        homeMoneyline: -165,
+        awayMoneyline: +145,
         total: 47.5,
         overOdds: -110,
         underOdds: -110,
@@ -62,6 +68,8 @@ export default function Dashboard() {
         awaySpread: 7,
         homeML: -310,
         awayML: +260,
+        homeMoneyline: -310,
+        awayMoneyline: +260,
         total: 51.5,
         overOdds: -105,
         underOdds: -115,
@@ -78,6 +86,8 @@ export default function Dashboard() {
         awaySpread: 2.5,
         homeML: -125,
         awayML: +105,
+        homeMoneyline: -125,
+        awayMoneyline: +105,
         total: 225.5,
         overOdds: -110,
         underOdds: -110,
@@ -91,8 +101,6 @@ export default function Dashboard() {
     setGames(mockGames[selectedSport] || []);
     setLoading(false);
   }, [selectedSport]);
-
-
 
   const formatOdds = (odds) => {
     return odds > 0 ? `+${odds}` : odds.toString();
@@ -264,7 +272,7 @@ export default function Dashboard() {
                       <div className="p-3 text-center">Total</div>
                       <div className="p-3 text-center">Moneyline</div>
                     </div>
-                    
+
                     {/* Away Team Row */}
                     <div className="grid grid-cols-4 border-b border-gray-700/50 hover:bg-gray-700/30 transition-colors">
                       <div className="p-3 flex items-center">
@@ -315,7 +323,7 @@ export default function Dashboard() {
                         </button>
                       </div>
                     </div>
-                    
+
                     {/* Home Team Row */}
                     <div className="grid grid-cols-4 hover:bg-gray-700/30 transition-colors">
                       <div className="p-3 flex items-center">
@@ -363,65 +371,6 @@ export default function Dashboard() {
                           <div className="text-center">
                             <div className="text-xs">{formatOdds(game.homeMoneyline)}</div>
                           </div>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                    {/* Moneyline */}
-                    <div className="bg-gray-800/50 rounded-xl p-4">
-                      <h4 className="text-gray-300 font-semibold mb-3 text-center">Moneyline</h4>
-                      <div className="space-y-2">
-                        <button
-                          onClick={() => addToBetSlip(game, 'Moneyline', game.awayML, `${game.awayTeam} ML`)}
-                          className={`w-full font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex justify-between items-center group ${
-                            isBetInSlip(game, 'Moneyline', `${game.awayTeam} ML`)
-                              ? 'bg-green-500 text-white'
-                              : 'bg-gray-900 hover:bg-green-500 text-white'
-                          }`}
-                        >
-                          <span>{game.awayTeam}</span>
-                          <span className="text-gray-200 group-hover:text-white">{formatOdds(game.awayML)}</span>
-                        </button>
-                        <button
-                          onClick={() => addToBetSlip(game, 'Moneyline', game.homeML, `${game.homeTeam} ML`)}
-                          className={`w-full font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex justify-between items-center group ${
-                            isBetInSlip(game, 'Moneyline', `${game.homeTeam} ML`)
-                              ? 'bg-green-500 text-white'
-                              : 'bg-gray-900 hover:bg-green-500 text-white'
-                          }`}
-                        >
-                          <span>{game.homeTeam}</span>
-                          <span className="text-gray-200 group-hover:text-white">{formatOdds(game.homeML)}</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Total */}
-                    <div className="bg-gray-800/50 rounded-xl p-4">
-                      <h4 className="text-gray-300 font-semibold mb-3 text-center">Total</h4>
-                      <div className="space-y-2">
-                        <button
-                          onClick={() => addToBetSlip(game, 'Total', game.overOdds, `Over ${game.total}`)}
-                          className={`w-full font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex justify-between items-center group ${
-                            isBetInSlip(game, 'Total', `Over ${game.total}`)
-                              ? 'bg-green-500 text-white'
-                              : 'bg-gray-900 hover:bg-green-500 text-white'
-                          }`}
-                        >
-                          <span>Over {game.total}</span>
-                          <span className="text-gray-200 group-hover:text-white">{formatOdds(game.overOdds)}</span>
-                        </button>
-                        <button
-                          onClick={() => addToBetSlip(game, 'Total', game.underOdds, `Under ${game.total}`)}
-                          className={`w-full font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex justify-between items-center group ${
-                            isBetInSlip(game, 'Total', `Under ${game.total}`)
-                              ? 'bg-green-500 text-white'
-                              : 'bg-gray-900 hover:bg-green-500 text-white'
-                          }`}
-                        >
-                          <span>Under {game.total}</span>
-                          <span className="text-gray-200 group-hover:text-white">{formatOdds(game.underOdds)}</span>
                         </button>
                       </div>
                     </div>
