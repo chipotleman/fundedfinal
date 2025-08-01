@@ -151,18 +151,6 @@ export default function Dashboard() {
 
   const sports = ['NFL', 'NBA', 'MLB', 'NHL', 'UFC', 'Soccer'];
 
-  const currentUser = {
-    username: 'DemoUser',
-    challenge: {
-      phase: 1,
-      maxBet: 100,
-      duration: '30 days'
-    }
-  };
-
-  const challengePhase = 1;
-  const challengeGoal = 25000;
-
   useEffect(() => {
     setGames(mockGames[selectedSport] || []);
     setLoading(false);
@@ -390,16 +378,18 @@ export default function Dashboard() {
       </div>
 
       {/* Bet Slip */}
-      <BetSlip
-        isOpen={showBetSlip}
-        onClose={() => setShowBetSlip(false)}
-        bets={betSlip}
-        setBets={setBetSlip}
-        bankroll={bankroll}
-        setBankroll={setBankroll}
-        pnl={pnl}
-        setPnl={setPnl}
-      />
+      {showBetSlip && (
+        <BetSlip
+          isOpen={showBetSlip}
+          onClose={() => setShowBetSlip(false)}
+          bets={betSlip}
+          setBets={setBetSlip}
+          bankroll={bankroll}
+          setBankroll={setBankroll}
+          pnl={pnl}
+          setPnl={setPnl}
+        />
+      )}
 
       <style jsx>{`
         .scrollbar-hide {
