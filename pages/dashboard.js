@@ -12,8 +12,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [bankroll, setBankroll] = useState(10000);
   const [pnl, setPnl] = useState(0);
-  const { selectedBets, addBet, removeBet, clearBets } = useBetSlip();
-  const [showBetSlip, setShowBetSlip] = useState(false);
+  const { betSlip, addToBetSlip, removeBet, clearBetSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const { colors } = useTheme();
   const router = useRouter();
 
@@ -187,7 +186,7 @@ export default function Dashboard() {
       <TopNavbar 
         bankroll={bankroll} 
         pnl={pnl} 
-        betSlipCount={selectedBets.length}
+        betSlipCount={betSlip.length}
         onBetSlipClick={() => setShowBetSlip(true)}
       />
 
