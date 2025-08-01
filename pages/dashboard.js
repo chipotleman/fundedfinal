@@ -1,7 +1,4 @@
-tags.
 
-```
-<replit_final_file>
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import TopNavbar from '../components/TopNavbar';
