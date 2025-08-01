@@ -44,7 +44,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
         <div className="px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <div className="flex-1 flex justify-center sm:justify-start sm:flex-none">
+            <div className="absolute left-1/2 transform -translate-x-1/2 sm:relative sm:left-auto sm:transform-none sm:flex-none">
               <Link href="/" className="flex items-center">
                 <img 
                   src="/fundmybet-logo.svg" 
