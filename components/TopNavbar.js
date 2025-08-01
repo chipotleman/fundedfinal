@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -45,11 +44,11 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
         <div className="px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             {/* Logo */}
-            <Link href="/" className="flex items-center">
+            <Link href="/" className="flex items-center justify-center sm:justify-start space-x-3 flex-1 sm:flex-none">
               <img 
                 src="/fundmybet-logo.svg" 
                 alt="FundMyBet" 
-                className="h-8 sm:h-12 w-auto brightness-100"
+                className="h-10 sm:h-12 w-auto brightness-100"
               />
             </Link>
 
@@ -300,8 +299,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732L14.146 12.8l-1.179 4.456a1 1 0 01-1.898-.088L9.854 12.8 6.5 10.866a1 1 0 010-1.732L9.854 7.2l1.215-4.456A1 1 0 0112 2z" clipRule="evenodd" />
                     </svg>
-                    <span className="font-medium">Promos</span>
-                  </Link>
+                    <span className="font-medium">Promos</span>                  </Link>
                   <Link 
                     href="/profile" 
                     onClick={closeMobileMenu}

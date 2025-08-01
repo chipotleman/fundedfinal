@@ -46,11 +46,29 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
     return odds > 0 ? `+${odds}` : odds.toString();
   };
 
+  const addBet = (bet) => {
+    setBets(prev => {
+      const existing = prev.find(b => b.id === bet.id);
+      if (existing) {
+        return prev.filter(b => b.id !== bet.id);
+      }
+
+      // Check if there's already a bet for the same game
+      const sameGameBet = prev.find(b => b.game_id === bet.game_id);
+      if (sameGameBet) {
+        // Remove the existing bet for this game and add the new one
+        return prev.filter(b => b.game_id !== bet.game_id).concat(bet);
+      }
+
+      return [...prev, bet];
+    });
+  };
+
   return (
     <>
       {/* Mobile Overlay */}
       <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={onClose}></div>
-      
+
       {/* Bet Slip Panel */}
       <div className="fixed right-0 top-0 bottom-0 w-full max-w-sm lg:max-w-md lg:w-96 bg-slate-800 border-l border-slate-700 flex flex-col z-50 lg:relative lg:border-l">
       {/* Header */}
