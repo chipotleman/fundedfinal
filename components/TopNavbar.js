@@ -1,222 +1,184 @@
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+` tags.
+
+```xml
+<replit_final_file>
+import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import BalanceModal from './BalanceModal';
+import Link from 'next/link';
 import { supabase } from '../lib/supabaseClient';
-import { useTheme } from '../contexts/ThemeContext';
 
 export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick }) {
-  const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [showBalanceModal, setShowBalanceModal] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [user, setUser] = useState(null);
   const router = useRouter();
-  const { isDarkMode, toggleTheme, colors } = useTheme();
+  const userMenuRef = useRef(null);
 
   useEffect(() => {
-    // Get current user data
-    const userData = localStorage.getItem('current_user');
-    if (userData) {
-      setCurrentUser(JSON.parse(userData));
-    }
+    // Get current user
+    const getCurrentUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser(session.user);
+      } else {
+        // Check localStorage for demo user
+        const demoUser = localStorage.getItem('current_user');
+        if (demoUser) {
+          setUser(JSON.parse(demoUser));
+        }
+      }
+    };
+
+    getCurrentUser();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (session?.user) {
+        setUser(session.user);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleSignOut = async () => {
-    // Clear any stored user data
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('demo_user');
-      localStorage.removeItem('user_session');
-      sessionStorage.clear();
-    }
-
-    // Sign out from Supabase if authenticated
-    if (typeof supabase !== 'undefined') {
+    try {
       await supabase.auth.signOut();
+      localStorage.removeItem('current_user');
+      localStorage.removeItem('demo_user');
+      router.push('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
     }
-
-    // Redirect to auth page
-    router.push('/auth');
   };
 
-  const closeMobileMenu = () => setShowMobileMenu(false);
-
-  // Theme Toggle Component
-  const ThemeToggle = ({ isMobile = false }) => (
-    <button
-      onClick={toggleTheme}
-      className={`flex items-center justify-center w-10 h-10 rounded-lg transition-colors ${
-        isDarkMode 
-          ? 'bg-slate-800 hover:bg-slate-700 border border-slate-600' 
-          : 'bg-gray-200 hover:bg-gray-300 border border-gray-300'
-      } ${isMobile ? 'w-full py-3' : ''}`}
-      title={`Switch to ${isDarkMode ? 'light' : 'dark'} mode`}
-    >
-      {isDarkMode ? (
-        <svg className={`w-5 h-5 ${colors.text.secondary}`} fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
-        </svg>
-      ) : (
-        <svg className={`w-5 h-5 ${colors.text.secondary}`} fill="currentColor" viewBox="0 0 20 20">
-          <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-        </svg>
-      )}
-      {isMobile && (
-        <span className={`ml-3 font-medium ${colors.text.primary}`}>
-          {isDarkMode ? 'Light Mode' : 'Dark Mode'}
-        </span>
-      )}
-    </button>
-  );
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
 
   return (
     <>
-      <nav className={`fixed top-0 left-0 right-0 backdrop-blur-lg border-b z-50 ${
-        isDarkMode 
-          ? 'bg-slate-900/95 border-slate-700' 
-          : 'bg-white/95 border-gray-200'
-      }`}>
-        <div className="px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo - left-aligned on both mobile and desktop */}
-            <div className="flex-none">
-              <Link href="/" className="flex items-center">
-                <img 
-                  src="/fundmybet-logo.svg" 
-                  alt="FundMyBet" 
-                  className="h-12 sm:h-14 w-auto brightness-100"
+      <nav className="bg-slate-900 border-b border-slate-800 fixed top-0 left-0 right-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Left side - Logo */}
+            <div className="flex items-center">
+              <Link href="/" className="flex-shrink-0">
+                <img
+                  className="h-8 w-auto"
+                  src="/fundmybet-logo.png"
+                  alt="RollrFunded"
                 />
               </Link>
             </div>
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-8">
-              <Link href="/dashboard" className={`${colors.text.secondary} hover:${colors.text.primary} font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105`}>
-                Dashboard
-              </Link>
-              <Link href="/rules" className={`${colors.text.secondary} hover:${colors.text.primary} font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105`}>
-                Rules
-              </Link>
-              <Link href="/leaderboard" className={`${colors.text.secondary} hover:${colors.text.primary} font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105`}>
-                Leaderboard
-              </Link>
-              <Link href="/promos" className={`${colors.text.secondary} hover:${colors.text.primary} font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105`}>
-                Promos
-              </Link>
-            </div>
-
-            {/* Right Side - Empty spacer on mobile to balance logo centering */}
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              {/* Desktop Balance Display */}
-              <div className="hidden md:flex items-center space-x-3">
-                <button
-                  onClick={() => setShowBalanceModal(true)}
-                  className={`rounded-lg px-3 py-2 border transition-colors ${
-                    isDarkMode 
-                      ? 'bg-slate-800 hover:bg-slate-700 border-slate-700 hover:border-slate-600' 
-                      : 'bg-gray-100 hover:bg-gray-200 border-gray-300 hover:border-gray-400'
-                  }`}
-                >
+            {/* Center - Stats (Desktop only) */}
+            <div className="hidden lg:flex items-center space-x-6">
+              <div className="flex items-center space-x-4">
+                <div className="bg-slate-800 px-4 py-2 rounded-lg border border-slate-700">
                   <div className="flex items-center space-x-2">
-                    <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
-                    </svg>
-                    <span className={`${colors.text.primary} font-bold text-sm`}>${bankroll?.toLocaleString() || '10,000'}</span>
+                    <span className="text-gray-400 text-sm">Bankroll</span>
+                    <span className="text-green-400 font-bold">{formatCurrency(bankroll)}</span>
                   </div>
-                </button>
-
-                <div className={`rounded-lg px-3 py-2 border ${
-                  isDarkMode 
-                    ? 'bg-slate-800 border-slate-700' 
-                    : 'bg-gray-100 border-gray-300'
-                }`}>
+                </div>
+                <div className="bg-slate-800 px-4 py-2 rounded-lg border border-slate-700">
                   <div className="flex items-center space-x-2">
-                    <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    <span className={`font-bold text-sm ${(pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {(pnl || 0) >= 0 ? '+' : ''}${pnl?.toLocaleString() || '0'}
+                    <span className="text-gray-400 text-sm">P&L</span>
+                    <span className={`font-bold ${pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {formatCurrency(pnl)}
                     </span>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Desktop Theme Toggle */}
-              <ThemeToggle />
-
-              {/* Bet Slip Button - Only show when there are bets */}
-              {betSlipCount > 0 && (
-                <button
-                  onClick={onBetSlipClick}
-                  className="relative bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold px-3 sm:px-4 py-2 rounded-lg transition-all duration-300 flex items-center space-x-1 sm:space-x-2"
-                >
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
-                  </svg>
-                  <span className="text-sm sm:text-base">Bet Slip</span>
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center animate-pulse">
+            {/* Right side - Bet Slip & User Menu */}
+            <div className="flex items-center space-x-4">
+              {/* Bet Slip Button */}
+              <button
+                onClick={onBetSlipClick}
+                className="relative bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-200 flex items-center space-x-2"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                </svg>
+                <span className="hidden sm:inline">Bet Slip</span>
+                {betSlipCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                     {betSlipCount}
                   </span>
-                </button>
-              )}
+                )}
+              </button>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="lg:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-white hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+              >
+                <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
 
               {/* Desktop User Menu */}
-              <div className="hidden lg:block relative">
+              <div className="hidden lg:block relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center border-2 transition-colors ${
-                    isDarkMode 
-                      ? 'bg-gradient-to-r from-slate-700 to-slate-800 border-slate-600 hover:border-slate-500' 
-                      : 'bg-gradient-to-r from-gray-200 to-gray-300 border-gray-400 hover:border-gray-500'
-                  }`}
+                  className="w-10 h-10 bg-gradient-to-r from-slate-700 to-slate-800 rounded-full border-2 border-slate-600 hover:border-slate-500 flex items-center justify-center transition-colors"
                 >
-                  <svg className={`w-5 h-5 ${colors.text.secondary}`} fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-5 h-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                   </svg>
                 </button>
 
+                {/* Desktop Dropdown Menu */}
                 {showUserMenu && (
-                  <div className={`absolute right-0 mt-2 w-64 backdrop-blur-xl rounded-2xl border shadow-2xl z-50 ${
-                    isDarkMode 
-                      ? 'bg-slate-800/95 border-slate-600/50' 
-                      : 'bg-white/95 border-gray-300/50'
-                  }`}>
-                    <div className={`p-6 border-b ${
-                      isDarkMode ? 'border-slate-600/50' : 'border-gray-300/50'
-                    }`}>
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center">
-                          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                        <div>
-                          <p className={`${colors.text.primary} font-bold text-lg`}>{currentUser?.username || 'User'}</p>
-                          <div className="flex items-center space-x-2">
-                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                            <p className="text-green-400 text-sm font-medium">
-                              {currentUser?.challenge ? 'Challenge Active' : 'No Challenge'}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
+                  <div className="absolute right-0 mt-2 w-64 bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden z-50">
+                    <div className="px-4 py-3 border-b border-slate-700">
+                      <p className="text-sm text-gray-400">Signed in as</p>
+                      <p className="text-sm font-medium text-white truncate">
+                        {user?.email || user?.username || 'User'}
+                      </p>
                     </div>
-                    <div className="p-3 space-y-1">
-                      <Link href="/profile" className={`flex items-center space-x-3 px-4 py-3 ${colors.text.secondary} hover:${colors.text.primary} ${colors.hover} rounded-xl transition-all duration-200 group`}>
-                        <svg className={`w-5 h-5 ${colors.text.accent} group-hover:${colors.text.primary}`} fill="currentColor" viewBox="0 0 20 20">
+                    <div className="py-2">
+                      <Link href="/profile" className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-slate-700 transition-colors">
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                         </svg>
                         <span className="font-medium">Profile</span>
                       </Link>
-                      <Link href="/settings" className={`flex items-center space-x-3 px-4 py-3 ${colors.text.secondary} hover:${colors.text.primary} ${colors.hover} rounded-xl transition-all duration-200 group`}>
-                        <svg className={`w-5 h-5 ${colors.text.accent} group-hover:${colors.text.primary}`} fill="currentColor" viewBox="0 0 20 20">
+                      <Link href="/leaderboard" className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-slate-700 transition-colors">
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                        </svg>
+                        <span className="font-medium">Leaderboard</span>
+                      </Link>
+                      <Link href="/settings" className="flex items-center space-x-3 px-4 py-3 text-gray-300 hover:text-white hover:bg-slate-700 transition-colors">
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
                         </svg>
                         <span className="font-medium">Settings</span>
                       </Link>
-                      <div className={`border-t my-2 ${
-                        isDarkMode ? 'border-slate-600/50' : 'border-gray-300/50'
-                      }`}></div>
+                      <div className="border-t my-2 border-slate-600/50"></div>
                       <button 
                         onClick={handleSignOut}
                         className="w-full flex items-center space-x-3 px-4 py-3 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all duration-200 group"
@@ -230,175 +192,58 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                   </div>
                 )}
               </div>
-
-              {/* Mobile Menu Button - Now properly positioned on the right */}
-              <button
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className={`lg:hidden w-10 h-10 rounded-lg flex items-center justify-center border transition-colors ${
-                  isDarkMode 
-                    ? 'bg-slate-800 border-slate-600 hover:border-slate-500' 
-                    : 'bg-gray-100 border-gray-300 hover:border-gray-400'
-                }`}
-              >
-                <svg className={`w-6 h-6 ${colors.text.secondary}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  {showMobileMenu ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  )}
-                </svg>
-              </button>
             </div>
           </div>
         </div>
-      </nav>
 
-      {/* Mobile Menu Overlay */}
-      {showMobileMenu && (
-        <div className="fixed inset-0 z-40 lg:hidden">
-          <div className="fixed inset-0 bg-black/50" onClick={closeMobileMenu}></div>
-          <div className={`fixed top-0 right-0 bottom-0 w-80 max-w-sm shadow-xl ${colors.bg.primary}`}>
-            <div className="flex flex-col h-full">
-              {/* Mobile Menu Header */}
-              <div className={`p-6 border-b ${colors.border}`}>
-                <div className="flex items-center justify-between">
-                  <h2 className={`text-xl font-bold ${colors.text.primary}`}>Menu</h2>
-                  <button
-                    onClick={closeMobileMenu}
-                    className={`w-8 h-8 ${colors.bg.secondary} rounded-lg flex items-center justify-center ${colors.text.accent} hover:${colors.text.primary}`}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              {/* User Info */}
-              <div className={`p-6 border-b ${colors.border}`}>
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center">
-                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div>
-                    <p className={`${colors.text.primary} font-bold`}>{currentUser?.username || 'User'}</p>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                      <p className="text-green-400 text-sm">Challenge Active</p>
-                    </div>
+        {/* Mobile Menu */}
+        {showMobileMenu && (
+          <div className="lg:hidden bg-slate-800 border-t border-slate-700">
+            <div className="px-4 py-3 space-y-3">
+              {/* Mobile Stats */}
+              <div className="flex space-x-4">
+                <div className="flex-1 bg-slate-700 px-3 py-2 rounded-lg">
+                  <div className="text-center">
+                    <span className="text-gray-400 text-xs block">Bankroll</span>
+                    <span className="text-green-400 font-bold text-sm">{formatCurrency(bankroll)}</span>
                   </div>
                 </div>
-
-                {/* Mobile Balance */}
-                <div className="mt-4 grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => {
-                      setShowBalanceModal(true);
-                      closeMobileMenu();
-                    }}
-                    className={`${colors.bg.secondary} rounded-lg p-3 border ${colors.border}`}
-                  >
-                    <div className="flex items-center justify-center space-x-2">
-                      <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
-                      </svg>
-                      <span className={`${colors.text.primary} font-bold text-sm`}>${bankroll?.toLocaleString() || '10,000'}</span>
-                    </div>
-                  </button>
-                  <div className={`${colors.bg.secondary} rounded-lg p-3 border ${colors.border}`}>
-                    <div className="flex items-center justify-center space-x-2">
-                      <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <span className={`font-bold text-sm ${(pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {(pnl || 0) >= 0 ? '+' : ''}${pnl?.toLocaleString() || '0'}
-                      </span>
-                    </div>
+                <div className="flex-1 bg-slate-700 px-3 py-2 rounded-lg">
+                  <div className="text-center">
+                    <span className="text-gray-400 text-xs block">P&L</span>
+                    <span className={`font-bold text-sm ${pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {formatCurrency(pnl)}
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* Navigation Links */}
-              <div className="flex-1 p-6">
-                <div className="space-y-2">
-                  {/* Mobile Theme Toggle */}
-                  <div className="mb-4">
-                    <ThemeToggle isMobile={true} />
-                  </div>
-                  
-                  <Link 
-                    href="/dashboard" 
-                    onClick={closeMobileMenu}
-                    className={`flex items-center space-x-3 px-4 py-4 ${colors.text.secondary} hover:${colors.text.primary} ${colors.hover} rounded-xl transition-all duration-200`}
-                  >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                    </svg>
-                    <span className="font-medium">Dashboard</span>
-                  </Link>
-                  <Link 
-                    href="/rules" 
-                    onClick={closeMobileMenu}
-                    className={`flex items-center space-x-3 px-4 py-4 ${colors.text.secondary} hover:${colors.text.primary} ${colors.hover} rounded-xl transition-all duration-200`}
-                  >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                    </svg>
-                    <span className="font-medium">Rules</span>
-                  </Link>
-                  <Link 
-                    href="/leaderboard" 
-                    onClick={closeMobileMenu}
-                    className={`flex items-center space-x-3 px-4 py-4 ${colors.text.secondary} hover:${colors.text.primary} ${colors.hover} rounded-xl transition-all duration-200`}
-                  >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    <span className="font-medium">Leaderboard</span>
-                  </Link>
-                  <Link 
-                    href="/promos" 
-                    onClick={closeMobileMenu}
-                    className={`flex items-center space-x-3 px-4 py-4 ${colors.text.secondary} hover:${colors.text.primary} ${colors.hover} rounded-xl transition-all duration-200`}
-                  >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732L14.146 12.8l-1.179 4.456a1 1 0 01-1.898-.088L9.854 12.8 6.5 10.866a1 1 0 010-1.732L9.854 7.2l1.215-4.456A1 1 0 0112 2z" clipRule="evenodd" />
-                    </svg>
-                    <span className="font-medium">Promos</span>                  </Link>
-                  <Link 
-                    href="/profile" 
-                    onClick={closeMobileMenu}
-                    className={`flex items-center space-x-3 px-4 py-4 ${colors.text.secondary} hover:${colors.text.primary} ${colors.hover} rounded-xl transition-all duration-200`}
-                  >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                    </svg>
-                    <span className="font-medium">Profile</span>
-                  </Link>
-                  <Link 
-                    href="/settings" 
-                    onClick={closeMobileMenu}
-                    className={`flex items-center space-x-3 px-4 py-4 ${colors.text.secondary} hover:${colors.text.primary} ${colors.hover} rounded-xl transition-all duration-200`}
-                  >
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-                    </svg>
-                    <span className="font-medium">Settings</span>
-                  </Link>
-                </div>
-              </div>
+              {/* Mobile Navigation Links */}
+              <div className="space-y-2">
+                <Link href="/profile" className="flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                  </svg>
+                  <span className="font-medium">Profile</span>
+                </Link>
+                <Link href="/leaderboard" className="flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <span className="font-medium">Leaderboard</span>
+                </Link>
+                <Link href="/settings" className="flex items-center space-x-3 px-3 py-2 text-gray-300 hover:text-white hover:bg-slate-700 rounded-lg transition-colors">
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                  </svg>
+                  <span className="font-medium">Settings</span>
+                </Link>
 
-              {/* Sign Out */}
-              <div className={`p-6 border-t ${colors.border}`}>
+                <div className="border-t border-slate-600/50 my-2"></div>
+
                 <button 
-                  onClick={() => {
-                    handleSignOut();
-                    closeMobileMenu();
-                  }}
-                  className="w-full flex items-center space-x-3 px-4 py-4 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all duration-200"
+                  onClick={handleSignOut}
+                  className="w-full flex items-center space-x-3 px-3 py-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors"
                 >
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
@@ -408,20 +253,8 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
               </div>
             </div>
           </div>
-        </div>
-      )}
-
-      <BalanceModal
-        isOpen={showBalanceModal}
-        onClose={() => setShowBalanceModal(false)}
-        bankroll={bankroll || 10000}
-        pnl={pnl || 0}
-        challengePhase={1}
-        totalChallenges={3}
-        progressPercent={((bankroll || 10000) - 10000) / (25000 - 10000) * 100}
-        challengeGoal={25000}
-        startingBankroll={10000}
-      />
+        )}
+      </nav>
     </>
   );
 }

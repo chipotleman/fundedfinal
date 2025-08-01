@@ -1,9 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
-import { useTheme } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabaseClient';
 
 export default function Dashboard() {
@@ -13,7 +13,6 @@ export default function Dashboard() {
   const [bankroll, setBankroll] = useState(10000);
   const [pnl, setPnl] = useState(0);
   const { betSlip, addToBetSlip, removeBet, clearBetSlip, showBetSlip, setShowBetSlip } = useBetSlip();
-  const { colors } = useTheme();
   const router = useRouter();
 
   useEffect(() => {
@@ -164,6 +163,10 @@ export default function Dashboard() {
         ]
       };
 
+      // Sport selection filter
+      const sportFilter = (games) => {
+        return games.filter(game => selectedSport === 'ALL' || game.sport === selectedSport);
+      };
 
       if (selectedSport === 'ALL') {
         // Combine all sports
@@ -182,7 +185,7 @@ export default function Dashboard() {
   const filteredGames = games.filter(game => selectedSport === 'ALL' || game.sport === selectedSport);
 
   return (
-    <div className={`min-h-screen ${colors.bg.primary}`}>
+    <div className="min-h-screen bg-slate-900">
       <TopNavbar 
         bankroll={bankroll} 
         pnl={pnl} 
@@ -190,25 +193,68 @@ export default function Dashboard() {
         onBetSlipClick={() => setShowBetSlip(true)}
       />
 
+      {/* Main Content */}
       <div className="pt-24 sm:pt-28 lg:pt-32 px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 space-y-4 sm:space-y-0">
-          <h1 className={`text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-black ${colors.text.primary} leading-tight`}>
+          <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-black text-white leading-tight">
             {selectedSport} Betting
           </h1>
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <div className="bg-slate-800 px-4 py-3 rounded-lg border border-slate-700">
+              <div className="flex items-center space-x-2">
+                <span className="text-gray-400 text-sm sm:text-base whitespace-nowrap">Live Lines</span>
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Sport Selection */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
+            <button
+              onClick={() => setSelectedSport('ALL')}
+              className={`px-4 py-2 rounded-full font-medium transition-all duration-200 text-sm sm:text-base ${
+                selectedSport === 'ALL'
+                  ? 'bg-green-500 text-white shadow-lg'
+                  : 'bg-slate-800 text-gray-300 hover:bg-slate-700 border border-slate-700'
+              }`}
+            >
+              All Sports
+            </button>
+            {sports.map((sport) => (
+              <button
+                key={sport}
+                onClick={() => setSelectedSport(sport)}
+                className={`px-4 py-2 rounded-full font-medium transition-all duration-200 text-sm sm:text-base ${
+                  selectedSport === sport
+                    ? 'bg-green-500 text-white shadow-lg'
+                    : 'bg-slate-800 text-gray-300 hover:bg-slate-700 border border-slate-700'
+                }`}
+              >
+                {sport}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Games Grid */}
         {loading ? (
           <div className="flex justify-center items-center py-20">
-            <div className="w-12 h-12 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
+            <div className="text-center">
+              <div className="w-12 h-12 border-4 border-green-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-white text-lg">Loading games...</p>
+            </div>
           </div>
         ) : filteredGames.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             {filteredGames.map((game) => (
-              <div key={game.id} className={`${colors.bg.secondary} rounded-xl sm:rounded-2xl border ${colors.border} overflow-hidden ${colors.hover} transition-all duration-300 hover:shadow-xl`}>
+              <div key={game.id} className="bg-slate-800 rounded-xl sm:rounded-2xl border border-slate-700 overflow-hidden hover:bg-slate-700 transition-all duration-300 hover:shadow-xl">
                 {/* Game Header */}
-                <div className={`p-4 sm:p-6 border-b ${colors.border}`}>
+                <div className="p-4 sm:p-6 border-b border-slate-700">
                   <div className="flex items-center justify-between mb-3">
-                    <span className={`text-xs sm:text-sm font-medium ${colors.text.accent} uppercase tracking-wider`}>
+                    <span className="text-xs sm:text-sm font-medium text-gray-400 uppercase tracking-wider">
                       {game.sport} • {game.time}
                     </span>
                     <div className="flex items-center space-x-1">
@@ -219,11 +265,11 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <img src={game.awayTeam.logo} alt={game.awayTeam.name} className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
-                      <span className={`${colors.text.primary} font-bold text-sm sm:text-base`}>{game.awayTeam.name}</span>
+                      <span className="text-white font-bold text-sm sm:text-base">{game.awayTeam.name}</span>
                     </div>
-                    <span className={`${colors.text.accent} text-xs sm:text-sm`}>@</span>
+                    <span className="text-gray-400 text-xs sm:text-sm">@</span>
                     <div className="flex items-center space-x-3">
-                      <span className={`${colors.text.primary} font-bold text-sm sm:text-base`}>{game.homeTeam.name}</span>
+                      <span className="text-white font-bold text-sm sm:text-base">{game.homeTeam.name}</span>
                       <img src={game.homeTeam.logo} alt={game.homeTeam.name} className="w-8 h-8 sm:w-10 sm:h-10 object-contain" />
                     </div>
                   </div>
@@ -231,39 +277,37 @@ export default function Dashboard() {
 
                 {/* Betting Options */}
                 <div className="p-4 sm:p-6">
+                  {/* Headers */}
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3">
+                    <div className="text-center text-xs sm:text-sm text-gray-400 font-medium">Moneyline</div>
+                    <div className="text-center text-xs sm:text-sm text-gray-400 font-medium">Spread</div>
+                    <div className="text-center text-xs sm:text-sm text-gray-400 font-medium">Total</div>
+                  </div>
+                  
+                  {/* Away Team */}
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-2">
+                    <button className="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-2 sm:px-3 rounded-lg transition-colors duration-200 text-xs sm:text-sm">
+                      {game.lines.moneyline.away > 0 ? `+${game.lines.moneyline.away}` : game.lines.moneyline.away}
+                    </button>
+                    <button className="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-2 sm:px-3 rounded-lg transition-colors duration-200 text-xs sm:text-sm">
+                      {game.lines.spread.away.point} ({game.lines.spread.away.odds > 0 ? `+${game.lines.spread.away.odds}` : game.lines.spread.away.odds})
+                    </button>
+                    <button className="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-2 sm:px-3 rounded-lg transition-colors duration-200 text-xs sm:text-sm">
+                      {game.lines.total.over.point} ({game.lines.total.over.odds > 0 ? `+${game.lines.total.over.odds}` : game.lines.total.over.odds})
+                    </button>
+                  </div>
+                  
+                  {/* Home Team */}
                   <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                    {/* Moneyline */}
-                    <div className="text-center">
-                      <div className={`text-xs sm:text-sm ${colors.text.accent} font-medium mb-2`}>ML</div>
-                      <button className={`${colors.bg.button} ${colors.text.button} font-bold py-2 px-4 rounded-lg transition-colors duration-200 hover:opacity-80`}>
-                        {game.lines.moneyline.home > 0 ? `+${game.lines.moneyline.home}` : game.lines.moneyline.home}
-                      </button>
-                      <button className={`${colors.bg.button} ${colors.text.button} font-bold py-2 px-4 rounded-lg transition-colors duration-200 hover:opacity-80`}>
-                        {game.lines.moneyline.away > 0 ? `+${game.lines.moneyline.away}` : game.lines.moneyline.away}
-                      </button>
-                    </div>
-
-                    {/* Spread */}
-                    <div className="text-center">
-                      <div className={`text-xs sm:text-sm ${colors.text.accent} font-medium mb-2`}>Spread</div>
-                      <button className={`${colors.bg.button} ${colors.text.button} font-bold py-2 px-4 rounded-lg transition-colors duration-200 hover:opacity-80`}>
-                        {game.lines.spread.home.point} ({game.lines.spread.home.odds > 0 ? `+${game.lines.spread.home.odds}` : game.lines.spread.home.odds})
-                      </button>
-                      <button className={`${colors.bg.button} ${colors.text.button} font-bold py-2 px-4 rounded-lg transition-colors duration-200 hover:opacity-80`}>
-                        {game.lines.spread.away.point} ({game.lines.spread.away.odds > 0 ? `+${game.lines.spread.away.odds}` : game.lines.spread.away.odds})
-                      </button>
-                    </div>
-
-                    {/* Total */}
-                    <div className="text-center">
-                      <div className={`text-xs sm:text-sm ${colors.text.accent} font-medium mb-2`}>Total</div>
-                      <button className={`${colors.bg.button} ${colors.text.button} font-bold py-2 px-4 rounded-lg transition-colors duration-200 hover:opacity-80`}>
-                        O {game.lines.total.over.point} ({game.lines.total.over.odds > 0 ? `+${game.lines.total.over.odds}` : game.lines.total.over.odds})
-                      </button>
-                      <button className={`${colors.bg.button} ${colors.text.button} font-bold py-2 px-4 rounded-lg transition-colors duration-200 hover:opacity-80`}>
-                        U {game.lines.total.under.point} ({game.lines.total.under.odds > 0 ? `+${game.lines.total.under.odds}` : game.lines.total.under.odds})
-                      </button>
-                    </div>
+                    <button className="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-2 sm:px-3 rounded-lg transition-colors duration-200 text-xs sm:text-sm">
+                      {game.lines.moneyline.home > 0 ? `+${game.lines.moneyline.home}` : game.lines.moneyline.home}
+                    </button>
+                    <button className="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-2 sm:px-3 rounded-lg transition-colors duration-200 text-xs sm:text-sm">
+                      {game.lines.spread.home.point} ({game.lines.spread.home.odds > 0 ? `+${game.lines.spread.home.odds}` : game.lines.spread.home.odds})
+                    </button>
+                    <button className="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-2 sm:px-3 rounded-lg transition-colors duration-200 text-xs sm:text-sm">
+                      {game.lines.total.under.point} ({game.lines.total.under.odds > 0 ? `+${game.lines.total.under.odds}` : game.lines.total.under.odds})
+                    </button>
                   </div>
                 </div>
               </div>
@@ -271,7 +315,7 @@ export default function Dashboard() {
           </div>
         ) : (
           <div className="flex justify-center items-center py-20">
-            <div className={`text-center ${colors.text.accent}`}>
+            <div className="text-center text-gray-400">
               <p className="text-lg">No games available for {selectedSport}</p>
             </div>
           </div>
