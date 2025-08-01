@@ -225,7 +225,7 @@ export default function Dashboard() {
 
         {/* Sports Selection - DraftKings Style Horizontal Scroll */}
         <div className="mb-6">
-          <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex space-x-3 overflow-x-auto pb-4 pt-2 scrollbar-hide">
             {sports.map((sport) => (
               <button
                 key={sport}
@@ -282,10 +282,10 @@ export default function Dashboard() {
                     </div>
                     <button
                       onClick={() => addToBetSlip(game, 'spread', game.lines.spread.away.odds, `${game.awayTeam} ${game.lines.spread.away.point}`)}
-                      className={`bg-slate-700 hover:bg-green-600 border border-slate-600 hover:border-green-500 rounded-lg py-2 px-3 transition-all duration-200 text-center ${
+                      className={`border rounded-lg py-2 px-3 transition-all duration-200 text-center ${
                         betSlip.find(bet => bet.id === `${game.id}-spread-${game.awayTeam} ${game.lines.spread.away.point}`) 
-                          ? 'bg-green-600 border-green-500' 
-                          : ''
+                          ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
+                          : 'bg-slate-700 hover:bg-green-600 border-slate-600 hover:border-green-500'
                       }`}
                     >
                       <div className="text-gray-300 text-xs">{game.lines.spread.away.point}</div>
@@ -293,10 +293,10 @@ export default function Dashboard() {
                     </button>
                     <button
                       onClick={() => addToBetSlip(game, 'total', game.lines.total.over.odds, `Over ${game.lines.total.over.point}`)}
-                      className={`bg-slate-700 hover:bg-green-600 border border-slate-600 hover:border-green-500 rounded-lg py-2 px-3 transition-all duration-200 text-center ${
+                      className={`border rounded-lg py-2 px-3 transition-all duration-200 text-center ${
                         betSlip.find(bet => bet.id === `${game.id}-total-Over ${game.lines.total.over.point}`) 
-                          ? 'bg-green-600 border-green-500' 
-                          : ''
+                          ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
+                          : 'bg-slate-700 hover:bg-green-600 border-slate-600 hover:border-green-500'
                       }`}
                     >
                       <div className="text-gray-300 text-xs">{game.lines.total.over.point}</div>
@@ -304,10 +304,10 @@ export default function Dashboard() {
                     </button>
                     <button
                       onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeam)}
-                      className={`bg-slate-700 hover:bg-green-600 border border-slate-600 hover:border-green-500 rounded-lg py-2 px-3 transition-all duration-200 text-center ${
+                      className={`border rounded-lg py-2 px-3 transition-all duration-200 text-center ${
                         betSlip.find(bet => bet.id === `${game.id}-moneyline-${game.awayTeam}`) 
-                          ? 'bg-green-600 border-green-500' 
-                          : ''
+                          ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
+                          : 'bg-slate-700 hover:bg-green-600 border-slate-600 hover:border-green-500'
                       }`}
                     >
                       <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.moneyline.away)}</div>
@@ -321,10 +321,10 @@ export default function Dashboard() {
                     </div>
                     <button
                       onClick={() => addToBetSlip(game, 'spread', game.lines.spread.home.odds, `${game.homeTeam} ${game.lines.spread.home.point}`)}
-                      className={`bg-slate-700 hover:bg-green-600 border border-slate-600 hover:border-green-500 rounded-lg py-2 px-3 transition-all duration-200 text-center ${
+                      className={`border rounded-lg py-2 px-3 transition-all duration-200 text-center ${
                         betSlip.find(bet => bet.id === `${game.id}-spread-${game.homeTeam} ${game.lines.spread.home.point}`) 
-                          ? 'bg-green-600 border-green-500' 
-                          : ''
+                          ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
+                          : 'bg-slate-700 hover:bg-green-600 border-slate-600 hover:border-green-500'
                       }`}
                     >
                       <div className="text-gray-300 text-xs">{game.lines.spread.home.point}</div>
@@ -332,10 +332,10 @@ export default function Dashboard() {
                     </button>
                     <button
                       onClick={() => addToBetSlip(game, 'total', game.lines.total.under.odds, `Under ${game.lines.total.under.point}`)}
-                      className={`bg-slate-700 hover:bg-green-600 border border-slate-600 hover:border-green-500 rounded-lg py-2 px-3 transition-all duration-200 text-center ${
+                      className={`border rounded-lg py-2 px-3 transition-all duration-200 text-center ${
                         betSlip.find(bet => bet.id === `${game.id}-total-Under ${game.lines.total.under.point}`) 
-                          ? 'bg-green-600 border-green-500' 
-                          : ''
+                          ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
+                          : 'bg-slate-700 hover:bg-green-600 border-slate-600 hover:border-green-500'
                       }`}
                     >
                       <div className="text-gray-300 text-xs">{game.lines.total.under.point}</div>
@@ -343,10 +343,10 @@ export default function Dashboard() {
                     </button>
                     <button
                       onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeam)}
-                      className={`bg-slate-700 hover:bg-green-600 border border-slate-600 hover:border-green-500 rounded-lg py-2 px-3 transition-all duration-200 text-center ${
+                      className={`border rounded-lg py-2 px-3 transition-all duration-200 text-center ${
                         betSlip.find(bet => bet.id === `${game.id}-moneyline-${game.homeTeam}`) 
-                          ? 'bg-green-600 border-green-500' 
-                          : ''
+                          ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
+                          : 'bg-slate-700 hover:bg-green-600 border-slate-600 hover:border-green-500'
                       }`}
                     >
                       <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.moneyline.home)}</div>
