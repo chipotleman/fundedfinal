@@ -236,6 +236,41 @@ html, body {
 }
 
 /* Responsive Design */
+@media (max-width: 640px) {
+  .modern-card {
+    padding: 12px;
+    border-radius: 12px;
+  }
+  
+  .btn-primary, .btn-success, .btn-danger {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+  
+  /* Mobile-specific utilities */
+  .mobile-padding {
+    padding: 1rem;
+  }
+  
+  .mobile-text {
+    font-size: 0.875rem;
+  }
+  
+  .mobile-spacing {
+    margin-bottom: 0.75rem;
+  }
+  
+  /* Hide scrollbars on mobile but keep functionality */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .modern-card {
     padding: 16px;
@@ -245,6 +280,20 @@ html, body {
   .btn-primary, .btn-success, .btn-danger {
     padding: 10px 20px;
     font-size: 14px;
+  }
+}
+
+/* Touch-friendly sizing for mobile */
+@media (hover: none) and (pointer: coarse) {
+  button, .btn, .btn-primary, .btn-success, .btn-danger {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Increase tap targets */
+  .glass-button {
+    min-height: 44px;
+    padding: 12px 20px;
   }
 }
 
