@@ -98,21 +98,21 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                 </div>
               </div>
 
-              {/* Bet Slip Button */}
-              <button
-                onClick={onBetSlipClick}
-                className="relative bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold px-3 sm:px-4 py-2 rounded-lg transition-all duration-300 flex items-center space-x-1 sm:space-x-2"
-              >
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
-                </svg>
-                <span className="text-sm sm:text-base">Bet Slip</span>
-                {betSlipCount > 0 && (
+              {/* Bet Slip Button - Only show when there are bets */}
+              {betSlipCount > 0 && (
+                <button
+                  onClick={onBetSlipClick}
+                  className="relative bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold px-3 sm:px-4 py-2 rounded-lg transition-all duration-300 flex items-center space-x-1 sm:space-x-2"
+                >
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-sm sm:text-base">Bet Slip</span>
                   <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center animate-pulse">
                     {betSlipCount}
                   </span>
-                )}
-              </button>
+                </button>
+              )}
 
               {/* Mobile Menu Button */}
               <button
