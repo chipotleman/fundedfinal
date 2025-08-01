@@ -268,9 +268,15 @@ export default function Dashboard() {
                   </div>
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex justify-center items-center py-20">
+            <div className={`text-center ${colors.text.accent}`}>
+              <p className="text-lg">No games available for {selectedSport}</p>
+            </div>
+          </div>
+        )}
       </div>
 
       {showBetSlip && <BetSlip onClose={() => setShowBetSlip(false)} />}
