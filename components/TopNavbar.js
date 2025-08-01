@@ -43,8 +43,8 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
       <nav className="fixed top-0 left-0 right-0 bg-slate-900/95 backdrop-blur-lg border-b border-slate-700 z-50">
         <div className="px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            {/* Logo */}
-            <div className="absolute left-1/2 transform -translate-x-1/2 sm:relative sm:left-auto sm:transform-none sm:flex-none">
+            {/* Logo - centered on mobile, left-aligned on desktop */}
+            <div className="flex-1 flex justify-center sm:flex-none sm:justify-start">
               <Link href="/" className="flex items-center">
                 <img 
                   src="/fundmybet-logo.svg" 
@@ -70,7 +70,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
               </Link>
             </div>
 
-            {/* Right Side */}
+            {/* Right Side - Empty spacer on mobile to balance logo centering */}
             <div className="flex items-center space-x-2 sm:space-x-4">
               {/* Desktop Balance Display */}
               <div className="hidden md:flex items-center space-x-3">
@@ -114,20 +114,6 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                   </span>
                 </button>
               )}
-
-              {/* Mobile Menu Button */}
-              <button
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="lg:hidden w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-600 hover:border-slate-500 transition-colors"
-              >
-                <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  {showMobileMenu ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  )}
-                </svg>
-              </button>
 
               {/* Desktop User Menu */}
               <div className="hidden lg:block relative">
@@ -187,6 +173,20 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                   </div>
                 )}
               </div>
+
+              {/* Mobile Menu Button - Now properly positioned on the right */}
+              <button
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="lg:hidden w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-600 hover:border-slate-500 transition-colors"
+              >
+                <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {showMobileMenu ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  )}
+                </svg>
+              </button>
             </div>
           </div>
         </div>
