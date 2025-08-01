@@ -223,16 +223,16 @@ export default function Dashboard() {
       />
 
       {/* Main Content */}
-      <div className="pt-20 px-4 sm:px-6 lg:px-8">
+      <div className="pt-24 sm:pt-28 lg:pt-32 px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 space-y-3 sm:space-y-0">
-          <h1 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-black text-white">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 space-y-4 sm:space-y-0">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-black text-white leading-tight">
             {selectedSport} Betting
           </h1>
           <div className="flex items-center space-x-2 sm:space-x-4">
-            <div className="bg-slate-800 px-3 py-2 rounded-lg border border-slate-700">
+            <div className="bg-slate-800 px-4 py-3 rounded-lg border border-slate-700">
               <div className="flex items-center space-x-2">
-                <span className="text-gray-400 text-xs sm:text-sm whitespace-nowrap">Live Lines</span>
+                <span className="text-gray-400 text-sm sm:text-base whitespace-nowrap">Live Lines</span>
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
               </div>
             </div>
