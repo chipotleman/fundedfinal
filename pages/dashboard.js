@@ -225,12 +225,14 @@ export default function Dashboard() {
       {/* Main Content */}
       <div className="pt-20 px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-white truncate">{selectedSport} Betting</h1>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 space-y-3 sm:space-y-0">
+          <h1 className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-black text-white">
+            {selectedSport} Betting
+          </h1>
           <div className="flex items-center space-x-2 sm:space-x-4">
             <div className="bg-slate-800 px-3 py-2 rounded-lg border border-slate-700">
               <div className="flex items-center space-x-2">
-                <span className="text-gray-400 text-xs sm:text-sm">Live Lines</span>
+                <span className="text-gray-400 text-xs sm:text-sm whitespace-nowrap">Live Lines</span>
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
               </div>
             </div>
@@ -239,19 +241,19 @@ export default function Dashboard() {
 
         {/* Sports Selection - DraftKings Style Horizontal Scroll */}
         <div className="mb-6">
-          <div className="flex space-x-3 overflow-x-auto pb-4 pt-2 scrollbar-hide">
+          <div className="flex space-x-3 overflow-x-auto pb-4 pt-2 px-1 scrollbar-hide">
             {sports.map((sport) => (
               <button
                 key={sport}
                 onClick={() => handleSportClick(sport)}
-                className={`flex-shrink-0 flex flex-col items-center justify-center min-w-16 h-16 sm:min-w-20 sm:h-20 rounded-full transition-all duration-200 ${
+                className={`flex-shrink-0 flex flex-col items-center justify-center w-18 h-18 sm:w-20 sm:h-20 rounded-full transition-all duration-200 ${
                   selectedSport === sport
-                    ? 'bg-green-500 text-white shadow-lg scale-110'
+                    ? 'bg-green-500 text-white shadow-lg scale-105'
                     : 'bg-slate-800 text-gray-300 hover:bg-slate-700 hover:text-white'
                 }`}
               >
-                <span className="text-lg sm:text-2xl mb-1">{getSportIcon(sport)}</span>
-                <span className="text-xs font-medium px-1 text-center">{sport}</span>
+                <span className="text-lg sm:text-xl mb-1">{getSportIcon(sport)}</span>
+                <span className="text-xs font-medium text-center leading-tight">{sport}</span>
               </button>
             ))}
           </div>
@@ -404,6 +406,12 @@ export default function Dashboard() {
         }
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
+        }
+        .w-18 {
+          width: 4.5rem;
+        }
+        .h-18 {
+          height: 4.5rem;
         }
       `}</style>
     </div>
