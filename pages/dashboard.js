@@ -10,7 +10,7 @@ export default function Dashboard() {
   const [pnl, setPnl] = useState(0);
   const [bets, setBets] = useState([]);
   const [games, setGames] = useState([]);
-  const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
+  const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, isBetInSlip } = useBetSlip();
   const [selectedSport, setSelectedSport] = useState('NFL');
   const [loading, setLoading] = useState(true);
   const [challengePhase, setChallengePhase] = useState(1);
