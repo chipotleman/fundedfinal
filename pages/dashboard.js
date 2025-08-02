@@ -3,6 +3,11 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
+import LiveBetting from '../components/LiveBetting';
+import AnalyticsDashboard from '../components/AnalyticsDashboard';
+import BetBuilder from '../components/BetBuilder';
+import CashOutModal from '../components/CashOutModal';
+import AchievementSystem from '../components/AchievementSystem';
 
 const mockGames = {
   'NFL': [
@@ -148,6 +153,10 @@ export default function Dashboard() {
   const [showBetSlip, setShowBetSlip] = useState(false);
   const [bankroll, setBankroll] = useState(10000);
   const [pnl, setPnl] = useState(0);
+  const [activeTab, setActiveTab] = useState('games');
+  const [showCashOut, setShowCashOut] = useState(false);
+  const [selectedCashOutBet, setSelectedCashOutBet] = useState(null);
+  const [liveGames] = useState([mockGames.NFL[0]]); // Mock live game
 
   const sports = ['NFL', 'NBA', 'MLB', 'NHL', 'UFC', 'Soccer'];
 
@@ -224,11 +233,35 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <div className="pt-24 sm:pt-28 lg:pt-32 px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+        {/* Header with Tabs */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 space-y-4 sm:space-y-0">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-black text-white leading-tight">
-            {selectedSport} Betting
-          </h1>
+          <div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-black text-white leading-tight mb-4">
+              {selectedSport} Betting
+            </h1>
+            <div className="flex space-x-1 bg-slate-800 rounded-lg p-1">
+              {[
+                { id: 'games', label: 'Games', icon: '🏈' },
+                { id: 'live', label: 'Live', icon: '🔴' },
+                { id: 'builder', label: 'Bet Builder', icon: '🔧' },
+                { id: 'analytics', label: 'Analytics', icon: '📊' },
+                { id: 'achievements', label: 'Achievements', icon: '🏆' }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === tab.id
+                      ? 'bg-green-500 text-white'
+                      : 'text-gray-300 hover:text-white hover:bg-slate-700'
+                  }`}
+                >
+                  <span>{tab.icon}</span>
+                  <span className="hidden sm:inline">{tab.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="flex items-center space-x-2 sm:space-x-4">
             <div className="bg-slate-800 px-4 py-3 rounded-lg border border-slate-700">
               <div className="flex items-center space-x-2">
@@ -239,35 +272,39 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Sports Selection - DraftKings Style Horizontal Scroll */}
-        <div className="mb-6">
-          <div className="flex space-x-3 overflow-x-auto pb-4 pt-2 px-1 scrollbar-hide">
-            {sports.map((sport) => (
-              <button
-                key={sport}
-                onClick={() => handleSportClick(sport)}
-                className={`flex-shrink-0 flex flex-col items-center justify-center w-18 h-18 sm:w-20 sm:h-20 rounded-full transition-all duration-200 ${
-                  selectedSport === sport
-                    ? 'bg-green-500 text-white shadow-lg scale-105'
-                    : 'bg-slate-800 text-gray-300 hover:bg-slate-700 hover:text-white'
-                }`}
-              >
-                <span className="text-lg sm:text-xl mb-1">{getSportIcon(sport)}</span>
-                <span className="text-xs font-medium text-center leading-tight">{sport}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+        
 
-        {/* Games List */}
-        <div className="space-y-4 pb-20">
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="w-12 h-12 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-white text-lg">Loading games...</p>
-            </div>
-          ) : games.length > 0 ? (
-            games.map(game => (
+        {/* Tab Content */}
+        <div className="pb-20">
+          {activeTab === 'games' && (
+            <div className="space-y-4">
+              {/* Sports Selection - DraftKings Style Horizontal Scroll */}
+              <div className="mb-6">
+                <div className="flex space-x-3 overflow-x-auto pb-4 pt-2 px-1 scrollbar-hide">
+                  {sports.map((sport) => (
+                    <button
+                      key={sport}
+                      onClick={() => handleSportClick(sport)}
+                      className={`flex-shrink-0 flex flex-col items-center justify-center w-18 h-18 sm:w-20 sm:h-20 rounded-full transition-all duration-200 ${
+                        selectedSport === sport
+                          ? 'bg-green-500 text-white shadow-lg scale-105'
+                          : 'bg-slate-800 text-gray-300 hover:bg-slate-700 hover:text-white'
+                      }`}
+                    >
+                      <span className="text-lg sm:text-xl mb-1">{getSportIcon(sport)}</span>
+                      <span className="text-xs font-medium text-center leading-tight">{sport}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="text-center py-12">
+                  <div className="w-12 h-12 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-white text-lg">Loading games...</p>
+                </div>
+              ) : games.length > 0 ? (
+                games.map(game => (
               <div key={game.id} className="bg-slate-800 rounded-xl sm:rounded-2xl border border-slate-700 overflow-hidden">
                 {/* Game Header */}
                 <div className="bg-slate-700/50 px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-600">
@@ -371,15 +408,68 @@ export default function Dashboard() {
                 </div>
               </div>
             ))
-          ) : (
-            <div className="text-center py-12">
-              <div className="bg-slate-800 rounded-2xl p-8 max-w-md mx-auto">
-                <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
-                </svg>
-                <h3 className="text-xl font-bold text-white mb-2">No Games Available</h3>
-                <p className="text-gray-400">Check back later for {selectedSport} games and betting lines.</p>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="bg-slate-800 rounded-2xl p-8 max-w-md mx-auto">
+                    <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
+                    </svg>
+                    <h3 className="text-xl font-bold text-white mb-2">No Games Available</h3>
+                    <p className="text-gray-400">Check back later for {selectedSport} games and betting lines.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'live' && (
+            <div className="space-y-4">
+              <div className="bg-gradient-to-r from-red-600 to-orange-600 rounded-xl p-4 mb-6">
+                <h2 className="text-white font-bold text-lg mb-2">🔴 Live Betting</h2>
+                <p className="text-red-100 text-sm">Real-time odds that change as the game unfolds</p>
               </div>
+              {liveGames.map(game => (
+                <LiveBetting 
+                  key={game.id} 
+                  game={game} 
+                  onBetSelect={addToBetSlip}
+                  betSlip={betSlip}
+                />
+              ))}
+            </div>
+          )}
+
+          {activeTab === 'builder' && (
+            <div>
+              <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-4 mb-6">
+                <h2 className="text-white font-bold text-lg mb-2">🔧 Bet Builder</h2>
+                <p className="text-blue-100 text-sm">Create custom parlays and round robins</p>
+              </div>
+              <BetBuilder 
+                games={games}
+                onBetSelect={addToBetSlip}
+                betSlip={betSlip}
+              />
+            </div>
+          )}
+
+          {activeTab === 'analytics' && (
+            <div>
+              <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-4 mb-6">
+                <h2 className="text-white font-bold text-lg mb-2">📊 Analytics Dashboard</h2>
+                <p className="text-purple-100 text-sm">Track your performance and improve your strategy</p>
+              </div>
+              <AnalyticsDashboard user={user} />
+            </div>
+          )}
+
+          {activeTab === 'achievements' && (
+            <div>
+              <div className="bg-gradient-to-r from-yellow-600 to-orange-600 rounded-xl p-4 mb-6">
+                <h2 className="text-white font-bold text-lg mb-2">🏆 Achievements</h2>
+                <p className="text-yellow-100 text-sm">Unlock rewards and climb the ranks</p>
+              </div>
+              <AchievementSystem userStats={{}} />
             </div>
           )}
         </div>
@@ -396,8 +486,24 @@ export default function Dashboard() {
           setBankroll={setBankroll}
           pnl={pnl}
           setPnl={setPnl}
+          onCashOut={(bet) => {
+            setSelectedCashOutBet(bet);
+            setShowCashOut(true);
+          }}
         />
       )}
+
+      {/* Cash Out Modal */}
+      <CashOutModal
+        isOpen={showCashOut}
+        onClose={() => setShowCashOut(false)}
+        bet={selectedCashOutBet}
+        onCashOut={(betId, amount) => {
+          setBankroll(prev => prev + amount);
+          setPnl(prev => prev + (amount - selectedCashOutBet.stake));
+          setBetSlip(prev => prev.filter(bet => bet.id !== betId));
+        }}
+      />
 
       <style jsx>{`
         .scrollbar-hide {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function BetSlip({ bets, setBets, bankroll, onClose }) {
+export default function BetSlip({ bets, setBets, bankroll, onClose, onCashOut }) {
   const [isPlacing, setIsPlacing] = useState(false);
   const [betType, setBetType] = useState('single');
 
@@ -116,14 +116,22 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
                     <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded text-sm font-semibold">
                       {formatOdds(bet.odds)}
                     </span>
-                    <button
-                      onClick={() => removeBet(bet.id)}
-                      className="text-gray-400 hover:text-red-400 transition-colors"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => onCashOut && onCashOut(bet)}
+                        className="text-yellow-400 hover:text-yellow-300 transition-colors text-xs bg-yellow-500/20 px-2 py-1 rounded"
+                      >
+                        Cash Out
+                      </button>
+                      <button
+                        onClick={() => removeBet(bet.id)}
+                        className="text-gray-400 hover:text-red-400 transition-colors"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
