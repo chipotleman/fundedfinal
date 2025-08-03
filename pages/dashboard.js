@@ -133,6 +133,10 @@ export default function Dashboard() {
     { id: 'achievements', label: 'Achievements', icon: '🏆' }
   ];
 
+  const closeBetSlip = () => {
+    setShowBetSlip(false);
+  };
+
   return (
     <div className="min-h-screen bg-slate-900">
       <TopNavbar 
@@ -245,7 +249,7 @@ export default function Dashboard() {
       {/* Bet Slip */}
       <BetSlip
         isOpen={showBetSlip}
-        onClose={() => setShowBetSlip(false)}
+        onClose={closeBetSlip}
         bets={betSlip}
         setBets={setBetSlip}
         bankroll={bankroll}
