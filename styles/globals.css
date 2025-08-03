@@ -135,12 +135,39 @@ html, body {
   }
 }
 
+@keyframes video-trace-prominent {
+  0%, 100% {
+    background: linear-gradient(90deg, #ef4444, #dc2626, #b91c1c, #991b1b);
+    opacity: 0.8;
+    box-shadow: 0 0 25px rgba(239, 68, 68, 0.6);
+  }
+  25% {
+    background: linear-gradient(90deg, #dc2626, #b91c1c, #991b1b, #ef4444);
+    opacity: 1;
+    box-shadow: 0 0 35px rgba(239, 68, 68, 0.8);
+  }
+  50% {
+    background: linear-gradient(90deg, #b91c1c, #991b1b, #ef4444, #dc2626);
+    opacity: 0.9;
+    box-shadow: 0 0 30px rgba(239, 68, 68, 0.7);
+  }
+  75% {
+    background: linear-gradient(90deg, #991b1b, #ef4444, #dc2626, #b91c1c);
+    opacity: 1;
+    box-shadow: 0 0 35px rgba(239, 68, 68, 0.8);
+  }
+}
+
 .animate-float {
   animation: float 3s ease-in-out infinite;
 }
 
 .video-trace-border {
   animation: video-trace 3s ease-in-out infinite;
+}
+
+.video-trace-border-prominent {
+  animation: video-trace-prominent 2s ease-in-out infinite;
 }
 
 .animate-pulse-glow {

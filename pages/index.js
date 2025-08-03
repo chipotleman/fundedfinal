@@ -36,12 +36,12 @@ export default function Home() {
             
             {/* Main Video Player */}
             <div className="relative max-w-5xl mx-auto mb-8 px-4">
-              {/* Video container with tracing border */}
+              {/* Video container with prominent tracing border */}
               <div className="relative">
-                {/* Subtle tracing border */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-green-400/30 via-blue-500/30 to-purple-500/30 rounded-2xl video-trace-border"></div>
+                {/* Prominent red tracing border like PlayerProfit */}
+                <div className="absolute -inset-1 rounded-2xl video-trace-border-prominent"></div>
                 
-                {/* Video container - large rectangle */}
+                {/* Video container - more rectangular */}
                 <div className="relative bg-slate-900 rounded-2xl overflow-hidden">
                   <video 
                     controls 
@@ -51,9 +51,9 @@ export default function Home() {
                     poster="/fundmybet-logo.png"
                     preload="auto"
                     style={{ 
-                      aspectRatio: '16/9',
-                      minHeight: '300px',
-                      maxHeight: '600px',
+                      aspectRatio: '2.2/1',
+                      minHeight: '280px',
+                      maxHeight: '450px',
                       objectFit: 'cover'
                     }}
                   >
