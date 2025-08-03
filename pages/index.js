@@ -76,8 +76,49 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Stats Section */}
+        {/* Video Explanation Section */}
         <div className="bg-slate-800 py-16">
+          <div className="max-w-5xl mx-auto px-6">
+            <div className="text-center mb-12">
+              <h2 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                How <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">FundMyBet</span> Works
+              </h2>
+              <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+                Watch this quick explanation to understand how you can get funded and start earning real profits
+              </p>
+            </div>
+            
+            <div className="relative max-w-4xl mx-auto">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-slate-900 border border-slate-700">
+                <video 
+                  controls 
+                  className="w-full h-auto"
+                  poster="/fundmybet-logo.png"
+                  preload="metadata"
+                >
+                  <source src="/attached_assets/Understood_lets_integrate_202508030902_h95p_1754226205212.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+              
+              {/* Video overlay for play button styling */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl pointer-events-none"></div>
+            </div>
+            
+            {/* Call to action below video */}
+            <div className="text-center mt-12">
+              <p className="text-lg text-gray-300 mb-6">
+                Ready to start your funded betting journey?
+              </p>
+              <Link href="/auth" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-2xl inline-block">
+                Get Started Now - $49
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats Section */}
+        <div className="bg-slate-900 py-16">
           <div className="max-w-6xl mx-auto px-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
               <div>
