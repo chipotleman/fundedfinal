@@ -47,7 +47,7 @@ export default function Home() {
                     controls 
                     className="block w-full h-full object-cover"
                     poster="/fundmybet-logo.png"
-                    preload="metadata"
+                    preload="auto"
                     style={{ 
                       aspectRatio: '16/9',
                       minHeight: '400px',
