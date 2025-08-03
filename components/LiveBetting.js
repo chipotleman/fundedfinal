@@ -110,33 +110,33 @@ export default function LiveBetting({ onAddToBetSlip }) {
               </div>
             </div>
 
-            {/* Clean Betting Layout */}
-            <div className="p-4">
-              <div className="grid grid-cols-3 gap-4">
+            {/* Clean Betting Layout - Mobile Optimized */}
+            <div className="p-3 lg:p-4">
+              <div className="grid grid-cols-3 gap-2 lg:gap-4">
                 
                 {/* Spread Column */}
-                <div className="space-y-3">
+                <div className="space-y-2 lg:space-y-3">
                   <div className="text-center">
-                    <h4 className="text-gray-400 text-sm font-medium mb-3">Point Spread</h4>
+                    <h4 className="text-gray-400 text-xs lg:text-sm font-medium mb-2 lg:mb-3">Point Spread</h4>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1 lg:space-y-2">
                     <button
                       onClick={() => handleBetClick(game, 'spread', game.lines.spread.away.odds, `${game.awayTeam} ${game.lines.spread.away.point}`)}
-                      className="w-full bg-slate-700/50 hover:bg-blue-500/20 border border-slate-600 hover:border-blue-500/50 rounded-lg p-3 transition-all group"
+                      className="w-full bg-slate-700/50 hover:bg-blue-500/20 border border-slate-600 hover:border-blue-500/50 rounded-lg p-2 lg:p-3 transition-all group"
                     >
                       <div className="text-center">
-                        <div className="text-white font-semibold text-sm">{game.awayTeam}</div>
-                        <div className="text-white font-bold">{game.lines.spread.away.point}</div>
+                        <div className="text-white font-semibold text-xs lg:text-sm truncate">{game.awayTeam}</div>
+                        <div className="text-white font-bold text-sm lg:text-base">{game.lines.spread.away.point}</div>
                         <div className="text-gray-400 text-xs">{formatOdds(game.lines.spread.away.odds)}</div>
                       </div>
                     </button>
                     <button
                       onClick={() => handleBetClick(game, 'spread', game.lines.spread.home.odds, `${game.homeTeam} ${game.lines.spread.home.point}`)}
-                      className="w-full bg-slate-700/50 hover:bg-blue-500/20 border border-slate-600 hover:border-blue-500/50 rounded-lg p-3 transition-all group"
+                      className="w-full bg-slate-700/50 hover:bg-blue-500/20 border border-slate-600 hover:border-blue-500/50 rounded-lg p-2 lg:p-3 transition-all group"
                     >
                       <div className="text-center">
-                        <div className="text-white font-semibold text-sm">{game.homeTeam}</div>
-                        <div className="text-white font-bold">{game.lines.spread.home.point}</div>
+                        <div className="text-white font-semibold text-xs lg:text-sm truncate">{game.homeTeam}</div>
+                        <div className="text-white font-bold text-sm lg:text-base">{game.lines.spread.home.point}</div>
                         <div className="text-gray-400 text-xs">{formatOdds(game.lines.spread.home.odds)}</div>
                       </div>
                     </button>
@@ -144,55 +144,55 @@ export default function LiveBetting({ onAddToBetSlip }) {
                 </div>
 
                 {/* Moneyline Column */}
-                <div className="space-y-3">
+                <div className="space-y-2 lg:space-y-3">
                   <div className="text-center">
-                    <h4 className="text-gray-400 text-sm font-medium mb-3">Moneyline</h4>
+                    <h4 className="text-gray-400 text-xs lg:text-sm font-medium mb-2 lg:mb-3">Moneyline</h4>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1 lg:space-y-2">
                     <button
                       onClick={() => handleBetClick(game, 'moneyline', game.lines.moneyline.away, `${game.awayTeam} ML`)}
-                      className="w-full bg-slate-700/50 hover:bg-green-500/20 border border-slate-600 hover:border-green-500/50 rounded-lg p-3 transition-all group"
+                      className="w-full bg-slate-700/50 hover:bg-green-500/20 border border-slate-600 hover:border-green-500/50 rounded-lg p-2 lg:p-3 transition-all group"
                     >
                       <div className="text-center">
-                        <div className="text-white font-semibold text-sm">{game.awayTeam}</div>
-                        <div className="text-white font-bold">{formatOdds(game.lines.moneyline.away)}</div>
+                        <div className="text-white font-semibold text-xs lg:text-sm truncate">{game.awayTeam}</div>
+                        <div className="text-white font-bold text-sm lg:text-base">{formatOdds(game.lines.moneyline.away)}</div>
                       </div>
                     </button>
                     <button
                       onClick={() => handleBetClick(game, 'moneyline', game.lines.moneyline.home, `${game.homeTeam} ML`)}
-                      className="w-full bg-slate-700/50 hover:bg-green-500/20 border border-slate-600 hover:border-green-500/50 rounded-lg p-3 transition-all group"
+                      className="w-full bg-slate-700/50 hover:bg-green-500/20 border border-slate-600 hover:border-green-500/50 rounded-lg p-2 lg:p-3 transition-all group"
                     >
                       <div className="text-center">
-                        <div className="text-white font-semibold text-sm">{game.homeTeam}</div>
-                        <div className="text-white font-bold">{formatOdds(game.lines.moneyline.home)}</div>
+                        <div className="text-white font-semibold text-xs lg:text-sm truncate">{game.homeTeam}</div>
+                        <div className="text-white font-bold text-sm lg:text-base">{formatOdds(game.lines.moneyline.home)}</div>
                       </div>
                     </button>
                   </div>
                 </div>
 
                 {/* Total Column */}
-                <div className="space-y-3">
+                <div className="space-y-2 lg:space-y-3">
                   <div className="text-center">
-                    <h4 className="text-gray-400 text-sm font-medium mb-3">Total Points</h4>
+                    <h4 className="text-gray-400 text-xs lg:text-sm font-medium mb-2 lg:mb-3">Total Points</h4>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1 lg:space-y-2">
                     <button
                       onClick={() => handleBetClick(game, 'total', game.lines.total.over.odds, `Over ${game.lines.total.over.point}`)}
-                      className="w-full bg-slate-700/50 hover:bg-purple-500/20 border border-slate-600 hover:border-purple-500/50 rounded-lg p-3 transition-all group"
+                      className="w-full bg-slate-700/50 hover:bg-purple-500/20 border border-slate-600 hover:border-purple-500/50 rounded-lg p-2 lg:p-3 transition-all group"
                     >
                       <div className="text-center">
-                        <div className="text-white font-semibold text-sm">Over</div>
-                        <div className="text-white font-bold">{game.lines.total.over.point}</div>
+                        <div className="text-white font-semibold text-xs lg:text-sm">Over</div>
+                        <div className="text-white font-bold text-sm lg:text-base">{game.lines.total.over.point}</div>
                         <div className="text-gray-400 text-xs">{formatOdds(game.lines.total.over.odds)}</div>
                       </div>
                     </button>
                     <button
                       onClick={() => handleBetClick(game, 'total', game.lines.total.under.odds, `Under ${game.lines.total.under.point}`)}
-                      className="w-full bg-slate-700/50 hover:bg-purple-500/20 border border-slate-600 hover:border-purple-500/50 rounded-lg p-3 transition-all group"
+                      className="w-full bg-slate-700/50 hover:bg-purple-500/20 border border-slate-600 hover:border-purple-500/50 rounded-lg p-2 lg:p-3 transition-all group"
                     >
                       <div className="text-center">
-                        <div className="text-white font-semibold text-sm">Under</div>
-                        <div className="text-white font-bold">{game.lines.total.under.point}</div>
+                        <div className="text-white font-semibold text-xs lg:text-sm">Under</div>
+                        <div className="text-white font-bold text-sm lg:text-base">{game.lines.total.under.point}</div>
                         <div className="text-gray-400 text-xs">{formatOdds(game.lines.total.under.odds)}</div>
                       </div>
                     </button>

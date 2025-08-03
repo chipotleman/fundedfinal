@@ -159,22 +159,45 @@ export default function Dashboard() {
             </p>
           </div>
 
-          {/* Navigation Tabs */}
-          <div className="flex space-x-2 mb-8 overflow-x-auto">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-medium transition-all whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'bg-blue-500 text-white'
-                    : 'bg-slate-800/50 text-gray-400 hover:text-white hover:bg-slate-700/50'
-                }`}
-              >
-                <span>{tab.icon}</span>
-                <span>{tab.label}</span>
-              </button>
-            ))}
+          {/* Sports Filter Tabs - Mobile Optimized */}
+          <div className="mb-6 lg:mb-8">
+            <div className="flex space-x-2 lg:space-x-4 overflow-x-auto pb-4 scrollbar-hide">
+              {['All Sports', 'NFL', 'NBA', 'MLB', 'NHL', 'College Football', 'College Basketball'].map((sport) => (
+                <button
+                  key={sport}
+                  onClick={() => setSelectedSport(sport)}
+                  className={`flex items-center space-x-1 lg:space-x-2 px-3 lg:px-6 py-2 lg:py-3 rounded-xl font-semibold whitespace-nowrap transition-all text-sm lg:text-base flex-shrink-0 ${
+                    selectedSport === sport
+                      ? 'bg-blue-500 text-white shadow-lg'
+                      : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
+                  }`}
+                >
+                  <span className="text-sm lg:text-base">{getSportIcon(sport)}</span>
+                  <span className="hidden sm:inline lg:inline">{sport}</span>
+                  <span className="sm:hidden lg:hidden">{sport.split(' ')[0]}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Main Content Tabs - Mobile Optimized */}
+          <div className="mb-6 lg:mb-8">
+            <div className="flex space-x-1 bg-slate-800 rounded-xl p-1 overflow-x-auto">
+              {tabs.map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center justify-center space-x-1 lg:space-x-2 py-2 lg:py-3 px-2 lg:px-4 rounded-lg font-semibold transition-all whitespace-nowrap flex-shrink-0 min-w-0 ${
+                    activeTab === tab.id
+                      ? 'bg-blue-500 text-white shadow-lg'
+                      : 'text-gray-400 hover:text-white hover:bg-slate-700'
+                  }`}
+                >
+                  <span className="text-base lg:text-lg">{tab.icon}</span>
+                  <span className="text-xs lg:text-sm hidden sm:inline truncate">{tab.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Games Tab */}
