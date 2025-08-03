@@ -35,24 +35,23 @@ export default function Home() {
             </div>
             
             {/* Main Video Player */}
-            <div className="relative max-w-4xl mx-auto mb-8 px-4">
-              {/* Glowing border container */}
-              <div className="relative inline-block">
-                {/* Animated glowing border */}
-                <div className="absolute -inset-1 bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 rounded-2xl blur-sm opacity-75 animate-pulse"></div>
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 rounded-2xl animate-spin-slow opacity-60"></div>
+            <div className="relative max-w-5xl mx-auto mb-8 px-4">
+              {/* Video container with tracing border */}
+              <div className="relative">
+                {/* Subtle tracing border */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-green-400/30 via-blue-500/30 to-purple-500/30 rounded-2xl video-trace-border"></div>
                 
-                {/* Video container - exact fit */}
+                {/* Video container - large rectangle */}
                 <div className="relative bg-slate-900 rounded-2xl overflow-hidden">
                   <video 
                     controls 
-                    className="block w-full h-auto max-w-full"
+                    className="block w-full h-auto"
                     poster="/fundmybet-logo.png"
                     preload="metadata"
                     style={{ 
                       aspectRatio: '16/9',
-                      minHeight: '240px',
-                      maxHeight: '70vh'
+                      minHeight: '400px',
+                      maxHeight: '600px'
                     }}
                   >
                     <source src="/explainer-video.mp4" type="video/mp4" />

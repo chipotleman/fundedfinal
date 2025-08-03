@@ -124,12 +124,14 @@ html, body {
   }
 }
 
-@keyframes spin-slow {
-  from {
-    transform: rotate(0deg);
+@keyframes video-trace {
+  0%, 100% {
+    opacity: 0.3;
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
   }
-  to {
-    transform: rotate(360deg);
+  50% {
+    opacity: 0.6;
+    box-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
   }
 }
 
@@ -137,8 +139,8 @@ html, body {
   animation: float 3s ease-in-out infinite;
 }
 
-.animate-spin-slow {
-  animation: spin-slow 3s linear infinite;
+.video-trace-border {
+  animation: video-trace 3s ease-in-out infinite;
 }
 
 .animate-pulse-glow {
