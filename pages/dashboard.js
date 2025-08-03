@@ -1,92 +1,179 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { createClient } from '@supabase/supabase-js';
+
+import { useEffect, useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
-import MatchupCard from '../components/MatchupCard';
-import ChallengeModal from '../components/ChallengeModal';
-import { useBetSlip } from '../contexts/BetSlipContext';
-import LiveBetting from '../components/LiveBetting';
-import BetBuilder from '../components/BetBuilder';
-import AnalyticsDashboard from '../components/AnalyticsDashboard';
-import AchievementSystem from '../components/AchievementSystem';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+const mockGames = {
+  'NFL': [
+    {
+      id: 1,
+      awayTeam: 'LA Chargers',
+      homeTeam: 'Detroit Lions',
+      time: '1:00 PM ET',
+      lines: {
+        spread: {
+          away: { point: '+10.5', odds: -115 },
+          home: { point: '-10.5', odds: -115 }
+        },
+        total: {
+          over: { point: 'O 37.5', odds: -115 },
+          under: { point: 'U 37.5', odds: -115 }
+        },
+        moneyline: {
+          away: +520,
+          home: -850
+        }
+      }
+    }
+  ],
+  'NBA': [
+    {
+      id: 2,
+      awayTeam: 'Lakers',
+      homeTeam: 'Warriors',
+      time: '10:00 PM ET',
+      lines: {
+        spread: {
+          away: { point: '+3.5', odds: -110 },
+          home: { point: '-3.5', odds: -110 }
+        },
+        total: {
+          over: { point: 'O 225.5', odds: -110 },
+          under: { point: 'U 225.5', odds: -110 }
+        },
+        moneyline: {
+          away: +140,
+          home: -160
+        }
+      }
+    }
+  ],
+  'MLB': [
+    {
+      id: 3,
+      awayTeam: 'Yankees',
+      homeTeam: 'Red Sox',
+      time: '7:30 PM ET',
+      lines: {
+        spread: {
+          away: { point: '+1.5', odds: -140 },
+          home: { point: '-1.5', odds: +120 }
+        },
+        total: {
+          over: { point: 'O 9.5', odds: -105 },
+          under: { point: 'U 9.5', odds: -115 }
+        },
+        moneyline: {
+          away: +130,
+          home: -150
+        }
+      }
+    }
+  ],
+  'NHL': [
+    {
+      id: 4,
+      awayTeam: 'Rangers',
+      homeTeam: 'Bruins',
+      time: '8:00 PM ET',
+      lines: {
+        spread: {
+          away: { point: '+1.5', odds: -180 },
+          home: { point: '-1.5', odds: +150 }
+        },
+        total: {
+          over: { point: 'O 6.5', odds: +110 },
+          under: { point: 'U 6.5', odds: -130 }
+        },
+        moneyline: {
+          away: +120,
+          home: -140
+        }
+      }
+    }
+  ],
+  'UFC': [
+    {
+      id: 5,
+      awayTeam: 'Fighter A',
+      homeTeam: 'Fighter B',
+      time: '10:00 PM ET',
+      lines: {
+        spread: {
+          away: { point: 'N/A', odds: 'N/A' },
+          home: { point: 'N/A', odds: 'N/A' }
+        },
+        total: {
+          over: { point: 'N/A', odds: 'N/A' },
+          under: { point: 'N/A', odds: 'N/A' }
+        },
+        moneyline: {
+          away: +180,
+          home: -220
+        }
+      }
+    }
+  ],
+  'Soccer': [
+    {
+      id: 6,
+      awayTeam: 'Manchester United',
+      homeTeam: 'Liverpool',
+      time: '12:30 PM ET',
+      lines: {
+        spread: {
+          away: { point: '+0.5', odds: -110 },
+          home: { point: '-0.5', odds: -110 }
+        },
+        total: {
+          over: { point: 'O 2.5', odds: -120 },
+          under: { point: 'U 2.5', odds: +100 }
+        },
+        moneyline: {
+          away: +250,
+          home: -150
+        }
+      }
+    }
+  ]
+};
 
 export default function Dashboard() {
-  const { betSlip, setBetSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const [user, setUser] = useState(null);
-  const [bankroll, setBankroll] = useState(0);
-  const [pnl, setPnl] = useState(0);
   const [selectedSport, setSelectedSport] = useState('All Sports');
-  const [showChallengeModal, setShowChallengeModal] = useState(false);
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('games');
-  const containerRef = useRef(null);
+  const [betSlip, setBetSlip] = useState([]);
+  const [showBetSlip, setShowBetSlip] = useState(false);
+  const [bankroll, setBankroll] = useState(10000);
+  const [pnl, setPnl] = useState(0);
 
-  const sports = ['All Sports', 'NFL', 'NBA', 'MLB', 'NHL', 'UFC', 'Soccer'];
+  const sports = ['NFL', 'NBA', 'MLB', 'NHL', 'UFC', 'Soccer'];
 
   useEffect(() => {
-    checkUser();
-    fetchGames();
-  }, []);
-
-  const checkUser = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      setUser(user);
-      fetchUserStats(user.id);
+    if (selectedSport === 'All Sports') {
+      // Show all games from all sports
+      const allGames = Object.values(mockGames).flat();
+      setGames(allGames);
+    } else {
+      setGames(mockGames[selectedSport] || []);
     }
+    setLoading(false);
+  }, [selectedSport]);
+
+  const formatOdds = (odds) => {
+    return odds > 0 ? `+${odds}` : odds.toString();
   };
 
-  const fetchUserStats = async (userId) => {
-    try {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('bankroll, pnl')
-        .eq('user_id', userId)
-        .single();
-
-      if (data) {
-        setBankroll(data.bankroll || 0);
-        setPnl(data.pnl || 0);
-      }
-    } catch (error) {
-      console.error('Error fetching user stats:', error);
-    }
-  };
-
-  const fetchGames = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/fetch-slates');
-      const data = await response.json();
-
-      if (data.success && data.games) {
-        setGames(data.games);
-      }
-    } catch (error) {
-      console.error('Error fetching games:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredGames = selectedSport === 'All Sports' 
-    ? games 
-    : games.filter(game => game.sport === selectedSport);
-
-  const addToBetSlip = (game, betType, odds, description) => {
+  const addToBetSlip = (game, betType, odds, selection) => {
     const newBet = {
-      id: `${game.id || 'game'}-${betType}-${Date.now()}`,
-      game_id: game.id || 'game',
-      matchup: game.matchup || `${game.awayTeam} @ ${game.homeTeam}`,
-      betType,
-      description,
-      odds,
+      id: `${game.id}-${betType}-${selection}`,
+      game_id: game.id,
+      matchup: `${game.awayTeam} @ ${game.homeTeam}`,
+      selection: selection,
+      betType: betType,
+      odds: odds,
       stake: 0
     };
 
@@ -96,9 +183,9 @@ export default function Dashboard() {
         return prev.filter(bet => bet.id !== newBet.id);
       }
 
-      const sameGameBet = prev.find(bet => bet.game_id === (game.id || 'game') && bet.betType === betType);
+      const sameGameBet = prev.find(bet => bet.game_id === game.id && bet.betType === betType);
       if (sameGameBet) {
-        return prev.filter(bet => !(bet.game_id === (game.id || 'game') && bet.betType === betType)).concat(newBet);
+        return prev.filter(bet => !(bet.game_id === game.id && bet.betType === betType)).concat(newBet);
       }
 
       return [...prev, newBet];
@@ -125,18 +212,6 @@ export default function Dashboard() {
     }
   };
 
-  const tabs = [
-    { id: 'games', label: 'Games', icon: '🏈' },
-    { id: 'live', label: 'Live Betting', icon: '🔴' },
-    { id: 'builder', label: 'Bet Builder', icon: '🎯' },
-    { id: 'analytics', label: 'Analytics', icon: '📊' },
-    { id: 'achievements', label: 'Achievements', icon: '🏆' }
-  ];
-
-  const closeBetSlip = () => {
-    setShowBetSlip(false);
-  };
-
   return (
     <div className="min-h-screen bg-slate-900">
       <TopNavbar 
@@ -147,150 +222,198 @@ export default function Dashboard() {
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
 
-      <div className="pt-20 pb-16" ref={containerRef}>
-        <div className="max-w-7xl mx-auto px-6">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-4xl font-black text-white mb-2">
-              Dashboard
-            </h1>
-            <p className="text-gray-400">
-              Welcome back! Ready to make some winning bets?
-            </p>
-          </div>
-
-          {/* Sports Filter Tabs - Mobile Optimized */}
-          <div className="mb-6 lg:mb-8">
-            <div className="flex space-x-2 lg:space-x-4 overflow-x-auto pb-4 scrollbar-hide">
-              {['All Sports', 'NFL', 'NBA', 'MLB', 'NHL', 'College Football', 'College Basketball'].map((sport) => (
-                <button
-                  key={sport}
-                  onClick={() => setSelectedSport(sport)}
-                  className={`flex items-center space-x-1 lg:space-x-2 px-3 lg:px-6 py-2 lg:py-3 rounded-xl font-semibold whitespace-nowrap transition-all text-sm lg:text-base flex-shrink-0 ${
-                    selectedSport === sport
-                      ? 'bg-blue-500 text-white shadow-lg'
-                      : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
-                  }`}
-                >
-                  <span className="text-sm lg:text-base">{getSportIcon(sport)}</span>
-                  <span className="hidden sm:inline lg:inline">{sport}</span>
-                  <span className="sm:hidden lg:hidden">{sport.split(' ')[0]}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Main Content Tabs - Mobile Optimized */}
-          <div className="mb-6 lg:mb-8">
-            <div className="flex space-x-1 bg-slate-800 rounded-xl p-1 overflow-x-auto">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center justify-center space-x-1 lg:space-x-2 py-2 lg:py-3 px-2 lg:px-4 rounded-lg font-semibold transition-all whitespace-nowrap flex-shrink-0 min-w-0 ${
-                    activeTab === tab.id
-                      ? 'bg-blue-500 text-white shadow-lg'
-                      : 'text-gray-400 hover:text-white hover:bg-slate-700'
-                  }`}
-                >
-                  <span className="text-base lg:text-lg">{tab.icon}</span>
-                  <span className="text-xs lg:text-sm hidden sm:inline truncate">{tab.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Games Tab */}
-          {activeTab === 'games' && (
-            <>
-              {/* Sports Filter */}
-              <div className="flex flex-wrap gap-3 mb-8">
-                {sports.map((sport) => (
-                  <button
-                    key={sport}
-                    onClick={() => handleSportClick(sport)}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-xl font-medium transition-all ${
-                      selectedSport === sport
-                        ? 'bg-blue-500 text-white'
-                        : 'bg-slate-800/50 text-gray-400 hover:text-white hover:bg-slate-700/50'
-                    }`}
-                  >
-                    <span>{getSportIcon(sport)}</span>
-                    <span>{sport}</span>
-                  </button>
-                ))}
+      {/* Main Content */}
+      <div className="pt-24 sm:pt-28 lg:pt-32 px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 space-y-4 sm:space-y-0">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-black text-white leading-tight">
+            {selectedSport} Betting
+          </h1>
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            <div className="bg-slate-800 px-4 py-3 rounded-lg border border-slate-700">
+              <div className="flex items-center space-x-2">
+                <span className="text-gray-400 text-sm sm:text-base whitespace-nowrap">Live Lines</span>
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
               </div>
+            </div>
+          </div>
+        </div>
 
-              {/* Games Grid */}
-              {loading ? (
-                <div className="flex justify-center items-center py-20">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        {/* Sports Selection - DraftKings Style Horizontal Scroll */}
+        <div className="mb-6">
+          <div className="flex space-x-3 overflow-x-auto pb-4 pt-2 px-1 scrollbar-hide">
+            {sports.map((sport) => (
+              <button
+                key={sport}
+                onClick={() => handleSportClick(sport)}
+                className={`flex-shrink-0 flex flex-col items-center justify-center w-18 h-18 sm:w-20 sm:h-20 rounded-full transition-all duration-200 ${
+                  selectedSport === sport
+                    ? 'bg-green-500 text-white shadow-lg scale-105'
+                    : 'bg-slate-800 text-gray-300 hover:bg-slate-700 hover:text-white'
+                }`}
+              >
+                <span className="text-lg sm:text-xl mb-1">{getSportIcon(sport)}</span>
+                <span className="text-xs font-medium text-center leading-tight">{sport}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Games List */}
+        <div className="space-y-4 pb-20">
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="w-12 h-12 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+              <p className="text-white text-lg">Loading games...</p>
+            </div>
+          ) : games.length > 0 ? (
+            games.map(game => (
+              <div key={game.id} className="bg-slate-800 rounded-xl sm:rounded-2xl border border-slate-700 overflow-hidden">
+                {/* Game Header */}
+                <div className="bg-slate-700/50 px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-600">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
+                      <span className="text-red-400 text-xs sm:text-sm font-medium uppercase tracking-wide">Live</span>
+                    </div>
+                    <span className="text-gray-400 text-xs sm:text-sm">{game.time}</span>
+                  </div>
+                  <h3 className="text-white font-bold text-base sm:text-lg lg:text-xl mt-2 truncate">{game.awayTeam} @ {game.homeTeam}</h3>
                 </div>
-              ) : filteredGames.length > 0 ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {filteredGames.map((game) => (
-                    <MatchupCard
-                      key={game.id}
-                      game={game}
-                      onAddToBetSlip={addToBetSlip}
-                      betSlip={betSlip}
-                    />
-                  ))}
+
+                {/* Betting Options - Compact DraftKings Style */}
+                <div className="overflow-x-auto">
+                  {/* Header Row */}
+                  <div className="grid grid-cols-4 gap-2 sm:gap-4 px-4 py-2 text-xs text-gray-400 font-medium uppercase tracking-wider border-b border-slate-600">
+                    <div className="text-left">Team</div>
+                    <div className="text-center">Spread</div>
+                    <div className="text-center">Total</div>
+                    <div className="text-center">Moneyline</div>
+                  </div>
+
+                  {/* Away Team Row */}
+                  <div className="grid grid-cols-4 gap-2 sm:gap-4 px-4 py-3 border-b border-slate-600/50">
+                    <div className="flex items-center">
+                      <div className="text-white font-bold text-sm truncate">{game.awayTeam}</div>
+                    </div>
+                    <button
+                      onClick={() => addToBetSlip(game, 'spread', game.lines.spread.away.odds, `${game.awayTeam} ${game.lines.spread.away.point}`)}
+                      className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
+                        betSlip.find(bet => bet.id === `${game.id}-spread-${game.awayTeam} ${game.lines.spread.away.point}`) 
+                          ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
+                          : 'bg-slate-700 hover:bg-green-600 border-slate-600 hover:border-green-500'
+                      }`}
+                    >
+                      <div className="text-gray-300 text-xs">{game.lines.spread.away.point}</div>
+                      <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.spread.away.odds)}</div>
+                    </button>
+                    <button
+                      onClick={() => addToBetSlip(game, 'total', game.lines.total.over.odds, `Over ${game.lines.total.over.point}`)}
+                      className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
+                        betSlip.find(bet => bet.id === `${game.id}-total-Over ${game.lines.total.over.point}`) 
+                          ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
+                          : 'bg-slate-700 hover:bg-green-600 border-slate-600 hover:border-green-500'
+                      }`}
+                    >
+                      <div className="text-gray-300 text-xs">{game.lines.total.over.point}</div>
+                      <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.total.over.odds)}</div>
+                    </button>
+                    <button
+                      onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeam)}
+                      className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
+                        betSlip.find(bet => bet.id === `${game.id}-moneyline-${game.awayTeam}`) 
+                          ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
+                          : 'bg-slate-700 hover:bg-green-600 border-slate-600 hover:border-green-500'
+                      }`}
+                    >
+                      <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.moneyline.away)}</div>
+                    </button>
+                  </div>
+
+                  {/* Home Team Row */}
+                  <div className="grid grid-cols-4 gap-2 sm:gap-4 px-4 py-3">
+                    <div className="flex items-center">
+                      <div className="text-white font-bold text-sm truncate">{game.homeTeam}</div>
+                    </div>
+                    <button
+                      onClick={() => addToBetSlip(game, 'spread', game.lines.spread.home.odds, `${game.homeTeam} ${game.lines.spread.home.point}`)}
+                      className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
+                        betSlip.find(bet => bet.id === `${game.id}-spread-${game.homeTeam} ${game.lines.spread.home.point}`) 
+                          ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
+                          : 'bg-slate-700 hover:bg-green-600 border-slate-600 hover:border-green-500'
+                      }`}
+                    >
+                      <div className="text-gray-300 text-xs">{game.lines.spread.home.point}</div>
+                      <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.spread.home.odds)}</div>
+                    </button>
+                    <button
+                      onClick={() => addToBetSlip(game, 'total', game.lines.total.under.odds, `Under ${game.lines.total.under.point}`)}
+                      className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
+                        betSlip.find(bet => bet.id === `${game.id}-total-Under ${game.lines.total.under.point}`) 
+                          ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
+                          : 'bg-slate-700 hover:bg-green-600 border-slate-600 hover:border-green-500'
+                      }`}
+                    >
+                      <div className="text-gray-300 text-xs">{game.lines.total.under.point}</div>
+                      <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.total.under.odds)}</div>
+                    </button>
+                    <button
+                      onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeam)}
+                      className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
+                        betSlip.find(bet => bet.id === `${game.id}-moneyline-${game.homeTeam}`) 
+                          ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
+                          : 'bg-slate-700 hover:bg-green-600 border-slate-600 hover:border-green-500'
+                      }`}
+                    >
+                      <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.moneyline.home)}</div>
+                    </button>
+                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-20">
-                  <div className="text-6xl mb-4">🏈</div>
-                  <h3 className="text-2xl font-bold text-white mb-2">No Games Available</h3>
-                  <p className="text-gray-400">Check back later for {selectedSport} games and betting lines.</p>
-                </div>
-              )}
-            </>
-          )}
-
-          {/* Live Betting Tab */}
-          {activeTab === 'live' && (
-            <LiveBetting onAddToBetSlip={addToBetSlip} />
-          )}
-
-          {/* Bet Builder Tab */}
-          {activeTab === 'builder' && (
-            <BetBuilder games={games} onAddToBetSlip={addToBetSlip} />
-          )}
-
-          {/* Analytics Tab */}
-          {activeTab === 'analytics' && (
-            <AnalyticsDashboard userStats={{ bankroll, pnl }} />
-          )}
-
-          {/* Achievements Tab */}
-          {activeTab === 'achievements' && (
-            <AchievementSystem userStats={{ bankroll, pnl }} />
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-12">
+              <div className="bg-slate-800 rounded-2xl p-8 max-w-md mx-auto">
+                <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
+                </svg>
+                <h3 className="text-xl font-bold text-white mb-2">No Games Available</h3>
+                <p className="text-gray-400">Check back later for {selectedSport} games and betting lines.</p>
+              </div>
+            </div>
           )}
         </div>
       </div>
 
       {/* Bet Slip */}
-      <BetSlip
-        isOpen={showBetSlip}
-        onClose={closeBetSlip}
-        bets={betSlip}
-        setBets={setBetSlip}
-        bankroll={bankroll}
-        userId={user?.id}
-        onBetPlaced={() => {
-          fetchUserStats(user.id);
-          setShowBetSlip(false);
-        }}
-      />
-
-      {/* Challenge Modal */}
-      {showChallengeModal && (
-        <ChallengeModal
-          isOpen={showChallengeModal}
-          onClose={() => setShowChallengeModal(false)}
-          user={user}
+      {showBetSlip && (
+        <BetSlip
+          isOpen={showBetSlip}
+          onClose={() => setShowBetSlip(false)}
+          bets={betSlip}
+          setBets={setBetSlip}
+          bankroll={bankroll}
+          setBankroll={setBankroll}
+          pnl={pnl}
+          setPnl={setPnl}
         />
       )}
+
+      <style jsx>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .w-18 {
+          width: 4.5rem;
+        }
+        .h-18 {
+          height: 4.5rem;
+        }
+      `}</style>
     </div>
   );
 }
