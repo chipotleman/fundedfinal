@@ -137,24 +137,24 @@ html, body {
 
 @keyframes video-trace-prominent {
   0%, 100% {
-    background: linear-gradient(90deg, #ef4444, #dc2626, #b91c1c, #991b1b);
+    background: linear-gradient(90deg, #8b5cf6, #3b82f6, #06b6d4, #8b5cf6);
     opacity: 0.8;
-    box-shadow: 0 0 25px rgba(239, 68, 68, 0.6);
+    box-shadow: 0 0 25px rgba(139, 92, 246, 0.6);
   }
   25% {
-    background: linear-gradient(90deg, #dc2626, #b91c1c, #991b1b, #ef4444);
+    background: linear-gradient(90deg, #3b82f6, #06b6d4, #8b5cf6, #3b82f6);
     opacity: 1;
-    box-shadow: 0 0 35px rgba(239, 68, 68, 0.8);
+    box-shadow: 0 0 35px rgba(59, 130, 246, 0.8);
   }
   50% {
-    background: linear-gradient(90deg, #b91c1c, #991b1b, #ef4444, #dc2626);
+    background: linear-gradient(90deg, #06b6d4, #8b5cf6, #3b82f6, #06b6d4);
     opacity: 0.9;
-    box-shadow: 0 0 30px rgba(239, 68, 68, 0.7);
+    box-shadow: 0 0 30px rgba(6, 182, 212, 0.7);
   }
   75% {
-    background: linear-gradient(90deg, #991b1b, #ef4444, #dc2626, #b91c1c);
+    background: linear-gradient(90deg, #8b5cf6, #3b82f6, #06b6d4, #8b5cf6);
     opacity: 1;
-    box-shadow: 0 0 35px rgba(239, 68, 68, 0.8);
+    box-shadow: 0 0 35px rgba(139, 92, 246, 0.8);
   }
 }
 
