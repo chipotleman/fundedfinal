@@ -72,9 +72,9 @@ export default function BetSlip({ isOpen, bets, setBets, bankroll, onClose, onCa
       <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={onClose}></div>
 
       {/* Bet Slip Panel */}
-      <div className="fixed right-0 top-0 bottom-0 w-full max-w-sm lg:max-w-md lg:w-96 bg-slate-800 border-l border-slate-700 flex flex-col z-50 lg:relative lg:border-l"></div>
-      {/* Header */}
-      <div className="p-6 border-b border-slate-700">
+      <div className="fixed right-0 top-0 bottom-0 w-full max-w-sm lg:max-w-md lg:w-96 bg-slate-800 border-l border-slate-700 flex flex-col z-50 lg:relative lg:border-l">
+        {/* Header */}
+        <div className="p-6 border-b border-slate-700">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-white flex items-center">
             <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
