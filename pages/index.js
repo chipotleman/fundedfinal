@@ -23,49 +23,58 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900"></div>
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22m36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
 
-          <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-8">
+          <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
             {/* Title Above Video */}
-            <div className="text-center mb-8">
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white mb-4 leading-tight">
+            <div className="text-center mb-6 sm:mb-8">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black text-white mb-3 sm:mb-4 leading-tight px-2">
                 Get <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Funded</span> to Bet
               </h1>
-              <p className="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-6">
+              <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-4 sm:mb-6 px-4">
                 Watch how you can get funded up to <span className="text-green-400 font-bold">$25,000</span> to bet with and keep 80% of your profits
               </p>
             </div>
             
             {/* Main Video Player */}
-            <div className="relative max-w-5xl mx-auto mb-8">
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl bg-slate-800 border-2 border-slate-700">
-                <video 
-                  controls 
-                  className="w-full h-auto"
-                  poster="/fundmybet-logo.png"
-                  preload="metadata"
-                  style={{ minHeight: '300px', maxHeight: '500px' }}
-                >
-                  <source src="/explainer-video.mp4" type="video/mp4" />
-                  Your browser does not support the video tag.
-                </video>
+            <div className="relative max-w-4xl mx-auto mb-8 px-4">
+              {/* Glowing border container */}
+              <div className="relative inline-block">
+                {/* Animated glowing border */}
+                <div className="absolute -inset-1 bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 rounded-2xl blur-sm opacity-75 animate-pulse"></div>
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 rounded-2xl animate-spin-slow opacity-60"></div>
+                
+                {/* Video container - exact fit */}
+                <div className="relative bg-slate-900 rounded-2xl overflow-hidden">
+                  <video 
+                    controls 
+                    className="block w-full h-auto max-w-full"
+                    poster="/fundmybet-logo.png"
+                    preload="metadata"
+                    style={{ 
+                      aspectRatio: '16/9',
+                      minHeight: '240px',
+                      maxHeight: '70vh'
+                    }}
+                  >
+                    <source src="/explainer-video.mp4" type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                </div>
               </div>
-              
-              {/* Video overlay for styling */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent rounded-2xl pointer-events-none"></div>
             </div>
             
             {/* Call to Action Below Video */}
-            <div className="text-center">
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-                <Link href="/auth" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-2xl">
+            <div className="text-center px-4">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-6 sm:mb-8">
+                <Link href="/auth" className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg shadow-2xl">
                   Start Challenge - $49
                 </Link>
-                <Link href="/rules" className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-700">
+                <Link href="/rules" className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg border border-slate-700">
                   How It Works
                 </Link>
               </div>
 
               {/* Quick Features */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto px-2">
                 <div className="bg-slate-800/50 backdrop-blur-lg rounded-xl p-6 border border-slate-700">
                   <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg flex items-center justify-center mb-4 mx-auto">
                     <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
