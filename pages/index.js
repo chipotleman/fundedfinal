@@ -45,12 +45,14 @@ export default function Home() {
                 <div className="relative bg-slate-900 rounded-2xl overflow-hidden">
                   <video 
                     controls 
+                    playsInline
+                    webkit-playsinline="true"
                     className="block w-full h-full object-cover"
                     poster="/fundmybet-logo.png"
                     preload="auto"
                     style={{ 
                       aspectRatio: '16/9',
-                      minHeight: '400px',
+                      minHeight: '300px',
                       maxHeight: '600px',
                       objectFit: 'cover'
                     }}
