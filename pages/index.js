@@ -45,13 +45,14 @@ export default function Home() {
                 <div className="relative bg-slate-900 rounded-2xl overflow-hidden">
                   <video 
                     controls 
-                    className="block w-full h-auto"
+                    className="block w-full h-full object-cover"
                     poster="/fundmybet-logo.png"
                     preload="metadata"
                     style={{ 
                       aspectRatio: '16/9',
                       minHeight: '400px',
-                      maxHeight: '600px'
+                      maxHeight: '600px',
+                      objectFit: 'cover'
                     }}
                   >
                     <source src="/explainer-video.mp4" type="video/mp4" />
