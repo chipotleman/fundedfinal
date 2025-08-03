@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -40,7 +41,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
 
   return (
     <>
-      <nav className="sticky top-0 left-0 right-0 bg-black z-50">
+      <nav className="sticky top-0 left-0 right-0 bg-black z-50 border-b border-gray-800">
         <div className="px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             {/* Logo - left-aligned on both mobile and desktop */}
@@ -199,7 +200,19 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
           <div className="fixed top-0 right-0 bottom-0 w-80 max-w-sm bg-black shadow-xl border-l border-gray-800">
             <div className="flex flex-col h-full">
               {/* Mobile Menu Header */}
-              <div className="p-6 border-b border-slate-700"></div>
+              <div className="p-6 border-b border-slate-700">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-white">Menu</h2>
+                  <button
+                    onClick={closeMobileMenu}
+                    className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
 
               {/* User Info */}
               <div className="p-6 border-b border-slate-700">
@@ -289,7 +302,8 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732L14.146 12.8l-1.179 4.456a1 1 0 01-1.898-.088L9.854 12.8 6.5 10.866a1 1 0 010-1.732L9.854 7.2l1.215-4.456A1 1 0 0112 2z" clipRule="evenodd" />
                     </svg>
-                    <span className="font-medium">Promos</span>                  </Link>
+                    <span className="font-medium">Promos</span>
+                  </Link>
                   <Link 
                     href="/profile" 
                     onClick={closeMobileMenu}
