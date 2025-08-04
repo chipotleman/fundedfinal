@@ -219,6 +219,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-black">
       <TopNavbar 
+        user={user}
         bankroll={bankroll}
         pnl={pnl}
         betSlipCount={betSlip.length}
