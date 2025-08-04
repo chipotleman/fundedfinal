@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import TopNavbar from '../components/TopNavbar';
 import { useBetSlip } from '../contexts/BetSlipContext';
