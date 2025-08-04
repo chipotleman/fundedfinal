@@ -96,7 +96,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                 <img
                   src="/funderlogo/Funder.png?v=4"
                   alt="Funder"
-                  className="h-16 sm:h-20 w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
+                  className="h-8 sm:h-10 w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
                   style={{
                     filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
                     animation: 'logoRedYellowGlow 4s infinite ease-in-out'
