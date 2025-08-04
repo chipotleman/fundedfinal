@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 
 export default function BalanceModal({ 
@@ -23,241 +22,109 @@ export default function BalanceModal({
     '• No overnight positions on major events'
   ];
 
-  const bettingHistory = [
-    { date: '2024-01-15', sport: 'NFL', bet: 'Chiefs -3.5', amount: 500, result: 'won', profit: 455 },
-    { date: '2024-01-14', sport: 'NBA', bet: 'Lakers ML', amount: 300, result: 'won', profit: 255 },
-    { date: '2024-01-13', sport: 'NHL', bet: 'Over 6.5', amount: 750, result: 'lost', profit: -750 },
-    { date: '2024-01-12', sport: 'NFL', bet: 'Cowboys +7', amount: 400, result: 'won', profit: 364 }
+  const bettingRules = [
+    '• Minimum bet: $10',
+    '• Maximum bet: 10% of current balance',
+    '• Sports betting only (no casino games)',
+    '• Live betting allowed',
+    '• All major sports included'
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-900 rounded-3xl border border-slate-700 max-w-4xl w-full max-h-[80vh] overflow-hidden my-auto">
-        {/* Header */}
-        <div className="p-6 border-b border-slate-700 bg-gradient-to-r from-slate-800 to-slate-900">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold text-white">Challenge Dashboard</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+    <div className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex justify-center items-center z-50" onClick={onClose}>
+      <div className="relative bg-slate-900 rounded-2xl border border-green-400 p-6 w-96 max-w-[90vw] max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-white text-xl font-bold"
+        >
+          ×
+        </button>
+
+        <h2 className="text-2xl font-bold text-green-400 mb-6 text-center">Account Balance</h2>
+
+        {/* Tab Navigation */}
+        <div className="flex mb-6 bg-slate-800 rounded-lg p-1">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+              activeTab === 'overview' 
+                ? 'bg-green-400 text-black' 
+                : 'text-gray-300 hover:text-white'
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('requirements')}
+            className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+              activeTab === 'requirements' 
+                ? 'bg-green-400 text-black' 
+                : 'text-gray-300 hover:text-white'
+            }`}
+          >
+            Rules
+          </button>
+        </div>
+
+        {activeTab === 'overview' && (
+          <div className="space-y-4">
+            {/* Current Balance */}
+            <div className="bg-slate-800 rounded-lg p-4">
+              <div className="text-gray-400 text-sm mb-1">Current Balance</div>
+              <div className="text-2xl font-bold text-white">${bankroll?.toLocaleString() || '0'}</div>
+            </div>
+
+            {/* P&L */}
+            <div className="bg-slate-800 rounded-lg p-4">
+              <div className="text-gray-400 text-sm mb-1">Profit & Loss</div>
+              <div className={`text-2xl font-bold ${pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {pnl >= 0 ? '+' : ''}${pnl?.toLocaleString() || '0'}
+              </div>
+            </div>
+
+            {/* Challenge Progress */}
+            <div className="bg-slate-800 rounded-lg p-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-gray-400 text-sm">Challenge Progress</span>
+                <span className="text-sm text-green-400">{challengePhase || 1}/{totalChallenges || 1}</span>
+              </div>
+
+              <div className="w-full bg-slate-700 rounded-full h-2 mb-2">
+                <div 
+                  className="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${progressPercent || 0}%` }}
+                ></div>
+              </div>
+
+              <div className="flex justify-between text-xs text-gray-400">
+                <span>${startingBankroll?.toLocaleString() || '25,000'}</span>
+                <span>${challengeGoal?.toLocaleString() || '50,000'}</span>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Tabs */}
-        <div className="flex border-b border-slate-700 bg-slate-800/50">
-          {[
-            { id: 'overview', label: 'Overview' },
-            { id: 'progress', label: 'Progress' },
-            { id: 'history', label: 'History' },
-            { id: 'stats', label: 'Stats' }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-4 font-medium transition-colors ${
-                activeTab === tab.id
-                  ? 'text-green-400 border-b-2 border-green-400 bg-slate-800'
-                  : 'text-gray-400 hover:text-white'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[60vh]">
-          {activeTab === 'overview' && (
-            <div className="space-y-6">
-              {/* Balance Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-white">Current Balance</h3>
-                    <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-                  </div>
-                  <div className="text-3xl font-bold text-green-400">${bankroll.toLocaleString()}</div>
-                  <div className="text-sm text-gray-400 mt-2">Starting: ${startingBankroll.toLocaleString()}</div>
-                </div>
-
-                <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
-                  <h3 className="text-lg font-semibold text-white mb-4">Unrealized P&L</h3>
-                  <div className={`text-3xl font-bold ${pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                    {pnl >= 0 ? '+' : ''}${pnl.toLocaleString()}
-                  </div>
-                  <div className="text-sm text-gray-400 mt-2">
-                    {((pnl / startingBankroll) * 100).toFixed(2)}% ROI
-                  </div>
-                </div>
-
-                <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
-                  <h3 className="text-lg font-semibold text-white mb-4">Challenge Phase</h3>
-                  <div className="text-3xl font-bold text-blue-400">Phase {challengePhase}</div>
-                  <div className="text-sm text-gray-400 mt-2">of {totalChallenges} phases</div>
-                </div>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
-                <h3 className="text-lg font-semibold text-white mb-4">Challenge Progress</h3>
-                <div className="relative h-6 bg-slate-700 rounded-full overflow-hidden">
-                  <div 
-                    className="absolute h-6 bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 rounded-full transition-all duration-1000"
-                    style={{ width: `${Math.max(5, progressPercent)}%` }}
-                  />
-                </div>
-                <div className="flex justify-between text-sm mt-2">
-                  <span className="text-gray-400">${startingBankroll.toLocaleString()}</span>
-                  <span className="text-white font-semibold">{progressPercent.toFixed(1)}%</span>
-                  <span className="text-gray-400">${challengeGoal.toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'progress' && (
-            <div className="space-y-6">
-              <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
-                <h3 className="text-xl font-bold text-white mb-6">Phase {challengePhase} Requirements</h3>
-                <div className="space-y-3">
-                  {challengeRequirements.map((req, index) => (
-                    <div key={index} className="flex items-center space-x-3">
-                      <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                      <span className="text-gray-300">{req}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
-                  <h4 className="text-lg font-semibold text-white mb-4">Risk Management</h4>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Max Daily Loss:</span>
-                      <span className="text-red-400 font-semibold">-$800</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Today's P&L:</span>
-                      <span className="text-green-400 font-semibold">+$240</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Max Position Size:</span>
-                      <span className="text-white font-semibold">$1,000</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
-                  <h4 className="text-lg font-semibold text-white mb-4">Betting Days</h4>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Completed:</span>
-                      <span className="text-green-400 font-semibold">7 days</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Required:</span>
-                      <span className="text-white font-semibold">10 days</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Remaining:</span>
-                      <span className="text-blue-400 font-semibold">3 days</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'history' && (
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold text-white">Recent Betting History</h3>
-              <div className="space-y-3">
-                {bettingHistory.map((bet, index) => (
-                  <div key={index} className="bg-slate-800 rounded-xl p-4 border border-slate-700">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="text-gray-400 text-sm">{bet.date}</div>
-                        <div className="bg-slate-700 px-2 py-1 rounded text-xs text-gray-300">{bet.sport}</div>
-                        <div className="text-white font-medium">{bet.bet}</div>
-                      </div>
-                      <div className="flex items-center space-x-4">
-                        <div className="text-gray-400">${bet.amount}</div>
-                        <div className={`font-bold ${bet.result === 'won' ? 'text-green-400' : 'text-red-400'}`}>
-                          {bet.result === 'won' ? '+' : ''}${bet.profit}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+        {activeTab === 'requirements' && (
+          <div className="space-y-4">
+            <div className="bg-slate-800 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-green-400 mb-3">Challenge Requirements</h3>
+              <ul className="space-y-2 text-gray-300 text-sm">
+                {challengeRequirements.map((requirement, index) => (
+                  <li key={index}>{requirement}</li>
                 ))}
-              </div>
+              </ul>
             </div>
-          )}
 
-          {activeTab === 'stats' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
-                <h4 className="text-lg font-semibold text-white mb-4">Performance Metrics</h4>
-                <div className="space-y-4">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Win Rate:</span>
-                    <span className="text-green-400 font-bold">68.5%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Total Bets:</span>
-                    <span className="text-white font-semibold">43</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Avg Bet Size:</span>
-                    <span className="text-white font-semibold">$425</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Best Streak:</span>
-                    <span className="text-green-400 font-semibold">8 wins</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
-                <h4 className="text-lg font-semibold text-white mb-4">Sport Breakdown</h4>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">NFL:</span>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-16 h-2 bg-slate-700 rounded-full overflow-hidden">
-                        <div className="w-3/4 h-2 bg-green-400 rounded-full"></div>
-                      </div>
-                      <span className="text-green-400 text-sm">75%</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">NBA:</span>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-16 h-2 bg-slate-700 rounded-full overflow-hidden">
-                        <div className="w-3/5 h-2 bg-blue-400 rounded-full"></div>
-                      </div>
-                      <span className="text-blue-400 text-sm">60%</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-400">NHL:</span>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-16 h-2 bg-slate-700 rounded-full overflow-hidden">
-                        <div className="w-1/2 h-2 bg-purple-400 rounded-full"></div>
-                      </div>
-                      <span className="text-purple-400 text-sm">50%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div className="bg-slate-800 rounded-lg p-4">
+              <h3 className="text-lg font-semibold text-blue-400 mb-3">Betting Rules</h3>
+              <ul className="space-y-2 text-gray-300 text-sm">
+                {bettingRules.map((rule, index) => (
+                  <li key={index}>{rule}</li>
+                ))}
+              </ul>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
