@@ -90,7 +90,33 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
       <nav className="sticky top-0 left-0 right-0 bg-black z-50">
         <div className="px-3 sm:px-6 py-2 sm:py-3">
           <div className="flex items-center justify-between min-h-[50px] sm:min-h-[60px]">
-            {/* Logo - left-aligned on both mobile and desktop */}
+            {/* Left Side - Desktop Navigation */}
+            <div className="hidden lg:flex items-center space-x-8 flex-1">
+              {isLoggedIn ? (
+                <>
+                  <Link href="/dashboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                    Dashboard
+                  </Link>
+                  <Link href="/leaderboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                    Leaderboard
+                  </Link>
+                  <Link href="/how-it-works" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                    How It Works
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/leaderboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                    Leaderboard
+                  </Link>
+                  <Link href="/how-it-works" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                    How It Works
+                  </Link>
+                </>
+              )}
+            </div>
+
+            {/* Logo - Centered */}
             <div className="flex-none">
               <Link href="/" className="flex items-center">
                 <img
@@ -121,19 +147,10 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
               </Link>
             </div>
 
-            {/* Desktop Navigation - Show different links based on auth status */}
-            <div className="hidden lg:flex items-center space-x-8">
+            {/* Right Side - Desktop: Additional Links + Bankroll + Bet Slip + Buttons, Mobile: Hamburger + Bet Slip */}
+            <div className="hidden lg:flex items-center space-x-8 flex-1 justify-end">
               {isLoggedIn ? (
                 <>
-                  <Link href="/dashboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Dashboard
-                  </Link>
-                  <Link href="/leaderboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Leaderboard
-                  </Link>
-                  <Link href="/how-it-works" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    How It Works
-                  </Link>
                   <Link href="/waitlist" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     Thunder Card
                   </Link>
@@ -142,21 +159,13 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                   </Link>
                 </>
               ) : (
-                <>
-                  <Link href="/leaderboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Leaderboard
-                  </Link>
-                  <Link href="/how-it-works" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    How It Works
-                  </Link>
-                  <Link href="/waitlist" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Thunder Card
-                  </Link>
-                </>
+                <Link href="/waitlist" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                  Thunder Card
+                </Link>
               )}
             </div>
 
-            {/* Right Side - Desktop: Bankroll + Bet Slip + Buttons, Mobile: Hamburger + Bet Slip */}
+            {/* Right Side - Mobile & Desktop: Bankroll + Bet Slip + Buttons */}
             <div className="flex items-center space-x-2 sm:space-x-4">
               {/* Desktop Bankroll - Only show when logged in */}
               {isLoggedIn && (
