@@ -37,7 +37,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
     fetchUser();
 
     // Subscribe to authentication state changes
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN') {
         setCurrentUser(session.user);
         setIsLoggedIn(true);
@@ -53,7 +53,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
 
     // Cleanup the listener on component unmount
     return () => {
-      authListener?.unsubscribe();
+      subscription?.unsubscribe();
     };
   }, [router]);
 
