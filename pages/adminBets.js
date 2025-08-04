@@ -9,12 +9,19 @@ export default function AdminBets() {
 
   useEffect(() => {
     const fetchBets = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (!session || session.user.email !== adminEmail) {
-        alert('Access denied.');
-        window.location.href = '/';
-        return;
+      // Check localStorage authentication first
+      const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+      
+      // Check if user is logged in and is admin
+      if (!currentUser.username || currentUser.username !== 'admin') {
+        // Fallback to Supabase check
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session || session.user.email !== adminEmail) {
+          alert('Access denied. Admin privileges required.');
+          window.location.href = '/auth';
+          return;
+        }
       }
 
       const { data, error } = await supabase
