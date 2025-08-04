@@ -34,30 +34,50 @@ export default function Waitlist() {
           </p>
         </div>
 
-        {/* Card Visual */}
-        <div className="max-w-md mx-auto mb-16">
-          <div className="relative">
-            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 p-[2px] animate-pulse"></div>
-            <div className="relative bg-gradient-to-br from-gray-900 to-black rounded-2xl p-8 aspect-[1.6/1]">
-              <div className="flex flex-col justify-between h-full">
-                <div>
-                  <div className="text-2xl font-bold text-white mb-2">Thunder Card</div>
-                  <div className="text-sm text-gray-400">Powered by Funder</div>
-                </div>
-                <div>
-                  <div className="text-lg font-mono text-white mb-4">•••• •••• •••• 1234</div>
-                  <div className="flex justify-between items-end">
+        {/* Thunder Card Preview */}
+            <div className="relative max-w-sm mx-auto mb-12">
+              <div className="relative">
+                {/* Card with gradient background - more rectangular aspect ratio like real debit card */}
+                <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 rounded-xl p-6 shadow-2xl border border-blue-500/30 transform hover:scale-105 transition-all duration-300" style={{aspectRatio: '1.586/1', width: '320px'}}>
+                  {/* Card Header */}
+                  <div className="flex justify-between items-start mb-4">
                     <div>
-                      <div className="text-xs text-gray-400">CARDHOLDER</div>
-                      <div className="text-sm font-semibold text-white">YOUR NAME</div>
+                      <div className="text-blue-300 text-xs font-medium mb-1">THUNDER CARD</div>
+                      <div className="text-white text-base font-bold">PREMIUM</div>
                     </div>
-                    <div className="w-12 h-8 bg-gradient-to-r from-yellow-400 to-orange-500 rounded opacity-80"></div>
+                    <div className="w-10 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded flex items-center justify-center">
+                      <div className="w-5 h-3 bg-yellow-300 rounded-sm"></div>
+                    </div>
+                  </div>
+
+                  {/* Card Number */}
+                  <div className="mb-4">
+                    <div className="text-white text-lg font-mono tracking-widest">
+                      •••• •••• •••• 1234
+                    </div>
+                  </div>
+
+                  {/* Card Details */}
+                  <div className="flex justify-between items-end mb-3">
+                    <div>
+                      <div className="text-blue-300 text-xs mb-1">CARDHOLDER</div>
+                      <div className="text-white text-xs font-medium">FUNDER MEMBER</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-blue-300 text-xs mb-1">EXPIRES</div>
+                      <div className="text-white text-xs font-medium">12/28</div>
+                    </div>
+                  </div>
+
+                  {/* Powered by Funder */}
+                  <div className="mt-2 pt-2 border-t border-blue-500/20">
+                    <div className="text-center text-blue-300 text-xs font-medium">
+                      Powered by Funder
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        </div>
 
         {/* Features */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">

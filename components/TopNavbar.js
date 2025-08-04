@@ -60,8 +60,8 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
               <Link href="/dashboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                 Dashboard
               </Link>
-              <Link href="/rules" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                Rules
+              <Link href="/how-it-works" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                How It Works
               </Link>
               <Link href="/leaderboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                 Leaderboard
@@ -278,14 +278,14 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                     <span className="font-medium">Dashboard</span>
                   </Link>
                   <Link 
-                    href="/rules" 
+                    href="/how-it-works" 
                     onClick={closeMobileMenu}
                     className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]"
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
                     </svg>
-                    <span className="font-medium">Rules</span>
+                    <span className="font-medium">How It Works</span>
                   </Link>
                   <Link 
                     href="/leaderboard" 

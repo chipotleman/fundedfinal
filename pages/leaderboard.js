@@ -313,8 +313,8 @@ const Leaderboard = () => {
               <Link href="/dashboard" className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-600 hover:border-slate-500">
                 View Dashboard
               </Link>
-              <Link href="/rules" className="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg">
-                View Rules
+              <Link href="/how-it-works" className="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg">
+                How It Works
               </Link>
             </div>
           </div>
