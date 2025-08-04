@@ -27,6 +27,8 @@ export default function Document() {
         
         {/* General Meta Tags */}
         <meta name="description" content="Get funded up to $25,000 to bet with and keep 80% of your profits. No risk betting with our money, not yours." />
+        <meta name="keywords" content="sports betting, funded betting, no risk betting, profit sharing" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
       </Head>
       <body>
         <Main />

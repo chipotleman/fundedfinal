@@ -4,7 +4,7 @@ import TopNavbar from '../components/TopNavbar';
 import ProfileModal from '../components/ProfileModal';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserProfiles } from '../contexts/UserProfilesContext';
-import { useAuth } from '../contexts/AuthContext'; // Assuming AuthContext for login status
+import { useAuth } from '../contexts/AuthContext';
 
 const Leaderboard = () => {
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
@@ -85,35 +85,10 @@ const Leaderboard = () => {
   return (
     <div className="min-h-screen bg-black">
       <TopNavbar 
-        bankroll={user ? 10000 : 0} // Only show balance if logged in
+        bankroll={user ? 10000 : null}
         pnl={0}
         betSlipCount={betSlip.length}
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
-        rightContent={
-          <>
-            {!user ? (
-              <>
-                <Link href="/sign-in" className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300">
-                  Sign In
-                </Link>
-                <Link href="/get-funded" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300">
-                  Get Funded
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link href="/logout" onClick={logout} className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300">
-                  Logout
-                </Link>
-                {!hasOpenChallenge(user.username) && (
-                  <Link href="/get-funded" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300">
-                    Get Funded
-                  </Link>
-                )}
-              </>
-            )}
-          </>
-        }
       />
 
       <div className="pt-4 pb-16">
