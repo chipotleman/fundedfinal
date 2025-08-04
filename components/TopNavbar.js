@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -204,22 +203,24 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
       {showMobileMenu && (
         <div className="fixed inset-0 z-[60] lg:hidden">
           <div className="fixed inset-0 bg-black/50" onClick={closeMobileMenu}></div>
+          
+          
           <div className="fixed top-0 right-0 bottom-0 w-80 max-w-sm bg-black shadow-xl border-l border-gray-800">
             <div className="flex flex-col h-full">
-              {/* Mobile Menu Header */}
-              <div className="p-6 border-b border-slate-700">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-white">Menu</h2>
-                  <button
-                    onClick={closeMobileMenu}
-                    className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
+              {/* Close Button */}
+              <div className="p-4 flex justify-end">
+                <button
+                  onClick={closeMobileMenu}
+                  className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
+
+              {/* Navigation Links */}
+              <div className="flex-1 px-6 pb-6">
 
               {/* User Info */}
               <div className="p-6 border-b border-slate-700">
@@ -269,8 +270,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
               </div>
 
               {/* Navigation Links */}
-              <div className="flex-1 p-6">
-                <div className="space-y-2">
+              <div className="space-y-2">
                   <Link 
                     href="/dashboard" 
                     onClick={closeMobileMenu}
@@ -375,7 +375,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
         challengeGoal={25000}
         startingBankroll={10000}
       />
-      
+
       <style jsx>{`
         @keyframes logoColorCycle {
           0% { filter: hue-rotate(0deg) saturate(1.2) brightness(1.1); }
