@@ -1,0 +1,603 @@
+
+Build Error
+
+Failed to compile
+
+Next.js (14.2.30) is outdated (learn more)
+./components/BalanceModal.js
+Error: 
+  × the name `BalanceModal` is defined multiple times
+     ╭─[/home/runner/workspace/components/BalanceModal.js:1:1]
+   1 │ 
+   2 │ import { useState } from 'react';
+   3 │ 
+   4 │ export default function BalanceModal({ 
+     ·                         ──────┬─────
+     ·                               ╰── previous definition of `BalanceModal` here
+   5 │   isOpen, 
+   6 │   onClose, 
+   7 │   bankroll, 
+   8 │   pnl, 
+   9 │   challengePhase, 
+  10 │   totalChallenges,
+  11 │   progressPercent,
+  12 │   challengeGoal,
+  13 │   startingBankroll 
+  14 │ }) {
+  15 │   const [activeTab, setActiveTab] = useState('overview');
+  16 │ 
+  17 │   if (!isOpen) return null;
+  18 │ 
+  19 │   const challengeRequirements = [
+  20 │     '• Reach $25,000 profit target',
+  21 │     '• Maximum 8% daily loss limit', 
+  22 │     '• Minimum 10 betting days',
+  23 │     '• No overnight positions on major events'
+  24 │   ];
+  25 │ 
+  26 │   const bettingHistory = [
+  27 │     { date: '2024-01-15', sport: 'NFL', bet: 'Chiefs -3.5', amount: 500, result: 'won', profit: 455 },
+  28 │     { date: '2024-01-14', sport: 'NBA', bet: 'Lakers ML', amount: 300, result: 'won', profit: 255 },
+  29 │     { date: '2024-01-13', sport: 'NHL', bet: 'Over 6.5', amount: 750, result: 'lost', profit: -750 },
+  30 │     { date: '2024-01-12', sport: 'NFL', bet: 'Cowboys +7', amount: 400, result: 'won', profit: 364 }
+  31 │   ];
+  32 │ 
+  33 │   return (
+  34 │     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  35 │       <div className="bg-slate-900 rounded-3xl border border-slate-700 max-w-4xl w-full max-h-[80vh] overflow-hidden my-auto">
+  36 │         {/* Header */}
+  37 │         <div className="p-6 border-b border-slate-700 bg-gradient-to-r from-slate-800 to-slate-900">
+  38 │           <div className="flex items-center justify-between">
+  39 │             <h2 className="text-2xl font-bold text-white">Challenge Dashboard</h2>
+  40 │             <button
+  41 │               onClick={onClose}
+  42 │               className="text-gray-400 hover:text-white transition-colors"
+  43 │             >
+  44 │               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  45 │                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  46 │               </svg>
+  47 │             </button>
+  48 │           </div>
+  49 │         </div>
+  50 │ 
+  51 │         {/* Tabs */}
+  52 │         <div className="flex border-b border-slate-700 bg-slate-800/50">
+  53 │           {[
+  54 │             { id: 'overview', label: 'Overview' },
+  55 │             { id: 'progress', label: 'Progress' },
+  56 │             { id: 'history', label: 'History' },
+  57 │             { id: 'stats', label: 'Stats' }
+  58 │           ].map((tab) => (
+  59 │             <button
+  60 │               key={tab.id}
+  61 │               onClick={() => setActiveTab(tab.id)}
+  62 │               className={`px-6 py-4 font-medium transition-colors ${
+  63 │                 activeTab === tab.id
+  64 │                   ? 'text-green-400 border-b-2 border-green-400 bg-slate-800'
+  65 │                   : 'text-gray-400 hover:text-white'
+  66 │               }`}
+  67 │             >
+  68 │               {tab.label}
+  69 │             </button>
+  70 │           ))}
+  71 │         </div>
+  72 │ 
+  73 │         {/* Content */}
+  74 │         <div className="p-6 overflow-y-auto max-h-[60vh]">
+  75 │           {activeTab === 'overview' && (
+  76 │             <div className="space-y-6">
+  77 │               {/* Balance Cards */}
+  78 │               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+  79 │                 <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+  80 │                   <div className="flex items-center justify-between mb-4">
+  81 │                     <h3 className="text-lg font-semibold text-white">Current Balance</h3>
+  82 │                     <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+  83 │                   </div>
+  84 │                   <div className="text-3xl font-bold text-green-400">${bankroll.toLocaleString()}</div>
+  85 │                   <div className="text-sm text-gray-400 mt-2">Starting: ${startingBankroll.toLocaleString()}</div>
+  86 │                 </div>
+  87 │ 
+  88 │                 <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+  89 │                   <h3 className="text-lg font-semibold text-white mb-4">Unrealized P&L</h3>
+  90 │                   <div className={`text-3xl font-bold ${pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+  91 │                     {pnl >= 0 ? '+' : ''}${pnl.toLocaleString()}
+  92 │                   </div>
+  93 │                   <div className="text-sm text-gray-400 mt-2">
+  94 │                     {((pnl / startingBankroll) * 100).toFixed(2)}% ROI
+  95 │                   </div>
+  96 │                 </div>
+  97 │ 
+  98 │                 <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+  99 │                   <h3 className="text-lg font-semibold text-white mb-4">Challenge Phase</h3>
+ 100 │                   <div className="text-3xl font-bold text-blue-400">Phase {challengePhase}</div>
+ 101 │                   <div className="text-sm text-gray-400 mt-2">of {totalChallenges} phases</div>
+ 102 │                 </div>
+ 103 │               </div>
+ 104 │ 
+ 105 │               {/* Progress Bar */}
+ 106 │               <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+ 107 │                 <h3 className="text-lg font-semibold text-white mb-4">Challenge Progress</h3>
+ 108 │                 <div className="relative h-6 bg-slate-700 rounded-full overflow-hidden">
+ 109 │                   <div 
+ 110 │                     className="absolute h-6 bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 rounded-full transition-all duration-1000"
+ 111 │                     style={{ width: `${Math.max(5, progressPercent)}%` }}
+ 112 │                   />
+ 113 │                 </div>
+ 114 │                 <div className="flex justify-between text-sm mt-2">
+ 115 │                   <span className="text-gray-400">${startingBankroll.toLocaleString()}</span>
+ 116 │                   <span className="text-white font-semibold">{progressPercent.toFixed(1)}%</span>
+ 117 │                   <span className="text-gray-400">${challengeGoal.toLocaleString()}</span>
+ 118 │                 </div>
+ 119 │               </div>
+ 120 │             </div>
+ 121 │           )}
+ 122 │ 
+ 123 │           {activeTab === 'progress' && (
+ 124 │             <div className="space-y-6">
+ 125 │               <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+ 126 │                 <h3 className="text-xl font-bold text-white mb-6">Phase {challengePhase} Requirements</h3>
+ 127 │                 <div className="space-y-3">
+ 128 │                   {challengeRequirements.map((req, index) => (
+ 129 │                     <div key={index} className="flex items-center space-x-3">
+ 130 │                       <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+ 131 │                       <span className="text-gray-300">{req}</span>
+ 132 │                     </div>
+ 133 │                   ))}
+ 134 │                 </div>
+ 135 │               </div>
+ 136 │ 
+ 137 │               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+ 138 │                 <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+ 139 │                   <h4 className="text-lg font-semibold text-white mb-4">Risk Management</h4>
+ 140 │                   <div className="space-y-3">
+ 141 │                     <div className="flex justify-between">
+ 142 │                       <span className="text-gray-400">Max Daily Loss:</span>
+ 143 │                       <span className="text-red-400 font-semibold">-$800</span>
+ 144 │                     </div>
+ 145 │                     <div className="flex justify-between">
+ 146 │                       <span className="text-gray-400">Today's P&L:</span>
+ 147 │                       <span className="text-green-400 font-semibold">+$240</span>
+ 148 │                     </div>
+ 149 │                     <div className="flex justify-between">
+ 150 │                       <span className="text-gray-400">Max Position Size:</span>
+ 151 │                       <span className="text-white font-semibold">$1,000</span>
+ 152 │                     </div>
+ 153 │                   </div>
+ 154 │                 </div>
+ 155 │ 
+ 156 │                 <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+ 157 │                   <h4 className="text-lg font-semibold text-white mb-4">Betting Days</h4>
+ 158 │                   <div className="space-y-3">
+ 159 │                     <div className="flex justify-between">
+ 160 │                       <span className="text-gray-400">Completed:</span>
+ 161 │                       <span className="text-green-400 font-semibold">7 days</span>
+ 162 │                     </div>
+ 163 │                     <div className="flex justify-between">
+ 164 │                       <span className="text-gray-400">Required:</span>
+ 165 │                       <span className="text-white font-semibold">10 days</span>
+ 166 │                     </div>
+ 167 │                     <div className="flex justify-between">
+ 168 │                       <span className="text-gray-400">Remaining:</span>
+ 169 │                       <span className="text-blue-400 font-semibold">3 days</span>
+ 170 │                     </div>
+ 171 │                   </div>
+ 172 │                 </div>
+ 173 │               </div>
+ 174 │             </div>
+ 175 │           )}
+ 176 │ 
+ 177 │           {activeTab === 'history' && (
+ 178 │             <div className="space-y-4">
+ 179 │               <h3 className="text-xl font-bold text-white">Recent Betting History</h3>
+ 180 │               <div className="space-y-3">
+ 181 │                 {bettingHistory.map((bet, index) => (
+ 182 │                   <div key={index} className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+ 183 │                     <div className="flex items-center justify-between">
+ 184 │                       <div className="flex items-center space-x-4">
+ 185 │                         <div className="text-gray-400 text-sm">{bet.date}</div>
+ 186 │                         <div className="bg-slate-700 px-2 py-1 rounded text-xs text-gray-300">{bet.sport}</div>
+ 187 │                         <div className="text-white font-medium">{bet.bet}</div>
+ 188 │                       </div>
+ 189 │                       <div className="flex items-center space-x-4">
+ 190 │                         <div className="text-gray-400">${bet.amount}</div>
+ 191 │                         <div className={`font-bold ${bet.result === 'won' ? 'text-green-400' : 'text-red-400'}`}>
+ 192 │                           {bet.result === 'won' ? '+' : ''}${bet.profit}
+ 193 │                         </div>
+ 194 │                       </div>
+ 195 │                     </div>
+ 196 │                   </div>
+ 197 │                 ))}
+ 198 │               </div>
+ 199 │             </div>
+ 200 │           )}
+ 201 │ 
+ 202 │           {activeTab === 'stats' && (
+ 203 │             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+ 204 │               <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+ 205 │                 <h4 className="text-lg font-semibold text-white mb-4">Performance Metrics</h4>
+ 206 │                 <div className="space-y-4">
+ 207 │                   <div className="flex justify-between">
+ 208 │                     <span className="text-gray-400">Win Rate:</span>
+ 209 │                     <span className="text-green-400 font-bold">68.5%</span>
+ 210 │                   </div>
+ 211 │                   <div className="flex justify-between">
+ 212 │                     <span className="text-gray-400">Total Bets:</span>
+ 213 │                     <span className="text-white font-semibold">43</span>
+ 214 │                   </div>
+ 215 │                   <div className="flex justify-between">
+ 216 │                     <span className="text-gray-400">Avg Bet Size:</span>
+ 217 │                     <span className="text-white font-semibold">$425</span>
+ 218 │                   </div>
+ 219 │                   <div className="flex justify-between">
+ 220 │                     <span className="text-gray-400">Best Streak:</span>
+ 221 │                     <span className="text-green-400 font-semibold">8 wins</span>
+ 222 │                   </div>
+ 223 │                 </div>
+ 224 │               </div>
+ 225 │ 
+ 226 │               <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+ 227 │                 <h4 className="text-lg font-semibold text-white mb-4">Sport Breakdown</h4>
+ 228 │                 <div className="space-y-3">
+ 229 │                   <div className="flex justify-between items-center">
+ 230 │                     <span className="text-gray-400">NFL:</span>
+ 231 │                     <div className="flex items-center space-x-2">
+ 232 │                       <div className="w-16 h-2 bg-slate-700 rounded-full overflow-hidden">
+ 233 │                         <div className="w-3/4 h-2 bg-green-400 rounded-full"></div>
+ 234 │                       </div>
+ 235 │                       <span className="text-green-400 text-sm">75%</span>
+ 236 │                     </div>
+ 237 │                   </div>
+ 238 │                   <div className="flex justify-between items-center">
+ 239 │                     <span className="text-gray-400">NBA:</span>
+ 240 │                     <div className="flex items-center space-x-2">
+ 241 │                       <div className="w-16 h-2 bg-slate-700 rounded-full overflow-hidden">
+ 242 │                         <div className="w-3/5 h-2 bg-blue-400 rounded-full"></div>
+ 243 │                       </div>
+ 244 │                       <span className="text-blue-400 text-sm">60%</span>
+ 245 │                     </div>
+ 246 │                   </div>
+ 247 │                   <div className="flex justify-between items-center">
+ 248 │                     <span className="text-gray-400">NHL:</span>
+ 249 │                     <div className="flex items-center space-x-2">
+ 250 │                       <div className="w-16 h-2 bg-slate-700 rounded-full overflow-hidden">
+ 251 │                         <div className="w-1/2 h-2 bg-purple-400 rounded-full"></div>
+ 252 │                       </div>
+ 253 │                       <span className="text-purple-400 text-sm">50%</span>
+ 254 │                     </div>
+ 255 │                   </div>
+ 256 │                 </div>
+ 257 │               </div>
+ 258 │             </div>
+ 259 │           )}
+ 260 │         </div>
+ 261 │       </div>
+ 262 │     </div>
+ 263 │   );
+ 264 │ }
+ 265 │ export default function BalanceModal({ bankroll, onClose }) {
+     ·                         ──────┬─────
+     ·                               ╰── `BalanceModal` redefined here
+ 266 │   return (
+ 267 │     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+ 268 │       <div className="bg-slate-900 rounded-2xl p-6 w-full max-w-md">
+     ╰────
+
+  × the name `default` is exported multiple times
+     ╭─[/home/runner/workspace/components/BalanceModal.js:1:1]
+   1 │     
+   2 │     import { useState } from 'react';
+   3 │     
+   4 │ ╭─▶ export default function BalanceModal({ 
+   5 │ │     isOpen, 
+   6 │ │     onClose, 
+   7 │ │     bankroll, 
+   8 │ │     pnl, 
+   9 │ │     challengePhase, 
+  10 │ │     totalChallenges,
+  11 │ │     progressPercent,
+  12 │ │     challengeGoal,
+  13 │ │     startingBankroll 
+  14 │ │   }) {
+  15 │ │     const [activeTab, setActiveTab] = useState('overview');
+  16 │ │   
+  17 │ │     if (!isOpen) return null;
+  18 │ │   
+  19 │ │     const challengeRequirements = [
+  20 │ │       '• Reach $25,000 profit target',
+  21 │ │       '• Maximum 8% daily loss limit', 
+  22 │ │       '• Minimum 10 betting days',
+  23 │ │       '• No overnight positions on major events'
+  24 │ │     ];
+  25 │ │   
+  26 │ │     const bettingHistory = [
+  27 │ │       { date: '2024-01-15', sport: 'NFL', bet: 'Chiefs -3.5', amount: 500, result: 'won', profit: 455 },
+  28 │ │       { date: '2024-01-14', sport: 'NBA', bet: 'Lakers ML', amount: 300, result: 'won', profit: 255 },
+  29 │ │       { date: '2024-01-13', sport: 'NHL', bet: 'Over 6.5', amount: 750, result: 'lost', profit: -750 },
+  30 │ │       { date: '2024-01-12', sport: 'NFL', bet: 'Cowboys +7', amount: 400, result: 'won', profit: 364 }
+  31 │ │     ];
+  32 │ │   
+  33 │ │     return (
+  34 │ │       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  35 │ │         <div className="bg-slate-900 rounded-3xl border border-slate-700 max-w-4xl w-full max-h-[80vh] overflow-hidden my-auto">
+  36 │ │           {/* Header */}
+  37 │ │           <div className="p-6 border-b border-slate-700 bg-gradient-to-r from-slate-800 to-slate-900">
+  38 │ │             <div className="flex items-center justify-between">
+  39 │ │               <h2 className="text-2xl font-bold text-white">Challenge Dashboard</h2>
+  40 │ │               <button
+  41 │ │                 onClick={onClose}
+  42 │ │                 className="text-gray-400 hover:text-white transition-colors"
+  43 │ │               >
+  44 │ │                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  45 │ │                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  46 │ │                 </svg>
+  47 │ │               </button>
+  48 │ │             </div>
+  49 │ │           </div>
+  50 │ │   
+  51 │ │           {/* Tabs */}
+  52 │ │           <div className="flex border-b border-slate-700 bg-slate-800/50">
+  53 │ │             {[
+  54 │ │               { id: 'overview', label: 'Overview' },
+  55 │ │               { id: 'progress', label: 'Progress' },
+  56 │ │               { id: 'history', label: 'History' },
+  57 │ │               { id: 'stats', label: 'Stats' }
+  58 │ │             ].map((tab) => (
+  59 │ │               <button
+  60 │ │                 key={tab.id}
+  61 │ │                 onClick={() => setActiveTab(tab.id)}
+  62 │ │                 className={`px-6 py-4 font-medium transition-colors ${
+  63 │ │                   activeTab === tab.id
+  64 │ │                     ? 'text-green-400 border-b-2 border-green-400 bg-slate-800'
+  65 │ │                     : 'text-gray-400 hover:text-white'
+  66 │ │                 }`}
+  67 │ │               >
+  68 │ │                 {tab.label}
+  69 │ │               </button>
+  70 │ │             ))}
+  71 │ │           </div>
+  72 │ │   
+  73 │ │           {/* Content */}
+  74 │ │           <div className="p-6 overflow-y-auto max-h-[60vh]">
+  75 │ │             {activeTab === 'overview' && (
+  76 │ │               <div className="space-y-6">
+  77 │ │                 {/* Balance Cards */}
+  78 │ │                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+  79 │ │                   <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+  80 │ │                     <div className="flex items-center justify-between mb-4">
+  81 │ │                       <h3 className="text-lg font-semibold text-white">Current Balance</h3>
+  82 │ │                       <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+  83 │ │                     </div>
+  84 │ │                     <div className="text-3xl font-bold text-green-400">${bankroll.toLocaleString()}</div>
+  85 │ │                     <div className="text-sm text-gray-400 mt-2">Starting: ${startingBankroll.toLocaleString()}</div>
+  86 │ │                   </div>
+  87 │ │   
+  88 │ │                   <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+  89 │ │                     <h3 className="text-lg font-semibold text-white mb-4">Unrealized P&L</h3>
+  90 │ │                     <div className={`text-3xl font-bold ${pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+  91 │ │                       {pnl >= 0 ? '+' : ''}${pnl.toLocaleString()}
+  92 │ │                     </div>
+  93 │ │                     <div className="text-sm text-gray-400 mt-2">
+  94 │ │                       {((pnl / startingBankroll) * 100).toFixed(2)}% ROI
+  95 │ │                     </div>
+  96 │ │                   </div>
+  97 │ │   
+  98 │ │                   <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+  99 │ │                     <h3 className="text-lg font-semibold text-white mb-4">Challenge Phase</h3>
+ 100 │ │                     <div className="text-3xl font-bold text-blue-400">Phase {challengePhase}</div>
+ 101 │ │                     <div className="text-sm text-gray-400 mt-2">of {totalChallenges} phases</div>
+ 102 │ │                   </div>
+ 103 │ │                 </div>
+ 104 │ │   
+ 105 │ │                 {/* Progress Bar */}
+ 106 │ │                 <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+ 107 │ │                   <h3 className="text-lg font-semibold text-white mb-4">Challenge Progress</h3>
+ 108 │ │                   <div className="relative h-6 bg-slate-700 rounded-full overflow-hidden">
+ 109 │ │                     <div 
+ 110 │ │                       className="absolute h-6 bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 rounded-full transition-all duration-1000"
+ 111 │ │                       style={{ width: `${Math.max(5, progressPercent)}%` }}
+ 112 │ │                     />
+ 113 │ │                   </div>
+ 114 │ │                   <div className="flex justify-between text-sm mt-2">
+ 115 │ │                     <span className="text-gray-400">${startingBankroll.toLocaleString()}</span>
+ 116 │ │                     <span className="text-white font-semibold">{progressPercent.toFixed(1)}%</span>
+ 117 │ │                     <span className="text-gray-400">${challengeGoal.toLocaleString()}</span>
+ 118 │ │                   </div>
+ 119 │ │                 </div>
+ 120 │ │               </div>
+ 121 │ │             )}
+ 122 │ │   
+ 123 │ │             {activeTab === 'progress' && (
+ 124 │ │               <div className="space-y-6">
+ 125 │ │                 <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+ 126 │ │                   <h3 className="text-xl font-bold text-white mb-6">Phase {challengePhase} Requirements</h3>
+ 127 │ │                   <div className="space-y-3">
+ 128 │ │                     {challengeRequirements.map((req, index) => (
+ 129 │ │                       <div key={index} className="flex items-center space-x-3">
+ 130 │ │                         <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+ 131 │ │                         <span className="text-gray-300">{req}</span>
+ 132 │ │                       </div>
+ 133 │ │                     ))}
+ 134 │ │                   </div>
+ 135 │ │                 </div>
+ 136 │ │   
+ 137 │ │                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+ 138 │ │                   <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+ 139 │ │                     <h4 className="text-lg font-semibold text-white mb-4">Risk Management</h4>
+ 140 │ │                     <div className="space-y-3">
+ 141 │ │                       <div className="flex justify-between">
+ 142 │ │                         <span className="text-gray-400">Max Daily Loss:</span>
+ 143 │ │                         <span className="text-red-400 font-semibold">-$800</span>
+ 144 │ │                       </div>
+ 145 │ │                       <div className="flex justify-between">
+ 146 │ │                         <span className="text-gray-400">Today's P&L:</span>
+ 147 │ │                         <span className="text-green-400 font-semibold">+$240</span>
+ 148 │ │                       </div>
+ 149 │ │                       <div className="flex justify-between">
+ 150 │ │                         <span className="text-gray-400">Max Position Size:</span>
+ 151 │ │                         <span className="text-white font-semibold">$1,000</span>
+ 152 │ │                       </div>
+ 153 │ │                     </div>
+ 154 │ │                   </div>
+ 155 │ │   
+ 156 │ │                   <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+ 157 │ │                     <h4 className="text-lg font-semibold text-white mb-4">Betting Days</h4>
+ 158 │ │                     <div className="space-y-3">
+ 159 │ │                       <div className="flex justify-between">
+ 160 │ │                         <span className="text-gray-400">Completed:</span>
+ 161 │ │                         <span className="text-green-400 font-semibold">7 days</span>
+ 162 │ │                       </div>
+ 163 │ │                       <div className="flex justify-between">
+ 164 │ │                         <span className="text-gray-400">Required:</span>
+ 165 │ │                         <span className="text-white font-semibold">10 days</span>
+ 166 │ │                       </div>
+ 167 │ │                       <div className="flex justify-between">
+ 168 │ │                         <span className="text-gray-400">Remaining:</span>
+ 169 │ │                         <span className="text-blue-400 font-semibold">3 days</span>
+ 170 │ │                       </div>
+ 171 │ │                     </div>
+ 172 │ │                   </div>
+ 173 │ │                 </div>
+ 174 │ │               </div>
+ 175 │ │             )}
+ 176 │ │   
+ 177 │ │             {activeTab === 'history' && (
+ 178 │ │               <div className="space-y-4">
+ 179 │ │                 <h3 className="text-xl font-bold text-white">Recent Betting History</h3>
+ 180 │ │                 <div className="space-y-3">
+ 181 │ │                   {bettingHistory.map((bet, index) => (
+ 182 │ │                     <div key={index} className="bg-slate-800 rounded-xl p-4 border border-slate-700">
+ 183 │ │                       <div className="flex items-center justify-between">
+ 184 │ │                         <div className="flex items-center space-x-4">
+ 185 │ │                           <div className="text-gray-400 text-sm">{bet.date}</div>
+ 186 │ │                           <div className="bg-slate-700 px-2 py-1 rounded text-xs text-gray-300">{bet.sport}</div>
+ 187 │ │                           <div className="text-white font-medium">{bet.bet}</div>
+ 188 │ │                         </div>
+ 189 │ │                         <div className="flex items-center space-x-4">
+ 190 │ │                           <div className="text-gray-400">${bet.amount}</div>
+ 191 │ │                           <div className={`font-bold ${bet.result === 'won' ? 'text-green-400' : 'text-red-400'}`}>
+ 192 │ │                             {bet.result === 'won' ? '+' : ''}${bet.profit}
+ 193 │ │                           </div>
+ 194 │ │                         </div>
+ 195 │ │                       </div>
+ 196 │ │                     </div>
+ 197 │ │                   ))}
+ 198 │ │                 </div>
+ 199 │ │               </div>
+ 200 │ │             )}
+ 201 │ │   
+ 202 │ │             {activeTab === 'stats' && (
+ 203 │ │               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+ 204 │ │                 <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+ 205 │ │                   <h4 className="text-lg font-semibold text-white mb-4">Performance Metrics</h4>
+ 206 │ │                   <div className="space-y-4">
+ 207 │ │                     <div className="flex justify-between">
+ 208 │ │                       <span className="text-gray-400">Win Rate:</span>
+ 209 │ │                       <span className="text-green-400 font-bold">68.5%</span>
+ 210 │ │                     </div>
+ 211 │ │                     <div className="flex justify-between">
+ 212 │ │                       <span className="text-gray-400">Total Bets:</span>
+ 213 │ │                       <span className="text-white font-semibold">43</span>
+ 214 │ │                     </div>
+ 215 │ │                     <div className="flex justify-between">
+ 216 │ │                       <span className="text-gray-400">Avg Bet Size:</span>
+ 217 │ │                       <span className="text-white font-semibold">$425</span>
+ 218 │ │                     </div>
+ 219 │ │                     <div className="flex justify-between">
+ 220 │ │                       <span className="text-gray-400">Best Streak:</span>
+ 221 │ │                       <span className="text-green-400 font-semibold">8 wins</span>
+ 222 │ │                     </div>
+ 223 │ │                   </div>
+ 224 │ │                 </div>
+ 225 │ │   
+ 226 │ │                 <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700">
+ 227 │ │                   <h4 className="text-lg font-semibold text-white mb-4">Sport Breakdown</h4>
+ 228 │ │                   <div className="space-y-3">
+ 229 │ │                     <div className="flex justify-between items-center">
+ 230 │ │                       <span className="text-gray-400">NFL:</span>
+ 231 │ │                       <div className="flex items-center space-x-2">
+ 232 │ │                         <div className="w-16 h-2 bg-slate-700 rounded-full overflow-hidden">
+ 233 │ │                           <div className="w-3/4 h-2 bg-green-400 rounded-full"></div>
+ 234 │ │                         </div>
+ 235 │ │                         <span className="text-green-400 text-sm">75%</span>
+ 236 │ │                       </div>
+ 237 │ │                     </div>
+ 238 │ │                     <div className="flex justify-between items-center">
+ 239 │ │                       <span className="text-gray-400">NBA:</span>
+ 240 │ │                       <div className="flex items-center space-x-2">
+ 241 │ │                         <div className="w-16 h-2 bg-slate-700 rounded-full overflow-hidden">
+ 242 │ │                           <div className="w-3/5 h-2 bg-blue-400 rounded-full"></div>
+ 243 │ │                         </div>
+ 244 │ │                         <span className="text-blue-400 text-sm">60%</span>
+ 245 │ │                       </div>
+ 246 │ │                     </div>
+ 247 │ │                     <div className="flex justify-between items-center">
+ 248 │ │                       <span className="text-gray-400">NHL:</span>
+ 249 │ │                       <div className="flex items-center space-x-2">
+ 250 │ │                         <div className="w-16 h-2 bg-slate-700 rounded-full overflow-hidden">
+ 251 │ │                           <div className="w-1/2 h-2 bg-purple-400 rounded-full"></div>
+ 252 │ │                         </div>
+ 253 │ │                         <span className="text-purple-400 text-sm">50%</span>
+ 254 │ │                       </div>
+ 255 │ │                     </div>
+ 256 │ │                   </div>
+ 257 │ │                 </div>
+ 258 │ │               </div>
+ 259 │ │             )}
+ 260 │ │           </div>
+ 261 │ │         </div>
+ 262 │ │       </div>
+ 263 │ │     );
+ 264 │ ├─▶ }
+     · ╰──── previous exported here
+ 265 │ ╭─▶ export default function BalanceModal({ bankroll, onClose }) {
+ 266 │ │     return (
+ 267 │ │       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+ 268 │ │         <div className="bg-slate-900 rounded-2xl p-6 w-full max-w-md">
+ 269 │ │           <div className="flex justify-between items-center mb-6">
+ 270 │ │             <h2 className="text-2xl font-bold text-white">Account Balance</h2>
+ 271 │ │             <button
+ 272 │ │               onClick={onClose}
+ 273 │ │               className="text-gray-400 hover:text-white transition-colors"
+ 274 │ │             >
+ 275 │ │               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+ 276 │ │                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+ 277 │ │               </svg>
+ 278 │ │             </button>
+ 279 │ │           </div>
+ 280 │ │   
+ 281 │ │           <div className="text-center">
+ 282 │ │             <div className="mb-6">
+ 283 │ │               <p className="text-gray-400 mb-2">Current Balance</p>
+ 284 │ │               <p className="text-4xl font-bold text-green-400">${bankroll.toLocaleString()}</p>
+ 285 │ │             </div>
+ 286 │ │   
+ 287 │ │             <div className="space-y-4">
+ 288 │ │               <div className="bg-slate-800 rounded-xl p-4">
+ 289 │ │                 <div className="flex justify-between items-center">
+ 290 │ │                   <span className="text-gray-400">Available for Betting</span>
+ 291 │ │                   <span className="text-white font-semibold">${bankroll.toLocaleString()}</span>
+ 292 │ │                 </div>
+ 293 │ │               </div>
+ 294 │ │   
+ 295 │ │               <div className="bg-slate-800 rounded-xl p-4">
+ 296 │ │                 <div className="flex justify-between items-center">
+ 297 │ │                   <span className="text-gray-400">In Active Bets</span>
+ 298 │ │                   <span className="text-white font-semibold">$0</span>
+ 299 │ │                 </div>
+ 300 │ │               </div>
+ 301 │ │             </div>
+ 302 │ │   
+ 303 │ │             <div className="mt-6 text-sm text-gray-500">
+ 304 │ │               <p>* This is virtual currency for challenge mode</p>
+ 305 │ │             </div>
+ 306 │ │           </div>
+ 307 │ │         </div>
+ 308 │ │       </div>
+ 309 │ │     );
+ 310 │ ├─▶ }
+     · ╰──── exported more than once
+     ╰────
+
+Error: 
+  ☞ Exported identifiers must be unique
+This error occurred during the build process and can only be dismissed by fixing the error.
