@@ -409,6 +409,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                     </div>
 
                     {/* Mobile Login Button */}
+                  <div className="mt-6">
                     <Link
                       href="/auth"
                       onClick={closeMobileMenu}
@@ -417,11 +418,81 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                       <span className="text-base">Login / Sign Up</span>
                     </Link>
                   </div>
-                </>
-              )}
-            </div>
+                </div>
+              </>
+            ) : (
+              /* Not logged in mobile menu */
+              <div className="flex flex-col h-full">
+                {/* Close Button */}
+                <div className="p-4 flex justify-end">
+                  <button
+                    onClick={closeMobileMenu}
+                    className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Navigation Links for non-logged in users */}
+                <div className="flex-1 px-6 pb-6">
+                  <div className="space-y-2">
+                    <Link
+                      href="/leaderboard"
+                      onClick={closeMobileMenu}
+                      className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <span className="font-medium">Leaderboard</span>
+                    </Link>
+                    <Link
+                      href="/how-it-works"
+                      onClick={closeMobileMenu}
+                      className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                      </svg>
+                      <span className="font-medium">How It Works</span>
+                    </Link>
+                    <Link
+                      href="/waitlist"
+                      onClick={closeMobileMenu}
+                      className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300"
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                      </svg>
+                      <span className="font-medium">Thunder Card</span>
+                    </Link>
+                  </div>
+
+                  {/* Mobile Auth Buttons */}
+                  <div className="mt-6 space-y-3">
+                    <Link
+                      href="/auth"
+                      onClick={closeMobileMenu}
+                      className="w-full text-center text-gray-300 hover:text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm border border-gray-600 hover:border-gray-500 flex items-center justify-center"
+                    >
+                      <span>Sign In</span>
+                    </Link>
+                    <Link
+                      href="/packages"
+                      onClick={closeMobileMenu}
+                      className="w-full text-center bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                    >
+                      <span className="text-base">GET FUNDED</span>
+                    </Link>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
+      )}
       )}
 
       <BalanceModal
