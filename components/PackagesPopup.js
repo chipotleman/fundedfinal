@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
@@ -138,7 +137,7 @@ export default function PackagesPopup({ isOpen, onClose }) {
       profitTarget: parseInt(packageData.target.replace(/[$,]/g, '')),
       dailyLossLimit: parseFloat(packageData.dailyLoss.replace('%', '')) / 100
     }));
-    
+
     router.push('/auth');
   };
 
@@ -196,7 +195,7 @@ export default function PackagesPopup({ isOpen, onClose }) {
         className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={onClose}
       />
-      
+
       {/* Modal Content */}
       <div className="relative bg-slate-900 rounded-2xl border-2 border-slate-700 max-w-sm w-full mx-4 max-h-[85vh] overflow-y-auto">
         {/* Close Button */}
@@ -215,7 +214,7 @@ export default function PackagesPopup({ isOpen, onClose }) {
             Choose Your <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Challenge</span>
           </h2>
           <p className="text-gray-300 text-xs mb-3">Swipe left/right to explore packages</p>
-          
+
           {/* Billing Toggle */}
           <div className="flex justify-center mb-3">
             <div className="bg-slate-800 rounded-lg p-1 border border-slate-700">
@@ -297,7 +296,7 @@ export default function PackagesPopup({ isOpen, onClose }) {
                   </svg>
                   <span className="text-gray-300 text-xs">{feature}</span>
                 </div>
-              ))}</div>
+              ))}
             </div>
 
             <button
