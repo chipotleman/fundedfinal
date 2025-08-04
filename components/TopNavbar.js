@@ -157,7 +157,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
             </div>
 
             {/* Right Side - Mobile & Desktop: Bankroll + Bet Slip + Buttons */}
-            <div className="flex items-center space-x-2 sm:space-x-4 lg:order-none order-1">
+            <div className="flex items-center space-x-2 sm:space-x-4 lg:order-none order-3">
               {/* Desktop Bankroll - Only show when logged in */}
               {isLoggedIn && (
                 <div className="hidden sm:flex items-center space-x-4">
