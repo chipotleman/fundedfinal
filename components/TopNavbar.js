@@ -444,6 +444,16 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                         </svg>
                         <span className="font-medium">Thunder Card</span>
                       </Link>
+                      <Link
+                        href="/packages"
+                        onClick={closeMobileMenu}
+                        className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300"
+                      >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 4a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+                        </svg>
+                        <span className="font-medium">Get Funded</span>
+                      </Link>
                     </div>
 
                     {/* Mobile Login Button */}
