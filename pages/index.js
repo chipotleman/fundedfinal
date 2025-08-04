@@ -25,7 +25,7 @@ export default function Home() {
           <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-8">
             {/* Logo with matching glow effect */}
             <div className="text-center mb-12 sm:mb-16 pt-4 sm:pt-0">
-              
+
 
               <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6 sm:mb-8 leading-tight px-2">
                 Get <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Funded</span> to Bet
@@ -57,7 +57,7 @@ export default function Home() {
                       objectFit: 'cover'
                     }}
                   >
-                    <source src="/new-explainer-video.mp4" type="video/mp4" />
+                    <source src="/attached_assets/video-output-2B76BEB5-93DD-4F89-8C82-7491551F28B9-1_1754319310155.mov" type="video/mp4" />
                     Your browser does not support the video tag.
                   </video>
                 </div>
