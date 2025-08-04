@@ -94,7 +94,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
             <div className="flex-none">
               <Link href="/" className="flex items-center">
                 <img
-                  src="/funder-logo.png"
+                  src="/funderlogo/Funder.png"
                   alt="Funder"
                   className="h-12 sm:h-16 w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
                   style={{
@@ -107,12 +107,12 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                     e.target.nextElementSibling.style.display = 'none';
                   }}
                   onError={(e) => {
-                    console.log('Logo failed to load, showing fallback');
+                    console.log('Logo failed to load, showing text fallback');
                     e.target.style.display = 'none';
                     e.target.nextElementSibling.style.display = 'block';
                   }}
                 />
-                <span 
+                <span
                   className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent"
                   style={{ display: 'block' }}
                 >
@@ -405,70 +405,6 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                           <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1 532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
                         </svg>
                         <span className="font-medium">Settings</span>
-                      </Link>
-                    </div>
-                  </div>
-
-                  {/* Sign Out */}
-                  <div className="p-6 border-t border-slate-700">
-                    <button
-                      onClick={() => {
-                        handleSignOut();
-                        closeMobileMenu();
-                      }}
-                      className="w-full flex items-center space-x-3 px-4 py-4 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-xl transition-all duration-200"
-                    >
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" />
-                      </svg>
-                      <span className="font-medium">Sign Out</span>
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  {/* Mobile Navigation Links for Non-Logged In Users */}
-                  <div className="flex-1 px-6 pb-6">
-                    <div className="space-y-2 mb-6">
-                      <Link
-                        href="/leaderboard"
-                        onClick={closeMobileMenu}
-                        className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300"
-                      >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        <span className="font-medium">Leaderboard</span>
-                      </Link>
-                      <Link
-                        href="/how-it-works"
-                        onClick={closeMobileMenu}
-                        className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300"
-                      >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                        </svg>
-                        <span className="font-medium">How It Works</span>
-                      </Link>
-                      <Link
-                        href="/waitlist"
-                        onClick={closeMobileMenu}
-                        className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300"
-                      >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                        </svg>
-                        <span className="font-medium">Thunder Card</span>
-                      </Link>
-                      <Link
-                        href="/packages"
-                        onClick={closeMobileMenu}
-                        className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300"
-                      >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 4a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
-                        </svg>
-                        <span className="font-medium">Get Funded</span>
                       </Link>
                     </div>
 
