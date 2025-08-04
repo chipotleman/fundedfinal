@@ -101,14 +101,20 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                     filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
                     animation: 'logoColorCycle 8s infinite ease-in-out'
                   }}
+                  onLoad={(e) => {
+                    console.log('Logo loaded successfully');
+                    e.target.style.display = 'block';
+                    e.target.nextElementSibling.style.display = 'none';
+                  }}
                   onError={(e) => {
+                    console.log('Logo failed to load, showing fallback');
                     e.target.style.display = 'none';
-                    e.target.nextSibling.style.display = 'block';
+                    e.target.nextElementSibling.style.display = 'block';
                   }}
                 />
                 <span 
                   className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent"
-                  style={{ display: 'none' }}
+                  style={{ display: 'block' }}
                 >
                   Funder
                 </span>
