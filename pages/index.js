@@ -1,10 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
 import LiveFeed from '../components/LiveFeed';
 
 export default function Home() {
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [visibleSections, setVisibleSections] = useState({});
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setVisibleSections(prev => ({
+              ...prev,
+              [entry.target.id]: true
+            }));
+          }
+        });
+      },
+      { 
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+      }
+    );
+
+    // Observe all sections with IDs
+    const sections = document.querySelectorAll('[id^="section-"]');
+    sections.forEach(section => observer.observe(section));
+
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div className="min-h-screen bg-black">
@@ -27,7 +53,7 @@ export default function Home() {
             <div className="text-center mb-12 sm:mb-16 pt-4 sm:pt-0">
 
 
-              <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6 sm:mb-8 leading-tight px-2">
+              <h1 className="text-4xl font-black text-white mb-6 sm:mb-8 leading-tight px-2">
                 Get <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Funded</span> to Bet
               </h1>
               <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-4 sm:mb-6 px-4">
@@ -79,7 +105,14 @@ export default function Home() {
             </div>
 
             {/* Live Winners Section - Moved up for better visual flow */}
-            <div className="text-center mb-12 px-4">
+            <div 
+              id="section-winners" 
+              className={`text-center mb-12 px-4 transition-all duration-1000 ${
+                visibleSections['section-winners'] 
+                  ? 'opacity-100 translate-y-0' 
+                  : 'opacity-0 translate-y-10'
+              }`}
+            >
               <h2 className="text-4xl font-bold text-white mb-4">
                 See Real <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Winners</span>
               </h2>
@@ -137,7 +170,14 @@ export default function Home() {
             </div>
 
             {/* Feature Boxes - Moved below Live Winners */}
-            <div className="text-center px-4">
+            <div 
+              id="section-features" 
+              className={`text-center px-4 transition-all duration-1000 delay-300 ${
+                visibleSections['section-features'] 
+                  ? 'opacity-100 translate-y-0' 
+                  : 'opacity-0 translate-y-10'
+              }`}
+            >
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto px-2">
                 <div className="bg-black/90 backdrop-blur-lg rounded-xl p-6 border border-gray-800">
                   <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg flex items-center justify-center mb-4 mx-auto">
@@ -174,8 +214,15 @@ export default function Home() {
         </div>
 
         {/* Stats Section */}
-        <div className="bg-black py-16">
-          <div className="max-w-6xl mx-auto px-6">
+        <div 
+          id="section-stats" 
+          className={`bg-black py-16 transition-all duration-1000 delay-500 ${
+            visibleSections['section-stats'] 
+              ? 'opacity-100 translate-y-0' 
+              : 'opacity-0 translate-y-10'
+          }`}
+        >
+          <div className="max-w-6xl mx-auto px-6"></div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
               <div>
                 <div className="text-4xl font-black text-green-400 mb-2">$2.1M+</div>

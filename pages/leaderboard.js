@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
@@ -268,7 +267,8 @@ const Leaderboard = () => {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+                </table>
+              </div>
             </div>
           </div>
         </div>
