@@ -57,7 +57,7 @@ export default function AdminBets() {
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 py-6 px-4 sm:px-6 lg:px-8">
+      <div className="bg-gradient-to-r from-purple-600 to-blue-600 py-3 px-4 sm:px-6 lg:px-8 mt-16">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-center text-white">
             Admin Bet Grading Panel
@@ -69,7 +69,7 @@ export default function AdminBets() {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4"></div>
         {bets.length > 0 ? (
           <div className="space-y-4 sm:space-y-6">
             {bets.map(bet => (
