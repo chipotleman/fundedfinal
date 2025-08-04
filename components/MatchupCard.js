@@ -46,11 +46,7 @@ export default function MatchupCard({ game, selectedBet, handleTeamSelect, onBet
                 odds: game.lines.spread.away.odds,
                 gameId: game.id
               })}
-              className={`px-3 py-2 rounded-lg font-semibold text-sm md:transition-all md:duration-200 md:hover:scale-105 ${
-                isInBetSlip(game, 'spread', `${game.awayTeam} ${game.lines?.spread?.away?.point}`) 
-                  ? 'bg-green-500 text-white shadow-lg' 
-                  : 'bg-slate-700 md:hover:bg-slate-600 text-white border border-slate-600'
-              }`}
+              className="glass-button px-3 py-2 text-white text-sm font-medium"
             >
               {game.awayTeam} {game.lines.spread.away.point} ({game.lines.spread.away.odds})
             </button>
@@ -63,11 +59,7 @@ export default function MatchupCard({ game, selectedBet, handleTeamSelect, onBet
                 odds: game.lines.spread.home.odds,
                 gameId: game.id
               })}
-              className={`px-3 py-2 rounded-lg font-semibold text-sm md:transition-all md:duration-200 md:hover:scale-105 ${
-                isInBetSlip(game, 'spread', `${game.homeTeam} ${game.lines?.spread?.home?.point}`) 
-                  ? 'bg-green-500 text-white shadow-lg' 
-                  : 'bg-slate-700 md:hover:bg-slate-600 text-white border border-slate-600'
-              }`}
+              className="glass-button px-3 py-2 text-white text-sm font-medium"
             >
               {game.homeTeam} {game.lines.spread.home.point} ({game.lines.spread.home.odds})
             </button>
@@ -87,11 +79,7 @@ export default function MatchupCard({ game, selectedBet, handleTeamSelect, onBet
                 odds: game.lines.moneyline.away,
                 gameId: game.id
               })}
-              className={`px-3 py-2 rounded-lg font-semibold text-sm md:transition-all md:duration-200 md:hover:scale-105 ${
-                isInBetSlip(game, 'moneyline', game.awayTeam) 
-                  ? 'bg-green-500 text-white shadow-lg' 
-                  : 'bg-slate-700 md:hover:bg-slate-600 text-white border border-slate-600'
-              }`}
+              className="btn-success px-3 py-2 text-white text-sm font-medium"
             >
               {game.awayTeam} ({game.lines.moneyline.away})
             </button>
@@ -104,11 +92,7 @@ export default function MatchupCard({ game, selectedBet, handleTeamSelect, onBet
                 odds: game.lines.moneyline.home,
                 gameId: game.id
               })}
-              className={`px-3 py-2 rounded-lg font-semibold text-sm md:transition-all md:duration-200 md:hover:scale-105 ${
-                isInBetSlip(game, 'moneyline', game.homeTeam) 
-                  ? 'bg-green-500 text-white shadow-lg' 
-                  : 'bg-slate-700 md:hover:bg-slate-600 text-white border border-slate-600'
-              }`}
+              className="btn-success px-3 py-2 text-white text-sm font-medium"
             >
               {game.homeTeam} ({game.lines.moneyline.home})
             </button>
@@ -128,11 +112,7 @@ export default function MatchupCard({ game, selectedBet, handleTeamSelect, onBet
                 odds: game.lines.total.over,
                 gameId: game.id
               })}
-              className={`px-3 py-2 rounded-lg font-semibold text-sm md:transition-all md:duration-200 md:hover:scale-105 ${
-                isInBetSlip(game, 'over_under', `Over ${game.lines?.total?.line}`) 
-                  ? 'bg-green-500 text-white shadow-lg' 
-                  : 'bg-slate-700 md:hover:bg-slate-600 text-white border border-slate-600'
-              }`}
+              className="btn-primary px-3 py-2 text-white text-sm font-medium"
             >
               Over {game.lines.total.line} ({game.lines.total.over})
             </button>
@@ -145,11 +125,7 @@ export default function MatchupCard({ game, selectedBet, handleTeamSelect, onBet
                 odds: game.lines.total.under,
                 gameId: game.id
               })}
-              className={`px-3 py-2 rounded-lg font-semibold text-sm md:transition-all md:duration-200 md:hover:scale-105 ${
-                isInBetSlip(game, 'over_under', `Under ${game.lines?.total?.line}`) 
-                  ? 'bg-green-500 text-white shadow-lg' 
-                  : 'bg-slate-700 md:hover:bg-slate-600 text-white border border-slate-600'
-              }`}
+              className="btn-primary px-3 py-2 text-white text-sm font-medium"
             >
               Under {game.lines.total.line} ({game.lines.total.under})
             </button>
