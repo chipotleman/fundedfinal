@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
@@ -103,7 +104,7 @@ const Leaderboard = () => {
 
         {/* Filters */}
         <div className="max-w-7xl mx-auto px-6 mb-8">
-          <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-800"></div>
+          <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-800">
             <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
               <div className="flex gap-2">
                 <button
@@ -214,13 +215,13 @@ const Leaderboard = () => {
         {/* Full Leaderboard Table */}
         <div className="max-w-7xl mx-auto px-6">
           <div className="bg-black/90 backdrop-blur-lg rounded-2xl border border-gray-800 overflow-hidden">
-            <div className="p-6 border-b border-gray-800"></div>
+            <div className="p-6 border-b border-gray-800">
               <h2 className="text-2xl font-bold text-white">Full Rankings</h2>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-gray-800/90"></thead>
+                <thead className="bg-gray-800/90">
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Rank</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Bettor</th>
@@ -282,7 +283,7 @@ const Leaderboard = () => {
         {/* Stats Cards */}
         <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-800 text-center"></div>
+            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-800 text-center">
               <div className="text-3xl font-black text-purple-400 mb-2">2,847</div>
               <div className="text-gray-300">Active Bettors</div>
             </div>
@@ -294,7 +295,7 @@ const Leaderboard = () => {
               <div className="text-3xl font-black text-blue-400 mb-2">{(68.4).toFixed(1)}%</div>
               <div className="text-gray-300">Avg Win Rate</div>
             </div>
-            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-800 text-center"></div>
+            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-800 text-center">
               <div className="text-3xl font-black text-orange-400 mb-2">24/7</div>
               <div className="text-gray-300">Live Updates</div>
             </div>
@@ -310,7 +311,7 @@ const Leaderboard = () => {
               <Link href="/auth" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg hover:scale-105 transform">
                 Start Your Journey
               </Link>
-              <Link href="/dashboard" className="bg-gray-800 hover:bg-gray-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-gray-600 hover:border-gray-500"></div>
+              <Link href="/dashboard" className="bg-gray-800 hover:bg-gray-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-gray-600 hover:border-gray-500">
                 View Dashboard
               </Link>
               <Link href="/how-it-works" className="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg">
