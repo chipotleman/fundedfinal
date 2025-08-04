@@ -503,9 +503,9 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
 
       <style jsx>{`
         @keyframes logoTealBlueGlow {
-          0% { filter: hue-rotate(160deg) saturate(1.3) brightness(1.2); }
-          50% { filter: hue-rotate(220deg) saturate(1.4) brightness(1.3); }
-          100% { filter: hue-rotate(160deg) saturate(1.3) brightness(1.2); }
+          0% { filter: hue-rotate(140deg) saturate(1.2) brightness(1.1); }
+          50% { filter: hue-rotate(200deg) saturate(1.3) brightness(1.2); }
+          100% { filter: hue-rotate(140deg) saturate(1.2) brightness(1.1); }
         }
       `}</style>
     </>
