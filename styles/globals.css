@@ -188,23 +188,6 @@ body {
   animation: slide-up 0.6s ease-out;
 }
 
-/* Custom video controls - hide unwanted elements */
-video::-webkit-media-controls-mute-button,
-video::-webkit-media-controls-volume-slider,
-video::-webkit-media-controls-volume-control-container,
-video::-webkit-media-controls-fullscreen-button,
-video::-webkit-media-controls-overlay-enclosure {
-  display: none !important;
-}
-
-video::-webkit-media-controls-enclosure {
-  background-color: rgba(0, 0, 0, 0.8);
-}
-
-video::-webkit-media-controls-panel {
-  background-color: rgba(0, 0, 0, 0.8);
-}
-
 /* Modern Cards */
 .modern-card {
   background: var(--card-gradient);
