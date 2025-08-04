@@ -53,21 +53,20 @@ export default function Home() {
           <div className="absolute inset-0 bg-black"></div>
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22m36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
 
-          <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-2 sm:py-6">
             {/* Logo with matching glow effect */}
-            <div className="text-center mb-12 sm:mb-16">
+            <div className="text-center mb-6 sm:mb-16">
 
-
-              <h1 className="text-4xl font-black text-white mb-6 sm:mb-8 leading-tight px-2">
+              <h1 className="text-4xl font-black text-white mb-4 sm:mb-8 leading-tight px-2">
                 Get <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent inline-block" style={{ transform: 'translateY(0.47px)' }}>Funded</span> to Bet
               </h1>
-              <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-4 sm:mb-6 px-4">
+              <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-3 sm:mb-6 px-4">
                 Watch how you can get funded up to <Link href="/packages" className="text-green-400 font-bold hover:text-green-300 cursor-pointer"> $25,000</Link> to bet with and keep 80% of your profits
               </p>
             </div>
 
             {/* Main Video Player */}
-            <div className="relative max-w-5xl mx-auto mb-8 px-4">
+            <div className="relative max-w-5xl mx-auto mb-6 sm:mb-8 px-4">
               {/* Video container with prominent tracing border */}
               <div className="relative">
                 {/* Prominent purple/blue tracing border */}
