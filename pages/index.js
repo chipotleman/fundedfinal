@@ -15,7 +15,7 @@ export default function Home() {
         onBetSlipClick={() => {}}
       />
 
-      <div className="pt-16">
+      <div>
         {/* Main Video Section - No scrolling needed */}
         <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
           {/* Background Pattern */}
