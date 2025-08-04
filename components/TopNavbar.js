@@ -90,24 +90,8 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
       <nav className="sticky top-0 left-0 right-0 bg-black z-50">
         <div className="px-3 sm:px-6 py-2 sm:py-3">
           <div className="flex items-center justify-between min-h-[50px] sm:min-h-[60px] relative">
-            {/* Mobile hamburger - Show only on mobile, positioned on left */}
-            <div className="lg:hidden order-1">
-              <button
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-600 hover:border-slate-500 transition-colors flex-shrink-0"
-              >
-                <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  {showMobileMenu ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  )}
-                </svg>
-              </button>
-            </div>
-
             {/* Logo - Far left on desktop, center on mobile */}
-            <div className="flex-none lg:order-none order-2 absolute left-1/2 transform -translate-x-1/2 lg:static lg:left-auto lg:transform-none">
+            <div className="flex-none lg:order-none order-2 absolute left-1/2 transform -translate-x-1/2 lg:static lg:left-auto lg:transform-none"></div>
               <Link href="/" className="flex items-center">
                 <img
                   src="/funderlogo/Funder.png"
@@ -174,6 +158,22 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
 
             {/* Right Side - Mobile & Desktop: Bankroll + Bet Slip + Buttons */}
             <div className="flex items-center space-x-2 sm:space-x-4 lg:order-none order-3">
+              {/* Mobile hamburger - Show only on mobile, positioned on right */}
+              <div className="lg:hidden">
+                <button
+                  onClick={() => setShowMobileMenu(!showMobileMenu)}
+                  className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-600 hover:border-slate-500 transition-colors flex-shrink-0"
+                >
+                  <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {showMobileMenu ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    )}
+                  </svg>
+                </button>
+              </div>
+
               {/* Desktop Bankroll - Only show when logged in */}
               {isLoggedIn && (
                 <div className="hidden sm:flex items-center space-x-4">
