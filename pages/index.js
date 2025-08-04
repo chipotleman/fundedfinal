@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
 import LiveFeed from '../components/LiveFeed';
+import PackagesPopup from '../components/PackagesPopup';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -34,6 +35,7 @@ function CustomVideoPlayer() {
 export default function Home() {
   const { user } = useAuth();
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
+  const [showPackagesPopup, setShowPackagesPopup] = useState(false);
 
   return (
     <div className="min-h-screen bg-black" style={{scrollBehavior: 'smooth'}}>
@@ -81,14 +83,23 @@ export default function Home() {
             {/* Call to Action Below Video */}
             <div className="text-center px-4 mb-8">
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-6 sm:mb-8">
-                <Link href="/auth" className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg shadow-2xl">
+                <button 
+                  onClick={() => setShowPackagesPopup(true)}
+                  className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg shadow-2xl"
+                >
                   Start a Challenge
-                </Link>
+                </button>
                 <Link href="/how-it-works" className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg border border-slate-700">
                   How It Works
                 </Link>
               </div>
-            </div>
+            </div></div>
+
+      {/* Packages Popup */}
+      <PackagesPopup 
+        isOpen={showPackagesPopup} 
+        onClose={() => setShowPackagesPopup(false)} 
+      />
 
             {/* Live Winners Section - Moved up for better visual flow */}
             <div className="text-center mb-12 px-4">
@@ -248,6 +259,12 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Packages Popup */}
+      <PackagesPopup 
+        isOpen={showPackagesPopup} 
+        onClose={() => setShowPackagesPopup(false)} 
+      />
     </div>
   );
 }
