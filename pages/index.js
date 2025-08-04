@@ -41,31 +41,13 @@ function CustomVideoPlayer() {
         Your browser does not support the video tag.
       </video>
 
-      {/* Custom Unmute Button - Very Clear and Prominent */}
+      {/* Small Unmute Button - Top Right Corner */}
       {isMuted && (
         <button
           onClick={toggleMute}
-          className="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-6 rounded-xl shadow-2xl border-2 border-white animate-pulse flex items-center space-x-2 z-10 transition-all duration-300 transform hover:scale-105"
+          className="absolute top-3 right-3 bg-green-500 hover:bg-green-600 text-white font-medium py-1.5 px-3 rounded-md shadow-lg z-10 transition-all duration-200 text-sm"
         >
-          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.813L4.69 13.38a1 1 0 01-.538-.307L2.414 11.336a1 1 0 01-.707-1.414l.01-.014a1 1 0 01.707-.414L4.172 9.5a1 1 0 01.538-.307l3.693-3.433A1 1 0 019.383 3.076zM15.657 6.343a1 1 0 011.414 0 7 7 0 010 9.9 1 1 0 11-1.414-1.414 5 5 0 000-7.072 1 1 0 010-1.414z" clipRule="evenodd" />
-            <path d="M13.243 8.758a1 1 0 011.414 0 3 3 0 010 4.243 1 1 0 11-1.414-1.415 1 1 0 000-1.414 1 1 0 010-1.414z" />
-          </svg>
-          <span className="text-lg font-black">UNMUTE FOR SOUND</span>
-        </button>
-      )}
-
-      {/* Mute button when unmuted */}
-      {!isMuted && (
-        <button
-          onClick={toggleMute}
-          className="absolute top-4 right-4 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-lg border border-white flex items-center space-x-2 z-10 transition-all duration-300"
-        >
-          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.617.813L4.69 13.38a1 1 0 01-.538-.307L2.414 11.336a1 1 0 01-.707-1.414l.01-.014a1 1 0 01.707-.414L4.172 9.5a1 1 0 01.538-.307l3.693-3.433A1 1 0 019.383 3.076zM15.657 6.343a1 1 0 011.414 0 7 7 0 010 9.9 1 1 0 11-1.414-1.414 5 5 0 000-7.072 1 1 0 010-1.414z" clipRule="evenodd" />
-            <path d="M13.243 8.758a1 1 0 011.414 0 3 3 0 010 4.243 1 1 0 11-1.414-1.415 1 1 0 000-1.414 1 1 0 010-1.414z" />
-          </svg>
-          <span>MUTE</span>
+          Unmute
         </button>
       )}
     </div>
