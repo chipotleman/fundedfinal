@@ -100,46 +100,49 @@ export default function Home() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
                 <LiveFeed />
 
-                {/* Stats Panel */}
-                <div className="bg-black/90 backdrop-blur-lg rounded-2xl border border-gray-800 p-8">
-                  <h3 className="text-2xl font-bold text-white mb-6">Community Stats</h3>
+                {/* Live Community Stats Panel */}
+                <div className="bg-black/90 backdrop-blur-lg rounded-2xl border border-gray-800 p-8" style={{ height: 'fit-content' }}>
+                  <h3 className="text-2xl font-bold text-white mb-6">Live Community Stats</h3>
                   <div className="space-y-6">
                     <div className="flex items-center justify-between p-4 bg-black/50 rounded-xl">
                       <div>
-                        <div className="text-2xl font-bold text-green-400">$2.4M+</div>
-                        <div className="text-gray-300">Total Payouts</div>
+                        <div className="text-2xl font-bold text-green-400">1,247</div>
+                        <div className="text-gray-300">Bettors Online</div>
                       </div>
-                      <div className="text-green-400 text-2xl">💰</div>
+                      <div className="relative">
+                        <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                        <div className="text-green-400 text-xl">🟢</div>
+                      </div>
                     </div>
 
                     <div className="flex items-center justify-between p-4 bg-black/50 rounded-xl">
                       <div>
-                        <div className="text-2xl font-bold text-blue-400">12,847</div>
-                        <div className="text-gray-300">Active Traders</div>
+                        <div className="text-2xl font-bold text-blue-400">72.3%</div>
+                        <div className="text-gray-300">Win Rate (Last Hour)</div>
                       </div>
-                      <div className="text-blue-400 text-2xl">👥</div>
+                      <div className="text-blue-400 text-2xl">⏱️</div>
                     </div>
 
                     <div className="flex items-center justify-between p-4 bg-black/50 rounded-xl">
                       <div>
-                        <div className="text-2xl font-bold text-purple-400">68.5%</div>
-                        <div className="text-gray-300">Average Win Rate</div>
+                        <div className="text-2xl font-bold text-purple-400">$184K</div>
+                        <div className="text-gray-300">Amount Gambled Today</div>
                       </div>
-                      <div className="text-purple-400 text-2xl">📈</div>
+                      <div className="text-purple-400 text-2xl">🎯</div>
                     </div>
 
                     <div className="flex items-center justify-between p-4 bg-black/50 rounded-xl">
                       <div>
-                        <div className="text-2xl font-bold text-orange-400">24/7</div>
-                        <div className="text-gray-300">Live Betting</div>
+                        <div className="text-2xl font-bold text-orange-400">$89K</div>
+                        <div className="text-gray-300">Amount Withdrawn Today</div>
                       </div>
-                      <div className="text-orange-400 text-2xl">⚡</div>
+                      <div className="text-orange-400 text-2xl">💸</div>
                     </div>
                   </div>
 
                   <div className="mt-8 text-center">
                     <Link href="/auth" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 inline-block">
-                      Join the Winners
+                      Join the Action
                     </Link>
                   </div>
                 </div>
