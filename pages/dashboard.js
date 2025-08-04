@@ -236,10 +236,7 @@ export default function Dashboard() {
       {/* Main Content */}
       <div className="pt-4 sm:pt-6 lg:pt-8 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 space-y-4 sm:space-y-0">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-black text-white leading-tight">
-            {selectedSport} Betting
-          </h1>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-end mb-4 space-y-4 sm:space-y-0">
           <div className="flex items-center space-x-2 sm:space-x-4">
             <div className="bg-gray-800 px-4 py-3 rounded-lg border border-gray-700">
               <div className="flex items-center space-x-2">
