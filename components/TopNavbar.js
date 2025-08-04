@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'router';
+import { useRouter } from 'next/router';
 import BalanceModal from './BalanceModal';
 import WithdrawModal from './WithdrawModal';
 import { supabase } from '../lib/supabaseClient';
