@@ -231,7 +231,7 @@ const Leaderboard = () => {
                     <th className="px-6 py-4 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Bets</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-800"></tbody>
+                <tbody className="divide-y divide-gray-800">
                   {leaderboardData.map((user, index) => (
                     <tr 
                       key={user.rank} 
