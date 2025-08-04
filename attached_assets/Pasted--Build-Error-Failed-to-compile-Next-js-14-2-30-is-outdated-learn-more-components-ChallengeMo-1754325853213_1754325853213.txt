@@ -1,0 +1,232 @@
+
+Build Error
+
+Failed to compile
+
+Next.js (14.2.30) is outdated (learn more)
+./components/ChallengeModal.js
+Error: 
+  × the name `ChallengeModal` is defined multiple times
+    ╭─[/home/runner/workspace/components/ChallengeModal.js:1:1]
+  1 │ export default function ChallengeModal({ pnl, progressPercent, challengeGoal, onClose }) {
+    ·                         ───────┬──────
+    ·                                ╰── previous definition of `ChallengeModal` here
+  2 │   return (
+  3 │     <div
+  4 │       onClick={onClose}
+  5 │       className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex justify-center items-center z-50"
+  6 │     >
+  7 │       <div
+  8 │         onClick={(e) => e.stopPropagation()}
+  9 │         className="relative bg-zinc-900 rounded-2xl border border-green-400 p-6 w-80 flex flex-col items-center animate-fade-in"
+ 10 │       >
+ 11 │         <h2 className="text-lg font-semibold text-green-400 mb-4">Challenge Progress</h2>
+ 12 │ 
+ 13 │         {/* Animated circular progress ring */}
+ 14 │         <div className="relative w-40 h-40 mb-4">
+ 15 │           <div
+ 16 │             className="absolute inset-0 rounded-full border-4 border-green-700 animate-spin-slow"
+ 17 │             style={{
+ 18 │               background: `conic-gradient(#22c55e ${progressPercent}%, #1e293b ${progressPercent}%)`,
+ 19 │             }}
+ 20 │           />
+ 21 │           <div className="absolute inset-4 rounded-full bg-black flex flex-col items-center justify-center border border-green-700">
+ 22 │             <p className="text-green-300 text-sm">PnL</p>
+ 23 │             <p className="text-green-400 text-xl font-bold">${pnl}</p>
+ 24 │             <p className="text-green-300 text-sm mt-1">{progressPercent.toFixed(1)}%</p>
+ 25 │           </div>
+ 26 │         </div>
+ 27 │ 
+ 28 │         <p className="text-green-300 mb-4">Goal: ${challengeGoal}</p>
+ 29 │ 
+ 30 │         <button
+ 31 │           onClick={onClose}
+ 32 │           className="bg-green-400 text-black font-bold py-2 px-4 rounded hover:bg-green-500 transition"
+ 33 │         >
+ 34 │           Close
+ 35 │         </button>
+ 36 │       </div>
+ 37 │     </div>
+ 38 │   );
+ 39 │ }
+ 40 │ import { useState } from 'react';
+ 41 │ 
+ 42 │ export default function ChallengeModal({ onClose }) {
+    ·                         ───────┬──────
+    ·                                ╰── `ChallengeModal` redefined here
+ 43 │   const [selectedChallenge, setSelectedChallenge] = useState(null);
+ 44 │ 
+ 45 │   const challenges = [
+    ╰────
+
+  × the name `default` is exported multiple times
+     ╭─[/home/runner/workspace/components/ChallengeModal.js:1:1]
+   1 │ ╭─▶ export default function ChallengeModal({ pnl, progressPercent, challengeGoal, onClose }) {
+   2 │ │     return (
+   3 │ │       <div
+   4 │ │         onClick={onClose}
+   5 │ │         className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex justify-center items-center z-50"
+   6 │ │       >
+   7 │ │         <div
+   8 │ │           onClick={(e) => e.stopPropagation()}
+   9 │ │           className="relative bg-zinc-900 rounded-2xl border border-green-400 p-6 w-80 flex flex-col items-center animate-fade-in"
+  10 │ │         >
+  11 │ │           <h2 className="text-lg font-semibold text-green-400 mb-4">Challenge Progress</h2>
+  12 │ │   
+  13 │ │           {/* Animated circular progress ring */}
+  14 │ │           <div className="relative w-40 h-40 mb-4">
+  15 │ │             <div
+  16 │ │               className="absolute inset-0 rounded-full border-4 border-green-700 animate-spin-slow"
+  17 │ │               style={{
+  18 │ │                 background: `conic-gradient(#22c55e ${progressPercent}%, #1e293b ${progressPercent}%)`,
+  19 │ │               }}
+  20 │ │             />
+  21 │ │             <div className="absolute inset-4 rounded-full bg-black flex flex-col items-center justify-center border border-green-700">
+  22 │ │               <p className="text-green-300 text-sm">PnL</p>
+  23 │ │               <p className="text-green-400 text-xl font-bold">${pnl}</p>
+  24 │ │               <p className="text-green-300 text-sm mt-1">{progressPercent.toFixed(1)}%</p>
+  25 │ │             </div>
+  26 │ │           </div>
+  27 │ │   
+  28 │ │           <p className="text-green-300 mb-4">Goal: ${challengeGoal}</p>
+  29 │ │   
+  30 │ │           <button
+  31 │ │             onClick={onClose}
+  32 │ │             className="bg-green-400 text-black font-bold py-2 px-4 rounded hover:bg-green-500 transition"
+  33 │ │           >
+  34 │ │             Close
+  35 │ │           </button>
+  36 │ │         </div>
+  37 │ │       </div>
+  38 │ │     );
+  39 │ ├─▶ }
+     · ╰──── previous exported here
+  40 │     import { useState } from 'react';
+  41 │     
+  42 │ ╭─▶ export default function ChallengeModal({ onClose }) {
+  43 │ │     const [selectedChallenge, setSelectedChallenge] = useState(null);
+  44 │ │   
+  45 │ │     const challenges = [
+  46 │ │       {
+  47 │ │         id: 1,
+  48 │ │         name: "Starter Challenge",
+  49 │ │         bankroll: 1000,
+  50 │ │         target: 1500,
+  51 │ │         timeLimit: "7 days",
+  52 │ │         difficulty: "Easy",
+  53 │ │         payout: 250,
+  54 │ │         description: "Perfect for beginners. Reach $1,500 from $1,000 in 7 days."
+  55 │ │       },
+  56 │ │       {
+  57 │ │         id: 2,
+  58 │ │         name: "Pro Challenge", 
+  59 │ │         bankroll: 2500,
+  60 │ │         target: 4000,
+  61 │ │         timeLimit: "14 days",
+  62 │ │         difficulty: "Medium",
+  63 │ │         payout: 750,
+  64 │ │         description: "For experienced traders. Reach $4,000 from $2,500 in 14 days."
+  65 │ │       },
+  66 │ │       {
+  67 │ │         id: 3,
+  68 │ │         name: "Elite Challenge",
+  69 │ │         bankroll: 5000,
+  70 │ │         target: 8000,
+  71 │ │         timeLimit: "30 days", 
+  72 │ │         difficulty: "Hard",
+  73 │ │         payout: 2000,
+  74 │ │         description: "For elite traders. Reach $8,000 from $5,000 in 30 days."
+  75 │ │       }
+  76 │ │     ];
+  77 │ │   
+  78 │ │     const handleStartChallenge = (challenge) => {
+  79 │ │       // Handle challenge start logic here
+  80 │ │       console.log('Starting challenge:', challenge);
+  81 │ │       onClose();
+  82 │ │     };
+  83 │ │   
+  84 │ │     return (
+  85 │ │       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+  86 │ │         <div className="bg-slate-900 rounded-2xl p-6 w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+  87 │ │           <div className="flex justify-between items-center mb-6">
+  88 │ │             <h2 className="text-3xl font-bold text-white">Choose Your Challenge</h2>
+  89 │ │             <button
+  90 │ │               onClick={onClose}
+  91 │ │               className="text-gray-400 hover:text-white transition-colors"
+  92 │ │             >
+  93 │ │               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  94 │ │                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+  95 │ │               </svg>
+  96 │ │             </button>
+  97 │ │           </div>
+  98 │ │   
+  99 │ │           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+ 100 │ │             {challenges.map((challenge) => (
+ 101 │ │               <div
+ 102 │ │                 key={challenge.id}
+ 103 │ │                 className={`border-2 rounded-xl p-6 cursor-pointer transition-all duration-300 ${
+ 104 │ │                   selectedChallenge?.id === challenge.id
+ 105 │ │                     ? 'border-blue-500 bg-blue-500/10'
+ 106 │ │                     : 'border-gray-600 hover:border-gray-400 bg-slate-800'
+ 107 │ │                 }`}
+ 108 │ │                 onClick={() => setSelectedChallenge(challenge)}
+ 109 │ │               >
+ 110 │ │                 <div className="mb-4">
+ 111 │ │                   <h3 className="text-xl font-bold text-white mb-2">{challenge.name}</h3>
+ 112 │ │                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+ 113 │ │                     challenge.difficulty === 'Easy' ? 'bg-green-500/20 text-green-400' :
+ 114 │ │                     challenge.difficulty === 'Medium' ? 'bg-yellow-500/20 text-yellow-400' :
+ 115 │ │                     'bg-red-500/20 text-red-400'
+ 116 │ │                   }`}>
+ 117 │ │                     {challenge.difficulty}
+ 118 │ │                   </span>
+ 119 │ │                 </div>
+ 120 │ │   
+ 121 │ │                 <div className="space-y-3 mb-6">
+ 122 │ │                   <div className="flex justify-between">
+ 123 │ │                     <span className="text-gray-400">Starting Bankroll:</span>
+ 124 │ │                     <span className="text-white font-semibold">${challenge.bankroll.toLocaleString()}</span>
+ 125 │ │                   </div>
+ 126 │ │                   <div className="flex justify-between">
+ 127 │ │                     <span className="text-gray-400">Target:</span>
+ 128 │ │                     <span className="text-green-400 font-semibold">${challenge.target.toLocaleString()}</span>
+ 129 │ │                   </div>
+ 130 │ │                   <div className="flex justify-between">
+ 131 │ │                     <span className="text-gray-400">Time Limit:</span>
+ 132 │ │                     <span className="text-white font-semibold">{challenge.timeLimit}</span>
+ 133 │ │                   </div>
+ 134 │ │                   <div className="flex justify-between">
+ 135 │ │                     <span className="text-gray-400">Payout:</span>
+ 136 │ │                     <span className="text-blue-400 font-semibold">${challenge.payout.toLocaleString()}</span>
+ 137 │ │                   </div>
+ 138 │ │                 </div>
+ 139 │ │   
+ 140 │ │                 <p className="text-gray-300 text-sm mb-4">{challenge.description}</p>
+ 141 │ │   
+ 142 │ │                 {selectedChallenge?.id === challenge.id && (
+ 143 │ │                   <button
+ 144 │ │                     onClick={() => handleStartChallenge(challenge)}
+ 145 │ │                     className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
+ 146 │ │                   >
+ 147 │ │                     Start Challenge
+ 148 │ │                   </button>
+ 149 │ │                 )}
+ 150 │ │               </div>
+ 151 │ │             ))}
+ 152 │ │           </div>
+ 153 │ │   
+ 154 │ │           {!selectedChallenge && (
+ 155 │ │             <div className="text-center mt-6">
+ 156 │ │               <p className="text-gray-400">Select a challenge to get started</p>
+ 157 │ │             </div>
+ 158 │ │           )}
+ 159 │ │         </div>
+ 160 │ │       </div>
+ 161 │ │     );
+ 162 │ ├─▶ }
+     · ╰──── exported more than once
+     ╰────
+
+Error: 
+  ☞ Exported identifiers must be unique
+This error occurred during the build process and can only be dismissed by fixing the error.
