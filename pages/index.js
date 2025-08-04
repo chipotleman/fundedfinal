@@ -5,32 +5,7 @@ import LiveFeed from '../components/LiveFeed';
 
 export default function Home() {
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [visibleSections, setVisibleSections] = useState({});
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setVisibleSections(prev => ({
-              ...prev,
-              [entry.target.id]: true
-            }));
-          }
-        });
-      },
-      { 
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-      }
-    );
-
-    // Observe all sections with IDs
-    const sections = document.querySelectorAll('[id^="section-"]');
-    sections.forEach(section => observer.observe(section));
-
-    return () => observer.disconnect();
-  }, []);
+  
 
   return (
     <div className="min-h-screen bg-black" style={{scrollBehavior: 'smooth'}}>
@@ -105,14 +80,7 @@ export default function Home() {
             </div>
 
             {/* Live Winners Section - Moved up for better visual flow */}
-            <div 
-              id="section-winners" 
-              className={`text-center mb-12 px-4 transition-all duration-1000 ${
-                visibleSections['section-winners'] 
-                  ? 'opacity-100 translate-y-0' 
-                  : 'opacity-0 translate-y-10'
-              }`}
-            >
+            <div className="text-center mb-12 px-4">
               <h2 className="text-4xl font-bold text-white mb-4">
                 See Real <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Winners</span>
               </h2>
@@ -170,14 +138,7 @@ export default function Home() {
             </div>
 
             {/* Feature Boxes - Moved below Live Winners */}
-            <div 
-              id="section-features" 
-              className={`text-center px-4 transition-all duration-1000 delay-300 ${
-                visibleSections['section-features'] 
-                  ? 'opacity-100 translate-y-0' 
-                  : 'opacity-0 translate-y-10'
-              }`}
-            >
+            <div className="text-center px-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto px-2">
                 <div className="bg-black/90 backdrop-blur-lg rounded-xl p-6 border border-gray-800">
                   <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg flex items-center justify-center mb-4 mx-auto">
@@ -214,14 +175,7 @@ export default function Home() {
         </div>
 
         {/* Stats Section */}
-        <div 
-          id="section-stats" 
-          className={`bg-black py-16 transition-all duration-1000 delay-500 ${
-            visibleSections['section-stats'] 
-              ? 'opacity-100 translate-y-0' 
-              : 'opacity-0 translate-y-10'
-          }`}
-        >
+        <div className="bg-black py-16">
           <div className="max-w-6xl mx-auto px-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
               <div>
