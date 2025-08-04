@@ -2,18 +2,20 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
 import LiveFeed from '../components/LiveFeed';
+import { useBetSlip } from '../contexts/BetSlipContext';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Home() {
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  
+  const { user } = useAuth();
+  const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
 
   return (
     <div className="min-h-screen bg-black" style={{scrollBehavior: 'smooth'}}>
       <TopNavbar 
-        bankroll={null}
-        pnl={null}
-        betSlipCount={0}
-        onBetSlipClick={() => {}}
+        bankroll={user ? 10000 : null}
+        pnl={user ? 0 : null}
+        betSlipCount={betSlip.length}
+        onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
 
       <div style={{overflowY: 'visible'}}>
