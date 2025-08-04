@@ -94,9 +94,9 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
             <div className="flex-none">
               <Link href="/" className="flex items-center">
                 <img
-                  src="/fundmybet-logo.svg"
-                  alt="FundMyBet"
-                  className="h-16 sm:h-20 w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
+                  src="/funder-logo.png"
+                  alt="Funder"
+                  className="h-12 sm:h-16 w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
                   style={{
                     filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
                     animation: 'logoColorCycle 8s infinite ease-in-out'
