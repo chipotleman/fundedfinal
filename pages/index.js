@@ -50,7 +50,7 @@ export default function Home() {
                     playsInline
                     webkit-playsinline="true"
                     muted
-                    preload="metadata"
+                    preload="none"
                     poster="/video-poster.jpg"
                     className="block w-full h-full object-cover md:aspect-[2.5/1] aspect-video"
                     style={{ 
@@ -59,13 +59,11 @@ export default function Home() {
                       objectFit: 'cover',
                       backgroundColor: '#1e293b' // slate-800 fallback
                     }}
-                    onLoadedMetadata={(e) => {
-                      // Ensure poster is visible by forcing it to show
-                      e.target.load();
-                    }}
-                    onError={(e) => {
-                      // Fallback if video fails to load
-                      console.log('Video failed to load, poster should still be visible');
+                    onCanPlay={(e) => {
+                      // Ensure the poster is displayed properly
+                      if (e.target.readyState >= 1) {
+                        e.target.poster = '/video-poster.jpg';
+                      }
                     }}
                   >
                     <source src="/latest-explainer-video.mov" type="video/mp4" />
