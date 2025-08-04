@@ -493,7 +493,6 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
           </div>
         </div>
       )}
-      )}
 
       <BalanceModal
         isOpen={showBalanceModal}
