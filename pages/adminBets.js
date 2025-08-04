@@ -69,7 +69,7 @@ export default function AdminBets() {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4"></div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
         {bets.length > 0 ? (
           <div className="space-y-4 sm:space-y-6">
             {bets.map(bet => (
