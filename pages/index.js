@@ -7,7 +7,7 @@ export default function Home() {
   const [showAuthModal, setShowAuthModal] = useState(false);
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-black">
       <TopNavbar 
         bankroll={null}
         pnl={null}
@@ -67,9 +67,9 @@ export default function Home() {
             <div className="text-center px-4">
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-6 sm:mb-8">
                 <Link href="/auth" className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg shadow-2xl">
-                  Start Challenge - $49
+                  Start a Challenge
                 </Link>
-                <Link href="/rules" className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg border border-slate-700">
+                <Link href="/how-it-works" className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg border border-slate-700">
                   How It Works
                 </Link>
               </div>

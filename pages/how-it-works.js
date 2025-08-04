@@ -1,127 +1,181 @@
-// pages/how-it-works.js
+
 import React from "react";
+import Link from 'next/link';
 
-const HowItWorks = ({ selectedBets = [], bankroll = 1000 }) => {
+const HowItWorks = () => {
+  const steps = [
+    {
+      number: "01",
+      title: "Choose Your Challenge",
+      description: "Select from multiple challenge tiers based on your skill level and starting bankroll amount.",
+      icon: (
+        <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+        </svg>
+      )
+    },
+    {
+      number: "02",
+      title: "Get Your Virtual Bankroll",
+      description: "Receive your virtual betting funds - no real money at risk. Start with amounts ranging from $100 to $25,000.",
+      icon: (
+        <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+        </svg>
+      )
+    },
+    {
+      number: "03",
+      title: "Place Your Bets",
+      description: "Bet on real games with real odds across NFL, NBA, MLB, NHL and more. All odds are pulled from live sportsbooks.",
+      icon: (
+        <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+        </svg>
+      )
+    },
+    {
+      number: "04",
+      title: "Hit Your Target",
+      description: "Reach your profit target to complete the challenge. Each tier has specific goals you need to achieve.",
+      icon: (
+        <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+        </svg>
+      )
+    },
+    {
+      number: "05",
+      title: "Get Paid Real Money",
+      description: "Complete your challenge and receive real cash payouts. Keep 80% of your profits - no strings attached.",
+      icon: (
+        <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
+        </svg>
+      )
+    }
+  ];
+
   return (
-    <div className="min-h-screen bg-black text-white pt-24 px-6 sm:px-12 lg:px-32 space-y-16">
-      {/* Hero */}
-      <section className="text-center space-y-4">
-        <h1 className="text-4xl sm:text-5xl font-extrabold neon-text">
-          Win Challenges. Get Paid. No Risk.
-        </h1>
-        <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto">
-          Virtual bets. Real rewards. Hit your targets, climb the ladder, and unlock payouts.
-        </p>
-      </section>
-
-      {/* Progress Simulation Bar */}
-      <section className="bg-gray-900 rounded-xl p-6 border border-green-500">
-        <h2 className="text-2xl font-bold mb-4 neon-text">Challenge Progress</h2>
-        <div className="space-y-4">
-          <p className="text-sm text-gray-300">Current Challenge: Turn $100 into $300</p>
-          <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden">
-            <div className="bg-green-400 h-full rounded-full animate-pulse" style={{ width: "35%" }}></div>
-          </div>
-          <p className="text-sm text-green-400">Progress: $135 / $300</p>
-          <ul className="text-sm text-gray-400 mt-3 list-disc list-inside">
-            <li>🔥 +10% payout if completed in under 20 bets</li>
-            <li>💎 Bonus for completing 3+ challenges in a row</li>
-            <li>⚡ XP Boost if you win 5 straight</li>
-          </ul>
+    <div className="min-h-screen bg-black text-white">
+      {/* Header */}
+      <div className="bg-black py-6 px-4 sm:px-6 lg:px-8 border-b border-gray-800">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <Link href="/" className="text-2xl font-bold text-white">
+            FundMyBet
+          </Link>
+          <Link href="/auth" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2 px-6 rounded-xl transition-all duration-300">
+            Start Challenge
+          </Link>
         </div>
-      </section>
+      </div>
 
-      {/* Challenge Tiers */}
-      <section className="space-y-6">
-        <h2 className="text-3xl font-bold text-center neon-text">Challenge Tiers</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            { tier: "Tier 1", goal: "$100 → $300", payout: "$20", progress: 25 },
-            { tier: "Tier 2", goal: "$250 → $750", payout: "$50", progress: 0 },
-            { tier: "Tier 3", goal: "$500 → $1,500", payout: "$120", progress: 0 },
-            { tier: "Tier 4+", goal: "High Stakes", payout: "Custom", progress: 0 },
-          ].map((t, idx) => (
-            <div
-              key={idx}
-              className="bg-gray-900 rounded-2xl p-6 border border-purple-700 hover:border-yellow-400 shadow-lg"
-            >
-              <h4 className="text-xl font-bold neon-text mb-1">{t.tier}</h4>
-              <p className="text-sm text-gray-300">{t.goal}</p>
-              <div className="w-full bg-gray-700 rounded-full h-3 my-3 overflow-hidden">
-                <div
-                  className="bg-yellow-400 h-full rounded-full"
-                  style={{ width: `${t.progress}%` }}
-                ></div>
+      {/* Hero Section */}
+      <div className="max-w-6xl mx-auto px-6 py-16">
+        <div className="text-center mb-16">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-6 leading-tight">
+            How It <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Works</span>
+          </h1>
+          <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+            Get funded to bet with virtual money, hit your targets, and earn real cash payouts. Here's exactly how the process works.
+          </p>
+        </div>
+
+        {/* Step-by-Step Process */}
+        <div className="space-y-16">
+          {steps.map((step, index) => (
+            <div key={index} className="relative">
+              {/* Connection Line */}
+              {index < steps.length - 1 && (
+                <div className="absolute left-1/2 top-32 w-px h-16 bg-gradient-to-b from-gray-600 to-transparent transform -translate-x-1/2 hidden lg:block"></div>
+              )}
+              
+              <div className={`flex flex-col lg:flex-row items-center gap-8 ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
+                {/* Content */}
+                <div className="flex-1 text-center lg:text-left">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl mb-6 lg:mb-8">
+                    <div className="text-white">
+                      {step.icon}
+                    </div>
+                  </div>
+                  <div className="text-6xl lg:text-8xl font-black text-gray-800 mb-4">
+                    {step.number}
+                  </div>
+                  <h3 className="text-2xl lg:text-3xl font-bold text-white mb-4">
+                    {step.title}
+                  </h3>
+                  <p className="text-lg text-gray-300 leading-relaxed max-w-md mx-auto lg:mx-0">
+                    {step.description}
+                  </p>
+                </div>
+
+                {/* Visual Element */}
+                <div className="flex-1 flex justify-center">
+                  <div className="w-80 h-80 bg-black/50 backdrop-blur-lg rounded-2xl border border-gray-800 flex items-center justify-center">
+                    <div className="text-8xl opacity-20">
+                      {step.icon}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <p className="text-green-400 font-semibold">{t.payout}</p>
-              <p className="text-xs text-gray-400 mt-2">🎯 Bonus if completed in <strong>under 20 bets</strong></p>
             </div>
           ))}
         </div>
-      </section>
 
-      {/* Boosts Section */}
-      <section className="space-y-6">
-        <h2 className="text-3xl font-bold text-center neon-text">Boost Bonuses</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[
-            {
-              title: "🔥 Streak Bonus",
-              desc: "Hit 5 wins in a row and earn +10% payout on your challenge.",
-            },
-            {
-              title: "⚡ Fast Track",
-              desc: "Complete your challenge in under 20 bets for a boost payout.",
-            },
-            {
-              title: "💎 Perfect Run",
-              desc: "Go undefeated? You’ll unlock a special tier payout bonus.",
-            },
-          ].map((boost, idx) => (
-            <div
-              key={idx}
-              className="bg-gray-900 border border-blue-600 rounded-2xl p-5 text-center hover:border-green-400 transition-all"
-            >
-              <h3 className="text-lg font-bold neon-text mb-2">{boost.title}</h3>
-              <p className="text-sm text-gray-300">{boost.desc}</p>
+        {/* Key Benefits */}
+        <div className="mt-24 mb-16">
+          <h2 className="text-3xl font-bold text-white text-center mb-12">Key Benefits</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-black/90 backdrop-blur-lg rounded-xl p-6 border border-gray-800 text-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg flex items-center justify-center mb-4 mx-auto">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">No Risk</h3>
+              <p className="text-gray-400 text-sm">Never risk your own money. Bet with virtual funds provided by us.</p>
             </div>
-          ))}
-        </div>
-      </section>
 
-      {/* FAQ */}
-      <section className="space-y-6 pb-24">
-        <h2 className="text-3xl font-bold text-center neon-text">Frequently Asked Questions</h2>
-        <div className="space-y-4 max-w-3xl mx-auto">
-          {[
-            {
-              q: "Is this gambling?",
-              a: "No. You’re not risking any real money. This is a skill-based challenge where performance earns payouts.",
-            },
-            {
-              q: "Do I have to deposit?",
-              a: "Nope. You can start a challenge without spending a dollar.",
-            },
-            {
-              q: "What happens if I fail a challenge?",
-              a: "Nothing. You can restart the challenge at any time — there are no fees or punishments.",
-            },
-            {
-              q: "How do I get paid?",
-              a: "Once you complete a challenge, we’ll send your payout via your preferred method — Venmo, PayPal, etc.",
-            },
-            {
-              q: "Are the odds real?",
-              a: "Yes. All odds are pulled from live sportsbooks. It’s just like placing a real bet, minus the risk.",
-            },
-          ].map((item, idx) => (
-            <details key={idx} className="bg-gray-900 p-4 rounded-xl border border-gray-700 hover:border-blue-500 transition-all">
-              <summary className="font-semibold text-white cursor-pointer">{item.q}</summary>
-              <p className="mt-2 text-gray-300 text-sm">{item.a}</p>
-            </details>
-          ))}
+            <div className="bg-black/90 backdrop-blur-lg rounded-xl p-6 border border-gray-800 text-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-500 rounded-lg flex items-center justify-center mb-4 mx-auto">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">Real Payouts</h3>
+              <p className="text-gray-400 text-sm">Earn real money when you complete challenges successfully.</p>
+            </div>
+
+            <div className="bg-black/90 backdrop-blur-lg rounded-xl p-6 border border-gray-800 text-center">
+              <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-red-500 rounded-lg flex items-center justify-center mb-4 mx-auto">
+                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-white mb-2">All Sports</h3>
+              <p className="text-gray-400 text-sm">Bet on NFL, NBA, MLB, NHL and many other sports leagues.</p>
+            </div>
+          </div>
         </div>
-      </section>
+
+        {/* Call to Action */}
+        <div className="text-center">
+          <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-gray-800">
+            <h2 className="text-3xl font-bold text-white mb-4">Ready to Get Started?</h2>
+            <p className="text-gray-300 text-lg mb-8 max-w-2xl mx-auto">
+              Join thousands of successful bettors who are earning real money with virtual betting challenges.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/auth" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg">
+                Start a Challenge
+              </Link>
+              <Link href="/waitlist" className="bg-black hover:bg-gray-900 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-gray-700">
+                Join Thunder Card Waitlist
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
