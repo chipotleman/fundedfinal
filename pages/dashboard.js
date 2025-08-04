@@ -213,7 +213,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-black"></div>
+    <div className="min-h-screen bg-black">
       <TopNavbar 
         user={user}
         bankroll={bankroll}
