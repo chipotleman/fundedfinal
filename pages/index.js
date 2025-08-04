@@ -111,7 +111,7 @@ export default function Home() {
         </div>
 
         {/* Stats Section */}
-        <div className="bg-black py-16"></div>
+        <div className="bg-black py-16">
           <div className="max-w-6xl mx-auto px-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
               <div>
