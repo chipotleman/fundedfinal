@@ -56,12 +56,19 @@ export default function Home() {
                     style={{ 
                       minHeight: '240px',
                       maxHeight: '380px',
-                      objectFit: 'cover'
+                      objectFit: 'cover',
+                      backgroundColor: '#1e293b' // slate-800 fallback
                     }}
                   >
                     <source src="/latest-explainer-video.mov" type="video/mp4" />
                     <source src="/latest-explainer-video.mov" type="video/quicktime" />
-                    Your browser does not support the video tag.
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
+                      <img 
+                        src="/fundmybet-logo.png" 
+                        alt="FundMyBet Logo" 
+                        className="max-w-xs max-h-32 object-contain opacity-80"
+                      />
+                    </div>
                   </video>
                 </div>
               </div>
