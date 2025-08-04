@@ -6,7 +6,7 @@ import TopNavbar from '../components/TopNavbar';
 
 export default function Packages() {
   const router = useRouter();
-  const [billingType, setBillingType] = useState('monthly'); // 'monthly' or 'onetime'
+  const [billingType, setBillingType] = useState('monthly'); // 'monthly' or 'annual'
 
   const monthlyPackages = [
     {
@@ -68,7 +68,7 @@ export default function Packages() {
     }
   ];
 
-  const onetimePackages = [
+  const annualPackages = [
     {
       id: 1,
       name: "Starter Challenge",
@@ -80,7 +80,7 @@ export default function Packages() {
         "5% daily loss limit",
         "$500 profit target", 
         "80% profit share",
-        "One-time payment",
+        "Annual subscription",
         "14-day evaluation",
         "All sports betting",
         "Real-time tracking"
@@ -91,14 +91,14 @@ export default function Packages() {
       id: 2,
       name: "Pro Challenge",
       fundingAmount: "$10,000", 
-      price: "$199",
+      price: "$792",
       target: "$1,000",
       dailyLoss: "6%",
       features: [
         "6% daily loss limit",
         "$1,000 profit target",
         "80% profit share", 
-        "One-time payment",
+        "Annual subscription",
         "14-day evaluation",
         "All sports betting",
         "Priority support",
@@ -110,14 +110,14 @@ export default function Packages() {
       id: 3,
       name: "Elite Challenge",
       fundingAmount: "$25,000",
-      price: "$399", 
+      price: "$1,592", 
       target: "$2,500",
       dailyLoss: "8%",
       features: [
         "8% daily loss limit",
         "$2,500 profit target",
         "80% profit share",
-        "One-time payment",
+        "Annual subscription",
         "14-day evaluation", 
         "All sports betting",
         "VIP support",
@@ -128,7 +128,7 @@ export default function Packages() {
     }
   ];
 
-  const packages = billingType === 'monthly' ? monthlyPackages : onetimePackages;
+  const packages = billingType === 'monthly' ? monthlyPackages : annualPackages;
 
   const handlePurchase = (packageData) => {
     // You can implement Stripe checkout or redirect to payment
@@ -172,14 +172,14 @@ export default function Packages() {
                   Monthly
                 </button>
                 <button
-                  onClick={() => setBillingType('onetime')}
+                  onClick={() => setBillingType('annual')}
                   className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
-                    billingType === 'onetime'
+                    billingType === 'annual'
                       ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-lg'
                       : 'text-gray-300 hover:text-white'
                   }`}
                 >
-                  One-Time
+                  Annually
                 </button>
               </div>
             </div>
@@ -216,7 +216,7 @@ export default function Packages() {
               <div className="text-center mb-6">
                 <div className="text-2xl font-bold text-white">{pkg.price}</div>
                 <div className="text-gray-400 text-sm">
-                  {billingType === 'monthly' ? 'Per month' : 'One-time fee'}
+                  {billingType === 'monthly' ? 'Per month' : 'Per year'}
                 </div>
               </div>
 
@@ -250,7 +250,7 @@ export default function Packages() {
                     : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-600'
                 }`}
               >
-                {billingType === 'monthly' ? 'Subscribe Now' : 'Start Challenge'}
+                {billingType === 'monthly' ? 'Subscribe Now' : 'Subscribe Annually'}
               </button>
             </div>
           ))}
