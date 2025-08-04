@@ -117,7 +117,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
             </div>
 
             {/* Logo - Left on desktop, center on mobile */}
-            <div className="flex-none lg:order-none order-2 lg:absolute lg:left-1/2 lg:transform lg:-translate-x-1/2">
+            <div className="flex-none lg:order-none order-2 absolute left-1/2 transform -translate-x-1/2 lg:static lg:left-auto lg:transform-none">
               <Link href="/" className="flex items-center">
                 <img
                   src="/funderlogo/Funder.png"
