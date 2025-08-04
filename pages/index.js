@@ -5,6 +5,76 @@ import LiveFeed from '../components/LiveFeed';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 
+// Custom Video Player Component
+function CustomVideoPlayer() {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [showPoster, setShowPoster] = useState(true);
+
+  const handlePlay = () => {
+    setIsPlaying(true);
+    setShowPoster(false);
+  };
+
+  const handleLoadedData = () => {
+    setIsLoaded(true);
+  };
+
+  return (
+    <div className="relative md:aspect-[2.5/1] aspect-video bg-slate-800" style={{ minHeight: '240px', maxHeight: '380px' }}>
+      {/* Poster Image - Always visible initially */}
+      {showPoster && (
+        <div className="absolute inset-0 z-10">
+          <img 
+            src="/video-poster.jpg" 
+            alt="Video thumbnail"
+            className="w-full h-full object-cover"
+            style={{ objectFit: 'cover' }}
+          />
+          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+            <button
+              onClick={handlePlay}
+              className="w-20 h-20 bg-white/90 hover:bg-white rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-2xl"
+            >
+              <svg className="w-8 h-8 text-gray-800 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Video Element */}
+      <video 
+        controls={isPlaying}
+        playsInline
+        webkit-playsinline="true"
+        muted={!isPlaying}
+        preload="metadata"
+        onLoadedData={handleLoadedData}
+        onPlay={() => setIsPlaying(true)}
+        className={`w-full h-full object-cover transition-opacity duration-500 ${isPlaying ? 'opacity-100' : 'opacity-0'}`}
+        style={{ 
+          objectFit: 'cover',
+          backgroundColor: '#1e293b'
+        }}
+        autoPlay={isPlaying}
+      >
+        <source src="/latest-explainer-video.mov" type="video/mp4" />
+        <source src="/latest-explainer-video.mov" type="video/quicktime" />
+        Your browser does not support the video tag.
+      </video>
+
+      {/* Loading indicator */}
+      {isPlaying && !isLoaded && (
+        <div className="absolute inset-0 bg-slate-800 flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Home() {
   const { user } = useAuth();
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
@@ -47,31 +117,7 @@ export default function Home() {
 
                 {/* Video container - more rectangular */}
                 <div className="relative bg-slate-900 rounded-2xl overflow-hidden">
-                  <video 
-                    controls 
-                    playsInline
-                    webkit-playsinline="true"
-                    muted
-                    preload="none"
-                    poster="/video-poster.jpg"
-                    className="block w-full h-full object-cover md:aspect-[2.5/1] aspect-video"
-                    style={{ 
-                      minHeight: '240px',
-                      maxHeight: '380px',
-                      objectFit: 'cover',
-                      backgroundColor: '#1e293b' // slate-800 fallback
-                    }}
-                    onLoadStart={(e) => {
-                      // Ensure poster is visible
-                      if (!e.target.poster) {
-                        e.target.poster = '/video-poster.jpg';
-                      }
-                    }}
-                  >
-                    <source src="/latest-explainer-video.mov" type="video/mp4" />
-                    <source src="/latest-explainer-video.mov" type="video/quicktime" />
-                    Your browser does not support the video tag.
-                  </video>
+                  <CustomVideoPlayer />
                 </div>
               </div>
             </div>
