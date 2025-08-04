@@ -4,10 +4,12 @@ import TopNavbar from '../components/TopNavbar';
 import ProfileModal from '../components/ProfileModal';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserProfiles } from '../contexts/UserProfilesContext';
+import { useAuth } from '../contexts/AuthContext'; // Assuming AuthContext for login status
 
 const Leaderboard = () => {
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const { selectedProfile, showProfileModal, setShowProfileModal, openProfile } = useUserProfiles();
+  const { user, login, logout } = useAuth(); // Assuming user object indicates login status
   const [timeframe, setTimeframe] = useState('monthly');
   const [category, setCategory] = useState('all');
 
@@ -74,13 +76,44 @@ const Leaderboard = () => {
     }
   };
 
+  // Determine if the user has an open challenge (mock implementation)
+  const hasOpenChallenge = (username) => {
+    // Replace with actual logic to check for open challenges
+    return false; 
+  };
+
   return (
     <div className="min-h-screen bg-black">
       <TopNavbar 
-        bankroll={10000}
+        bankroll={user ? 10000 : 0} // Only show balance if logged in
         pnl={0}
         betSlipCount={betSlip.length}
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
+        rightContent={
+          <>
+            {!user ? (
+              <>
+                <Link href="/sign-in" className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300">
+                  Sign In
+                </Link>
+                <Link href="/get-funded" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300">
+                  Get Funded
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/logout" onClick={logout} className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300">
+                  Logout
+                </Link>
+                {!hasOpenChallenge(user.username) && (
+                  <Link href="/get-funded" className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300">
+                    Get Funded
+                  </Link>
+                )}
+              </>
+            )}
+          </>
+        }
       />
 
       <div className="pt-4 pb-16">

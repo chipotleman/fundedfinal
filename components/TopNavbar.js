@@ -115,28 +115,9 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
               </Link>
             </div>
 
-            {/* Right Side - Desktop: Buttons + Bankroll + Bet Slip, Mobile: Hamburger + Bet Slip */}
+            {/* Right Side - Desktop: Bankroll + Bet Slip + Buttons, Mobile: Hamburger + Bet Slip */}
             <div className="flex items-center space-x-2 sm:space-x-4">
-              {/* Desktop Buttons - Always show */}
-              <div className="hidden lg:flex items-center space-x-3">
-                {!isLoggedIn && (
-                  <Link
-                    href="/auth"
-                    className="text-gray-300 hover:text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm border border-gray-600 hover:border-gray-500"
-                  >
-                    Sign In
-                  </Link>
-                )}
-                <Link
-                  href="/packages"
-                  className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                  style={{ height: '48px' }} // Match logo height approximately
-                >
-                  GET FUNDED
-                </Link>
-              </div>
-
-              {/* Desktop Bankroll */}
+              {/* Desktop Bankroll - Only show when logged in */}
               {isLoggedIn && (
                 <div className="hidden sm:flex items-center space-x-4">
                   <div className="bg-slate-800 hover:bg-slate-700 rounded-lg px-3 py-2 border border-slate-700 hover:border-slate-600 transition-colors">
@@ -180,6 +161,34 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                   </span>
                 </button>
               )}
+
+              {/* Desktop Authentication Buttons - All the way on the right */}
+              <div className="hidden lg:flex items-center space-x-3 ml-4">
+                {isLoggedIn ? (
+                  <button
+                    onClick={handleSignOut}
+                    className="text-gray-300 hover:text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm border border-gray-600 hover:border-gray-500"
+                  >
+                    Log Out
+                  </button>
+                ) : (
+                  <>
+                    <Link
+                      href="/auth"
+                      className="text-gray-300 hover:text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm border border-gray-600 hover:border-gray-500"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/packages"
+                      className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                      style={{ height: '48px' }}
+                    >
+                      GET FUNDED
+                    </Link>
+                  </>
+                )}
+              </div>
 
               {/* Mobile Hamburger Menu */}
               <button
