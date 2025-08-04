@@ -185,19 +185,19 @@ export default function Packages() {
         </div>
       </div>
 
-      {/* Packages Carousel */}
+      {/* Packages Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <div className="overflow-x-auto scrollbar-hide">
-          <div className="flex space-x-6 pb-4" style={{ width: 'max-content' }}>
-            {packages.map((pkg) => (
-              <div 
-                key={pkg.id} 
-                className={`flex-shrink-0 w-80 relative bg-slate-900 rounded-2xl border-2 p-6 transition-all duration-300 hover:transform hover:-translate-y-2 hover:shadow-2xl ${
-                  pkg.popular 
-                    ? 'border-green-400 shadow-lg shadow-green-400/20' 
-                    : 'border-slate-700 hover:border-blue-400'
-                }`}
-              >
+        {/* Desktop Grid Layout */}
+        <div className="hidden lg:grid lg:grid-cols-3 lg:gap-8">
+          {packages.map((pkg) => (
+            <div 
+              key={pkg.id} 
+              className={`relative bg-slate-900 rounded-2xl border-2 p-6 transition-all duration-300 hover:transform hover:-translate-y-2 hover:shadow-2xl ${
+                pkg.popular 
+                  ? 'border-green-400 shadow-lg shadow-green-400/20' 
+                  : 'border-slate-700 hover:border-blue-400'
+              }`}
+            >
                 {pkg.popular && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                     <span className="bg-gradient-to-r from-green-400 to-blue-500 text-white px-4 py-1 rounded-full text-sm font-bold">
@@ -253,17 +253,88 @@ export default function Packages() {
                 </button>
               </div>
             ))}
-          </div>
         </div>
 
-        {/* Scroll Indicator for Mobile */}
-        <div className="flex justify-center mt-4 lg:hidden">
-          <div className="flex space-x-2">
-            {packages.map((_, index) => (
-              <div key={index} className="w-2 h-2 bg-gray-600 rounded-full"></div>
-            ))}
+        {/* Mobile Carousel Layout */}
+        <div className="lg:hidden">
+          <div className="overflow-x-auto scrollbar-hide">
+            <div className="flex space-x-6 pb-4" style={{ width: 'max-content' }}>
+              {packages.map((pkg) => (
+                <div 
+                  key={pkg.id} 
+                  className={`flex-shrink-0 w-80 relative bg-slate-900 rounded-2xl border-2 p-6 transition-all duration-300 hover:transform hover:-translate-y-2 hover:shadow-2xl ${
+                    pkg.popular 
+                      ? 'border-green-400 shadow-lg shadow-green-400/20' 
+                      : 'border-slate-700 hover:border-blue-400'
+                  }`}
+                >
+                  {pkg.popular && (
+                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                      <span className="bg-gradient-to-r from-green-400 to-blue-500 text-white px-4 py-1 rounded-full text-sm font-bold">
+                        MOST POPULAR
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="text-center mb-6">
+                    <h3 className="text-xl font-bold text-white mb-2">{pkg.name}</h3>
+                    <div className="text-3xl font-black text-green-400 mb-1">{pkg.fundingAmount}</div>
+                    <div className="text-gray-400 text-sm">Funding Amount</div>
+                  </div>
+
+                  <div className="text-center mb-6">
+                    <div className="text-2xl font-bold text-white">{pkg.price}</div>
+                    <div className="text-gray-400 text-sm">
+                      {billingType === 'monthly' ? 'Per month' : 'Per year'}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 mb-6">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-300 text-sm">Profit Target:</span>
+                      <span className="text-green-400 font-bold">{pkg.target}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-300 text-sm">Daily Loss Limit:</span>
+                      <span className="text-red-400 font-bold">{pkg.dailyLoss}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 mb-8">
+                    {pkg.features.map((feature, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <svg className="w-4 h-4 text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                        <span className="text-gray-300 text-sm">{feature}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button
+                    onClick={() => handlePurchase(pkg)}
+                    className={`w-full py-3 px-4 rounded-xl font-bold transition-all duration-300 ${
+                      pkg.popular
+                        ? 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white'
+                        : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-600'
+                    }`}
+                  >
+                    {billingType === 'monthly' ? 'Subscribe Now' : 'Subscribe Annually'}
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
-          <p className="text-gray-400 text-sm ml-4">← Swipe to explore packages →</p>
+
+          {/* Scroll Indicator for Mobile */}
+          <div className="flex justify-center mt-4">
+            <div className="flex space-x-2">
+              {packages.map((_, index) => (
+                <div key={index} className="w-2 h-2 bg-gray-600 rounded-full"></div>
+              ))}
+            </div>
+            <p className="text-gray-400 text-sm ml-4">← Swipe to explore packages →</p>
+          </div>
         </div>
       </div>
 
