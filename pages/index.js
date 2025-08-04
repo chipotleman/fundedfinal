@@ -57,7 +57,7 @@ export default function Home() {
                       objectFit: 'cover'
                     }}
                   >
-                    <source src="/attached_assets/video-output-2B76BEB5-93DD-4F89-8C82-7491551F28B9-1_1754319310155.mov" type="video/mp4" />
+                    <source src="/latest-explainer-video.mov" type="video/quicktime" />
                     Your browser does not support the video tag.
                   </video>
                 </div>
