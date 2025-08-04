@@ -1,0 +1,53 @@
+[11:59:35.582] Running build in Washington, D.C., USA (East) – iad1
+[11:59:35.582] Build machine configuration: 4 cores, 8 GB
+[11:59:35.597] Cloning github.com/chipotleman/fundedfinal (Branch: main, Commit: 2ca3fc5)
+[11:59:35.603] Skipping build cache, deployment was triggered without cache.
+[11:59:36.944] Cloning completed: 1.347s
+[11:59:39.249] Running "vercel build"
+[11:59:39.829] Vercel CLI 44.6.4
+[11:59:40.158] Installing dependencies...
+[11:59:48.532] 
+[11:59:48.533] added 194 packages in 8s
+[11:59:48.533] 
+[11:59:48.533] 46 packages are looking for funding
+[11:59:48.533]   run `npm fund` for details
+[11:59:48.586] Detected Next.js version: 14.2.30
+[11:59:48.589] Running "npm run build"
+[11:59:48.717] 
+[11:59:48.717] > fundedfinal@1.0.0 build
+[11:59:48.717] > next build
+[11:59:48.718] 
+[11:59:49.316] Attention: Next.js now collects completely anonymous telemetry regarding usage.
+[11:59:49.317] This information is used to shape Next.js' roadmap and prioritize features.
+[11:59:49.317] You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+[11:59:49.317] https://nextjs.org/telemetry
+[11:59:49.317] 
+[11:59:49.380]   ▲ Next.js 14.2.30
+[11:59:49.380] 
+[11:59:49.456]    Creating an optimized production build ...
+[11:59:54.107] Failed to compile.
+[11:59:54.107] 
+[11:59:54.107] ./pages/leaderboard.js
+[11:59:54.107] Error: 
+[11:59:54.107]   [31mx[0m Expected ',', got 'profile'
+[11:59:54.107]      ,-[[36;1;4m/vercel/path0/pages/leaderboard.js[0m:316:1]
+[11:59:54.108]  [2m316[0m |       </div>
+[11:59:54.108]  [2m317[0m | 
+[11:59:54.108]  [2m318[0m |       <ProfileModal 
+[11:59:54.108]  [2m319[0m |         profile={selectedProfile}
+[11:59:54.108]      : [31;1m        ^^^^^^^[0m
+[11:59:54.108]  [2m320[0m |         isOpen={showProfileModal}
+[11:59:54.108]  [2m321[0m |         onClose={() => setShowProfileModal(false)}
+[11:59:54.108]  [2m322[0m |       />
+[11:59:54.108]      `----
+[11:59:54.108] 
+[11:59:54.108] Caused by:
+[11:59:54.108]     Syntax Error
+[11:59:54.108] 
+[11:59:54.108] Import trace for requested module:
+[11:59:54.108] ./pages/leaderboard.js
+[11:59:54.108] 
+[11:59:54.120] 
+[11:59:54.120] > Build failed because of webpack errors
+[11:59:54.155] Error: Command "npm run build" exited with 1
+[11:59:57.607] Exiting build container
