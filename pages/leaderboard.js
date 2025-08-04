@@ -313,7 +313,6 @@ const Leaderboard = () => {
           </div>
         </div>
       </div>
-      </div>
 
       <ProfileModal 
         profile={selectedProfile}
