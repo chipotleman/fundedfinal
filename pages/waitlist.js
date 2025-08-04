@@ -35,10 +35,10 @@ export default function Waitlist() {
         </div>
 
         {/* Thunder Card Preview */}
-            <div className="relative max-w-sm mx-auto mb-12">
+            <div className="relative max-w-sm mx-auto mb-12 flex justify-center">
               <div className="relative">
                 {/* Card with gradient background - more rectangular aspect ratio like real debit card */}
-                <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 rounded-xl p-6 shadow-2xl border border-blue-500/30 transform hover:scale-105 transition-all duration-300" style={{aspectRatio: '1.586/1', width: '320px'}}>
+                <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 rounded-xl p-6 shadow-2xl border border-blue-500/30 transform hover:scale-105 transition-all duration-300 mx-auto" style={{aspectRatio: '1.586/1', width: '320px'}}>
                   {/* Card Header */}
                   <div className="flex justify-between items-start mb-4">
                     <div>
@@ -170,7 +170,7 @@ export default function Waitlist() {
         {/* Coming Soon */}
         <div className="text-center mt-16">
           <p className="text-gray-400 text-lg">
-            Coming Soon • Expected Launch: Q2 2024
+            Coming Soon • Expected Launch: Q1 2026
           </p>
         </div>
       </div>
