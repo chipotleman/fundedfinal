@@ -15,7 +15,6 @@ function CustomVideoPlayer() {
       <video 
         controls
         autoPlay
-        muted
         playsInline
         webkit-playsinline="true"
         preload="auto"
