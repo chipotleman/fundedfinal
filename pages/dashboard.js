@@ -312,7 +312,7 @@ export default function Dashboard() {
                       className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
                         betSlip.find(bet => bet.id === `${game.id}-spread-${game.awayTeam} ${game.lines.spread.away.point}`) 
                           ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
-                          : 'bg-gray-700 border-gray-600 text-white hover:hover:bg-green-600 hover:hover:border-green-500'
+                          : 'bg-gray-700 border-gray-600 text-white hover:bg-green-600 hover:border-green-500'
                       }`}
                     >
                       <div className="text-gray-300 text-xs">{game.lines.spread.away.point}</div>
@@ -323,7 +323,7 @@ export default function Dashboard() {
                       className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
                         betSlip.find(bet => bet.id === `${game.id}-total-Over ${game.lines.total.over.point}`) 
                           ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
-                          : 'bg-gray-700 border-gray-600 text-white hover:hover:bg-green-600 hover:hover:border-green-500'
+                          : 'bg-gray-700 border-gray-600 text-white hover:bg-green-600 hover:border-green-500'
                       }`}
                     >
                       <div className="text-gray-300 text-xs">{game.lines.total.over.point}</div>
@@ -334,7 +334,7 @@ export default function Dashboard() {
                       className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
                         betSlip.find(bet => bet.id === `${game.id}-moneyline-${game.awayTeam}`) 
                           ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
-                          : 'bg-gray-700 border-gray-600 text-white hover:hover:bg-green-600 hover:hover:border-green-500'
+                          : 'bg-gray-700 border-gray-600 text-white hover:bg-green-600 hover:border-green-500'
                       }`}
                     >
                       <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.moneyline.away)}</div>
@@ -351,7 +351,7 @@ export default function Dashboard() {
                       className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
                         betSlip.find(bet => bet.id === `${game.id}-spread-${game.homeTeam} ${game.lines.spread.home.point}`) 
                           ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
-                          : 'bg-gray-700 border-gray-600 text-white hover:hover:bg-green-600 hover:hover:border-green-500'
+                          : 'bg-gray-700 border-gray-600 text-white hover:bg-green-600 hover:border-green-500'
                       }`}
                     >
                       <div className="text-gray-300 text-xs">{game.lines.spread.home.point}</div>
@@ -362,7 +362,7 @@ export default function Dashboard() {
                       className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
                         betSlip.find(bet => bet.id === `${game.id}-total-Under ${game.lines.total.under.point}`) 
                           ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
-                          : 'bg-gray-700 border-gray-600 text-white hover:hover:bg-green-600 hover:hover:border-green-500'
+                          : 'bg-gray-700 border-gray-600 text-white hover:bg-green-600 hover:border-green-500'
                       }`}
                     >
                       <div className="text-gray-300 text-xs">{game.lines.total.under.point}</div>
@@ -373,7 +373,7 @@ export default function Dashboard() {
                       className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
                         betSlip.find(bet => bet.id === `${game.id}-moneyline-${game.homeTeam}`) 
                           ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
-                          : 'bg-gray-700 border-gray-600 text-white hover:hover:bg-green-600 hover:hover:border-green-500'
+                          : 'bg-gray-700 border-gray-600 text-white hover:bg-green-600 hover:border-green-500'
                       }`}
                     >
                       <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.moneyline.home)}</div>
@@ -423,6 +423,15 @@ export default function Dashboard() {
         }
         .h-18 {
           height: 4.5rem;
+        }
+        
+        /* Disable hover effects on touch devices */
+        @media (hover: none) and (pointer: coarse) {
+          button:hover {
+            background-color: inherit !important;
+            border-color: inherit !important;
+            transform: none !important;
+          }
         }
       `}</style>
     </div>
