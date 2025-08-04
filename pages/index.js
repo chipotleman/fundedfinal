@@ -51,7 +51,7 @@ export default function Home() {
                     webkit-playsinline="true"
                     muted
                     preload="none"
-                    poster="/fundmybet-logo.png"
+                    poster="/video-poster.jpg"
                     className="block w-full h-full object-cover md:aspect-[2.5/1] aspect-video"
                     style={{ 
                       minHeight: '240px',
@@ -62,7 +62,7 @@ export default function Home() {
                     onLoadStart={(e) => {
                       // Ensure poster is visible
                       if (!e.target.poster) {
-                        e.target.poster = '/fundmybet-logo.png';
+                        e.target.poster = '/video-poster.jpg';
                       }
                     }}
                   >
