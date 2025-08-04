@@ -1,8 +1,11 @@
 
 import React from "react";
 import Link from 'next/link';
+import TopNavbar from '../components/TopNavbar';
+import { useBetSlip } from '../contexts/BetSlipContext';
 
 const HowItWorks = () => {
+  const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const steps = [
     {
       number: "01",
@@ -58,20 +61,17 @@ const HowItWorks = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Header */}
-      <div className="bg-black py-6 px-4 sm:px-6 lg:px-8 border-b border-gray-800">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-white">
-            FundMyBet
-          </Link>
-          <Link href="/auth" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2 px-6 rounded-xl transition-all duration-300">
-            Start Challenge
-          </Link>
-        </div>
-      </div>
+      <TopNavbar 
+        bankroll={10000}
+        pnl={0}
+        betSlipCount={betSlip.length}
+        onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
+      />
 
-      {/* Hero Section */}
-      <div className="max-w-6xl mx-auto px-6 py-16">
+      <div className="pt-20 pb-16">
+        {/* Hero Section */}
+        <div className="max-w-6xl mx-auto px-6 py-16"></div>
+      </div>
         <div className="text-center mb-16">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-6 leading-tight">
             How It <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Works</span>

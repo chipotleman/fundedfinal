@@ -75,7 +75,7 @@ const Leaderboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-black">
       <TopNavbar 
         bankroll={10000}
         pnl={0}
@@ -86,7 +86,7 @@ const Leaderboard = () => {
       <div className="pt-20 pb-16">
         {/* Hero Section */}
         <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-black via-purple-900 to-black"></div>
           <div className="absolute inset-0 opacity-20" style={{
             backgroundImage: "url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22m36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"
           }}></div>
@@ -103,7 +103,7 @@ const Leaderboard = () => {
 
         {/* Filters */}
         <div className="max-w-7xl mx-auto px-6 mb-8">
-          <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 border border-slate-700">
+          <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-800"></div>
             <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
               <div className="flex gap-2">
                 <button
@@ -111,7 +111,7 @@ const Leaderboard = () => {
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     timeframe === 'weekly' 
                       ? 'bg-purple-500 text-white' 
-                      : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                   }`}
                 >
                   Weekly
@@ -121,7 +121,7 @@ const Leaderboard = () => {
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     timeframe === 'monthly' 
                       ? 'bg-purple-500 text-white' 
-                      : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                   }`}
                 >
                   Monthly
@@ -131,7 +131,7 @@ const Leaderboard = () => {
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     timeframe === 'alltime' 
                       ? 'bg-purple-500 text-white' 
-                      : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                   }`}
                 >
                   All Time
@@ -144,7 +144,7 @@ const Leaderboard = () => {
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     category === 'all' 
                       ? 'bg-blue-500 text-white' 
-                      : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                   }`}
                 >
                   All Tiers
@@ -154,7 +154,7 @@ const Leaderboard = () => {
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     category === 'elite' 
                       ? 'bg-blue-500 text-white' 
-                      : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                   }`}
                 >
                   Elite
@@ -164,7 +164,7 @@ const Leaderboard = () => {
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     category === 'pro' 
                       ? 'bg-blue-500 text-white' 
-                      : 'bg-slate-700 text-gray-300 hover:bg-slate-600'
+                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                   }`}
                 >
                   Pro
@@ -213,14 +213,14 @@ const Leaderboard = () => {
 
         {/* Full Leaderboard Table */}
         <div className="max-w-7xl mx-auto px-6">
-          <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl border border-slate-700 overflow-hidden">
-            <div className="p-6 border-b border-slate-700">
+          <div className="bg-black/90 backdrop-blur-lg rounded-2xl border border-gray-800 overflow-hidden">
+            <div className="p-6 border-b border-gray-800"></div>
               <h2 className="text-2xl font-bold text-white">Full Rankings</h2>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-slate-700/50">
+                <thead className="bg-gray-800/90"></thead>
                   <tr>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Rank</th>
                     <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Bettor</th>
@@ -231,11 +231,11 @@ const Leaderboard = () => {
                     <th className="px-6 py-4 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Bets</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-700">
+                <tbody className="divide-y divide-gray-800"></tbody>
                   {leaderboardData.map((user, index) => (
                     <tr 
                       key={user.rank} 
-                      className="hover:bg-slate-700/30 transition-colors cursor-pointer"
+                      className="hover:bg-gray-800/50 transition-colors cursor-pointer"
                       onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -282,19 +282,19 @@ const Leaderboard = () => {
         {/* Stats Cards */}
         <div className="max-w-7xl mx-auto px-6 py-16">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 border border-slate-700 text-center">
+            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-800 text-center"></div>
               <div className="text-3xl font-black text-purple-400 mb-2">2,847</div>
               <div className="text-gray-300">Active Bettors</div>
             </div>
-            <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 border border-slate-700 text-center">
+            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-800 text-center">
               <div className="text-3xl font-black text-green-400 mb-2">$1.2M</div>
               <div className="text-gray-300">Total Profits</div>
             </div>
-            <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 border border-slate-700 text-center">
+            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-800 text-center">
               <div className="text-3xl font-black text-blue-400 mb-2">{(68.4).toFixed(1)}%</div>
               <div className="text-gray-300">Avg Win Rate</div>
             </div>
-            <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 border border-slate-700 text-center">
+            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-800 text-center"></div>
               <div className="text-3xl font-black text-orange-400 mb-2">24/7</div>
               <div className="text-gray-300">Live Updates</div>
             </div>
@@ -310,7 +310,7 @@ const Leaderboard = () => {
               <Link href="/auth" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg hover:scale-105 transform">
                 Start Your Journey
               </Link>
-              <Link href="/dashboard" className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-600 hover:border-slate-500">
+              <Link href="/dashboard" className="bg-gray-800 hover:bg-gray-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-gray-600 hover:border-gray-500"></div>
                 View Dashboard
               </Link>
               <Link href="/how-it-works" className="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg">

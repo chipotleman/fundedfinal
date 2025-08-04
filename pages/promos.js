@@ -112,7 +112,7 @@ export default function Promos() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-black">
       <TopNavbar 
         bankroll={10000}
         pnl={0}
@@ -123,7 +123,7 @@ export default function Promos() {
       <div className="pt-20 pb-16">
         {/* Hero Section */}
         <div className="relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-green-900 to-slate-900"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-black via-green-900 to-black"></div>
           <div className="absolute inset-0 opacity-20" style={{
             backgroundImage: "url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22m36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"
           }}></div>
@@ -141,15 +141,15 @@ export default function Promos() {
         {/* Stats Cards */}
         <div className="max-w-7xl mx-auto px-6 mb-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-8 border border-slate-700 text-center">
+            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-gray-800 text-center"></div>
               <div className="text-4xl font-black text-green-400 mb-2">{userStats.referrals}</div>
               <div className="text-gray-300">Successful Referrals</div>
             </div>
-            <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-8 border border-slate-700 text-center">
+            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-gray-800 text-center">
               <div className="text-4xl font-black text-blue-400 mb-2">${userStats.earnings}</div>
               <div className="text-gray-300">Total Earned</div>
             </div>
-            <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-8 border border-slate-700 text-center">
+            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-gray-800 text-center"></div>
               <div className="text-4xl font-black text-purple-400 mb-2">{userStats.tier}</div>
               <div className="text-gray-300">Member Status</div>
             </div>
@@ -158,7 +158,7 @@ export default function Promos() {
 
         {/* Tabs */}
         <div className="max-w-7xl mx-auto px-6 mb-8">
-          <div className="flex space-x-1 bg-slate-800/50 rounded-xl p-1">
+          <div className="flex space-x-1 bg-black/90 rounded-xl p-1 border border-gray-800"></div>
             <button
               onClick={() => setActiveTab('referrals')}
               className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all ${
@@ -222,7 +222,7 @@ export default function Promos() {
             {/* Available Promos */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {promos.map((promo) => (
-                <div key={promo.id} className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-6 border border-slate-700">
+                <div key={promo.id} className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-800"></div>
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-xl font-bold text-white">{promo.title}</h3>
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -274,7 +274,7 @@ export default function Promos() {
           <div className="max-w-7xl mx-auto px-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {challenges.map((challenge) => (
-                <div key={challenge.id} className="bg-slate-800/50 backdrop-blur-lg rounded-2xl p-8 border border-slate-700">
+                <div key={challenge.id} className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-gray-800"></div>
                   <div className="text-center">
                     <h3 className="text-2xl font-bold text-white mb-4">{challenge.title}</h3>
                     <p className="text-gray-300 mb-6">{challenge.description}</p>
