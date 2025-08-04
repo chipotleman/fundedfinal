@@ -16,7 +16,7 @@ export default function Preloader({ onComplete }) {
           }, 500);
           return 100;
         }
-        return prev + 2;
+        return prev + 0.67;
       });
     }, 100);
 
