@@ -7,55 +7,16 @@ import { useAuth } from '../contexts/AuthContext';
 
 // Custom Video Player Component
 function CustomVideoPlayer() {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [showPoster, setShowPoster] = useState(true);
-  const videoRef = useState(null);
-
-  const handlePlayClick = () => {
-    setIsPlaying(true);
-    setShowPoster(false);
-    
-    // Find and play the video element
-    const video = document.querySelector('#main-video');
-    if (video) {
-      video.play().catch(console.error);
-    }
-  };
-
   return (
     <div className="relative md:aspect-[2.5/1] aspect-video bg-slate-800" style={{ minHeight: '240px', maxHeight: '380px' }}>
-      {/* Poster Image with Play Button - Always visible initially */}
-      {showPoster && (
-        <div className="absolute inset-0 z-20 cursor-pointer" onClick={handlePlayClick}>
-          <div 
-            className="w-full h-full bg-cover bg-center bg-no-repeat"
-            style={{ 
-              backgroundImage: 'url(/video-poster.jpg)',
-              objectFit: 'cover'
-            }}
-          >
-            <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-              <div className="w-20 h-20 bg-white/90 hover:bg-white rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 shadow-2xl">
-                <svg className="w-8 h-8 text-gray-800 ml-1" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Video Element */}
+      {/* Video Element with Autoplay */}
       <video 
-        id="main-video"
-        controls={isPlaying}
+        controls
+        autoPlay
+        muted
         playsInline
         webkit-playsinline="true"
-        preload="none"
-        onPlay={() => {
-          setIsPlaying(true);
-          setShowPoster(false);
-        }}
+        preload="auto"
         className="w-full h-full object-cover"
         style={{ 
           objectFit: 'cover',
