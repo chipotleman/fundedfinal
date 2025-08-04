@@ -60,26 +60,6 @@ export default function Packages() {
         "Weekly payouts"
       ],
       popular: false
-    },
-    {
-      id: 4,
-      name: "Master Challenge",
-      fundingAmount: "$50,000",
-      price: "$699",
-      target: "$5,000", 
-      dailyLoss: "10%",
-      features: [
-        "10% daily loss limit",
-        "$5,000 profit target",
-        "85% profit share",
-        "14-day evaluation",
-        "All sports betting", 
-        "Dedicated manager",
-        "Custom analytics",
-        "Daily payouts",
-        "Exclusive events"
-      ],
-      popular: false
     }
   ];
 
@@ -100,9 +80,21 @@ export default function Packages() {
 
       
 
+      {/* Title Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-8">
+        <div className="text-center">
+          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-4">
+            PICK YOUR <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">CHALLENGE</span>
+          </h1>
+          <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto">
+            Choose the funding level that matches your betting strategy and start earning real profits
+          </p>
+        </div>
+      </div>
+
       {/* Packages Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-24">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
           {packages.map((pkg) => (
             <div 
               key={pkg.id} 
