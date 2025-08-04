@@ -179,7 +179,12 @@ export default function Dashboard() {
     setBetSlip(prev => {
       const existing = prev.find(bet => bet.id === newBet.id);
       if (existing) {
-        return prev.filter(bet => bet.id !== newBet.id);
+        const newSlip = prev.filter(bet => bet.id !== newBet.id);
+        // If bet slip becomes empty, hide it
+        if (newSlip.length === 0) {
+          setShowBetSlip(false);
+        }
+        return newSlip;
       }
 
       const sameGameBet = prev.find(bet => bet.game_id === game.id && bet.betType === betType);
@@ -222,7 +227,7 @@ export default function Dashboard() {
       />
 
       {/* Main Content */}
-      <div className="pt-16 sm:pt-20 lg:pt-24 px-4 sm:px-6 lg:px-8">
+      <div className="pt-20 sm:pt-24 lg:pt-28 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 space-y-4 sm:space-y-0">
           <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-black text-white leading-tight">
@@ -259,7 +264,7 @@ export default function Dashboard() {
         </div>
 
         {/* Games List */}
-        <div className="space-y-4 pb-20">
+        <div className="space-y-4">
           {loading ? (
             <div className="text-center py-12">
               <div className="w-12 h-12 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
