@@ -101,7 +101,17 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                     filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
                     animation: 'logoColorCycle 8s infinite ease-in-out'
                   }}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'block';
+                  }}
                 />
+                <span 
+                  className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent"
+                  style={{ display: 'none' }}
+                >
+                  Funder
+                </span>
               </Link>
             </div>
 
