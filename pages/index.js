@@ -40,6 +40,28 @@ function CustomVideoPlayer() {
         <source src="/latest-explainer-video.mov" type="video/quicktime" />
         Your browser does not support the video tag.
       </video>
+
+      {/* Themed Speaker Icon for Unmuting */}
+      {isMuted && (
+        <button
+          onClick={toggleMute}
+          className="absolute top-4 right-4 w-10 h-10 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-sm border border-slate-600/50 rounded-lg flex items-center justify-center transition-all duration-200 group z-10"
+        >
+          <svg 
+            className="w-5 h-5 text-gray-300 group-hover:text-white transition-colors duration-200" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path 
+              strokeLinecap="round" 
+              strokeLinejoin="round" 
+              strokeWidth={2} 
+              d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z M17 8l4 4m0-4l-4 4" 
+            />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }
