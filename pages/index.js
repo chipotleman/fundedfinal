@@ -40,16 +40,6 @@ function CustomVideoPlayer() {
         <source src="/latest-explainer-video.mov" type="video/quicktime" />
         Your browser does not support the video tag.
       </video>
-
-      {/* Small Unmute Button - Top Right Corner */}
-      {isMuted && (
-        <button
-          onClick={toggleMute}
-          className="absolute top-3 right-3 bg-green-500 hover:bg-green-600 text-white font-medium py-1.5 px-3 rounded-md shadow-lg z-10 transition-all duration-200 text-sm"
-        >
-          Unmute
-        </button>
-      )}
     </div>
   );
 }
