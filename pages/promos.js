@@ -120,9 +120,9 @@ export default function Promos() {
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
 
-      <div className="pt-20 pb-16">
+      <div className="pt-4 pb-16">
         {/* Header */}
-        <div className="max-w-7xl mx-auto px-6 pt-4 pb-8 text-center">
+        <div className="max-w-7xl mx-auto px-6 pt-2 pb-8 text-center">
           <h1 className="text-4xl md:text-6xl font-black text-white mb-4">
             <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Promotions</span>
           </h1>
