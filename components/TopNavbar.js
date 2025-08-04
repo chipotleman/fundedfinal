@@ -488,7 +488,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                     </Link>
                   </div>
                 </div>
-              </>
+              </div>
             )}
           </div>
         </div>
