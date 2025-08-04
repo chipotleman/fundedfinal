@@ -178,7 +178,6 @@ const HowItWorks = () => {
       </div>
     </div>
   );
-  );
 };
 
 export default HowItWorks;
