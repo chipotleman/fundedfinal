@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 
 const banners = [
@@ -24,24 +23,11 @@ export default function BannerCarousel() {
           key={idx}
           src={src}
           alt={`Banner ${idx + 1}`}
-          className={`w-full h-32 object-cover transition-opacity duration-1000 ${
-            idx === current ? 'opacity-100' : 'opacity-0 absolute top-0 left-0'
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${
+            idx === current ? 'opacity-100' : 'opacity-0'
           }`}
         />
       ))}
-      
-      {/* Dots indicator */}
-      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-2">
-        {banners.map((_, idx) => (
-          <button
-            key={idx}
-            onClick={() => setCurrent(idx)}
-            className={`w-2 h-2 rounded-full transition-colors ${
-              idx === current ? 'bg-white' : 'bg-white/50'
-            }`}
-          />
-        ))}
-      </div>
     </div>
   );
 }
