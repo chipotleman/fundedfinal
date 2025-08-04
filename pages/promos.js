@@ -141,7 +141,7 @@ export default function Promos() {
         {/* Stats Cards */}
         <div className="max-w-7xl mx-auto px-6 mb-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-gray-800 text-center"></div>
+            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-gray-800 text-center">
               <div className="text-4xl font-black text-green-400 mb-2">{userStats.referrals}</div>
               <div className="text-gray-300">Successful Referrals</div>
             </div>
@@ -149,7 +149,7 @@ export default function Promos() {
               <div className="text-4xl font-black text-blue-400 mb-2">${userStats.earnings}</div>
               <div className="text-gray-300">Total Earned</div>
             </div>
-            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-gray-800 text-center"></div>
+            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-gray-800 text-center">
               <div className="text-4xl font-black text-purple-400 mb-2">{userStats.tier}</div>
               <div className="text-gray-300">Member Status</div>
             </div>
@@ -158,7 +158,7 @@ export default function Promos() {
 
         {/* Tabs */}
         <div className="max-w-7xl mx-auto px-6 mb-8">
-          <div className="flex space-x-1 bg-black/90 rounded-xl p-1 border border-gray-800"></div>
+          <div className="flex space-x-1 bg-black/90 rounded-xl p-1 border border-gray-800">
             <button
               onClick={() => setActiveTab('referrals')}
               className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all ${
@@ -222,7 +222,7 @@ export default function Promos() {
             {/* Available Promos */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {promos.map((promo) => (
-                <div key={promo.id} className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-800"></div>
+                <div key={promo.id} className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-800">
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-xl font-bold text-white">{promo.title}</h3>
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -274,7 +274,7 @@ export default function Promos() {
           <div className="max-w-7xl mx-auto px-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {challenges.map((challenge) => (
-                <div key={challenge.id} className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-gray-800"></div>
+                <div key={challenge.id} className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-gray-800">
                   <div className="text-center">
                     <h3 className="text-2xl font-bold text-white mb-4">{challenge.title}</h3>
                     <p className="text-gray-300 mb-6">{challenge.description}</p>
