@@ -216,6 +216,14 @@ export default function Dashboard() {
     }
   };
 
+  const removeBetFromSlip = (betId) => {
+    setBetSlip(prev => prev.filter(bet => bet.id !== betId));
+    // Force re-render to immediately update highlights on mobile
+    setTimeout(() => {
+      setGames(prevGames => [...prevGames]);
+    }, 0);
+  };
+
   return (
     <div className="min-h-screen bg-black">
       <TopNavbar 
