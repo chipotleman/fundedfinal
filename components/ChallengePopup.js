@@ -172,10 +172,23 @@ export default function ChallengePopup({ isOpen, onClose }) {
           {/* Action Button */}
           <button
             onClick={() => handleSelectChallenge(currentChallenge)}
-            className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 text-lg shadow-2xl"
+            className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 text-lg shadow-2xl mb-6"
           >
             Start This Challenge
           </button>
+
+          {/* Dots Indicator */}
+          <div className="flex justify-center space-x-2">
+            {challenges.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentIndex(index)}
+                className={`w-2 h-2 rounded-full transition-colors ${
+                  index === currentIndex ? 'bg-green-400' : 'bg-gray-600'
+                }`}
+              />
+            ))}
+          </div>
         </div>
 
         {/* Navigation Arrows */}
@@ -200,19 +213,6 @@ export default function ChallengePopup({ isOpen, onClose }) {
             </svg>
           </button>
         )}
-
-        {/* Dots Indicator */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-          {challenges.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentIndex(index)}
-              className={`w-2 h-2 rounded-full transition-colors ${
-                index === currentIndex ? 'bg-green-400' : 'bg-gray-600'
-              }`}
-            />
-          ))}
-        </div>
       </div>
     </div>
   );

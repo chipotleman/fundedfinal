@@ -155,18 +155,31 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
           {currentIndex === steps.length - 1 ? (
             <button
               onClick={onClose}
-              className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 text-lg"
+              className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 text-lg mb-6"
             >
               Got It!
             </button>
           ) : (
             <button
               onClick={nextStep}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 text-lg"
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 text-lg mb-6"
             >
               Next Step
             </button>
           )}
+
+          {/* Dots Indicator */}
+          <div className="flex justify-center space-x-2">
+            {steps.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentIndex(index)}
+                className={`w-2 h-2 rounded-full transition-colors ${
+                  index === currentIndex ? 'bg-green-400' : 'bg-gray-600'
+                }`}
+              />
+            ))}
+          </div>
         </div>
 
         {/* Navigation Arrows */}
@@ -191,19 +204,6 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
             </svg>
           </button>
         )}
-
-        {/* Dots Indicator */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-          {steps.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentIndex(index)}
-              className={`w-2 h-2 rounded-full transition-colors ${
-                index === currentIndex ? 'bg-green-400' : 'bg-gray-600'
-              }`}
-            />
-          ))}
-        </div>
       </div>
     </div>
   );
