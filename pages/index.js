@@ -50,25 +50,25 @@ export default function Home() {
                     playsInline
                     webkit-playsinline="true"
                     muted
-                    preload="metadata"
-                    className="block w-full h-full object-cover md:aspect-[2.5/1] aspect-video"
+                    preload="none"
                     poster="/fundmybet-logo.png"
+                    className="block w-full h-full object-cover md:aspect-[2.5/1] aspect-video"
                     style={{ 
                       minHeight: '240px',
                       maxHeight: '380px',
                       objectFit: 'cover',
                       backgroundColor: '#1e293b' // slate-800 fallback
                     }}
+                    onLoadStart={(e) => {
+                      // Ensure poster is visible
+                      if (!e.target.poster) {
+                        e.target.poster = '/fundmybet-logo.png';
+                      }
+                    }}
                   >
                     <source src="/latest-explainer-video.mov" type="video/mp4" />
                     <source src="/latest-explainer-video.mov" type="video/quicktime" />
-                    <div className="absolute inset-0 flex items-center justify-center bg-slate-800">
-                      <img 
-                        src="/fundmybet-logo.png" 
-                        alt="FundMyBet Logo" 
-                        className="max-w-xs max-h-32 object-contain opacity-80"
-                      />
-                    </div>
+                    Your browser does not support the video tag.
                   </video>
                 </div>
               </div>
