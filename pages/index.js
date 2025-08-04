@@ -135,7 +135,7 @@ export default function Home() {
         </div>
 
         {/* Live Feed Section */}
-        <div className="relative max-w-7xl mx-auto px-6 py-16 bg-slate-800"></div>
+        <div className="relative max-w-7xl mx-auto px-6 py-16 bg-slate-800">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold text-white mb-4">
               See Real <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Winners</span>
