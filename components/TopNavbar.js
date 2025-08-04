@@ -105,43 +105,36 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
               </Link>
             </div>
 
-            {/* Desktop Navigation */}
+            {/* Desktop Navigation - Always show these two links */}
             <div className="hidden lg:flex items-center space-x-8">
-              {isLoggedIn ? (
-                <>
-                  <Link href="/dashboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Dashboard
-                  </Link>
-                  <Link href="/leaderboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Leaderboard
-                  </Link>
-                  <Link href="/promos" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Promos
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link href="/how-it-works" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    How It Works
-                  </Link>
-                  <Link href="/waitlist" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Thunder Card
-                  </Link>
-                </>
-              )}
+              <Link href="/how-it-works" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                How It Works
+              </Link>
+              <Link href="/waitlist" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                Thunder Card
+              </Link>
             </div>
 
-            {/* Right Side - Desktop: Bankroll + Bet Slip + Login, Mobile: Hamburger + Bet Slip */}
+            {/* Right Side - Desktop: Buttons + Bankroll + Bet Slip, Mobile: Hamburger + Bet Slip */}
             <div className="flex items-center space-x-2 sm:space-x-4">
-              {/* Desktop Login Button - Show when not logged in */}
-              {!isLoggedIn && (
+              {/* Desktop Buttons - Always show */}
+              <div className="hidden lg:flex items-center space-x-3">
+                {!isLoggedIn && (
+                  <Link
+                    href="/auth"
+                    className="text-gray-300 hover:text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm border border-gray-600 hover:border-gray-500"
+                  >
+                    Sign In
+                  </Link>
+                )}
                 <Link
-                  href="/auth"
-                  className="hidden sm:block bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300 text-sm"
+                  href="/packages"
+                  className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  style={{ height: '48px' }} // Match logo height approximately
                 >
-                  Login / Sign Up
+                  GET FUNDED
                 </Link>
-              )}
+              </div>
 
               {/* Desktop Bankroll */}
               {isLoggedIn && (
