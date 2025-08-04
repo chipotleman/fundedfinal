@@ -317,9 +317,10 @@ const Leaderboard = () => {
       <ProfileModal 
         profile={selectedProfile}
         isOpen={showProfileModal}
-        onClose={() => setShowProfileModal(false)}
-      />
+        onClose={() => setShowProfileModal(fal/>
     </div>
+  );
+}
   );
 };
 

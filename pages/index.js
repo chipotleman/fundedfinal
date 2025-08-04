@@ -175,8 +175,15 @@ export default function Home({
 
       {showWalletModal && (
         <BalanceModal
-          bankroll={bankroll}
+          isOpen={showWalletModal}
           onClose={() => setShowWalletModal(false)}
+          bankroll={bankroll}
+          pnl={0}
+          challengePhase={1}
+          totalChallenges={1}
+          progressPercent={0}
+          challengeGoal={25000}
+          startingBankroll={bankroll}
         />
       )}
 
