@@ -89,9 +89,9 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
     <>
       <nav className="sticky top-0 left-0 right-0 bg-black z-50">
         <div className="px-3 sm:px-6 py-2 sm:py-3">
-          <div className="flex items-center justify-between min-h-[50px] sm:min-h-[60px] relative">
-            {/* Logo - Far left on desktop, center on mobile */}
-            <div className="flex-none lg:order-none order-2 absolute left-1/2 transform -translate-x-1/2 lg:static lg:left-auto lg:transform-none">
+          <div className="flex items-center justify-between min-h-[50px] sm:min-h-[60px]">
+            {/* Logo - left-aligned on both mobile and desktop */}
+            <div className="flex-none">
               <Link href="/" className="flex items-center">
                 <img
                   src="/funderlogo/Funder.png"
@@ -99,7 +99,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                   className="h-16 sm:h-20 w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
                   style={{
                     filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
-                    animation: 'logoRedYellowGlow 4s infinite ease-in-out'
+                    animation: 'logoTealBlueGlow 4s infinite ease-in-out'
                   }}
                   onLoad={(e) => {
                     console.log('Logo loaded successfully');
@@ -121,8 +121,8 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
               </Link>
             </div>
 
-            {/* Center Menu - Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-8 absolute left-1/2 transform -translate-x-1/2">
+            {/* Desktop Navigation - Show different links based on auth status */}
+            <div className="hidden lg:flex items-center space-x-8">
               {isLoggedIn ? (
                 <>
                   <Link href="/dashboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
@@ -150,30 +150,14 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                     How It Works
                   </Link>
                   <Link href="/waitlist" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Thunder Card  
+                    Thunder Card
                   </Link>
                 </>
               )}
             </div>
 
-            {/* Right Side - Mobile & Desktop: Bankroll + Bet Slip + Buttons */}
-            <div className="flex items-center space-x-2 sm:space-x-4 lg:order-none order-3">
-              {/* Mobile hamburger - Show only on mobile, positioned on right */}
-              <div className="lg:hidden">
-                <button
-                  onClick={() => setShowMobileMenu(!showMobileMenu)}
-                  className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-600 hover:border-slate-500 transition-colors flex-shrink-0"
-                >
-                  <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    {showMobileMenu ? (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    ) : (
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                    )}
-                  </svg>
-                </button>
-              </div>
-
+            {/* Right Side - Desktop: Bankroll + Bet Slip + Buttons, Mobile: Hamburger + Bet Slip */}
+            <div className="flex items-center space-x-2 sm:space-x-4">
               {/* Desktop Bankroll - Only show when logged in */}
               {isLoggedIn && (
                 <div className="hidden sm:flex items-center space-x-4">
@@ -247,7 +231,19 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                 )}
               </div>
 
-              
+              {/* Mobile Hamburger Menu */}
+              <button
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="lg:hidden w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-600 hover:border-slate-500 transition-colors flex-shrink-0"
+              >
+                <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  {showMobileMenu ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  )}
+                </svg>
+              </button>
             </div>
           </div>
         </div>
@@ -506,10 +502,10 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
       />
 
       <style jsx>{`
-        @keyframes logoRedYellowGlow {
-          0% { filter: hue-rotate(-30deg) saturate(1.2) brightness(1.1); }
-          50% { filter: hue-rotate(30deg) saturate(1.3) brightness(1.2); }
-          100% { filter: hue-rotate(-30deg) saturate(1.2) brightness(1.1); }
+        @keyframes logoTealBlueGlow {
+          0% { filter: hue-rotate(160deg) saturate(1.3) brightness(1.2); }
+          50% { filter: hue-rotate(220deg) saturate(1.4) brightness(1.3); }
+          100% { filter: hue-rotate(160deg) saturate(1.3) brightness(1.2); }
         }
       `}</style>
     </>
