@@ -151,14 +151,25 @@ export default function AuthPage() {
     setLoading(true);
 
     try {
-      // Get current user
+      // Get current user and selected package
       const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
+      const selectedPackage = JSON.parse(localStorage.getItem('selected_package') || '{}');
+      
+      // Use selected package data or fallback to default challenge
+      const challengeData = selectedPackage.startingBalance ? {
+        name: selectedPackage.name,
+        startingBalance: selectedPackage.startingBalance,
+        profitTarget: selectedPackage.profitTarget,
+        dailyLossLimit: selectedPackage.dailyLossLimit,
+        fundingAmount: selectedPackage.fundingAmount,
+        price: selectedPackage.price
+      } : selectedChallenge;
       
       // Update user with challenge info and personal data
       const updatedUser = {
         ...currentUser,
-        challenge: selectedChallenge,
-        bankroll: selectedChallenge.startingBalance,
+        challenge: challengeData,
+        bankroll: challengeData.startingBalance,
         challengeStartDate: new Date().toISOString(),
         status: 'active',
         pnl: 0,
@@ -167,7 +178,8 @@ export default function AuthPage() {
         betsHistory: [],
         challengePhase: 1,
         dailyLoss: 0,
-        maxDailyLoss: selectedChallenge.startingBalance * 0.08, // 8% daily loss limit
+        maxDailyLoss: challengeData.startingBalance * (challengeData.dailyLossLimit || 0.08),
+        profitTarget: challengeData.profitTarget || challengeData.startingBalance * 0.1,
         lastBetDate: null,
         bettingDays: 0,
         achievements: [],
@@ -184,6 +196,9 @@ export default function AuthPage() {
 
       // Save updated user
       localStorage.setItem('current_user', JSON.stringify(updatedUser));
+
+      // Clear selected package data
+      localStorage.removeItem('selected_package');
 
       // Update in users array
       const existingUsers = JSON.parse(localStorage.getItem('app_users') || '[]');

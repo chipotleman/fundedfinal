@@ -131,7 +131,14 @@ export default function Packages() {
   const packages = billingType === 'monthly' ? monthlyPackages : annualPackages;
 
   const handlePurchase = (packageData) => {
-    // You can implement Stripe checkout or redirect to payment
+    // Store selected package data in localStorage for auth page
+    localStorage.setItem('selected_package', JSON.stringify({
+      ...packageData,
+      startingBalance: parseInt(packageData.fundingAmount.replace(/[$,]/g, '')),
+      profitTarget: parseInt(packageData.target.replace(/[$,]/g, '')),
+      dailyLossLimit: parseFloat(packageData.dailyLoss.replace('%', '')) / 100
+    }));
+    
     console.log('Purchasing package:', packageData);
     router.push('/auth');
   };
