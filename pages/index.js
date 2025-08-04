@@ -67,7 +67,7 @@ export default function Home() {
             </div>
 
             {/* Call to Action Below Video */}
-            <div className="text-center px-4">
+            <div className="text-center px-4 mb-8">
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-6 sm:mb-8">
                 <Link href="/auth" className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg shadow-2xl">
                   Start a Challenge
@@ -76,8 +76,68 @@ export default function Home() {
                   How It Works
                 </Link>
               </div>
+            </div>
 
-              {/* Quick Features */}
+            {/* Live Winners Section - Moved up for better visual flow */}
+            <div className="text-center mb-12 px-4">
+              <h2 className="text-4xl font-bold text-white mb-4">
+                See Real <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Winners</span>
+              </h2>
+              <p className="text-gray-300 text-lg max-w-2xl mx-auto mb-8">
+                Watch as traders like you win real money in real-time. Click any user to see their full profile and betting history.
+              </p>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+                <LiveFeed />
+
+                {/* Stats Panel */}
+                <div className="bg-black/90 backdrop-blur-lg rounded-2xl border border-gray-800 p-8">
+                  <h3 className="text-2xl font-bold text-white mb-6">Community Stats</h3>
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between p-4 bg-black/50 rounded-xl">
+                      <div>
+                        <div className="text-2xl font-bold text-green-400">$2.4M+</div>
+                        <div className="text-gray-300">Total Payouts</div>
+                      </div>
+                      <div className="text-green-400 text-2xl">💰</div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-black/50 rounded-xl">
+                      <div>
+                        <div className="text-2xl font-bold text-blue-400">12,847</div>
+                        <div className="text-gray-300">Active Traders</div>
+                      </div>
+                      <div className="text-blue-400 text-2xl">👥</div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-black/50 rounded-xl">
+                      <div>
+                        <div className="text-2xl font-bold text-purple-400">68.5%</div>
+                        <div className="text-gray-300">Average Win Rate</div>
+                      </div>
+                      <div className="text-purple-400 text-2xl">📈</div>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-black/50 rounded-xl">
+                      <div>
+                        <div className="text-2xl font-bold text-orange-400">24/7</div>
+                        <div className="text-gray-300">Live Betting</div>
+                      </div>
+                      <div className="text-orange-400 text-2xl">⚡</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-8 text-center">
+                    <Link href="/auth" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 inline-block">
+                      Join the Winners
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Feature Boxes - Moved below Live Winners */}
+            <div className="text-center px-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto px-2">
                 <div className="bg-black/90 backdrop-blur-lg rounded-xl p-6 border border-gray-800">
                   <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg flex items-center justify-center mb-4 mx-auto">
@@ -137,65 +197,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Live Feed Section */}
-        <div className="relative max-w-7xl mx-auto px-6 py-16 bg-black">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-white mb-4">
-              See Real <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Winners</span>
-            </h2>
-            <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-              Watch as traders like you win real money in real-time. Click any user to see their full profile and betting history.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <LiveFeed />
-
-            {/* Stats Panel */}
-            <div className="bg-black/90 backdrop-blur-lg rounded-2xl border border-gray-800 p-8">
-              <h3 className="text-2xl font-bold text-white mb-6">Community Stats</h3>
-              <div className="space-y-6">
-                <div className="flex items-center justify-between p-4 bg-black/50 rounded-xl">
-                  <div>
-                    <div className="text-2xl font-bold text-green-400">$2.4M+</div>
-                    <div className="text-gray-300">Total Payouts</div>
-                  </div>
-                  <div className="text-green-400 text-2xl">💰</div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-black/50 rounded-xl">
-                  <div>
-                    <div className="text-2xl font-bold text-blue-400">12,847</div>
-                    <div className="text-gray-300">Active Traders</div>
-                  </div>
-                  <div className="text-blue-400 text-2xl">👥</div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-black/50 rounded-xl">
-                  <div>
-                    <div className="text-2xl font-bold text-purple-400">68.5%</div>
-                    <div className="text-gray-300">Average Win Rate</div>
-                  </div>
-                  <div className="text-purple-400 text-2xl">📈</div>
-                </div>
-
-                <div className="flex items-center justify-between p-4 bg-black/50 rounded-xl">
-                  <div>
-                    <div className="text-2xl font-bold text-orange-400">24/7</div>
-                    <div className="text-gray-300">Live Betting</div>
-                  </div>
-                  <div className="text-orange-400 text-2xl">⚡</div>
-                </div>
-              </div>
-
-              <div className="mt-8 text-center">
-                <Link href="/auth" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 inline-block">
-                  Join the Winners
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
+        
       </div>
     </div>
   );
