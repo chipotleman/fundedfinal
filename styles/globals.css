@@ -28,6 +28,16 @@ html, body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+html {
+  scroll-padding-top: 0;
+}
+
+body {
+  overflow-y: auto;
 }
 
 /* Glass Morphism Components */

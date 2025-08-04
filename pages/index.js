@@ -33,7 +33,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-black" style={{scrollBehavior: 'smooth'}}>
       <TopNavbar 
         bankroll={null}
         pnl={null}
@@ -41,7 +41,7 @@ export default function Home() {
         onBetSlipClick={() => {}}
       />
 
-      <div>
+      <div style={{overflowY: 'visible'}}>
         {/* Main Video Section - No scrolling needed */}
         <div className="relative min-h-screen flex items-center justify-center">
           {/* Background Pattern */}
