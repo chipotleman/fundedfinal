@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import TopNavbar from '../components/TopNavbar';
 
 export default function Waitlist() {
   const [email, setEmail] = useState('');
@@ -16,17 +17,12 @@ export default function Waitlist() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Header */}
-      <div className="bg-black py-6 px-4 sm:px-6 lg:px-8 border-b border-gray-800">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link href="/" className="text-2xl font-bold text-white">
-            FundMyBet
-          </Link>
-          <Link href="/" className="text-gray-400 hover:text-white transition-colors">
-            ← Back to Home
-          </Link>
-        </div>
-      </div>
+      <TopNavbar 
+        bankroll={null}
+        pnl={null}
+        betSlipCount={0}
+        onBetSlipClick={() => {}}
+      />
 
       {/* Hero Section */}
       <div className="max-w-6xl mx-auto px-6 py-16">

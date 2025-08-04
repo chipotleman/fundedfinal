@@ -50,7 +50,7 @@ export default function Home() {
                     poster="/fundmybet-logo.png"
                     preload="auto"
                     style={{ 
-                      aspectRatio: '2.2/1',
+                      aspectRatio: window.innerWidth < 768 ? '16/9' : '2.2/1',
                       minHeight: '280px',
                       maxHeight: '450px',
                       objectFit: 'cover'

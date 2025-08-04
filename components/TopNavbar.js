@@ -69,6 +69,9 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
               <Link href="/promos" className="text-gray-300 hover:text-white font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105">
                 Promos
               </Link>
+              <Link href="/waitlist" className="text-gray-300 hover:text-white font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105">
+                Thunder Card
+              </Link>
             </div>
 
             {/* Right Side - Empty spacer on mobile to balance logo centering */}
@@ -303,6 +306,16 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                       <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732L14.146 12.8l-1.179 4.456a1 1 0 01-1.898-.088L9.854 12.8 6.5 10.866a1 1 0 010-1.732L9.854 7.2l1.215-4.456A1 1 0 0112 2z" clipRule="evenodd" />
                     </svg>
                     <span className="font-medium">Promos</span>
+                  </Link>
+                  <Link 
+                    href="/waitlist" 
+                    onClick={closeMobileMenu}
+                    className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-white hover:bg-slate-800 rounded-xl transition-all duration-200"
+                  >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                    </svg>
+                    <span className="font-medium">Thunder Card</span>
                   </Link>
                   <Link 
                     href="/profile" 
