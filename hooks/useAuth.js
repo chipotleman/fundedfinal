@@ -14,10 +14,20 @@ export const useAuth = () => {
         const userData = localStorage.getItem('current_user');
         if (userData) {
           const parsedUser = JSON.parse(userData);
-          setUser(parsedUser);
+          // Validate that the user data is complete
+          if (parsedUser && parsedUser.id && parsedUser.username) {
+            setUser(parsedUser);
+          } else {
+            // Clear invalid user data
+            localStorage.removeItem('current_user');
+            setUser(null);
+          }
         }
       } catch (error) {
         console.error('Error checking auth:', error);
+        // Clear corrupted data
+        localStorage.removeItem('current_user');
+        setUser(null);
       } finally {
         setLoading(false);
       }
@@ -41,8 +51,25 @@ export const useAuth = () => {
   }, []);
 
   const login = (userData) => {
-    localStorage.setItem('current_user', JSON.stringify(userData));
-    setUser(userData);
+    try {
+      // Ensure we have valid user data
+      if (userData && userData.id && userData.username) {
+        localStorage.setItem('current_user', JSON.stringify(userData));
+        setUser(userData);
+        
+        // Also update the users array if it exists
+        const existingUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
+        const userIndex = existingUsers.findIndex(u => u.id === userData.id);
+        if (userIndex !== -1) {
+          existingUsers[userIndex] = userData;
+          localStorage.setItem('app_users', JSON.stringify(existingUsers));
+        }
+      } else {
+        console.error('Invalid user data provided to login function');
+      }
+    } catch (error) {
+      console.error('Error during login:', error);
+    }
   };
 
   const logout = () => {

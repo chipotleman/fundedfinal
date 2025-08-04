@@ -16,18 +16,27 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
 
   useEffect(() => {
     const fetchUser = async () => {
+      // First check localStorage for user data
+      const storedUser = localStorage.getItem('current_user');
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          if (parsedUser && parsedUser.id && parsedUser.username) {
+            setCurrentUser(parsedUser);
+            setIsLoggedIn(true);
+            return;
+          }
+        } catch (error) {
+          console.error('Error parsing stored user:', error);
+          localStorage.removeItem('current_user');
+        }
+      }
+
+      // Fallback to Supabase auth
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setCurrentUser(user);
         setIsLoggedIn(true);
-        // Fetch user details from local storage if available, otherwise from Supabase
-        const storedUser = localStorage.getItem('current_user');
-        if (storedUser) {
-          setCurrentUser(JSON.parse(storedUser));
-        } else {
-          // You might want to fetch user details from a Supabase table here if needed
-          // For now, we'll rely on the user object from supabase.auth.getUser()
-        }
       } else {
         setIsLoggedIn(false);
         setCurrentUser(null);
@@ -98,25 +107,42 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-8">
-              <Link href="/dashboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                Dashboard
-              </Link>
-              <Link href="/how-it-works" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                How It Works
-              </Link>
-              <Link href="/leaderboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                Leaderboard
-              </Link>
-              <Link href="/promos" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                Promos
-              </Link>
-              <Link href="/waitlist" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                Thunder Card
-              </Link>
+              {isLoggedIn ? (
+                <>
+                  <Link href="/dashboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                    Dashboard
+                  </Link>
+                  <Link href="/leaderboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                    Leaderboard
+                  </Link>
+                  <Link href="/promos" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                    Promos
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link href="/how-it-works" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                    How It Works
+                  </Link>
+                  <Link href="/waitlist" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                    Thunder Card
+                  </Link>
+                </>
+              )}
             </div>
 
-            {/* Right Side - Desktop: Bankroll + Bet Slip, Mobile: Hamburger + Bet Slip */}
+            {/* Right Side - Desktop: Bankroll + Bet Slip + Login, Mobile: Hamburger + Bet Slip */}
             <div className="flex items-center space-x-2 sm:space-x-4">
+              {/* Desktop Login Button - Show when not logged in */}
+              {!isLoggedIn && (
+                <Link
+                  href="/auth"
+                  className="hidden sm:block bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300 text-sm"
+                >
+                  Login / Sign Up
+                </Link>
+              )}
+
               {/* Desktop Bankroll */}
               {isLoggedIn && (
                 <div className="hidden sm:flex items-center space-x-4">
@@ -357,14 +383,42 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                   </div>
                 </>
               ) : (
-                <div className="flex flex-col items-center justify-center flex-1 px-6 pb-6">
-                  <Link
-                    href="/auth"
-                    className="w-full text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-                  >
-                    <span className="text-base">Login / Sign Up</span>
-                  </Link>
-                </div>
+                <>
+                  {/* Mobile Navigation Links for Non-Logged In Users */}
+                  <div className="flex-1 px-6 pb-6">
+                    <div className="space-y-2 mb-6">
+                      <Link
+                        href="/how-it-works"
+                        onClick={closeMobileMenu}
+                        className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300"
+                      >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                        </svg>
+                        <span className="font-medium">How It Works</span>
+                      </Link>
+                      <Link
+                        href="/waitlist"
+                        onClick={closeMobileMenu}
+                        className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300"
+                      >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                        </svg>
+                        <span className="font-medium">Thunder Card</span>
+                      </Link>
+                    </div>
+
+                    {/* Mobile Login Button */}
+                    <Link
+                      href="/auth"
+                      onClick={closeMobileMenu}
+                      className="w-full text-center bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                    >
+                      <span className="text-base">Login / Sign Up</span>
+                    </Link>
+                  </div>
+                </>
               )}
             </div>
           </div>

@@ -125,8 +125,12 @@ export default function AuthPage() {
         
         // If user already has a challenge, go to dashboard
         if (user.challenge) {
-          router.push('/dashboard');
+          setError('✅ Login successful! Redirecting to dashboard...');
+          setTimeout(() => {
+            router.push('/dashboard');
+          }, 1000);
         } else {
+          setError('✅ Login successful! Please select a challenge.');
           setStep('challenge');
         }
       }
