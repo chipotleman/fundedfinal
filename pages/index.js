@@ -59,9 +59,9 @@ export default function Home() {
                       objectFit: 'cover',
                       backgroundColor: '#1e293b' // slate-800 fallback
                     }}
-                    onCanPlay={(e) => {
-                      // Ensure the poster is displayed properly
-                      if (e.target.readyState >= 1) {
+                    onLoadStart={(e) => {
+                      // Ensure poster is visible
+                      if (!e.target.poster) {
                         e.target.poster = '/video-poster.jpg';
                       }
                     }}
