@@ -257,7 +257,7 @@ export default function Packages() {
 
         {/* Mobile Carousel Layout */}
         <div className="lg:hidden pt-4">
-          <div className="overflow-x-auto scrollbar-hide"></div>
+          <div className="overflow-x-auto scrollbar-hide">
             <div className="flex space-x-6 pb-4" style={{ width: 'max-content' }}>
               {packages.map((pkg) => (
                 <div 
