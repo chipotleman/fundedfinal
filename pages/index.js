@@ -48,15 +48,17 @@ export default function Home() {
                     controls 
                     playsInline
                     webkit-playsinline="true"
+                    muted
+                    preload="metadata"
                     className="block w-full h-full object-cover md:aspect-[2.5/1] aspect-video"
                     poster="/fundmybet-logo.png"
-                    preload="metadata"
                     style={{ 
                       minHeight: '240px',
                       maxHeight: '380px',
                       objectFit: 'cover'
                     }}
                   >
+                    <source src="/latest-explainer-video.mov" type="video/mp4" />
                     <source src="/latest-explainer-video.mov" type="video/quicktime" />
                     Your browser does not support the video tag.
                   </video>
