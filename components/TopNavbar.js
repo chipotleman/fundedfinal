@@ -114,7 +114,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                 />
                 <span
                   className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent"
-                  style={{ display: 'block' }}
+                  style={{ display: 'none' }}
                 >
                   Funder
                 </span>
