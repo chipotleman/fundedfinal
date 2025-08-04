@@ -222,12 +222,10 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                     </Link>
                     <Link
                       href="/packages"
-                      className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                      className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                       style={{ height: '48px' }}
                     >
-                      <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent font-bold">
-                        GET FUNDED
-                      </span>
+                      GET FUNDED
                     </Link>
                   </>
                 )}
@@ -472,9 +470,9 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                       <Link
                         href="/packages"
                         onClick={closeMobileMenu}
-                        className="w-full text-center bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 font-bold py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                        className="w-full text-center bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                       >
-                        <span className="text-base bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent font-bold">GET FUNDED</span>
+                        <span className="text-base">GET FUNDED</span>
                       </Link>
                     </div>
                   </div>
