@@ -127,6 +127,9 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                 </>
               ) : (
                 <>
+                  <Link href="/leaderboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                    Leaderboard
+                  </Link>
                   <Link href="/how-it-works" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     How It Works
                   </Link>
@@ -199,7 +202,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                       href="/auth"
                       className="text-gray-300 hover:text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm border border-gray-600 hover:border-gray-500"
                     >
-                      Sign In
+                      SIGN IN
                     </Link>
                     <Link
                       href="/packages"
@@ -411,6 +414,16 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                   {/* Mobile Navigation Links for Non-Logged In Users */}
                   <div className="flex-1 px-6 pb-6">
                     <div className="space-y-2 mb-6">
+                      <Link
+                        href="/leaderboard"
+                        onClick={closeMobileMenu}
+                        className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300"
+                      >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        <span className="font-medium">Leaderboard</span>
+                      </Link>
                       <Link
                         href="/how-it-works"
                         onClick={closeMobileMenu}
