@@ -99,7 +99,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                   className="h-16 sm:h-20 w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
                   style={{
                     filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
-                    animation: 'logoTealBlueGlow 4s infinite ease-in-out'
+                    animation: 'logoRedYellowGlow 4s infinite ease-in-out'
                   }}
                   onLoad={(e) => {
                     console.log('Logo loaded successfully');
@@ -502,10 +502,10 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
       />
 
       <style jsx>{`
-        @keyframes logoTealBlueGlow {
-          0% { filter: hue-rotate(120deg) saturate(1.2) brightness(1.1); }
-          50% { filter: hue-rotate(180deg) saturate(1.3) brightness(1.2); }
-          100% { filter: hue-rotate(120deg) saturate(1.2) brightness(1.1); }
+        @keyframes logoRedYellowGlow {
+          0% { filter: hue-rotate(-30deg) saturate(1.2) brightness(1.1); }
+          50% { filter: hue-rotate(30deg) saturate(1.3) brightness(1.2); }
+          100% { filter: hue-rotate(-30deg) saturate(1.2) brightness(1.1); }
         }
       `}</style>
     </>
