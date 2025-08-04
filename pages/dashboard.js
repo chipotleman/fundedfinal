@@ -213,7 +213,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-black"></div>
       <TopNavbar 
         user={user}
         bankroll={bankroll}
@@ -230,9 +230,9 @@ export default function Dashboard() {
             {selectedSport} Betting
           </h1>
           <div className="flex items-center space-x-2 sm:space-x-4">
-            <div className="bg-slate-800 px-4 py-3 rounded-lg border border-slate-700">
+            <div className="bg-gray-800 px-4 py-3 rounded-lg border border-gray-700">
               <div className="flex items-center space-x-2">
-                <span className="text-gray-400 text-sm sm:text-base whitespace-nowrap">Live Lines</span>
+                <span className="text-gray-300 text-sm sm:text-base whitespace-nowrap">Live Lines</span>
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
               </div>
             </div>
@@ -249,7 +249,7 @@ export default function Dashboard() {
                 className={`flex-shrink-0 flex flex-col items-center justify-center w-18 h-18 sm:w-20 sm:h-20 rounded-full transition-all duration-200 ${
                   selectedSport === sport
                     ? 'bg-green-500 text-white shadow-lg scale-105'
-                    : 'bg-slate-800 text-gray-300 hover:bg-slate-700 hover:text-white'
+                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white border border-gray-700'
                 }`}
               >
                 <span className="text-lg sm:text-xl mb-1">{getSportIcon(sport)}</span>
@@ -268,9 +268,9 @@ export default function Dashboard() {
             </div>
           ) : games.length > 0 ? (
             games.map(game => (
-              <div key={game.id} className="bg-slate-800 rounded-xl sm:rounded-2xl border border-slate-700 overflow-hidden">
+              <div key={game.id} className="bg-gray-900 rounded-xl sm:rounded-2xl border border-gray-700 overflow-hidden">
                 {/* Game Header */}
-                <div className="bg-slate-700/50 px-4 sm:px-6 py-3 sm:py-4 border-b border-slate-600">
+                <div className="bg-gray-800/50 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-600">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
                       <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
@@ -301,7 +301,7 @@ export default function Dashboard() {
                       className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
                         betSlip.find(bet => bet.id === `${game.id}-spread-${game.awayTeam} ${game.lines.spread.away.point}`) 
                           ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
-                          : 'bg-slate-700 hover:bg-green-600 border-slate-600 hover:border-green-500'
+                          : 'bg-gray-700 hover:bg-green-600 border-gray-600 hover:border-green-500 text-white'
                       }`}
                     >
                       <div className="text-gray-300 text-xs">{game.lines.spread.away.point}</div>
@@ -312,7 +312,7 @@ export default function Dashboard() {
                       className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
                         betSlip.find(bet => bet.id === `${game.id}-total-Over ${game.lines.total.over.point}`) 
                           ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
-                          : 'bg-slate-700 hover:bg-green-600 border-slate-600 hover:border-green-500'
+                          : 'bg-gray-700 hover:bg-green-600 border-gray-600 hover:border-green-500 text-white'
                       }`}
                     >
                       <div className="text-gray-300 text-xs">{game.lines.total.over.point}</div>
@@ -323,7 +323,7 @@ export default function Dashboard() {
                       className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
                         betSlip.find(bet => bet.id === `${game.id}-moneyline-${game.awayTeam}`) 
                           ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
-                          : 'bg-slate-700 hover:bg-green-600 border-slate-600 hover:border-green-500'
+                          : 'bg-gray-700 hover:bg-green-600 border-gray-600 hover:border-green-500 text-white'
                       }`}
                     >
                       <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.moneyline.away)}</div>
@@ -340,7 +340,7 @@ export default function Dashboard() {
                       className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
                         betSlip.find(bet => bet.id === `${game.id}-spread-${game.homeTeam} ${game.lines.spread.home.point}`) 
                           ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
-                          : 'bg-slate-700 hover:bg-green-600 border-slate-600 hover:border-green-500'
+                          : 'bg-gray-700 hover:bg-green-600 border-gray-600 hover:border-green-500 text-white'
                       }`}
                     >
                       <div className="text-gray-300 text-xs">{game.lines.spread.home.point}</div>
@@ -351,7 +351,7 @@ export default function Dashboard() {
                       className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
                         betSlip.find(bet => bet.id === `${game.id}-total-Under ${game.lines.total.under.point}`) 
                           ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
-                          : 'bg-slate-700 hover:bg-green-600 border-slate-600 hover:border-green-500'
+                          : 'bg-gray-700 hover:bg-green-600 border-gray-600 hover:border-green-500 text-white'
                       }`}
                     >
                       <div className="text-gray-300 text-xs">{game.lines.total.under.point}</div>
@@ -362,7 +362,7 @@ export default function Dashboard() {
                       className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
                         betSlip.find(bet => bet.id === `${game.id}-moneyline-${game.homeTeam}`) 
                           ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
-                          : 'bg-slate-700 hover:bg-green-600 border-slate-600 hover:border-green-500'
+                          : 'bg-gray-700 hover:bg-green-600 border-gray-600 hover:border-green-500 text-white'
                       }`}
                     >
                       <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.moneyline.home)}</div>
@@ -373,7 +373,7 @@ export default function Dashboard() {
             ))
           ) : (
             <div className="text-center py-12">
-              <div className="bg-slate-800 rounded-2xl p-8 max-w-md mx-auto">
+              <div className="bg-gray-900 rounded-2xl p-8 max-w-md mx-auto border border-gray-700">
                 <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
                 </svg>
