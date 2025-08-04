@@ -29,7 +29,7 @@ export default function Home() {
 
 
               <h1 className="text-4xl font-black text-white mb-6 sm:mb-8 leading-tight px-2">
-                Get <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Funded</span> to Bet
+                Get <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent inline-block align-baseline">Funded</span> to Bet
               </h1>
               <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-4 sm:mb-6 px-4">
                 Watch how you can get funded up to <span className="text-green-400 font-bold">$25,000</span> to bet with and keep 80% of your profits
