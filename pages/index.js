@@ -222,7 +222,7 @@ export default function Home() {
               : 'opacity-0 translate-y-10'
           }`}
         >
-          <div className="max-w-6xl mx-auto px-6"></div>
+          <div className="max-w-6xl mx-auto px-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
               <div>
                 <div className="text-4xl font-black text-green-400 mb-2">$2.1M+</div>
@@ -243,8 +243,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-
-        
       </div>
     </div>
   );
