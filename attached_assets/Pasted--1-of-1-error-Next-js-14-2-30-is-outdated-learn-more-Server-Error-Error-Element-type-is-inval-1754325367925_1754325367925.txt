@@ -1,0 +1,56 @@
+
+
+1 of 1 error
+Next.js (14.2.30) is outdated (learn more)
+Server Error
+
+Error: Element type is invalid: expected a string (for built-in components) or a class/function (for composite components) but got: object. You likely forgot to export your component from the file it's defined in, or you might have mixed up default and named imports.
+
+This error happened while generating the page. Any console logs will be displayed in the terminal window.
+Call Stack
+React
+renderElement
+
+file:///home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js (6043:9)
+renderNodeDestructiveImpl
+
+file:///home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js (6104:11)
+renderNodeDestructive
+
+file:///home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js (6076:14)
+renderNode
+
+file:///home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js (6259:12)
+renderChildrenArray
+
+file:///home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js (6211:7)
+renderNodeDestructiveImpl
+
+file:///home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js (6141:7)
+renderNodeDestructive
+
+file:///home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js (6076:14)
+renderNode
+
+file:///home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js (6259:12)
+renderHostElement
+
+file:///home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js (5642:3)
+renderElement
+
+file:///home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js (5952:5)
+renderNodeDestructiveImpl
+
+file:///home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js (6104:11)
+renderNodeDestructive
+
+file:///home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js (6076:14)
+renderIndeterminateComponent
+
+file:///home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js (5785:7)
+renderElement
+
+file:///home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js (5946:7)
+renderNodeDestructiveImpl
+
+file:///home/runner/workspace/node_modules/react-dom/cjs/react-dom-server.browser.development.js (6104:11)
