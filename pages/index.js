@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
 import LiveFeed from '../components/LiveFeed';
+import ChallengePopup from '../components/ChallengePopup';
+import HowItWorksPopup from '../components/HowItWorksPopup';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -34,6 +36,8 @@ function CustomVideoPlayer() {
 export default function Home() {
   const { user } = useAuth();
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
+  const [showChallengePopup, setShowChallengePopup] = useState(false);
+  const [showHowItWorksPopup, setShowHowItWorksPopup] = useState(false);
 
   return (
     <div className="min-h-screen bg-black" style={{scrollBehavior: 'smooth'}}>
@@ -81,12 +85,18 @@ export default function Home() {
             {/* Call to Action Below Video */}
             <div className="text-center px-4 mb-8">
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-6 sm:mb-8">
-                <Link href="/auth" className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg shadow-2xl">
+                <button 
+                  onClick={() => setShowChallengePopup(true)}
+                  className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg shadow-2xl"
+                >
                   Start a Challenge
-                </Link>
-                <Link href="/how-it-works" className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg border border-slate-700">
+                </button>
+                <button 
+                  onClick={() => setShowHowItWorksPopup(true)}
+                  className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg border border-slate-700"
+                >
                   How It Works
-                </Link>
+                </button>
               </div>
             </div>
 
@@ -248,6 +258,16 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* Popups */}
+      <ChallengePopup 
+        isOpen={showChallengePopup} 
+        onClose={() => setShowChallengePopup(false)} 
+      />
+      <HowItWorksPopup 
+        isOpen={showHowItWorksPopup} 
+        onClose={() => setShowHowItWorksPopup(false)} 
+      />
     </div>
   );
 }
