@@ -223,9 +223,9 @@ export default function Dashboard() {
       />
 
       {/* Main Content */}
-      <div className="pt-24 sm:pt-28 lg:pt-32 px-4 sm:px-6 lg:px-8">
+      <div className="pt-16 sm:pt-20 lg:pt-24 px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 space-y-4 sm:space-y-0">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 space-y-4 sm:space-y-0"></div>
           <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-black text-white leading-tight">
             {selectedSport} Betting
           </h1>
@@ -240,7 +240,7 @@ export default function Dashboard() {
         </div>
 
         {/* Sports Selection - DraftKings Style Horizontal Scroll */}
-        <div className="mb-6">
+        <div className="mb-4"></div>
           <div className="flex space-x-3 overflow-x-auto pb-4 pt-2 px-1 scrollbar-hide">
             {sports.map((sport) => (
               <button

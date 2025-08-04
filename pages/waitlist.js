@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
@@ -43,7 +42,7 @@ export default function Waitlist() {
               <div className="flex flex-col justify-between h-full">
                 <div>
                   <div className="text-2xl font-bold text-white mb-2">Thunder Card</div>
-                  <div className="text-sm text-gray-400">Powered by FundMyBet</div>
+                  <div className="text-sm text-gray-400">Powered by Funder</div>
                 </div>
                 <div>
                   <div className="text-lg font-mono text-white mb-4">•••• •••• •••• 1234</div>

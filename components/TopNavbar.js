@@ -57,19 +57,19 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-8">
-              <Link href="/dashboard" className="text-gray-300 hover:text-white font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105">
+              <Link href="/dashboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                 Dashboard
               </Link>
-              <Link href="/rules" className="text-gray-300 hover:text-white font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105">
+              <Link href="/rules" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                 Rules
               </Link>
-              <Link href="/leaderboard" className="text-gray-300 hover:text-white font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105">
+              <Link href="/leaderboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                 Leaderboard
               </Link>
-              <Link href="/promos" className="text-gray-300 hover:text-white font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105">
+              <Link href="/promos" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                 Promos
               </Link>
-              <Link href="/waitlist" className="text-gray-300 hover:text-white font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105">
+              <Link href="/waitlist" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                 Thunder Card
               </Link>
             </div>
@@ -270,7 +270,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                   <Link 
                     href="/dashboard" 
                     onClick={closeMobileMenu}
-                    className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-white hover:bg-slate-800 rounded-xl transition-all duration-200"
+                    className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]"
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
@@ -280,7 +280,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                   <Link 
                     href="/rules" 
                     onClick={closeMobileMenu}
-                    className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-white hover:bg-slate-800 rounded-xl transition-all duration-200"
+                    className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]"
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
@@ -290,7 +290,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                   <Link 
                     href="/leaderboard" 
                     onClick={closeMobileMenu}
-                    className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-white hover:bg-slate-800 rounded-xl transition-all duration-200"
+                    className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]"
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -300,7 +300,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                   <Link 
                     href="/promos" 
                     onClick={closeMobileMenu}
-                    className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-white hover:bg-slate-800 rounded-xl transition-all duration-200"
+                    className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]"
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732L14.146 12.8l-1.179 4.456a1 1 0 01-1.898-.088L9.854 12.8 6.5 10.866a1 1 0 010-1.732L9.854 7.2l1.215-4.456A1 1 0 0112 2z" clipRule="evenodd" />
@@ -310,7 +310,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                   <Link 
                     href="/waitlist" 
                     onClick={closeMobileMenu}
-                    className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-white hover:bg-slate-800 rounded-xl transition-all duration-200"
+                    className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]"
                   >
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
