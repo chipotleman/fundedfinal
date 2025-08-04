@@ -13,7 +13,7 @@ export default function Packages() {
       id: 1,
       name: "Starter Challenge",
       fundingAmount: "$5,000",
-      price: "$49",
+      price: "$99",
       target: "$500",
       dailyLoss: "5%",
       features: [
@@ -31,7 +31,7 @@ export default function Packages() {
       id: 2,
       name: "Pro Challenge",
       fundingAmount: "$10,000", 
-      price: "$99",
+      price: "$199",
       target: "$1,000",
       dailyLoss: "6%",
       features: [
@@ -50,7 +50,7 @@ export default function Packages() {
       id: 3,
       name: "Elite Challenge",
       fundingAmount: "$25,000",
-      price: "$199", 
+      price: "$299", 
       target: "$2,500",
       dailyLoss: "8%",
       features: [
@@ -73,7 +73,7 @@ export default function Packages() {
       id: 1,
       name: "Starter Challenge",
       fundingAmount: "$5,000",
-      price: "$99",
+      price: "$792",
       target: "$500",
       dailyLoss: "5%",
       features: [
@@ -91,7 +91,7 @@ export default function Packages() {
       id: 2,
       name: "Pro Challenge",
       fundingAmount: "$10,000", 
-      price: "$792",
+      price: "$1,592",
       target: "$1,000",
       dailyLoss: "6%",
       features: [
@@ -110,7 +110,7 @@ export default function Packages() {
       id: 3,
       name: "Elite Challenge",
       fundingAmount: "$25,000",
-      price: "$1,592", 
+      price: "$2,392", 
       target: "$2,500",
       dailyLoss: "8%",
       features: [
