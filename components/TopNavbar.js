@@ -96,10 +96,10 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                 <img
                   src="/funderlogo/Funder.png"
                   alt="Funder"
-                  className="h-12 sm:h-16 w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
+                  className="h-16 sm:h-20 w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
                   style={{
                     filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
-                    animation: 'logoColorCycle 8s infinite ease-in-out'
+                    animation: 'logoTealBlueGlow 4s infinite ease-in-out'
                   }}
                   onLoad={(e) => {
                     console.log('Logo loaded successfully');
@@ -502,12 +502,10 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
       />
 
       <style jsx>{`
-        @keyframes logoColorCycle {
-          0% { filter: hue-rotate(0deg) saturate(1.2) brightness(1.1); }
-          25% { filter: hue-rotate(90deg) saturate(1.4) brightness(1.2); }
-          50% { filter: hue-rotate(180deg) saturate(1.3) brightness(1.15); }
-          75% { filter: hue-rotate(270deg) saturate(1.4) brightness(1.2); }
-          100% { filter: hue-rotate(360deg) saturate(1.2) brightness(1.1); }
+        @keyframes logoTealBlueGlow {
+          0% { filter: hue-rotate(160deg) saturate(1.3) brightness(1.2); }
+          50% { filter: hue-rotate(220deg) saturate(1.4) brightness(1.3); }
+          100% { filter: hue-rotate(160deg) saturate(1.3) brightness(1.2); }
         }
       `}</style>
     </>
