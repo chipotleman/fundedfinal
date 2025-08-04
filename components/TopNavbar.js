@@ -89,9 +89,9 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
     <>
       <nav className="sticky top-0 left-0 right-0 bg-black z-50">
         <div className="px-3 sm:px-6 py-2 sm:py-3">
-          <div className="flex items-center justify-between min-h-[50px] sm:min-h-[60px]">
+          <div className="flex items-center justify-between lg:justify-start min-h-[50px] sm:min-h-[60px] relative">
             {/* Left Side - Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-8 flex-1">
+            <div className="hidden lg:flex items-center space-x-8">
               {isLoggedIn ? (
                 <>
                   <Link href="/dashboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
@@ -116,8 +116,8 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
               )}
             </div>
 
-            {/* Logo - Centered */}
-            <div className="flex-none">
+            {/* Logo - Left on desktop, center on mobile */}
+            <div className="flex-none lg:order-none order-2 lg:absolute lg:left-1/2 lg:transform lg:-translate-x-1/2">
               <Link href="/" className="flex items-center">
                 <img
                   src="/funderlogo/Funder.png"
@@ -148,7 +148,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
             </div>
 
             {/* Right Side - Desktop: Additional Links + Bankroll + Bet Slip + Buttons, Mobile: Hamburger + Bet Slip */}
-            <div className="hidden lg:flex items-center space-x-8 flex-1 justify-end">
+            <div className="hidden lg:flex items-center space-x-8 lg:ml-auto">
               {isLoggedIn ? (
                 <>
                   <Link href="/waitlist" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
@@ -166,7 +166,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
             </div>
 
             {/* Right Side - Mobile & Desktop: Bankroll + Bet Slip + Buttons */}
-            <div className="flex items-center space-x-2 sm:space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 lg:order-none order-3">
               {/* Desktop Bankroll - Only show when logged in */}
               {isLoggedIn && (
                 <div className="hidden sm:flex items-center space-x-4">
