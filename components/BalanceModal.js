@@ -262,3 +262,49 @@ export default function BalanceModal({
     </div>
   );
 }
+export default function BalanceModal({ bankroll, onClose }) {
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-slate-900 rounded-2xl p-6 w-full max-w-md">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-white">Account Balance</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="text-center">
+          <div className="mb-6">
+            <p className="text-gray-400 mb-2">Current Balance</p>
+            <p className="text-4xl font-bold text-green-400">${bankroll.toLocaleString()}</p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="bg-slate-800 rounded-xl p-4">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">Available for Betting</span>
+                <span className="text-white font-semibold">${bankroll.toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div className="bg-slate-800 rounded-xl p-4">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-400">In Active Bets</span>
+                <span className="text-white font-semibold">$0</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 text-sm text-gray-500">
+            <p>* This is virtual currency for challenge mode</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
