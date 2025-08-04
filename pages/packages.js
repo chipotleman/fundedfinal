@@ -98,20 +98,10 @@ export default function Packages() {
         onBetSlipClick={() => {}}
       />
 
-      {/* Header */}
-      <div className="bg-gradient-to-r from-green-600 to-blue-600 py-8 px-4 sm:px-6 lg:px-8 mt-16">
-        <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4">
-            Choose Your <span className="bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent">Funding Package</span>
-          </h1>
-          <p className="text-lg sm:text-xl text-gray-200 max-w-3xl mx-auto">
-            Select the right funding level for your betting strategy and start earning real profits
-          </p>
-        </div>
-      </div>
+      
 
       {/* Packages Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 pt-24">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {packages.map((pkg) => (
             <div 
