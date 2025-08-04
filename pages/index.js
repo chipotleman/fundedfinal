@@ -46,11 +46,10 @@ export default function Home() {
                     controls 
                     playsInline
                     webkit-playsinline="true"
-                    className="block w-full h-full object-cover"
+                    className="block w-full h-full object-cover md:aspect-[2.2/1] aspect-video"
                     poster="/fundmybet-logo.png"
                     preload="auto"
                     style={{ 
-                      aspectRatio: window.innerWidth < 768 ? '16/9' : '2.2/1',
                       minHeight: '280px',
                       maxHeight: '450px',
                       objectFit: 'cover'
