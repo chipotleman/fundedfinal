@@ -1,12 +1,74 @@
 
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import { useState } from 'react';
 import TopNavbar from '../components/TopNavbar';
 
 export default function Packages() {
   const router = useRouter();
+  const [billingType, setBillingType] = useState('monthly'); // 'monthly' or 'onetime'
 
-  const packages = [
+  const monthlyPackages = [
+    {
+      id: 1,
+      name: "Starter Challenge",
+      fundingAmount: "$5,000",
+      price: "$49",
+      target: "$500",
+      dailyLoss: "5%",
+      features: [
+        "5% daily loss limit",
+        "$500 profit target", 
+        "80% profit share",
+        "Monthly subscription",
+        "All sports betting",
+        "Real-time tracking",
+        "Cancel anytime"
+      ],
+      popular: false
+    },
+    {
+      id: 2,
+      name: "Pro Challenge",
+      fundingAmount: "$10,000", 
+      price: "$99",
+      target: "$1,000",
+      dailyLoss: "6%",
+      features: [
+        "6% daily loss limit",
+        "$1,000 profit target",
+        "80% profit share", 
+        "Monthly subscription",
+        "All sports betting",
+        "Priority support",
+        "Advanced analytics",
+        "Cancel anytime"
+      ],
+      popular: true
+    },
+    {
+      id: 3,
+      name: "Elite Challenge",
+      fundingAmount: "$25,000",
+      price: "$199", 
+      target: "$2,500",
+      dailyLoss: "8%",
+      features: [
+        "8% daily loss limit",
+        "$2,500 profit target",
+        "80% profit share",
+        "Monthly subscription", 
+        "All sports betting",
+        "VIP support",
+        "Advanced analytics",
+        "Weekly payouts",
+        "Cancel anytime"
+      ],
+      popular: false
+    }
+  ];
+
+  const onetimePackages = [
     {
       id: 1,
       name: "Starter Challenge",
@@ -18,6 +80,7 @@ export default function Packages() {
         "5% daily loss limit",
         "$500 profit target", 
         "80% profit share",
+        "One-time payment",
         "14-day evaluation",
         "All sports betting",
         "Real-time tracking"
@@ -35,6 +98,7 @@ export default function Packages() {
         "6% daily loss limit",
         "$1,000 profit target",
         "80% profit share", 
+        "One-time payment",
         "14-day evaluation",
         "All sports betting",
         "Priority support",
@@ -53,6 +117,7 @@ export default function Packages() {
         "8% daily loss limit",
         "$2,500 profit target",
         "80% profit share",
+        "One-time payment",
         "14-day evaluation", 
         "All sports betting",
         "VIP support",
@@ -62,6 +127,8 @@ export default function Packages() {
       popular: false
     }
   ];
+
+  const packages = billingType === 'monthly' ? monthlyPackages : onetimePackages;
 
   const handlePurchase = (packageData) => {
     // You can implement Stripe checkout or redirect to payment
@@ -86,9 +153,37 @@ export default function Packages() {
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white mb-4">
             PICK YOUR <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">CHALLENGE</span>
           </h1>
-          <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto">
+          <p className="text-lg sm:text-xl text-gray-300 max-w-3xl mx-auto mb-8">
             Choose the funding level that matches your betting strategy and start earning real profits
           </p>
+          
+          {/* Billing Toggle */}
+          <div className="flex justify-center mb-6">
+            <div className="bg-slate-800 rounded-xl p-1 border border-slate-700">
+              <div className="flex">
+                <button
+                  onClick={() => setBillingType('monthly')}
+                  className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
+                    billingType === 'monthly'
+                      ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-lg'
+                      : 'text-gray-300 hover:text-white'
+                  }`}
+                >
+                  Monthly
+                </button>
+                <button
+                  onClick={() => setBillingType('onetime')}
+                  className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
+                    billingType === 'onetime'
+                      ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-lg'
+                      : 'text-gray-300 hover:text-white'
+                  }`}
+                >
+                  One-Time
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -120,7 +215,9 @@ export default function Packages() {
 
               <div className="text-center mb-6">
                 <div className="text-2xl font-bold text-white">{pkg.price}</div>
-                <div className="text-gray-400 text-sm">One-time fee</div>
+                <div className="text-gray-400 text-sm">
+                  {billingType === 'monthly' ? 'Per month' : 'One-time fee'}
+                </div>
               </div>
 
               <div className="space-y-3 mb-6">
@@ -153,7 +250,7 @@ export default function Packages() {
                     : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-600'
                 }`}
               >
-                Start Challenge
+                {billingType === 'monthly' ? 'Subscribe Now' : 'Start Challenge'}
               </button>
             </div>
           ))}
