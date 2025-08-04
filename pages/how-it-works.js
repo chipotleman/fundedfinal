@@ -70,8 +70,8 @@ const HowItWorks = () => {
 
       <div className="pt-20 pb-16">
         {/* Hero Section */}
-        <div className="max-w-6xl mx-auto px-6 py-16">
-          <div className="text-center mb-16">
+        <div className="max-w-6xl mx-auto px-6 py-8">
+          <div className="text-center mb-12">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-6 leading-tight">
             How It <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Works</span>
           </h1>
