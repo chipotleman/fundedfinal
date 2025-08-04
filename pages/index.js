@@ -23,21 +23,9 @@ export default function Home() {
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22m36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
 
           <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
-            {/* Logo with matching glow effect */}
-            <div className="text-center mb-8 sm:mb-12">
-              <div className="relative inline-block mb-6 sm:mb-8">
-                <img 
-                  src="/fundmybet-logo.svg" 
-                  alt="Funder Logo" 
-                  className="h-8 sm:h-10 w-auto"
-                  style={{
-                    filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.6)) drop-shadow(0 0 16px rgba(139, 92, 246, 0.4))',
-                    animation: 'logoGlow 4s ease-in-out infinite'
-                  }}
-                />
-              </div>
-              
-              <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6 sm:mb-8 leading-tight px-2">
+            {/* Title Above Video */}
+            <div className="text-center mb-6 sm:mb-8">
+              <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black text-white mb-3 sm:mb-4 leading-tight px-2">
                 Get <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Funded</span> to Bet
               </h1>
               <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-4 sm:mb-6 px-4">
@@ -58,11 +46,11 @@ export default function Home() {
                     controls 
                     playsInline
                     webkit-playsinline="true"
-                    className="block w-full h-full object-cover md:aspect-[2.2/1] aspect-[16/9]"
+                    className="block w-full h-full object-cover md:aspect-[2.2/1] aspect-video"
                     poster="/fundmybet-logo.png"
                     preload="auto"
                     style={{ 
-                      minHeight: '200px',
+                      minHeight: '280px',
                       maxHeight: '450px',
                       objectFit: 'cover'
                     }}
@@ -205,17 +193,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        @keyframes logoGlow {
-          0%, 100% {
-            filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.6)) drop-shadow(0 0 16px rgba(139, 92, 246, 0.4));
-          }
-          50% {
-            filter: drop-shadow(0 0 12px rgba(139, 92, 246, 0.8)) drop-shadow(0 0 24px rgba(59, 130, 246, 0.6));
-          }
-        }
-      `}</style>
     </div>
   );
 }
