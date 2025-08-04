@@ -50,14 +50,14 @@ export default function Home() {
                     webkit-playsinline="true"
                     className="block w-full h-full object-cover md:aspect-[2.5/1] aspect-video"
                     poster="/fundmybet-logo.png"
-                    preload="auto"
+                    preload="metadata"
                     style={{ 
                       minHeight: '240px',
                       maxHeight: '380px',
                       objectFit: 'cover'
                     }}
                   >
-                    <source src="/explainer-video.mp4" type="video/mp4" />
+                    <source src="/new-explainer-video.mp4" type="video/mp4" />
                     Your browser does not support the video tag.
                   </video>
                 </div>
