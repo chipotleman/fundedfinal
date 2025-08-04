@@ -94,7 +94,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
             <div className="flex-none">
               <Link href="/" className="flex items-center">
                 <img
-                  src="/funderlogo/Funder.png?v=3"
+                  src="/funderlogo/Funder.png?v=4"
                   alt="Funder"
                   className="h-16 sm:h-20 w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
                   style={{
