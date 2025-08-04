@@ -259,7 +259,7 @@ export default function Dashboard() {
                 onClick={() => handleSportClick(sport)}
                 className={`flex-shrink-0 flex flex-col items-center justify-center w-18 h-18 sm:w-20 sm:h-20 rounded-full transition-all duration-200 ${
                   selectedSport === sport
-                    ? 'bg-green-500 text-white shadow-lg scale-105'
+                    ? 'bg-gray-800 text-white shadow-lg border-2 border-purple-500'
                     : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white border border-gray-700'
                 }`}
               >
