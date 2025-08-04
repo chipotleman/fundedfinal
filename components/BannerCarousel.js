@@ -1,68 +1,117 @@
+
 import { useState, useEffect } from 'react';
 
 const banners = [
   {
     id: 1,
-    title: "Welcome Bonus",
-    description: "Get $100 bonus when you complete your first challenge!",
-    image: "/banners/banner1.jpg",
-    bgColor: "from-blue-600 to-purple-600"
+    image: '/banners/banner1.jpg',
+    title: 'Start Your Challenge',
+    subtitle: 'Turn $10,000 into $25,000',
+    cta: 'Begin Now'
   },
   {
     id: 2,
-    title: "Challenge Mode",
-    description: "Prove your skills with zero risk betting challenges",
-    image: "/banners/banner2.jpg", 
-    bgColor: "from-green-600 to-blue-600"
+    image: '/banners/banner2.jpg',
+    title: 'Funded Trading',
+    subtitle: 'No personal risk, real profits',
+    cta: 'Learn More'
   },
   {
     id: 3,
-    title: "Leaderboard",
-    description: "Compete with other traders for the top spot",
-    image: "/banners/banner3.jpg",
-    bgColor: "from-purple-600 to-pink-600"
+    image: '/banners/banner3.jpg',
+    title: 'Join Thousands',
+    subtitle: 'Of successful funded traders',
+    cta: 'Get Started'
   }
 ];
 
 export default function BannerCarousel() {
-  const [currentBanner, setCurrentBanner] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentBanner((prev) => (prev + 1) % banners.length);
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % banners.length);
     }, 5000);
 
-    return () => clearInterval(timer);
+    return () => clearInterval(interval);
   }, []);
 
-  return (
-    <div className="relative w-full max-w-4xl mx-auto">
-      <div className="overflow-hidden rounded-2xl">
-        <div 
-          className="flex transition-transform duration-500 ease-in-out"
-          style={{ transform: `translateX(-${currentBanner * 100}%)` }}
-        >
-          {banners.map((banner) => (
-            <div
-              key={banner.id}
-              className={`w-full flex-shrink-0 bg-gradient-to-r ${banner.bgColor} p-8 text-center text-white`}
-            >
-              <h3 className="text-2xl font-bold mb-2">{banner.title}</h3>
-              <p className="text-lg opacity-90">{banner.description}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+  const goToSlide = (index) => {
+    setCurrentIndex(index);
+  };
 
-      {/* Dots indicator */}
-      <div className="flex justify-center mt-4 space-x-2">
+  const goToPrevious = () => {
+    setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length);
+  };
+
+  const goToNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % banners.length);
+  };
+
+  return (
+    <div className="relative w-full h-96 rounded-2xl overflow-hidden bg-slate-900">
+      {/* Banner Images with Overlay Content */}
+      {banners.map((banner, index) => (
+        <div
+          key={banner.id}
+          className={`absolute inset-0 transition-opacity duration-700 ${
+            index === currentIndex ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          {/* Background Image */}
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url(${banner.image})` }}
+          />
+          
+          {/* Gradient Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+          
+          {/* Content */}
+          <div className="absolute inset-0 flex items-center">
+            <div className="px-8 sm:px-12 lg:px-16 text-white max-w-2xl">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-4 leading-tight">
+                {banner.title}
+              </h2>
+              <p className="text-lg sm:text-xl mb-6 text-gray-200">
+                {banner.subtitle}
+              </p>
+              <button className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-8 rounded-xl text-lg transition-all duration-300 transform hover:scale-105 shadow-xl">
+                {banner.cta}
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {/* Navigation Arrows */}
+      <button
+        onClick={goToPrevious}
+        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full transition-all duration-200"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      
+      <button
+        onClick={goToNext}
+        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white p-2 rounded-full transition-all duration-200"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+
+      {/* Dots Indicator */}
+      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
         {banners.map((_, index) => (
           <button
             key={index}
-            onClick={() => setCurrentBanner(index)}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              currentBanner === index 
-                ? 'bg-white' 
+            onClick={() => goToSlide(index)}
+            className={`w-3 h-3 rounded-full transition-all duration-200 ${
+              index === currentIndex 
+                ? 'bg-white shadow-lg' 
                 : 'bg-white/50 hover:bg-white/70'
             }`}
           />
