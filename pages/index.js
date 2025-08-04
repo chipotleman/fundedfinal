@@ -25,17 +25,7 @@ export default function Home() {
           <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
             {/* Logo with matching glow effect */}
             <div className="text-center mb-10 sm:mb-16">
-              <div className="relative inline-block mb-8 sm:mb-12">
-                <img 
-                  src="/fundmybet-logo.svg" 
-                  alt="Funder Logo" 
-                  className="h-8 sm:h-10 w-auto"
-                  style={{
-                    filter: 'drop-shadow(0 0 8px rgba(59, 130, 246, 0.6)) drop-shadow(0 0 16px rgba(139, 92, 246, 0.4))',
-                    animation: 'logoGlow 4s ease-in-out infinite'
-                  }}
-                />
-              </div>
+              
 
               <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-black text-white mb-6 sm:mb-8 leading-tight px-2">
                 Get <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Funded</span> to Bet
