@@ -101,9 +101,9 @@ export default function Home() {
                 <LiveFeed />
 
                 {/* Live Community Stats Panel */}
-                <div className="bg-black/90 backdrop-blur-lg rounded-2xl border border-gray-800 p-8" style={{ height: 'fit-content' }}>
+                <div className="bg-black/90 backdrop-blur-lg rounded-2xl border border-gray-800 p-8 h-96 flex flex-col">
                   <h3 className="text-2xl font-bold text-white mb-6">Live Community Stats</h3>
-                  <div className="space-y-6">
+                  <div className="space-y-6 flex-1 flex flex-col justify-center">
                     <div className="flex items-center justify-between p-4 bg-black/50 rounded-xl">
                       <div>
                         <div className="text-2xl font-bold text-green-400">1,247</div>
