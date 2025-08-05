@@ -104,12 +104,12 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
   const currentStep = steps[currentIndex];
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl max-w-md w-full border-2 border-slate-700 overflow-hidden">
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
+      <div className="relative bg-black border-2 border-slate-700 rounded-3xl max-w-md w-full overflow-hidden">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-8 h-8 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-colors"
+          className="absolute top-4 right-4 z-10 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center transition-colors"
         >
           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -144,7 +144,7 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
           {/* Details */}
           <div className="space-y-3 mb-8">
             {currentStep.details.map((detail, index) => (
-              <div key={index} className="flex items-center space-x-3 p-3 bg-slate-700/30 rounded-lg">
+              <div key={index} className="flex items-center space-x-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
                 <div className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></div>
                 <span className="text-gray-300">{detail}</span>
               </div>
@@ -154,10 +154,19 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
           {/* Action Button */}
           {currentIndex === steps.length - 1 ? (
             <button
-              onClick={onClose}
+              onClick={() => {
+                onClose();
+                // Scroll to demo section
+                setTimeout(() => {
+                  const demoSection = document.getElementById('demo-section');
+                  if (demoSection) {
+                    demoSection.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }, 100);
+              }}
               className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 text-lg mb-6"
             >
-              Got It!
+              Try a Demo
             </button>
           ) : (
             <button
@@ -168,42 +177,15 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
             </button>
           )}
 
-          {/* Dots Indicator */}
-          <div className="flex justify-center space-x-2">
-            {steps.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  index === currentIndex ? 'bg-green-400' : 'bg-gray-600'
-                }`}
-              />
-            ))}
-          </div>
+          {/* Swipe Indicator */}
+          {steps.length > 1 && (
+            <div className="text-center">
+              <p className="text-gray-400 text-sm">Swipe to see more</p>
+            </div>
+          )}
         </div>
 
-        {/* Navigation Arrows */}
-        {currentIndex > 0 && (
-          <button
-            onClick={prevStep}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-colors"
-          >
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-        )}
-
-        {currentIndex < steps.length - 1 && (
-          <button
-            onClick={nextStep}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-colors"
-          >
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        )}
+        
       </div>
     </div>
   );

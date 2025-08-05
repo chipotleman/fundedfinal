@@ -150,7 +150,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
       const decimal = bet.odds > 0 ? (bet.odds / 100 + 1) : (100 / Math.abs(bet.odds) + 1);
       return acc * decimal;
     }, 1);
-    return Math.round((combinedDecimal - 1) * 100);
+    return Math.round((decimal - 1) * 100);
   };
 
   const updateAllBetStakes = (stake) => {
@@ -246,7 +246,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                       Clear All
                     </button>
                   </div>
-                  
+
                   <div className="space-y-4">
                     {selectedBets.map((bet) => (
                       <div key={bet.id} className="bg-slate-700/30 rounded-xl p-5 border border-slate-600/50">
@@ -490,168 +490,170 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
         </div>
       )}
 
-      <div className="max-w-6xl mx-auto px-6">
-        {/* Header */}
-        <div className="text-center mb-8 sm:mb-12">
-          <h2 className="text-2xl sm:text-4xl font-black text-white mb-3 sm:mb-4">
-            Want a <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Demo</span>?
-          </h2>
-          <p className="text-lg sm:text-xl text-gray-400 mb-2">No sign up required</p>
-          <p className="text-sm sm:text-base text-gray-500">Try placing bets with mock funds to see how our platform works</p>
-        </div>
-
-        {/* Demo Interface */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
-          {/* Games List */}
-          <div className="lg:col-span-2">
-            <div className="bg-slate-800/50 backdrop-blur-lg rounded-xl sm:rounded-2xl border border-slate-700 p-3 sm:p-6">
-              <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6 flex items-center">
-                <span className="w-3 h-3 bg-green-400 rounded-full mr-3 animate-pulse"></span>
-                Live Games
-              </h3>
-              <div className="space-y-3 sm:space-y-4">
-                {mockGames.map((game) => (
-                  <div key={game.id} className="bg-slate-700/30 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-slate-600">
-                    <div className="flex items-center justify-between mb-3 sm:mb-4">
-                      <div>
-                        <div className="text-white font-semibold text-sm sm:text-base">{game.awayTeam} @ {game.homeTeam}</div>
-                        <div className="text-gray-400 text-xs sm:text-sm">{game.sport} • Live</div>
-                      </div>
-                      <div className="text-green-400 font-bold text-xs sm:text-sm">DEMO</div>
-                    </div>
-
-                    {/* Betting Options - Dashboard Style Table */}
-                    <div className="overflow-x-auto">
-                      {/* Header Row */}
-                      <div className="grid grid-cols-4 gap-1 sm:gap-4 px-2 sm:px-4 py-2 text-xs text-gray-400 font-medium uppercase tracking-wider border-b border-slate-600">
-                        <div className="text-left">Team</div>
-                        <div className="text-center">Spread</div>
-                        <div className="text-center">Total</div>
-                        <div className="text-center">Moneyline</div>
-                      </div>
-
-                      {/* Away Team Row */}
-                      <div className="grid grid-cols-4 gap-1 sm:gap-4 px-2 sm:px-4 py-2 sm:py-3 border-b border-slate-600/50">
-                        <div className="flex items-center">
-                          <div className="text-white font-bold text-xs sm:text-sm truncate">{game.awayTeam}</div>
-                        </div>
-                        <button
-                          onClick={() => placeDemoBet(game, 'spread', -110, `${game.awayTeam} ${game.spread > 0 ? -game.spread : Math.abs(game.spread)}`, `${game.id}-spread-away`)}
-                          className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
-                            isBetSelected(`${game.id}-spread-away`)
-                              ? 'bg-green-600 border-green-500 text-white' 
-                              : 'bg-gray-700 border-gray-600 text-white'
-                          }`}
-                        >
-                          <div className="text-gray-300 text-xs">{game.spread > 0 ? -game.spread : Math.abs(game.spread)}</div>
-                          <div className="text-green-400 text-xs font-medium">-110</div>
-                        </button>
-                        <button
-                          onClick={() => placeDemoBet(game, 'total', -110, `Over ${game.total}`, `${game.id}-total-over`)}
-                          className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
-                            isBetSelected(`${game.id}-total-over`)
-                              ? 'bg-green-600 border-green-500 text-white' 
-                              : 'bg-gray-700 border-gray-600 text-white'
-                          }`}
-                        >
-                          <div className="text-gray-300 text-xs">O {game.total}</div>
-                          <div className="text-green-400 text-xs font-medium">-110</div>
-                        </button>
-                        <button
-                          onClick={() => placeDemoBet(game, 'moneyline', game.moneylineAway, game.awayTeam, `${game.id}-moneyline-away`)}
-                          className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
-                            isBetSelected(`${game.id}-moneyline-away`)
-                              ? 'bg-green-600 border-green-500 text-white' 
-                              : 'bg-gray-700 border-gray-600 text-white'
-                          }`}
-                        >
-                          <div className="text-green-400 text-xs font-medium">{game.moneylineAway > 0 ? '+' : ''}{game.moneylineAway}</div>
-                        </button>
-                      </div>
-
-                      {/* Home Team Row */}
-                      <div className="grid grid-cols-4 gap-1 sm:gap-4 px-2 sm:px-4 py-2 sm:py-3">
-                        <div className="flex items-center">
-                          <div className="text-white font-bold text-xs sm:text-sm truncate">{game.homeTeam}</div>
-                        </div>
-                        <button
-                          onClick={() => placeDemoBet(game, 'spread', -110, `${game.homeTeam} ${game.spread > 0 ? '+' + game.spread : game.spread}`, `${game.id}-spread-home`)}
-                          className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
-                            isBetSelected(`${game.id}-spread-home`)
-                              ? 'bg-green-600 border-green-500 text-white' 
-                              : 'bg-gray-700 border-gray-600 text-white'
-                          }`}
-                        >
-                          <div className="text-gray-300 text-xs">{game.spread > 0 ? '+' + game.spread : game.spread}</div>
-                          <div className="text-green-400 text-xs font-medium">-110</div>
-                        </button>
-                        <button
-                          onClick={() => placeDemoBet(game, 'total', -110, `Under ${game.total}`, `${game.id}-total-under`)}
-                          className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
-                            isBetSelected(`${game.id}-total-under`)
-                              ? 'bg-green-600 border-green-500 text-white' 
-                              : 'bg-gray-700 border-gray-600 text-white'
-                          }`}
-                        >
-                          <div className="text-gray-300 text-xs">U {game.total}</div>
-                          <div className="text-green-400 text-xs font-medium">-110</div>
-                        </button>
-                        <button
-                          onClick={() => placeDemoBet(game, 'moneyline', game.moneylineHome, game.homeTeam, `${game.id}-moneyline-home`)}
-                          className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
-                            isBetSelected(`${game.id}-moneyline-home`)
-                              ? 'bg-green-600 border-green-500 text-white' 
-                              : 'bg-gray-700 border-gray-600 text-white'
-                          }`}
-                        >
-                          <div className="text-green-400 text-xs font-medium">{game.moneylineHome > 0 ? '+' : ''}{game.moneylineHome}</div>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+      <div id="demo-section" className="py-16 sm:py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          {/* Header */}
+          <div className="text-center mb-8 sm:mb-12">
+            <h2 className="text-2xl sm:text-4xl font-black text-white mb-3 sm:mb-4">
+              Want a <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Demo</span>?
+            </h2>
+            <p className="text-lg sm:text-xl text-gray-400 mb-2">No sign up required</p>
+            <p className="text-sm sm:text-base text-gray-500">Try placing bets with mock funds to see how our platform works</p>
           </div>
 
-          {/* Static Bet Slip */}
-          <div className="lg:col-span-1">
-            <div className="bg-slate-800/50 backdrop-blur-lg rounded-xl sm:rounded-2xl border border-slate-700 p-4 sm:p-6 sticky top-6">
-              <h3 className="text-xl font-bold text-white mb-6">How to Use</h3>
+          {/* Demo Interface */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
+            {/* Games List */}
+            <div className="lg:col-span-2">
+              <div className="bg-slate-800/50 backdrop-blur-lg rounded-xl sm:rounded-2xl border border-slate-700 p-3 sm:p-6">
+                <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6 flex items-center">
+                  <span className="w-3 h-3 bg-green-400 rounded-full mr-3 animate-pulse"></span>
+                  Live Games
+                </h3>
+                <div className="space-y-3 sm:space-y-4">
+                  {mockGames.map((game) => (
+                    <div key={game.id} className="bg-slate-700/30 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-slate-600">
+                      <div className="flex items-center justify-between mb-3 sm:mb-4">
+                        <div>
+                          <div className="text-white font-semibold text-sm sm:text-base">{game.awayTeam} @ {game.homeTeam}</div>
+                          <div className="text-gray-400 text-xs sm:text-sm">{game.sport} • Live</div>
+                        </div>
+                        <div className="text-green-400 font-bold text-xs sm:text-sm">DEMO</div>
+                      </div>
 
-              {/* Demo Balance */}
-              <div className="bg-slate-700/30 rounded-xl p-4 mb-6">
-                <div className="text-gray-400 text-sm">Demo Balance</div>
-                <div className="text-2xl font-bold text-green-400">${demoBalance.toLocaleString()}</div>
+                      {/* Betting Options - Dashboard Style Table */}
+                      <div className="overflow-x-auto">
+                        {/* Header Row */}
+                        <div className="grid grid-cols-4 gap-1 sm:gap-4 px-2 sm:px-4 py-2 text-xs text-gray-400 font-medium uppercase tracking-wider border-b border-slate-600">
+                          <div className="text-left">Team</div>
+                          <div className="text-center">Spread</div>
+                          <div className="text-center">Total</div>
+                          <div className="text-center">Moneyline</div>
+                        </div>
+
+                        {/* Away Team Row */}
+                        <div className="grid grid-cols-4 gap-1 sm:gap-4 px-2 sm:px-4 py-2 sm:py-3 border-b border-slate-600/50">
+                          <div className="flex items-center">
+                            <div className="text-white font-bold text-xs sm:text-sm truncate">{game.awayTeam}</div>
+                          </div>
+                          <button
+                            onClick={() => placeDemoBet(game, 'spread', -110, `${game.awayTeam} ${game.spread > 0 ? -game.spread : Math.abs(game.spread)}`, `${game.id}-spread-away`)}
+                            className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
+                              isBetSelected(`${game.id}-spread-away`)
+                                ? 'bg-green-600 border-green-500 text-white' 
+                                : 'bg-gray-700 border-gray-600 text-white'
+                            }`}
+                          >
+                            <div className="text-gray-300 text-xs">{game.spread > 0 ? -game.spread : Math.abs(game.spread)}</div>
+                            <div className="text-green-400 text-xs font-medium">-110</div>
+                          </button>
+                          <button
+                            onClick={() => placeDemoBet(game, 'total', -110, `Over ${game.total}`, `${game.id}-total-over`)}
+                            className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
+                              isBetSelected(`${game.id}-total-over`)
+                                ? 'bg-green-600 border-green-500 text-white' 
+                                : 'bg-gray-700 border-gray-600 text-white'
+                            }`}
+                          >
+                            <div className="text-gray-300 text-xs">O {game.total}</div>
+                            <div className="text-green-400 text-xs font-medium">-110</div>
+                          </button>
+                          <button
+                            onClick={() => placeDemoBet(game, 'moneyline', game.moneylineAway, game.awayTeam, `${game.id}-moneyline-away`)}
+                            className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
+                              isBetSelected(`${game.id}-moneyline-away`)
+                                ? 'bg-green-600 border-green-500 text-white' 
+                                : 'bg-gray-700 border-gray-600 text-white'
+                            }`}
+                          >
+                            <div className="text-green-400 text-xs font-medium">{game.moneylineAway > 0 ? '+' : ''}{game.moneylineAway}</div>
+                          </button>
+                        </div>
+
+                        {/* Home Team Row */}
+                        <div className="grid grid-cols-4 gap-1 sm:gap-4 px-2 sm:px-4 py-2 sm:py-3">
+                          <div className="flex items-center">
+                            <div className="text-white font-bold text-xs sm:text-sm truncate">{game.homeTeam}</div>
+                          </div>
+                          <button
+                            onClick={() => placeDemoBet(game, 'spread', -110, `${game.homeTeam} ${game.spread > 0 ? '+' + game.spread : game.spread}`, `${game.id}-spread-home`)}
+                            className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
+                              isBetSelected(`${game.id}-spread-home`)
+                                ? 'bg-green-600 border-green-500 text-white' 
+                                : 'bg-gray-700 border-gray-600 text-white'
+                            }`}
+                          >
+                            <div className="text-gray-300 text-xs">{game.spread > 0 ? '+' + game.spread : game.spread}</div>
+                            <div className="text-green-400 text-xs font-medium">-110</div>
+                          </button>
+                          <button
+                            onClick={() => placeDemoBet(game, 'total', -110, `Under ${game.total}`, `${game.id}-total-under`)}
+                            className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
+                              isBetSelected(`${game.id}-total-under`)
+                                ? 'bg-green-600 border-green-500 text-white' 
+                                : 'bg-gray-700 border-gray-600 text-white'
+                            }`}
+                          >
+                            <div className="text-gray-300 text-xs">U {game.total}</div>
+                            <div className="text-green-400 text-xs font-medium">-110</div>
+                          </button>
+                          <button
+                            onClick={() => placeDemoBet(game, 'moneyline', game.moneylineHome, game.homeTeam, `${game.id}-moneyline-home`)}
+                            className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
+                              isBetSelected(`${game.id}-moneyline-home`)
+                                ? 'bg-green-600 border-green-500 text-white' 
+                                : 'bg-gray-700 border-gray-600 text-white'
+                            }`}
+                          >
+                            <div className="text-green-400 text-xs font-medium">{game.moneylineHome > 0 ? '+' : ''}{game.moneylineHome}</div>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
+            </div>
 
-              <div className="space-y-4 text-sm text-gray-300">
-                <div className="flex items-start space-x-3">
-                  <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mt-0.5">1</span>
-                  <p>Click on any odds to add bets to your slip</p>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mt-0.5">2</span>
-                  <p>Selected bets will appear in a slip at the top</p>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mt-0.5">3</span>
-                  <p>You can select multiple bets for parlays</p>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mt-0.5">4</span>
-                  <p>Try it out with our mock games above!</p>
-                </div>
-              </div>
+            {/* Static Bet Slip */}
+            <div className="lg:col-span-1">
+              <div className="bg-slate-800/50 backdrop-blur-lg rounded-xl sm:rounded-2xl border border-slate-700 p-4 sm:p-6 sticky top-6">
+                <h3 className="text-xl font-bold text-white mb-6">How to Use</h3>
 
-              {/* CTA */}
-              <div className="mt-8 pt-6 border-t border-slate-700">
-                <Link href="/auth" className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 text-center block">
-                  Start Betting for Real
-                </Link>
-                <p className="text-center text-gray-400 text-sm mt-2">
-                  Get funded up to $50K
-                </p>
+                {/* Demo Balance */}
+                <div className="bg-slate-700/30 rounded-xl p-4 mb-6">
+                  <div className="text-gray-400 text-sm">Demo Balance</div>
+                  <div className="text-2xl font-bold text-green-400">${demoBalance.toLocaleString()}</div>
+                </div>
+
+                <div className="space-y-4 text-sm text-gray-300">
+                  <div className="flex items-start space-x-3">
+                    <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mt-0.5">1</span>
+                    <p>Click on any odds to add bets to your slip</p>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mt-0.5">2</span>
+                    <p>Selected bets will appear in a slip at the top</p>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mt-0.5">3</span>
+                    <p>You can select multiple bets for parlays</p>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <span className="bg-green-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold mt-0.5">4</span>
+                    <p>Try it out with our mock games above!</p>
+                  </div>
+                </div>
+
+                {/* CTA */}
+                <div className="mt-8 pt-6 border-t border-slate-700">
+                  <Link href="/auth" className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 text-center block">
+                    Start Betting for Real
+                  </Link>
+                  <p className="text-center text-gray-400 text-sm mt-2">
+                    Get funded up to $50K
+                  </p>
+                </div>
               </div>
             </div>
           </div>

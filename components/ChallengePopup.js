@@ -100,12 +100,12 @@ export default function ChallengePopup({ isOpen, onClose }) {
   const currentChallenge = challenges[currentIndex];
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl max-w-md w-full border-2 border-slate-700 overflow-hidden">
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
+      <div className="relative bg-black border-2 border-slate-700 rounded-3xl max-w-md w-full overflow-hidden">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-8 h-8 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-colors"
+          className="absolute top-4 right-4 z-10 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center transition-colors"
         >
           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -115,7 +115,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
         {/* Popular Badge */}
         {currentChallenge.popular && (
           <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
-            <span className="bg-gradient-to-r from-green-400 to-green-500 text-black px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
+            <span className="bg-gradient-to-r from-green-400 to-blue-500 text-black px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
               Most Popular
             </span>
           </div>
@@ -147,22 +147,22 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
           {/* Challenge Details */}
           <div className="space-y-4 mb-8">
-            <div className="flex justify-between items-center py-3 px-4 bg-slate-700/50 rounded-xl">
+            <div className="flex justify-between items-center py-3 px-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
               <span className="text-gray-300 font-medium">Starting Balance</span>
               <span className="text-green-400 font-bold text-lg">${currentChallenge.startingBalance.toLocaleString()}</span>
             </div>
-            <div className="flex justify-between items-center py-3 px-4 bg-slate-700/50 rounded-xl">
+            <div className="flex justify-between items-center py-3 px-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
               <span className="text-gray-300 font-medium">Profit Target</span>
               <span className="text-blue-400 font-bold text-lg">${currentChallenge.target.toLocaleString()}</span>
             </div>
-            <div className="flex justify-between items-center py-3 px-4 bg-slate-700/50 rounded-xl">
+            <div className="flex justify-between items-center py-3 px-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
               <span className="text-gray-300 font-medium">Max Bet Size</span>
               <span className="text-white font-bold text-lg">${currentChallenge.maxBet}</span>
             </div>
           </div>
 
           {/* Payout */}
-          <div className="text-center p-6 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/20 mb-8">
+          <div className="text-center p-6 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/30 mb-8">
             <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-400">
               ${currentChallenge.payout.toLocaleString()}
             </div>
@@ -177,42 +177,15 @@ export default function ChallengePopup({ isOpen, onClose }) {
             Start This Challenge
           </button>
 
-          {/* Dots Indicator */}
-          <div className="flex justify-center space-x-2">
-            {challenges.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  index === currentIndex ? 'bg-green-400' : 'bg-gray-600'
-                }`}
-              />
-            ))}
-          </div>
+          {/* Swipe Indicator */}
+          {challenges.length > 1 && (
+            <div className="text-center">
+              <p className="text-gray-400 text-sm">Swipe to see more</p>
+            </div>
+          )}
         </div>
 
-        {/* Navigation Arrows */}
-        {currentIndex > 0 && (
-          <button
-            onClick={prevChallenge}
-            className="absolute left-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-colors"
-          >
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-        )}
-
-        {currentIndex < challenges.length - 1 && (
-          <button
-            onClick={nextChallenge}
-            className="absolute right-4 top-1/2 transform -translate-y-1/2 w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-colors"
-          >
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        )}
+        
       </div>
     </div>
   );
