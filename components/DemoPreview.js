@@ -94,7 +94,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
       // Check for opposing bets
       if (isOpposingBet(newBet, prev)) {
         // Remove the opposing bet and add the new one
-        const filteredBets = prev.filter(bet => 
+        const filteredBets = prev.filter(bet =>
           !(bet.gameId === newBet.gameId && bet.betType === newBet.betType)
         );
         const finalBets = [...filteredBets, newBet];
@@ -114,8 +114,8 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
   };
 
   const updateBetStake = (betId, stake) => {
-    setSelectedBets(prev => 
-      prev.map(bet => 
+    setSelectedBets(prev =>
+      prev.map(bet =>
         bet.id === betId ? { ...bet, stake: parseFloat(stake) || 0 } : bet
       )
     );
@@ -132,7 +132,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
     });
   };
 
-  const totalStake = betType === 'parlay' 
+  const totalStake = betType === 'parlay'
     ? (selectedBets.length > 0 ? (selectedBets[0].stake || 0) : 0)
     : selectedBets.reduce((sum, bet) => sum + (bet.stake || 0), 0);
 
@@ -155,7 +155,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
 
   const updateAllBetStakes = (stake) => {
     if (betType === 'parlay') {
-      setSelectedBets(prev => 
+      setSelectedBets(prev =>
         prev.map(bet => ({ ...bet, stake: parseFloat(stake) || 0 }))
       );
     }
@@ -203,21 +203,21 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                 <div className="bg-slate-700/50 rounded-xl p-4 mb-6">
                   <h3 className="text-white font-bold mb-3 text-lg">Bet Type</h3>
                   <div className="grid grid-cols-2 gap-3">
-                    <button 
+                    <button
                       onClick={() => setBetType('single')}
                       className={`font-bold py-3 px-4 rounded-xl text-base transition-all duration-200 ${
-                        betType === 'single' 
-                          ? 'bg-green-500 text-white shadow-lg' 
+                        betType === 'single'
+                          ? 'bg-green-500 text-white shadow-lg'
                           : 'bg-slate-800 hover:bg-slate-700 text-white'
                       }`}
                     >
                       Single Bets
                     </button>
-                    <button 
+                    <button
                       onClick={() => setBetType('parlay')}
                       className={`font-bold py-3 px-4 rounded-xl text-base transition-all duration-200 ${
-                        betType === 'parlay' 
-                          ? 'bg-green-500 text-white shadow-lg' 
+                        betType === 'parlay'
+                          ? 'bg-green-500 text-white shadow-lg'
                           : 'bg-slate-800 hover:bg-slate-700 text-white'
                       }`}
                     >
@@ -295,7 +295,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                           {((betType === 'single' && bet.stake > 0) || (betType === 'parlay' && selectedBets[0]?.stake > 0)) && (
                             <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
                               <div className="text-green-400 font-bold text-lg text-center">
-                                {betType === 'parlay' 
+                                {betType === 'parlay'
                                   ? `Parlay Payout: $${(selectedBets[0].stake * (calculateParlayOdds() > 0 ? calculateParlayOdds()/100 + 1 : 100/Math.abs(calculateParlayOdds()) + 1)).toFixed(0)}`
                                   : `To Win: $${calculatePayout(bet.odds, bet.stake).toFixed(0)}`
                                 }
@@ -540,7 +540,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                             onClick={() => placeDemoBet(game, 'spread', -110, `${game.awayTeam} ${game.spread > 0 ? -game.spread : Math.abs(game.spread)}`, `${game.id}-spread-away`)}
                             className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
                               isBetSelected(`${game.id}-spread-away`)
-                                ? 'bg-green-600 border-green-500 text-white' 
+                                ? 'bg-green-600 border-green-500 text-white'
                                 : 'bg-gray-700 border-gray-600 text-white'
                             }`}
                           >
@@ -551,7 +551,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                             onClick={() => placeDemoBet(game, 'total', -110, `Over ${game.total}`, `${game.id}-total-over`)}
                             className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
                               isBetSelected(`${game.id}-total-over`)
-                                ? 'bg-green-600 border-green-500 text-white' 
+                                ? 'bg-green-600 border-green-500 text-white'
                                 : 'bg-gray-700 border-gray-600 text-white'
                             }`}
                           >
@@ -562,7 +562,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                             onClick={() => placeDemoBet(game, 'moneyline', game.moneylineAway, game.awayTeam, `${game.id}-moneyline-away`)}
                             className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
                               isBetSelected(`${game.id}-moneyline-away`)
-                                ? 'bg-green-600 border-green-500 text-white' 
+                                ? 'bg-green-600 border-green-500 text-white'
                                 : 'bg-gray-700 border-gray-600 text-white'
                             }`}
                           >
@@ -579,7 +579,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                             onClick={() => placeDemoBet(game, 'spread', -110, `${game.homeTeam} ${game.spread > 0 ? '+' + game.spread : game.spread}`, `${game.id}-spread-home`)}
                             className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
                               isBetSelected(`${game.id}-spread-home`)
-                                ? 'bg-green-600 border-green-500 text-white' 
+                                ? 'bg-green-600 border-green-500 text-white'
                                 : 'bg-gray-700 border-gray-600 text-white'
                             }`}
                           >
@@ -590,7 +590,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                             onClick={() => placeDemoBet(game, 'total', -110, `Under ${game.total}`, `${game.id}-total-under`)}
                             className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
                               isBetSelected(`${game.id}-total-under`)
-                                ? 'bg-green-600 border-green-500 text-white' 
+                                ? 'bg-green-600 border-green-500 text-white'
                                 : 'bg-gray-700 border-gray-600 text-white'
                             }`}
                           >
@@ -601,7 +601,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                             onClick={() => placeDemoBet(game, 'moneyline', game.moneylineHome, game.homeTeam, `${game.id}-moneyline-home`)}
                             className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
                               isBetSelected(`${game.id}-moneyline-home`)
-                                ? 'bg-green-600 border-green-500 text-white' 
+                                ? 'bg-green-600 border-green-500 text-white'
                                 : 'bg-gray-700 border-gray-600 text-white'
                             }`}
                           >

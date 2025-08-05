@@ -90,6 +90,10 @@ export default function ChallengePopup({ isOpen, onClose }) {
     }
   };
 
+  const goToChallenge = (index) => {
+    setCurrentIndex(index);
+  };
+
   const handleSelectChallenge = (challenge) => {
     onClose();
     router.push('/auth');
@@ -187,9 +191,54 @@ export default function ChallengePopup({ isOpen, onClose }) {
             </div>
           </div>
 
-          {/* Swipe Indicator with Arrows */}
+          {/* Desktop Navigation Buttons */}
+          <div className="hidden md:flex items-center justify-between mb-4">
+            <button
+              onClick={prevChallenge}
+              disabled={currentIndex === 0}
+              className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors ${
+                currentIndex === 0 
+                  ? 'text-gray-600 cursor-not-allowed' 
+                  : 'text-gray-400 hover:text-white hover:bg-slate-700'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span>Previous</span>
+            </button>
+            
+            <div className="flex items-center space-x-2">
+              {challenges.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToChallenge(index)}
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    index === currentIndex ? 'bg-green-400' : 'bg-gray-600 hover:bg-gray-500'
+                  }`}
+                />
+              ))}
+            </div>
+            
+            <button
+              onClick={nextChallenge}
+              disabled={currentIndex === challenges.length - 1}
+              className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors ${
+                currentIndex === challenges.length - 1 
+                  ? 'text-gray-600 cursor-not-allowed' 
+                  : 'text-gray-400 hover:text-white hover:bg-slate-700'
+              }`}
+            >
+              <span>Next</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Mobile Swipe Indicator */}
           {challenges.length > 1 && (
-            <div className="flex items-center justify-center space-x-4 text-gray-400 text-sm">
+            <div className="md:hidden flex items-center justify-center space-x-4 text-gray-400 text-sm">
               {currentIndex > 0 && (
                 <div className="flex items-center space-x-1">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
