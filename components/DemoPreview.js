@@ -168,21 +168,21 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
 
   return (
     <div className="bg-black py-4 relative">
-      {/* Demo Bet Slip - Floating responsive */}
+      {/* Demo Challenge Dashboard - Floating responsive */}
       {showDemoBetSlip && (
-        <div className="fixed inset-0 z-50 lg:inset-auto lg:top-20 lg:right-4 lg:w-80 lg:max-h-96">
+        <div className="fixed inset-0 z-50 lg:inset-auto lg:top-20 lg:right-4 lg:w-80">
           {/* Mobile Overlay */}
           <div className="fixed inset-0 bg-black/50" onClick={() => setShowDemoBetSlip(false)}></div>
           
-          {/* Bet Slip Panel - Half screen on mobile */}
-          <div className="absolute bottom-0 left-0 right-0 h-1/2 lg:relative bg-black border border-slate-700 rounded-t-2xl lg:rounded-2xl shadow-2xl lg:h-auto w-full lg:w-80 flex flex-col">
+          {/* Challenge Dashboard Panel - Half screen on mobile */}
+          <div className="absolute bottom-0 left-0 right-0 h-1/2 lg:relative bg-black border border-slate-700 rounded-t-2xl lg:rounded-2xl shadow-2xl lg:h-auto w-full lg:w-80 flex flex-col max-h-[90vh] lg:max-h-[600px]">
             <div className="flex-shrink-0 p-4 border-b border-slate-700">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-white flex items-center">
                   <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
+                    <path fillRule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clipRule="evenodd" />
                   </svg>
-                  Demo Bet Slip ({selectedBets.length})
+                  Challenge 1
                 </h3>
                 <button
                   onClick={() => setShowDemoBetSlip(false)}
@@ -195,144 +195,144 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
-              {/* Bet Type Toggle */}
-              {selectedBets.length > 1 && (
-                <div className="bg-slate-700/50 rounded-lg p-3 mb-4">
-                  <h4 className="text-white font-semibold mb-3 text-sm">Bet Type</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button 
-                      onClick={() => setBetType('single')}
-                      className={`font-semibold py-2 px-3 rounded-lg text-sm transition-colors ${
-                        betType === 'single' 
-                          ? 'bg-green-500 text-white' 
-                          : 'bg-slate-800 hover:bg-slate-700 text-white'
-                      }`}
-                    >
-                      Singles
-                    </button>
-                    <button 
-                      onClick={() => setBetType('parlay')}
-                      className={`font-semibold py-2 px-3 rounded-lg text-sm transition-colors ${
-                        betType === 'parlay' 
-                          ? 'bg-green-500 text-white' 
-                          : 'bg-slate-800 hover:bg-slate-700 text-white'
-                      }`}
-                    >
-                      Parlay
-                    </button>
-                  </div>
-                  {betType === 'parlay' && selectedBets.length > 1 && (
-                    <div className="mt-3 p-3 bg-blue-500/20 rounded-lg">
-                      <p className="text-blue-400 text-sm font-medium">
-                        Parlay Odds: {calculateParlayOdds() > 0 ? '+' : ''}{calculateParlayOdds()}
-                      </p>
-                    </div>
-                  )}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {/* Challenge Progress */}
+              <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg p-4 border border-purple-500/20">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-gray-300 text-sm font-medium">Progress to Target</span>
+                  <span className="text-green-400 font-bold">78%</span>
                 </div>
-              )}
-
-              {/* Individual Bets */}
-              {selectedBets.map((bet) => (
-                <div key={bet.id} className="bg-slate-700/50 rounded-lg p-3 border border-slate-600">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="text-white font-semibold text-sm mb-1">{bet.matchup}</div>
-                      <div className="text-gray-300 text-sm">{bet.team}</div>
-                      <div className="text-gray-400 text-xs">{bet.betType}</div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded text-sm font-semibold">
-                        {bet.odds > 0 ? '+' : ''}{bet.odds}
-                      </span>
-                      <button
-                        onClick={() => removeBet(bet.id)}
-                        className="text-gray-400 hover:text-red-400 transition-colors"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-
-                  {betType === 'single' && (
-                    <div className="space-y-2">
-                      <label className="text-gray-300 text-sm font-medium">Stake</label>
-                      <div className="relative">
-                        <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">$</span>
-                        <input
-                          type="number"
-                          value={bet.stake || ''}
-                          onChange={(e) => updateBetStake(bet.id, e.target.value)}
-                          className="w-full pl-8 pr-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-green-400 transition-colors text-sm"
-                          placeholder="0.00"
-                          min="0"
-                          max={demoBalance}
-                          step="0.01"
-                        />
-                      </div>
-                      {bet.stake > 0 && (
-                        <div className="text-right">
-                          <div className="text-green-400 text-sm font-semibold">
-                            To Win: ${(calculatePayout(bet.odds, bet.stake) - bet.stake).toFixed(2)}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                <div className="w-full bg-slate-700 rounded-full h-3 mb-2">
+                  <div className="bg-gradient-to-r from-green-400 to-blue-500 h-3 rounded-full" style={{width: '78%'}}></div>
                 </div>
-              ))}
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-white">$780 / $1,000</div>
+                  <div className="text-gray-400 text-sm">Target Reached</div>
+                </div>
+              </div>
 
-              {/* Parlay Stake Input */}
-              {betType === 'parlay' && selectedBets.length > 1 && (
-                <div className="bg-slate-700/50 rounded-lg p-3 border border-slate-600">
+              {/* Current Balance */}
+              <div className="bg-slate-700/50 rounded-lg p-4">
+                <div className="text-gray-400 text-sm mb-1">Current Balance</div>
+                <div className="text-3xl font-bold text-green-400">$10,780</div>
+                <div className="flex items-center mt-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                  <span className="text-green-400 text-sm font-medium">+$780 P&L</span>
+                </div>
+              </div>
+
+              {/* Challenge Info */}
+              <div className="space-y-3">
+                <div className="flex justify-between items-center py-2 px-3 bg-slate-700/30 rounded-lg">
+                  <span className="text-gray-300 text-sm">Starting Balance</span>
+                  <span className="text-white font-semibold">$10,000</span>
+                </div>
+                <div className="flex justify-between items-center py-2 px-3 bg-slate-700/30 rounded-lg">
+                  <span className="text-gray-300 text-sm">Profit Target</span>
+                  <span className="text-blue-400 font-semibold">$1,000</span>
+                </div>
+                <div className="flex justify-between items-center py-2 px-3 bg-slate-700/30 rounded-lg">
+                  <span className="text-gray-300 text-sm">Max Bet Size</span>
+                  <span className="text-orange-400 font-semibold">$500</span>
+                </div>
+                <div className="flex justify-between items-center py-2 px-3 bg-slate-700/30 rounded-lg">
+                  <span className="text-gray-300 text-sm">Days Left</span>
+                  <span className="text-yellow-400 font-semibold">23 days</span>
+                </div>
+              </div>
+
+              {/* Withdrawal Info */}
+              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+                <h4 className="text-green-400 font-semibold mb-2 flex items-center">
+                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                  </svg>
+                  Withdrawal Status
+                </h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-gray-300 text-sm">Until Withdrawal</span>
+                    <span className="text-green-400 font-semibold">$220</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-300 text-sm">Payout Amount</span>
+                    <span className="text-green-400 font-bold">$5,000</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Bets */}
+              <div className="bg-slate-700/50 rounded-lg p-4">
+                <h4 className="text-white font-semibold mb-3 text-sm">Recent Bets</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center py-2 border-b border-slate-600/50">
+                    <div>
+                      <div className="text-white text-sm font-medium">Chiefs -3.5</div>
+                      <div className="text-gray-400 text-xs">$250 @ -110</div>
+                    </div>
+                    <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-semibold">WON</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2 border-b border-slate-600/50">
+                    <div>
+                      <div className="text-white text-sm font-medium">Lakers ML</div>
+                      <div className="text-gray-400 text-xs">$300 @ +120</div>
+                    </div>
+                    <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-semibold">WON</span>
+                  </div>
+                  <div className="flex justify-between items-center py-2">
+                    <div>
+                      <div className="text-white text-sm font-medium">Over 47.5</div>
+                      <div className="text-gray-400 text-xs">$200 @ -105</div>
+                    </div>
+                    <span className="bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded text-xs font-semibold">PENDING</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Current Bets */}
+              {selectedBets.length > 0 && (
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                  <h4 className="text-blue-400 font-semibold mb-3 text-sm">Active Bets ({selectedBets.length})</h4>
                   <div className="space-y-2">
-                    <label className="text-gray-300 text-sm font-medium">Parlay Stake</label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">$</span>
-                      <input
-                        type="number"
-                        value={selectedBets[0]?.stake || ''}
-                        onChange={(e) => updateAllBetStakes(e.target.value)}
-                        className="w-full pl-8 pr-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-green-400 transition-colors text-sm"
-                        placeholder="0.00"
-                        min="0"
-                        max={demoBalance}
-                        step="0.01"
-                      />
-                    </div>
-                    {selectedBets[0]?.stake > 0 && (
-                      <div className="text-right">
-                        <div className="text-green-400 text-sm font-semibold">
-                          To Win: ${((selectedBets[0].stake * calculateParlayOdds() / 100)).toFixed(2)}
+                    {selectedBets.map((bet) => (
+                      <div key={bet.id} className="flex justify-between items-center py-2 border-b border-slate-600/30 last:border-b-0">
+                        <div>
+                          <div className="text-white text-sm font-medium">{bet.team}</div>
+                          <div className="text-gray-400 text-xs">{bet.betType} • {bet.odds > 0 ? '+' : ''}{bet.odds}</div>
                         </div>
+                        <button
+                          onClick={() => removeBet(bet.id)}
+                          className="text-gray-400 hover:text-red-400 transition-colors"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
                       </div>
-                    )}
+                    ))}
                   </div>
                 </div>
               )}
             </div>
 
             <div className="flex-shrink-0 border-t border-slate-600 p-4">
-              <div className="flex justify-between text-gray-300 text-sm mb-3">
-                <span>Total Stake:</span>
-                <span className="font-semibold">${totalStake.toFixed(2)}</span>
+              <div className="space-y-2 mb-4">
+                <div className="flex justify-between text-gray-300 text-sm">
+                  <span>Win Rate:</span>
+                  <span className="font-semibold text-green-400">73.2%</span>
+                </div>
+                <div className="flex justify-between text-gray-300 text-sm">
+                  <span>Total Bets:</span>
+                  <span className="font-semibold">41</span>
+                </div>
               </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={clearAllBets}
-                  className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 text-sm"
-                >
-                  Clear All
-                </button>
-                <button
-                  onClick={() => alert('This is just a demo! Sign up to place real bets.')}
-                  className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 text-sm"
-                >
-                  Place Demo Bet
-                </button>
-              </div>
+              
+              <button
+                onClick={() => alert('This is just a demo! Sign up to start your real funded challenge.')}
+                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300 text-sm"
+              >
+                Start Real Challenge
+              </button>
             </div>
           </div>
         </div>
