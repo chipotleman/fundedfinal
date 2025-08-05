@@ -200,7 +200,7 @@ export default function Home() {
 
 
               <h1 className="text-4xl font-black text-white mb-6 sm:mb-8 leading-tight px-2">
-                Get <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent inline-block" style={{ transform: 'translateY(-0.53px)' }}>Funded</span> to Bet
+                Get <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent inline-block" style={{ transform: 'translateY(0.42px)' }}>Funded</span> to Bet
               </h1>
               <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-4 sm:mb-6 px-4">
                 Watch how you can get funded up to <Link href="/packages" className="text-green-400 font-bold hover:text-green-300 transition-colors cursor-pointer">$25,000</Link> to bet with and keep 80% of your profits
