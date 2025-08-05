@@ -174,7 +174,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
           <div className="fixed inset-0 bg-black/50 lg:hidden" onClick={() => setShowDemoBetSlip(false)}></div>
 
           {/* Challenge Dashboard Panel - Full height without scrolling */}
-          <div className="absolute bottom-0 left-0 right-0 h-[85vh] lg:relative bg-black border border-slate-700 rounded-t-2xl lg:rounded-2xl shadow-2xl lg:h-auto w-full lg:w-[480px] flex flex-col"></div>
+          <div className="absolute bottom-0 left-0 right-0 h-[85vh] lg:relative bg-black border border-slate-700 rounded-t-2xl lg:rounded-2xl shadow-2xl lg:h-auto w-full lg:w-[480px] flex flex-col">
             <div className="flex-shrink-0 p-3 border-b border-slate-700">
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-bold text-white flex items-center">
@@ -379,6 +379,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
           </div>
         </div>
       )}
+    </div>
 
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
