@@ -6,6 +6,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
   const [betAmount, setBetAmount] = useState(100);
   const [demoBalance, setDemoBalance] = useState(10000);
   const [betType, setBetType] = useState('single');
+  const [showStatsModal, setShowStatsModal] = useState(false);
 
   const mockGames = [
     {
@@ -196,39 +197,41 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
 
             {/* Main Betting Area - Primary Focus */}
             <div className="flex-1 flex flex-col p-4 lg:p-6 overflow-hidden">
-              {/* Bet Type Toggle - Prominent */}
-              <div className="bg-slate-700/50 rounded-xl p-4 mb-6">
-                <h3 className="text-white font-bold mb-3 text-lg">Bet Type</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  <button 
-                    onClick={() => setBetType('single')}
-                    className={`font-bold py-3 px-4 rounded-xl text-base transition-all duration-200 ${
-                      betType === 'single' 
-                        ? 'bg-green-500 text-white shadow-lg' 
-                        : 'bg-slate-800 hover:bg-slate-700 text-white'
-                    }`}
-                  >
-                    Single Bets
-                  </button>
-                  <button 
-                    onClick={() => setBetType('parlay')}
-                    className={`font-bold py-3 px-4 rounded-xl text-base transition-all duration-200 ${
-                      betType === 'parlay' 
-                        ? 'bg-green-500 text-white shadow-lg' 
-                        : 'bg-slate-800 hover:bg-slate-700 text-white'
-                    }`}
-                  >
-                    Parlay
-                  </button>
-                </div>
-                {betType === 'parlay' && selectedBets.length > 1 && (
-                  <div className="mt-4 p-4 bg-blue-500/20 border border-blue-500/30 rounded-xl">
-                    <p className="text-blue-400 font-bold text-center">
-                      Parlay Odds: {calculateParlayOdds() > 0 ? '+' : ''}{calculateParlayOdds()}
-                    </p>
+              {/* Bet Type Toggle - Only show when multiple bets selected */}
+              {selectedBets.length > 1 && (
+                <div className="bg-slate-700/50 rounded-xl p-4 mb-6">
+                  <h3 className="text-white font-bold mb-3 text-lg">Bet Type</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button 
+                      onClick={() => setBetType('single')}
+                      className={`font-bold py-3 px-4 rounded-xl text-base transition-all duration-200 ${
+                        betType === 'single' 
+                          ? 'bg-green-500 text-white shadow-lg' 
+                          : 'bg-slate-800 hover:bg-slate-700 text-white'
+                      }`}
+                    >
+                      Single Bets
+                    </button>
+                    <button 
+                      onClick={() => setBetType('parlay')}
+                      className={`font-bold py-3 px-4 rounded-xl text-base transition-all duration-200 ${
+                        betType === 'parlay' 
+                          ? 'bg-green-500 text-white shadow-lg' 
+                          : 'bg-slate-800 hover:bg-slate-700 text-white'
+                      }`}
+                    >
+                      Parlay
+                    </button>
                   </div>
-                )}
-              </div>
+                  {betType === 'parlay' && (
+                    <div className="mt-4 p-4 bg-blue-500/20 border border-blue-500/30 rounded-xl">
+                      <p className="text-blue-400 font-bold text-center">
+                        Parlay Odds: {calculateParlayOdds() > 0 ? '+' : ''}{calculateParlayOdds()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Active Bets - Main Focus */}
               {selectedBets.length > 0 ? (
@@ -338,15 +341,23 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
               )}
 
               {/* Challenge Stats - Secondary Info */}
-              <div className="mt-6 grid grid-cols-2 gap-4">
-                <div className="bg-slate-700/30 rounded-lg p-3">
-                  <div className="text-gray-400 text-xs">Balance</div>
-                  <div className="text-lg font-bold text-green-400">${demoBalance.toLocaleString()}</div>
+              <div className="mt-6 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-slate-700/30 rounded-lg p-3">
+                    <div className="text-gray-400 text-xs">Balance</div>
+                    <div className="text-lg font-bold text-green-400">${demoBalance.toLocaleString()}</div>
+                  </div>
+                  <div className="bg-slate-700/30 rounded-lg p-3">
+                    <div className="text-gray-400 text-xs">Challenge Progress</div>
+                    <div className="text-lg font-bold text-blue-400">78%</div>
+                  </div>
                 </div>
-                <div className="bg-slate-700/30 rounded-lg p-3">
-                  <div className="text-gray-400 text-xs">Challenge Progress</div>
-                  <div className="text-lg font-bold text-blue-400">78%</div>
-                </div>
+                <button
+                  onClick={() => setShowStatsModal(true)}
+                  className="w-full bg-slate-600/50 hover:bg-slate-600 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
+                >
+                  VIEW MORE
+                </button>
               </div>
             </div>
 
@@ -371,14 +382,93 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                 onClick={() => alert('This is just a demo! Sign up to start your real funded challenge.')}
                 className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 text-sm"
               >
-                Start Real Challenge
+                Place Bet
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="max-w-6xl mx-auto px-6">
+      {/* Detailed Stats Modal */}
+      {showStatsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/70" onClick={() => setShowStatsModal(false)}></div>
+          <div className="relative bg-slate-800 rounded-2xl border border-slate-700 p-6 w-full max-w-md">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-white">Challenge Details</h3>
+              <button
+                onClick={() => setShowStatsModal(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-slate-700/30 rounded-xl p-4">
+                <div className="text-gray-400 text-sm mb-1">Starting Balance</div>
+                <div className="text-2xl font-bold text-green-400">$10,000</div>
+              </div>
+
+              <div className="bg-slate-700/30 rounded-xl p-4">
+                <div className="text-gray-400 text-sm mb-1">Current Balance</div>
+                <div className="text-2xl font-bold text-green-400">${demoBalance.toLocaleString()}</div>
+              </div>
+
+              <div className="bg-slate-700/30 rounded-xl p-4">
+                <div className="text-gray-400 text-sm mb-1">Total P&L</div>
+                <div className="text-2xl font-bold text-green-400">+$0</div>
+              </div>
+
+              <div className="bg-slate-700/30 rounded-xl p-4">
+                <div className="text-gray-400 text-sm mb-1">Target Goal</div>
+                <div className="text-2xl font-bold text-blue-400">$12,800</div>
+              </div>
+
+              <div className="bg-slate-700/30 rounded-xl p-4">
+                <div className="text-gray-400 text-sm mb-1">Progress</div>
+                <div className="text-2xl font-bold text-blue-400">78%</div>
+                <div className="w-full bg-slate-600 rounded-full h-3 mt-2">
+                  <div className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full" style={{ width: '78%' }}></div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-slate-700/30 rounded-xl p-4 text-center">
+                  <div className="text-gray-400 text-sm">Bets Placed</div>
+                  <div className="text-xl font-bold text-white">12</div>
+                </div>
+                <div className="bg-slate-700/30 rounded-xl p-4 text-center">
+                  <div className="text-gray-400 text-sm">Win Rate</div>
+                  <div className="text-xl font-bold text-green-400">67%</div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-slate-700/30 rounded-xl p-4 text-center">
+                  <div className="text-gray-400 text-sm">Days Left</div>
+                  <div className="text-xl font-bold text-orange-400">14</div>
+                </div>
+                <div className="bg-slate-700/30 rounded-xl p-4 text-center">
+                  <div className="text-gray-400 text-sm">Max Loss</div>
+                  <div className="text-xl font-bold text-red-400">$1,000</div>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowStatsModal(false)}
+              className="w-full mt-6 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="max-w-6xl mx-auto px-6"></div>
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-4xl font-black text-white mb-3 sm:mb-4">Want a Demo?</h2>
