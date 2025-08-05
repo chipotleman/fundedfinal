@@ -166,7 +166,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
   };
 
   return (
-    <div className="bg-black py-4 relative">
+    <div className="bg-black py-4 relative" data-demo-section>
       {/* Demo Challenge Dashboard - Floating responsive */}
       {showDemoBetSlip && (
         <div className="fixed inset-0 z-50 lg:inset-auto lg:top-20 lg:right-4 lg:w-80">
