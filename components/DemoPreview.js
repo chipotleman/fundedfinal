@@ -146,9 +146,9 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
 
   const calculateParlayOdds = () => {
     if (selectedBets.length < 2) return 0;
-    const combinedDecimal = selectedBets.reduce((acc, bet) => {
-      const decimal = bet.odds > 0 ? (bet.odds / 100 + 1) : (100 / Math.abs(bet.odds) + 1);
-      return acc * decimal;
+    const decimal = selectedBets.reduce((acc, bet) => {
+      const decimalOdds = bet.odds > 0 ? (bet.odds / 100 + 1) : (100 / Math.abs(bet.odds) + 1);
+      return acc * decimalOdds;
     }, 1);
     return Math.round((decimal - 1) * 100);
   };
@@ -494,7 +494,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
         <div className="max-w-6xl mx-auto px-6">
           {/* Header */}
           <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-2xl sm:text-4xl font-black text-white mb-3 sm:mb-4">
+            <h2 className="text-4xl font-bold text-white mb-4">
               Want a <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Demo</span>?
             </h2>
             <p className="text-lg sm:text-xl text-gray-400 mb-2">No sign up required</p>

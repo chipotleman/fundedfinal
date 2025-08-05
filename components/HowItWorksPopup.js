@@ -109,7 +109,7 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center transition-colors"
+          className="absolute top-4 right-4 z-10 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
         >
           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -164,23 +164,48 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
                   }
                 }, 100);
               }}
-              className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 text-lg mb-6"
+              className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl text-lg mb-6"
             >
               Try a Demo
             </button>
           ) : (
             <button
               onClick={nextStep}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 text-lg mb-6"
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-6 rounded-xl text-lg mb-6"
             >
               Next Step
             </button>
           )}
 
-          {/* Swipe Indicator */}
+          {/* Progress Bar */}
+          <div className="mb-4">
+            <div className="w-full bg-slate-700 rounded-full h-2">
+              <div 
+                className="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full"
+                style={{ width: `${((currentIndex + 1) / steps.length) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Swipe Indicator with Arrows */}
           {steps.length > 1 && (
-            <div className="text-center">
-              <p className="text-gray-400 text-sm">Swipe to see more</p>
+            <div className="flex items-center justify-center space-x-4 text-gray-400 text-sm">
+              {currentIndex > 0 && (
+                <div className="flex items-center space-x-1">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  <span>Swipe left</span>
+                </div>
+              )}
+              {currentIndex < steps.length - 1 && (
+                <div className="flex items-center space-x-1">
+                  <span>Swipe right</span>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              )}
             </div>
           )}
         </div>
