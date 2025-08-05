@@ -7,6 +7,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
   const [demoBalance, setDemoBalance] = useState(10000);
   const [betType, setBetType] = useState('single');
   const [showStatsModal, setShowStatsModal] = useState(false);
+  const [showDetailedStats, setShowDetailedStats] = useState(false);
 
   const mockGames = [
     {
@@ -342,21 +343,42 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
 
               {/* Challenge Stats - Secondary Info */}
               <div className="mt-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-700/30 rounded-lg p-3">
-                    <div className="text-gray-400 text-xs">Balance</div>
-                    <div className="text-lg font-bold text-green-400">${demoBalance.toLocaleString()}</div>
+                {!showDetailedStats ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-slate-700/30 rounded-lg p-3">
+                      <div className="text-gray-400 text-xs">Balance</div>
+                      <div className="text-lg font-bold text-green-400">${demoBalance.toLocaleString()}</div>
+                    </div>
+                    <div className="bg-slate-700/30 rounded-lg p-3">
+                      <div className="text-gray-400 text-xs">Challenge Progress</div>
+                      <div className="text-lg font-bold text-blue-400">78%</div>
+                    </div>
                   </div>
-                  <div className="bg-slate-700/30 rounded-lg p-3">
-                    <div className="text-gray-400 text-xs">Challenge Progress</div>
-                    <div className="text-lg font-bold text-blue-400">78%</div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-slate-700/30 rounded-lg p-3">
+                      <div className="text-gray-400 text-xs">Bets Placed</div>
+                      <div className="text-lg font-bold text-white">12</div>
+                    </div>
+                    <div className="bg-slate-700/30 rounded-lg p-3">
+                      <div className="text-gray-400 text-xs">Win Rate</div>
+                      <div className="text-lg font-bold text-green-400">67%</div>
+                    </div>
+                    <div className="bg-slate-700/30 rounded-lg p-3">
+                      <div className="text-gray-400 text-xs">Days Left</div>
+                      <div className="text-lg font-bold text-orange-400">14</div>
+                    </div>
+                    <div className="bg-slate-700/30 rounded-lg p-3">
+                      <div className="text-gray-400 text-xs">Max Loss</div>
+                      <div className="text-lg font-bold text-red-400">$1,000</div>
+                    </div>
                   </div>
-                </div>
+                )}
                 <button
-                  onClick={() => setShowStatsModal(true)}
+                  onClick={() => setShowDetailedStats(!showDetailedStats)}
                   className="w-full bg-slate-600/50 hover:bg-slate-600 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
                 >
-                  VIEW MORE
+                  {showDetailedStats ? 'VIEW LESS' : 'VIEW MORE'}
                 </button>
               </div>
             </div>
