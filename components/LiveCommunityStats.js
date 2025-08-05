@@ -172,15 +172,7 @@ export default function LiveCommunityStats() {
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="p-3 border-t border-slate-700 text-center">
-        <div className="text-gray-400 text-xs mb-3">
-          Live community data • Updated every second
-        </div>
-        <Link href="/auth" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300 inline-block text-sm">
-          Join the Action
-        </Link>
-      </div>
+      
     </div>
   );
 }
