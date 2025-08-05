@@ -199,7 +199,7 @@ export default function Home() {
             <div className="text-center mb-12 sm:mb-16 pt-4 sm:pt-0">
 
 
-              <h1 className="text-4xl font-black text-white mb-6 sm:mb-8 leading-tight px-2">
+              <h1 className="text-4xl font-bold text-white mb-6 sm:mb-8 leading-tight px-2">
                 Get <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent inline-block" style={{ transform: 'translateY(0.42px)' }}>Funded</span> to Bet
               </h1>
               <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-4 sm:mb-6 px-4">
