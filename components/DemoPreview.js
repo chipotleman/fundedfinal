@@ -167,7 +167,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
   };
 
   return (
-    <div className="bg-black py-16 relative">
+    <div className="bg-black py-4 relative">
       {/* Demo Bet Slip - Floating responsive */}
       {showDemoBetSlip && (
         <div className="fixed inset-0 z-50 lg:inset-auto lg:top-20 lg:right-4 lg:w-80 lg:max-h-96">
@@ -312,8 +312,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                   </div>
                 </div>
               )}
-
-              </div>
+            </div>
 
             <div className="flex-shrink-0 border-t border-slate-600 p-4">
               <div className="flex justify-between text-gray-300 text-sm mb-3">
