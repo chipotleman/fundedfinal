@@ -174,8 +174,8 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
           {/* Mobile Overlay */}
           <div className="fixed inset-0 bg-black/50" onClick={() => setShowDemoBetSlip(false)}></div>
           
-          {/* Challenge Dashboard Panel - Half screen on mobile */}
-          <div className="absolute bottom-0 left-0 right-0 h-1/2 lg:relative bg-black border border-slate-700 rounded-t-2xl lg:rounded-2xl shadow-2xl lg:h-auto w-full lg:w-80 flex flex-col max-h-[90vh] lg:max-h-[600px]">
+          {/* Challenge Dashboard Panel - 75% screen on mobile */}
+          <div className="absolute bottom-0 left-0 right-0 h-3/4 lg:relative bg-black border border-slate-700 rounded-t-2xl lg:rounded-2xl shadow-2xl lg:h-auto w-full lg:w-80 flex flex-col max-h-[75vh] lg:max-h-[600px]"></div>
             <div className="flex-shrink-0 p-4 border-b border-slate-700">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-white flex items-center">
@@ -293,26 +293,58 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
               {selectedBets.length > 0 && (
                 <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
                   <h4 className="text-blue-400 font-semibold mb-3 text-sm">Active Bets ({selectedBets.length})</h4>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {selectedBets.map((bet) => (
-                      <div key={bet.id} className="flex justify-between items-center py-2 border-b border-slate-600/30 last:border-b-0">
-                        <div>
-                          <div className="text-white text-sm font-medium">{bet.team}</div>
-                          <div className="text-gray-400 text-xs">{bet.betType} • {bet.odds > 0 ? '+' : ''}{bet.odds}</div>
+                      <div key={bet.id} className="bg-slate-700/50 rounded-lg p-3 border border-slate-600/50">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <div className="text-white text-sm font-medium">{bet.team}</div>
+                            <div className="text-gray-400 text-xs">{bet.betType} • {bet.odds > 0 ? '+' : ''}{bet.odds}</div>
+                          </div>
+                          <button
+                            onClick={() => removeBet(bet.id)}
+                            className="text-gray-400 hover:text-red-400 transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
                         </div>
-                        <button
-                          onClick={() => removeBet(bet.id)}
-                          className="text-gray-400 hover:text-red-400 transition-colors"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
+                        <div className="flex items-center space-x-2">
+                          <div className="text-gray-400 text-xs">Stake:</div>
+                          <input
+                            type="number"
+                            placeholder="$0"
+                            value={bet.stake || ''}
+                            onChange={(e) => updateBetStake(bet.id, e.target.value)}
+                            className="bg-slate-600 text-white text-xs px-2 py-1 rounded w-16 border border-slate-500 focus:border-blue-500 focus:outline-none"
+                          />
+                          {bet.stake > 0 && (
+                            <div className="text-green-400 text-xs font-medium">
+                              Win: ${calculatePayout(bet.odds, bet.stake).toFixed(2)}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
+                  
+                  {/* Place Bets Button */}
+                  {selectedBets.some(bet => bet.stake > 0) && (
+                    <button
+                      onClick={() => {
+                        alert('Demo bets placed successfully! This shows how your real challenge would work.');
+                        setSelectedBets([]);
+                        setShowDemoBetSlip(false);
+                        setDemoBetSlipCount?.(0);
+                      }}
+                      className="w-full mt-3 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 text-sm"
+                    >
+                      Place Demo Bets
+                    </button>
+                  )}
                 </div>
-              )}
+              )}</div>
             </div>
 
             <div className="flex-shrink-0 border-t border-slate-600 p-4">
