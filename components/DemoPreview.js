@@ -2,11 +2,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 
-export default function DemoPreview() {
+export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, showDemoBetSlip, setShowDemoBetSlip }) {
   const [selectedBets, setSelectedBets] = useState([]);
   const [betAmount, setBetAmount] = useState(100);
   const [demoBalance, setDemoBalance] = useState(10000);
-  const [showDemoBetSlip, setShowDemoBetSlip] = useState(false);
   const [betType, setBetType] = useState('single');
 
   const mockGames = [
@@ -87,6 +86,7 @@ export default function DemoPreview() {
         if (newBets.length === 0) {
           setShowDemoBetSlip(false);
         }
+        setDemoBetSlipCount?.(newBets.length);
         return newBets;
       }
       
@@ -96,13 +96,17 @@ export default function DemoPreview() {
         const filteredBets = prev.filter(bet => 
           !(bet.gameId === newBet.gameId && bet.betType === newBet.betType)
         );
+        const finalBets = [...filteredBets, newBet];
         setShowDemoBetSlip(true);
-        return [...filteredBets, newBet];
+        setDemoBetSlipCount?.(finalBets.length);
+        return finalBets;
       }
       
       // Add the new bet
+      const finalBets = [...prev, newBet];
       setShowDemoBetSlip(true);
-      return [...prev, newBet];
+      setDemoBetSlipCount?.(finalBets.length);
+      return finalBets;
     });
   };
 
@@ -124,6 +128,7 @@ export default function DemoPreview() {
       if (newBets.length === 0) {
         setShowDemoBetSlip(false);
       }
+      setDemoBetSlipCount?.(newBets.length);
       return newBets;
     });
   };
@@ -160,31 +165,21 @@ export default function DemoPreview() {
   const clearAllBets = () => {
     setSelectedBets([]);
     setShowDemoBetSlip(false);
+    setDemoBetSlipCount?.(0);
   };
 
   return (
     <div className="bg-black py-16 relative">
-      {/* Demo Bet Slip Header Icon - Only show when there are bets and slip is closed */}
-      {!showDemoBetSlip && selectedBets.length > 0 && (
-        <div className="fixed top-20 right-4 z-50">
-          <button
-            onClick={() => setShowDemoBetSlip(true)}
-            className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-full shadow-2xl transition-all duration-300 flex items-center space-x-2"
-          >
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
-            </svg>
-            <span className="text-sm font-bold">{selectedBets.length}</span>
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              {selectedBets.length}
-            </span>
-          </button>
-        </div>
-      )}
+      
 
-      {/* Demo Bet Slip - Floating at top */}
+      {/* Demo Bet Slip - Floating responsive */}
       {showDemoBetSlip && (
-        <div className="fixed top-20 right-4 w-80 bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl z-50 max-h-96 overflow-y-auto">
+        <div className="fixed inset-0 z-50 lg:inset-auto lg:top-20 lg:right-4 lg:w-80 lg:max-h-96">
+          {/* Mobile Overlay */}
+          <div className="lg:hidden fixed inset-0 bg-black/50" onClick={() => setShowDemoBetSlip(false)}></div>
+          
+          {/* Bet Slip Panel */}
+          <div className="lg:relative bg-slate-800 border border-slate-700 rounded-none lg:rounded-2xl shadow-2xl h-full lg:h-auto overflow-y-auto lg:max-h-96 w-full lg:w-80">
           <div className="p-4 border-b border-slate-700">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-white flex items-center">
@@ -348,36 +343,36 @@ export default function DemoPreview() {
 
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-black text-white mb-4">Get a Demo of our Platform</h2>
-          <p className="text-xl text-gray-400 mb-2">No sign up required</p>
-          <p className="text-gray-500">Try placing bets with mock funds to see how our platform works</p>
+        <div className="text-center mb-8 sm:mb-12">
+          <h2 className="text-2xl sm:text-4xl font-black text-white mb-3 sm:mb-4">Want a Demo?</h2>
+          <p className="text-lg sm:text-xl text-gray-400 mb-2">No sign up required</p>
+          <p className="text-sm sm:text-base text-gray-500">Try placing bets with mock funds to see how our platform works</p>
         </div>
 
         {/* Demo Interface */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Games List */}
           <div className="lg:col-span-2">
-            <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl border border-slate-700 p-6">
-              <h3 className="text-xl font-bold text-white mb-6 flex items-center">
+            <div className="bg-slate-800/50 backdrop-blur-lg rounded-xl sm:rounded-2xl border border-slate-700 p-3 sm:p-6">
+              <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6 flex items-center">
                 <span className="w-3 h-3 bg-green-400 rounded-full mr-3 animate-pulse"></span>
                 Live Games
               </h3>
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {mockGames.map((game) => (
-                  <div key={game.id} className="bg-slate-700/30 rounded-xl p-4 border border-slate-600">
-                    <div className="flex items-center justify-between mb-4">
+                  <div key={game.id} className="bg-slate-700/30 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-slate-600">
+                    <div className="flex items-center justify-between mb-3 sm:mb-4">
                       <div>
-                        <div className="text-white font-semibold">{game.awayTeam} @ {game.homeTeam}</div>
-                        <div className="text-gray-400 text-sm">{game.sport} • Live</div>
+                        <div className="text-white font-semibold text-sm sm:text-base">{game.awayTeam} @ {game.homeTeam}</div>
+                        <div className="text-gray-400 text-xs sm:text-sm">{game.sport} • Live</div>
                       </div>
-                      <div className="text-green-400 font-bold">DEMO</div>
+                      <div className="text-green-400 font-bold text-xs sm:text-sm">DEMO</div>
                     </div>
                     
                     {/* Betting Options - Dashboard Style Table */}
                     <div className="overflow-x-auto">
                       {/* Header Row */}
-                      <div className="grid grid-cols-4 gap-2 sm:gap-4 px-4 py-2 text-xs text-gray-400 font-medium uppercase tracking-wider border-b border-slate-600">
+                      <div className="grid grid-cols-4 gap-1 sm:gap-4 px-2 sm:px-4 py-2 text-xs text-gray-400 font-medium uppercase tracking-wider border-b border-slate-600">
                         <div className="text-left">Team</div>
                         <div className="text-center">Spread</div>
                         <div className="text-center">Total</div>
@@ -385,9 +380,9 @@ export default function DemoPreview() {
                       </div>
 
                       {/* Away Team Row */}
-                      <div className="grid grid-cols-4 gap-2 sm:gap-4 px-4 py-3 border-b border-slate-600/50">
+                      <div className="grid grid-cols-4 gap-1 sm:gap-4 px-2 sm:px-4 py-2 sm:py-3 border-b border-slate-600/50">
                         <div className="flex items-center">
-                          <div className="text-white font-bold text-sm truncate">{game.awayTeam}</div>
+                          <div className="text-white font-bold text-xs sm:text-sm truncate">{game.awayTeam}</div>
                         </div>
                         <button
                           onClick={() => placeDemoBet(game, 'spread', -110, `${game.awayTeam} ${game.spread > 0 ? -game.spread : Math.abs(game.spread)}`, `${game.id}-spread-away`)}
@@ -424,9 +419,9 @@ export default function DemoPreview() {
                       </div>
 
                       {/* Home Team Row */}
-                      <div className="grid grid-cols-4 gap-2 sm:gap-4 px-4 py-3">
+                      <div className="grid grid-cols-4 gap-1 sm:gap-4 px-2 sm:px-4 py-2 sm:py-3">
                         <div className="flex items-center">
-                          <div className="text-white font-bold text-sm truncate">{game.homeTeam}</div>
+                          <div className="text-white font-bold text-xs sm:text-sm truncate">{game.homeTeam}</div>
                         </div>
                         <button
                           onClick={() => placeDemoBet(game, 'spread', -110, `${game.homeTeam} ${game.spread > 0 ? '+' + game.spread : game.spread}`, `${game.id}-spread-home`)}
@@ -470,7 +465,7 @@ export default function DemoPreview() {
 
           {/* Static Bet Slip */}
           <div className="lg:col-span-1">
-            <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl border border-slate-700 p-6 sticky top-6">
+            <div className="bg-slate-800/50 backdrop-blur-lg rounded-xl sm:rounded-2xl border border-slate-700 p-4 sm:p-6 sticky top-6">
               <h3 className="text-xl font-bold text-white mb-6">How to Use</h3>
               
               {/* Demo Balance */}

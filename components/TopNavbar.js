@@ -5,7 +5,7 @@ import BalanceModal from './BalanceModal';
 import WithdrawModal from './WithdrawModal';
 import { supabase } from '../lib/supabaseClient';
 
-export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick }) {
+export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick, demoBetSlipCount, onDemoBetSlipClick }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
@@ -188,17 +188,17 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
               )}
 
               {/* Bet Slip Button - Only show when there are bets */}
-              {betSlipCount > 0 && (
+              {(betSlipCount > 0 || (demoBetSlipCount > 0 && !isLoggedIn)) && (
                 <button
-                  onClick={onBetSlipClick}
+                  onClick={isLoggedIn ? onBetSlipClick : onDemoBetSlipClick}
                   className="relative bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-2 sm:py-3 px-2 sm:px-6 rounded-lg transition-all duration-300 flex items-center space-x-1 sm:space-x-2 text-sm sm:text-base"
                 >
                   <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
                   </svg>
-                  <span className="hidden sm:inline">Bet Slip</span>
+                  <span className="hidden sm:inline">{isLoggedIn ? 'Bet Slip' : 'Demo Bets'}</span>
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {betSlipCount}
+                    {isLoggedIn ? betSlipCount : demoBetSlipCount}
                   </span>
                 </button>
               )}

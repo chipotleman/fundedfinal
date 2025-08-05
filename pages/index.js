@@ -173,6 +173,8 @@ export default function Home() {
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const [showChallengePopup, setShowChallengePopup] = useState(false);
   const [showHowItWorksPopup, setShowHowItWorksPopup] = useState(false);
+  const [demoBetSlipCount, setDemoBetSlipCount] = useState(0);
+  const [showDemoBetSlip, setShowDemoBetSlip] = useState(false);
 
   return (
     <div className="min-h-screen bg-black" style={{scrollBehavior: 'smooth'}}>
@@ -181,6 +183,8 @@ export default function Home() {
         pnl={user ? 0 : null}
         betSlipCount={betSlip.length}
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
+        demoBetSlipCount={demoBetSlipCount}
+        onDemoBetSlipClick={() => setShowDemoBetSlip(!showDemoBetSlip)}
       />
 
       <div style={{overflowY: 'visible'}}>
@@ -258,7 +262,12 @@ export default function Home() {
         </div>
 
         {/* Demo Preview Section */}
-        <DemoPreview />
+        <DemoPreview 
+          demoBetSlipCount={demoBetSlipCount}
+          setDemoBetSlipCount={setDemoBetSlipCount}
+          showDemoBetSlip={showDemoBetSlip}
+          setShowDemoBetSlip={setShowDemoBetSlip}
+        />
       </div>
 
       {/* Popups */}
