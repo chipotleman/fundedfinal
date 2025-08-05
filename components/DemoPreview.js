@@ -40,9 +40,9 @@ export default function DemoPreview() {
     }
   ];
 
-  const placeDemoBet = (game, betType, odds) => {
+  const placeDemoBet = (game, betType, odds, team) => {
     const winAmount = betAmount * (odds > 0 ? odds/100 : 100/Math.abs(odds));
-    setSelectedGame({ ...game, betType, odds, betAmount, winAmount });
+    setSelectedGame({ ...game, betType, odds, betAmount, winAmount, team });
   };
 
   return (
@@ -75,37 +75,81 @@ export default function DemoPreview() {
                       <div className="text-green-400 font-bold">DEMO</div>
                     </div>
                     
-                    <div className="grid grid-cols-3 gap-3">
-                      {/* Spread */}
+                    <div className="grid grid-cols-6 gap-2 text-xs">
+                      {/* Away Spread */}
                       <button
-                        onClick={() => placeDemoBet(game, 'spread', -110)}
-                        className="bg-slate-600/50 hover:bg-green-500/20 border border-slate-500 hover:border-green-500 rounded-lg p-3 transition-all duration-200"
+                        onClick={() => placeDemoBet(game, 'spread', game.spread > 0 ? game.spread : -game.spread, game.awayTeam)}
+                        className={`border rounded-lg py-2 px-2 transition-all duration-200 text-center ${
+                          selectedGame?.betType === 'spread' && selectedGame?.team === game.awayTeam
+                            ? 'bg-green-600 border-green-500 shadow-lg scale-105'
+                            : 'bg-slate-600/50 border-slate-500 hover:bg-green-500/20 hover:border-green-500'
+                        }`}
                       >
-                        <div className="text-white text-sm font-medium">Spread</div>
-                        <div className="text-green-400 font-bold">{game.spread > 0 ? '+' : ''}{game.spread}</div>
-                        <div className="text-gray-400 text-xs">-110</div>
+                        <div className="text-gray-300 text-xs">{game.spread > 0 ? -game.spread : Math.abs(game.spread)}</div>
+                        <div className="text-green-400 font-medium">-110</div>
                       </button>
                       
-                      {/* Total */}
+                      {/* Home Spread */}
                       <button
-                        onClick={() => placeDemoBet(game, 'over', -110)}
-                        className="bg-slate-600/50 hover:bg-blue-500/20 border border-slate-500 hover:border-blue-500 rounded-lg p-3 transition-all duration-200"
+                        onClick={() => placeDemoBet(game, 'spread', game.spread > 0 ? -game.spread : game.spread, game.homeTeam)}
+                        className={`border rounded-lg py-2 px-2 transition-all duration-200 text-center ${
+                          selectedGame?.betType === 'spread' && selectedGame?.team === game.homeTeam
+                            ? 'bg-green-600 border-green-500 shadow-lg scale-105'
+                            : 'bg-slate-600/50 border-slate-500 hover:bg-green-500/20 hover:border-green-500'
+                        }`}
                       >
-                        <div className="text-white text-sm font-medium">Over</div>
-                        <div className="text-blue-400 font-bold">{game.total}</div>
-                        <div className="text-gray-400 text-xs">-110</div>
+                        <div className="text-gray-300 text-xs">{game.spread > 0 ? '+' + game.spread : game.spread}</div>
+                        <div className="text-green-400 font-medium">-110</div>
                       </button>
                       
-                      {/* Moneyline */}
+                      {/* Over */}
                       <button
-                        onClick={() => placeDemoBet(game, 'moneyline', game.moneylineHome)}
-                        className="bg-slate-600/50 hover:bg-purple-500/20 border border-slate-500 hover:border-purple-500 rounded-lg p-3 transition-all duration-200"
+                        onClick={() => placeDemoBet(game, 'total', -110, 'Over')}
+                        className={`border rounded-lg py-2 px-2 transition-all duration-200 text-center ${
+                          selectedGame?.betType === 'total' && selectedGame?.team === 'Over'
+                            ? 'bg-green-600 border-green-500 shadow-lg scale-105'
+                            : 'bg-slate-600/50 border-slate-500 hover:bg-green-500/20 hover:border-green-500'
+                        }`}
                       >
-                        <div className="text-white text-sm font-medium">ML</div>
-                        <div className="text-purple-400 font-bold">
-                          {game.moneylineHome > 0 ? '+' : ''}{game.moneylineHome}
-                        </div>
-                        <div className="text-gray-400 text-xs">Home</div>
+                        <div className="text-gray-300 text-xs">O {game.total}</div>
+                        <div className="text-green-400 font-medium">-110</div>
+                      </button>
+                      
+                      {/* Under */}
+                      <button
+                        onClick={() => placeDemoBet(game, 'total', -110, 'Under')}
+                        className={`border rounded-lg py-2 px-2 transition-all duration-200 text-center ${
+                          selectedGame?.betType === 'total' && selectedGame?.team === 'Under'
+                            ? 'bg-green-600 border-green-500 shadow-lg scale-105'
+                            : 'bg-slate-600/50 border-slate-500 hover:bg-green-500/20 hover:border-green-500'
+                        }`}
+                      >
+                        <div className="text-gray-300 text-xs">U {game.total}</div>
+                        <div className="text-green-400 font-medium">-110</div>
+                      </button>
+                      
+                      {/* Away ML */}
+                      <button
+                        onClick={() => placeDemoBet(game, 'moneyline', game.moneylineAway, game.awayTeam)}
+                        className={`border rounded-lg py-2 px-2 transition-all duration-200 text-center ${
+                          selectedGame?.betType === 'moneyline' && selectedGame?.team === game.awayTeam
+                            ? 'bg-green-600 border-green-500 shadow-lg scale-105'
+                            : 'bg-slate-600/50 border-slate-500 hover:bg-green-500/20 hover:border-green-500'
+                        }`}
+                      >
+                        <div className="text-green-400 font-medium">{game.moneylineAway > 0 ? '+' : ''}{game.moneylineAway}</div>
+                      </button>
+                      
+                      {/* Home ML */}
+                      <button
+                        onClick={() => placeDemoBet(game, 'moneyline', game.moneylineHome, game.homeTeam)}
+                        className={`border rounded-lg py-2 px-2 transition-all duration-200 text-center ${
+                          selectedGame?.betType === 'moneyline' && selectedGame?.team === game.homeTeam
+                            ? 'bg-green-600 border-green-500 shadow-lg scale-105'
+                            : 'bg-slate-600/50 border-slate-500 hover:bg-green-500/20 hover:border-green-500'
+                        }`}
+                      >
+                        <div className="text-green-400 font-medium">{game.moneylineHome > 0 ? '+' : ''}{game.moneylineHome}</div>
                       </button>
                     </div>
                   </div>
@@ -132,7 +176,7 @@ export default function DemoPreview() {
                       {selectedGame.awayTeam} @ {selectedGame.homeTeam}
                     </div>
                     <div className="text-gray-400 text-sm mb-2">
-                      {selectedGame.betType} ({selectedGame.odds > 0 ? '+' : ''}{selectedGame.odds})
+                      {selectedGame.betType} - {selectedGame.team} ({selectedGame.odds > 0 ? '+' : ''}{selectedGame.odds})
                     </div>
                     
                     <div className="space-y-3">
@@ -180,10 +224,10 @@ export default function DemoPreview() {
               {/* CTA */}
               <div className="mt-6 pt-6 border-t border-slate-700">
                 <Link href="/auth" className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 text-center block">
-                  Start Trading for Real
+                  Start Betting for Real
                 </Link>
                 <p className="text-center text-gray-400 text-sm mt-2">
-                  Get funded up to $100K
+                  Get funded up to $50K
                 </p>
               </div>
             </div>
