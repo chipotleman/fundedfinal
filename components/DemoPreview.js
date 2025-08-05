@@ -384,10 +384,10 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                         </div>
                         <button
                           onClick={() => placeDemoBet(game, 'spread', -110, `${game.awayTeam} ${game.spread > 0 ? -game.spread : Math.abs(game.spread)}`, `${game.id}-spread-away`)}
-                          className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
+                          className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
                             isBetSelected(`${game.id}-spread-away`)
-                              ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
-                              : 'bg-gray-700 border-gray-600 text-white hover:bg-green-600 hover:border-green-500'
+                              ? 'bg-green-600 border-green-500 text-white' 
+                              : 'bg-gray-700 border-gray-600 text-white'
                           }`}
                         >
                           <div className="text-gray-300 text-xs">{game.spread > 0 ? -game.spread : Math.abs(game.spread)}</div>
@@ -395,10 +395,10 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                         </button>
                         <button
                           onClick={() => placeDemoBet(game, 'total', -110, `Over ${game.total}`, `${game.id}-total-over`)}
-                          className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
+                          className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
                             isBetSelected(`${game.id}-total-over`)
-                              ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
-                              : 'bg-gray-700 border-gray-600 text-white hover:bg-green-600 hover:border-green-500'
+                              ? 'bg-green-600 border-green-500 text-white' 
+                              : 'bg-gray-700 border-gray-600 text-white'
                           }`}
                         >
                           <div className="text-gray-300 text-xs">O {game.total}</div>
@@ -406,10 +406,10 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                         </button>
                         <button
                           onClick={() => placeDemoBet(game, 'moneyline', game.moneylineAway, game.awayTeam, `${game.id}-moneyline-away`)}
-                          className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
+                          className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
                             isBetSelected(`${game.id}-moneyline-away`)
-                              ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
-                              : 'bg-gray-700 border-gray-600 text-white hover:bg-green-600 hover:border-green-500'
+                              ? 'bg-green-600 border-green-500 text-white' 
+                              : 'bg-gray-700 border-gray-600 text-white'
                           }`}
                         >
                           <div className="text-green-400 text-xs font-medium">{game.moneylineAway > 0 ? '+' : ''}{game.moneylineAway}</div>
@@ -423,10 +423,10 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                         </div>
                         <button
                           onClick={() => placeDemoBet(game, 'spread', -110, `${game.homeTeam} ${game.spread > 0 ? '+' + game.spread : game.spread}`, `${game.id}-spread-home`)}
-                          className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
+                          className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
                             isBetSelected(`${game.id}-spread-home`)
-                              ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
-                              : 'bg-gray-700 border-gray-600 text-white hover:bg-green-600 hover:border-green-500'
+                              ? 'bg-green-600 border-green-500 text-white' 
+                              : 'bg-gray-700 border-gray-600 text-white'
                           }`}
                         >
                           <div className="text-gray-300 text-xs">{game.spread > 0 ? '+' + game.spread : game.spread}</div>
@@ -434,10 +434,10 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                         </button>
                         <button
                           onClick={() => placeDemoBet(game, 'total', -110, `Under ${game.total}`, `${game.id}-total-under`)}
-                          className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
+                          className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
                             isBetSelected(`${game.id}-total-under`)
-                              ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
-                              : 'bg-gray-700 border-gray-600 text-white hover:bg-green-600 hover:border-green-500'
+                              ? 'bg-green-600 border-green-500 text-white' 
+                              : 'bg-gray-700 border-gray-600 text-white'
                           }`}
                         >
                           <div className="text-gray-300 text-xs">U {game.total}</div>
@@ -445,10 +445,10 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                         </button>
                         <button
                           onClick={() => placeDemoBet(game, 'moneyline', game.moneylineHome, game.homeTeam, `${game.id}-moneyline-home`)}
-                          className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
+                          className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
                             isBetSelected(`${game.id}-moneyline-home`)
-                              ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
-                              : 'bg-gray-700 border-gray-600 text-white hover:bg-green-600 hover:border-green-500'
+                              ? 'bg-green-600 border-green-500 text-white' 
+                              : 'bg-gray-700 border-gray-600 text-white'
                           }`}
                         >
                           <div className="text-green-400 text-xs font-medium">{game.moneylineHome > 0 ? '+' : ''}{game.moneylineHome}</div>
