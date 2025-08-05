@@ -3,6 +3,7 @@ import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
 import LiveFeed from '../components/LiveFeed';
 import LiveCommunityStats from '../components/LiveCommunityStats';
+import DemoPreview from '../components/DemoPreview';
 import ChallengePopup from '../components/ChallengePopup';
 import HowItWorksPopup from '../components/HowItWorksPopup';
 import { useBetSlip } from '../contexts/BetSlipContext';
@@ -256,29 +257,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Stats Section */}
-        <div className="bg-black py-16">
-          <div className="max-w-6xl mx-auto px-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
-              <div>
-                <div className="text-4xl font-black text-green-400 mb-2">$2.1M+</div>
-                <div className="text-gray-400">Total Payouts</div>
-              </div>
-              <div>
-                <div className="text-4xl font-black text-blue-400 mb-2">15,000+</div>
-                <div className="text-gray-400">Active Traders</div>
-              </div>
-              <div>
-                <div className="text-4xl font-black text-purple-400 mb-2">78%</div>
-                <div className="text-gray-400">Success Rate</div>
-              </div>
-              <div>
-                <div className="text-4xl font-black text-orange-400 mb-2">24/7</div>
-                <div className="text-gray-400">Live Support</div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Demo Preview Section */}
+        <DemoPreview />
       </div>
 
       {/* Popups */}
