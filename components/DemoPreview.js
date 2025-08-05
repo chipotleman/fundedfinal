@@ -490,7 +490,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
         </div>
       )}
 
-      <div id="demo-section" className="py-16 sm:py-20">
+      <div id="demo-section" className="py-8 sm:py-12">
         <div className="max-w-6xl mx-auto px-6">
           {/* Header */}
           <div className="text-center mb-8 sm:mb-12">
