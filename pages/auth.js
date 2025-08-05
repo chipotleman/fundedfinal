@@ -229,7 +229,7 @@ export default function AuthPage() {
         {/* Header with Logo */}
         <div className="relative z-10 px-6 py-8">
           <div className="max-w-7xl mx-auto">
-            <Link href="/" className="flex items-center justify-center sm:justify-start">
+            <Link href="/" className="flex items-center justify-center">
               <img
                 src="/funderlogo/Funder.png?v=4"
                 alt="Funder"
@@ -358,7 +358,7 @@ export default function AuthPage() {
       {/* Header with Logo */}
       <div className="relative z-10 px-6 py-8">
         <div className="max-w-7xl mx-auto">
-          <Link href="/" className="flex items-center justify-center sm:justify-start">
+          <Link href="/" className="flex items-center justify-center">
             <img
               src="/funderlogo/Funder.png?v=4"
               alt="Funder"
