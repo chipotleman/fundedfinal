@@ -468,7 +468,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
         </div>
       )}
 
-      <div className="max-w-6xl mx-auto px-6"></div>
+      <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
           <h2 className="text-2xl sm:text-4xl font-black text-white mb-3 sm:mb-4">Want a Demo?</h2>
