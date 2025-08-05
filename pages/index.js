@@ -7,6 +7,128 @@ import HowItWorksPopup from '../components/HowItWorksPopup';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 
+// Thunder Card Module Component
+function ThunderCardModule() {
+  const [email, setEmail] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (email) {
+      // Here you would typically send to your backend
+      console.log('Thunder Card waitlist signup:', email);
+      setIsSubmitted(true);
+      setEmail('');
+    }
+  };
+
+  return (
+    <div className="text-center px-4 mb-16">
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-gradient-to-br from-slate-900 via-purple-900 to-blue-900 rounded-2xl border border-purple-500/30 overflow-hidden">
+          {/* Header */}
+          <div className="p-8 sm:p-12">
+            <h2 className="text-4xl sm:text-5xl font-black text-white mb-4">
+              Introducing the <span className="bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">Thunder Card</span>
+            </h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-8">
+              The first prepaid bank card that gets funded directly from your betting profits. Use it anywhere, just like a regular debit card.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 px-8 pb-8">
+            {/* Thunder Card Preview */}
+            <div className="flex justify-center items-center">
+              <div className="relative">
+                {/* Card with gradient background */}
+                <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 rounded-xl p-6 shadow-2xl border border-blue-500/30 transform hover:scale-105 transition-all duration-300" style={{aspectRatio: '1.586/1', width: '320px'}}>
+                  {/* Card Header */}
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <div className="text-blue-300 text-xs font-medium mb-1">THUNDER CARD</div>
+                      <div className="text-white text-base font-bold">PREMIUM</div>
+                    </div>
+                    <div className="w-10 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded flex items-center justify-center">
+                      <div className="w-5 h-3 bg-yellow-300 rounded-sm"></div>
+                    </div>
+                  </div>
+
+                  {/* Card Number */}
+                  <div className="mb-4">
+                    <div className="text-white text-lg font-mono tracking-widest">
+                      •••• •••• •••• 1234
+                    </div>
+                  </div>
+
+                  {/* Card Footer */}
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <div className="text-blue-300 text-xs mb-1">CARDHOLDER</div>
+                      <div className="text-white text-sm font-bold">YOUR NAME</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-blue-300 text-xs mb-1">EXPIRES</div>
+                      <div className="text-white text-sm font-bold">12/28</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Coming Soon Sign Up */}
+            <div className="flex flex-col justify-center">
+              <div className="bg-black/40 backdrop-blur-lg rounded-xl p-8 border border-slate-700">
+                <div className="text-center mb-6">
+                  <div className="inline-flex items-center bg-purple-600/20 text-purple-300 px-4 py-2 rounded-full text-sm font-medium mb-4">
+                    🚀 Coming Soon
+                  </div>
+                  <h3 className="text-2xl font-bold text-white mb-3">Get Early Access</h3>
+                  <p className="text-gray-400 text-base">
+                    Be the first to know when the Thunder Card launches. Join our exclusive waitlist for early access and special perks.
+                  </p>
+                </div>
+
+                {!isSubmitted ? (
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your email"
+                      className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
+                      required
+                    />
+                    <button
+                      type="submit"
+                      className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                    >
+                      Join Waitlist
+                    </button>
+                  </form>
+                ) : (
+                  <div className="text-center">
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+                      <div className="text-green-400 font-medium">
+                        ✅ You're on the list! We'll notify you when the Thunder Card is ready.
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-6 text-center">
+                  <Link href="/waitlist" className="text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors">
+                    Learn more about Thunder Card →
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Custom Video Player Component
 function CustomVideoPlayer() {
   const [isMuted, setIsMuted] = useState(true);
@@ -208,40 +330,8 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Feature Boxes - Moved below Live Winners */}
-            <div className="text-center px-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 max-w-4xl mx-auto px-2">
-                <div className="bg-black/90 backdrop-blur-lg rounded-xl p-6 border border-gray-800">
-                  <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg flex items-center justify-center mb-4 mx-auto">
-                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-bold text-white mb-2">No Risk Betting</h3>
-                  <p className="text-gray-400 text-sm">Bet with our money, not yours</p>
-                </div>
-
-                <div className="bg-black/90 backdrop-blur-lg rounded-xl p-6 border border-gray-800">
-                  <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-500 rounded-lg flex items-center justify-center mb-4 mx-auto">
-                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-bold text-white mb-2">Real Payouts</h3>
-                  <p className="text-gray-400 text-sm">Keep 80% of your profits</p>
-                </div>
-
-                <div className="bg-black/90 backdrop-blur-lg rounded-xl p-6 border border-gray-800">
-                  <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-red-500 rounded-lg flex items-center justify-center mb-4 mx-auto">
-                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-bold text-white mb-2">All Sports</h3>
-                  <p className="text-gray-400 text-sm">NFL, NBA, MLB, NHL & more</p>
-                </div>
-              </div>
-            </div>
+            {/* Thunder Card Coming Soon Module */}
+            <ThunderCardModule />
           </div>
         </div>
 
