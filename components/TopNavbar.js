@@ -465,7 +465,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick 
                         onClick={closeMobileMenu}
                         className="w-full text-center text-gray-300 hover:text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm border border-gray-600 hover:border-gray-500 flex items-center justify-center"
                       >
-                        <span>Sign In</span>
+                        <span>SIGN IN</span>
                       </Link>
                       <Link
                         href="/packages"
