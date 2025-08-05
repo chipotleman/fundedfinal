@@ -117,7 +117,7 @@ export default function LiveFeed() {
                   <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
                     userData.tier === 'Elite' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'
                   }`}>
-                    {userData.tier} Trader
+                    {userData.tier} Bettor
                   </span>
                 </div>
               </div>

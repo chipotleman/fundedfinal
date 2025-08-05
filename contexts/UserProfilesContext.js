@@ -31,7 +31,7 @@ const mockUserProfiles = {
       roi: 154.2
     },
     achievements: [
-      { name: "Elite Trader", description: "Reached Elite tier", icon: "🏆" },
+      { name: "Elite Bettor", description: "Reached Elite tier", icon: "🏆" },
       { name: "Win Streak Master", description: "15+ win streak", icon: "🔥" },
       { name: "Challenge King", description: "Completed 3 challenges", icon: "👑" }
     ],

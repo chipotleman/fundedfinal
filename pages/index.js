@@ -245,7 +245,7 @@ export default function Home() {
                 See Real <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Winners</span>
               </h2>
               <p className="text-gray-300 text-lg max-w-2xl mx-auto mb-8">
-                Watch as traders like you win real money in real-time. Click any user to see their full profile and betting history.
+                Watch as bettors like you win real money in real-time. Click any user to see their full profile and betting history.
               </p>
 
               <div className="flex justify-center max-w-6xl mx-auto">
