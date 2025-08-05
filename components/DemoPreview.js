@@ -169,12 +169,12 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
     <div className="bg-black py-4 relative" data-demo-section>
       {/* Demo Challenge Dashboard - Floating responsive */}
       {showDemoBetSlip && (
-        <div className="fixed inset-0 z-50 lg:inset-auto lg:top-20 lg:right-4 lg:w-80">
+        <div className="fixed inset-0 z-50 lg:inset-auto lg:top-20 lg:right-8 lg:w-[480px]">
           {/* Mobile Overlay */}
-          <div className="fixed inset-0 bg-black/50" onClick={() => setShowDemoBetSlip(false)}></div>
+          <div className="fixed inset-0 bg-black/50 lg:hidden" onClick={() => setShowDemoBetSlip(false)}></div>
 
           {/* Challenge Dashboard Panel - Full height without scrolling */}
-          <div className="absolute bottom-0 left-0 right-0 h-[85vh] lg:relative bg-black border border-slate-700 rounded-t-2xl lg:rounded-2xl shadow-2xl lg:h-auto w-full lg:w-96 flex flex-col">
+          <div className="absolute bottom-0 left-0 right-0 h-[85vh] lg:relative bg-black border border-slate-700 rounded-t-2xl lg:rounded-2xl shadow-2xl lg:h-auto w-full lg:w-[480px] flex flex-col"></div>
             <div className="flex-shrink-0 p-3 border-b border-slate-700">
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-bold text-white flex items-center">
@@ -195,9 +195,9 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
             </div>
 
             {/* Split layout - Two columns */}
-            <div className="flex-1 flex p-3 gap-3 overflow-hidden">
+            <div className="flex-1 flex p-4 lg:p-6 gap-4 lg:gap-6 overflow-hidden">
               {/* Left Column - Challenge Info */}
-              <div className="flex-1 space-y-3">
+              <div className="flex-1 space-y-4 lg:space-y-5">
                 {/* Challenge Progress - Compact */}
                 <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-lg p-2 border border-purple-500/20">
                   <div className="flex justify-between items-center mb-1">
@@ -252,7 +252,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
               </div>
 
               {/* Right Column - Betting Info */}
-              <div className="flex-1 space-y-3">
+              <div className="flex-1 space-y-4 lg:space-y-5">
                 {/* Withdrawal Info - Compact */}
                 <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
                   <h4 className="text-green-400 font-semibold mb-1 flex items-center text-sm">
@@ -303,38 +303,44 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
 
                 {/* Current Bets - Compact */}
                 {selectedBets.length > 0 && (
-                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-2">
-                    <h4 className="text-blue-400 font-semibold mb-2 text-xs">Active Bets ({selectedBets.length})</h4>
-                    <div className="space-y-2 max-h-20 overflow-y-auto">
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 lg:p-4">
+                    <h4 className="text-blue-400 font-semibold mb-3 text-sm lg:text-base">Active Bets ({selectedBets.length})</h4>
+                    <div className="space-y-3 max-h-32 lg:max-h-40 overflow-y-auto">
                       {selectedBets.map((bet) => (
-                        <div key={bet.id} className="bg-slate-700/50 rounded p-2 border border-slate-600/50">
-                          <div className="flex justify-between items-start mb-1">
+                        <div key={bet.id} className="bg-slate-700/50 rounded-lg p-3 border border-slate-600/50">
+                          <div className="flex justify-between items-start mb-3">
                             <div className="flex-1">
-                              <div className="text-white text-xs font-medium">{bet.team}</div>
-                              <div className="text-gray-400 text-xs">{bet.betType} • {bet.odds > 0 ? '+' : ''}{bet.odds}</div>
+                              <div className="text-white text-sm lg:text-base font-medium">{bet.team}</div>
+                              <div className="text-gray-400 text-xs lg:text-sm">{bet.betType} • {bet.odds > 0 ? '+' : ''}{bet.odds}</div>
                             </div>
                             <button
                               onClick={() => removeBet(bet.id)}
-                              className="text-gray-400 hover:text-red-400 transition-colors ml-1"
+                              className="text-gray-400 hover:text-red-400 transition-colors ml-2"
                             >
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                               </svg>
                             </button>
                           </div>
-                          <div className="flex items-center space-x-1">
-                            <div className="text-gray-400 text-xs">$</div>
-                            <input
-                              type="number"
-                              placeholder="0"
-                              value={bet.stake || ''}
-                              onChange={(e) => updateBetStake(bet.id, e.target.value)}
-                              className="bg-slate-600 text-white text-xs px-1 py-0.5 rounded w-12 border border-slate-500 focus:border-blue-500 focus:outline-none"
-                              style={{ fontSize: '16px' }}
-                            />
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <div className="relative flex-1">
+                                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm font-semibold">$</div>
+                                <input
+                                  type="number"
+                                  placeholder="0"
+                                  value={bet.stake || ''}
+                                  onChange={(e) => updateBetStake(bet.id, e.target.value)}
+                                  className="w-full bg-gradient-to-r from-slate-700 to-slate-600 text-white text-sm font-semibold pl-8 pr-4 py-2.5 rounded-lg border border-slate-500 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 focus:outline-none transition-all duration-200"
+                                  style={{ fontSize: '16px' }}
+                                />
+                              </div>
+                            </div>
                             {bet.stake > 0 && (
-                              <div className="text-green-400 text-xs font-medium">
-                                Win: ${calculatePayout(bet.odds, bet.stake).toFixed(0)}
+                              <div className="bg-green-500/10 border border-green-500/20 rounded-lg px-3 py-2">
+                                <div className="text-green-400 text-sm font-semibold text-center">
+                                  To Win: ${calculatePayout(bet.odds, bet.stake).toFixed(0)}
+                                </div>
                               </div>
                             )}
                           </div>
@@ -347,7 +353,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
             </div>
 
             {/* Bottom Actions - Fixed */}
-            <div className="flex-shrink-0 border-t border-slate-600 p-3 space-y-2">
+            <div className="flex-shrink-0 border-t border-slate-600 p-4 lg:p-6 space-y-3">
               {/* Place Bets Button */}
               {selectedBets.some(bet => bet.stake > 0) && (
                 <button
