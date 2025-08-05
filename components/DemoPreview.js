@@ -75,82 +75,93 @@ export default function DemoPreview() {
                       <div className="text-green-400 font-bold">DEMO</div>
                     </div>
                     
-                    <div className="grid grid-cols-6 gap-2 text-xs">
-                      {/* Away Spread */}
-                      <button
-                        onClick={() => placeDemoBet(game, 'spread', game.spread > 0 ? game.spread : -game.spread, game.awayTeam)}
-                        className={`border rounded-lg py-2 px-2 transition-all duration-200 text-center ${
-                          selectedGame?.betType === 'spread' && selectedGame?.team === game.awayTeam
-                            ? 'bg-green-600 border-green-500 shadow-lg scale-105'
-                            : 'bg-slate-600/50 border-slate-500 hover:bg-green-500/20 hover:border-green-500'
-                        }`}
-                      >
-                        <div className="text-gray-300 text-xs">{game.spread > 0 ? -game.spread : Math.abs(game.spread)}</div>
-                        <div className="text-green-400 font-medium">-110</div>
-                      </button>
-                      
-                      {/* Home Spread */}
-                      <button
-                        onClick={() => placeDemoBet(game, 'spread', game.spread > 0 ? -game.spread : game.spread, game.homeTeam)}
-                        className={`border rounded-lg py-2 px-2 transition-all duration-200 text-center ${
-                          selectedGame?.betType === 'spread' && selectedGame?.team === game.homeTeam
-                            ? 'bg-green-600 border-green-500 shadow-lg scale-105'
-                            : 'bg-slate-600/50 border-slate-500 hover:bg-green-500/20 hover:border-green-500'
-                        }`}
-                      >
-                        <div className="text-gray-300 text-xs">{game.spread > 0 ? '+' + game.spread : game.spread}</div>
-                        <div className="text-green-400 font-medium">-110</div>
-                      </button>
-                      
-                      {/* Over */}
-                      <button
-                        onClick={() => placeDemoBet(game, 'total', -110, 'Over')}
-                        className={`border rounded-lg py-2 px-2 transition-all duration-200 text-center ${
-                          selectedGame?.betType === 'total' && selectedGame?.team === 'Over'
-                            ? 'bg-green-600 border-green-500 shadow-lg scale-105'
-                            : 'bg-slate-600/50 border-slate-500 hover:bg-green-500/20 hover:border-green-500'
-                        }`}
-                      >
-                        <div className="text-gray-300 text-xs">O {game.total}</div>
-                        <div className="text-green-400 font-medium">-110</div>
-                      </button>
-                      
-                      {/* Under */}
-                      <button
-                        onClick={() => placeDemoBet(game, 'total', -110, 'Under')}
-                        className={`border rounded-lg py-2 px-2 transition-all duration-200 text-center ${
-                          selectedGame?.betType === 'total' && selectedGame?.team === 'Under'
-                            ? 'bg-green-600 border-green-500 shadow-lg scale-105'
-                            : 'bg-slate-600/50 border-slate-500 hover:bg-green-500/20 hover:border-green-500'
-                        }`}
-                      >
-                        <div className="text-gray-300 text-xs">U {game.total}</div>
-                        <div className="text-green-400 font-medium">-110</div>
-                      </button>
-                      
-                      {/* Away ML */}
-                      <button
-                        onClick={() => placeDemoBet(game, 'moneyline', game.moneylineAway, game.awayTeam)}
-                        className={`border rounded-lg py-2 px-2 transition-all duration-200 text-center ${
-                          selectedGame?.betType === 'moneyline' && selectedGame?.team === game.awayTeam
-                            ? 'bg-green-600 border-green-500 shadow-lg scale-105'
-                            : 'bg-slate-600/50 border-slate-500 hover:bg-green-500/20 hover:border-green-500'
-                        }`}
-                      >
-                        <div className="text-green-400 font-medium">{game.moneylineAway > 0 ? '+' : ''}{game.moneylineAway}</div>
-                      </button>
-                      
-                      {/* Home ML */}
-                      <button
-                        onClick={() => placeDemoBet(game, 'moneyline', game.moneylineHome, game.homeTeam)}
-                        className={`border rounded-lg py-2 px-2 transition-all duration-200 text-center ${
-                          selectedGame?.betType === 'moneyline' && selectedGame?.team === game.homeTeam
-                            ? 'bg-green-600 border-green-500 shadow-lg scale-105'
-                            : 'bg-slate-600/50 border-slate-500 hover:bg-green-500/20 hover:border-green-500'
-                        }`}
-                      >
-                        <div className="text-green-400 font-medium">{game.moneylineHome > 0 ? '+' : ''}{game.moneylineHome}</div>
-                      </button>
+                    {/* Betting Options - Dashboard Style Table */}
+                    <div className="overflow-x-auto">
+                      {/* Header Row */}
+                      <div className="grid grid-cols-4 gap-2 sm:gap-4 px-4 py-2 text-xs text-gray-400 font-medium uppercase tracking-wider border-b border-slate-600">
+                        <div className="text-left">Team</div>
+                        <div className="text-center">Spread</div>
+                        <div className="text-center">Total</div>
+                        <div className="text-center">Moneyline</div>
+                      </div>
+
+                      {/* Away Team Row */}
+                      <div className="grid grid-cols-4 gap-2 sm:gap-4 px-4 py-3 border-b border-slate-600/50">
+                        <div className="flex items-center">
+                          <div className="text-white font-bold text-sm truncate">{game.awayTeam}</div>
+                        </div>
+                        <button
+                          onClick={() => placeDemoBet(game, 'spread', -110, `${game.awayTeam} ${game.spread > 0 ? -game.spread : Math.abs(game.spread)}`)}
+                          className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
+                            selectedGame?.betType === 'spread' && selectedGame?.team === game.awayTeam
+                              ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
+                              : 'bg-gray-700 border-gray-600 text-white hover:bg-green-600 hover:border-green-500'
+                          }`}
+                        >
+                          <div className="text-gray-300 text-xs">{game.spread > 0 ? -game.spread : Math.abs(game.spread)}</div>
+                          <div className="text-green-400 text-xs font-medium">-110</div>
+                        </button>
+                        <button
+                          onClick={() => placeDemoBet(game, 'total', -110, `Over ${game.total}`)}
+                          className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
+                            selectedGame?.betType === 'total' && selectedGame?.team === 'Over'
+                              ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
+                              : 'bg-gray-700 border-gray-600 text-white hover:bg-green-600 hover:border-green-500'
+                          }`}
+                        >
+                          <div className="text-gray-300 text-xs">O {game.total}</div>
+                          <div className="text-green-400 text-xs font-medium">-110</div>
+                        </button>
+                        <button
+                          onClick={() => placeDemoBet(game, 'moneyline', game.moneylineAway, game.awayTeam)}
+                          className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
+                            selectedGame?.betType === 'moneyline' && selectedGame?.team === game.awayTeam
+                              ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
+                              : 'bg-gray-700 border-gray-600 text-white hover:bg-green-600 hover:border-green-500'
+                          }`}
+                        >
+                          <div className="text-green-400 text-xs font-medium">{game.moneylineAway > 0 ? '+' : ''}{game.moneylineAway}</div>
+                        </button>
+                      </div>
+
+                      {/* Home Team Row */}
+                      <div className="grid grid-cols-4 gap-2 sm:gap-4 px-4 py-3">
+                        <div className="flex items-center">
+                          <div className="text-white font-bold text-sm truncate">{game.homeTeam}</div>
+                        </div>
+                        <button
+                          onClick={() => placeDemoBet(game, 'spread', -110, `${game.homeTeam} ${game.spread > 0 ? '+' + game.spread : game.spread}`)}
+                          className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
+                            selectedGame?.betType === 'spread' && selectedGame?.team === game.homeTeam
+                              ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
+                              : 'bg-gray-700 border-gray-600 text-white hover:bg-green-600 hover:border-green-500'
+                          }`}
+                        >
+                          <div className="text-gray-300 text-xs">{game.spread > 0 ? '+' + game.spread : game.spread}</div>
+                          <div className="text-green-400 text-xs font-medium">-110</div>
+                        </button>
+                        <button
+                          onClick={() => placeDemoBet(game, 'total', -110, `Under ${game.total}`)}
+                          className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
+                            selectedGame?.betType === 'total' && selectedGame?.team === 'Under'
+                              ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
+                              : 'bg-gray-700 border-gray-600 text-white hover:bg-green-600 hover:border-green-500'
+                          }`}
+                        >
+                          <div className="text-gray-300 text-xs">U {game.total}</div>
+                          <div className="text-green-400 text-xs font-medium">-110</div>
+                        </button>
+                        <button
+                          onClick={() => placeDemoBet(game, 'moneyline', game.moneylineHome, game.homeTeam)}
+                          className={`border rounded-lg py-2 px-2 sm:px-3 transition-all duration-200 text-center ${
+                            selectedGame?.betType === 'moneyline' && selectedGame?.team === game.homeTeam
+                              ? 'bg-green-600 border-green-500 shadow-lg scale-105' 
+                              : 'bg-gray-700 border-gray-600 text-white hover:bg-green-600 hover:border-green-500'
+                          }`}
+                        >
+                          <div className="text-green-400 text-xs font-medium">{game.moneylineHome > 0 ? '+' : ''}{game.moneylineHome}</div>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
