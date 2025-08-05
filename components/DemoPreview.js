@@ -344,7 +344,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                     </button>
                   )}
                 </div>
-              )}</div>
+              )}
             </div>
 
             <div className="flex-shrink-0 border-t border-slate-600 p-4">
