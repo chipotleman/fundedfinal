@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../lib/supabaseClient';
@@ -9,8 +8,6 @@ export default function Marketplace() {
   const router = useRouter();
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const [cappers, setCappers] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
   const [loading, setLoading] = useState(true);
 
   // Mock data for now - will be replaced with actual Supabase data
@@ -27,7 +24,8 @@ export default function Marketplace() {
       categories: ["NFL", "NBA"],
       verified: true,
       rating: 4.8,
-      totalPicks: 1249
+      totalPicks: 1249,
+      helpedGetFunded: 127
     },
     {
       id: 2,
@@ -41,7 +39,8 @@ export default function Marketplace() {
       categories: ["NFL", "NBA", "MLB"],
       verified: true,
       rating: 4.9,
-      totalPicks: 3428
+      totalPicks: 3428,
+      helpedGetFunded: 294
     },
     {
       id: 3,
@@ -55,7 +54,8 @@ export default function Marketplace() {
       categories: ["NHL"],
       verified: false,
       rating: 4.6,
-      totalPicks: 687
+      totalPicks: 687,
+      helpedGetFunded: 43
     }
   ];
 
@@ -64,7 +64,7 @@ export default function Marketplace() {
       try {
         const response = await fetch('/api/marketplace/cappers');
         const data = await response.json();
-        
+
         if (response.ok) {
           setCappers(data.cappers);
         } else {
@@ -84,20 +84,10 @@ export default function Marketplace() {
     fetchCappers();
   }, []);
 
-  const filteredCappers = cappers.filter(capper => {
-    const matchesSearch = capper.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         capper.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || 
-                           capper.categories.includes(selectedCategory) ||
-                           (selectedCategory === 'human' && capper.type === 'human') ||
-                           (selectedCategory === 'ai' && capper.type === 'ai');
-    return matchesSearch && matchesCategory;
-  });
-
   const handleSubscribe = async (capper) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         alert('Please sign in to subscribe to cappers');
         return;
@@ -150,51 +140,23 @@ export default function Marketplace() {
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
 
-      {/* Header */}
+      {/* Header Section */}
       <div className="bg-gradient-to-r from-purple-600 to-blue-600 py-8 px-4 sm:px-6 lg:px-8 mt-16">
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-4">
-            Sports Picks Marketplace
+            Need Help Passing a Challenge?
           </h1>
-          <p className="text-lg sm:text-xl text-purple-100 max-w-3xl mx-auto">
-            Connect with top cappers and AI models. Get expert picks, analysis, and guidance to improve your betting game.
+          <p className="text-lg sm:text-xl text-purple-100 max-w-4xl mx-auto">
+            These Cappers and AI models are available to help you if you are having trouble becoming a funded bettor.
           </p>
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-slate-800 rounded-xl p-6 mb-8">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <input
-                type="text"
-                placeholder="Search cappers and AI models..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500"
-              />
-            </div>
-            <select
-              value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-purple-500"
-            >
-              <option value="all">All Categories</option>
-              <option value="human">Human Cappers</option>
-              <option value="ai">AI Models</option>
-              <option value="NFL">NFL</option>
-              <option value="NBA">NBA</option>
-              <option value="MLB">MLB</option>
-              <option value="NHL">NHL</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Marketplace Grid */}
+      {/* Marketplace Grid */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredCappers.map(capper => (
-            <div key={capper.id} className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden hover:border-purple-500 transition-all duration-300">
+          {cappers.map(capper => (
+            <div key={capper.id} className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden hover:border-purple-500 transition-all duration-300 transform hover:-translate-y-1">
               {/* Capper Header */}
               <div className="p-6">
                 <div className="flex items-start space-x-4 mb-4">
@@ -238,14 +200,18 @@ export default function Marketplace() {
                 <p className="text-gray-400 text-sm mb-4">{capper.description}</p>
 
                 {/* Stats */}
-                <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-3 gap-2 mb-6">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-green-400">{capper.winRate}%</div>
+                    <div className="text-lg font-bold text-green-400">{capper.winRate}%</div>
                     <div className="text-xs text-gray-400">Win Rate</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-400">{capper.totalPicks.toLocaleString()}</div>
+                    <div className="text-lg font-bold text-blue-400">{capper.totalPicks.toLocaleString()}</div>
                     <div className="text-xs text-gray-400">Total Picks</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-lg font-bold text-yellow-400">{capper.helpedGetFunded}</div>
+                    <div className="text-xs text-gray-400">Got Funded</div>
                   </div>
                 </div>
 
@@ -257,7 +223,7 @@ export default function Marketplace() {
                   </div>
                   <button
                     onClick={() => handleSubscribe(capper)}
-                    className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300"
+                    className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300 transform hover:scale-105"
                   >
                     Subscribe
                   </button>
@@ -283,28 +249,14 @@ export default function Marketplace() {
           ))}
         </div>
 
-        {filteredCappers.length === 0 && (
+        {cappers.length === 0 && (
           <div className="text-center py-12">
             <div className="bg-slate-800 rounded-2xl p-8 max-w-md mx-auto">
-              <h3 className="text-xl font-bold text-white mb-2">No Results Found</h3>
-              <p className="text-gray-400">Try adjusting your search or filters to find cappers and AI models.</p>
+              <h3 className="text-xl font-bold text-white mb-2">No Cappers Available</h3>
+              <p className="text-gray-400">Check back soon for more cappers and AI models.</p>
             </div>
           </div>
         )}
-      </div>
-
-      {/* Info Banner */}
-      <div className="bg-gradient-to-r from-green-600 to-blue-600 py-8 px-4 sm:px-6 lg:px-8 mb-8">
-        <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">Become a Capper</h2>
-          <p className="text-lg text-green-100 mb-6">
-            Share your expertise and earn money with 0% processing fees. 
-            Referred cappers also earn their referrer 10% of sales for one year!
-          </p>
-          <button className="bg-white text-green-600 font-bold py-3 px-8 rounded-lg hover:bg-gray-100 transition-colors">
-            Apply to Become a Capper
-          </button>
-        </div>
       </div>
     </div>
   );
