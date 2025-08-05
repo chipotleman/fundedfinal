@@ -266,7 +266,9 @@ export default function Home() {
             </div>
 
             {/* Thunder Card Coming Soon Module */}
-            <ThunderCardModule />
+            <div id="thunder-card">
+              <ThunderCardModule />
+            </div>
           </div>
         </div>
 

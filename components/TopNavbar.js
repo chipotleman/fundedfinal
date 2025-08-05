@@ -134,7 +134,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                   <button onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     How It Works
                   </button>
-                  <Link href="/waitlist" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                  <Link href="/#thunder-card" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     Thunder Card
                   </Link>
                   <Link href="/promos" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
@@ -149,7 +149,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                   <button onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     How It Works
                   </button>
-                  <Link href="/waitlist" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                  <Link href="/#thunder-card" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     Thunder Card
                   </Link>
                 </>
@@ -379,7 +379,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                         <span className="font-medium">Promos</span>
                       </Link>
                       <Link
-                        href="/waitlist"
+                        href="/#thunder-card"
                         onClick={closeMobileMenu}
                         className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]"
                       >
@@ -451,7 +451,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                         <span className="font-medium">How It Works</span>
                       </button>
                       <Link
-                        href="/waitlist"
+                        href="/#thunder-card"
                         onClick={closeMobileMenu}
                         className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300"
                       >
