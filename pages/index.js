@@ -248,11 +248,8 @@ export default function Home() {
                 Watch as traders like you win real money in real-time. Click any user to see their full profile and betting history.
               </p>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
+              <div className="flex justify-center max-w-6xl mx-auto">
                 <LiveFeed />
-
-                {/* Live Community Stats Panel */}
-                <LiveCommunityStats />
               </div>
             </div>
 
@@ -268,6 +265,21 @@ export default function Home() {
           showDemoBetSlip={showDemoBetSlip}
           setShowDemoBetSlip={setShowDemoBetSlip}
         />
+
+        {/* Live Community Stats Section */}
+        <div className="py-16 px-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-8">
+              <h2 className="text-4xl font-bold text-white mb-4">
+                Live <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Community Stats</span>
+              </h2>
+              <p className="text-gray-300 text-lg">
+                Real-time data from our active betting community
+              </p>
+            </div>
+            <LiveCommunityStats />
+          </div>
+        </div>
       </div>
 
       {/* Popups */}
