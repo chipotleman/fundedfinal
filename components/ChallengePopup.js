@@ -204,6 +204,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
             </div>
           </div>
         </div>
+        </div>
 
 
       </div>
