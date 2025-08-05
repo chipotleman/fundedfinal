@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
 import LiveFeed from '../components/LiveFeed';
+import LiveCommunityStats from '../components/LiveCommunityStats';
 import ChallengePopup from '../components/ChallengePopup';
 import HowItWorksPopup from '../components/HowItWorksPopup';
 import { useBetSlip } from '../contexts/BetSlipContext';
@@ -246,87 +247,7 @@ export default function Home() {
                 <LiveFeed />
 
                 {/* Live Community Stats Panel */}
-                <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl border border-slate-700 h-96 flex flex-col">
-                  {/* Header */}
-                  <div className="p-4 border-b border-slate-700 flex items-center space-x-3">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <h3 className="text-white font-bold">Live Community Stats</h3>
-                    <span className="text-gray-400 text-sm">Real-time updates</span>
-                  </div>
-
-                  {/* Stats */}
-                  <div className="flex-1 overflow-y-auto p-2 space-y-2 font-mono text-sm">
-                    <div className="bg-slate-700/30 hover:bg-slate-700/50 rounded-lg p-3 border-l-4 border-green-400 transition-all duration-300">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <span className="text-lg">🟢</span>
-                          <div>
-                            <div className="text-white">
-                              <span className="text-green-400 font-bold">1,247</span> Bettors Online
-                            </div>
-                            <div className="text-gray-400 text-xs">Active right now</div>
-                          </div>
-                        </div>
-                        <div className="text-green-400 font-bold text-lg">Live</div>
-                      </div>
-                    </div>
-
-                    <div className="bg-slate-700/30 hover:bg-slate-700/50 rounded-lg p-3 border-l-4 border-blue-400 transition-all duration-300">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <span className="text-lg">⏱️</span>
-                          <div>
-                            <div className="text-white">
-                              <span className="text-blue-400 font-bold">72.3%</span> Win Rate
-                            </div>
-                            <div className="text-gray-400 text-xs">Last hour performance</div>
-                          </div>
-                        </div>
-                        <div className="text-blue-400 font-bold text-lg">+72%</div>
-                      </div>
-                    </div>
-
-                    <div className="bg-slate-700/30 hover:bg-slate-700/50 rounded-lg p-3 border-l-4 border-purple-400 transition-all duration-300">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <span className="text-lg">🎯</span>
-                          <div>
-                            <div className="text-white">
-                              <span className="text-purple-400 font-bold">$184K</span> Gambled Today
-                            </div>
-                            <div className="text-gray-400 text-xs">Total action today</div>
-                          </div>
-                        </div>
-                        <div className="text-purple-400 font-bold text-lg">$184K</div>
-                      </div>
-                    </div>
-
-                    <div className="bg-slate-700/30 hover:bg-slate-700/50 rounded-lg p-3 border-l-4 border-orange-400 transition-all duration-300">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <span className="text-lg">💸</span>
-                          <div>
-                            <div className="text-white">
-                              <span className="text-orange-400 font-bold">$89K</span> Withdrawn Today
-                            </div>
-                            <div className="text-gray-400 text-xs">Successful payouts</div>
-                          </div>
-                        </div>
-                        <div className="text-orange-400 font-bold text-lg">$89K</div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Footer */}
-                  <div className="p-3 border-t border-slate-700 text-center">
-                    <div className="text-gray-400 text-xs mb-3">
-                      Live community data • Updated every second
-                    </div>
-                    <Link href="/auth" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2 px-6 rounded-lg transition-all duration-300 inline-block text-sm">
-                      Join the Action
-                    </Link>
-                  </div>
-                </div>
+                <LiveCommunityStats />
               </div>
             </div>
 
