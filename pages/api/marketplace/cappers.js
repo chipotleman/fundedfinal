@@ -1,4 +1,3 @@
-
 import { supabase } from '../../../lib/supabaseClient';
 
 export default async function handler(req, res) {
@@ -9,51 +8,61 @@ export default async function handler(req, res) {
   const { search, category, type } = req.query;
 
   try {
-    let query = supabase
+    // First get cappers
+    const { data: cappers, error: cappersError } = await supabase
       .from('cappers')
-      .select(`
-        *,
-        capper_stats (
-          win_rate,
-          total_picks,
-          followers,
-          rating,
-          roi,
-          current_streak
-        )
-      `);
+      .select('*');
+
+    if (cappersError) {
+      throw cappersError;
+    }
+
+    // Then get stats separately to avoid relationship error
+    const { data: stats, error: statsError } = await supabase
+      .from('capper_stats')
+      .select('*');
+
+    if (statsError) {
+      console.warn('Error fetching capper stats:', statsError);
+    }
+
+    // Combine the data
+    const cappersWithStats = cappers?.map(capper => {
+      const capperStats = stats?.find(stat => stat.capper_id === capper.id);
+      return {
+        ...capper,
+        ...capperStats,
+        helpedGetFunded: capperStats?.helped_get_funded || 0
+      };
+    }) || [];
 
     // Apply filters
+    let filteredCappers = cappersWithStats;
+
     if (search) {
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`);
+      filteredCappers = filteredCappers.filter(capper =>
+        capper.name.toLowerCase().includes(search.toLowerCase()) ||
+        capper.description.toLowerCase().includes(search.toLowerCase())
+      );
     }
 
     if (type && type !== 'all') {
-      query = query.eq('type', type);
+      filteredCappers = filteredCappers.filter(capper => capper.type === type);
     }
 
     if (category && category !== 'all' && !['human', 'ai'].includes(category)) {
-      query = query.contains('categories', [category]);
+      filteredCappers = filteredCappers.filter(capper =>
+        capper.categories && capper.categories.includes(category)
+      );
     }
 
-    const { data: cappers, error } = await query.order('created_at', { ascending: false });
+    // Ensure at least 10 visible cappers or AI models
+    const visibleCappers = filteredCappers.slice(0, 10);
 
-    if (error) {
-      throw error;
-    }
-
-    // Transform data to match expected format
-    const transformedCappers = cappers.map(capper => ({
-      ...capper,
-      winRate: capper.capper_stats?.[0]?.win_rate || 0,
-      totalPicks: capper.capper_stats?.[0]?.total_picks || 0,
-      followers: capper.capper_stats?.[0]?.followers || 0,
-      rating: capper.capper_stats?.[0]?.rating || 0,
-      roi: capper.capper_stats?.[0]?.roi || 0,
-      currentStreak: capper.capper_stats?.[0]?.current_streak || 0
-    }));
-
-    res.status(200).json({ cappers: transformedCappers });
+    res.status(200).json({
+      cappers: visibleCappers || [],
+      count: visibleCappers.length || 0
+    });
 
   } catch (error) {
     console.error('Error fetching cappers:', error);

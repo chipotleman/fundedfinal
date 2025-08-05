@@ -56,6 +56,141 @@ export default function Marketplace() {
       rating: 4.6,
       totalPicks: 687,
       helpedGetFunded: 43
+    },
+    {
+      id: 4,
+      name: "NBA Prediction Engine",
+      type: "ai",
+      avatar: "https://via.placeholder.com/80",
+      description: "Deep learning model specializing in NBA player props and totals",
+      winRate: 73.8,
+      followers: 3421,
+      monthlyPrice: 89.99,
+      categories: ["NBA"],
+      verified: true,
+      rating: 4.9,
+      totalPicks: 2156,
+      helpedGetFunded: 198
+    },
+    {
+      id: 5,
+      name: "College Football Guru",
+      type: "human",
+      avatar: "https://via.placeholder.com/80",
+      description: "Former D1 coach with insider knowledge of college football",
+      winRate: 66.4,
+      followers: 1593,
+      monthlyPrice: 39.99,
+      categories: ["NCAAF"],
+      verified: true,
+      rating: 4.7,
+      totalPicks: 892,
+      helpedGetFunded: 76
+    },
+    {
+      id: 6,
+      name: "Baseball Analytics Pro",
+      type: "human",
+      avatar: "https://via.placeholder.com/80",
+      description: "Sabermetrics expert with focus on MLB run lines and totals",
+      winRate: 69.1,
+      followers: 2134,
+      monthlyPrice: 44.99,
+      categories: ["MLB"],
+      verified: true,
+      rating: 4.6,
+      totalPicks: 1678,
+      helpedGetFunded: 89
+    },
+    {
+      id: 7,
+      name: "Live Bet AI",
+      type: "ai",
+      avatar: "https://via.placeholder.com/80",
+      description: "Real-time ML model for live betting opportunities across all sports",
+      winRate: 70.3,
+      followers: 4567,
+      monthlyPrice: 99.99,
+      categories: ["NFL", "NBA", "MLB", "NHL"],
+      verified: true,
+      rating: 4.8,
+      totalPicks: 3892,
+      helpedGetFunded: 312
+    },
+    {
+      id: 8,
+      name: "Tennis Sharp",
+      type: "human",
+      avatar: "https://via.placeholder.com/80",
+      description: "Former ATP tour player with expertise in tennis betting markets",
+      winRate: 65.9,
+      followers: 734,
+      monthlyPrice: 34.99,
+      categories: ["Tennis"],
+      verified: false,
+      rating: 4.5,
+      totalPicks: 456,
+      helpedGetFunded: 29
+    },
+    {
+      id: 9,
+      name: "Soccer Analytics AI",
+      type: "ai",
+      avatar: "https://via.placeholder.com/80",
+      description: "Global soccer prediction model covering major leagues worldwide",
+      winRate: 67.7,
+      followers: 2891,
+      monthlyPrice: 54.99,
+      categories: ["Soccer"],
+      verified: true,
+      rating: 4.7,
+      totalPicks: 2234,
+      helpedGetFunded: 156
+    },
+    {
+      id: 10,
+      name: "Fantasy Football Expert",
+      type: "human",
+      avatar: "https://via.placeholder.com/80",
+      description: "DFS expert transitioning to sports betting with proven track record",
+      winRate: 63.2,
+      followers: 1876,
+      monthlyPrice: 29.99,
+      categories: ["NFL", "NCAAF"],
+      verified: false,
+      rating: 4.4,
+      totalPicks: 743,
+      helpedGetFunded: 52
+    },
+    {
+      id: 11,
+      name: "Props Predictor AI",
+      type: "ai",
+      avatar: "https://via.placeholder.com/80",
+      description: "Specialized AI model for player props across NFL, NBA, and MLB",
+      winRate: 72.1,
+      followers: 3756,
+      monthlyPrice: 74.99,
+      categories: ["NFL", "NBA", "MLB"],
+      verified: true,
+      rating: 4.8,
+      totalPicks: 2567,
+      helpedGetFunded: 203
+    },
+    {
+      id: 12,
+      name: "March Madness Maven",
+      type: "human",
+      avatar: "https://via.placeholder.com/80",
+      description: "College basketball specialist with focus on tournament play",
+      winRate: 61.8,
+      followers: 1234,
+      monthlyPrice: 49.99,
+      categories: ["NCAAB"],
+      verified: true,
+      rating: 4.3,
+      totalPicks: 589,
+      helpedGetFunded: 38
     }
   ];
 
@@ -147,7 +282,7 @@ export default function Marketplace() {
             Need Help Passing a Challenge?
           </h1>
           <p className="text-lg sm:text-xl text-purple-100 max-w-4xl mx-auto">
-            These Cappers and AI models are available to help you if you are having trouble becoming a funded bettor.
+            These cappers and AI models are available to help you if you are having trouble becoming a funded bettor.
           </p>
         </div>
       </div>
@@ -211,7 +346,7 @@ export default function Marketplace() {
                   </div>
                   <div className="text-center">
                     <div className="text-lg font-bold text-yellow-400">{capper.helpedGetFunded}</div>
-                    <div className="text-xs text-gray-400">Got Funded</div>
+                    <div className="text-xs text-gray-400">Clients Funded</div>
                   </div>
                 </div>
 
