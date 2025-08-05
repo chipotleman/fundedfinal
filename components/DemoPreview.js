@@ -493,7 +493,9 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
       <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
-          <h2 className="text-2xl sm:text-4xl font-black text-white mb-3 sm:mb-4">Want a Demo?</h2>
+          <h2 className="text-2xl sm:text-4xl font-black text-white mb-3 sm:mb-4">
+            Want a <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Demo</span>?
+          </h2>
           <p className="text-lg sm:text-xl text-gray-400 mb-2">No sign up required</p>
           <p className="text-sm sm:text-base text-gray-500">Try placing bets with mock funds to see how our platform works</p>
         </div>
