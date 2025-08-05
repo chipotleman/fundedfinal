@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 
 const steps = [
@@ -74,7 +73,7 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
 
   const handleTouchEnd = () => {
     if (!touchStart || !touchEnd) return;
-    
+
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
@@ -108,158 +107,71 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
   const currentStep = steps[currentIndex];
 
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
-      <div className="relative bg-black border-2 border-slate-700 rounded-3xl max-w-md w-full overflow-hidden">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
-        >
-          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-
-        {/* Step Number */}
-        <div className="absolute top-4 left-4 z-10">
-          <span className="bg-gradient-to-r from-green-400 to-blue-500 text-black px-3 py-1 rounded-full text-xs font-bold">
-            {currentIndex + 1} of {steps.length}
-          </span>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 max-w-4xl w-full max-h-[85vh] overflow-y-auto shadow-2xl">
+        {/* Header */}
+        <div className="p-6 border-b border-slate-700 flex items-center justify-between sticky top-0 bg-gradient-to-r from-slate-800 to-slate-900 rounded-t-2xl">
+          <div>
+            <h2 className="text-2xl font-black text-white mb-2">
+              How <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">It Works</span>
+            </h2>
+            <p className="text-gray-300 text-sm">Get funded to bet with our money. Keep 80% of your profits.</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 bg-slate-700 hover:bg-slate-600 rounded-full flex items-center justify-center text-gray-300 hover:text-white transition-all duration-200 flex-shrink-0"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
-        {/* Step Content */}
-        <div
-          className="p-8 pt-16"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          {/* Icon */}
-          <div className="text-center mb-6">
-            <div className="text-6xl mb-4">{currentStep.icon}</div>
-          </div>
-
-          {/* Title and Description */}
-          <div className="text-center mb-8">
-            <h3 className="text-2xl font-bold text-white mb-4">{currentStep.title}</h3>
-            <p className="text-gray-300 text-lg leading-relaxed">{currentStep.description}</p>
-          </div>
-
-          {/* Details */}
-          <div className="space-y-3 mb-8">
-            {currentStep.details.map((detail, index) => (
-              <div key={index} className="flex items-center space-x-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                <div className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></div>
-                <span className="text-gray-300">{detail}</span>
+        {/* Steps */}
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {[
+              {
+                number: "01",
+                title: "Choose Challenge",
+                description: "Select your challenge level based on your experience and comfort level.",
+                icon: "🎯"
+              },
+              {
+                number: "02", 
+                title: "Complete Evaluation",
+                description: "Demonstrate your betting skills by hitting your profit target with our virtual money.",
+                icon: "📈"
+              },
+              {
+                number: "03",
+                title: "Get Funded & Trade",
+                description: "Once you pass, we'll fund your real account. Keep 80% of all profits you make.",
+                icon: "💰"
+              }
+            ].map((step, index) => (
+              <div key={index} className="bg-slate-700/30 rounded-lg p-4 border border-slate-600/50 text-center hover:bg-slate-700/50 transition-all duration-300">
+                <div className="text-3xl mb-3">{step.icon}</div>
+                <div className="text-sm font-bold text-green-400 mb-2">{step.number}</div>
+                <h3 className="text-lg font-bold text-white mb-2">{step.title}</h3>
+                <p className="text-gray-300 text-xs leading-relaxed">{step.description}</p>
               </div>
             ))}
           </div>
-
-          {/* Action Button */}
-          {currentIndex === steps.length - 1 ? (
-            <button
-              onClick={() => {
-                onClose();
-                // Scroll to demo section
-                setTimeout(() => {
-                  const demoSection = document.getElementById('demo-section');
-                  if (demoSection) {
-                    demoSection.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }, 100);
-              }}
-              className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl text-lg mb-6"
-            >
-              Try a Demo
-            </button>
-          ) : (
-            <button
-              onClick={nextStep}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-6 rounded-xl text-lg mb-6"
-            >
-              Next Step
-            </button>
-          )}
-
-          {/* Progress Bar */}
-          <div className="mb-4">
-            <div className="w-full bg-slate-700 rounded-full h-2">
-              <div 
-                className="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full"
-                style={{ width: `${((currentIndex + 1) / steps.length) * 100}%` }}
-              ></div>
-            </div>
-          </div>
-
-          {/* Desktop Navigation Buttons */}
-          <div className="hidden md:flex items-center justify-between mb-4">
-            <button
-              onClick={prevStep}
-              disabled={currentIndex === 0}
-              className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors ${
-                currentIndex === 0 
-                  ? 'text-gray-600 cursor-not-allowed' 
-                  : 'text-gray-400 hover:text-white hover:bg-slate-700'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              <span>Previous</span>
-            </button>
-            
-            <div className="flex items-center space-x-2">
-              {steps.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => goToStep(index)}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    index === currentIndex ? 'bg-green-400' : 'bg-gray-600 hover:bg-gray-500'
-                  }`}
-                />
-              ))}
-            </div>
-            
-            <button
-              onClick={nextStep}
-              disabled={currentIndex === steps.length - 1}
-              className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors ${
-                currentIndex === steps.length - 1 
-                  ? 'text-gray-600 cursor-not-allowed' 
-                  : 'text-gray-400 hover:text-white hover:bg-slate-700'
-              }`}
-            >
-              <span>Next</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Mobile Swipe Indicator */}
-          {steps.length > 1 && (
-            <div className="md:hidden flex items-center justify-center space-x-4 text-gray-400 text-sm">
-              {currentIndex > 0 && (
-                <div className="flex items-center space-x-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  <span>Swipe left</span>
-                </div>
-              )}
-              {currentIndex < steps.length - 1 && (
-                <div className="flex items-center space-x-1">
-                  <span>Swipe right</span>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
-        
+        {/* CTA Button */}
+        <div className="text-center mt-6 pt-4 border-t border-slate-700">
+          <button
+            onClick={() => {
+              onClose();
+              window.location.href = '/auth';
+            }}
+            className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+          >
+            Start Your Challenge
+          </button>
+        </div>
       </div>
     </div>
   );
