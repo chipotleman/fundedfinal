@@ -97,14 +97,12 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
           !(bet.gameId === newBet.gameId && bet.betType === newBet.betType)
         );
         const finalBets = [...filteredBets, newBet];
-        setShowDemoBetSlip(true);
         setDemoBetSlipCount?.(finalBets.length);
         return finalBets;
       }
       
       // Add the new bet
       const finalBets = [...prev, newBet];
-      setShowDemoBetSlip(true);
       setDemoBetSlipCount?.(finalBets.length);
       return finalBets;
     });
@@ -174,10 +172,10 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
       {showDemoBetSlip && (
         <div className="fixed inset-0 z-50 lg:inset-auto lg:top-20 lg:right-4 lg:w-80 lg:max-h-96">
           {/* Mobile Overlay */}
-          <div className="lg:hidden fixed inset-0 bg-black/50" onClick={() => setShowDemoBetSlip(false)}></div>
+          <div className="fixed inset-0 bg-black/50" onClick={() => setShowDemoBetSlip(false)}></div>
           
-          {/* Bet Slip Panel */}
-          <div className="lg:relative bg-slate-800 border border-slate-700 rounded-none lg:rounded-2xl shadow-2xl h-full lg:h-auto overflow-y-auto lg:max-h-96 w-full lg:w-80">
+          {/* Bet Slip Panel - Half screen on mobile */}
+          <div className="absolute bottom-0 left-0 right-0 h-1/2 lg:relative bg-slate-800 border border-slate-700 rounded-t-2xl lg:rounded-2xl shadow-2xl lg:h-auto overflow-y-auto lg:max-h-96 w-full lg:w-80">
             <div className="p-4 border-b border-slate-700">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-white flex items-center">
