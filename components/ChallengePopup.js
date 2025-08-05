@@ -1,212 +1,160 @@
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
 
-const challenges = [
-  {
-    id: 1,
-    name: "Starter Challenge",
-    description: "Perfect for beginners looking to get started",
-    startingBalance: 1000,
-    target: 1200,
-    maxBet: 50,
-    payout: 800,
-    badge: "BEGINNER",
-    popular: false
-  },
-  {
-    id: 2,
-    name: "Pro Challenge",
-    description: "For experienced bettors ready to scale up",
-    startingBalance: 5000,
-    target: 6000,
-    maxBet: 250,
-    payout: 4000,
-    badge: "POPULAR",
-    popular: true
-  },
-  {
-    id: 3,
-    name: "Elite Challenge",
-    description: "Maximum stakes for serious professionals",
-    startingBalance: 10000,
-    target: 12000,
-    maxBet: 500,
-    payout: 8000,
-    badge: "ADVANCED",
-    popular: false
-  }
-];
+import { useState } from 'react';
+import Link from 'next/link';
 
 export default function ChallengePopup({ isOpen, onClose }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
-  const router = useRouter();
-
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
-
-  const handleTouchStart = (e) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe && currentIndex < challenges.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    }
-    if (isRightSwipe && currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-    }
-  };
-
-  const nextChallenge = () => {
-    if (currentIndex < challenges.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    }
-  };
-
-  const prevChallenge = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-    }
-  };
-
-  const goToChallenge = (index) => {
-    setCurrentIndex(index);
-  };
-
-  const handleSelectChallenge = (challenge) => {
-    onClose();
-    router.push('/auth');
-  };
-
   if (!isOpen) return null;
 
-  const currentChallenge = challenges[currentIndex];
+  const [selectedChallenge, setSelectedChallenge] = useState('starter');
+
+  const challenges = {
+    starter: {
+      name: 'Starter Challenge',
+      funding: '$10,000',
+      profit: '$1,000',
+      fee: '$149',
+      description: 'Perfect for beginners looking to prove their skills',
+      features: ['60-day evaluation', '8% profit target', 'Up to 5% daily loss limit', '1:30 max leverage']
+    },
+    pro: {
+      name: 'Pro Challenge',
+      funding: '$25,000',
+      profit: '$2,500',
+      fee: '$299',
+      description: 'For experienced bettors ready for bigger stakes',
+      features: ['90-day evaluation', '10% profit target', 'Up to 5% daily loss limit', '1:50 max leverage']
+    },
+    elite: {
+      name: 'Elite Challenge',
+      funding: '$100,000',
+      profit: '$10,000',
+      fee: '$999',
+      description: 'The ultimate challenge for elite bettors',
+      features: ['120-day evaluation', '10% profit target', 'Up to 5% daily loss limit', '1:100 max leverage']
+    }
+  };
 
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
-      <div className="relative bg-black border-2 border-slate-700 rounded-3xl max-w-md w-full overflow-hidden">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
-        >
-          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-
-        {/* Popular Badge */}
-        {currentChallenge.popular && (
-          <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
-            <span className="bg-gradient-to-r from-green-400 to-blue-500 text-black px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
-              Most Popular
-            </span>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+        {/* Header */}
+        <div className="p-6 border-b border-slate-700 flex items-center justify-between sticky top-0 bg-gradient-to-r from-slate-800 to-slate-900 rounded-t-2xl">
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-2">Choose Your Challenge</h2>
+            <p className="text-gray-300">Select the funding level that matches your trading experience</p>
           </div>
-        )}
+          <button
+            onClick={onClose}
+            className="w-10 h-10 bg-slate-700 hover:bg-slate-600 rounded-full flex items-center justify-center text-gray-300 hover:text-white transition-all duration-200 flex-shrink-0"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
 
-        <div
-          className="p-8 pt-12"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          {/* Challenge Card */}
-        <div className="relative h-full flex flex-col p-4">
-          <div className="text-center mb-6">
-            <div className="inline-block bg-gradient-to-r from-green-400/20 to-blue-500/20 backdrop-blur-lg rounded-full px-4 py-1 border border-green-400/30 mb-4">
-              <span className="text-green-400 text-sm font-bold">{currentChallenge.badge}</span>
-            </div>
-            <h2 className="text-2xl font-bold text-white mb-2">{currentChallenge.name}</h2>
-            <p className="text-gray-300 text-sm">{currentChallenge.description}</p>
+        {/* Challenge Selection */}
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            {Object.entries(challenges).map(([key, challenge]) => (
+              <button
+                key={key}
+                onClick={() => setSelectedChallenge(key)}
+                className={`p-4 rounded-xl border-2 transition-all duration-300 text-left ${
+                  selectedChallenge === key
+                    ? 'border-blue-500 bg-blue-500/10 shadow-lg shadow-blue-500/20'
+                    : 'border-slate-600 bg-slate-700/30 hover:border-slate-500 hover:bg-slate-700/50'
+                }`}
+              >
+                <div className="text-white font-bold text-lg mb-2">{challenge.name}</div>
+                <div className="text-green-400 font-bold text-2xl mb-1">{challenge.funding}</div>
+                <div className="text-gray-300 text-sm">{challenge.description}</div>
+              </button>
+            ))}
           </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <div className="bg-slate-700/30 rounded-lg p-3 border border-slate-600/50">
-              <div className="text-gray-400 text-xs font-medium mb-1">Starting Balance</div>
-              <div className="text-green-400 text-xl font-bold">${currentChallenge.startingBalance.toLocaleString()}</div>
+          {/* Selected Challenge Details */}
+          <div className="bg-gradient-to-r from-slate-700/50 to-slate-600/50 rounded-xl p-6 border border-slate-600 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-xl font-bold text-white mb-4">{challenges[selectedChallenge].name} Details</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Funding Amount:</span>
+                    <span className="text-green-400 font-bold">{challenges[selectedChallenge].funding}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Profit Target:</span>
+                    <span className="text-blue-400 font-bold">{challenges[selectedChallenge].profit}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Challenge Fee:</span>
+                    <span className="text-orange-400 font-bold">{challenges[selectedChallenge].fee}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-lg font-bold text-white mb-4">Features & Rules</h4>
+                <ul className="space-y-2">
+                  {challenges[selectedChallenge].features.map((feature, index) => (
+                    <li key={index} className="flex items-start text-gray-300 text-sm">
+                      <span className="text-green-400 mr-2 flex-shrink-0">✓</span>
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-            <div className="bg-slate-700/30 rounded-lg p-3 border border-slate-600/50">
-              <div className="text-gray-400 text-xs font-medium mb-1">Target</div>
-              <div className="text-blue-400 text-xl font-bold">${currentChallenge.target.toLocaleString()}</div>
-            </div>
-            <div className="bg-slate-700/30 rounded-lg p-3 border border-slate-600/50">
-              <div className="text-gray-400 text-xs font-medium mb-1">Max Bet Size</div>
-              <div className="text-purple-400 text-xl font-bold">${currentChallenge.maxBet}</div>
-            </div>
-            <div className="bg-slate-700/30 rounded-lg p-3 border border-slate-600/50">
-              <div className="text-gray-400 text-xs font-medium mb-1">Your Payout</div>
-              <div className="text-orange-400 text-xl font-bold">${currentChallenge.payout.toLocaleString()}</div>
+          </div>
+
+          {/* How It Works */}
+          <div className="bg-slate-700/30 rounded-xl p-6 border border-slate-600/50 mb-6">
+            <h4 className="text-lg font-bold text-white mb-4 flex items-center">
+              <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-3"></span>
+              How It Works
+            </h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-white font-bold">1</span>
+                </div>
+                <h5 className="text-white font-semibold mb-2">Purchase Challenge</h5>
+                <p className="text-gray-400 text-sm">Pay the one-time fee and get instant access to your funded account</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-white font-bold">2</span>
+                </div>
+                <h5 className="text-white font-semibold mb-2">Trade & Profit</h5>
+                <p className="text-gray-400 text-sm">Place bets, hit your profit target while following the rules</p>
+              </div>
+              <div className="text-center">
+                <div className="w-12 h-12 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-white font-bold">3</span>
+                </div>
+                <h5 className="text-white font-semibold mb-2">Get Funded</h5>
+                <p className="text-gray-400 text-sm">Receive up to 80% of profits on all winning trades</p>
+              </div>
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="space-y-3">
-            <button
-              onClick={handleSelectChallenge}
-              className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Link 
+              href="/auth" 
+              className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 text-center shadow-lg hover:shadow-xl transform hover:-translate-y-1"
             >
-              Start This Challenge
+              Start {challenges[selectedChallenge].name} - {challenges[selectedChallenge].fee}
+            </Link>
+            <button 
+              onClick={onClose}
+              className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 border border-slate-600 hover:border-slate-500"
+            >
+              Maybe Later
             </button>
-
-            <div className="flex items-center justify-center space-x-4">
-              <button
-                onClick={prevChallenge}
-                className="w-10 h-10 bg-slate-700 hover:bg-slate-600 rounded-full flex items-center justify-center transition-colors"
-                disabled={currentIndex === 0}
-              >
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-
-              <div className="flex space-x-2">
-                {challenges.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => goToChallenge(index)}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      index === currentIndex ? 'bg-green-400' : 'bg-gray-600 hover:bg-gray-500'
-                    }`}
-                  />
-                ))}
-              </div>
-
-              <button
-                onClick={nextChallenge}
-                className="w-10 h-10 bg-slate-700 hover:bg-slate-600 rounded-full flex items-center justify-center transition-colors"
-                disabled={currentIndex === challenges.length - 1}
-              >
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-            </div>
           </div>
         </div>
-        </div>
-
-
       </div>
     </div>
   );
