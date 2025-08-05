@@ -176,6 +176,18 @@ export default function Home() {
   const [demoBetSlipCount, setDemoBetSlipCount] = useState(0);
   const [showDemoBetSlip, setShowDemoBetSlip] = useState(false);
 
+  useEffect(() => {
+    const handleOpenHowItWorks = () => {
+      setShowHowItWorksPopup(true);
+    };
+
+    window.addEventListener('openHowItWorks', handleOpenHowItWorks);
+    
+    return () => {
+      window.removeEventListener('openHowItWorks', handleOpenHowItWorks);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-black" style={{scrollBehavior: 'smooth'}}>
       <TopNavbar 
