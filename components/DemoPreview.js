@@ -175,8 +175,8 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
           <div className="fixed inset-0 bg-black/50" onClick={() => setShowDemoBetSlip(false)}></div>
           
           {/* Bet Slip Panel - Half screen on mobile */}
-          <div className="absolute bottom-0 left-0 right-0 h-1/2 lg:relative bg-slate-800 border border-slate-700 rounded-t-2xl lg:rounded-2xl shadow-2xl lg:h-auto overflow-y-auto lg:max-h-96 w-full lg:w-80">
-            <div className="p-4 border-b border-slate-700">
+          <div className="absolute bottom-0 left-0 right-0 h-1/2 lg:relative bg-black border border-slate-700 rounded-t-2xl lg:rounded-2xl shadow-2xl lg:h-auto w-full lg:w-80 flex flex-col">
+            <div className="flex-shrink-0 p-4 border-b border-slate-700">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-white flex items-center">
                   <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -195,7 +195,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
               </div>
             </div>
 
-            <div className="p-4 space-y-3">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {/* Bet Type Toggle */}
               {selectedBets.length > 1 && (
                 <div className="bg-slate-700/50 rounded-lg p-3 mb-4">
@@ -313,25 +313,26 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                 </div>
               )}
 
-              <div className="border-t border-slate-600 pt-3">
-                <div className="flex justify-between text-gray-300 text-sm mb-2">
-                  <span>Total Stake:</span>
-                  <span className="font-semibold">${totalStake.toFixed(2)}</span>
-                </div>
-                <div className="flex space-x-2 mb-3">
-                  <button
-                    onClick={clearAllBets}
-                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 text-sm"
-                  >
-                    Clear All
-                  </button>
-                  <button
-                    onClick={() => alert('This is just a demo! Sign up to place real bets.')}
-                    className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 text-sm"
-                  >
-                    Place Demo Bet
-                  </button>
-                </div>
+              </div>
+
+            <div className="flex-shrink-0 border-t border-slate-600 p-4">
+              <div className="flex justify-between text-gray-300 text-sm mb-3">
+                <span>Total Stake:</span>
+                <span className="font-semibold">${totalStake.toFixed(2)}</span>
+              </div>
+              <div className="flex space-x-2">
+                <button
+                  onClick={clearAllBets}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 text-sm"
+                >
+                  Clear All
+                </button>
+                <button
+                  onClick={() => alert('This is just a demo! Sign up to place real bets.')}
+                  className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 text-sm"
+                >
+                  Place Demo Bet
+                </button>
               </div>
             </div>
           </div>
