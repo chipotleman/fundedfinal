@@ -172,7 +172,12 @@ export default function LiveCommunityStats() {
         </div>
       </div>
 
-      
+      {/* Footer */}
+      <div className="p-3 border-t border-slate-700 text-center">
+        <div className="text-gray-400 text-xs">
+          All data is live • Click any dataset to expand
+        </div>
+      </div>
     </div>
   );
 }
