@@ -385,27 +385,21 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
             </div>
 
             {/* Bottom Actions - Fixed */}
-            <div className="flex-shrink-0 border-t border-slate-600 p-4 lg:p-6 space-y-3">
-              {/* Place Bets Button */}
-              {selectedBets.some(bet => bet.stake > 0) && (
-                <button
-                  onClick={() => {
+            <div className="flex-shrink-0 border-t border-slate-600 p-4 lg:p-6">
+              <button
+                onClick={() => {
+                  if (selectedBets.some(bet => bet.stake > 0)) {
                     alert('Demo bets placed successfully! This shows how your real challenge would work.');
                     setSelectedBets([]);
                     setShowDemoBetSlip(false);
                     setDemoBetSlipCount?.(0);
-                  }}
-                  className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 text-sm"
-                >
-                  Place Demo Bets
-                </button>
-              )}
-
-              <button
-                onClick={() => alert('This is just a demo! Sign up to start your real funded challenge.')}
-                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 text-sm"
+                  } else {
+                    alert('This is just a demo! Sign up to start your real funded challenge.');
+                  }
+                }}
+                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 text-sm"
               >
-                Place Bet
+                PLACE DEMO BET
               </button>
             </div>
           </div>
