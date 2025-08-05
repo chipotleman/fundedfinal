@@ -175,7 +175,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
           <div className="fixed inset-0 bg-black/50" onClick={() => setShowDemoBetSlip(false)}></div>
           
           {/* Challenge Dashboard Panel - 75% screen on mobile */}
-          <div className="absolute bottom-0 left-0 right-0 h-3/4 lg:relative bg-black border border-slate-700 rounded-t-2xl lg:rounded-2xl shadow-2xl lg:h-auto w-full lg:w-80 flex flex-col max-h-[75vh] lg:max-h-[600px]"></div>
+          <div className="absolute bottom-0 left-0 right-0 h-3/4 lg:relative bg-black border border-slate-700 rounded-t-2xl lg:rounded-2xl shadow-2xl lg:h-auto w-full lg:w-80 flex flex-col max-h-[75vh] lg:max-h-[600px]">
             <div className="flex-shrink-0 p-4 border-b border-slate-700">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-white flex items-center">
