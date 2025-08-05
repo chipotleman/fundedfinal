@@ -128,9 +128,6 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                   <Link href="/dashboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     Dashboard
                   </Link>
-                  <Link href="/marketplace" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Marketplace
-                  </Link>
                   <Link href="/leaderboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     Leaderboard
                   </Link>
@@ -143,12 +140,12 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                   <Link href="/promos" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     Promos
                   </Link>
+                  <Link href="/marketplace" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                    Hire Help
+                  </Link>
                 </>
               ) : (
                 <>
-                  <Link href="/marketplace" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Marketplace
-                  </Link>
                   <Link href="/leaderboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     Leaderboard
                   </Link>
@@ -157,6 +154,9 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                   </Link>
                   <Link href="/waitlist" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     Thunder Card
+                  </Link>
+                  <Link href="/marketplace" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                    Hire Help
                   </Link>
                 </>
               )}
@@ -353,16 +353,6 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                         <span className="font-medium">Dashboard</span>
                       </Link>
                       <Link
-                        href="/marketplace"
-                        onClick={closeMobileMenu}
-                        className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]"
-                      >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-                        </svg>
-                        <span className="font-medium">Marketplace</span>
-                      </Link>
-                      <Link
                         href="/how-it-works"
                         onClick={closeMobileMenu}
                         className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]"
@@ -401,6 +391,16 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                           <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                         </svg>
                         <span className="font-medium">Thunder Card</span>
+                      </Link>
+                      <Link
+                        href="/marketplace"
+                        onClick={closeMobileMenu}
+                        className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]"
+                      >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+                        </svg>
+                        <span className="font-medium">Hire Help</span>
                       </Link>
                       <Link
                         href="/profile"
@@ -443,16 +443,6 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                   <div className="flex-1 px-6 pb-6">
                     <div className="space-y-2">
                       <Link
-                        href="/marketplace"
-                        onClick={closeMobileMenu}
-                        className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300"
-                      >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001 1v-6a1 1 0 00-1-1h-2z" />
-                        </svg>
-                        <span className="font-medium">Marketplace</span>
-                      </Link>
-                      <Link
                         href="/leaderboard"
                         onClick={closeMobileMenu}
                         className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300"
@@ -481,6 +471,16 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                           <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                         </svg>
                         <span className="font-medium">Thunder Card</span>
+                      </Link>
+                      <Link
+                        href="/marketplace"
+                        onClick={closeMobileMenu}
+                        className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300"
+                      >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
+                        </svg>
+                        <span className="font-medium">Hire Help</span>
                       </Link>
                     </div>
 
