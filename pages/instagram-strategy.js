@@ -33,21 +33,21 @@ export default function InstagramStrategy() {
       id: 'phase1',
       title: 'Phase 1: Foundation & Teasing',
       content: (
-        <div className="grid grid-cols-2 gap-12 h-full">
-          <div>
-            <h2 className="text-4xl font-bold text-white mb-8">Phase 1: Foundation & Teasing</h2>
-            <div className="space-y-6">
-              <div className="bg-slate-800 p-6 rounded-xl border border-gray-700">
-                <h3 className="text-green-400 font-bold text-lg mb-2">🎯 Goal</h3>
-                <p className="text-gray-300">Build anticipation and establish credibility before launch</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 h-full overflow-y-auto">
+          <div className="space-y-4 md:space-y-6">
+            <h2 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-8">Phase 1: Foundation & Teasing</h2>
+            <div className="space-y-4 md:space-y-6">
+              <div className="bg-slate-800 p-4 md:p-6 rounded-xl border border-gray-700">
+                <h3 className="text-green-400 font-bold text-base md:text-lg mb-2">🎯 Goal</h3>
+                <p className="text-gray-300 text-sm md:text-base">Build anticipation and establish credibility before launch</p>
               </div>
-              <div className="bg-slate-800 p-6 rounded-xl border border-gray-700">
-                <h3 className="text-blue-400 font-bold text-lg mb-2">📆 Timeline</h3>
-                <p className="text-gray-300">Week 1-2</p>
+              <div className="bg-slate-800 p-4 md:p-6 rounded-xl border border-gray-700">
+                <h3 className="text-blue-400 font-bold text-base md:text-lg mb-2">📆 Timeline</h3>
+                <p className="text-gray-300 text-sm md:text-base">Week 1-2</p>
               </div>
-              <div className="bg-slate-800 p-6 rounded-xl border border-gray-700">
-                <h3 className="text-purple-400 font-bold text-lg mb-2">✅ Key Actions</h3>
-                <ul className="text-gray-300 space-y-2">
+              <div className="bg-slate-800 p-4 md:p-6 rounded-xl border border-gray-700">
+                <h3 className="text-purple-400 font-bold text-base md:text-lg mb-2">✅ Key Actions</h3>
+                <ul className="text-gray-300 space-y-1 md:space-y-2 text-sm md:text-base">
                   <li>• Post 1-2 times daily</li>
                   <li>• Story 3-5 times daily</li>
                   <li>• Behind-the-scenes content</li>
@@ -57,20 +57,20 @@ export default function InstagramStrategy() {
             </div>
           </div>
           <div className="flex items-center justify-center">
-            <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-8 border border-gray-800 w-full max-w-md">
+            <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 md:p-8 border border-gray-800 w-full max-w-md">
               <div className="text-center">
-                <div className="text-6xl mb-4">📱</div>
-                <h4 className="text-white font-bold mb-4">Content Strategy</h4>
+                <div className="text-4xl md:text-6xl mb-4">📱</div>
+                <h4 className="text-white font-bold mb-4 text-base md:text-lg">Content Strategy</h4>
                 <div className="space-y-3 text-left">
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-sm md:text-base">
                     <span className="text-gray-400">Teaser Posts</span>
                     <span className="text-green-400">Daily</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-sm md:text-base">
                     <span className="text-gray-400">Educational</span>
                     <span className="text-blue-400">3x/week</span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-sm md:text-base">
                     <span className="text-gray-400">Social Proof</span>
                     <span className="text-purple-400">2x/week</span>
                   </div>
@@ -87,21 +87,21 @@ export default function InstagramStrategy() {
       id: 'phase2',
       title: 'Phase 2: Awareness Building',
       content: (
-        <div className="grid grid-cols-2 gap-12 h-full">
-          <div>
-            <h2 className="text-4xl font-bold text-white mb-8">Phase 2: Awareness Building</h2>
-            <div className="space-y-6">
-              <div className="bg-slate-800 p-6 rounded-xl border border-gray-700">
-                <h3 className="text-green-400 font-bold text-lg mb-2">🎯 Goal</h3>
-                <p className="text-gray-300">Identify pain points and position our solution</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 h-full overflow-y-auto">
+          <div className="space-y-4 md:space-y-6">
+            <h2 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-8">Phase 2: Awareness Building</h2>
+            <div className="space-y-4 md:space-y-6">
+              <div className="bg-slate-800 p-4 md:p-6 rounded-xl border border-gray-700">
+                <h3 className="text-green-400 font-bold text-base md:text-lg mb-2">🎯 Goal</h3>
+                <p className="text-gray-300 text-sm md:text-base">Identify pain points and position our solution</p>
               </div>
-              <div className="bg-slate-800 p-6 rounded-xl border border-gray-700">
-                <h3 className="text-blue-400 font-bold text-lg mb-2">📆 Timeline</h3>
-                <p className="text-gray-300">Week 3-4</p>
+              <div className="bg-slate-800 p-4 md:p-6 rounded-xl border border-gray-700">
+                <h3 className="text-blue-400 font-bold text-base md:text-lg mb-2">📆 Timeline</h3>
+                <p className="text-gray-300 text-sm md:text-base">Week 3-4</p>
               </div>
-              <div className="bg-slate-800 p-6 rounded-xl border border-gray-700">
-                <h3 className="text-purple-400 font-bold text-lg mb-2">✅ Key Actions</h3>
-                <ul className="text-gray-300 space-y-2">
+              <div className="bg-slate-800 p-4 md:p-6 rounded-xl border border-gray-700">
+                <h3 className="text-purple-400 font-bold text-base md:text-lg mb-2">✅ Key Actions</h3>
+                <ul className="text-gray-300 space-y-1 md:space-y-2 text-sm md:text-base">
                   <li>• Problem-focused content</li>
                   <li>• Solution teasing</li>
                   <li>• Educational series launch</li>
@@ -111,18 +111,18 @@ export default function InstagramStrategy() {
             </div>
           </div>
           <div className="flex items-center justify-center">
-            <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-8 border border-gray-800 w-full max-w-md">
+            <div className="bg-black/50 backdrop-blur-lg rounded-2xl p-4 md:p-8 border border-gray-800 w-full max-w-md">
               <div className="text-center">
-                <div className="text-6xl mb-4">🎯</div>
-                <h4 className="text-white font-bold mb-4">Problem/Solution Focus</h4>
+                <div className="text-4xl md:text-6xl mb-4">🎯</div>
+                <h4 className="text-white font-bold mb-4 text-base md:text-lg">Problem/Solution Focus</h4>
                 <div className="space-y-4">
                   <div className="bg-red-900/20 p-3 rounded-lg border border-red-500/30">
-                    <span className="text-red-400 font-semibold">Problem:</span>
-                    <p className="text-gray-300 text-sm mt-1">"Lost your bankroll again?"</p>
+                    <span className="text-red-400 font-semibold text-sm md:text-base">Problem:</span>
+                    <p className="text-gray-300 text-xs md:text-sm mt-1">"Lost your bankroll again?"</p>
                   </div>
                   <div className="bg-green-900/20 p-3 rounded-lg border border-green-500/30">
-                    <span className="text-green-400 font-semibold">Solution:</span>
-                    <p className="text-gray-300 text-sm mt-1">"What if there was a better way?"</p>
+                    <span className="text-green-400 font-semibold text-sm md:text-base">Solution:</span>
+                    <p className="text-gray-300 text-xs md:text-sm mt-1">"What if there was a better way?"</p>
                   </div>
                 </div>
               </div>
@@ -137,9 +137,9 @@ export default function InstagramStrategy() {
       id: 'phase3',
       title: 'Phase 3: Product Reveal',
       content: (
-        <div className="grid grid-cols-2 gap-12 h-full">
-          <div>
-            <h2 className="text-4xl font-bold text-white mb-8">Phase 3: Product Reveal</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 h-full overflow-y-auto">
+          <div className="space-y-4 md:space-y-6">
+            <h2 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-8">Phase 3: Product Reveal</h2>
             <div className="space-y-6">
               <div className="bg-slate-800 p-6 rounded-xl border border-gray-700">
                 <h3 className="text-green-400 font-bold text-lg mb-2">🎯 Goal</h3>
@@ -302,8 +302,8 @@ export default function InstagramStrategy() {
       title: 'Metrics Dashboard',
       content: (
         <div className="h-full">
-          <h2 className="text-4xl font-bold text-white mb-8 text-center">Metrics Dashboard</h2>
-          <div className="grid grid-cols-2 gap-8 h-4/5">
+          <h2 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-8 text-center">Metrics Dashboard</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 h-auto md:h-4/5 overflow-y-auto">
             <div className="space-y-6">
               <div className="bg-slate-800 p-6 rounded-xl border border-gray-700">
                 <h3 className="text-green-400 font-bold text-lg mb-4">📈 Growth Metrics</h3>
@@ -379,8 +379,8 @@ export default function InstagramStrategy() {
       title: 'Traction',
       content: (
         <div className="h-full">
-          <h2 className="text-4xl font-bold text-white mb-8 text-center">Current Traction</h2>
-          <div className="grid grid-cols-2 gap-12 h-4/5">
+          <h2 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-8 text-center">Current Traction</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 h-auto md:h-4/5 overflow-y-auto">
             <div className="space-y-8">
               <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 p-8 rounded-xl border border-green-500/30">
                 <div className="text-center">
@@ -424,8 +424,8 @@ export default function InstagramStrategy() {
       title: 'Go-To-Market Strategy',
       content: (
         <div className="h-full">
-          <h2 className="text-4xl font-bold text-white mb-8 text-center">Go-To-Market Strategy</h2>
-          <div className="grid grid-cols-2 gap-12 h-4/5">
+          <h2 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-8 text-center">Go-To-Market Strategy</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 h-auto md:h-4/5 overflow-y-auto">
             <div className="space-y-6">
               <h3 className="text-2xl font-bold text-green-400 mb-4">🎯 Scaling Channels</h3>
               <div className="space-y-4">
@@ -477,8 +477,8 @@ export default function InstagramStrategy() {
       title: 'Business Model Summary',
       content: (
         <div className="h-full">
-          <h2 className="text-4xl font-bold text-white mb-8 text-center">Business Model Summary</h2>
-          <div className="grid grid-cols-2 gap-12 h-4/5">
+          <h2 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-8 text-center">Business Model Summary</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 h-auto md:h-4/5 overflow-y-auto">
             <div className="space-y-6">
               <div className="bg-slate-800 p-6 rounded-xl border border-gray-700">
                 <h3 className="text-green-400 font-bold text-lg mb-4">🧩 Revenue Streams</h3>
@@ -572,11 +572,11 @@ export default function InstagramStrategy() {
       <div className="pt-20 pb-8 px-4">
         <div className="max-w-7xl mx-auto">
           {/* Slide Container */}
-          <div className="relative bg-black border-2 border-gray-800 rounded-2xl overflow-hidden" style={{ aspectRatio: '16/9', minHeight: '600px' }}>
+          <div className="relative bg-black border-2 border-gray-800 rounded-2xl overflow-hidden" style={{ aspectRatio: window.innerWidth < 768 ? '4/5' : '16/9', minHeight: window.innerWidth < 768 ? '500px' : '600px' }}>
             {/* Current Slide */}
-            <div className="absolute inset-0 p-8">
+            <div className="absolute inset-0 p-4 sm:p-8">
               {slides[currentSlide].content}
-            </div>
+            </div></div>
 
             {/* Navigation Controls */}
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 bg-black/80 backdrop-blur-lg rounded-full px-6 py-3 border border-gray-700">
