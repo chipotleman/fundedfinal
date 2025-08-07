@@ -6,6 +6,19 @@ import { useBetSlip } from '../contexts/BetSlipContext';
 export default function InstagramStrategy() {
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check if we're on mobile after component mounts
+  React.useEffect(() => {
+    const checkIsMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkIsMobile();
+    window.addEventListener('resize', checkIsMobile);
+    
+    return () => window.removeEventListener('resize', checkIsMobile);
+  }, []);
 
   const slides = [
     // Cover Slide
@@ -572,7 +585,7 @@ export default function InstagramStrategy() {
       <div className="pt-20 pb-8 px-4">
         <div className="max-w-7xl mx-auto">
           {/* Slide Container */}
-          <div className="relative bg-black border-2 border-gray-800 rounded-2xl overflow-hidden" style={{ aspectRatio: window.innerWidth < 768 ? '4/5' : '16/9', minHeight: window.innerWidth < 768 ? '500px' : '600px' }}>
+          <div className="relative bg-black border-2 border-gray-800 rounded-2xl overflow-hidden" style={{ aspectRatio: isMobile ? '4/5' : '16/9', minHeight: isMobile ? '500px' : '600px' }}>
             {/* Current Slide */}
             <div className="absolute inset-0 p-4 sm:p-8">
               {slides[currentSlide].content}
