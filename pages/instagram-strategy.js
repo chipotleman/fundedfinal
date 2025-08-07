@@ -576,10 +576,10 @@ export default function InstagramStrategy() {
             {/* Current Slide */}
             <div className="absolute inset-0 p-4 sm:p-8">
               {slides[currentSlide].content}
-            </div></div>
+            </div>
 
             {/* Navigation Controls */}
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 bg-black/80 backdrop-blur-lg rounded-full px-6 py-3 border border-gray-700">
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center space-x-4 bg-black/80 backdrop-blur-lg rounded-full px-6 py-3 border border-gray-700"></div>
               <button
                 onClick={prevSlide}
                 className="p-2 text-gray-400 hover:text-white transition-colors"
