@@ -243,35 +243,65 @@ export default function ChallengePopup({ isOpen, onClose }) {
               <div className="p-4 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/30 mb-4">
                 <div className="text-center mb-3">
                   <div className="text-sm font-medium text-gray-300">Profit Split</div>
-                  <div className="text-xs text-gray-400">Slide to adjust your percentage</div>
+                  <div className="text-xs text-gray-400">Drag anywhere on the bar to adjust</div>
                 </div>
                 
-                {/* Split Visual */}
-                <div className="flex h-10 rounded-xl overflow-hidden mb-3 border border-slate-600">
+                {/* Draggable Split Visual */}
+                <div 
+                  className="flex h-10 rounded-xl overflow-hidden border border-slate-600 cursor-grab active:cursor-grabbing relative"
+                  onMouseDown={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const startX = e.clientX;
+                    const startSplit = userSplit;
+
+                    const handleMouseMove = (e) => {
+                      const deltaX = e.clientX - startX;
+                      const deltaPercent = (deltaX / rect.width) * 100;
+                      const newSplit = Math.max(50, Math.min(90, startSplit + deltaPercent));
+                      setUserSplit(Math.round(newSplit));
+                    };
+
+                    const handleMouseUp = () => {
+                      document.removeEventListener('mousemove', handleMouseMove);
+                      document.removeEventListener('mouseup', handleMouseUp);
+                    };
+
+                    document.addEventListener('mousemove', handleMouseMove);
+                    document.addEventListener('mouseup', handleMouseUp);
+                  }}
+                  onTouchStart={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const startX = e.touches[0].clientX;
+                    const startSplit = userSplit;
+
+                    const handleTouchMove = (e) => {
+                      const deltaX = e.touches[0].clientX - startX;
+                      const deltaPercent = (deltaX / rect.width) * 100;
+                      const newSplit = Math.max(50, Math.min(90, startSplit + deltaPercent));
+                      setUserSplit(Math.round(newSplit));
+                    };
+
+                    const handleTouchEnd = () => {
+                      document.removeEventListener('touchmove', handleTouchMove);
+                      document.removeEventListener('touchend', handleTouchEnd);
+                    };
+
+                    document.addEventListener('touchmove', handleTouchMove);
+                    document.addEventListener('touchend', handleTouchEnd);
+                  }}
+                >
                   <div 
-                    className="bg-gradient-to-r from-green-400 to-green-500 flex items-center justify-center text-white text-xs font-bold transition-all duration-300"
+                    className="bg-gradient-to-r from-green-400 to-green-500 flex items-center justify-center text-white text-xs font-bold transition-all duration-150"
                     style={{ width: `${userSplit}%` }}
                   >
                     You {userSplit}%
                   </div>
                   <div 
-                    className="bg-gradient-to-r from-slate-600 to-slate-700 flex items-center justify-center text-white text-xs font-bold transition-all duration-300"
+                    className="bg-gradient-to-r from-slate-600 to-slate-700 flex items-center justify-center text-white text-xs font-bold transition-all duration-150"
                     style={{ width: `${100 - userSplit}%` }}
                   >
                     Us {100 - userSplit}%
                   </div>
-                </div>
-                
-                {/* Slider */}
-                <div className="relative">
-                  <input
-                    type="range"
-                    min="50"
-                    max="90"
-                    value={userSplit}
-                    onChange={(e) => setUserSplit(parseInt(e.target.value))}
-                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider"
-                  />
                 </div>
               </div>
 
