@@ -8,9 +8,9 @@ const steps = [
     description: "Select from our three challenge tiers based on your experience and comfort level",
     icon: "🎯",
     details: [
-      "Starter: $1,000 starting balance",
-      "Pro: $5,000 starting balance", 
-      "Elite: $10,000 starting balance"
+      "Starter: $5,000 starting balance",
+      "Pro: $10,000 starting balance", 
+      "Elite: $25,000 starting balance"
     ]
   },
   {
@@ -30,9 +30,9 @@ const steps = [
     description: "Reach your profit target within the challenge timeframe to qualify for payout",
     icon: "🎪",
     details: [
-      "Starter: $200 profit target",
+      "Starter: $500 profit target",
       "Pro: $1,000 profit target",
-      "Elite: $2,000 profit target"
+      "Elite: $2,500 profit target"
     ]
   },
   {
