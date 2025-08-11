@@ -55,6 +55,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
   });
   const [loading, setLoading] = useState(false);
   const [showAccountInfo, setShowAccountInfo] = useState(false);
+  const [showTargetExplainer, setShowTargetExplainer] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -226,8 +227,16 @@ export default function ChallengePopup({ isOpen, onClose }) {
                 </div>
 
                 <div className="flex justify-between items-center py-2 px-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
-                  <span className="text-gray-300 font-medium text-sm">Profit Target</span>
-                  <span className="text-blue-400 font-bold">${currentChallenge.target.toLocaleString()}</span>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-gray-300 font-medium text-sm">Target Balance</span>
+                    <button
+                      onClick={() => setShowTargetExplainer(true)}
+                      className="w-4 h-4 bg-blue-500 hover:bg-blue-400 rounded-full flex items-center justify-center transition-colors"
+                    >
+                      <span className="text-white text-xs font-bold">?</span>
+                    </button>
+                  </div>
+                  <span className="text-blue-400 font-bold">${(currentChallenge.startingBalance + currentChallenge.target).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 px-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
                   <span className="text-gray-300 font-medium text-sm">Max Bet Size</span>
@@ -546,6 +555,124 @@ export default function ChallengePopup({ isOpen, onClose }) {
             <button
               onClick={() => setShowAccountInfo(false)}
               className="w-full mt-6 bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
+            >
+              Got it!
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Target Explainer Modal */}
+      {showTargetExplainer && (
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 border-2 border-slate-700 rounded-2xl max-w-md w-full p-6">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowTargetExplainer(false)}
+              className="absolute top-4 right-4 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
+            >
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-green-500 rounded-full flex items-center justify-center mb-4 mx-auto">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Challenge Phases</h3>
+              <p className="text-gray-400 text-sm">You must complete 2 phases to get funded</p>
+            </div>
+
+            {/* Phase 1 */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-lg font-semibold text-white">Phase 1 - Evaluation</h4>
+                <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full border border-blue-500/30">CURRENT</span>
+              </div>
+              
+              {/* Phase 1 Progress Bar */}
+              <div className="mb-3">
+                <div className="flex justify-between text-xs text-gray-400 mb-1">
+                  <span>Minimum: ${(currentChallenge.startingBalance * 0.85).toLocaleString()}</span>
+                  <span>Target: ${(currentChallenge.startingBalance + currentChallenge.target).toLocaleString()}</span>
+                </div>
+                <div className="w-full bg-slate-700 rounded-full h-4 relative overflow-hidden">
+                  {/* Danger Zone (Red) */}
+                  <div className="absolute left-0 top-0 h-full bg-gradient-to-r from-red-600 to-red-500 w-[15%]"></div>
+                  {/* Safe Zone (Gray) */}
+                  <div className="absolute left-[15%] top-0 h-full bg-slate-600 w-[65%]"></div>
+                  {/* Target Zone (Green) */}
+                  <div className="absolute right-0 top-0 h-full bg-gradient-to-r from-green-500 to-green-400 w-[20%]"></div>
+                  {/* Current Position Indicator */}
+                  <div className="absolute left-[15%] top-0 h-full w-1 bg-white shadow-lg"></div>
+                </div>
+                <div className="flex justify-between text-xs mt-1">
+                  <span className="text-red-400">Fail Zone</span>
+                  <span className="text-gray-400">Starting: ${currentChallenge.startingBalance.toLocaleString()}</span>
+                  <span className="text-green-400">Pass Zone</span>
+                </div>
+              </div>
+
+              <div className="text-sm text-gray-300 space-y-1">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <span>Reach ${(currentChallenge.startingBalance + currentChallenge.target).toLocaleString()} to advance</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                  <span>Don't fall below ${(currentChallenge.startingBalance * 0.85).toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Phase 2 */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-lg font-semibold text-white">Phase 2 - Verification</h4>
+                <span className="text-xs bg-gray-500/20 text-gray-400 px-2 py-1 rounded-full border border-gray-500/30">LOCKED</span>
+              </div>
+              
+              {/* Phase 2 Progress Bar */}
+              <div className="mb-3 opacity-50">
+                <div className="flex justify-between text-xs text-gray-400 mb-1">
+                  <span>Minimum: ${(currentChallenge.startingBalance + currentChallenge.target * 0.85).toLocaleString()}</span>
+                  <span>Target: ${(currentChallenge.startingBalance + currentChallenge.target * 2).toLocaleString()}</span>
+                </div>
+                <div className="w-full bg-slate-700 rounded-full h-4 relative overflow-hidden">
+                  {/* Danger Zone (Red) */}
+                  <div className="absolute left-0 top-0 h-full bg-gradient-to-r from-red-600 to-red-500 w-[15%]"></div>
+                  {/* Safe Zone (Gray) */}
+                  <div className="absolute left-[15%] top-0 h-full bg-slate-600 w-[65%]"></div>
+                  {/* Target Zone (Green) */}
+                  <div className="absolute right-0 top-0 h-full bg-gradient-to-r from-green-500 to-green-400 w-[20%]"></div>
+                </div>
+                <div className="flex justify-between text-xs mt-1">
+                  <span className="text-red-400">Fail Zone</span>
+                  <span className="text-gray-400">Starting: ${(currentChallenge.startingBalance + currentChallenge.target).toLocaleString()}</span>
+                  <span className="text-green-400">Pass Zone</span>
+                </div>
+              </div>
+
+              <div className="text-sm text-gray-300 space-y-1 opacity-50">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <span>Reach ${(currentChallenge.startingBalance + currentChallenge.target * 2).toLocaleString()} to get funded</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                  <span>Don't fall below ${(currentChallenge.startingBalance + currentChallenge.target * 0.85).toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => setShowTargetExplainer(false)}
+              className="w-full bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
             >
               Got it!
             </button>

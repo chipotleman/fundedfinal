@@ -27,12 +27,12 @@ const steps = [
   {
     id: 3,
     title: "Hit Your Target",
-    description: "Reach your profit target within the challenge timeframe to qualify for payout",
+    description: "Reach your target balance within the challenge timeframe to qualify for payout",
     icon: "🎪",
     details: [
-      "Starter: $1,000 profit target",
-      "Pro: $2,000 profit target",
-      "Elite: $5,000 profit target"
+      "Starter: $6,000 target balance",
+      "Pro: $12,000 target balance",
+      "Elite: $30,000 target balance"
     ]
   },
   {

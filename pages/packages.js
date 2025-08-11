@@ -18,7 +18,7 @@ export default function Packages() {
       dailyLoss: "15%",
       features: [
         "15% daily loss limit",
-        "$1,000 profit target", 
+        "$6,000 target balance", 
         "80% profit share",
         "Monthly subscription",
         "All sports betting",
@@ -36,7 +36,7 @@ export default function Packages() {
       dailyLoss: "15%",
       features: [
         "15% daily loss limit",
-        "$2,000 profit target",
+        "$12,000 target balance",
         "80% profit share", 
         "Monthly subscription",
         "All sports betting",
@@ -55,7 +55,7 @@ export default function Packages() {
       dailyLoss: "15%",
       features: [
         "15% daily loss limit",
-        "$5,000 profit target",
+        "$30,000 target balance",
         "80% profit share",
         "Monthly subscription", 
         "All sports betting",
@@ -78,7 +78,7 @@ export default function Packages() {
       dailyLoss: "5%",
       features: [
         "5% daily loss limit",
-        "$500 profit target", 
+        "$5,500 target balance", 
         "80% profit share",
         "Annual subscription",
         "14-day evaluation",
@@ -96,7 +96,7 @@ export default function Packages() {
       dailyLoss: "6%",
       features: [
         "6% daily loss limit",
-        "$1,000 profit target",
+        "$11,000 target balance",
         "80% profit share", 
         "Annual subscription",
         "14-day evaluation",
@@ -115,7 +115,7 @@ export default function Packages() {
       dailyLoss: "8%",
       features: [
         "8% daily loss limit",
-        "$2,500 profit target",
+        "$27,500 target balance",
         "80% profit share",
         "Annual subscription",
         "14-day evaluation", 
@@ -298,7 +298,7 @@ export default function Packages() {
 
                   <div className="space-y-3 mb-6">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-300 text-sm">Profit Target:</span>
+                      <span className="text-gray-300 text-sm">Target Balance:</span>
                       <span className="text-green-400 font-bold">{pkg.target}</span>
                     </div>
                     <div className="flex justify-between items-center">
