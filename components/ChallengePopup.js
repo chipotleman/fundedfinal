@@ -243,20 +243,11 @@ export default function ChallengePopup({ isOpen, onClose }) {
               <div className="p-4 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/30 mb-4">
                 <div className="text-center mb-3">
                   <div className="text-sm font-medium text-gray-300">Profit Split</div>
-                  <div className="text-xs text-gray-400">Click anywhere on the bar to adjust</div>
+                  <div className="text-xs text-gray-400">Slide to adjust your percentage</div>
                 </div>
                 
-                {/* Split Visual - Clickable */}
-                <div 
-                  className="flex h-10 rounded-xl overflow-hidden border border-slate-600 cursor-pointer relative"
-                  onClick={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const clickX = e.clientX - rect.left;
-                    const percentage = Math.round((clickX / rect.width) * 100);
-                    const clampedPercentage = Math.max(50, Math.min(90, percentage));
-                    setUserSplit(clampedPercentage);
-                  }}
-                >
+                {/* Split Visual */}
+                <div className="flex h-10 rounded-xl overflow-hidden mb-3 border border-slate-600">
                   <div 
                     className="bg-gradient-to-r from-green-400 to-green-500 flex items-center justify-center text-white text-xs font-bold transition-all duration-300"
                     style={{ width: `${userSplit}%` }}
@@ -269,6 +260,18 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   >
                     Us {100 - userSplit}%
                   </div>
+                </div>
+                
+                {/* Slider */}
+                <div className="relative">
+                  <input
+                    type="range"
+                    min="50"
+                    max="90"
+                    value={userSplit}
+                    onChange={(e) => setUserSplit(parseInt(e.target.value))}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider"
+                  />
                 </div>
               </div>
 
