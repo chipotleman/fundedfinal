@@ -54,6 +54,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
     email: ''
   });
   const [loading, setLoading] = useState(false);
+  const [showAccountInfo, setShowAccountInfo] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -421,13 +422,25 @@ export default function ChallengePopup({ isOpen, onClose }) {
               </div>
             </div>
 
-            {/* Security Notice */}
-            <div className="text-center mb-4 p-2 bg-slate-800/30 rounded-xl border border-slate-600">
-              <div className="flex items-center justify-center space-x-2 text-xs text-gray-400">
-                <svg className="w-3 h-3 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                </svg>
-                <span>Secured with SSL encryption</span>
+            {/* Security Notice and Account Info */}
+            <div className="space-y-3 mb-4">
+              <div className="text-center p-2 bg-slate-800/30 rounded-xl border border-slate-600">
+                <div className="flex items-center justify-center space-x-2 text-xs text-gray-400">
+                  <svg className="w-3 h-3 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  <span>Secured with SSL encryption</span>
+                </div>
+              </div>
+
+              {/* Account Info Button */}
+              <div className="text-center">
+                <button
+                  onClick={() => setShowAccountInfo(true)}
+                  className="text-blue-400 hover:text-blue-300 text-sm font-medium underline transition-colors"
+                >
+                  How Do I Get My Account?
+                </button>
               </div>
             </div>
 
@@ -450,6 +463,78 @@ export default function ChallengePopup({ isOpen, onClose }) {
         )}
       </div>
       
+      {/* Account Info Modal */}
+      {showAccountInfo && (
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 border-2 border-slate-700 rounded-2xl max-w-md w-full p-6">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowAccountInfo(false)}
+              className="absolute top-4 right-4 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
+            >
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-green-500 rounded-full flex items-center justify-center mb-4 mx-auto">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">How Do I Get My Account?</h3>
+            </div>
+
+            {/* Content */}
+            <div className="space-y-4 text-gray-300">
+              <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                <div className="flex items-start space-x-3">
+                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-white mb-1">New Users</h4>
+                    <p className="text-sm">Your account details will be sent to the email on file immediately after payment completion.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                <div className="flex items-start space-x-3">
+                  <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-white mb-1">Existing Users</h4>
+                    <p className="text-sm">If you already have an account, your new challenge will be automatically added to your existing account.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-center pt-2">
+                <p className="text-xs text-gray-400">
+                  Check your spam folder if you don't see the email within 5 minutes.
+                </p>
+              </div>
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => setShowAccountInfo(false)}
+              className="w-full mt-6 bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
+            >
+              Got it!
+            </button>
+          </div>
+        </div>
+      )}
+
       <style jsx>{`
         .slider::-webkit-slider-thumb {
           appearance: none;
