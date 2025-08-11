@@ -113,9 +113,19 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
   const currentChallenge = challenges[currentIndex];
   
-  // Calculate price based on split (higher user split = higher price)
-  const basePriceMultiplier = (userSplit - 50) / 40; // 0 to 1 scale from 50% to 90%
-  const adjustedPrice = Math.round(currentChallenge.price * (1 + basePriceMultiplier * 0.8)); // Up to 80% price increase
+  // Calculate price based on split (80% is base price, lower = discount, higher = surcharge)
+  const baseSplit = 80;
+  let priceMultiplier;
+  
+  if (userSplit <= baseSplit) {
+    // Discount for splits at or below 80%
+    priceMultiplier = 1 - ((baseSplit - userSplit) * 0.02); // 2% discount per % below 80%
+  } else {
+    // Surcharge for splits above 80%
+    priceMultiplier = 1 + ((userSplit - baseSplit) * 0.08); // 8% surcharge per % above 80%
+  }
+  
+  const adjustedPrice = Math.round(currentChallenge.price * priceMultiplier);
 
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
@@ -233,10 +243,20 @@ export default function ChallengePopup({ isOpen, onClose }) {
               <div className="p-4 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/30 mb-4">
                 <div className="text-center mb-3">
                   <div className="text-sm font-medium text-gray-300">Profit Split</div>
+                  <div className="text-xs text-gray-400">Click anywhere on the bar to adjust</div>
                 </div>
                 
-                {/* Split Visual */}
-                <div className="flex h-8 rounded-xl overflow-hidden mb-3 border border-slate-600">
+                {/* Split Visual - Clickable */}
+                <div 
+                  className="flex h-10 rounded-xl overflow-hidden border border-slate-600 cursor-pointer relative"
+                  onClick={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const clickX = e.clientX - rect.left;
+                    const percentage = Math.round((clickX / rect.width) * 100);
+                    const clampedPercentage = Math.max(50, Math.min(90, percentage));
+                    setUserSplit(clampedPercentage);
+                  }}
+                >
                   <div 
                     className="bg-gradient-to-r from-green-400 to-green-500 flex items-center justify-center text-white text-xs font-bold transition-all duration-300"
                     style={{ width: `${userSplit}%` }}
@@ -250,21 +270,6 @@ export default function ChallengePopup({ isOpen, onClose }) {
                     Us {100 - userSplit}%
                   </div>
                 </div>
-                
-                {/* Slider */}
-                <div className="relative">
-                  <input
-                    type="range"
-                    min="50"
-                    max="90"
-                    value={userSplit}
-                    onChange={(e) => setUserSplit(parseInt(e.target.value))}
-                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider"
-                  />
-                  <div className="text-center mt-2 text-xs text-gray-400">
-                    Slide to adjust your profit percentage
-                  </div>
-                </div>
               </div>
 
               {/* Price Display */}
@@ -272,8 +277,16 @@ export default function ChallengePopup({ isOpen, onClose }) {
                 <div className="text-xl font-bold text-white">${adjustedPrice}</div>
                 <div className="text-gray-400 text-xs">Challenge fee</div>
                 {adjustedPrice !== currentChallenge.price && (
-                  <div className="text-xs text-orange-400 mt-1">
-                    Base: ${currentChallenge.price} (+${adjustedPrice - currentChallenge.price} for {userSplit}% split)
+                  <div className="text-xs mt-1">
+                    {userSplit < 80 ? (
+                      <span className="text-green-400">
+                        Base: ${currentChallenge.price} (-${currentChallenge.price - adjustedPrice} discount for {userSplit}% split)
+                      </span>
+                    ) : (
+                      <span className="text-orange-400">
+                        Base: ${currentChallenge.price} (+${adjustedPrice - currentChallenge.price} surcharge for {userSplit}% split)
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
