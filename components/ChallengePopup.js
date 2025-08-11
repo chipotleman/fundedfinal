@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
@@ -39,9 +38,8 @@ const challenges = [
 ];
 
 export default function ChallengePopup({ isOpen, onClose }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [touchStart, setTouchStart] = useState(0);
-  const [touchEnd, setTouchEnd] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(1); // Start with Pro Challenge (most popular)
+  const [showDropdown, setShowDropdown] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -55,43 +53,9 @@ export default function ChallengePopup({ isOpen, onClose }) {
     };
   }, [isOpen]);
 
-  const handleTouchStart = (e) => {
-    setTouchStart(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchMove = (e) => {
-    setTouchEnd(e.targetTouches[0].clientX);
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd) return;
-    
-    const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
-
-    if (isLeftSwipe && currentIndex < challenges.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    }
-    if (isRightSwipe && currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-    }
-  };
-
-  const nextChallenge = () => {
-    if (currentIndex < challenges.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    }
-  };
-
-  const prevChallenge = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-    }
-  };
-
-  const goToChallenge = (index) => {
+  const handleChallengeSelect = (index) => {
     setCurrentIndex(index);
+    setShowDropdown(false);
   };
 
   const handleSelectChallenge = (challenge) => {
@@ -126,12 +90,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
         )}
 
         {/* Challenge Card */}
-        <div
-          className="p-8 pt-12"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
+        <div className="p-8 pt-12">
           {/* Badge */}
           <div className="text-center mb-4">
             <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
@@ -151,10 +110,43 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
           {/* Challenge Details */}
           <div className="space-y-4 mb-8">
-            <div className="flex justify-between items-center py-3 px-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
-              <span className="text-gray-300 font-medium">Starting Balance</span>
-              <span className="text-green-400 font-bold text-lg">${currentChallenge.startingBalance.toLocaleString()}</span>
+            {/* Starting Balance with Dropdown */}
+            <div className="relative">
+              <div 
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="flex justify-between items-center py-3 px-4 bg-slate-800/50 rounded-xl border border-slate-700/50 cursor-pointer hover:border-green-400/50 transition-all duration-300"
+              >
+                <span className="text-gray-300 font-medium">Starting Balance</span>
+                <div className="flex items-center space-x-2">
+                  <span className="text-green-400 font-bold text-lg">${currentChallenge.startingBalance.toLocaleString()}</span>
+                  <svg className={`w-4 h-4 text-green-400 transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Dropdown */}
+              {showDropdown && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800 border border-slate-600 rounded-xl shadow-2xl z-20">
+                  {challenges.map((challenge, index) => (
+                    <div
+                      key={challenge.id}
+                      onClick={() => handleChallengeSelect(index)}
+                      className={`flex justify-between items-center py-3 px-4 cursor-pointer hover:bg-slate-700/50 transition-all duration-200 ${
+                        index === currentIndex ? 'bg-green-500/20 border-l-4 border-green-400' : ''
+                      } ${index === 0 ? 'rounded-t-xl' : ''} ${index === challenges.length - 1 ? 'rounded-b-xl' : ''}`}
+                    >
+                      <div>
+                        <span className="text-white font-medium text-sm">{challenge.name}</span>
+                        <div className="text-xs text-gray-400">{challenge.badge}</div>
+                      </div>
+                      <span className="text-green-400 font-bold">${challenge.startingBalance.toLocaleString()}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
+
             <div className="flex justify-between items-center py-3 px-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
               <span className="text-gray-300 font-medium">Profit Target</span>
               <span className="text-blue-400 font-bold text-lg">${currentChallenge.target.toLocaleString()}</span>
@@ -176,90 +168,23 @@ export default function ChallengePopup({ isOpen, onClose }) {
           {/* Action Button */}
           <button
             onClick={() => handleSelectChallenge(currentChallenge)}
-            className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl text-lg shadow-2xl mb-6"
+            className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl text-lg shadow-2xl mb-6 transform hover:scale-105 transition-all duration-300"
           >
-            Start This Challenge
+            Next - Get Set Up
           </button>
 
-          {/* Progress Bar */}
-          <div className="mb-4">
-            <div className="w-full bg-slate-700 rounded-full h-2">
-              <div 
-                className="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full"
-                style={{ width: `${((currentIndex + 1) / challenges.length) * 100}%` }}
-              ></div>
-            </div>
+          {/* Challenge indicator */}
+          <div className="flex justify-center space-x-2">
+            {challenges.map((_, index) => (
+              <div
+                key={index}
+                className={`w-2 h-2 rounded-full transition-colors ${
+                  index === currentIndex ? 'bg-green-400' : 'bg-gray-600'
+                }`}
+              />
+            ))}
           </div>
-
-          {/* Desktop Navigation Buttons */}
-          <div className="hidden md:flex items-center justify-between mb-4">
-            <button
-              onClick={prevChallenge}
-              disabled={currentIndex === 0}
-              className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors ${
-                currentIndex === 0 
-                  ? 'text-gray-600 cursor-not-allowed' 
-                  : 'text-gray-400 hover:text-white hover:bg-slate-700'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              <span>Previous</span>
-            </button>
-            
-            <div className="flex items-center space-x-2">
-              {challenges.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => goToChallenge(index)}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    index === currentIndex ? 'bg-green-400' : 'bg-gray-600 hover:bg-gray-500'
-                  }`}
-                />
-              ))}
-            </div>
-            
-            <button
-              onClick={nextChallenge}
-              disabled={currentIndex === challenges.length - 1}
-              className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors ${
-                currentIndex === challenges.length - 1 
-                  ? 'text-gray-600 cursor-not-allowed' 
-                  : 'text-gray-400 hover:text-white hover:bg-slate-700'
-              }`}
-            >
-              <span>Next</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-
-          {/* Mobile Swipe Indicator */}
-          {challenges.length > 1 && (
-            <div className="md:hidden flex items-center justify-center space-x-4 text-gray-400 text-sm">
-              {currentIndex > 0 && (
-                <div className="flex items-center space-x-1">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  <span>Swipe left</span>
-                </div>
-              )}
-              {currentIndex < challenges.length - 1 && (
-                <div className="flex items-center space-x-1">
-                  <span>Swipe right</span>
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </div>
-              )}
-            </div>
-          )}
         </div>
-
-        
       </div>
     </div>
   );
