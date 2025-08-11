@@ -231,7 +231,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                     <span className="text-gray-300 font-medium text-sm">Target Balance</span>
                     <button
                       onClick={() => setShowTargetExplainer(true)}
-                      className="w-4 h-4 bg-blue-500 hover:bg-blue-400 rounded-full flex items-center justify-center transition-colors"
+                      className="w-3 h-3 sm:w-4 sm:h-4 bg-blue-500 hover:bg-blue-400 rounded-full flex items-center justify-center transition-colors"
                     >
                       <span className="text-white text-xs font-bold">?</span>
                     </button>
@@ -323,21 +323,26 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
               {/* Price Display */}
               <div className="text-center mb-4 p-3 bg-slate-800/30 rounded-xl border border-slate-600">
-                <div className="text-xl font-bold text-white">${adjustedPrice}</div>
-                <div className="text-gray-400 text-xs">Challenge fee</div>
-                {adjustedPrice !== currentChallenge.price && (
-                  <div className="text-xs mt-1">
-                    {userSplit < 80 ? (
-                      <span className="text-green-400">
-                        Base: ${currentChallenge.price} (-${currentChallenge.price - adjustedPrice} discount for {userSplit}% split)
-                      </span>
-                    ) : (
-                      <span className="text-orange-400">
-                        Base: ${currentChallenge.price} (+${adjustedPrice - currentChallenge.price} surcharge for {userSplit}% split)
-                      </span>
-                    )}
-                  </div>
-                )}
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="text-xl font-bold text-white">${adjustedPrice}</div>
+                  {adjustedPrice !== currentChallenge.price && (
+                    <div className="text-xs">
+                      {userSplit < 80 ? (
+                        <span className="text-green-400">(-${currentChallenge.price - adjustedPrice})</span>
+                      ) : (
+                        <span className="text-orange-400">(+${adjustedPrice - currentChallenge.price})</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                <div className="text-gray-400 text-xs">
+                  Challenge fee
+                  {adjustedPrice !== currentChallenge.price && (
+                    <span className="ml-1">
+                      {userSplit < 80 ? '(discount applied)' : '(surcharge applied)'}
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Action Button */}
@@ -386,6 +391,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   onChange={(e) => handleCardInputChange('email', e.target.value)}
                   className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:border-green-400 focus:outline-none transition-colors text-sm"
                   placeholder="your@email.com"
+                  style={{ fontSize: '16px' }}
                 />
               </div>
 
@@ -397,6 +403,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   onChange={(e) => handleCardInputChange('name', e.target.value)}
                   className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:border-green-400 focus:outline-none transition-colors text-sm"
                   placeholder="John Doe"
+                  style={{ fontSize: '16px' }}
                 />
               </div>
 
@@ -408,6 +415,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   onChange={(e) => handleCardInputChange('cardNumber', e.target.value)}
                   className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:border-green-400 focus:outline-none transition-colors text-sm"
                   placeholder="1234 5678 9012 3456"
+                  style={{ fontSize: '16px' }}
                 />
               </div>
 
@@ -420,6 +428,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                     onChange={(e) => handleCardInputChange('expiry', e.target.value)}
                     className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:border-green-400 focus:outline-none transition-colors text-sm"
                     placeholder="MM/YY"
+                    style={{ fontSize: '16px' }}
                   />
                 </div>
                 <div>
@@ -430,6 +439,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                     onChange={(e) => handleCardInputChange('cvv', e.target.value)}
                     className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:border-green-400 focus:outline-none transition-colors text-sm"
                     placeholder="123"
+                    style={{ fontSize: '16px' }}
                   />
                 </div>
               </div>
@@ -444,6 +454,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                     onChange={(e) => handleCardInputChange('zipCode', e.target.value)}
                     className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:border-green-400 focus:outline-none transition-colors text-sm"
                     placeholder="12345"
+                    style={{ fontSize: '16px' }}
                   />
                 </div>
               )}
