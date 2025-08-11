@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
@@ -31,36 +30,38 @@ export default function AuthPage() {
     {
       id: 1,
       name: "Starter Challenge",
-      startingBalance: 1000,
-      target: 2500,
-      maxBet: 100,
-      payout: 500,
-      duration: "30 days",
       description: "Perfect for beginners",
-      badge: "BEGINNER"
+      startingBalance: 5000,
+      target: 5500,
+      maxBet: 250,
+      payout: 4000,
+      price: 149,
+      badge: "BEGINNER",
+      popular: false
     },
     {
       id: 2,
       name: "Pro Challenge",
-      startingBalance: 5000,
-      target: 12500,
-      maxBet: 500,
-      payout: 2500,
-      duration: "45 days",
       description: "For experienced bettors",
-      popular: true,
-      badge: "POPULAR"
+      startingBalance: 10000,
+      target: 11000,
+      maxBet: 500,
+      payout: 8000,
+      price: 249,
+      badge: "POPULAR",
+      popular: true
     },
     {
       id: 3,
       name: "Elite Challenge",
-      startingBalance: 10000,
-      target: 25000,
-      maxBet: 1000,
-      payout: 5000,
-      duration: "60 days",
-      description: "The ultimate test",
-      badge: "ELITE"
+      description: "Maximum stakes for pros",
+      startingBalance: 25000,
+      target: 27500,
+      maxBet: 1250,
+      payout: 20000,
+      price: 399,
+      badge: "ADVANCED",
+      popular: false
     }
   ];
 
@@ -85,7 +86,7 @@ export default function AuthPage() {
       if (isSignUp) {
         // Get existing users from localStorage
         const existingUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
-        
+
         // Check if username already exists
         if (existingUsers.find(user => user.username === username)) {
           setError('Username already exists. Please choose a different username.');
@@ -123,7 +124,7 @@ export default function AuthPage() {
 
         // Set current user
         localStorage.setItem('current_user', JSON.stringify(user));
-        
+
         // If user already has a challenge, go to dashboard
         if (user.challenge) {
           setError('✅ Login successful! Redirecting to dashboard...');
@@ -155,7 +156,7 @@ export default function AuthPage() {
       // Get current user and selected package
       const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
       const selectedPackage = JSON.parse(localStorage.getItem('selected_package') || '{}');
-      
+
       // Use selected package data or fallback to default challenge
       const challengeData = selectedPackage.startingBalance ? {
         name: selectedPackage.name,
@@ -165,7 +166,7 @@ export default function AuthPage() {
         fundingAmount: selectedPackage.fundingAmount,
         price: selectedPackage.price
       } : selectedChallenge;
-      
+
       // Update user with challenge info and personal data
       const updatedUser = {
         ...currentUser,
@@ -392,8 +393,8 @@ export default function AuthPage() {
 
             {error && (
               <div className={`mb-6 p-4 rounded-xl border ${
-                error.includes('✅') 
-                  ? 'bg-green-500/10 border-green-500/20 text-green-400' 
+                error.includes('✅')
+                  ? 'bg-green-500/10 border-green-500/20 text-green-400'
                   : 'bg-red-500/10 border-red-500/20 text-red-400'
               }`}>
                 <p className="text-sm font-medium">{error}</p>

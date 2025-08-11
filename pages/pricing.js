@@ -18,7 +18,7 @@ export default function Pricing() {
         onClick={handleCheckout}
         style={{ padding: '15px 30px', backgroundColor: '#a020f0', color: '#fff', border: 'none', borderRadius: '5px', marginTop: '20px' }}
       >
-        Buy Pass - $199
+        Buy Pass - $249
       </button>
     </div>
   );
