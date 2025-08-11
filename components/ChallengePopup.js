@@ -153,7 +153,6 @@ export default function ChallengePopup({ isOpen, onClose }) {
               {/* Header */}
               <div className="text-center mb-6">
                 <h2 className="text-2xl font-bold text-white mb-2">Choose Your Challenge Package</h2>
-                <p className="text-gray-400">Select your starting balance to begin</p>
               </div>
 
               {/* Badge */}
