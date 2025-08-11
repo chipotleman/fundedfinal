@@ -51,7 +51,8 @@ export default function ChallengePopup({ isOpen, onClose }) {
     expiry: '',
     cvv: '',
     name: '',
-    email: ''
+    email: '',
+    zipCode: ''
   });
   const [loading, setLoading] = useState(false);
   const [showAccountInfo, setShowAccountInfo] = useState(false);
@@ -95,6 +96,10 @@ export default function ChallengePopup({ isOpen, onClose }) {
     if (field === 'cvv') {
       value = value.replace(/\D/g, '');
       if (value.length > 4) return;
+    }
+    if (field === 'zipCode') {
+      value = value.replace(/\D/g, '');
+      if (value.length > 5) return;
     }
     
     setCardInfo(prev => ({ ...prev, [field]: value }));
@@ -420,6 +425,20 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   />
                 </div>
               </div>
+
+              {/* Zip Code Field - Shows when card number is being entered */}
+              {cardInfo.cardNumber.length > 0 && (
+                <div className="animate-in slide-in-from-top-2 duration-300">
+                  <label className="block text-gray-300 text-xs font-medium mb-1">Zip Code</label>
+                  <input
+                    type="text"
+                    value={cardInfo.zipCode}
+                    onChange={(e) => handleCardInputChange('zipCode', e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:border-green-400 focus:outline-none transition-colors text-sm"
+                    placeholder="12345"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Security Notice and Account Info */}
