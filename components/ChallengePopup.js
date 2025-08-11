@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
@@ -8,9 +7,9 @@ const challenges = [
     name: "Starter Challenge",
     description: "Perfect for beginners looking to get started",
     startingBalance: 5000,
-    target: 5500,
+    target: 1000, // 20% of 5000
     maxBet: 250,
-    payout: 4000,
+    payout: 800,
     price: 149,
     badge: "BEGINNER",
     popular: false
@@ -20,9 +19,9 @@ const challenges = [
     name: "Pro Challenge",
     description: "For experienced bettors ready to scale up",
     startingBalance: 10000,
-    target: 11000,
+    target: 2000, // 20% of 10000
     maxBet: 500,
-    payout: 8000,
+    payout: 1600,
     price: 249,
     badge: "POPULAR",
     popular: true
@@ -32,9 +31,9 @@ const challenges = [
     name: "Elite Challenge",
     description: "Maximum stakes for serious professionals",
     startingBalance: 25000,
-    target: 27500,
+    target: 5000, // 20% of 25000
     maxBet: 1250,
-    payout: 20000,
+    payout: 4000,
     price: 399,
     badge: "ADVANCED",
     popular: false
@@ -101,7 +100,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
       value = value.replace(/\D/g, '');
       if (value.length > 5) return;
     }
-    
+
     setCardInfo(prev => ({ ...prev, [field]: value }));
   };
 
@@ -118,11 +117,11 @@ export default function ChallengePopup({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   const currentChallenge = challenges[currentIndex];
-  
+
   // Calculate price based on split (80% is base price, lower = discount, higher = surcharge)
   const baseSplit = 80;
   let priceMultiplier;
-  
+
   if (userSplit <= baseSplit) {
     // Discount for splits at or below 80%
     priceMultiplier = 1 - ((baseSplit - userSplit) * 0.02); // 2% discount per % below 80%
@@ -130,7 +129,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
     // Surcharge for splits above 80%
     priceMultiplier = 1 + ((userSplit - baseSplit) * 0.08); // 8% surcharge per % above 80%
   }
-  
+
   const adjustedPrice = Math.round(currentChallenge.price * priceMultiplier);
 
   return (
@@ -188,7 +187,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
               <div className="space-y-3 mb-6">
                 {/* Starting Balance with Dropdown */}
                 <div className="relative">
-                  <div 
+                  <div
                     onClick={() => setShowDropdown(!showDropdown)}
                     className="flex justify-between items-center py-3 px-4 bg-slate-800/50 rounded-xl border-2 border-green-400/50 cursor-pointer hover:border-green-400 transition-all duration-300 shadow-lg shadow-green-400/20"
                   >
@@ -197,7 +196,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                       <div className="text-xs text-green-400 font-medium">Click to change</div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-green-400 font-bold text-lg">${currentChallenge.startingBalance.toLocaleString()}</span>
+                      <span className="text-green-400 font-bold">${currentChallenge.startingBalance.toLocaleString()}</span>
                       <svg className={`w-4 h-4 text-green-400 transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
@@ -248,14 +247,14 @@ export default function ChallengePopup({ isOpen, onClose }) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
                 </button>
-                
+
                 <div className="text-center mb-3">
                   <div className="text-sm font-medium text-gray-300">Profit Split</div>
                   <div className="text-xs text-gray-400">Drag anywhere on the bar to adjust</div>
                 </div>
-                
+
                 {/* Draggable Split Visual */}
-                <div 
+                <div
                   className="flex h-10 rounded-xl overflow-hidden border border-slate-600 cursor-grab active:cursor-grabbing relative"
                   onMouseDown={(e) => {
                     const rect = e.currentTarget.getBoundingClientRect();
@@ -298,13 +297,13 @@ export default function ChallengePopup({ isOpen, onClose }) {
                     document.addEventListener('touchend', handleTouchEnd);
                   }}
                 >
-                  <div 
+                  <div
                     className="bg-gradient-to-r from-green-400 to-green-500 flex items-center justify-center text-white text-xs font-bold transition-all duration-150"
                     style={{ width: `${userSplit}%` }}
                   >
                     You {userSplit}%
                   </div>
-                  <div 
+                  <div
                     className="bg-gradient-to-r from-slate-600 to-slate-700 flex items-center justify-center text-white text-xs font-bold transition-all duration-150"
                     style={{ width: `${100 - userSplit}%` }}
                   >
@@ -481,7 +480,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
           </div>
         )}
       </div>
-      
+
       {/* Account Info Modal */}
       {showAccountInfo && (
         <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -565,7 +564,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
           border: 2px solid #1f2937;
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
-        
+
         .slider::-moz-range-thumb {
           height: 20px;
           width: 20px;
@@ -575,13 +574,13 @@ export default function ChallengePopup({ isOpen, onClose }) {
           border: 2px solid #1f2937;
           box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
         }
-        
+
         .slider::-webkit-slider-track {
           height: 8px;
           border-radius: 4px;
           background: #374151;
         }
-        
+
         .slider::-moz-range-track {
           height: 8px;
           border-radius: 4px;

@@ -30,9 +30,9 @@ const steps = [
     description: "Reach your profit target within the challenge timeframe to qualify for payout",
     icon: "🎪",
     details: [
-      "Starter: $500 profit target",
-      "Pro: $1,000 profit target",
-      "Elite: $2,500 profit target"
+      "Starter: $1,000 profit target",
+      "Pro: $2,000 profit target",
+      "Elite: $5,000 profit target"
     ]
   },
   {
