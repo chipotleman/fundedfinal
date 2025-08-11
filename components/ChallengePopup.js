@@ -45,6 +45,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
   const [currentIndex, setCurrentIndex] = useState(1); // Start with Pro Challenge (most popular)
   const [showDropdown, setShowDropdown] = useState(false);
   const [step, setStep] = useState('selection'); // 'selection' or 'payment'
+  const [userSplit, setUserSplit] = useState(80); // Default 80% user split
   const [cardInfo, setCardInfo] = useState({
     cardNumber: '',
     expiry: '',
@@ -111,6 +112,10 @@ export default function ChallengePopup({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   const currentChallenge = challenges[currentIndex];
+  
+  // Calculate price based on split (higher user split = higher price)
+  const basePriceMultiplier = (userSplit - 50) / 40; // 0 to 1 scale from 50% to 90%
+  const adjustedPrice = Math.round(currentChallenge.price * (1 + basePriceMultiplier * 0.8)); // Up to 80% price increase
 
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
@@ -224,18 +229,53 @@ export default function ChallengePopup({ isOpen, onClose }) {
                 </div>
               </div>
 
-              {/* Payout */}
-              <div className="text-center p-4 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/30 mb-4">
-                <div className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-400">
-                  ${currentChallenge.payout.toLocaleString()}
+              {/* Profit Split */}
+              <div className="p-4 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/30 mb-4">
+                <div className="text-center mb-3">
+                  <div className="text-sm font-medium text-gray-300">Profit Split</div>
                 </div>
-                <div className="text-gray-300 text-xs font-medium">Payout on Success</div>
+                
+                {/* Split Visual */}
+                <div className="flex h-8 rounded-xl overflow-hidden mb-3 border border-slate-600">
+                  <div 
+                    className="bg-gradient-to-r from-green-400 to-green-500 flex items-center justify-center text-white text-xs font-bold transition-all duration-300"
+                    style={{ width: `${userSplit}%` }}
+                  >
+                    You {userSplit}%
+                  </div>
+                  <div 
+                    className="bg-gradient-to-r from-slate-600 to-slate-700 flex items-center justify-center text-white text-xs font-bold transition-all duration-300"
+                    style={{ width: `${100 - userSplit}%` }}
+                  >
+                    Us {100 - userSplit}%
+                  </div>
+                </div>
+                
+                {/* Slider */}
+                <div className="relative">
+                  <input
+                    type="range"
+                    min="50"
+                    max="90"
+                    value={userSplit}
+                    onChange={(e) => setUserSplit(parseInt(e.target.value))}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider"
+                  />
+                  <div className="text-center mt-2 text-xs text-gray-400">
+                    Slide to adjust your profit percentage
+                  </div>
+                </div>
               </div>
 
               {/* Price Display */}
               <div className="text-center mb-4 p-3 bg-slate-800/30 rounded-xl border border-slate-600">
-                <div className="text-xl font-bold text-white">${currentChallenge.price}</div>
+                <div className="text-xl font-bold text-white">${adjustedPrice}</div>
                 <div className="text-gray-400 text-xs">Challenge fee</div>
+                {adjustedPrice !== currentChallenge.price && (
+                  <div className="text-xs text-orange-400 mt-1">
+                    Base: ${currentChallenge.price} (+${adjustedPrice - currentChallenge.price} for {userSplit}% split)
+                  </div>
+                )}
               </div>
 
               {/* Action Button */}
@@ -243,7 +283,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                 onClick={handleNext}
                 className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-2xl mb-4 transform hover:scale-105 transition-all duration-300"
               >
-                Next - Get Set Up (${currentChallenge.price})
+                Next - Get Set Up (${adjustedPrice})
               </button>
 
               {/* Challenge indicator */}
@@ -268,7 +308,9 @@ export default function ChallengePopup({ isOpen, onClose }) {
               <div className="flex items-center justify-center space-x-2 text-gray-400 text-sm">
                 <span>{currentChallenge.name}</span>
                 <span>•</span>
-                <span className="text-green-400 font-bold">${currentChallenge.price}</span>
+                <span className="text-green-400 font-bold">${adjustedPrice}</span>
+                <span>•</span>
+                <span className="text-blue-400 font-medium">{userSplit}% split</span>
               </div>
             </div>
 
@@ -353,12 +395,47 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   <span>Processing...</span>
                 </div>
               ) : (
-                `Pay and Start Challenge - $${currentChallenge.price}`
+                `Pay and Start Challenge - $${adjustedPrice}`
               )}
             </button>
           </div>
         )}
       </div>
+      
+      <style jsx>{`
+        .slider::-webkit-slider-thumb {
+          appearance: none;
+          height: 20px;
+          width: 20px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #10b981, #3b82f6);
+          cursor: pointer;
+          border: 2px solid #1f2937;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .slider::-moz-range-thumb {
+          height: 20px;
+          width: 20px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #10b981, #3b82f6);
+          cursor: pointer;
+          border: 2px solid #1f2937;
+          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .slider::-webkit-slider-track {
+          height: 8px;
+          border-radius: 4px;
+          background: #374151;
+        }
+        
+        .slider::-moz-range-track {
+          height: 8px;
+          border-radius: 4px;
+          background: #374151;
+        }
+      `}</style>
     </div>
   );
 }
