@@ -154,17 +154,8 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
         {step === 'selection' ? (
           <>
-            {/* Popular Badge */}
-            {currentChallenge.popular && (
-              <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
-                <span className="bg-gradient-to-r from-green-400 to-blue-500 text-black px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
-                  Most Popular
-                </span>
-              </div>
-            )}
-
             {/* Challenge Selection */}
-            <div className="p-6 pt-12">
+            <div className="p-6 pt-8">
               {/* Header */}
               <div className="text-center mb-4">
                 <h2 className="text-xl font-bold text-white">Choose Your Challenge</h2>
@@ -240,7 +231,18 @@ export default function ChallengePopup({ isOpen, onClose }) {
               </div>
 
               {/* Profit Split */}
-              <div className="p-4 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/30 mb-4">
+              <div className="p-4 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/30 mb-4 relative">
+                {/* Reset Button */}
+                <button
+                  onClick={() => setUserSplit(80)}
+                  className="absolute top-2 right-2 w-6 h-6 bg-slate-700/80 hover:bg-slate-600 rounded-full flex items-center justify-center transition-colors"
+                  title="Reset to 80%"
+                >
+                  <svg className="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
+                
                 <div className="text-center mb-3">
                   <div className="text-sm font-medium text-gray-300">Profit Split</div>
                   <div className="text-xs text-gray-400">Drag anywhere on the bar to adjust</div>
