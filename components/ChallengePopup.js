@@ -114,8 +114,8 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
-      <div className="relative bg-black border-2 border-slate-700 rounded-3xl max-w-md w-full overflow-hidden">
-        {/* Close Button */}
+      <div className="relative bg-black border-2 border-slate-700 rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        {/* Close Button - Always visible */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-10 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
@@ -354,7 +354,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   <span>Processing...</span>
                 </div>
               ) : (
-                `Complete Purchase - $${currentChallenge.price}`
+                `Pay and Start Challenge - $${currentChallenge.price}`
               )}
             </button>
           </div>
