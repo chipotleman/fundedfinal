@@ -56,6 +56,11 @@ export default function ChallengePopup({ isOpen, onClose }) {
   const [loading, setLoading] = useState(false);
   const [showAccountInfo, setShowAccountInfo] = useState(false);
   const [showTargetExplainer, setShowTargetExplainer] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [licenseKey, setLicenseKey] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState({ gambling: false, propFirm: false });
+  const [showGamblingTerms, setShowGamblingTerms] = useState(false);
+  const [showPropFirmTerms, setShowPropFirmTerms] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -105,14 +110,39 @@ export default function ChallengePopup({ isOpen, onClose }) {
     setCardInfo(prev => ({ ...prev, [field]: value }));
   };
 
+  // Generate unique license key
+  const generateLicenseKey = () => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    const segments = 4;
+    const segmentLength = 4;
+    let result = '';
+    
+    for (let i = 0; i < segments; i++) {
+      if (i > 0) result += '-';
+      for (let j = 0; j < segmentLength; j++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+      }
+    }
+    
+    // Add timestamp to ensure uniqueness
+    const timestamp = Date.now().toString().slice(-4);
+    return `${result}-${timestamp}`;
+  };
+
   const handlePayment = async () => {
     setLoading(true);
     // Simulate payment processing
     setTimeout(() => {
       setLoading(false);
-      onClose();
-      router.push('/auth');
+      const newLicenseKey = generateLicenseKey();
+      setLicenseKey(newLicenseKey);
+      setStep('receipt');
     }, 2000);
+  };
+
+  const handleBeginChallenge = () => {
+    onClose();
+    router.push('/auth');
   };
 
   if (!isOpen) return null;
@@ -366,7 +396,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
               </div>
             </div>
           </>
-        ) : (
+        ) : step === 'payment' ? (
           /* Payment Step */
           <div className="p-6 pt-12">
             {/* Header */}
@@ -501,6 +531,146 @@ export default function ChallengePopup({ isOpen, onClose }) {
               )}
             </button>
           </div>
+        ) : (
+          /* Receipt Step */
+          <div className="p-6 pt-12">
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="mb-4">
+                <img src="/funderlogo/Funder.png" alt="Funder Logo" className="h-8 mx-auto" />
+              </div>
+              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mb-4 mx-auto">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">Payment Successful!</h2>
+              <p className="text-gray-400 text-sm">Your challenge is ready to begin</p>
+            </div>
+
+            {/* License Key */}
+            <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/30 p-4 mb-6">
+              <div className="text-center">
+                <div className="text-gray-300 text-xs font-medium mb-1">License Key</div>
+                <div className="text-green-400 font-mono font-bold text-lg tracking-wider">{licenseKey}</div>
+                <div className="text-gray-400 text-xs mt-1">Keep this safe - you'll need it to access your challenge</div>
+              </div>
+            </div>
+
+            {/* Challenge Details */}
+            <div className="space-y-3 mb-6">
+              <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+                <h3 className="text-white font-bold text-lg mb-3">{currentChallenge.name}</h3>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300 text-sm">Starting Balance</span>
+                    <span className="text-green-400 font-bold">${currentChallenge.startingBalance.toLocaleString()}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300 text-sm">Target Balance (Phase 1)</span>
+                    <span className="text-blue-400 font-bold">${(currentChallenge.startingBalance + currentChallenge.target).toLocaleString()}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300 text-sm">Target Balance (Phase 2)</span>
+                    <span className="text-purple-400 font-bold">${(currentChallenge.startingBalance + currentChallenge.target * 2).toLocaleString()}</span>
+                  </div>
+
+                  <div className="border-t border-slate-600 pt-2 mt-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-300 text-sm">Minimum Balance (Phase 1)</span>
+                      <span className="text-red-400 font-bold">${(currentChallenge.startingBalance * 0.85).toLocaleString()}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-300 text-sm">Minimum Balance (Phase 2)</span>
+                      <span className="text-red-400 font-bold">${(currentChallenge.startingBalance + currentChallenge.target * 0.85).toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-600 pt-2 mt-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-300 text-sm">Max Bet Size</span>
+                      <span className="text-white font-bold">${currentChallenge.maxBet}</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-300 text-sm">Profit Split</span>
+                      <span className="text-green-400 font-bold">{userSplit}% / {100 - userSplit}%</span>
+                    </div>
+                    
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-300 text-sm">Challenge Fee</span>
+                      <span className="text-white font-bold">${adjustedPrice}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Terms and Conditions */}
+            <div className="space-y-3 mb-6">
+              <div className="text-white font-medium text-sm mb-3">Please accept the following terms:</div>
+              
+              {/* Gambling Risk Terms */}
+              <div className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  id="gambling-terms"
+                  checked={termsAccepted.gambling}
+                  onChange={(e) => setTermsAccepted(prev => ({ ...prev, gambling: e.target.checked }))}
+                  className="mt-1 w-4 h-4 text-green-500 bg-slate-800 border-slate-600 rounded focus:ring-green-500"
+                />
+                <div className="flex-1">
+                  <label htmlFor="gambling-terms" className="text-gray-300 text-sm cursor-pointer">
+                    I understand the gambling risks and responsibilities
+                  </label>
+                  <button
+                    onClick={() => setShowGamblingTerms(true)}
+                    className="text-blue-400 hover:text-blue-300 text-xs ml-2 underline"
+                  >
+                    (Read Full Terms)
+                  </button>
+                </div>
+              </div>
+
+              {/* Prop Firm Terms */}
+              <div className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  id="propfirm-terms"
+                  checked={termsAccepted.propFirm}
+                  onChange={(e) => setTermsAccepted(prev => ({ ...prev, propFirm: e.target.checked }))}
+                  className="mt-1 w-4 h-4 text-green-500 bg-slate-800 border-slate-600 rounded focus:ring-green-500"
+                />
+                <div className="flex-1">
+                  <label htmlFor="propfirm-terms" className="text-gray-300 text-sm cursor-pointer">
+                    I understand this is a proprietary trading firm simulation
+                  </label>
+                  <button
+                    onClick={() => setShowPropFirmTerms(true)}
+                    className="text-blue-400 hover:text-blue-300 text-xs ml-2 underline"
+                  >
+                    (Read Full Terms)
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Begin Challenge Button */}
+            <button
+              onClick={handleBeginChallenge}
+              disabled={!termsAccepted.gambling || !termsAccepted.propFirm}
+              className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-4 px-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 disabled:transform-none disabled:cursor-not-allowed"
+            >
+              {(!termsAccepted.gambling || !termsAccepted.propFirm) ? 
+                'Please Accept Terms to Continue' : 
+                'Begin Challenge'
+              }
+            </button>
+          </div>
         )}
       </div>
 
@@ -571,6 +741,150 @@ export default function ChallengePopup({ isOpen, onClose }) {
               className="w-full mt-6 bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
             >
               Got it!
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Gambling Terms Modal */}
+      {showGamblingTerms && (
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 border-2 border-slate-700 rounded-2xl max-w-md w-full p-6 max-h-[80vh] overflow-y-auto">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowGamblingTerms(false)}
+              className="absolute top-4 right-4 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
+            >
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-orange-500 rounded-full flex items-center justify-center mb-4 mx-auto">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Gambling Risk Disclosure</h3>
+            </div>
+
+            {/* Content */}
+            <div className="space-y-4 text-gray-300 text-sm">
+              <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+                <h4 className="font-semibold text-red-400 mb-2">⚠️ Important Warning</h4>
+                <p>Gambling can be addictive and should be done responsibly. Never bet more than you can afford to lose.</p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-white mb-2">No Profit Guarantee</h4>
+                <p>There is absolutely no guarantee that you will make money from this challenge. Sports betting involves significant risk and most participants lose money.</p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-white mb-2">Personal Responsibility</h4>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>You are solely responsible for your betting decisions</li>
+                  <li>You acknowledge the risks involved in sports betting</li>
+                  <li>You agree to gamble responsibly and within your means</li>
+                  <li>You understand that past performance does not guarantee future results</li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-white mb-2">Limitation of Liability</h4>
+                <p>Funder is not responsible for any financial losses you may incur. This is a skill-based challenge with inherent risks.</p>
+              </div>
+
+              <div className="bg-slate-800/50 border border-slate-600 rounded-lg p-3">
+                <p className="text-xs text-gray-400">
+                  If you or someone you know has a gambling problem, please seek help:
+                  <br />• National Problem Gambling Helpline: 1-800-522-4700
+                  <br />• Visit ncpgambling.org for resources
+                </p>
+              </div>
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => setShowGamblingTerms(false)}
+              className="w-full mt-6 bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
+            >
+              I Understand the Risks
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Prop Firm Terms Modal */}
+      {showPropFirmTerms && (
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 border-2 border-slate-700 rounded-2xl max-w-md w-full p-6 max-h-[80vh] overflow-y-auto">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowPropFirmTerms(false)}
+              className="absolute top-4 right-4 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
+            >
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mb-4 mx-auto">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Proprietary Firm Terms</h3>
+            </div>
+
+            {/* Content */}
+            <div className="space-y-4 text-gray-300 text-sm">
+              <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                <h4 className="font-semibold text-blue-400 mb-2">📋 Challenge Structure</h4>
+                <p>This is a proprietary trading firm evaluation process designed to assess your sports betting skills.</p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-white mb-2">Challenge Rules</h4>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>You must complete 2 phases to receive funding</li>
+                  <li>Strict adherence to maximum bet sizes is required</li>
+                  <li>Daily and overall drawdown limits must be respected</li>
+                  <li>All betting activity is monitored and evaluated</li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-white mb-2">Evaluation Criteria</h4>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>Consistent profit generation within risk parameters</li>
+                  <li>Proper risk management and position sizing</li>
+                  <li>Adherence to all challenge rules and guidelines</li>
+                  <li>Professional trading behavior and discipline</li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-white mb-2">Firm Discretion</h4>
+                <p>Funder reserves the right to evaluate, modify, or terminate challenges based on our internal risk management policies. All decisions are final.</p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-white mb-2">No Guaranteed Outcomes</h4>
+                <p>Completion of challenge phases does not guarantee funding. All evaluations are subject to final approval by our risk management team.</p>
+              </div>
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => setShowPropFirmTerms(false)}
+              className="w-full mt-6 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
+            >
+              I Understand the Terms
             </button>
           </div>
         </div>
