@@ -231,7 +231,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                     <span className="text-gray-300 font-medium text-sm">Target Balance</span>
                     <button
                       onClick={() => setShowTargetExplainer(true)}
-                      className="w-3 h-3 sm:w-4 sm:h-4 bg-blue-500 hover:bg-blue-400 rounded-full flex items-center justify-center transition-colors"
+                      className="w-3 h-3 bg-blue-500 hover:bg-blue-400 rounded-full flex items-center justify-center transition-colors"
                     >
                       <span className="text-white text-xs font-bold">?</span>
                     </button>
@@ -371,6 +371,9 @@ export default function ChallengePopup({ isOpen, onClose }) {
           <div className="p-6 pt-12">
             {/* Header */}
             <div className="text-center mb-6">
+              <div className="mb-4">
+                <img src="/funderlogo/Funder.png" alt="Funder Logo" className="h-8 mx-auto" />
+              </div>
               <h2 className="text-xl font-bold text-white mb-2">Complete Purchase</h2>
               <div className="flex items-center justify-center space-x-2 text-gray-400 text-sm">
                 <span>{currentChallenge.name}</span>
