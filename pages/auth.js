@@ -418,8 +418,8 @@ export default function AuthPage() {
 
       {/* Main Auth Form */}
       <div className="flex-1 flex items-center justify-center p-6">
-        <div className="relative max-w-md w-full">
-          <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-slate-700/50 shadow-2xl">
+        <div className="relative max-w-md w-full mx-2">
+          <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-slate-700/50 shadow-2xl">
             <div className="text-center mb-8">
               <div className="mb-4 mx-auto">
                 <img
@@ -457,7 +457,7 @@ export default function AuthPage() {
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    className="w-full px-4 py-3 sm:py-4 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium text-sm sm:text-base"
+                    className="w-full px-3 py-2 sm:px-4 sm:py-3 bg-slate-700/50 border-2 border-slate-600 rounded-lg sm:rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium text-xs sm:text-sm"
                     placeholder="Create a username"
                     minLength="3"
                     required
@@ -473,7 +473,7 @@ export default function AuthPage() {
                   type="tel" // Use type="tel" for phone numbers
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full px-4 py-3 sm:py-4 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium text-sm sm:text-base"
+                  className="w-full px-3 py-2 sm:px-4 sm:py-3 bg-slate-700/50 border-2 border-slate-600 rounded-lg sm:rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium text-xs sm:text-sm"
                   placeholder="Enter your phone number (e.g., +11234567890)"
                   required
                 />
@@ -488,7 +488,7 @@ export default function AuthPage() {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 sm:py-4 pr-12 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium text-sm sm:text-base"
+                    className="w-full px-3 py-2 sm:px-4 sm:py-3 pr-10 sm:pr-12 bg-slate-700/50 border-2 border-slate-600 rounded-lg sm:rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium text-xs sm:text-sm"
                     placeholder="Enter your password"
                     minLength="6"
                     required
@@ -522,7 +522,7 @@ export default function AuthPage() {
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-4 py-3 sm:py-4 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium text-sm sm:text-base"
+                    className="w-full px-3 py-2 sm:px-4 sm:py-3 bg-slate-700/50 border-2 border-slate-600 rounded-lg sm:rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium text-xs sm:text-sm"
                     placeholder="Confirm your password"
                     minLength="6"
                     required
@@ -533,7 +533,7 @@ export default function AuthPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3 sm:py-4 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 text-sm sm:text-base"
+                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-2 sm:py-3 rounded-lg sm:rounded-xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 text-xs sm:text-sm"
               >
                 {loading ? (
                   <div className="flex items-center justify-center space-x-2">
