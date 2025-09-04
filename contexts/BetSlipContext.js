@@ -52,7 +52,7 @@ export const BetSlipProvider = ({ children }) => {
       };
       
       setBetSlip([...betSlip, newBet]);
-      setShowBetSlip(true);
+      // Don't automatically open bet slip - only open when user clicks the button
     }
   };
 
