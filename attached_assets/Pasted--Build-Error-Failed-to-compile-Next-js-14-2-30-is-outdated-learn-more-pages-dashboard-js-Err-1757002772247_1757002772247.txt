@@ -1,0 +1,65 @@
+
+Build Error
+
+Failed to compile
+
+Next.js (14.2.30) is outdated (learn more)
+./pages/dashboard.js
+Error: 
+  × the name `addToBetSlip` is defined multiple times
+     ╭─[/home/runner/workspace/pages/dashboard.js:142:1]
+ 142 │ 
+ 143 │ export default function Dashboard() {
+ 144 │   const { user } = useAuth();
+ 145 │   const { betSlip, showBetSlip, setShowBetSlip, addToBetSlip } = useBetSlip();
+     ·                                                 ──────┬─────
+     ·                                                       ╰── previous definition of `addToBetSlip` here
+ 146 │   const [selectedSport, setSelectedSport] = useState('All Sports');
+ 147 │   const [games, setGames] = useState([]);
+ 148 │   const [loading, setLoading] = useState(true);
+ 149 │   const [bankroll, setBankroll] = useState(10000);
+ 150 │   const [pnl, setPnl] = useState(0);
+ 151 │ 
+ 152 │   const sports = ['NFL', 'NBA', 'MLB', 'NHL', 'UFC', 'Soccer'];
+ 153 │ 
+ 154 │   useEffect(() => {
+ 155 │     if (selectedSport === 'All Sports') {
+ 156 │       // Show all games from all sports
+ 157 │       const allGames = Object.values(mockGames).flat();
+ 158 │       setGames(allGames);
+ 159 │     } else {
+ 160 │       setGames(mockGames[selectedSport] || []);
+ 161 │     }
+ 162 │     setLoading(false);
+ 163 │   }, [selectedSport]);
+ 164 │ 
+ 165 │   const formatOdds = (odds) => {
+ 166 │     return odds > 0 ? `+${odds}` : odds.toString();
+ 167 │   };
+ 168 │ 
+ 169 │   const isBetInSlip = (game, betType, selection) => {
+ 170 │     let betId;
+ 171 │     switch (betType) {
+ 172 │       case 'spread':
+ 173 │         betId = `${game.id}-spread-${selection}`;
+ 174 │         break;
+ 175 │       case 'total':
+ 176 │         betId = `${game.id}-total-${selection}`;
+ 177 │         break;
+ 178 │       case 'moneyline':
+ 179 │         betId = `${game.id}-moneyline-${selection}`;
+ 180 │         break;
+ 181 │       default:
+ 182 │         return false;
+ 183 │     }
+ 184 │     return betSlip.some(bet => bet.id === betId);
+ 185 │   };
+ 186 │ 
+ 187 │   const addToBetSlip = (game, betType, odds, selection) => {
+     ·         ──────┬─────
+     ·               ╰── `addToBetSlip` redefined here
+ 188 │     let betId;
+ 189 │     let formattedSelection;
+ 190 │     switch (betType) {
+     ╰────
+This error occurred during the build process and can only be dismissed by fixing the error.
