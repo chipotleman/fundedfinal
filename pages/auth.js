@@ -361,7 +361,17 @@ export default function AuthPage() {
         <div className="relative max-w-md w-full">
           <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-slate-700/50 shadow-2xl">
             <div className="text-center mb-8">
-              {/* Removed logo from here */}
+              <div className="mb-4 mx-auto">
+                <img
+                  src="/funderlogo/Funder.png?v=4"
+                  alt="Funder"
+                  className="h-16 w-auto mx-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
+                  style={{
+                    filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
+                    animation: 'logoRedYellowGlow 4s infinite ease-in-out'
+                  }}
+                />
+              </div>
               <h1 className="text-2xl sm:text-3xl font-black text-white mb-2">
                 {isSignUp ? 'Create Account' : 'Sign In'}
               </h1>
