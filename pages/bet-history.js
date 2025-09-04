@@ -4,8 +4,8 @@ import TopNavbar from '../components/TopNavbar';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 
-// Mock settled bets data with realistic recent dates
-const mockSettledBets = [
+// Mock bets data with realistic recent dates
+const mockBets = [
   {
     id: 'bet_001',
     matchup: 'LA Chargers @ Detroit Lions',
@@ -38,30 +38,63 @@ const mockSettledBets = [
     status: 'lost',
     settledAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
     profit: -75
+  },
+  {
+    id: 'bet_004',
+    matchup: 'Chiefs @ Bills',
+    selection: 'Kansas City Chiefs -3.5',
+    betType: 'spread',
+    odds: -108,
+    stake: 150,
+    status: 'open',
+    placedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
+    gameStart: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days from now
+    profit: 0
+  },
+  {
+    id: 'bet_005',
+    matchup: 'Celtics @ Heat',
+    selection: 'Under 210.5',
+    betType: 'total',
+    odds: -112,
+    stake: 80,
+    status: 'open',
+    placedAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), // 3 hours ago
+    gameStart: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day from now
+    profit: 0
   }
 ];
 
 export default function BetHistory() {
   const { user } = useAuth();
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
-  const [settledBets, setSettledBets] = useState([]);
+  const [allBets, setAllBets] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const [expandedShare, setExpandedShare] = useState({});
 
   useEffect(() => {
     // In a real app, this would fetch from your API
-    setSettledBets(mockSettledBets);
+    setAllBets(mockBets);
   }, []);
 
   const formatOdds = (odds) => {
     return odds > 0 ? `+${odds}` : odds.toString();
   };
 
-  const filteredBets = settledBets.filter(bet => {
+  const filteredBets = allBets.filter(bet => {
     if (selectedFilter === 'all') return true;
     return bet.status === selectedFilter;
   });
 
-  const totalProfit = settledBets.reduce((sum, bet) => sum + bet.profit, 0);
+  const totalProfit = allBets.reduce((sum, bet) => sum + bet.profit, 0);
+
+  const cashOutBet = (betId) => {
+    setAllBets(prev => prev.map(bet => 
+      bet.id === betId 
+        ? { ...bet, status: 'cashed_out', settledAt: new Date().toISOString(), profit: bet.stake * 0.8 }
+        : bet
+    ));
+  };
 
   const shareToSocial = (platform, bet) => {
     const payout = bet.stake + bet.profit;
@@ -193,7 +226,7 @@ export default function BetHistory() {
           {/* Filter Tabs */}
           <div className="flex justify-center space-x-2 mb-12">
             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-2 border border-slate-700/50">
-              {['all', 'won', 'lost'].map(filter => (
+              {['all', 'open', 'won', 'lost'].map(filter => (
                 <button
                   key={filter}
                   onClick={() => setSelectedFilter(filter)}
@@ -215,13 +248,15 @@ export default function BetHistory() {
               <div 
                 key={bet.id} 
                 className={`relative group transition-all duration-500 hover:scale-[1.02] ${
-                  bet.status === 'won' ? 'hover:rotate-1' : 'hover:-rotate-1'
+                  bet.status === 'won' ? 'hover:rotate-1' : bet.status === 'open' ? '' : 'hover:-rotate-1'
                 }`}
               >
                 {/* Main Card */}
                 <div className={`relative bg-gradient-to-br ${
                   bet.status === 'won' 
-                    ? 'from-emerald-900/40 via-slate-900 to-blue-900/40 border-emerald-500/30' 
+                    ? 'from-emerald-900/40 via-slate-900 to-blue-900/40 border-4 border-yellow-400/60' 
+                    : bet.status === 'open'
+                    ? 'from-blue-900/40 via-slate-900 to-purple-900/40 border-blue-500/30'
                     : 'from-red-900/40 via-slate-900 to-orange-900/40 border-red-500/30'
                 } rounded-3xl border backdrop-blur-xl overflow-hidden shadow-2xl`}>
                   
@@ -250,15 +285,17 @@ export default function BetHistory() {
                       <div className={`flex items-center space-x-3 px-5 py-3 rounded-2xl backdrop-blur-md ${
                         bet.status === 'won' 
                           ? 'bg-emerald-500/20 border border-emerald-400/30' 
+                          : bet.status === 'open'
+                          ? 'bg-blue-500/20 border border-blue-400/30'
                           : 'bg-red-500/20 border border-red-400/30'
                       }`}>
                         <div className={`w-3 h-3 rounded-full animate-pulse ${
-                          bet.status === 'won' ? 'bg-emerald-400' : 'bg-red-400'
+                          bet.status === 'won' ? 'bg-emerald-400' : bet.status === 'open' ? 'bg-blue-400' : 'bg-red-400'
                         }`}></div>
                         <span className={`font-black text-sm tracking-wider ${
-                          bet.status === 'won' ? 'text-emerald-400' : 'text-red-400'
+                          bet.status === 'won' ? 'text-emerald-400' : bet.status === 'open' ? 'text-blue-400' : 'text-red-400'
                         }`}>
-                          {bet.status === 'won' ? '✨ WINNER' : '💀 LOST'}
+                          {bet.status === 'won' ? '✨ WINNER' : bet.status === 'open' ? '🔄 OPEN' : '💀 LOST'}
                         </span>
                       </div>
                       
@@ -283,7 +320,7 @@ export default function BetHistory() {
                           <div className="text-right">
                             <div className="text-gray-400 text-xs font-bold tracking-widest uppercase mb-1">Odds</div>
                             <div className={`font-black text-2xl ${
-                              bet.status === 'won' ? 'text-emerald-400' : 'text-gray-300'
+                              bet.status === 'won' ? 'text-emerald-400' : bet.status === 'open' ? 'text-blue-400' : 'text-gray-300'
                             }`}>
                               {formatOdds(bet.odds)}
                             </div>
@@ -296,6 +333,8 @@ export default function BetHistory() {
                     <div className={`bg-gradient-to-r ${
                       bet.status === 'won' 
                         ? 'from-emerald-500/20 to-blue-500/20 border-emerald-400/30' 
+                        : bet.status === 'open'
+                        ? 'from-blue-500/20 to-purple-500/20 border-blue-400/30'
                         : 'from-red-500/20 to-orange-500/20 border-red-400/30'
                     } rounded-2xl p-6 border backdrop-blur-md mb-6`}>
                       
@@ -305,26 +344,46 @@ export default function BetHistory() {
                           <div className="text-white font-black text-xl">${bet.stake.toFixed(2)}</div>
                         </div>
                         <div>
-                          <div className="text-gray-400 text-xs font-bold tracking-widest uppercase mb-2">Profit</div>
-                          <div className={`font-black text-xl ${
-                            bet.profit >= 0 ? 'text-emerald-400' : 'text-red-400'
-                          }`}>
-                            {bet.profit >= 0 ? '+' : ''}${bet.profit.toFixed(2)}
-                          </div>
+                          {bet.status === 'open' ? (
+                            <>
+                              <div className="text-gray-400 text-xs font-bold tracking-widest uppercase mb-2">Game Start</div>
+                              <div className="text-blue-400 font-black text-lg">
+                                {new Date(bet.gameStart).toLocaleDateString('en-US', { 
+                                  month: 'short', 
+                                  day: 'numeric'
+                                })} {new Date(bet.gameStart).toLocaleTimeString('en-US', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="text-gray-400 text-xs font-bold tracking-widest uppercase mb-2">Profit</div>
+                              <div className={`font-black text-xl ${
+                                bet.profit >= 0 ? 'text-emerald-400' : 'text-red-400'
+                              }`}>
+                                {bet.profit >= 0 ? '+' : ''}${bet.profit.toFixed(2)}
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                       
                       <div className="border-t border-gray-600/30 pt-4">
                         <div className="flex items-center justify-between">
                           <span className={`font-black text-lg tracking-wider ${
-                            bet.status === 'won' ? 'text-emerald-400' : 'text-gray-400'
+                            bet.status === 'won' ? 'text-emerald-400' : bet.status === 'open' ? 'text-blue-400' : 'text-gray-400'
                           }`}>
-                            TOTAL PAYOUT
+                            {bet.status === 'open' ? 'POTENTIAL PAYOUT' : 'TOTAL PAYOUT'}
                           </span>
                           <span className={`font-black text-3xl ${
-                            bet.status === 'won' ? 'text-emerald-400' : 'text-red-400'
+                            bet.status === 'won' ? 'text-emerald-400' : bet.status === 'open' ? 'text-blue-400' : 'text-red-400'
                           }`}>
-                            ${bet.profit >= 0 ? (bet.stake + bet.profit).toFixed(2) : '0.00'}
+                            ${bet.status === 'open' 
+                              ? (bet.stake + (bet.stake * (bet.odds > 0 ? bet.odds / 100 : 100 / Math.abs(bet.odds)))).toFixed(2)
+                              : bet.profit >= 0 ? (bet.stake + bet.profit).toFixed(2) : '0.00'
+                            }
                           </span>
                         </div>
                       </div>
@@ -337,14 +396,29 @@ export default function BetHistory() {
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                         <span>
-                          {new Date(bet.settledAt).toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric',
-                            year: 'numeric'
-                          })} • {new Date(bet.settledAt).toLocaleTimeString('en-US', {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
+                          {bet.status === 'open' ? (
+                            <>
+                              Placed {new Date(bet.placedAt).toLocaleDateString('en-US', { 
+                                month: 'short', 
+                                day: 'numeric',
+                                year: 'numeric'
+                              })} • {new Date(bet.placedAt).toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </>
+                          ) : (
+                            <>
+                              {new Date(bet.settledAt).toLocaleDateString('en-US', { 
+                                month: 'short', 
+                                day: 'numeric',
+                                year: 'numeric'
+                              })} • {new Date(bet.settledAt).toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </>
+                          )}
                         </span>
                       </div>
                       
@@ -358,53 +432,87 @@ export default function BetHistory() {
                       </div>
                     </div>
 
-                    {/* Share Options for Winners */}
+                    {/* Action Buttons */}
                     {bet.status === 'won' && (
                       <div className="mt-6">
                         <div className="text-center mb-4">
                           <span className="text-gray-400 font-bold text-sm tracking-wider">SHARE YOUR WIN</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="relative">
                           <button
-                            onClick={() => shareToSocial('instagram', bet)}
-                            className="flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105"
+                            onClick={() => setExpandedShare(prev => ({ ...prev, [bet.id]: !prev[bet.id] }))}
+                            className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105"
                           >
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
                             </svg>
-                            <span>Story</span>
+                            <span>Share Win</span>
+                            <svg className={`w-4 h-4 transition-transform ${expandedShare[bet.id] ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
                           </button>
                           
-                          <button
-                            onClick={() => shareToSocial('tiktok', bet)}
-                            className="flex items-center justify-center space-x-2 bg-gradient-to-r from-black to-gray-800 hover:from-gray-900 hover:to-gray-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105"
-                          >
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-.88-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/>
-                            </svg>
-                            <span>TikTok</span>
-                          </button>
-                          
-                          <button
-                            onClick={() => shareToSocial('twitter', bet)}
-                            className="flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105"
-                          >
-                            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                              <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                            </svg>
-                            <span>Tweet</span>
-                          </button>
-                          
-                          <button
-                            onClick={() => downloadBetImage(bet)}
-                            className="flex items-center justify-center space-x-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-3 px-4 rounded-xl transition-all duration-300 transform hover:scale-105"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            <span>Download</span>
-                          </button>
+                          {expandedShare[bet.id] && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800/90 backdrop-blur-md rounded-xl p-4 border border-slate-600/50 z-10">
+                              <div className="grid grid-cols-2 gap-3">
+                                <button
+                                  onClick={() => shareToSocial('instagram', bet)}
+                                  className="flex items-center justify-center space-x-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300"
+                                >
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                                  </svg>
+                                  <span>Story</span>
+                                </button>
+                                
+                                <button
+                                  onClick={() => shareToSocial('tiktok', bet)}
+                                  className="flex items-center justify-center space-x-2 bg-gradient-to-r from-black to-gray-800 hover:from-gray-900 hover:to-gray-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300"
+                                >
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-.88-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z"/>
+                                  </svg>
+                                  <span>TikTok</span>
+                                </button>
+                                
+                                <button
+                                  onClick={() => shareToSocial('twitter', bet)}
+                                  className="flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300"
+                                >
+                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                                  </svg>
+                                  <span>Twitter</span>
+                                </button>
+                                
+                                <button
+                                  onClick={() => downloadBetImage(bet)}
+                                  className="flex items-center justify-center space-x-2 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                  </svg>
+                                  <span>Download</span>
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </div>
+                      </div>
+                    )}
+
+                    {/* Cashout Button for Open Bets */}
+                    {bet.status === 'open' && (
+                      <div className="mt-6">
+                        <button
+                          onClick={() => cashOutBet(bet.id)}
+                          className="w-full flex items-center justify-center space-x-2 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 transform hover:scale-105"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                          </svg>
+                          <span>Cash Out (${(bet.stake * 0.8).toFixed(2)})</span>
+                        </button>
                       </div>
                     )}
                   </div>
