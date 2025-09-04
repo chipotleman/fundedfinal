@@ -142,7 +142,7 @@ const mockGames = {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { betSlip, showBetSlip, setShowBetSlip, addToBetSlip } = useBetSlip();
+  const { betSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
   const [selectedSport, setSelectedSport] = useState('All Sports');
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -164,11 +164,6 @@ export default function Dashboard() {
 
   const formatOdds = (odds) => {
     return odds > 0 ? `+${odds}` : odds.toString();
-  };
-
-  const isBetInSlip = (game, betType, selection) => {
-    const betId = `${game.id}-${betType}-${selection}`;
-    return betSlip.some(bet => bet.id === betId);
   };
 
   const getSportIcon = (sport) => {
