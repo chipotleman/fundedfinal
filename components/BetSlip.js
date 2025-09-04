@@ -6,10 +6,10 @@ export default function BetSlip({ bankroll, onClose }) {
   const [isPlacing, setIsPlacing] = useState(false);
   const [betType, setBetType] = useState('single');
   const [parlayStake, setParlayStake] = useState(0);
-  
+
   // TODO: Get user's challenge from context/props - will be implemented when challenge specs are provided
   const userChallenge = 'basic'; // Placeholder - will be dynamic
-  
+
   // Challenge-based minimum bet amounts (to be configured based on specifications)
   const challengeMinBets = {
     'basic': 10,
@@ -17,12 +17,12 @@ export default function BetSlip({ bankroll, onClose }) {
     'pro': 50,
     'elite': 100
   };
-  
+
   const getMinBetAmount = () => {
     return challengeMinBets[userChallenge] || 10;
   };
 
-  
+
 
   const calculatePayout = (odds, stake) => {
     // Handle case where odds might be an object
@@ -35,7 +35,7 @@ export default function BetSlip({ bankroll, onClose }) {
   };
 
   const totalStake = betType === 'parlay' ? parlayStake : bets.reduce((sum, bet) => sum + (bet.stake || 0), 0);
-  
+
   const totalPayout = betType === 'parlay' && parlayStake > 0 
     ? (() => {
         const parlayDecimal = bets.reduce((acc, bet) => {
@@ -48,12 +48,12 @@ export default function BetSlip({ bankroll, onClose }) {
     : bets.reduce((sum, bet) => 
         sum + (bet.stake ? calculatePayout(bet.odds, bet.stake) : 0), 0
       );
-  
+
   const potentialProfit = totalPayout - totalStake;
-  
+
   // Validation logic
   const minBetAmount = getMinBetAmount();
-  
+
   const validateBets = () => {
     if (betType === 'parlay') {
       return {
@@ -65,7 +65,7 @@ export default function BetSlip({ bankroll, onClose }) {
     } else {
       const betsWithoutStakes = bets.filter(bet => !bet.stake || bet.stake === 0);
       const betsWithLowStakes = bets.filter(bet => bet.stake > 0 && bet.stake < minBetAmount);
-      
+
       return {
         isValid: bets.every(bet => bet.stake >= minBetAmount),
         hasStakes: bets.every(bet => bet.stake > 0),
@@ -74,7 +74,7 @@ export default function BetSlip({ bankroll, onClose }) {
       };
     }
   };
-  
+
   const validation = validateBets();
 
   const placeBets = async () => {
@@ -97,7 +97,7 @@ export default function BetSlip({ bankroll, onClose }) {
     return oddsValue > 0 ? `+${oddsValue}` : oddsValue.toString();
   };
 
-  
+
 
   return (
     <>
@@ -357,7 +357,7 @@ export default function BetSlip({ bankroll, onClose }) {
               </p>
             </div>
           )}
-          
+
           {!validation.hasStakes && (
             <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-3">
               <p className="text-yellow-400 text-sm font-medium">
@@ -365,7 +365,7 @@ export default function BetSlip({ bankroll, onClose }) {
               </p>
             </div>
           )}
-          
+
           {validation.belowMinimum && (
             <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3">
               <p className="text-red-400 text-sm font-medium">
