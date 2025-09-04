@@ -515,9 +515,7 @@ export default function AuthPage() {
       {/* Bet Slip */}
       {showBetSlip && (
         <BetSlip
-          bets={betSlip}
-          setBets={setBetSlip}
-          bankroll={10000} // Example bankroll, this should be fetched or managed properly
+          bankroll={10000}
           onClose={() => setShowBetSlip(false)}
         />
       )}
