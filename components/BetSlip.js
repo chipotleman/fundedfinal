@@ -186,7 +186,15 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
               {betType === 'parlay' && bets.length > 1 && (
                 <div className="mt-3 p-3 bg-blue-500/20 rounded-lg">
                   <p className="text-blue-400 text-sm font-medium">
-                    Parlay Odds: {((bets.reduce((acc, bet) => acc * (bet.odds > 0 ? (bet.odds/100 + 1) : (100/Math.abs(bet.odds) + 1)), 1) - 1) * 100).toFixed(0) > 0 ? '+' : ''}{((bets.reduce((acc, bet) => acc * (bet.odds > 0 ? (bet.odds/100 + 1) : (100/Math.abs(bet.odds) + 1)), 1) - 1) * 100).toFixed(0)}
+                    Parlay Odds: {(() => {
+                      const parlayDecimal = bets.reduce((acc, bet) => {
+                        const oddsValue = typeof bet.odds === 'object' ? bet.odds.odds || bet.odds.value || 0 : bet.odds;
+                        const decimal = oddsValue > 0 ? (oddsValue/100 + 1) : (100/Math.abs(oddsValue) + 1);
+                        return acc * decimal;
+                      }, 1);
+                      const parlayAmerican = Math.round((parlayDecimal - 1) * 100);
+                      return parlayAmerican > 0 ? `+${parlayAmerican}` : parlayAmerican.toString();
+                    })()}
                   </p>
                 </div>
               )}
