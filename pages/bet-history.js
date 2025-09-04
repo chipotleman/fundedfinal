@@ -71,7 +71,7 @@ const mockBets = [
     stake: 10000,
     status: 'open',
     placedAt: new Date().toISOString(), // Now
-    gameStart: new Date('2024-10-01T20:20:00Z').toISOString(), // Tonight 8:20 PM
+    gameStart: new Date(new Date().setHours(20, 20, 0, 0)).toISOString(), // Today at 8:20 PM
     profit: 0
   }
 ];
@@ -216,6 +216,15 @@ export default function BetHistory() {
     return `BET${Date.now().toString().slice(-8)}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
   };
 
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount);
+  };
+
   return (
     <div className="min-h-screen bg-black">
       <TopNavbar 
@@ -358,7 +367,7 @@ export default function BetHistory() {
                       <div className="grid grid-cols-2 gap-6 mb-4">
                         <div>
                           <div className="text-gray-400 text-xs font-bold tracking-widest uppercase mb-2">Stake</div>
-                          <div className="text-white font-black text-xl">${bet.stake.toFixed(2)}</div>
+                          <div className="text-white font-black text-xl">{formatCurrency(bet.stake)}</div>
                         </div>
                         <div>
                           {bet.status === 'open' ? (
@@ -380,7 +389,7 @@ export default function BetHistory() {
                               <div className={`font-black text-xl ${
                                 bet.profit >= 0 ? 'text-emerald-400' : 'text-red-400'
                               }`}>
-                                {bet.profit >= 0 ? '+' : ''}${bet.profit.toFixed(2)}
+                                {bet.profit >= 0 ? '+' : ''}{formatCurrency(Math.abs(bet.profit))}
                               </div>
                             </>
                           )}
@@ -397,9 +406,9 @@ export default function BetHistory() {
                           <span className={`font-black text-3xl ${
                             bet.status === 'won' ? 'text-emerald-400' : bet.status === 'open' ? 'text-blue-400' : 'text-red-400'
                           }`}>
-                            ${bet.status === 'open' 
-                              ? (bet.stake + (bet.stake * (bet.odds > 0 ? bet.odds / 100 : 100 / Math.abs(bet.odds)))).toFixed(2)
-                              : bet.profit >= 0 ? (bet.stake + bet.profit).toFixed(2) : '0.00'
+                            {bet.status === 'open' 
+                              ? formatCurrency(bet.stake + (bet.stake * (bet.odds > 0 ? bet.odds / 100 : 100 / Math.abs(bet.odds))))
+                              : bet.profit >= 0 ? formatCurrency(bet.stake + bet.profit) : '$0.00'
                             }
                           </span>
                         </div>
@@ -528,7 +537,7 @@ export default function BetHistory() {
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                           </svg>
-                          <span>Cash Out (${(bet.stake * 0.8).toFixed(2)})</span>
+                          <span>Cash Out ({formatCurrency(bet.stake * 0.8)})</span>
                         </button>
                       </div>
                     )}
