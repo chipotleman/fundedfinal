@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import TopNavbar from '../components/TopNavbar';
 import { useBetSlip } from '../contexts/BetSlipContext';
@@ -62,6 +61,18 @@ const mockBets = [
     placedAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), // 3 hours ago
     gameStart: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day from now
     profit: 0
+  },
+  {
+    id: 'bet_006',
+    matchup: 'Dallas Cowboys @ Philadelphia Eagles',
+    selection: 'Under 48.5',
+    betType: 'total',
+    odds: -115,
+    stake: 10000,
+    status: 'open',
+    placedAt: new Date().toISOString(), // Now
+    gameStart: new Date('2024-10-01T20:20:00Z').toISOString(), // Tonight 8:20 PM
+    profit: 0
   }
 ];
 
@@ -100,7 +111,7 @@ export default function BetHistory() {
     const payout = bet.stake + bet.profit;
     const text = `Just won $${bet.profit.toFixed(2)} profit on ${bet.selection}! Total payout: $${payout.toFixed(2)} 💰 #Funded #BettingWin`;
     const url = 'https://fundmybet.com';
-    
+
     switch (platform) {
       case 'instagram':
         // Generate and download image for Instagram story
@@ -120,11 +131,11 @@ export default function BetHistory() {
     // Create a temporary canvas to generate the bet slip image
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-    
+
     // Set canvas dimensions
     canvas.width = 400;
     canvas.height = 600;
-    
+
     // Create gradient background
     const gradient = ctx.createLinearGradient(0, 0, 0, 600);
     if (bet.status === 'won') {
@@ -136,60 +147,60 @@ export default function BetHistory() {
       gradient.addColorStop(0.5, '#0f172a');
       gradient.addColorStop(1, '#ea580c');
     }
-    
+
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 400, 600);
-    
+
     // Add text content
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 24px Arial';
     ctx.textAlign = 'center';
     ctx.fillText('BET SLIP', 200, 60);
-    
+
     ctx.font = '16px Arial';
     ctx.fillText(bet.matchup, 200, 120);
-    
+
     ctx.font = 'bold 18px Arial';
     ctx.fillText(bet.selection, 200, 160);
-    
+
     ctx.font = '14px Arial';
     ctx.fillStyle = '#9ca3af';
     ctx.fillText(`${bet.betType.toUpperCase()}`, 200, 180);
-    
+
     // Odds
     ctx.fillStyle = bet.status === 'won' ? '#10b981' : '#9ca3af';
     ctx.font = 'bold 28px Arial';
     ctx.fillText(formatOdds(bet.odds), 200, 240);
-    
+
     // Payout info
     ctx.fillStyle = '#ffffff';
     ctx.font = '16px Arial';
     ctx.textAlign = 'left';
     ctx.fillText(`Stake: $${bet.stake.toFixed(2)}`, 50, 320);
-    
+
     ctx.fillStyle = bet.profit >= 0 ? '#10b981' : '#ef4444';
     ctx.fillText(`Profit: ${bet.profit >= 0 ? '+' : ''}$${bet.profit.toFixed(2)}`, 50, 350);
-    
+
     ctx.fillStyle = bet.status === 'won' ? '#10b981' : '#ef4444';
     ctx.font = 'bold 24px Arial';
     ctx.fillText(`TOTAL PAYOUT: $${bet.profit >= 0 ? (bet.stake + bet.profit).toFixed(2) : '0.00'}`, 50, 400);
-    
+
     // Footer
     ctx.fillStyle = '#9ca3af';
     ctx.font = '12px Arial';
     ctx.textAlign = 'left';
     ctx.fillText(`BET ID: ${generateBetId()}`, 50, 520);
-    
+
     ctx.textAlign = 'right';
     const date = new Date(bet.settledAt);
     ctx.fillText(
       `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} • ${date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`,
       350, 520
     );
-    
+
     ctx.textAlign = 'center';
     ctx.fillText('Funded ✓', 200, 560);
-    
+
     // Convert to blob and download
     canvas.toBlob((blob) => {
       const url = URL.createObjectURL(blob);
@@ -259,7 +270,7 @@ export default function BetHistory() {
                     ? 'from-blue-900/40 via-slate-900 to-purple-900/40 border-blue-500/30'
                     : 'from-red-900/40 via-slate-900 to-orange-900/40 border-red-500/30'
                 } rounded-3xl border backdrop-blur-xl overflow-hidden shadow-2xl`}>
-                  
+
                   {/* Animated Background Pattern */}
                   <div className="absolute inset-0 opacity-10">
                     <div className={`absolute inset-0 bg-gradient-to-r ${
@@ -304,7 +315,7 @@ export default function BetHistory() {
                           {bet.status === 'won' ? 'WINNER' : bet.status === 'open' ? 'OPEN' : 'LOST'}
                         </span>
                       </div>
-                      
+
                       <div className="text-right">
                         <div className="text-gray-400 text-xs font-medium">BET ID</div>
                         <div className="text-white text-sm font-mono">{generateBetId()}</div>
@@ -316,7 +327,7 @@ export default function BetHistory() {
                       <div className="bg-slate-800/60 backdrop-blur-md rounded-2xl p-6 border border-slate-600/30">
                         <div className="text-gray-400 text-xs font-bold tracking-widest uppercase mb-2">Game</div>
                         <div className="text-white font-black text-xl mb-4">{bet.matchup}</div>
-                        
+
                         <div className="flex items-center justify-between">
                           <div>
                             <div className="text-gray-400 text-xs font-bold tracking-widest uppercase mb-1">Selection</div>
@@ -343,7 +354,7 @@ export default function BetHistory() {
                         ? 'from-blue-500/20 to-purple-500/20 border-blue-400/30'
                         : 'from-red-500/20 to-orange-500/20 border-red-400/30'
                     } rounded-2xl p-6 border backdrop-blur-md mb-6`}>
-                      
+
                       <div className="grid grid-cols-2 gap-6 mb-4">
                         <div>
                           <div className="text-gray-400 text-xs font-bold tracking-widest uppercase mb-2">Stake</div>
@@ -375,7 +386,7 @@ export default function BetHistory() {
                           )}
                         </div>
                       </div>
-                      
+
                       <div className="border-t border-gray-600/30 pt-4">
                         <div className="flex items-center justify-between">
                           <span className={`font-black text-lg tracking-wider ${
@@ -427,7 +438,7 @@ export default function BetHistory() {
                           )}
                         </span>
                       </div>
-                      
+
                       <div className="flex items-center space-x-1 text-gray-500 text-sm">
                         <span>Funded</span>
                         <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
@@ -457,7 +468,7 @@ export default function BetHistory() {
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
                           </button>
-                          
+
                           {expandedShare[bet.id] && (
                             <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800/90 backdrop-blur-md rounded-xl p-4 border border-slate-600/50 z-10">
                               <div className="grid grid-cols-2 gap-3">
@@ -470,7 +481,7 @@ export default function BetHistory() {
                                   </svg>
                                   <span>Story</span>
                                 </button>
-                                
+
                                 <button
                                   onClick={() => shareToSocial('tiktok', bet)}
                                   className="flex items-center justify-center space-x-2 bg-gradient-to-r from-black to-gray-800 hover:from-gray-900 hover:to-gray-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300"
@@ -480,7 +491,7 @@ export default function BetHistory() {
                                   </svg>
                                   <span>TikTok</span>
                                 </button>
-                                
+
                                 <button
                                   onClick={() => shareToSocial('twitter', bet)}
                                   className="flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300"
@@ -490,7 +501,7 @@ export default function BetHistory() {
                                   </svg>
                                   <span>Twitter</span>
                                 </button>
-                                
+
                                 <button
                                   onClick={() => downloadBetImage(bet)}
                                   className="flex items-center justify-center space-x-2 bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white font-bold py-3 px-4 rounded-lg transition-all duration-300"
