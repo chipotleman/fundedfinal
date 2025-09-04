@@ -189,7 +189,7 @@ export default function BetHistory() {
     ctx.fillStyle = '#9ca3af';
     ctx.font = '12px Arial';
     ctx.textAlign = 'left';
-    ctx.fillText(`BET ID: ${generateBetId()}`, 50, 520);
+    ctx.fillText(`BET ID: ${generateBetId(bet)}`, 50, 520);
 
     ctx.textAlign = 'right';
     const date = new Date(bet.settledAt);
@@ -212,7 +212,11 @@ export default function BetHistory() {
     });
   };
 
-  const generateBetId = () => {
+  const generateBetId = (bet) => {
+    // Special case for Cowboys vs Eagles game
+    if (bet && bet.matchup === 'Dallas Cowboys @ Philadelphia Eagles') {
+      return `BUCKY${Date.now().toString().slice(-8)}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+    }
     return `BET${Date.now().toString().slice(-8)}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
   };
 
@@ -327,7 +331,7 @@ export default function BetHistory() {
 
                       <div className="text-right">
                         <div className="text-gray-400 text-xs font-medium">BET ID</div>
-                        <div className="text-white text-sm font-mono">{generateBetId()}</div>
+                        <div className="text-white text-sm font-mono">{generateBetId(bet)}</div>
                       </div>
                     </div>
 
