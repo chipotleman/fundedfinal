@@ -74,6 +74,7 @@ export default function MobileNavMenu({ open, onClose, bankroll, progressPercent
           <>
             <Link href="/home" onClick={onClose}>Home</Link>
             <Link href="/dashboard" onClick={onClose}>Dashboard</Link>
+            <Link href="/bet-history" onClick={onClose}>Bet History</Link>
             <Link href="/rules" onClick={onClose}>Rules</Link>
             <Link href="/how-it-works" onClick={onClose}>How it Works</Link>
           </>

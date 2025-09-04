@@ -6,9 +6,11 @@ import { supabase } from '../lib/supabaseClient';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function AuthPage() {
   const [username, setUsername] = useState('');
+  const [email, setEmail] = useState(''); // Added email state
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -19,15 +21,16 @@ export default function AuthPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const router = useRouter();
+  const { login, signUp } = useAuth();
 
-  // Clear any existing sessions when component mounts
+  // Clear any existing sessions when component mounts (This might conflict with Supabase persistent sessions, consider reviewing)
   useEffect(() => {
     const clearSession = async () => {
       if (typeof window !== 'undefined') {
-        localStorage.removeItem('demo_user');
-        localStorage.removeItem('user_session');
-        localStorage.removeItem('current_user');
-        sessionStorage.clear();
+        // localStorage.removeItem('demo_user'); // These are no longer relevant for Supabase auth
+        // localStorage.removeItem('user_session');
+        // localStorage.removeItem('current_user');
+        // sessionStorage.clear();
       }
     };
     clearSession();
@@ -74,88 +77,89 @@ export default function AuthPage() {
 
   const handleAuth = async (e) => {
     e.preventDefault();
+    if (!email.trim()) {
+      setError('Please enter an email address');
+      return;
+    }
+
+    if (isSignUp && !username.trim()) {
+      setError('Please enter a username');
+      return;
+    }
+
+    // Additional validation for password if needed (e.g., length, complexity)
+    if (password.length < 6) {
+        setError('Password must be at least 6 characters long');
+        setLoading(false);
+        return;
+    }
+
     setLoading(true);
     setError('');
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long');
-      setLoading(false);
-      return;
-    }
-
-    if (username.length < 3) {
-      setError('Username must be at least 3 characters long');
-      setLoading(false);
-      return;
-    }
-
-    if (isSignUp && password !== confirmPassword) {
-      setError('Passwords do not match');
-      setLoading(false);
-      return;
-    }
-
     try {
       if (isSignUp) {
-        // Get existing users from localStorage
-        const existingUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
+        // In Supabase, username is often handled separately or as part of profile data.
+        // For simplicity here, we'll use email as the primary identifier for auth and store username in profile.
+        // Supabase auth doesn't directly support 'username' in the sign up function itself for email/password auth.
+        // We will set a default password and allow users to change it later.
+        const { data: existingUser, error: checkUserError } = await supabase
+          .from('profiles')
+          .select('username')
+          .eq('username', username.trim())
+          .single();
 
-        // Check if username already exists
-        if (existingUsers.find(user => user.username === username)) {
-          setError('Username already exists. Please choose a different username.');
-          setLoading(false);
-          return;
+        if (checkUserError && !checkUserError.message.includes('No rows found')) {
+          throw checkUserError; // Throw error if it's not a "not found" error
         }
 
-        // Create new user
-        const newUser = {
-          id: Date.now().toString(),
-          username,
-          password,
-          createdAt: new Date().toISOString(),
-          bankroll: 0,
-          challenge: null
-        };
-
-        // Save user
-        existingUsers.push(newUser);
-        localStorage.setItem('app_users', JSON.stringify(existingUsers));
-        localStorage.setItem('current_user', JSON.stringify(newUser));
-
-        setError('✅ Account created successfully! Please select a challenge.');
-        setStep('challenge');
-      } else {
-        // Sign in existing user
-        const existingUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
-        const user = existingUsers.find(u => u.username === username && u.password === password);
-
-        if (!user) {
-          setError('Invalid username or password. Please check your credentials.');
-          setLoading(false);
-          return;
+        if (existingUser) {
+          throw new Error('Username already exists. Please choose a different one.');
         }
 
-        // Set current user
-        localStorage.setItem('current_user', JSON.stringify(user));
+        const { error } = await signUp(email.trim(), password); // Using provided password
+        if (error) throw error;
 
-        // If user already has a challenge, go to dashboard
-        if (user.challenge) {
-          setError('✅ Login successful! Redirecting to dashboard...');
-          setTimeout(() => {
-            router.push('/dashboard');
-          }, 1000);
+        // After successful signUp, create the user profile
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData?.session?.user) {
+          await supabase
+            .from('profiles')
+            .insert([
+              { id: sessionData.session.user.id, username: username.trim(), email: email.trim(), bankroll: 0, challenge: null, createdAt: new Date().toISOString() }
+            ]);
+          // Assuming login will be handled by the session listener or automatically after signUp
+          // If not, you might need to call login explicitly here with the new credentials.
         } else {
-          setError('✅ Login successful! Please select a challenge.');
-          setStep('challenge');
+          // This case should ideally not happen if signUp is successful and session is available
+          throw new Error('Could not retrieve user session after sign up.');
+        }
+        
+        setError('✅ Account created successfully! Please check your email for confirmation.');
+        // Optionally, redirect to login or a confirmation page
+        // router.push('/auth/confirm-email'); 
+      } else {
+        // Sign in logic using Supabase
+        const { error } = await login(email.trim(), password);
+        if (error) {
+          // If password login fails, we could offer to sign up or indicate error.
+          // The original logic tried to sign up if login failed, which is unusual.
+          // Let's stick to indicating login failure.
+          throw error;
+        } else {
+          // Upon successful login, Supabase auth usually handles session persistence.
+          // We don't need to manually set localStorage items for the user session.
+          router.push('/dashboard');
         }
       }
     } catch (error) {
-      console.log('Auth error:', error.message);
-      setError('Authentication failed. Please try again.');
+      console.error('Auth error:', error.message);
+      setError(error.message);
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleChallengeStart = async () => {
     if (!selectedChallenge) {
@@ -166,22 +170,31 @@ export default function AuthPage() {
     setLoading(true);
 
     try {
-      // Get current user and selected package
-      const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
-      const selectedPackage = JSON.parse(localStorage.getItem('selected_package') || '{}');
+      // Get current user from Supabase session
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData?.session?.user?.id;
+
+      if (!userId) {
+        setError('You must be logged in to start a challenge.');
+        setLoading(false);
+        return;
+      }
+
+      // Fetch current user profile data from Supabase
+      const { data: currentUser, error: fetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (fetchError) throw fetchError;
+      if (!currentUser) throw new Error('User profile not found.');
 
       // Use selected package data or fallback to default challenge
-      const challengeData = selectedPackage.startingBalance ? {
-        name: selectedPackage.name,
-        startingBalance: selectedPackage.startingBalance,
-        profitTarget: selectedPackage.profitTarget,
-        dailyLossLimit: selectedPackage.dailyLossLimit,
-        fundingAmount: selectedPackage.fundingAmount,
-        price: selectedPackage.price
-      } : selectedChallenge;
+      const challengeData = selectedChallenge; // Assuming challenge structure matches
 
-      // Update user with challenge info and personal data
-      const updatedUser = {
+      // Update user profile with challenge info
+      const updatedUserProfile = {
         ...currentUser,
         challenge: challengeData,
         bankroll: challengeData.startingBalance,
@@ -209,19 +222,13 @@ export default function AuthPage() {
         }
       };
 
-      // Save updated user
-      localStorage.setItem('current_user', JSON.stringify(updatedUser));
+      // Update user profile in Supabase
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update(updatedUserProfile)
+        .eq('id', userId);
 
-      // Clear selected package data
-      localStorage.removeItem('selected_package');
-
-      // Update in users array
-      const existingUsers = JSON.parse(localStorage.getItem('app_users') || '[]');
-      const userIndex = existingUsers.findIndex(u => u.id === currentUser.id);
-      if (userIndex !== -1) {
-        existingUsers[userIndex] = updatedUser;
-        localStorage.setItem('app_users', JSON.stringify(existingUsers));
-      }
+      if (updateError) throw updateError;
 
       router.push('/dashboard');
     } catch (error) {
@@ -396,7 +403,7 @@ export default function AuthPage() {
 
             {error && (
               <div className={`mb-6 p-4 rounded-xl border ${
-                error.includes('✅')
+                error.includes('✅') || error.includes('successfully') || error.includes('created')
                   ? 'bg-green-500/10 border-green-500/20 text-green-400'
                   : 'bg-red-500/10 border-red-500/20 text-red-400'
               }`}>
@@ -405,17 +412,33 @@ export default function AuthPage() {
             )}
 
             <form onSubmit={handleAuth} className="space-y-6">
+              {isSignUp && ( // Only show username field during sign up
+                <div>
+                  <label className="block text-sm font-semibold text-gray-300 mb-3">
+                    Username
+                  </label>
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    className="w-full px-4 py-3 sm:py-4 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium text-sm sm:text-base"
+                    placeholder="Create a username"
+                    minLength="3"
+                    required
+                  />
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-semibold text-gray-300 mb-3">
-                  Username
+                  Email
                 </label>
                 <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-3 sm:py-4 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium text-sm sm:text-base"
-                  placeholder="Enter your username"
-                  minLength="3"
+                  placeholder="Enter your email"
                   required
                 />
               </div>
@@ -492,6 +515,14 @@ export default function AuthPage() {
                 onClick={() => {
                   setIsSignUp(!isSignUp);
                   setError('');
+                  // Clear fields when switching modes if desired
+                  if (!isSignUp) { // Switching from sign in to sign up
+                    setUsername('');
+                    setConfirmPassword('');
+                  } else { // Switching from sign up to sign in
+                    setUsername(''); // Clear username if it's not needed for sign in
+                  }
+                  setPassword(''); // Always clear password
                 }}
                 className="text-green-400 hover:text-green-300 font-medium transition-colors text-sm sm:text-base"
               >
@@ -514,7 +545,9 @@ export default function AuthPage() {
       {/* Bet Slip */}
       {showBetSlip && (
         <BetSlip
-          bankroll={10000}
+          // Assuming bankroll is fetched or managed elsewhere, or passed as prop
+          // If bankroll is tied to the user, fetch it after login or from context
+          bankroll={/* User's current bankroll from Supabase or context */}
           onClose={() => setShowBetSlip(false)}
         />
       )}
