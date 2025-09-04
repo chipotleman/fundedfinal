@@ -150,7 +150,9 @@ export default function Dashboard() {
   const [pnl, setPnl] = useState(0);
 
   const handleBetSlipClick = () => {
+    console.log('Bet slip clicked, current state:', showBetSlip);
     setShowBetSlip(!showBetSlip);
+    console.log('Bet slip new state should be:', !showBetSlip);
   };
 
   const sports = ['NFL', 'NBA', 'MLB', 'NHL', 'UFC', 'Soccer'];
@@ -363,10 +365,19 @@ export default function Dashboard() {
 
       {/* Bet Slip */}
       {showBetSlip && (
-        <BetSlip
-          bankroll={bankroll}
-          onClose={() => setShowBetSlip(false)}
-        />
+        <div className="fixed inset-0 z-50">
+          <BetSlip
+            bankroll={bankroll}
+            onClose={() => setShowBetSlip(false)}
+          />
+        </div>
+      )}
+      
+      {/* Debug info - remove after testing */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="fixed bottom-4 left-4 bg-red-500 text-white p-2 text-xs z-50">
+          Bet Slip State: {showBetSlip ? 'OPEN' : 'CLOSED'}
+        </div>
       )}
 
       <style jsx>{`
