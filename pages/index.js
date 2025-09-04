@@ -181,10 +181,16 @@ export default function Home() {
       setShowHowItWorksPopup(true);
     };
 
+    const handleOpenChallengePopup = () => {
+      setShowChallengePopup(true);
+    };
+
     window.addEventListener('openHowItWorks', handleOpenHowItWorks);
+    window.addEventListener('openChallengePopup', handleOpenChallengePopup);
     
     return () => {
       window.removeEventListener('openHowItWorks', handleOpenHowItWorks);
+      window.removeEventListener('openChallengePopup', handleOpenChallengePopup);
     };
   }, []);
 

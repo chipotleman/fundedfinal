@@ -471,13 +471,15 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                       >
                         <span>SIGN IN</span>
                       </Link>
-                      <Link
-                        href="/packages"
-                        onClick={closeMobileMenu}
+                      <button
+                        onClick={() => {
+                          closeMobileMenu();
+                          window.dispatchEvent(new CustomEvent('openChallengePopup'));
+                        }}
                         className="w-full text-center bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
                       >
                         <span className="text-base">GET FUNDED</span>
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 </div>
