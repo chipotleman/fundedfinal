@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { useBetSlip } from '../contexts/BetSlipContext';
+import ShareableBetSlip from './ShareableBetSlip';
 
 export default function BetSlip({ bankroll, onClose }) {
   const { betSlip: bets, removeBet, updateStake, clearBetSlip } = useBetSlip();
   const [isPlacing, setIsPlacing] = useState(false);
   const [betType, setBetType] = useState('single');
   const [parlayStake, setParlayStake] = useState(0);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [selectedWinningBet, setSelectedWinningBet] = useState(null);
 
   // TODO: Get user's challenge from context/props - will be implemented when challenge specs are provided
   const userChallenge = 'basic'; // Placeholder - will be dynamic
@@ -84,6 +87,13 @@ export default function BetSlip({ bankroll, onClose }) {
 
     // Simulate bet placement
     setTimeout(() => {
+      // Simulate some bets winning (for demo purposes)
+      const winningBet = bets[0]; // Just take the first bet as winning for demo
+      if (winningBet && winningBet.stake > 0) {
+        setSelectedWinningBet(winningBet);
+        setShowShareModal(true);
+      }
+      
       alert(`${bets.length} bet(s) placed successfully!`);
       clearBetSlip();
       setIsPlacing(false);
@@ -397,6 +407,16 @@ export default function BetSlip({ bankroll, onClose }) {
         </div>
       )}
       </div>
+
+      {/* Shareable Bet Slip Modal */}
+      <ShareableBetSlip 
+        bet={selectedWinningBet}
+        isVisible={showShareModal}
+        onClose={() => {
+          setShowShareModal(false);
+          setSelectedWinningBet(null);
+        }}
+      />
     </>
   );
 }
