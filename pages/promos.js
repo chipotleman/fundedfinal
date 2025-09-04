@@ -1,7 +1,7 @@
-
 import React, { useState } from 'react';
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
+import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 
 export default function Promos() {
@@ -227,23 +227,23 @@ export default function Promos() {
                       {promo.status.toUpperCase()}
                     </span>
                   </div>
-                  
+
                   <p className="text-gray-300 mb-4">{promo.description}</p>
-                  
+
                   <div className="flex justify-between items-center mb-4">
                     <span className="text-2xl font-bold text-green-400">{promo.reward}</span>
                     <span className="text-gray-400">
                       {promo.progress.current}/{promo.progress.max}
                     </span>
                   </div>
-                  
+
                   <div className="w-full bg-slate-700 rounded-full h-2 mb-4">
                     <div 
                       className="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full transition-all"
                       style={{ width: `${(promo.progress.current / promo.progress.max) * 100}%` }}
                     ></div>
                   </div>
-                  
+
                   <button 
                     className={`w-full py-3 rounded-xl font-bold transition-all ${
                       promo.status === 'available' 
@@ -271,7 +271,7 @@ export default function Promos() {
                   <div className="text-center">
                     <h3 className="text-2xl font-bold text-white mb-4">{challenge.title}</h3>
                     <p className="text-gray-300 mb-6">{challenge.description}</p>
-                    
+
                     <div className="space-y-4 mb-6">
                       <div className="flex justify-between">
                         <span className="text-gray-400">Reward:</span>
@@ -290,7 +290,7 @@ export default function Promos() {
                         <span className="text-blue-400 font-bold">{challenge.timeLimit}</span>
                       </div>
                     </div>
-                    
+
                     <button className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300">
                       Start Challenge
                     </button>
@@ -308,7 +308,7 @@ export default function Promos() {
               <h2 className="text-4xl font-bold text-white mb-4">VIP Member Benefits</h2>
               <p className="text-xl text-gray-300">Unlock exclusive rewards and premium features</p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
               {vipPerks.map((perk, index) => (
                 <div key={index} className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/30">
@@ -322,7 +322,7 @@ export default function Promos() {
                 </div>
               ))}
             </div>
-            
+
             <div className="text-center">
               <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-lg rounded-2xl p-12 border border-purple-500/30">
                 <h3 className="text-3xl font-bold text-white mb-4">Become a VIP Member</h3>

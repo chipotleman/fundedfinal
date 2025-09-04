@@ -322,6 +322,13 @@ const Leaderboard = () => {
         </div>
       </div>
 
+      {showBetSlip && (
+        <BetSlip
+          bankroll={10000}
+          onClose={() => setShowBetSlip(false)}
+        />
+      )}
+
       {showProfileModal && (
         <ProfileModal 
           profile={selectedProfile}
