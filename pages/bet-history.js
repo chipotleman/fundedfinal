@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import TopNavbar from '../components/TopNavbar';
+import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -576,6 +577,13 @@ export default function BetHistory() {
         </div>
       </div>
 
-      </div>
+      {/* Bet Slip */}
+      {showBetSlip && (
+        <BetSlip
+          bankroll={10000}
+          onClose={() => setShowBetSlip(false)}
+        />
+      )}
+    </div>
   );
 }

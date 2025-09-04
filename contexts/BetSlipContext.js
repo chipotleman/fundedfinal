@@ -18,6 +18,7 @@ export const BetSlipProvider = ({ children }) => {
   // Load bet slip from localStorage on mount
   useEffect(() => {
     const saved = localStorage.getItem('betSlip');
+    const savedShowState = localStorage.getItem('showBetSlip');
     if (saved) {
       try {
         setBetSlip(JSON.parse(saved));
@@ -25,12 +26,20 @@ export const BetSlipProvider = ({ children }) => {
         console.error('Failed to parse saved bet slip:', error);
       }
     }
+    if (savedShowState) {
+      setShowBetSlip(JSON.parse(savedShowState));
+    }
   }, []);
 
   // Save bet slip to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('betSlip', JSON.stringify(betSlip));
   }, [betSlip]);
+
+  // Save show bet slip state to localStorage
+  useEffect(() => {
+    localStorage.setItem('showBetSlip', JSON.stringify(showBetSlip));
+  }, [showBetSlip]);
 
   const addToBetSlip = (game, betType, odds, selection) => {
     const betId = `${game.id}-${betType}-${selection}`;

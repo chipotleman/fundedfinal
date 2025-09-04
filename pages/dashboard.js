@@ -363,12 +363,10 @@ export default function Dashboard() {
 
       {/* Bet Slip */}
       {showBetSlip && (
-        <div className="fixed inset-0 z-50">
-          <BetSlip
-            bankroll={bankroll}
-            onClose={() => setShowBetSlip(false)}
-          />
-        </div>
+        <BetSlip
+          bankroll={bankroll}
+          onClose={() => setShowBetSlip(false)}
+        />
       )}
       
       
