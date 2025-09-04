@@ -10,7 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function AuthPage() {
   const [username, setUsername] = useState('');
-  const [email, setEmail] = useState(''); // Added email state
+  const [phone, setPhone] = useState(''); // Changed from email to phone
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -77,10 +77,10 @@ export default function AuthPage() {
 
   const handleAuth = async (e) => {
     e.preventDefault();
-    
+
     // Validation
-    if (!email.trim()) {
-      setError('Please enter an email address');
+    if (!phone.trim()) {
+      setError('Please enter a phone number');
       return;
     }
 
@@ -126,9 +126,9 @@ export default function AuthPage() {
           // Continue with signup even if profile check fails
         }
 
-        // Sign up with Supabase
+        // Sign up with Supabase using phone
         const { data, error } = await supabase.auth.signUp({
-          email: email.trim(),
+          phone: phone.trim(),
           password: password,
           options: {
             data: {
@@ -142,14 +142,25 @@ export default function AuthPage() {
         }
 
         if (data.user) {
-          setError('✅ Account created successfully! Please check your email to confirm your account.');
-          setStep('auth');
-          setIsSignUp(false);
+          if (data.user.phone_confirmed_at) {
+            // User is auto-confirmed, redirect to dashboard
+            router.push('/dashboard');
+          } else {
+            // User needs SMS confirmation
+            setError('✅ Account created successfully! Please check your phone for a verification code.');
+            setStep('auth');
+            setIsSignUp(false);
+            // Clear form
+            setUsername('');
+            setPhone('');
+            setPassword('');
+            setConfirmPassword('');
+          }
         }
       } else {
         // Sign in
         const { data, error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
+          phone: phone.trim(),
           password: password,
         });
 
@@ -163,20 +174,20 @@ export default function AuthPage() {
       }
     } catch (error) {
       console.error('Auth error:', error);
-      
+
       // Handle network and configuration errors
       if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
         setError('Network error. Please check your internet connection and try again.');
       } else if (error.message?.includes('Invalid API key') || error.message?.includes('Invalid URL')) {
         setError('Configuration error. Please contact support.');
       } else if (error.message?.includes('Invalid login credentials')) {
-        setError('Invalid email or password. Please try again.');
-      } else if (error.message?.includes('Email not confirmed')) {
-        setError('Please check your email and click the confirmation link before signing in.');
+        setError('Invalid phone number or password. Please try again.');
+      } else if (error.message?.includes('Phone not confirmed')) {
+        setError('Please check your phone and enter the verification code before signing in.');
       } else if (error.message?.includes('User already registered')) {
-        setError('This email is already registered. Please sign in instead.');
-      } else if (error.message?.includes('Unable to validate email address')) {
-        setError('Please enter a valid email address.');
+        setError('This phone number is already registered. Please sign in instead.');
+      } else if (error.message?.includes('Unable to validate phone number')) {
+        setError('Please enter a valid phone number.');
       } else {
         setError(error.message || 'An error occurred. Please try again.');
       }
@@ -456,14 +467,14 @@ export default function AuthPage() {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-300 mb-3">
-                  Email
+                  Phone Number
                 </label>
                 <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  type="tel" // Use type="tel" for phone numbers
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                   className="w-full px-4 py-3 sm:py-4 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium text-sm sm:text-base"
-                  placeholder="Enter your email"
+                  placeholder="Enter your phone number (e.g., +11234567890)"
                   required
                 />
               </div>
@@ -543,9 +554,11 @@ export default function AuthPage() {
                   // Clear fields when switching modes if desired
                   if (!isSignUp) { // Switching from sign in to sign up
                     setUsername('');
+                    setPhone(''); // Clear phone when switching to sign up
                     setConfirmPassword('');
                   } else { // Switching from sign up to sign in
                     setUsername(''); // Clear username if it's not needed for sign in
+                    setPhone(''); // Clear phone when switching to sign in
                   }
                   setPassword(''); // Always clear password
                 }}
