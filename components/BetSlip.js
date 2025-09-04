@@ -4,6 +4,21 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
   const [isPlacing, setIsPlacing] = useState(false);
   const [betType, setBetType] = useState('single');
   const [parlayStake, setParlayStake] = useState(0);
+  
+  // TODO: Get user's challenge from context/props - will be implemented when challenge specs are provided
+  const userChallenge = 'basic'; // Placeholder - will be dynamic
+  
+  // Challenge-based minimum bet amounts (to be configured based on specifications)
+  const challengeMinBets = {
+    'basic': 10,
+    'premium': 25,
+    'pro': 50,
+    'elite': 100
+  };
+  
+  const getMinBetAmount = () => {
+    return challengeMinBets[userChallenge] || 10;
+  };
 
   const updateStake = (betId, stake) => {
     setBets(bets.map(bet => 
@@ -41,6 +56,32 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
       );
   
   const potentialProfit = totalPayout - totalStake;
+  
+  // Validation logic
+  const minBetAmount = getMinBetAmount();
+  
+  const validateBets = () => {
+    if (betType === 'parlay') {
+      return {
+        isValid: parlayStake >= minBetAmount,
+        hasStakes: parlayStake > 0,
+        belowMinimum: parlayStake > 0 && parlayStake < minBetAmount,
+        invalidBets: parlayStake < minBetAmount ? ['Parlay'] : []
+      };
+    } else {
+      const betsWithoutStakes = bets.filter(bet => !bet.stake || bet.stake === 0);
+      const betsWithLowStakes = bets.filter(bet => bet.stake > 0 && bet.stake < minBetAmount);
+      
+      return {
+        isValid: bets.every(bet => bet.stake >= minBetAmount),
+        hasStakes: bets.every(bet => bet.stake > 0),
+        belowMinimum: betsWithLowStakes.length > 0,
+        invalidBets: [...betsWithoutStakes.map(bet => bet.selection), ...betsWithLowStakes.map(bet => bet.selection)]
+      };
+    }
+  };
+  
+  const validation = validateBets();
 
   const placeBets = async () => {
     if (totalStake === 0 || totalStake > bankroll) return;
@@ -153,13 +194,22 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
                         type="number"
                         value={bet.stake || ''}
                         onChange={(e) => updateStake(bet.id, e.target.value)}
-                        className="w-full pl-8 pr-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-green-400 transition-colors"
-                        placeholder="0.00"
-                        min="0"
+                        className={`w-full pl-8 pr-4 py-2 bg-slate-800 border rounded-lg text-white focus:outline-none transition-colors ${
+                          bet.stake > 0 && bet.stake < minBetAmount
+                            ? 'border-red-500 focus:border-red-400'
+                            : 'border-slate-600 focus:border-green-400'
+                        }`}
+                        placeholder={`Min $${minBetAmount}`}
+                        min={minBetAmount}
                         max={bankroll}
                         step="0.01"
                       />
                     </div>
+                    {bet.stake > 0 && bet.stake < minBetAmount && (
+                      <div className="text-red-400 text-xs mt-1">
+                        Minimum bet: ${minBetAmount}
+                      </div>
+                    )}
                     {bet.stake > 0 && (
                       <div className="text-right">
                         <div className="text-green-400 text-sm font-semibold">
@@ -224,13 +274,22 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
                     type="number"
                     value={parlayStake || ''}
                     onChange={(e) => setParlayStake(parseFloat(e.target.value) || 0)}
-                    className="w-full pl-8 pr-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-green-400 transition-colors"
-                    placeholder="0.00"
-                    min="0"
+                    className={`w-full pl-8 pr-4 py-2 bg-slate-800 border rounded-lg text-white focus:outline-none transition-colors ${
+                      parlayStake > 0 && parlayStake < minBetAmount
+                        ? 'border-red-500 focus:border-red-400'
+                        : 'border-slate-600 focus:border-green-400'
+                    }`}
+                    placeholder={`Min $${minBetAmount}`}
+                    min={minBetAmount}
                     max={bankroll}
                     step="0.01"
                   />
                 </div>
+                {parlayStake > 0 && parlayStake < minBetAmount && (
+                  <div className="text-red-400 text-xs mt-1">
+                    Minimum bet: ${minBetAmount}
+                  </div>
+                )}
                 {parlayStake > 0 && (
                   <div className="text-right mt-2">
                     <div className="text-green-400 text-sm font-semibold">
@@ -312,7 +371,7 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
             </div>
           </div>
 
-          {/* Balance Check */}
+          {/* Validation Messages */}
           {totalStake > bankroll && (
             <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3">
               <p className="text-red-400 text-sm font-medium">
@@ -320,11 +379,32 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
               </p>
             </div>
           )}
+          
+          {!validation.hasStakes && (
+            <div className="bg-yellow-500/20 border border-yellow-500/30 rounded-lg p-3">
+              <p className="text-yellow-400 text-sm font-medium">
+                Please enter a stake amount for all bets
+              </p>
+            </div>
+          )}
+          
+          {validation.belowMinimum && (
+            <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3">
+              <p className="text-red-400 text-sm font-medium">
+                Minimum bet amount is ${minBetAmount} for your challenge level
+              </p>
+              {validation.invalidBets.length > 0 && (
+                <p className="text-red-300 text-xs mt-1">
+                  Invalid: {validation.invalidBets.join(', ')}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Place Bet Button */}
           <button
             onClick={placeBets}
-            disabled={totalStake === 0 || totalStake > bankroll || isPlacing}
+            disabled={!validation.isValid || totalStake > bankroll || isPlacing}
             className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-4 rounded-xl transition-all duration-300 disabled:cursor-not-allowed"
           >
             {isPlacing ? (
