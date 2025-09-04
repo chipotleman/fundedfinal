@@ -77,6 +77,8 @@ export default function AuthPage() {
 
   const handleAuth = async (e) => {
     e.preventDefault();
+    
+    // Validation
     if (!email.trim()) {
       setError('Please enter an email address');
       return;
@@ -87,11 +89,14 @@ export default function AuthPage() {
       return;
     }
 
-    // Additional validation for password if needed (e.g., length, complexity)
     if (password.length < 6) {
-        setError('Password must be at least 6 characters long');
-        setLoading(false);
-        return;
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+
+    if (isSignUp && password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
     }
 
     setLoading(true);
@@ -99,62 +104,78 @@ export default function AuthPage() {
 
     try {
       if (isSignUp) {
-        // In Supabase, username is often handled separately or as part of profile data.
-        // For simplicity here, we'll use email as the primary identifier for auth and store username in profile.
-        // Supabase auth doesn't directly support 'username' in the sign up function itself for email/password auth.
-        // We will set a default password and allow users to change it later.
-        const { data: existingUser, error: checkUserError } = await supabase
-          .from('profiles')
-          .select('username')
-          .eq('username', username.trim())
-          .single();
-
-        if (checkUserError && !checkUserError.message.includes('No rows found')) {
-          throw checkUserError; // Throw error if it's not a "not found" error
-        }
-
-        if (existingUser) {
-          throw new Error('Username already exists. Please choose a different one.');
-        }
-
-        const { error } = await signUp(email.trim(), password); // Using provided password
-        if (error) throw error;
-
-        // After successful signUp, create the user profile
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (sessionData?.session?.user) {
-          await supabase
+        // Check if username already exists
+        try {
+          const { data: existingUser, error: checkUserError } = await supabase
             .from('profiles')
-            .insert([
-              { id: sessionData.session.user.id, username: username.trim(), email: email.trim(), bankroll: 0, challenge: null, createdAt: new Date().toISOString() }
-            ]);
-          // Assuming login will be handled by the session listener or automatically after signUp
-          // If not, you might need to call login explicitly here with the new credentials.
-        } else {
-          // This case should ideally not happen if signUp is successful and session is available
-          throw new Error('Could not retrieve user session after sign up.');
+            .select('username')
+            .eq('username', username.trim())
+            .maybeSingle();
+
+          if (checkUserError) {
+            console.error('Error checking username:', checkUserError);
+          }
+
+          if (existingUser) {
+            setError('Username already exists. Please choose a different one.');
+            setLoading(false);
+            return;
+          }
+        } catch (profileError) {
+          console.warn('Could not check existing username:', profileError);
+          // Continue with signup even if profile check fails
         }
-        
-        setError('✅ Account created successfully! Please check your email for confirmation.');
-        // Optionally, redirect to login or a confirmation page
-        // router.push('/auth/confirm-email'); 
-      } else {
-        // Sign in logic using Supabase
-        const { error } = await login(email.trim(), password);
+
+        // Sign up with Supabase
+        const { data, error } = await supabase.auth.signUp({
+          email: email.trim(),
+          password: password,
+          options: {
+            data: {
+              username: username.trim()
+            }
+          }
+        });
+
         if (error) {
-          // If password login fails, we could offer to sign up or indicate error.
-          // The original logic tried to sign up if login failed, which is unusual.
-          // Let's stick to indicating login failure.
           throw error;
-        } else {
-          // Upon successful login, Supabase auth usually handles session persistence.
-          // We don't need to manually set localStorage items for the user session.
+        }
+
+        if (data.user) {
+          setError('✅ Account created successfully! Please check your email to confirm your account.');
+          setStep('auth');
+          setIsSignUp(false);
+        }
+      } else {
+        // Sign in
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email.trim(),
+          password: password,
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (data.user) {
           router.push('/dashboard');
         }
       }
     } catch (error) {
-      console.error('Auth error:', error.message);
-      setError(error.message);
+      console.error('Auth error:', error);
+      
+      // Handle specific error types
+      if (error.message?.includes('Invalid login credentials')) {
+        setError('Invalid email or password. Please try again.');
+      } else if (error.message?.includes('Email not confirmed')) {
+        setError('Please check your email and click the confirmation link before signing in.');
+      } else if (error.message?.includes('User already registered')) {
+        setError('This email is already registered. Please sign in instead.');
+      } else if (error.message?.includes('Unable to validate email address')) {
+        setError('Please enter a valid email address.');
+      } else {
+        setError(error.message || 'An error occurred. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

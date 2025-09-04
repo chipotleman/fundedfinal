@@ -64,11 +64,16 @@ export function AuthProvider({ children }) {
   // Ensure user has a profile in the database
   const ensureUserProfile = async (user) => {
     try {
-      const { data: existingProfile } = await supabase
+      const { data: existingProfile, error: fetchError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
-        .single();
+        .maybeSingle();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        console.error('Error fetching profile:', fetchError);
+        return;
+      }
 
       if (!existingProfile) {
         // Create profile for new user
@@ -79,6 +84,8 @@ export function AuthProvider({ children }) {
               id: user.id,
               username: user.user_metadata?.username || user.email?.split('@')[0] || 'user',
               email: user.email,
+              bankroll: 0,
+              challenge: null,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             }
@@ -100,12 +107,6 @@ export function AuthProvider({ children }) {
     });
     
     if (error) throw error;
-    
-    // Ensure user profile exists
-    if (data.user) {
-      await ensureUserProfile(data.user);
-    }
-    
     return data;
   };
 
@@ -121,8 +122,6 @@ export function AuthProvider({ children }) {
     });
     
     if (error) throw error;
-    
-    // Profile will be created in the auth state change listener
     return data;
   };
 
