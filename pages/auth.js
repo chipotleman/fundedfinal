@@ -377,11 +377,17 @@ export default function AuthPage() {
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="relative max-w-md w-full">
           <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-slate-700/50 shadow-2xl">
-            <div className="text-center mb-6 sm:mb-8">
-              <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                </svg>
+            <div className="text-center mb-8">
+              <div className="mb-4 mx-auto">
+                <img
+                  src="/funderlogo/Funder.png?v=4"
+                  alt="Funder"
+                  className="h-16 w-auto mx-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
+                  style={{
+                    filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
+                    animation: 'logoRedYellowGlow 4s infinite ease-in-out'
+                  }}
+                />
               </div>
               <h1 className="text-2xl sm:text-3xl font-black text-white mb-2">
                 {isSignUp ? 'Create Account' : 'Welcome Back'}
