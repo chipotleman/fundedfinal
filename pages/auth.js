@@ -164,8 +164,12 @@ export default function AuthPage() {
     } catch (error) {
       console.error('Auth error:', error);
       
-      // Handle specific error types
-      if (error.message?.includes('Invalid login credentials')) {
+      // Handle network and configuration errors
+      if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
+        setError('Network error. Please check your internet connection and try again.');
+      } else if (error.message?.includes('Invalid API key') || error.message?.includes('Invalid URL')) {
+        setError('Configuration error. Please contact support.');
+      } else if (error.message?.includes('Invalid login credentials')) {
         setError('Invalid email or password. Please try again.');
       } else if (error.message?.includes('Email not confirmed')) {
         setError('Please check your email and click the confirmation link before signing in.');
