@@ -3,6 +3,7 @@ import { useState } from 'react';
 export default function BetSlip({ bets, setBets, bankroll, onClose }) {
   const [isPlacing, setIsPlacing] = useState(false);
   const [betType, setBetType] = useState('single');
+  const [parlayStake, setParlayStake] = useState(0);
 
   const updateStake = (betId, stake) => {
     setBets(bets.map(bet => 
@@ -24,10 +25,21 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
     }
   };
 
-  const totalStake = bets.reduce((sum, bet) => sum + (bet.stake || 0), 0);
-  const totalPayout = bets.reduce((sum, bet) => 
-    sum + (bet.stake ? calculatePayout(bet.odds, bet.stake) : 0), 0
-  );
+  const totalStake = betType === 'parlay' ? parlayStake : bets.reduce((sum, bet) => sum + (bet.stake || 0), 0);
+  
+  const totalPayout = betType === 'parlay' && parlayStake > 0 
+    ? (() => {
+        const parlayDecimal = bets.reduce((acc, bet) => {
+          const oddsValue = typeof bet.odds === 'object' ? bet.odds.odds || bet.odds.value || 0 : bet.odds;
+          const decimal = oddsValue > 0 ? (oddsValue/100 + 1) : (100/Math.abs(oddsValue) + 1);
+          return acc * decimal;
+        }, 1);
+        return parlayStake * parlayDecimal;
+      })()
+    : bets.reduce((sum, bet) => 
+        sum + (bet.stake ? calculatePayout(bet.odds, bet.stake) : 0), 0
+      );
+  
   const potentialProfit = totalPayout - totalStake;
 
   const placeBets = async () => {
@@ -131,30 +143,32 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
                   </div>
                 </div>
 
-                {/* Stake Input */}
-                <div className="space-y-2">
-                  <label className="text-gray-300 text-sm font-medium">Stake</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">$</span>
-                    <input
-                      type="number"
-                      value={bet.stake || ''}
-                      onChange={(e) => updateStake(bet.id, e.target.value)}
-                      className="w-full pl-8 pr-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-green-400 transition-colors"
-                      placeholder="0.00"
-                      min="0"
-                      max={bankroll}
-                      step="0.01"
-                    />
-                  </div>
-                  {bet.stake > 0 && (
-                    <div className="text-right">
-                      <div className="text-green-400 text-sm font-semibold">
-                        To Win: ${(calculatePayout(bet.odds, bet.stake) - bet.stake).toFixed(2)}
-                      </div>
+                {/* Stake Input - Only show for singles */}
+                {betType === 'single' && (
+                  <div className="space-y-2">
+                    <label className="text-gray-300 text-sm font-medium">Stake</label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">$</span>
+                      <input
+                        type="number"
+                        value={bet.stake || ''}
+                        onChange={(e) => updateStake(bet.id, e.target.value)}
+                        className="w-full pl-8 pr-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-green-400 transition-colors"
+                        placeholder="0.00"
+                        min="0"
+                        max={bankroll}
+                        step="0.01"
+                      />
                     </div>
-                  )}
-                </div>
+                    {bet.stake > 0 && (
+                      <div className="text-right">
+                        <div className="text-green-400 text-sm font-semibold">
+                          To Win: ${(calculatePayout(bet.odds, bet.stake) - bet.stake).toFixed(2)}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
 
@@ -200,6 +214,33 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
               )}
             </div>
 
+            {/* Parlay Stake Input */}
+            {betType === 'parlay' && bets.length > 1 && (
+              <div className="bg-slate-700/50 rounded-xl p-4 mb-4">
+                <h3 className="text-white font-semibold mb-3">Parlay Stake</h3>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">$</span>
+                  <input
+                    type="number"
+                    value={parlayStake || ''}
+                    onChange={(e) => setParlayStake(parseFloat(e.target.value) || 0)}
+                    className="w-full pl-8 pr-4 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-green-400 transition-colors"
+                    placeholder="0.00"
+                    min="0"
+                    max={bankroll}
+                    step="0.01"
+                  />
+                </div>
+                {parlayStake > 0 && (
+                  <div className="text-right mt-2">
+                    <div className="text-green-400 text-sm font-semibold">
+                      To Win: ${(totalPayout - parlayStake).toFixed(2)}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Quick Bet Amounts */}
             <div className="bg-slate-700/50 rounded-xl p-4">
               <h3 className="text-white font-semibold mb-3">Quick Amounts</h3>
@@ -210,16 +251,11 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
                     onClick={() => {
                       if (bets.length >= 1) {
                         if (betType === 'parlay') {
-                          // For parlay, set the same amount on all bets
-                          bets.forEach(bet => updateStake(bet.id, amount));
+                          // For parlay, set the parlay stake
+                          setParlayStake(amount);
                         } else {
-                          // For singles, set amount on the first bet or all if only one
-                          if (bets.length === 1) {
-                            updateStake(bets[0].id, amount);
-                          } else {
-                            // Set on first bet if multiple singles
-                            updateStake(bets[0].id, amount);
-                          }
+                          // For singles, set amount on all bets
+                          bets.forEach(bet => updateStake(bet.id, amount));
                         }
                       }
                     }}
@@ -237,16 +273,11 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
                     onClick={() => {
                       if (bets.length >= 1) {
                         if (betType === 'parlay') {
-                          // For parlay, set the same amount on all bets
-                          bets.forEach(bet => updateStake(bet.id, amount));
+                          // For parlay, set the parlay stake
+                          setParlayStake(amount);
                         } else {
-                          // For singles, set amount on the first bet or all if only one
-                          if (bets.length === 1) {
-                            updateStake(bets[0].id, amount);
-                          } else {
-                            // Set on first bet if multiple singles
-                            updateStake(bets[0].id, amount);
-                          }
+                          // For singles, set amount on all bets
+                          bets.forEach(bet => updateStake(bet.id, amount));
                         }
                       }
                     }}
