@@ -6,6 +6,7 @@ import LiveCommunityStats from '../components/LiveCommunityStats';
 import DemoPreview from '../components/DemoPreview';
 import ChallengePopup from '../components/ChallengePopup';
 import HowItWorksPopup from '../components/HowItWorksPopup';
+import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -174,7 +175,8 @@ export default function Home() {
   const [showChallengePopup, setShowChallengePopup] = useState(false);
   const [showHowItWorksPopup, setShowHowItWorksPopup] = useState(false);
   const [demoBetSlipCount, setDemoBetSlipCount] = useState(0);
-  const [showDemoBetSlip, setShowDemoBetSlip] = useState(false);
+  const [showBetSlip, setShowBetSlip] = useState(false);
+  const { betSlip, setBetSlip } = useBetSlip();
 
   useEffect(() => {
     const handleOpenHowItWorks = () => {
@@ -187,7 +189,7 @@ export default function Home() {
 
     window.addEventListener('openHowItWorks', handleOpenHowItWorks);
     window.addEventListener('openChallengePopup', handleOpenChallengePopup);
-    
+
     return () => {
       window.removeEventListener('openHowItWorks', handleOpenHowItWorks);
       window.removeEventListener('openChallengePopup', handleOpenChallengePopup);
@@ -309,6 +311,16 @@ export default function Home() {
         isOpen={showHowItWorksPopup} 
         onClose={() => setShowHowItWorksPopup(false)} 
       />
+
+      {/* Bet Slip */}
+      {showBetSlip && (
+        <BetSlip
+          bets={betSlip}
+          setBets={setBetSlip}
+          bankroll={10000}
+          onClose={() => setShowBetSlip(false)}
+        />
+      )}
     </div>
   );
 }

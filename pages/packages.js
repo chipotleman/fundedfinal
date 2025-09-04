@@ -1,12 +1,15 @@
-
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import TopNavbar from '../components/TopNavbar';
+import BetSlip from '../components/BetSlip';
+import { useBetSlip } from '../contexts/BetSlipContext';
 
 export default function Packages() {
-  const router = useRouter();
   const [billingType, setBillingType] = useState('monthly'); // 'monthly' or 'annual'
+  const [showBetSlip, setShowBetSlip] = useState(false);
+  const { betSlip, setBetSlip } = useBetSlip();
+  const router = useRouter();
 
   const monthlyPackages = [
     {
@@ -138,18 +141,16 @@ export default function Packages() {
       profitTarget: parseInt(packageData.target.replace(/[$,]/g, '')),
       dailyLossLimit: parseFloat(packageData.dailyLoss.replace('%', '')) / 100
     }));
-    
+
     console.log('Purchasing package:', packageData);
     router.push('/auth');
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-black text-white">
       <TopNavbar 
-        bankroll={null}
-        pnl={null}
-        betSlipCount={0}
-        onBetSlipClick={() => {}}
+        betSlipCount={betSlip.length}
+        onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
 
       {/* Compact Title Section */}
@@ -161,7 +162,7 @@ export default function Packages() {
           <p className="text-base sm:text-lg text-gray-300 max-w-2xl mx-auto mb-6">
             Choose the funding level that matches your betting strategy and start earning real profits
           </p>
-          
+
           {/* Billing Toggle */}
           <div className="flex justify-center mb-6">
             <div className="bg-slate-800 rounded-xl p-1 border border-slate-700">
@@ -381,6 +382,16 @@ export default function Packages() {
           Learn More About Our Process
         </Link>
       </div>
+
+      {/* Bet Slip */}
+      {showBetSlip && (
+        <BetSlip
+          bets={betSlip}
+          setBets={setBetSlip}
+          bankroll={10000}
+          onClose={() => setShowBetSlip(false)}
+        />
+      )}
     </div>
   );
 }

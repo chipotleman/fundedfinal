@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
 import Link from 'next/link';
+import { supabase } from '../lib/supabaseClient';
+import TopNavbar from '../components/TopNavbar';
+import BetSlip from '../components/BetSlip';
+import { useBetSlip } from '../contexts/BetSlipContext';
 
 export default function AuthPage() {
   const [username, setUsername] = useState('');
@@ -11,6 +16,9 @@ export default function AuthPage() {
   const [step, setStep] = useState('auth');
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showBetSlip, setShowBetSlip] = useState(false);
+  const { betSlip, setBetSlip } = useBetSlip();
   const router = useRouter();
 
   // Clear any existing sessions when component mounts
@@ -78,6 +86,12 @@ export default function AuthPage() {
 
     if (username.length < 3) {
       setError('Username must be at least 3 characters long');
+      setLoading(false);
+      return;
+    }
+
+    if (isSignUp && password !== confirmPassword) {
+      setError('Passwords do not match');
       setLoading(false);
       return;
     }
@@ -350,7 +364,11 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black flex flex-col">
+    <div className="min-h-screen bg-black text-white">
+      <TopNavbar 
+        betSlipCount={betSlip.length}
+        onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
+      />
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-20" style={{
         backgroundImage: "url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22m36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"
@@ -437,6 +455,23 @@ export default function AuthPage() {
                 <p className="text-gray-400 text-xs mt-2">Minimum 6 characters required</p>
               </div>
 
+              {isSignUp && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-300 mb-3">
+                    Confirm Password
+                  </label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full px-4 py-3 sm:py-4 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium text-sm sm:text-base"
+                    placeholder="Confirm your password"
+                    minLength="6"
+                    required
+                  />
+                </div>
+              )}
+
               <button
                 type="submit"
                 disabled={loading}
@@ -476,6 +511,16 @@ export default function AuthPage() {
           </div>
         </div>
       </div>
+
+      {/* Bet Slip */}
+      {showBetSlip && (
+        <BetSlip
+          bets={betSlip}
+          setBets={setBetSlip}
+          bankroll={10000} // Example bankroll, this should be fetched or managed properly
+          onClose={() => setShowBetSlip(false)}
+        />
+      )}
 
       <style jsx>{`
         @keyframes logoRedYellowGlow {
