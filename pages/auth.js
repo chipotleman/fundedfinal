@@ -372,9 +372,6 @@ export default function AuthPage() {
                   }}
                 />
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-white mb-2">
-                {isSignUp ? 'Create Account' : 'Sign In'}
-              </h1>
               <p className="text-gray-400 font-medium text-sm sm:text-base">
                 {isSignUp ? 'Join our funded challenge platform' : 'Sign in to your account'}
               </p>
