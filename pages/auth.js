@@ -356,41 +356,14 @@ export default function AuthPage() {
         backgroundImage: "url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22m36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"
       }}></div>
 
-      {/* Header with Logo */}
-      <div className="relative z-10 px-6 py-8">
-        <div className="max-w-7xl mx-auto">
-          <Link href="/" className="flex items-center justify-center">
-            <img
-              src="/funderlogo/Funder.png?v=4"
-              alt="Funder"
-              className="h-12 sm:h-16 w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
-              style={{
-                filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
-                animation: 'logoRedYellowGlow 4s infinite ease-in-out'
-              }}
-            />
-          </Link>
-        </div>
-      </div>
-
       {/* Main Auth Form */}
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="relative max-w-md w-full">
           <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-slate-700/50 shadow-2xl">
             <div className="text-center mb-8">
-              <div className="mb-4 mx-auto">
-                <img
-                  src="/funderlogo/Funder.png?v=4"
-                  alt="Funder"
-                  className="h-16 w-auto mx-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
-                  style={{
-                    filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
-                    animation: 'logoRedYellowGlow 4s infinite ease-in-out'
-                  }}
-                />
-              </div>
+              {/* Removed logo from here */}
               <h1 className="text-2xl sm:text-3xl font-black text-white mb-2">
-                {isSignUp ? 'Create Account' : 'Welcome Back'}
+                {isSignUp ? 'Create Account' : 'Sign In'}
               </h1>
               <p className="text-gray-400 font-medium text-sm sm:text-base">
                 {isSignUp ? 'Join our funded challenge platform' : 'Sign in to your account'}
