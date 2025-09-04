@@ -545,9 +545,7 @@ export default function AuthPage() {
       {/* Bet Slip */}
       {showBetSlip && (
         <BetSlip
-          // Assuming bankroll is fetched or managed elsewhere, or passed as prop
-          // If bankroll is tied to the user, fetch it after login or from context
-          bankroll={/* User's current bankroll from Supabase or context */}
+          bankroll={10000}
           onClose={() => setShowBetSlip(false)}
         />
       )}
