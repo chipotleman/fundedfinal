@@ -164,7 +164,7 @@ export default function BetHistory() {
                     <div className={`font-bold text-xl ${
                       bet.profit >= 0 ? 'text-green-400' : 'text-red-400'
                     }`}>
-                      {bet.profit >= 0 ? '+' : ''}${bet.profit.toFixed(2)}
+                      ${bet.profit >= 0 ? (bet.stake + bet.profit).toFixed(2) : '0.00'}
                     </div>
                   </div>
                 </div>

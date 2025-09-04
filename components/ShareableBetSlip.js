@@ -20,6 +20,10 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
     }
   };
 
+  const generateBetId = () => {
+    return `BET${Date.now().toString().slice(-8)}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+  };
+
   const generateImage = async () => {
     if (!betSlipRef.current) return;
     
@@ -99,7 +103,7 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
             {/* Logo Watermark */}
             <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
               <img 
-                src="/fundmybet-logo.png" 
+                src="/funderlogo/Funder.png" 
                 alt="FundMyBet" 
                 className="w-64 h-64 object-contain"
               />
@@ -111,7 +115,7 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
               <div className="text-center mb-6">
                 <div className="flex items-center justify-center mb-2">
                   <img 
-                    src="/fundmybet-logo.png" 
+                    src="/funderlogo/Funder.png" 
                     alt="FundMyBet" 
                     className="w-8 h-8 mr-2"
                   />
@@ -147,25 +151,39 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
                     <span className="text-white font-semibold">${bet.stake.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-300">Payout:</span>
-                    <span className="text-white font-semibold">${payout.toFixed(2)}</span>
+                    <span className="text-gray-300">Profit:</span>
+                    <span className="text-green-400 font-semibold">${profit.toFixed(2)}</span>
                   </div>
                   <div className="border-t border-gray-600 pt-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-green-400 font-bold text-lg">PROFIT:</span>
-                      <span className="text-green-400 font-bold text-2xl">${profit.toFixed(2)}</span>
+                      <span className="text-green-400 font-bold text-lg">TOTAL PAYOUT:</span>
+                      <span className="text-green-400 font-bold text-2xl">${payout.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
               {/* Footer */}
-              <div className="text-center pt-4 border-t border-slate-600">
-                <div className="text-gray-400 text-xs mb-2">
-                  PLACED: {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}
+              <div className="pt-4 border-t border-slate-600">
+                <div className="flex justify-between items-center mb-2">
+                  <div className="text-gray-400 text-xs">
+                    BET ID: {generateBetId()}
+                  </div>
+                  <div className="text-gray-400 text-xs">
+                    {new Date(bet.settledAt).toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric',
+                      year: 'numeric'
+                    })} • {new Date(bet.settledAt).toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
                 </div>
-                <div className="text-gray-400 text-xs">
-                  Join the challenge at fundmybet.com
+                <div className="text-center">
+                  <div className="text-gray-400 text-xs">
+                    Join the challenge at fundmybet.com
+                  </div>
                 </div>
               </div>
             </div>
