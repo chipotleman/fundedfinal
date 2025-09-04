@@ -47,7 +47,7 @@ export const BetSlipProvider = ({ children }) => {
         matchup: `${game.awayTeam} @ ${game.homeTeam}`,
         betType,
         selection,
-        odds,
+        odds: typeof odds === 'object' ? odds.odds || odds.value || 0 : odds,
         stake: 0
       };
       

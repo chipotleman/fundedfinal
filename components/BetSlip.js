@@ -15,10 +15,12 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
   };
 
   const calculatePayout = (odds, stake) => {
-    if (odds > 0) {
-      return (stake * odds / 100) + stake;
+    // Handle case where odds might be an object
+    const oddsValue = typeof odds === 'object' ? odds.odds || odds.value || 0 : odds;
+    if (oddsValue > 0) {
+      return (stake * oddsValue / 100) + stake;
     } else {
-      return (stake * (100 / Math.abs(odds))) + stake;
+      return (stake * (100 / Math.abs(oddsValue))) + stake;
     }
   };
 
@@ -43,7 +45,9 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
   };
 
   const formatOdds = (odds) => {
-    return odds > 0 ? `+${odds}` : odds.toString();
+    // Handle case where odds might be an object
+    const oddsValue = typeof odds === 'object' ? odds.odds || odds.value || 0 : odds;
+    return oddsValue > 0 ? `+${oddsValue}` : oddsValue.toString();
   };
 
   const addBet = (bet) => {
