@@ -149,6 +149,10 @@ export default function Dashboard() {
   const [bankroll, setBankroll] = useState(10000);
   const [pnl, setPnl] = useState(0);
 
+  const handleBetSlipClick = () => {
+    setShowBetSlip(!showBetSlip);
+  };
+
   const sports = ['NFL', 'NBA', 'MLB', 'NHL', 'UFC', 'Soccer'];
 
   useEffect(() => {
@@ -194,7 +198,7 @@ export default function Dashboard() {
         bankroll={bankroll}
         pnl={pnl}
         betSlipCount={betSlip.length}
-        onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
+        onBetSlipClick={handleBetSlipClick}
       />
 
       {/* Main Content */}
