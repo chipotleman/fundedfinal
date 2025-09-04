@@ -90,24 +90,6 @@ export default function BetHistory() {
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl font-bold text-white mb-6">Bet History</h1>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-            <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
-              <div className="text-gray-400 text-sm">Total P&L</div>
-              <div className={`text-2xl font-bold ${totalProfit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {totalProfit >= 0 ? '+' : ''}${totalProfit.toFixed(2)}
-              </div>
-            </div>
-            <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
-              <div className="text-gray-400 text-sm">Win Rate</div>
-              <div className="text-2xl font-bold text-white">{winRate}%</div>
-            </div>
-            <div className="bg-gray-900 rounded-xl p-6 border border-gray-700">
-              <div className="text-gray-400 text-sm">Total Bets</div>
-              <div className="text-2xl font-bold text-white">{settledBets.length}</div>
-            </div>
-          </div>
-
           {/* Filter Tabs */}
           <div className="flex space-x-4 mb-6">
             {['all', 'won', 'lost'].map(filter => (
@@ -126,55 +108,79 @@ export default function BetHistory() {
           </div>
 
           {/* Bets List */}
-          <div className="space-y-4">
+          <div className="space-y-6">
             {filteredBets.map(bet => (
               <div 
                 key={bet.id} 
-                className={`bg-gray-900 rounded-xl border p-6 ${
-                  bet.status === 'won' ? 'border-green-500/30' : 'border-red-500/30'
-                }`}
+                className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-600 p-8 shadow-xl"
               >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <div className={`w-3 h-3 rounded-full ${
-                        bet.status === 'won' ? 'bg-green-400' : 'bg-red-400'
-                      }`}></div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        bet.status === 'won' 
-                          ? 'bg-green-500/20 text-green-400' 
-                          : 'bg-red-500/20 text-red-400'
-                      }`}>
-                        {bet.status.toUpperCase()}
-                      </span>
-                    </div>
-                    
-                    <h3 className="text-white font-bold text-lg mb-1">{bet.matchup}</h3>
-                    <p className="text-gray-300 mb-2">{bet.selection}</p>
-                    <p className="text-gray-400 text-sm">{bet.betType} • {formatOdds(bet.odds)}</p>
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-4 h-4 rounded-full ${
+                      bet.status === 'won' ? 'bg-green-400' : 'bg-red-400'
+                    }`}></div>
+                    <span className={`px-4 py-2 rounded-full text-sm font-bold ${
+                      bet.status === 'won' 
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                        : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                    }`}>
+                      {bet.status === 'won' ? 'WON' : 'LOST'}
+                    </span>
                   </div>
+                  <div className="text-gray-400 text-sm">
+                    {new Date(bet.settledAt).toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                </div>
 
-                  <div className="text-right mt-4 sm:mt-0">
-                    <div className="text-gray-400 text-sm">Stake: ${bet.stake.toFixed(2)}</div>
-                    <div className={`text-xl font-bold ${
+                {/* Matchup */}
+                <div className="mb-6">
+                  <h3 className="text-white font-bold text-2xl mb-2">{bet.matchup}</h3>
+                  <div className="bg-slate-700/50 rounded-xl p-4">
+                    <div className="text-gray-300 text-sm mb-1">SELECTION</div>
+                    <div className="text-white font-bold text-lg">{bet.selection}</div>
+                    <div className="text-gray-400 text-sm mt-1">{bet.betType.toUpperCase()}</div>
+                  </div>
+                </div>
+
+                {/* Bet Details Grid */}
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                  <div className="bg-slate-700/30 rounded-xl p-4 text-center">
+                    <div className="text-gray-400 text-sm mb-1">ODDS</div>
+                    <div className="text-blue-400 font-bold text-xl">{formatOdds(bet.odds)}</div>
+                  </div>
+                  <div className="bg-slate-700/30 rounded-xl p-4 text-center">
+                    <div className="text-gray-400 text-sm mb-1">STAKE</div>
+                    <div className="text-white font-bold text-xl">${bet.stake.toFixed(2)}</div>
+                  </div>
+                  <div className="bg-slate-700/30 rounded-xl p-4 text-center">
+                    <div className="text-gray-400 text-sm mb-1">PAYOUT</div>
+                    <div className={`font-bold text-xl ${
                       bet.profit >= 0 ? 'text-green-400' : 'text-red-400'
                     }`}>
                       {bet.profit >= 0 ? '+' : ''}${bet.profit.toFixed(2)}
                     </div>
-                    <div className="text-gray-500 text-xs">
-                      {new Date(bet.settledAt).toLocaleDateString()}
-                    </div>
-                    
-                    {bet.status === 'won' && (
-                      <button
-                        onClick={() => handleShareBet(bet)}
-                        className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                      >
-                        Share Win 🎉
-                      </button>
-                    )}
                   </div>
                 </div>
+
+                {/* Share Button */}
+                {bet.status === 'won' && (
+                  <div className="text-center">
+                    <button
+                      onClick={() => handleShareBet(bet)}
+                      className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold px-6 py-3 rounded-xl transition-all duration-300 flex items-center space-x-2 mx-auto"
+                    >
+                      <span>Share Win</span>
+                      <span>🎉</span>
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
 
