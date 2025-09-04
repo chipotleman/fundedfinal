@@ -8,8 +8,7 @@ export default function Waitlist() {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [submitted, setSubmitted] = useState(false);
-  const { betSlip, setBetSlip } = useBetSlip();
-  const [showBetSlip, setShowBetSlip] = useState(false);
+  const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -20,7 +19,7 @@ export default function Waitlist() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <TopNavbar 
+      <TopNavbar
         betSlipCount={betSlip.length}
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />

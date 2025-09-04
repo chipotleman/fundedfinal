@@ -7,8 +7,7 @@ import { useBetSlip } from '../contexts/BetSlipContext';
 
 export default function Packages() {
   const [billingType, setBillingType] = useState('monthly'); // 'monthly' or 'annual'
-  const [showBetSlip, setShowBetSlip] = useState(false);
-  const { betSlip, setBetSlip } = useBetSlip();
+  const { betSlip, setShowBetSlip } = useBetSlip();
   const router = useRouter();
 
   const monthlyPackages = [

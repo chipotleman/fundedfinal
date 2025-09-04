@@ -17,8 +17,7 @@ export default function AuthPage() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showBetSlip, setShowBetSlip] = useState(false);
-  const { betSlip, setBetSlip } = useBetSlip();
+  const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const router = useRouter();
 
   // Clear any existing sessions when component mounts

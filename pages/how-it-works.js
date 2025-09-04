@@ -1,4 +1,3 @@
-
 import React from "react";
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
@@ -61,7 +60,7 @@ const HowItWorks = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <TopNavbar 
+      <TopNavbar
         bankroll={10000}
         pnl={0}
         betSlipCount={betSlip.length}
@@ -88,7 +87,7 @@ const HowItWorks = () => {
               {index < steps.length - 1 && (
                 <div className="absolute left-1/2 top-32 w-px h-16 bg-gradient-to-b from-gray-600 to-transparent transform -translate-x-1/2 hidden lg:block"></div>
               )}
-              
+
               <div className={`flex flex-col lg:flex-row items-center gap-8 ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
                 {/* Content */}
                 <div className="flex-1 text-center lg:text-left">

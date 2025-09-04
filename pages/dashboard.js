@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
+import { useBetSlip } from '../contexts/BetSlipContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const mockGames = {
   'NFL': [
@@ -139,12 +141,11 @@ const mockGames = {
 };
 
 export default function Dashboard() {
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
+  const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const [selectedSport, setSelectedSport] = useState('All Sports');
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [betSlip, setBetSlip] = useState([]);
-  const [showBetSlip, setShowBetSlip] = useState(false);
   const [bankroll, setBankroll] = useState(10000);
   const [pnl, setPnl] = useState(0);
 
@@ -415,7 +416,7 @@ export default function Dashboard() {
         .h-18 {
           height: 4.5rem;
         }
-        
+
         /* Disable hover effects on touch devices */
         @media (hover: none) and (pointer: coarse) {
           button:hover {

@@ -5,6 +5,7 @@ import ProfileModal from '../components/ProfileModal';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserProfiles } from '../contexts/UserProfilesContext';
 import { useAuth } from '../contexts/AuthContext';
+import BetSlip from '../components/BetSlip'; // Assuming BetSlip component is imported
 
 const Leaderboard = () => {
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
@@ -51,6 +52,11 @@ const Leaderboard = () => {
         profit: Math.floor(user.profit * 0.7),
         roi: user.roi * 0.7
       }));
+    } else if (timeframe === 'alltime') {
+       // For 'alltime', we can use the base data or a specific calculation if needed.
+       // For now, let's just use the base data without modification for 'alltime'.
+       // If you want to adjust 'alltime' data, you can add logic here.
+       filteredData = [...allLeaderboardData]; // Reset to original if 'alltime' needs specific handling
     }
 
     return filteredData;
