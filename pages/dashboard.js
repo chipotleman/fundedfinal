@@ -142,7 +142,7 @@ const mockGames = {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
+  const { betSlip, showBetSlip, setShowBetSlip, addToBetSlip: contextAddToBetSlip } = useBetSlip();
   const [selectedSport, setSelectedSport] = useState('All Sports');
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -167,34 +167,7 @@ export default function Dashboard() {
   };
 
   const addToBetSlip = (game, betType, odds, selection) => {
-    const newBet = {
-      id: `${game.id}-${betType}-${selection}`,
-      game_id: game.id,
-      matchup: `${game.awayTeam} @ ${game.homeTeam}`,
-      selection: selection,
-      betType: betType,
-      odds: odds,
-      stake: 0
-    };
-
-    setBetSlip(prev => {
-      const existing = prev.find(bet => bet.id === newBet.id);
-      if (existing) {
-        const newSlip = prev.filter(bet => bet.id !== newBet.id);
-        // If bet slip becomes empty, hide it
-        if (newSlip.length === 0) {
-          setShowBetSlip(false);
-        }
-        return newSlip;
-      }
-
-      const sameGameBet = prev.find(bet => bet.game_id === game.id && bet.betType === betType);
-      if (sameGameBet) {
-        return prev.filter(bet => !(bet.game_id === game.id && bet.betType === betType)).concat(newBet);
-      }
-
-      return [...prev, newBet];
-    });
+    contextAddToBetSlip(game, betType, odds, selection);
   };
 
   const getSportIcon = (sport) => {
@@ -217,13 +190,7 @@ export default function Dashboard() {
     }
   };
 
-  const removeBetFromSlip = (betId) => {
-    setBetSlip(prev => prev.filter(bet => bet.id !== betId));
-    // Force re-render to immediately update highlights on mobile
-    setTimeout(() => {
-      setGames(prevGames => [...prevGames]);
-    }, 0);
-  };
+  
 
   return (
     <div className="min-h-screen bg-black">
