@@ -175,8 +175,7 @@ export default function Home() {
   const [showChallengePopup, setShowChallengePopup] = useState(false);
   const [showHowItWorksPopup, setShowHowItWorksPopup] = useState(false);
   const [demoBetSlipCount, setDemoBetSlipCount] = useState(0);
-  const [showBetSlip, setShowBetSlip] = useState(false);
-  const { betSlip, setBetSlip } = useBetSlip();
+  const [showDemoBetSlip, setShowDemoBetSlip] = useState(false);
 
   useEffect(() => {
     const handleOpenHowItWorks = () => {
@@ -316,7 +315,7 @@ export default function Home() {
       {showBetSlip && (
         <BetSlip
           bets={betSlip}
-          setBets={setBetSlip}
+          setBets={() => {}} // This should be handled by the context
           bankroll={10000}
           onClose={() => setShowBetSlip(false)}
         />
