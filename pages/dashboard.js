@@ -167,53 +167,8 @@ export default function Dashboard() {
   };
 
   const isBetInSlip = (game, betType, selection) => {
-    let betId;
-    switch (betType) {
-      case 'spread':
-        betId = `${game.id}-spread-${selection}`;
-        break;
-      case 'total':
-        betId = `${game.id}-total-${selection}`;
-        break;
-      case 'moneyline':
-        betId = `${game.id}-moneyline-${selection}`;
-        break;
-      default:
-        return false;
-    }
+    const betId = `${game.id}-${betType}-${selection}`;
     return betSlip.some(bet => bet.id === betId);
-  };
-
-  const addToBetSlip = (game, betType, odds, selection) => {
-    let betId;
-    let formattedSelection;
-    switch (betType) {
-      case 'spread':
-        betId = `${game.id}-spread-${selection}`;
-        formattedSelection = selection;
-        break;
-      case 'total':
-        betId = `${game.id}-total-${selection}`;
-        formattedSelection = selection;
-        break;
-      case 'moneyline':
-        betId = `${game.id}-moneyline-${selection}`;
-        formattedSelection = selection;
-        break;
-      default:
-        return; // Should not happen
-    }
-
-    const newBet = {
-      id: betId,
-      game: `${game.awayTeam} @ ${game.homeTeam}`,
-      selection: formattedSelection,
-      odds: typeof odds === 'object' ? formatOdds(odds.odds) : formatOdds(odds),
-      wager: 0,
-      potentialPayout: 0,
-    };
-
-    addToBetSlip(newBet);
   };
 
   const getSportIcon = (sport) => {
