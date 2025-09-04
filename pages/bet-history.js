@@ -269,13 +269,19 @@ export default function BetHistory() {
                     } animate-pulse`}></div>
                   </div>
 
-                  {/* Funder Logo Watermark */}
-                  <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
-                    <img 
-                      src="/funderlogo/Funder.png" 
-                      alt="Funder" 
-                      className="w-80 h-80 object-contain"
-                    />
+                  {/* Repeating Funder Logo Watermark Pattern */}
+                  <div className="absolute inset-0 opacity-[0.02] pointer-events-none overflow-hidden">
+                    <div className="grid grid-cols-8 gap-4 h-full w-full transform rotate-12 scale-110">
+                      {[...Array(64)].map((_, i) => (
+                        <div key={i} className="flex items-center justify-center">
+                          <img 
+                            src="/funderlogo/Funder.png" 
+                            alt="Funder" 
+                            className="w-8 h-8 object-contain"
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   {/* Content */}
@@ -295,7 +301,7 @@ export default function BetHistory() {
                         <span className={`font-black text-sm tracking-wider ${
                           bet.status === 'won' ? 'text-emerald-400' : bet.status === 'open' ? 'text-blue-400' : 'text-red-400'
                         }`}>
-                          {bet.status === 'won' ? '✨ WINNER' : bet.status === 'open' ? '🔄 OPEN' : '💀 LOST'}
+                          {bet.status === 'won' ? 'WINNER' : bet.status === 'open' ? 'OPEN' : 'LOST'}
                         </span>
                       </div>
                       
