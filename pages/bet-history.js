@@ -112,75 +112,118 @@ export default function BetHistory() {
             {filteredBets.map(bet => (
               <div 
                 key={bet.id} 
-                className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-600 p-8 shadow-xl"
+                className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-600 p-8 shadow-xl overflow-hidden"
               >
-                {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-4 h-4 rounded-full ${
-                      bet.status === 'won' ? 'bg-green-400' : 'bg-red-400'
-                    }`}></div>
-                    <span className={`px-4 py-2 rounded-full text-sm font-bold ${
-                      bet.status === 'won' 
-                        ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                        : 'bg-red-500/20 text-red-400 border border-red-500/30'
-                    }`}>
-                      {bet.status === 'won' ? 'WON' : 'LOST'}
-                    </span>
-                  </div>
-                  <div className="text-gray-400 text-sm">
-                    {new Date(bet.settledAt).toLocaleDateString('en-US', { 
-                      month: 'short', 
-                      day: 'numeric',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </div>
+                {/* Logo Watermark */}
+                <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
+                  <img 
+                    src="/funderlogo/Funder.png" 
+                    alt="Funder" 
+                    className="w-64 h-64 object-contain"
+                  />
                 </div>
 
-                {/* Matchup */}
-                <div className="mb-6">
-                  <h3 className="text-white font-bold text-2xl mb-2">{bet.matchup}</h3>
-                  <div className="bg-slate-700/50 rounded-xl p-4">
-                    <div className="text-gray-300 text-sm mb-1">SELECTION</div>
-                    <div className="text-white font-bold text-lg">{bet.selection}</div>
-                    <div className="text-gray-400 text-sm mt-1">{bet.betType.toUpperCase()}</div>
-                  </div>
-                </div>
-
-                {/* Bet Details Grid */}
-                <div className="grid grid-cols-3 gap-4 mb-6">
-                  <div className="bg-slate-700/30 rounded-xl p-4 text-center">
-                    <div className="text-gray-400 text-sm mb-1">ODDS</div>
-                    <div className="text-blue-400 font-bold text-xl">{formatOdds(bet.odds)}</div>
-                  </div>
-                  <div className="bg-slate-700/30 rounded-xl p-4 text-center">
-                    <div className="text-gray-400 text-sm mb-1">STAKE</div>
-                    <div className="text-white font-bold text-xl">${bet.stake.toFixed(2)}</div>
-                  </div>
-                  <div className="bg-slate-700/30 rounded-xl p-4 text-center">
-                    <div className="text-gray-400 text-sm mb-1">PAYOUT</div>
-                    <div className={`font-bold text-xl ${
-                      bet.profit >= 0 ? 'text-green-400' : 'text-red-400'
-                    }`}>
-                      ${bet.profit >= 0 ? (bet.stake + bet.profit).toFixed(2) : '0.00'}
+                {/* Content */}
+                <div className="relative z-10">
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-4 h-4 rounded-full ${
+                        bet.status === 'won' ? 'bg-green-400' : 'bg-red-400'
+                      }`}></div>
+                      <span className={`px-4 py-2 rounded-full text-sm font-bold ${
+                        bet.status === 'won' 
+                          ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                          : 'bg-red-500/20 text-red-400 border border-red-500/30'
+                      }`}>
+                        {bet.status === 'won' ? 'WINNING BET ✓' : 'LOST'}
+                      </span>
                     </div>
                   </div>
-                </div>
 
-                {/* Share Button */}
-                {bet.status === 'won' && (
-                  <div className="text-center">
-                    <button
-                      onClick={() => handleShareBet(bet)}
-                      className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold px-6 py-3 rounded-xl transition-all duration-300 flex items-center space-x-2 mx-auto"
-                    >
-                      <span>Share Win</span>
-                      <span>🎉</span>
-                    </button>
+                  {/* Matchup */}
+                  <div className="mb-6">
+                    <div className="bg-slate-700/50 rounded-xl p-4 mb-4">
+                      <div className="text-gray-300 text-sm mb-1">MATCHUP</div>
+                      <div className="text-white font-bold text-xl">{bet.matchup}</div>
+                    </div>
+
+                    <div className="bg-slate-700/50 rounded-xl p-4">
+                      <div className="text-gray-300 text-sm mb-1">SELECTION</div>
+                      <div className="text-white font-bold text-lg">{bet.selection}</div>
+                      <div className="text-gray-400 text-sm mt-1">{bet.betType.toUpperCase()}</div>
+                    </div>
                   </div>
-                )}
+
+                  {/* Odds */}
+                  <div className="bg-slate-700/50 rounded-xl p-4 mb-6">
+                    <div className="text-gray-300 text-sm mb-1">ODDS</div>
+                    <div className="text-green-400 font-bold text-xl">{formatOdds(bet.odds)}</div>
+                  </div>
+
+                  {/* Payout Section */}
+                  <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 rounded-xl p-4 border border-green-500/30 mb-6">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-gray-300">Stake:</span>
+                      <span className="text-white font-semibold">${bet.stake.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-gray-300">Profit:</span>
+                      <span className={`font-semibold ${
+                        bet.profit >= 0 ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        ${bet.profit >= 0 ? bet.profit.toFixed(2) : bet.profit.toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="border-t border-gray-600 pt-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-green-400 font-bold text-lg">TOTAL PAYOUT:</span>
+                        <span className={`font-bold text-2xl ${
+                          bet.profit >= 0 ? 'text-green-400' : 'text-red-400'
+                        }`}>
+                          ${bet.profit >= 0 ? (bet.stake + bet.profit).toFixed(2) : '0.00'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="pt-4 border-t border-slate-600">
+                    <div className="flex justify-between items-center mb-2">
+                      <div className="text-gray-400 text-xs">
+                        BET ID: BET{Date.now().toString().slice(-8)}{Math.floor(Math.random() * 1000).toString().padStart(3, '0')}
+                      </div>
+                      <div className="text-gray-400 text-xs">
+                        {new Date(bet.settledAt).toLocaleDateString('en-US', { 
+                          month: 'short', 
+                          day: 'numeric',
+                          year: 'numeric'
+                        })} • {new Date(bet.settledAt).toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-gray-400 text-xs">
+                        Join the challenge at fundmybet.com
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Share Button */}
+                  {bet.status === 'won' && (
+                    <div className="text-center mt-6">
+                      <button
+                        onClick={() => handleShareBet(bet)}
+                        className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-bold px-6 py-3 rounded-xl transition-all duration-300 flex items-center space-x-2 mx-auto"
+                      >
+                        <span>Share Win</span>
+                        <span>🎉</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             ))}
 
