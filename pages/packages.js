@@ -386,8 +386,6 @@ export default function Packages() {
       {/* Bet Slip */}
       {showBetSlip && (
         <BetSlip
-          bets={betSlip}
-          setBets={setBetSlip}
           bankroll={10000}
           onClose={() => setShowBetSlip(false)}
         />

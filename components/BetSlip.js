@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useBetSlip } from '../contexts/BetSlipContext';
 
-export default function BetSlip({ bets, setBets, bankroll, onClose }) {
+export default function BetSlip({ bankroll, onClose }) {
+  const { betSlip: bets, removeBet, updateStake, clearBetSlip } = useBetSlip();
   const [isPlacing, setIsPlacing] = useState(false);
   const [betType, setBetType] = useState('single');
   const [parlayStake, setParlayStake] = useState(0);
@@ -20,15 +22,7 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
     return challengeMinBets[userChallenge] || 10;
   };
 
-  const updateStake = (betId, stake) => {
-    setBets(bets.map(bet => 
-      bet.id === betId ? { ...bet, stake: parseFloat(stake) || 0 } : bet
-    ));
-  };
-
-  const removeBet = (betId) => {
-    setBets(bets.filter(bet => bet.id !== betId));
-  };
+  
 
   const calculatePayout = (odds, stake) => {
     // Handle case where odds might be an object
@@ -91,7 +85,7 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
     // Simulate bet placement
     setTimeout(() => {
       alert(`${bets.length} bet(s) placed successfully!`);
-      setBets([]);
+      clearBetSlip();
       setIsPlacing(false);
       onClose();
     }, 1500);
@@ -103,23 +97,7 @@ export default function BetSlip({ bets, setBets, bankroll, onClose }) {
     return oddsValue > 0 ? `+${oddsValue}` : oddsValue.toString();
   };
 
-  const addBet = (bet) => {
-    setBets(prev => {
-      const existing = prev.find(b => b.id === bet.id);
-      if (existing) {
-        return prev.filter(b => b.id !== bet.id);
-      }
-
-      // Check if there's already a bet for the same game
-      const sameGameBet = prev.find(b => b.game_id === bet.game_id);
-      if (sameGameBet) {
-        // Remove the existing bet for this game and add the new one
-        return prev.filter(b => b.game_id !== bet.game_id).concat(bet);
-      }
-
-      return [...prev, bet];
-    });
-  };
+  
 
   return (
     <>

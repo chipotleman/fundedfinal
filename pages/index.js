@@ -314,8 +314,6 @@ export default function Home() {
       {/* Bet Slip */}
       {showBetSlip && (
         <BetSlip
-          bets={betSlip}
-          setBets={() => {}} // This should be handled by the context
           bankroll={10000}
           onClose={() => setShowBetSlip(false)}
         />
