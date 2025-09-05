@@ -9,8 +9,6 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
   const [betType, setBetType] = useState('single');
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [showDetailedStats, setShowDetailedStats] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [successBetData, setSuccessBetData] = useState(null);
 
   const mockGames = [
     {
@@ -172,57 +170,55 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
 
   return (
     <div className="bg-black py-4 relative" data-demo-section>
-      {/* Demo Challenge Dashboard - Full page overlay like real bet slip */}
+      {/* Demo Challenge Dashboard - Floating responsive */}
       {showDemoBetSlip && (
-        <>
-          {/* Desktop/Mobile Overlay */}
-          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowDemoBetSlip(false)}></div>
+        <div className="fixed inset-0 z-50 lg:inset-auto lg:top-20 lg:right-8 lg:w-[480px]">
+          {/* Mobile Overlay */}
+          <div className="fixed inset-0 bg-black/50 lg:hidden" onClick={() => setShowDemoBetSlip(false)}></div>
 
-          {/* Demo Bet Slip Panel - Same style as real bet slip */}
-          <div className="fixed right-0 top-0 bottom-0 w-full max-w-sm lg:max-w-md lg:w-96 bg-slate-800 border-l border-slate-700 flex flex-col z-50 transform translate-x-0 transition-transform duration-300 ease-in-out">
-            {/* Header */}
-            <div className="p-6 border-b border-slate-700">
+          {/* Challenge Dashboard Panel - Full height without scrolling */}
+          <div className="absolute bottom-0 left-0 right-0 h-[85vh] lg:relative bg-black border border-slate-700 rounded-t-2xl lg:rounded-2xl shadow-2xl lg:h-auto w-full lg:w-[480px] flex flex-col">
+            <div className="flex-shrink-0 p-3 border-b border-slate-700">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white flex items-center">
-                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
+                <h3 className="text-base font-bold text-white flex items-center">
+                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clipRule="evenodd" />
                   </svg>
-                  Demo Bet Slip ({selectedBets.length})
-                </h2>
+                  Challenge 1
+                </h3>
                 <button
                   onClick={() => setShowDemoBetSlip(false)}
                   className="text-gray-400 hover:text-white transition-colors"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
-            </div></div>
+            </div>
 
-            {/* Bets */}
-            <div className="flex-1 overflow-y-auto"></div>
-              <div className="p-4 space-y-4">
+            {/* Main Betting Area - Primary Focus */}
+            <div className="flex-1 flex flex-col p-4 lg:p-6 overflow-hidden">
               {/* Bet Type Toggle - Only show when multiple bets selected */}
               {selectedBets.length > 1 && (
-                <div className="bg-slate-700/50 rounded-lg p-3 mb-4">
-                  <h3 className="text-white font-bold mb-2 text-sm">Bet Type</h3>
-                  <div className="grid grid-cols-2 gap-2">
+                <div className="bg-slate-700/50 rounded-xl p-4 mb-6">
+                  <h3 className="text-white font-bold mb-3 text-lg">Bet Type</h3>
+                  <div className="grid grid-cols-2 gap-3">
                     <button
                       onClick={() => setBetType('single')}
-                      className={`font-medium py-2 px-3 rounded-lg text-sm transition-all duration-200 ${
+                      className={`font-bold py-3 px-4 rounded-xl text-base transition-all duration-200 ${
                         betType === 'single'
-                          ? 'bg-green-500 text-white'
+                          ? 'bg-green-500 text-white shadow-lg'
                           : 'bg-slate-800 hover:bg-slate-700 text-white'
                       }`}
                     >
-                      Singles
+                      Single Bets
                     </button>
                     <button
                       onClick={() => setBetType('parlay')}
-                      className={`font-medium py-2 px-3 rounded-lg text-sm transition-all duration-200 ${
+                      className={`font-bold py-3 px-4 rounded-xl text-base transition-all duration-200 ${
                         betType === 'parlay'
-                          ? 'bg-green-500 text-white'
+                          ? 'bg-green-500 text-white shadow-lg'
                           : 'bg-slate-800 hover:bg-slate-700 text-white'
                       }`}
                     >
@@ -230,8 +226,8 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                     </button>
                   </div>
                   {betType === 'parlay' && (
-                    <div className="mt-2 p-2 bg-blue-500/20 border border-blue-500/30 rounded-lg">
-                      <p className="text-blue-400 font-medium text-center text-sm">
+                    <div className="mt-4 p-4 bg-blue-500/20 border border-blue-500/30 rounded-xl">
+                      <p className="text-blue-400 font-bold text-center">
                         Parlay Odds: {calculateParlayOdds() > 0 ? '+' : ''}{calculateParlayOdds()}
                       </p>
                     </div>
@@ -243,7 +239,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
               {selectedBets.length > 0 ? (
                 <div className="flex-1 space-y-4 overflow-y-auto">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-white font-bold text-lg">Your Bets ({selectedBets.length})</h4>
+                    <h4 className="text-white font-bold text-xl">Your Bets ({selectedBets.length})</h4>
                     <button
                       onClick={clearAllBets}
                       className="text-red-400 hover:text-red-300 font-medium text-sm"
@@ -252,109 +248,70 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                     </button>
                   </div>
 
-                  {betType === 'parlay' ? (
-                    <div className="space-y-3">
-                      {/* Parlay Bets List */}
-                      <div className="bg-slate-700/30 rounded-lg p-3 border border-slate-600/50">
-                        <div className="text-white font-bold text-sm mb-3">Parlay ({selectedBets.length} bets)</div>
-                        {selectedBets.map((bet, index) => (
-                          <div key={bet.id} className="flex justify-between items-center py-2 border-b border-slate-600/30 last:border-b-0">
-                            <div className="flex-1 min-w-0">
-                              <div className="text-white text-xs truncate">{bet.team}</div>
-                              <div className="text-gray-400 text-xs truncate">{bet.matchup}</div>
-                            </div>
-                            <div className="flex items-center space-x-2 flex-shrink-0">
-                              <span className="bg-green-500/20 text-green-400 px-2 py-0.5 rounded text-xs font-bold">
-                                {bet.odds > 0 ? '+' : ''}{bet.odds}
-                              </span>
-                              <button
-                                onClick={() => removeBet(bet.id)}
-                                className="text-gray-400 hover:text-red-400 transition-colors"
-                              >
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                              </button>
-                            </div>
+                  <div className="space-y-4">
+                    {selectedBets.map((bet) => (
+                      <div key={bet.id} className="bg-slate-700/30 rounded-xl p-5 border border-slate-600/50">
+                        {/* Bet Header */}
+                        <div className="flex justify-between items-start mb-4">
+                          <div className="flex-1">
+                            <div className="text-white font-bold text-lg mb-1">{bet.team}</div>
+                            <div className="text-gray-300 font-medium">{bet.matchup}</div>
+                            <div className="text-gray-400 text-sm">{bet.betType}</div>
                           </div>
-                        ))}
-                        
-                        {/* Single Parlay Stake Input */}
-                        <div className="mt-3 space-y-2">
+                          <div className="flex items-center space-x-3">
+                            <span className="bg-green-500/20 text-green-400 px-3 py-2 rounded-lg font-bold text-lg">
+                              {bet.odds > 0 ? '+' : ''}{bet.odds}
+                            </span>
+                            <button
+                              onClick={() => removeBet(bet.id)}
+                              className="text-gray-400 hover:text-red-400 transition-colors"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Stake Input */}
+                        <div className="space-y-3">
+                          <label className="text-gray-300 font-medium">Wager Amount</label>
                           <div className="relative">
-                            <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 font-medium text-sm">$</div>
+                            <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 font-bold text-lg">$</div>
                             <input
                               type="number"
-                              placeholder="Parlay Amount"
-                              value={selectedBets[0]?.stake || ''}
-                              onChange={(e) => updateAllBetStakes(e.target.value)}
-                              className="w-full bg-slate-700 text-white font-medium text-sm pl-8 pr-4 py-2 rounded-lg border border-slate-500 focus:border-blue-400 focus:outline-none transition-all duration-200"
+                              placeholder="Enter amount"
+                              value={betType === 'parlay' ? (selectedBets[0]?.stake || '') : (bet.stake || '')}
+                              onChange={(e) => {
+                                if (betType === 'parlay') {
+                                  updateAllBetStakes(e.target.value);
+                                } else {
+                                  updateBetStake(bet.id, e.target.value);
+                                }
+                              }}
+                              className="w-full bg-gradient-to-r from-slate-700 to-slate-600 text-white font-bold text-lg pl-12 pr-6 py-4 rounded-xl border border-slate-500 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 focus:outline-none transition-all duration-200"
+                              style={{ fontSize: '18px' }}
                             />
                           </div>
-                          {selectedBets[0]?.stake > 0 && (
-                            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
-                              <div className="text-green-400 font-medium text-sm text-center">
-                                Parlay Payout: ${(selectedBets[0].stake * (calculateParlayOdds() > 0 ? calculateParlayOdds()/100 + 1 : 100/Math.abs(calculateParlayOdds()) + 1)).toFixed(0)}
+                          {((betType === 'single' && bet.stake > 0) || (betType === 'parlay' && selectedBets[0]?.stake > 0)) && (
+                            <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
+                              <div className="text-green-400 font-bold text-lg text-center">
+                                {betType === 'parlay'
+                                  ? `Parlay Payout: $${(selectedBets[0].stake * (calculateParlayOdds() > 0 ? calculateParlayOdds()/100 + 1 : 100/Math.abs(calculateParlayOdds()) + 1)).toFixed(0)}`
+                                  : `To Win: $${calculatePayout(bet.odds, bet.stake).toFixed(0)}`
+                                }
                               </div>
                             </div>
                           )}
                         </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {selectedBets.map((bet) => (
-                        <div key={bet.id} className="bg-slate-700/30 rounded-lg p-3 border border-slate-600/50">
-                          {/* Compact Bet Header */}
-                          <div className="flex justify-between items-center mb-2">
-                            <div className="flex-1 min-w-0">
-                              <div className="text-white font-bold text-sm truncate">{bet.team}</div>
-                              <div className="text-gray-400 text-xs truncate">{bet.matchup}</div>
-                            </div>
-                            <div className="flex items-center space-x-2 flex-shrink-0">
-                              <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded text-sm font-bold">
-                                {bet.odds > 0 ? '+' : ''}{bet.odds}
-                              </span>
-                              <button
-                                onClick={() => removeBet(bet.id)}
-                                className="text-gray-400 hover:text-red-400 transition-colors"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                              </button>
-                            </div>
-                          </div>
+                    ))}
+                  </div>
 
-                          {/* Compact Stake Input */}
-                          <div className="space-y-2">
-                            <div className="relative">
-                              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 font-medium text-sm">$</div>
-                              <input
-                                type="number"
-                                placeholder="Amount"
-                                value={bet.stake || ''}
-                                onChange={(e) => updateBetStake(bet.id, e.target.value)}
-                                className="w-full bg-slate-700 text-white font-medium text-sm pl-8 pr-4 py-2 rounded-lg border border-slate-500 focus:border-blue-400 focus:outline-none transition-all duration-200"
-                              />
-                            </div>
-                            {bet.stake > 0 && (
-                              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
-                                <div className="text-green-400 font-medium text-sm text-center">
-                                  To Win: ${calculatePayout(bet.odds, bet.stake).toFixed(0)}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                
                   {/* Quick Bet Amounts */}
-                  <div className="bg-slate-700/30 rounded-lg p-3">
-                    <h3 className="text-white font-medium mb-2 text-sm">Quick Amounts</h3>
-                    <div className="grid grid-cols-5 gap-1">
+                  <div className="bg-slate-700/30 rounded-xl p-4">
+                    <h3 className="text-white font-bold mb-3">Quick Amounts</h3>
+                    <div className="grid grid-cols-5 gap-2">
                       {[25, 50, 100, 250, 500].map((amount) => (
                         <button
                           key={amount}
@@ -365,7 +322,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                               selectedBets.forEach(bet => updateBetStake(bet.id, amount));
                             }
                           }}
-                          className="bg-slate-800 hover:bg-green-500 text-white font-medium py-1.5 px-2 rounded text-xs transition-colors"
+                          className="bg-slate-800 hover:bg-green-500 text-white font-bold py-2 px-3 rounded-lg transition-colors text-sm"
                         >
                           ${amount}
                         </button>
@@ -374,192 +331,77 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                   </div>
                 </div>
               ) : (
-                <div className="p-6 text-center">
-                  <svg className="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                  <p className="text-gray-400 text-lg font-medium mb-2">Your demo bet slip is empty</p>
-                  <p className="text-gray-500 text-sm">Click on odds to add demo bets</p>
+                <div className="flex-1 flex items-center justify-center">
+                  <div className="text-center py-8">
+                    <svg className="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    <h3 className="text-xl font-bold text-white mb-2">No Bets Selected</h3>
+                    <p className="text-gray-400">Click on odds below to add bets to your slip</p>
+                  </div>
                 </div>
               )}
-            </div>
 
-            {/* Footer */}
-            {selectedBets.length > 0 && (
-              <div className="p-6 border-t border-slate-700 space-y-4">
-                {/* Demo Balance Info */}
-                <div className="space-y-2">
-                  <div className="flex justify-between text-gray-300">
-                    <span>Demo Balance:</span>
-                    <span className="font-semibold text-green-400">${demoBalance.toLocaleString()}</span>
-                  </div>
-                  <div className="flex justify-between text-gray-300">
-                    <span>Total Stake:</span>
-                    <span className="font-semibold">${totalStake.toFixed(2)}</span>
-                  </div>
-                  {betType === 'parlay' && selectedBets[0]?.stake > 0 ? (
-                    <div className="flex justify-between text-green-400 font-bold text-lg border-t border-slate-600 pt-2">
-                      <span>Potential Payout:</span>
-                      <span>${(selectedBets[0].stake * (calculateParlayOdds() > 0 ? calculateParlayOdds()/100 + 1 : 100/Math.abs(calculateParlayOdds()) + 1)).toFixed(2)}</span>
+              {/* Challenge Stats - Secondary Info */}
+              <div className="mt-6 space-y-4">
+                {!showDetailedStats ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-slate-700/30 rounded-lg p-3">
+                      <div className="text-gray-400 text-xs">Balance</div>
+                      <div className="text-lg font-bold text-green-400">${demoBalance.toLocaleString()}</div>
                     </div>
-                  ) : (
-                    <div className="flex justify-between text-green-400 font-bold text-lg border-t border-slate-600 pt-2">
-                      <span>Potential Payout:</span>
-                      <span>${selectedBets.reduce((sum, bet) => sum + (bet.stake ? calculatePayout(bet.odds, bet.stake) : 0), 0).toFixed(2)}</span>
+                    <div className="bg-slate-700/30 rounded-lg p-3">
+                      <div className="text-gray-400 text-xs">Challenge Progress</div>
+                      <div className="text-lg font-bold text-blue-400">78%</div>
                     </div>
-                  )}
-                </div>
-
-                {/* Place Demo Bet Button */}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-slate-700/30 rounded-lg p-3">
+                      <div className="text-gray-400 text-xs">Bets Placed</div>
+                      <div className="text-lg font-bold text-white">12</div>
+                    </div>
+                    <div className="bg-slate-700/30 rounded-lg p-3">
+                      <div className="text-gray-400 text-xs">Win Rate</div>
+                      <div className="text-lg font-bold text-green-400">67%</div>
+                    </div>
+                    <div className="bg-slate-700/30 rounded-lg p-3">
+                      <div className="text-gray-400 text-xs">Days Left</div>
+                      <div className="text-lg font-bold text-orange-400">14</div>
+                    </div>
+                    <div className="bg-slate-700/30 rounded-lg p-3">
+                      <div className="text-gray-400 text-xs">Max Loss</div>
+                      <div className="text-lg font-bold text-red-400">$1,000</div>
+                    </div>
+                  </div>
+                )}
                 <button
-                  onClick={() => {
-                    if (selectedBets.some(bet => bet.stake > 0)) {
-                      // Calculate total stake and potential payout
-                      const totalStake = betType === 'parlay' 
-                        ? (selectedBets[0]?.stake || 0)
-                        : selectedBets.reduce((sum, bet) => sum + (bet.stake || 0), 0);
-                      
-                      const totalPayout = betType === 'parlay' && selectedBets[0]?.stake > 0
-                        ? selectedBets[0].stake * (calculateParlayOdds() > 0 ? calculateParlayOdds()/100 + 1 : 100/Math.abs(calculateParlayOdds()) + 1)
-                        : selectedBets.reduce((sum, bet) => sum + (bet.stake ? calculatePayout(bet.odds, bet.stake) : 0), 0);
-
-                      setSuccessBetData({
-                        bets: selectedBets.filter(bet => bet.stake > 0),
-                        betType,
-                        totalStake,
-                        totalPayout,
-                        balanceAfter: demoBalance - totalStake
-                      });
-                      setShowSuccessModal(true);
-                    } else {
-                      setSuccessBetData(null);
-                      setShowSuccessModal(true);
-                    }
-                  }}
-                  className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 rounded-xl transition-all duration-300"
+                  onClick={() => setShowDetailedStats(!showDetailedStats)}
+                  className="w-full bg-slate-600/50 hover:bg-slate-600 text-white font-medium py-2 px-4 rounded-lg transition-colors text-sm"
                 >
-                  Place Demo Bet{selectedBets.length > 1 ? 's' : ''}
+                  {showDetailedStats ? 'VIEW LESS' : 'VIEW MORE'}
                 </button>
               </div>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* Demo Success Modal */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/70" onClick={() => setShowSuccessModal(false)}></div>
-          <div className="relative bg-slate-800 rounded-2xl border border-slate-700 p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white">
-                {successBetData ? 'Demo Bet Placed!' : 'Demo Mode'}
-              </h3>
-              <button
-                onClick={() => setShowSuccessModal(false)}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
             </div>
 
-            {successBetData ? (
-              <div className="space-y-4">
-                {/* Success Message */}
-                <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4 text-center">
-                  <div className="text-green-400 font-bold text-lg mb-2">✅ Bet Placed Successfully!</div>
-                  <p className="text-green-300 text-sm">This shows how your real challenge would work</p>
-                </div>
-
-                {/* Bet Summary */}
-                <div className="bg-slate-700/30 rounded-xl p-4">
-                  <h4 className="text-white font-semibold mb-3">Bet Summary</h4>
-                  
-                  {successBetData.betType === 'parlay' ? (
-                    <div className="space-y-2">
-                      <div className="text-blue-400 font-medium text-sm">Parlay ({successBetData.bets.length} bets)</div>
-                      {successBetData.bets.map((bet, index) => (
-                        <div key={bet.id} className="text-gray-300 text-sm">
-                          • {bet.team} ({bet.odds > 0 ? '+' : ''}{bet.odds})
-                        </div>
-                      ))}
-                      <div className="border-t border-slate-600 pt-2 mt-2">
-                        <div className="text-white text-sm">Parlay Odds: {calculateParlayOdds() > 0 ? '+' : ''}{calculateParlayOdds()}</div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {successBetData.bets.map((bet) => (
-                        <div key={bet.id} className="text-gray-300 text-sm">
-                          • {bet.team} - ${bet.stake} ({bet.odds > 0 ? '+' : ''}{bet.odds})
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Financial Summary */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-700/30 rounded-xl p-4 text-center">
-                    <div className="text-gray-400 text-sm">Total Stake</div>
-                    <div className="text-xl font-bold text-red-400">${successBetData.totalStake.toFixed(0)}</div>
-                  </div>
-                  <div className="bg-slate-700/30 rounded-xl p-4 text-center">
-                    <div className="text-gray-400 text-sm">Potential Payout</div>
-                    <div className="text-xl font-bold text-green-400">${successBetData.totalPayout.toFixed(0)}</div>
-                  </div>
-                </div>
-
-                <div className="bg-slate-700/30 rounded-xl p-4">
-                  <div className="text-gray-400 text-sm mb-1">Updated Balance</div>
-                  <div className="text-2xl font-bold text-green-400">${successBetData.balanceAfter.toLocaleString()}</div>
-                  <div className="text-gray-400 text-xs mt-1">*Demo balance for illustration</div>
-                </div>
-
-                <button
-                  onClick={() => {
-                    setShowSuccessModal(false);
+            {/* Bottom Actions - Fixed */}
+            <div className="flex-shrink-0 border-t border-slate-600 p-4 lg:p-6">
+              <button
+                onClick={() => {
+                  if (selectedBets.some(bet => bet.stake > 0)) {
+                    alert('Demo bets placed successfully! This shows how your real challenge would work.');
                     setSelectedBets([]);
                     setShowDemoBetSlip(false);
                     setDemoBetSlipCount?.(0);
-                    setDemoBalance(successBetData.balanceAfter);
-                  }}
-                  className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
-                >
-                  Continue Demo
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-4 text-center">
-                  <div className="text-blue-400 font-bold text-lg mb-2">🎮 Demo Mode</div>
-                  <p className="text-blue-300 text-sm">Add stake amounts to your bets to see how placing bets works!</p>
-                </div>
-
-                <div className="bg-slate-700/30 rounded-xl p-4">
-                  <h4 className="text-white font-semibold mb-3">How to Use:</h4>
-                  <div className="space-y-2 text-sm text-gray-300">
-                    <div>1. Add stake amounts to your selected bets</div>
-                    <div>2. Choose between single bets or parlay</div>
-                    <div>3. Click "Place Demo Bet" to see the results</div>
-                    <div>4. Sign up to start betting with real funded accounts!</div>
-                  </div>
-                </div>
-
-                <Link href="/auth" className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 text-center block">
-                  Start Real Challenge
-                </Link>
-
-                <button
-                  onClick={() => setShowSuccessModal(false)}
-                  className="w-full bg-slate-600 hover:bg-slate-500 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-                >
-                  Continue Demo
-                </button>
-              </div>
-            )}
+                  } else {
+                    alert('This is just a demo! Sign up to start your real funded challenge.');
+                  }
+                }}
+                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 text-sm"
+              >
+                PLACE DEMO BET
+              </button>
+            </div>
           </div>
         </div>
       )}
