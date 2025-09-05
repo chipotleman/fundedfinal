@@ -172,35 +172,37 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
 
   return (
     <div className="bg-black py-4 relative" data-demo-section>
-      {/* Demo Challenge Dashboard - Floating responsive */}
+      {/* Demo Challenge Dashboard - Full page overlay like real bet slip */}
       {showDemoBetSlip && (
-        <div className="fixed inset-0 z-50 lg:inset-auto lg:top-20 lg:right-8 lg:w-[480px]">
-          {/* Mobile Overlay */}
-          <div className="fixed inset-0 bg-black/50 lg:hidden" onClick={() => setShowDemoBetSlip(false)}></div>
+        <>
+          {/* Desktop/Mobile Overlay */}
+          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setShowDemoBetSlip(false)}></div>
 
-          {/* Challenge Dashboard Panel - Full height without scrolling */}
-          <div className="absolute bottom-0 left-0 right-0 h-[85vh] lg:relative bg-black border border-slate-700 rounded-t-2xl lg:rounded-2xl shadow-2xl lg:h-auto w-full lg:w-[480px] flex flex-col">
-            <div className="flex-shrink-0 p-3 border-b border-slate-700">
+          {/* Demo Bet Slip Panel - Same style as real bet slip */}
+          <div className="fixed right-0 top-0 bottom-0 w-full max-w-sm lg:max-w-md lg:w-96 bg-slate-800 border-l border-slate-700 flex flex-col z-50 transform translate-x-0 transition-transform duration-300 ease-in-out">
+            {/* Header */}
+            <div className="p-6 border-b border-slate-700">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-white flex items-center">
-                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clipRule="evenodd" />
+                <h2 className="text-xl font-bold text-white flex items-center">
+                  <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
                   </svg>
-                  Challenge 1
-                </h3>
+                  Demo Bet Slip ({selectedBets.length})
+                </h2>
                 <button
                   onClick={() => setShowDemoBetSlip(false)}
                   className="text-gray-400 hover:text-white transition-colors"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
-            </div>
+            </div></div>
 
-            {/* Main Betting Area - Primary Focus */}
-            <div className="flex-1 flex flex-col p-4 lg:p-6 overflow-hidden">
+            {/* Bets */}
+            <div className="flex-1 overflow-y-auto"></div>
+              <div className="p-4 space-y-4">
               {/* Bet Type Toggle - Only show when multiple bets selected */}
               {selectedBets.length > 1 && (
                 <div className="bg-slate-700/50 rounded-lg p-3 mb-4">
@@ -372,94 +374,79 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                   </div>
                 </div>
               ) : (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center py-8">
-                    <svg className="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                    <h3 className="text-xl font-bold text-white mb-2">No Bets Selected</h3>
-                    <p className="text-gray-400">Click on odds below to add bets to your slip</p>
-                  </div>
+                <div className="p-6 text-center">
+                  <svg className="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  <p className="text-gray-400 text-lg font-medium mb-2">Your demo bet slip is empty</p>
+                  <p className="text-gray-500 text-sm">Click on odds to add demo bets</p>
                 </div>
-              )}
+              )}</div>
 
-              {/* Challenge Stats - Secondary Info */}
-              <div className="mt-4 space-y-3">
-                {!showDetailedStats ? (
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-slate-700/30 rounded-lg p-2">
-                      <div className="text-gray-400 text-xs">Balance</div>
-                      <div className="text-sm font-bold text-green-400">${demoBalance.toLocaleString()}</div>
-                    </div>
-                    <div className="bg-slate-700/30 rounded-lg p-2">
-                      <div className="text-gray-400 text-xs">Progress</div>
-                      <div className="text-sm font-bold text-blue-400">78%</div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-slate-700/30 rounded-lg p-2">
-                      <div className="text-gray-400 text-xs">Bets</div>
-                      <div className="text-sm font-bold text-white">12</div>
-                    </div>
-                    <div className="bg-slate-700/30 rounded-lg p-2">
-                      <div className="text-gray-400 text-xs">Win Rate</div>
-                      <div className="text-sm font-bold text-green-400">67%</div>
-                    </div>
-                    <div className="bg-slate-700/30 rounded-lg p-2">
-                      <div className="text-gray-400 text-xs">Days Left</div>
-                      <div className="text-sm font-bold text-orange-400">14</div>
-                    </div>
-                    <div className="bg-slate-700/30 rounded-lg p-2">
-                      <div className="text-gray-400 text-xs">Max Loss</div>
-                      <div className="text-sm font-bold text-red-400">$1K</div>
-                    </div>
-                  </div>
-                )}
-                <button
-                  onClick={() => setShowDetailedStats(!showDetailedStats)}
-                  className="w-full bg-slate-600/50 hover:bg-slate-600 text-white font-medium py-1.5 px-3 rounded-lg transition-colors text-xs"
-                >
-                  {showDetailedStats ? 'LESS' : 'MORE'}
-                </button>
               </div>
             </div>
 
-            {/* Bottom Actions - Fixed */}
-            <div className="flex-shrink-0 border-t border-slate-600 p-4 lg:p-6">
-              <button
-                onClick={() => {
-                  if (selectedBets.some(bet => bet.stake > 0)) {
-                    // Calculate total stake and potential payout
-                    const totalStake = betType === 'parlay' 
-                      ? (selectedBets[0]?.stake || 0)
-                      : selectedBets.reduce((sum, bet) => sum + (bet.stake || 0), 0);
-                    
-                    const totalPayout = betType === 'parlay' && selectedBets[0]?.stake > 0
-                      ? selectedBets[0].stake * (calculateParlayOdds() > 0 ? calculateParlayOdds()/100 + 1 : 100/Math.abs(calculateParlayOdds()) + 1)
-                      : selectedBets.reduce((sum, bet) => sum + (bet.stake ? calculatePayout(bet.odds, bet.stake) : 0), 0);
+            {/* Footer */}
+            {selectedBets.length > 0 && (
+              <div className="p-6 border-t border-slate-700 space-y-4">
+                {/* Demo Balance Info */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-gray-300">
+                    <span>Demo Balance:</span>
+                    <span className="font-semibold text-green-400">${demoBalance.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-gray-300">
+                    <span>Total Stake:</span>
+                    <span className="font-semibold">${totalStake.toFixed(2)}</span>
+                  </div>
+                  {betType === 'parlay' && selectedBets[0]?.stake > 0 ? (
+                    <div className="flex justify-between text-green-400 font-bold text-lg border-t border-slate-600 pt-2">
+                      <span>Potential Payout:</span>
+                      <span>${(selectedBets[0].stake * (calculateParlayOdds() > 0 ? calculateParlayOdds()/100 + 1 : 100/Math.abs(calculateParlayOdds()) + 1)).toFixed(2)}</span>
+                    </div>
+                  ) : (
+                    <div className="flex justify-between text-green-400 font-bold text-lg border-t border-slate-600 pt-2">
+                      <span>Potential Payout:</span>
+                      <span>${selectedBets.reduce((sum, bet) => sum + (bet.stake ? calculatePayout(bet.odds, bet.stake) : 0), 0).toFixed(2)}</span>
+                    </div>
+                  )}
+                </div>
 
-                    setSuccessBetData({
-                      bets: selectedBets.filter(bet => bet.stake > 0),
-                      betType,
-                      totalStake,
-                      totalPayout,
-                      balanceAfter: demoBalance - totalStake
-                    });
-                    setShowSuccessModal(true);
-                  } else {
-                    setSuccessBetData(null);
-                    setShowSuccessModal(true);
-                  }
-                }}
-                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 text-sm"
-              >
-                PLACE DEMO BET
-              </button>
-            </div>
+                {/* Place Demo Bet Button */}
+                <button
+                  onClick={() => {
+                    if (selectedBets.some(bet => bet.stake > 0)) {
+                      // Calculate total stake and potential payout
+                      const totalStake = betType === 'parlay' 
+                        ? (selectedBets[0]?.stake || 0)
+                        : selectedBets.reduce((sum, bet) => sum + (bet.stake || 0), 0);
+                      
+                      const totalPayout = betType === 'parlay' && selectedBets[0]?.stake > 0
+                        ? selectedBets[0].stake * (calculateParlayOdds() > 0 ? calculateParlayOdds()/100 + 1 : 100/Math.abs(calculateParlayOdds()) + 1)
+                        : selectedBets.reduce((sum, bet) => sum + (bet.stake ? calculatePayout(bet.odds, bet.stake) : 0), 0);
+
+                      setSuccessBetData({
+                        bets: selectedBets.filter(bet => bet.stake > 0),
+                        betType,
+                        totalStake,
+                        totalPayout,
+                        balanceAfter: demoBalance - totalStake
+                      });
+                      setShowSuccessModal(true);
+                    } else {
+                      setSuccessBetData(null);
+                      setShowSuccessModal(true);
+                    }
+                  }}
+                  className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 rounded-xl transition-all duration-300"
+                >
+                  Place Demo Bet{selectedBets.length > 1 ? 's' : ''}
+                </button>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        </>
+      )}</div>
 
       {/* Demo Success Modal */}
       {showSuccessModal && (
