@@ -444,7 +444,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
             )}
           </div>
         </>
-      )}</div>
+      )}
 
       {/* Demo Success Modal */}
       {showSuccessModal && (
