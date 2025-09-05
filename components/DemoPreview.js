@@ -381,9 +381,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                   <p className="text-gray-400 text-lg font-medium mb-2">Your demo bet slip is empty</p>
                   <p className="text-gray-500 text-sm">Click on odds to add demo bets</p>
                 </div>
-              )}</div>
-
-              </div>
+              )}
             </div>
 
             {/* Footer */}
