@@ -348,9 +348,8 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                       ))}
                     </div>
                   )}
-                </div>
-
-                {/* Quick Bet Amounts */}
+                
+                  {/* Quick Bet Amounts */}
                   <div className="bg-slate-700/30 rounded-lg p-3">
                     <h3 className="text-white font-medium mb-2 text-sm">Quick Amounts</h3>
                     <div className="grid grid-cols-5 gap-1">
