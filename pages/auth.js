@@ -23,17 +23,26 @@ export default function AuthPage() {
   const router = useRouter();
   const { login, signUp } = useAuth();
 
-  // Clear any existing sessions when component mounts (This might conflict with Supabase persistent sessions, consider reviewing)
+  // Load purchased challenge from localStorage if it exists
   useEffect(() => {
-    const clearSession = async () => {
-      if (typeof window !== 'undefined') {
-        // localStorage.removeItem('demo_user'); // These are no longer relevant for Supabase auth
-        // localStorage.removeItem('user_session');
-        // localStorage.removeItem('current_user');
-        // sessionStorage.clear();
+    if (typeof window !== 'undefined') {
+      const purchasedChallenge = localStorage.getItem('purchased_challenge');
+      if (purchasedChallenge) {
+        try {
+          const challengeData = JSON.parse(purchasedChallenge);
+          setSelectedChallenge(challengeData);
+          // If user already authenticated, go straight to challenge start
+          supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session?.user) {
+              setStep('challenge');
+            }
+          });
+        } catch (error) {
+          console.error('Error loading purchased challenge:', error);
+          localStorage.removeItem('purchased_challenge');
+        }
       }
-    };
-    clearSession();
+    }
   }, []);
 
   const challenges = [
@@ -227,7 +236,18 @@ export default function AuthPage() {
       if (!currentUser) throw new Error('User profile not found.');
 
       // Use selected package data or fallback to default challenge
-      const challengeData = selectedChallenge; // Assuming challenge structure matches
+      const challengeData = {
+        id: selectedChallenge.id,
+        name: selectedChallenge.name,
+        startingBalance: selectedChallenge.startingBalance,
+        target: selectedChallenge.target,
+        maxBet: selectedChallenge.maxBet,
+        payout: selectedChallenge.payout,
+        price: selectedChallenge.adjustedPrice || selectedChallenge.price,
+        userSplit: selectedChallenge.userSplit || 80,
+        licenseKey: selectedChallenge.licenseKey,
+        purchaseDate: selectedChallenge.purchaseDate
+      };
 
       // Update user profile with challenge info
       const updatedUserProfile = {
@@ -242,8 +262,8 @@ export default function AuthPage() {
         betsHistory: [],
         challengePhase: 1,
         dailyLoss: 0,
-        maxDailyLoss: challengeData.startingBalance * (challengeData.dailyLossLimit || 0.08),
-        profitTarget: challengeData.profitTarget || challengeData.startingBalance * 0.1,
+        maxDailyLoss: challengeData.startingBalance * 0.08,
+        profitTarget: challengeData.target,
         lastBetDate: null,
         bettingDays: 0,
         achievements: [],
@@ -265,6 +285,9 @@ export default function AuthPage() {
         .eq('id', userId);
 
       if (updateError) throw updateError;
+
+      // Clear the purchased challenge from localStorage after successful save
+      localStorage.removeItem('purchased_challenge');
 
       router.push('/dashboard');
     } catch (error) {

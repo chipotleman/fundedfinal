@@ -134,6 +134,9 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                   <Link href="/leaderboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     Leaderboard
                   </Link>
+                  <Link href="/demo" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                    Demo
+                  </Link>
                   <button onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     How It Works
                   </button>
@@ -148,6 +151,9 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                 <>
                   <Link href="/leaderboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     Leaderboard
+                  </Link>
+                  <Link href="/demo" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                    Demo
                   </Link>
                   <button onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     How It Works
@@ -223,13 +229,13 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                     >
                       SIGN IN
                     </Link>
-                    <Link
-                      href="/packages"
+                    <button
+                      onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
                       className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                       style={{ height: '48px' }}
                     >
                       GET FUNDED
-                    </Link>
+                    </button>
                   </>
                 )}
               </div>
@@ -348,6 +354,17 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                           <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
                         </svg>
                         <span className="font-medium">Dashboard</span>
+                      </Link>
+                      <Link
+                        href="/demo"
+                        onClick={closeMobileMenu}
+                        className="flex items-center space-x-3 px-4 py-4 text-gray-300 hover:text-blue-400 hover:bg-slate-800/50 rounded-xl transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]"
+                      >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
+                          <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+                        </svg>
+                        <span className="font-medium">Demo</span>
                       </Link>
                       <button
                         onClick={() => {

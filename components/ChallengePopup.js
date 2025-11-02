@@ -136,6 +136,17 @@ export default function ChallengePopup({ isOpen, onClose }) {
       setLoading(false);
       const newLicenseKey = generateLicenseKey();
       setLicenseKey(newLicenseKey);
+      
+      // Store selected challenge data in localStorage for auth page
+      const challengeData = {
+        ...currentChallenge,
+        userSplit,
+        adjustedPrice,
+        licenseKey: newLicenseKey,
+        purchaseDate: new Date().toISOString()
+      };
+      localStorage.setItem('purchased_challenge', JSON.stringify(challengeData));
+      
       setStep('receipt');
     }, 2000);
   };
