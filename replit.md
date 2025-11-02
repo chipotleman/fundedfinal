@@ -11,6 +11,21 @@ Funder is a Next.js-based sports betting platform that provides users with funde
 - **State Management**: React Context (AuthContext, BetSlipContext, UserProfilesContext)
 
 ## Recent Changes (November 2, 2025)
+### Demo Platform Experience Added
+- Added "Demo" link to TopNavbar for easy access to free trial experience
+- Created complete demo flow without authentication requirement:
+  - **/demo**: Full challenge customization page (balance selection, profit split adjustment)
+  - **/demo-dashboard**: Fully functional betting dashboard with localStorage persistence
+  - Demo allows users to experience all platform features before signing up
+- Demo features:
+  - Choose from 3 challenge tiers ($5k, $10k, $25k starting balance)
+  - Customize profit split (50%-100%)
+  - Full betting functionality with live games
+  - Track bankroll, P&L, win rate, and total bets
+  - All progress saved to localStorage (persists across browser sessions)
+  - Reset demo option to start over
+  - Easy conversion path to real account signup
+
 ### Navigation and Challenge Persistence Update
 - Changed "GET FUNDED" button in TopNavbar to trigger the ChallengePopup instead of linking to /packages
 - Both "GET FUNDED" (top nav) and "Start a Challenge" (homepage) now open the same ChallengePopup component
