@@ -312,13 +312,13 @@ export default function Home() {
       {showFloatingButton && (
         <button
           onClick={() => setShowDemoBetSlip(true)}
-          className="fixed bottom-6 left-6 z-40 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold rounded-full shadow-2xl transform hover:scale-110 flex items-center space-x-2 px-5 py-4"
+          className="fixed bottom-6 left-6 z-40 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold rounded-full shadow-2xl transform hover:scale-110 flex items-center space-x-2 px-5 py-4"
         >
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
           </svg>
           <span className="text-base">Demo Bets</span>
-          <div className="bg-white text-green-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
+          <div className="bg-white text-purple-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
             {demoBetSlipCount}
           </div>
         </button>
