@@ -11,6 +11,25 @@ Funder is a Next.js-based sports betting platform that provides users with funde
 - **State Management**: React Context (AuthContext, BetSlipContext, UserProfilesContext)
 
 ## Recent Changes (November 3, 2025)
+### Bet Receipt & History Improvements
+- **Created BetReceipt component** with professional bet confirmation display
+  - Shows after every bet placed (demo or real)
+  - Displays matchup, selection, bet type, odds, wager amount, profit "to win", and total "potential payout"
+  - Auto-dismisses after 5 seconds or can be manually closed
+  - Clearly distinguishes demo bets with DEMO badge
+  - Supports both single and parlay bets with correct odds calculations
+- **Integrated bet receipts into all betting flows**:
+  - Demo homepage (DemoPreview component)
+  - Demo dashboard betting
+  - Real BetSlip component
+  - Parlay bets show combined odds and correct payouts
+- **Enhanced demo bet history**:
+  - Demo bets now stored in localStorage with proper structure (id, status, profit fields)
+  - bet-history page displays both demo and real bets with DEMO badge for demo bets
+  - Demo bet history persists across browser sessions
+- **Fixed homepage demo bet slip scrolling**:
+  - Changed overflow-hidden to overflow-y-auto to prevent wager input cutoff
+
 ### Global Popups & Mobile Navigation Updates
 - **Fixed GET FUNDED button** to work from all pages by moving ChallengePopup and HowItWorksPopup to _app.js
   - Popups are now globally available across all pages (not just homepage)
