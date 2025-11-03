@@ -10,8 +10,17 @@ Funder is a Next.js-based sports betting platform that provides users with funde
 - **Styling**: Tailwind CSS
 - **State Management**: React Context (AuthContext, BetSlipContext, UserProfilesContext)
 
-## Recent Changes (November 2, 2025)
-### Demo Platform Experience Added
+## Recent Changes (November 3, 2025)
+### Global Popups & Mobile Navigation Updates
+- **Fixed GET FUNDED button** to work from all pages by moving ChallengePopup and HowItWorksPopup to _app.js
+  - Popups are now globally available across all pages (not just homepage)
+  - Event listeners for 'openChallengePopup' and 'openHowItWorks' now set up in _app.js
+  - GET FUNDED button in TopNavbar works from /leaderboard, /demo, /waitlist, etc.
+- **Added Demo link to mobile navigation** for non-logged-in users
+  - Mobile hamburger menu now includes Demo option between Leaderboard and How It Works
+  - Provides consistent navigation experience across desktop and mobile
+
+### Demo Platform Experience (November 2, 2025)
 - Added "Demo" link to TopNavbar for easy access to free trial experience
 - Created complete demo flow without authentication requirement:
   - **/demo**: Full challenge customization page (balance selection, profit split adjustment)
@@ -19,14 +28,14 @@ Funder is a Next.js-based sports betting platform that provides users with funde
   - Demo allows users to experience all platform features before signing up
 - Demo features:
   - Choose from 3 challenge tiers ($5k, $10k, $25k starting balance)
-  - Customize profit split (50%-100%)
+  - Customize profit split (50%-90%)
   - Full betting functionality with live games
   - Track bankroll, P&L, win rate, and total bets
   - All progress saved to localStorage (persists across browser sessions)
   - Reset demo option to start over
   - Easy conversion path to real account signup
 
-### Navigation and Challenge Persistence Update
+### Navigation and Challenge Persistence Update (November 2, 2025)
 - Changed "GET FUNDED" button in TopNavbar to trigger the ChallengePopup instead of linking to /packages
 - Both "GET FUNDED" (top nav) and "Start a Challenge" (homepage) now open the same ChallengePopup component
 - Implemented challenge selection persistence:

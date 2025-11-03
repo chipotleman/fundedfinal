@@ -4,8 +4,6 @@ import TopNavbar from '../components/TopNavbar';
 import LiveFeed from '../components/LiveFeed';
 import LiveCommunityStats from '../components/LiveCommunityStats';
 import DemoPreview from '../components/DemoPreview';
-import ChallengePopup from '../components/ChallengePopup';
-import HowItWorksPopup from '../components/HowItWorksPopup';
 import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -172,28 +170,8 @@ function CustomVideoPlayer() {
 export default function Home() {
   const { user } = useAuth();
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
-  const [showChallengePopup, setShowChallengePopup] = useState(false);
-  const [showHowItWorksPopup, setShowHowItWorksPopup] = useState(false);
   const [demoBetSlipCount, setDemoBetSlipCount] = useState(0);
   const [showDemoBetSlip, setShowDemoBetSlip] = useState(false);
-
-  useEffect(() => {
-    const handleOpenHowItWorks = () => {
-      setShowHowItWorksPopup(true);
-    };
-
-    const handleOpenChallengePopup = () => {
-      setShowChallengePopup(true);
-    };
-
-    window.addEventListener('openHowItWorks', handleOpenHowItWorks);
-    window.addEventListener('openChallengePopup', handleOpenChallengePopup);
-
-    return () => {
-      window.removeEventListener('openHowItWorks', handleOpenHowItWorks);
-      window.removeEventListener('openChallengePopup', handleOpenChallengePopup);
-    };
-  }, []);
 
   return (
     <div className="min-h-screen bg-black" style={{scrollBehavior: 'smooth'}}>
@@ -244,13 +222,13 @@ export default function Home() {
             <div className="text-center px-4 mb-8">
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-6 sm:mb-8">
                 <button 
-                  onClick={() => setShowChallengePopup(true)}
+                  onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
                   className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg shadow-2xl"
                 >
                   Start a Challenge
                 </button>
                 <button 
-                  onClick={() => setShowHowItWorksPopup(true)}
+                  onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))}
                   className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg border border-slate-700"
                 >
                   How It Works
@@ -300,16 +278,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-
-      {/* Popups */}
-      <ChallengePopup 
-        isOpen={showChallengePopup} 
-        onClose={() => setShowChallengePopup(false)} 
-      />
-      <HowItWorksPopup 
-        isOpen={showHowItWorksPopup} 
-        onClose={() => setShowHowItWorksPopup(false)} 
-      />
 
       {/* Bet Slip */}
       {showBetSlip && (
