@@ -181,7 +181,7 @@ export default function DemoPage() {
                 <div className="flex items-center justify-center gap-3 text-sm">
                   <span className="text-green-400 font-bold">You: {userSplit}%</span>
                   <span className="text-gray-500">|</span>
-                  <span className="text-pink-400 font-bold">Us: {100 - userSplit}%</span>
+                  <span className="text-blue-400 font-bold">Us: {100 - userSplit}%</span>
                 </div>
               </div>
               <input
