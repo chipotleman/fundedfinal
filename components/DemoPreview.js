@@ -387,7 +387,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
             </div>
 
             {/* Bottom Actions - Fixed */}
-            <div className="flex-shrink-0 border-t border-slate-600 p-3 lg:p-6">
+            <div className="flex-shrink-0 border-t border-slate-600 p-4 pb-6 lg:p-6">
               <button
                 onClick={() => {
                   if (selectedBets.some(bet => bet.stake > 0)) {
@@ -437,7 +437,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                     alert('Please enter a wager amount for your bet(s)');
                   }
                 }}
-                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 text-sm"
+                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 lg:py-2 px-4 rounded-lg transition-all duration-300 text-sm"
               >
                 PLACE DEMO BET
               </button>

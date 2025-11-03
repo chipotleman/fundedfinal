@@ -312,7 +312,7 @@ export default function Home() {
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
             <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
           </svg>
-          <span className="text-base">Bet Slip</span>
+          <span className="text-base">Demo Bets</span>
           <div className="bg-white text-green-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
             {demoBetSlipCount}
           </div>
