@@ -70,10 +70,10 @@ export default function Waitlist() {
                     </div>
                   </div>
 
-                  {/* Powered by piks® */}
+                  {/* Funded by piks */}
                   <div className="mt-2 pt-2 border-t border-blue-500/20">
                     <div className="text-center text-blue-300 text-xs font-medium">
-                      piks®
+                      funded by piks
                     </div>
                   </div>
                 </div>
