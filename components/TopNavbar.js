@@ -135,7 +135,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                     Leaderboard
                   </Link>
                   <Link href="/demo" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Demo
+                    Free Trial
                   </Link>
                   <button onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     How It Works
@@ -153,7 +153,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                     Leaderboard
                   </Link>
                   <Link href="/demo" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Demo
+                    Free Trial
                   </Link>
                   <button onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     How It Works
@@ -364,7 +364,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                           <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                           <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
                         </svg>
-                        <span className="font-medium">Demo</span>
+                        <span className="font-medium">Free Trial</span>
                       </Link>
                       <button
                         onClick={() => {
