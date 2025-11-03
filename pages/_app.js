@@ -12,19 +12,25 @@ function MyApp({ Component, pageProps }) {
 
   useEffect(() => {
     const handleOpenChallengePopup = () => {
+      console.log('Opening challenge popup');
       setShowChallengePopup(true);
     };
 
     const handleOpenHowItWorks = () => {
+      console.log('Opening how it works popup');
       setShowHowItWorksPopup(true);
     };
 
-    window.addEventListener('openChallengePopup', handleOpenChallengePopup);
-    window.addEventListener('openHowItWorks', handleOpenHowItWorks);
+    if (typeof window !== 'undefined') {
+      window.addEventListener('openChallengePopup', handleOpenChallengePopup);
+      window.addEventListener('openHowItWorks', handleOpenHowItWorks);
+    }
 
     return () => {
-      window.removeEventListener('openChallengePopup', handleOpenChallengePopup);
-      window.removeEventListener('openHowItWorks', handleOpenHowItWorks);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('openChallengePopup', handleOpenChallengePopup);
+        window.removeEventListener('openHowItWorks', handleOpenHowItWorks);
+      }
     };
   }, []);
 
@@ -35,13 +41,15 @@ function MyApp({ Component, pageProps }) {
           <Component {...pageProps} />
           
           {/* Global Popups - Available on all pages */}
-          {showChallengePopup && (
-            <ChallengePopup onClose={() => setShowChallengePopup(false)} />
-          )}
+          <ChallengePopup 
+            isOpen={showChallengePopup} 
+            onClose={() => setShowChallengePopup(false)} 
+          />
           
-          {showHowItWorksPopup && (
-            <HowItWorksPopup onClose={() => setShowHowItWorksPopup(false)} />
-          )}
+          <HowItWorksPopup 
+            isOpen={showHowItWorksPopup} 
+            onClose={() => setShowHowItWorksPopup(false)} 
+          />
         </UserProfilesProvider>
       </BetSlipProvider>
     </AuthProvider>
