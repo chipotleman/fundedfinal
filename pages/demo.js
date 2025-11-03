@@ -176,9 +176,13 @@ export default function DemoPage() {
 
             {/* Profit Split Slider */}
             <div className="py-4 px-5 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-xl border border-purple-500/30">
-              <div className="flex justify-between items-center mb-3">
-                <span className="text-gray-300 font-medium">Your Profit Split</span>
-                <span className="text-purple-400 font-bold text-xl">{userSplit}%</span>
+              <div className="text-center mb-3">
+                <span className="text-gray-300 font-medium block mb-1">Profit Split</span>
+                <div className="flex items-center justify-center gap-3 text-sm">
+                  <span className="text-green-400 font-bold">You: {userSplit}%</span>
+                  <span className="text-gray-500">|</span>
+                  <span className="text-slate-400 font-bold">Us: {100 - userSplit}%</span>
+                </div>
               </div>
               <input
                 type="range"
