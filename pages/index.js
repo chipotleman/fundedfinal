@@ -182,6 +182,14 @@ export default function Home() {
       setShowFloatingButton(scrollPosition > 200 && demoBetSlipCount > 0);
     };
 
+    // Hide button immediately when no bets selected
+    if (demoBetSlipCount === 0) {
+      setShowFloatingButton(false);
+    } else {
+      // Check current scroll position when bets are added
+      handleScroll();
+    }
+
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, [demoBetSlipCount]);
