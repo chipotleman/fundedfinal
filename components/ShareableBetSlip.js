@@ -103,8 +103,8 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
             {/* Logo Watermark */}
             <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
               <img 
-                src="/funderlogo/Funder.png" 
-                alt="FundMyBet" 
+                src="/funderlogo/Piks.png" 
+                alt="Piks" 
                 className="w-64 h-64 object-contain"
               />
             </div>
@@ -115,11 +115,11 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
               <div className="text-center mb-6">
                 <div className="flex items-center justify-center mb-2">
                   <img 
-                    src="/funderlogo/Funder.png" 
-                    alt="FundMyBet" 
+                    src="/funderlogo/Piks.png" 
+                    alt="Piks" 
                     className="w-8 h-8 mr-2"
                   />
-                  <h3 className="text-xl font-bold text-white">FUNDMYBET</h3>
+                  <h3 className="text-xl font-bold text-white">PIKS</h3>
                 </div>
                 <div className="bg-green-500/20 text-green-400 px-4 py-2 rounded-full text-sm font-bold">
                   WINNING BET ✓

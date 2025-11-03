@@ -94,8 +94,8 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
             <div className="flex-none">
               <Link href="/" className="flex items-center">
                 <img
-                  src="/funderlogo/Funder.png?v=4"
-                  alt="Funder"
+                  src="/funderlogo/Piks.png?v=5"
+                  alt="Piks"
                   className="h-8 sm:h-10 w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
                   style={{
                     filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
@@ -116,7 +116,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                   className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent"
                   style={{ display: 'none' }}
                 >
-                  Funder
+                  Piks
                 </span>
               </Link>
             </div>

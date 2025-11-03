@@ -1,7 +1,7 @@
-# Funder - Sports Betting Challenge Platform
+# Piks - Sports Betting Challenge Platform
 
 ## Overview
-Funder is a Next.js-based sports betting platform that provides users with funded challenges to bet with. Users can sign up for different challenge tiers, receive funded accounts, and keep a percentage of their profits.
+Piks is a Next.js-based sports betting platform that provides users with funded challenges to bet with. Users can sign up for different challenge tiers, receive funded accounts, and keep a percentage of their profits.
 
 ## Current State
 - **Framework**: Next.js 14.2.30
@@ -11,6 +11,19 @@ Funder is a Next.js-based sports betting platform that provides users with funde
 - **State Management**: React Context (AuthContext, BetSlipContext, UserProfilesContext)
 
 ## Recent Changes (November 3, 2025)
+### Brand Update: Piks
+- **Rebranded from "Funder" to "Piks"**:
+  - Updated logo across all components (TopNavbar, ShareableBetSlip)
+  - Changed all text references from "Funder"/"FundMyBet" to "Piks"
+  - Updated meta tags and SEO content
+  - New logo file: `/public/funderlogo/Piks.png`
+
+### Simplified Demo Bet Slip
+- **Removed Phase 1/Phase 2 progression system** from demo bet slip for cleaner UX
+  - Removed phase toggle buttons, requirement tracking, and stats
+  - Demo bet slip now focuses purely on core betting experience
+  - Simpler interface without complexity of challenge phases
+
 ### Floating Bet Slip Button
 - **Added scroll-aware floating bet slip button**:
   - Appears in bottom left corner when user scrolls down with demo bets selected

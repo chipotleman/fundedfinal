@@ -11,7 +11,7 @@ export default function Document() {
         <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico.PNG" />
         
         {/* Open Graph / Social Media Meta Tags */}
-        <meta property="og:title" content="FundMyBet - Get Funded to Bet" />
+        <meta property="og:title" content="Piks - Get Funded to Bet" />
         <meta property="og:description" content="Get funded up to $25,000 to bet with and keep 80% of your profits. No risk betting with our money, not yours." />
         <meta property="og:image" content="https://fundmybet.vercel.app/funder-social-banner.png" />
         <meta property="og:image:width" content="1200" />
@@ -21,7 +21,7 @@ export default function Document() {
         
         {/* Twitter Card Meta Tags */}
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="FundMyBet - Get Funded to Bet" />
+        <meta name="twitter:title" content="Piks - Get Funded to Bet" />
         <meta name="twitter:description" content="Get funded up to $25,000 to bet with and keep 80% of your profits. No risk betting with our money, not yours." />
         <meta name="twitter:image" content="https://fundmybet.vercel.app/funder-social-banner.png" />
         
