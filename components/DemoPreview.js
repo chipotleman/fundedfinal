@@ -574,7 +574,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                                 : 'bg-gray-700 border-gray-600 text-white'
                             }`}
                           >
-                            <div className="text-gray-300 text-xs">{game.spread > 0 ? -game.spread : '+' + Math.abs(game.spread)}</div>
+                            <div className={`text-xs ${isBetSelected(`${game.id}-spread-away`) ? 'text-white' : 'text-gray-300'}`}>{game.spread > 0 ? -game.spread : '+' + Math.abs(game.spread)}</div>
                             <div className={`text-xs font-medium ${isBetSelected(`${game.id}-spread-away`) ? 'text-white' : 'text-green-400'}`}>-110</div>
                           </button>
                           <button
@@ -585,7 +585,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                                 : 'bg-gray-700 border-gray-600 text-white'
                             }`}
                           >
-                            <div className="text-gray-300 text-xs">O {game.total}</div>
+                            <div className={`text-xs ${isBetSelected(`${game.id}-total-over`) ? 'text-white' : 'text-gray-300'}`}>O {game.total}</div>
                             <div className={`text-xs font-medium ${isBetSelected(`${game.id}-total-over`) ? 'text-white' : 'text-green-400'}`}>-110</div>
                           </button>
                           <button
@@ -613,7 +613,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                                 : 'bg-gray-700 border-gray-600 text-white'
                             }`}
                           >
-                            <div className="text-gray-300 text-xs">{game.spread > 0 ? '+' + game.spread : game.spread}</div>
+                            <div className={`text-xs ${isBetSelected(`${game.id}-spread-home`) ? 'text-white' : 'text-gray-300'}`}>{game.spread > 0 ? '+' + game.spread : game.spread}</div>
                             <div className={`text-xs font-medium ${isBetSelected(`${game.id}-spread-home`) ? 'text-white' : 'text-green-400'}`}>-110</div>
                           </button>
                           <button
@@ -624,7 +624,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                                 : 'bg-gray-700 border-gray-600 text-white'
                             }`}
                           >
-                            <div className="text-gray-300 text-xs">U {game.total}</div>
+                            <div className={`text-xs ${isBetSelected(`${game.id}-total-under`) ? 'text-white' : 'text-gray-300'}`}>U {game.total}</div>
                             <div className={`text-xs font-medium ${isBetSelected(`${game.id}-total-under`) ? 'text-white' : 'text-green-400'}`}>-110</div>
                           </button>
                           <button
