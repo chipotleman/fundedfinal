@@ -13,34 +13,37 @@ export default function DemoPage() {
   const challengeOptions = [
     {
       id: 1,
-      name: "Starter Demo",
-      description: "Perfect for beginners",
+      name: "Starter Challenge",
+      description: "Perfect for beginners looking to get started",
       startingBalance: 5000,
       target: 1000,
       maxBet: 250,
       payout: 800,
+      price: 149,
       badge: "BEGINNER",
       popular: false
     },
     {
       id: 2,
-      name: "Pro Demo",
-      description: "For experienced bettors",
+      name: "Pro Challenge",
+      description: "For experienced bettors ready to scale up",
       startingBalance: 10000,
       target: 2000,
       maxBet: 500,
       payout: 1600,
+      price: 249,
       badge: "POPULAR",
       popular: true
     },
     {
       id: 3,
-      name: "Elite Demo",
-      description: "Maximum stakes for pros",
+      name: "Elite Challenge",
+      description: "Maximum stakes for serious professionals",
       startingBalance: 25000,
       target: 5000,
       maxBet: 1250,
       payout: 4000,
+      price: 399,
       badge: "ADVANCED",
       popular: false
     }
