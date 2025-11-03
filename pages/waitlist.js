@@ -62,7 +62,7 @@ export default function Waitlist() {
                   <div className="flex justify-between items-end mb-3">
                     <div>
                       <div className="text-blue-300 text-xs mb-1">CARDHOLDER</div>
-                      <div className="text-white text-xs font-medium">FUNDER MEMBER</div>
+                      <div className="text-white text-xs font-medium">PIKS MEMBER</div>
                     </div>
                     <div className="text-right">
                       <div className="text-blue-300 text-xs mb-1">EXPIRES</div>
@@ -70,10 +70,10 @@ export default function Waitlist() {
                     </div>
                   </div>
 
-                  {/* Powered by Funder */}
+                  {/* Powered by piks® */}
                   <div className="mt-2 pt-2 border-t border-blue-500/20">
                     <div className="text-center text-blue-300 text-xs font-medium">
-                      Powered by Funder
+                      piks®
                     </div>
                   </div>
                 </div>
