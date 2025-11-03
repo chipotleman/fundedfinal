@@ -172,6 +172,19 @@ export default function Home() {
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const [demoBetSlipCount, setDemoBetSlipCount] = useState(0);
   const [showDemoBetSlip, setShowDemoBetSlip] = useState(false);
+  const [showFloatingButton, setShowFloatingButton] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Show floating button when scrolled down past 200px (below header)
+      // and there are demo bets selected
+      const scrollPosition = window.scrollY;
+      setShowFloatingButton(scrollPosition > 200 && demoBetSlipCount > 0);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [demoBetSlipCount]);
 
   return (
     <div className="min-h-screen bg-black w-full overflow-x-hidden" style={{scrollBehavior: 'smooth'}}>
@@ -285,6 +298,25 @@ export default function Home() {
           bankroll={10000}
           onClose={() => setShowBetSlip(false)}
         />
+      )}
+
+      {/* Floating Demo Bet Slip Button - Bottom Left */}
+      {showFloatingButton && (
+        <button
+          onClick={() => setShowDemoBetSlip(true)}
+          className="fixed bottom-6 left-6 z-40 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold rounded-full shadow-2xl transition-all duration-300 transform hover:scale-110 flex items-center space-x-2 px-5 py-4"
+          style={{
+            animation: 'slideInLeft 0.3s ease-out'
+          }}
+        >
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
+          </svg>
+          <span className="text-base">Bet Slip</span>
+          <div className="bg-white text-green-600 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold">
+            {demoBetSlipCount}
+          </div>
+        </button>
       )}
     </div>
   );

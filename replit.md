@@ -11,6 +11,15 @@ Funder is a Next.js-based sports betting platform that provides users with funde
 - **State Management**: React Context (AuthContext, BetSlipContext, UserProfilesContext)
 
 ## Recent Changes (November 3, 2025)
+### Floating Bet Slip Button
+- **Added scroll-aware floating bet slip button**:
+  - Appears in bottom left corner when user scrolls down with demo bets selected
+  - Automatically hides when scrolled to top (where header button is visible)
+  - Smooth slide-in animation from left side
+  - Shows bet count badge
+  - Follows scroll position, always accessible without scrolling
+  - Clean UX that maintains unobstructed view at top of page
+
 ### Mobile Demo Bet Slip Optimization
 - **Optimized mobile demo bet slip for full-screen experience**:
   - Changed from 85vh to full screen (inset-0) on mobile

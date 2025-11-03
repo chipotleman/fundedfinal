@@ -412,3 +412,15 @@ button:hover, .btn:hover {
   box-shadow: 0 12px 40px rgba(59, 130, 246, 0.2);
   border-color: rgba(59, 130, 246, 0.3);
 }
+
+/* Floating button animation */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
