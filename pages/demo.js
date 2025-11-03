@@ -183,7 +183,7 @@ export default function DemoPage() {
               <input
                 type="range"
                 min="50"
-                max="100"
+                max="90"
                 step="5"
                 value={userSplit}
                 onChange={(e) => setUserSplit(parseInt(e.target.value))}
@@ -191,7 +191,7 @@ export default function DemoPage() {
               />
               <div className="flex justify-between text-xs text-gray-400 mt-2">
                 <span>50% Split</span>
-                <span>100% Split</span>
+                <span>90% Split</span>
               </div>
             </div>
           </div>
