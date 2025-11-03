@@ -174,7 +174,7 @@ export default function Home() {
   const [showDemoBetSlip, setShowDemoBetSlip] = useState(false);
 
   return (
-    <div className="min-h-screen bg-black" style={{scrollBehavior: 'smooth'}}>
+    <div className="min-h-screen bg-black w-full overflow-x-hidden" style={{scrollBehavior: 'smooth'}}>
       <TopNavbar 
         bankroll={user ? 10000 : null}
         pnl={user ? 0 : null}
