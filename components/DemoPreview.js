@@ -12,7 +12,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
   const [showDetailedStats, setShowDetailedStats] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [currentReceipt, setCurrentReceipt] = useState(null);
-  const [showChallengeRequirements, setShowChallengeRequirements] = useState(false);
+  const [activePhase, setActivePhase] = useState('phase1');
   const [demoStats, setDemoStats] = useState({
     totalBets: 0,
     wins: 0,
@@ -192,7 +192,14 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-2">
                   {/* Phase 1 - Active */}
-                  <button className="bg-green-500/20 border border-green-500 text-green-400 font-bold py-1.5 px-3 rounded-lg text-sm flex items-center space-x-1">
+                  <button 
+                    onClick={() => setActivePhase('phase1')}
+                    className={`font-bold py-1.5 px-3 rounded-lg text-sm flex items-center space-x-1 transition-colors ${
+                      activePhase === 'phase1'
+                        ? 'bg-green-500/20 border border-green-500 text-green-400'
+                        : 'bg-slate-700/30 border border-slate-600 text-slate-400 hover:bg-slate-700'
+                    }`}
+                  >
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
@@ -200,8 +207,12 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                   </button>
                   {/* Phase 2 - Locked */}
                   <button 
-                    onClick={() => setShowChallengeRequirements(true)}
-                    className="bg-slate-700/50 border border-slate-600 text-slate-400 font-bold py-1.5 px-3 rounded-lg text-sm flex items-center space-x-1 hover:bg-slate-700 transition-colors"
+                    onClick={() => setActivePhase('phase2')}
+                    className={`font-bold py-1.5 px-3 rounded-lg text-sm flex items-center space-x-1 transition-colors ${
+                      activePhase === 'phase2'
+                        ? 'bg-slate-700/50 border border-slate-600 text-white'
+                        : 'bg-slate-700/30 border border-slate-600 text-slate-400 hover:bg-slate-700'
+                    }`}
                   >
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
@@ -221,7 +232,126 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
             </div>
 
             {/* Main Betting Area - Primary Focus */}
-            <div className="flex-1 flex flex-col p-3 lg:p-4 overflow-y-auto lg:overflow-y-auto">
+            <div className="flex-1 flex flex-col p-3 lg:p-4 overflow-y-auto lg:overflow-y-auto relative">
+              {/* Faded Background for Phase 2 */}
+              {activePhase === 'phase2' && (
+                <div className="absolute inset-0 bg-black/70 z-10"></div>
+              )}
+              
+              {/* Phase 2 Requirements Overlay */}
+              {activePhase === 'phase2' && (
+                <div className="absolute inset-0 z-20 flex flex-col p-4 overflow-y-auto">
+                  <div className="flex items-center space-x-3 mb-6">
+                    <div className="bg-slate-700 p-2 rounded-lg">
+                      <svg className="w-6 h-6 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white">Phase 2 Locked</h3>
+                      <p className="text-sm text-slate-400">Complete Phase 1 to unlock</p>
+                    </div>
+                  </div>
+
+                  <p className="text-gray-300 text-sm mb-4">Complete these requirements to unlock Phase 2:</p>
+                  
+                  <div className="space-y-3">
+                    {/* Requirement 1: Place 5 bets */}
+                    <div className={`flex items-center justify-between p-3 rounded-lg border ${demoStats.totalBets >= 5 ? 'bg-green-500/10 border-green-500/30' : 'bg-slate-700/30 border-slate-600'}`}>
+                      <div className="flex items-center space-x-3">
+                        {demoStats.totalBets >= 5 ? (
+                          <svg className="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                        ) : (
+                          <svg className="w-6 h-6 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                        <span className={demoStats.totalBets >= 5 ? 'text-green-400 font-medium' : 'text-white'}>
+                          Place 5 bets
+                        </span>
+                      </div>
+                      <span className={demoStats.totalBets >= 5 ? 'text-green-400 font-bold' : 'text-slate-400'}>
+                        {demoStats.totalBets}/5
+                      </span>
+                    </div>
+
+                    {/* Requirement 2: Win 3 bets */}
+                    <div className={`flex items-center justify-between p-3 rounded-lg border ${demoStats.wins >= 3 ? 'bg-green-500/10 border-green-500/30' : 'bg-slate-700/30 border-slate-600'}`}>
+                      <div className="flex items-center space-x-3">
+                        {demoStats.wins >= 3 ? (
+                          <svg className="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                        ) : (
+                          <svg className="w-6 h-6 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                        <span className={demoStats.wins >= 3 ? 'text-green-400 font-medium' : 'text-white'}>
+                          Win 3 bets
+                        </span>
+                      </div>
+                      <span className={demoStats.wins >= 3 ? 'text-green-400 font-bold' : 'text-slate-400'}>
+                        {demoStats.wins}/3
+                      </span>
+                    </div>
+
+                    {/* Requirement 3: Place 2 parlays */}
+                    <div className={`flex items-center justify-between p-3 rounded-lg border ${demoStats.parlays >= 2 ? 'bg-green-500/10 border-green-500/30' : 'bg-slate-700/30 border-slate-600'}`}>
+                      <div className="flex items-center space-x-3">
+                        {demoStats.parlays >= 2 ? (
+                          <svg className="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                        ) : (
+                          <svg className="w-6 h-6 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                        <span className={demoStats.parlays >= 2 ? 'text-green-400 font-medium' : 'text-white'}>
+                          Place 2 parlays
+                        </span>
+                      </div>
+                      <span className={demoStats.parlays >= 2 ? 'text-green-400 font-bold' : 'text-slate-400'}>
+                        {demoStats.parlays}/2
+                      </span>
+                    </div>
+
+                    {/* Requirement 4: Reach $500 profit */}
+                    <div className={`flex items-center justify-between p-3 rounded-lg border ${demoStats.totalProfit >= 500 ? 'bg-green-500/10 border-green-500/30' : 'bg-slate-700/30 border-slate-600'}`}>
+                      <div className="flex items-center space-x-3">
+                        {demoStats.totalProfit >= 500 ? (
+                          <svg className="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                        ) : (
+                          <svg className="w-6 h-6 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                        <span className={demoStats.totalProfit >= 500 ? 'text-green-400 font-medium' : 'text-white'}>
+                          Reach $500 profit
+                        </span>
+                      </div>
+                      <span className={demoStats.totalProfit >= 500 ? 'text-green-400 font-bold' : 'text-slate-400'}>
+                        ${demoStats.totalProfit}/$500
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setActivePhase('phase1')}
+                    className="w-full mt-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
+                  >
+                    Back to Phase 1
+                  </button>
+                </div>
+              )}
+              
+              {/* Normal Bet Slip Content - Shown in Phase 1 or faded in Phase 2 */}
+              <div className={activePhase === 'phase2' ? 'opacity-30' : ''}>
               {/* Bet Type Toggle - Only show when multiple bets selected */}
               {selectedBets.length > 1 && (
                 <div className="bg-slate-700/50 rounded-xl p-3 lg:p-4 mb-4 lg:mb-6">
@@ -404,6 +534,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                   {showDetailedStats ? 'VIEW LESS' : 'VIEW MORE'}
                 </button>
               </div>
+              </div>
             </div>
 
             {/* Bottom Actions - Fixed */}
@@ -482,131 +613,6 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                 PLACE DEMO BET
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Challenge Requirements Modal */}
-      {showChallengeRequirements && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/80" onClick={() => setShowChallengeRequirements(false)}></div>
-          <div className="relative bg-slate-800 rounded-2xl border border-slate-700 p-6 w-full max-w-md">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center space-x-3">
-                <div className="bg-slate-700 p-2 rounded-lg">
-                  <svg className="w-6 h-6 text-slate-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold text-white">Phase 2</h3>
-                  <p className="text-sm text-slate-400">Complete Phase 1 to unlock</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowChallengeRequirements(false)}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="space-y-3 mb-6">
-              <p className="text-gray-300 text-sm mb-4">Complete these requirements to unlock Phase 2:</p>
-              
-              {/* Requirement 1: Place 5 bets */}
-              <div className={`flex items-center justify-between p-3 rounded-lg border ${demoStats.totalBets >= 5 ? 'bg-green-500/10 border-green-500/30' : 'bg-slate-700/30 border-slate-600'}`}>
-                <div className="flex items-center space-x-3">
-                  {demoStats.totalBets >= 5 ? (
-                    <svg className="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  ) : (
-                    <svg className="w-6 h-6 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                  <span className={demoStats.totalBets >= 5 ? 'text-green-400 font-medium' : 'text-white'}>
-                    Place 5 bets
-                  </span>
-                </div>
-                <span className={demoStats.totalBets >= 5 ? 'text-green-400 font-bold' : 'text-slate-400'}>
-                  {demoStats.totalBets}/5
-                </span>
-              </div>
-
-              {/* Requirement 2: Win 3 bets */}
-              <div className={`flex items-center justify-between p-3 rounded-lg border ${demoStats.wins >= 3 ? 'bg-green-500/10 border-green-500/30' : 'bg-slate-700/30 border-slate-600'}`}>
-                <div className="flex items-center space-x-3">
-                  {demoStats.wins >= 3 ? (
-                    <svg className="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  ) : (
-                    <svg className="w-6 h-6 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                  <span className={demoStats.wins >= 3 ? 'text-green-400 font-medium' : 'text-white'}>
-                    Win 3 bets
-                  </span>
-                </div>
-                <span className={demoStats.wins >= 3 ? 'text-green-400 font-bold' : 'text-slate-400'}>
-                  {demoStats.wins}/3
-                </span>
-              </div>
-
-              {/* Requirement 3: Place 2 parlays */}
-              <div className={`flex items-center justify-between p-3 rounded-lg border ${demoStats.parlays >= 2 ? 'bg-green-500/10 border-green-500/30' : 'bg-slate-700/30 border-slate-600'}`}>
-                <div className="flex items-center space-x-3">
-                  {demoStats.parlays >= 2 ? (
-                    <svg className="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  ) : (
-                    <svg className="w-6 h-6 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                  <span className={demoStats.parlays >= 2 ? 'text-green-400 font-medium' : 'text-white'}>
-                    Place 2 parlays
-                  </span>
-                </div>
-                <span className={demoStats.parlays >= 2 ? 'text-green-400 font-bold' : 'text-slate-400'}>
-                  {demoStats.parlays}/2
-                </span>
-              </div>
-
-              {/* Requirement 4: Reach $500 profit */}
-              <div className={`flex items-center justify-between p-3 rounded-lg border ${demoStats.totalProfit >= 500 ? 'bg-green-500/10 border-green-500/30' : 'bg-slate-700/30 border-slate-600'}`}>
-                <div className="flex items-center space-x-3">
-                  {demoStats.totalProfit >= 500 ? (
-                    <svg className="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  ) : (
-                    <svg className="w-6 h-6 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                  <span className={demoStats.totalProfit >= 500 ? 'text-green-400 font-medium' : 'text-white'}>
-                    Reach $500 profit
-                  </span>
-                </div>
-                <span className={demoStats.totalProfit >= 500 ? 'text-green-400 font-bold' : 'text-slate-400'}>
-                  ${demoStats.totalProfit}/$500
-                </span>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowChallengeRequirements(false)}
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
-            >
-              Got It
-            </button>
           </div>
         </div>
       )}
