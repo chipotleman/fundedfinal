@@ -198,7 +198,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
             </div>
 
             {/* Main Betting Area - Primary Focus */}
-            <div className="flex-1 flex flex-col p-4 lg:p-6 overflow-hidden">
+            <div className="flex-1 flex flex-col p-4 lg:p-6 overflow-y-auto">
               {/* Bet Type Toggle - Only show when multiple bets selected */}
               {selectedBets.length > 1 && (
                 <div className="bg-slate-700/50 rounded-xl p-4 mb-6">
