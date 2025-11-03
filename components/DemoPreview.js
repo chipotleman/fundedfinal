@@ -175,12 +175,12 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
     <div className="bg-black py-4 relative" data-demo-section>
       {/* Demo Challenge Dashboard - Floating responsive */}
       {showDemoBetSlip && (
-        <div className="fixed inset-0 z-50 lg:inset-auto lg:top-20 lg:right-8 lg:bottom-20 lg:w-[480px]">
+        <div className="fixed inset-0 z-50 lg:inset-auto lg:top-20 lg:right-8 lg:bottom-8 lg:w-[480px]">
           {/* Mobile Overlay */}
           <div className="fixed inset-0 bg-black/80 lg:hidden" onClick={() => setShowDemoBetSlip(false)}></div>
 
-          {/* Challenge Dashboard Panel - Full screen mobile, floating desktop */}
-          <div className="absolute inset-0 lg:relative bg-black border-0 lg:border border-slate-700 rounded-none lg:rounded-2xl shadow-2xl lg:max-h-[calc(100vh-160px)] w-full lg:w-[480px] flex flex-col">
+          {/* Challenge Dashboard Panel - Full screen mobile, fixed height desktop */}
+          <div className="absolute inset-0 lg:relative bg-black border-0 lg:border border-slate-700 rounded-none lg:rounded-2xl shadow-2xl lg:h-full w-full lg:w-[480px] flex flex-col">
             <div className="flex-shrink-0 p-3 lg:p-3 border-b border-slate-700">
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-bold text-white flex items-center">
@@ -201,7 +201,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
             </div>
 
             {/* Main Betting Area - Primary Focus */}
-            <div className="flex-1 flex flex-col p-3 lg:p-6 overflow-y-auto">
+            <div className="flex-1 flex flex-col p-3 lg:p-4 overflow-y-auto lg:overflow-y-auto">
               {/* Bet Type Toggle - Only show when multiple bets selected */}
               {selectedBets.length > 1 && (
                 <div className="bg-slate-700/50 rounded-xl p-3 lg:p-4 mb-4 lg:mb-6">
@@ -387,7 +387,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
             </div>
 
             {/* Bottom Actions - Fixed */}
-            <div className="flex-shrink-0 border-t border-slate-600 p-4 pb-6 lg:p-6 lg:pb-8">
+            <div className="flex-shrink-0 border-t border-slate-600 p-4 pb-6 lg:p-4">
               <button
                 onClick={() => {
                   if (selectedBets.some(bet => bet.stake > 0)) {
