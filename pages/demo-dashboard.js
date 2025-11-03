@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import TopNavbar from '../components/TopNavbar';
+import BetReceipt from '../components/BetReceipt';
 
 const mockGames = {
   'NFL': [
@@ -113,6 +114,8 @@ export default function DemoDashboard() {
   const [totalBets, setTotalBets] = useState(0);
   const [wins, setWins] = useState(0);
   const [losses, setLosses] = useState(0);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [currentReceipt, setCurrentReceipt] = useState(null);
 
   const sports = ['NFL', 'NBA', 'MLB', 'NHL', 'Soccer'];
 
@@ -235,25 +238,47 @@ export default function DemoDashboard() {
       return;
     }
 
+    // Save demo bets to localStorage history
+    const demoBets = JSON.parse(localStorage.getItem('demo_bet_history') || '[]');
+    const newBets = selectedBets.map(bet => ({
+      id: `demo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      matchup: bet.matchup,
+      selection: bet.selection || bet.team,
+      betType: bet.betType,
+      odds: bet.odds,
+      stake: bet.stake,
+      status: 'open',
+      placedAt: new Date().toISOString(),
+      profit: 0,
+      isDemo: true
+    }));
+    localStorage.setItem('demo_bet_history', JSON.stringify([...demoBets, ...newBets]));
+
+    // Show receipt for first bet
+    if (selectedBets.length > 0 && selectedBets[0].stake > 0) {
+      setCurrentReceipt(selectedBets[0]);
+      setShowReceipt(true);
+    }
+
     // Simulate bet outcome (50/50 random)
     const won = Math.random() > 0.5;
     const potentialWin = getTotalPotentialWin();
 
-    if (won) {
-      setBankroll(prev => prev + potentialWin);
-      setPnl(prev => prev + potentialWin);
-      setWins(prev => prev + 1);
-      alert(`🎉 Bets Won! You won $${potentialWin.toFixed(2)}!`);
-    } else {
-      setBankroll(prev => prev - totalStake);
-      setPnl(prev => prev - totalStake);
-      setLosses(prev => prev + 1);
-      alert(`📉 Bets Lost. You lost $${totalStake.toFixed(2)}.`);
-    }
+    setTimeout(() => {
+      if (won) {
+        setBankroll(prev => prev + potentialWin);
+        setPnl(prev => prev + potentialWin);
+        setWins(prev => prev + 1);
+      } else {
+        setBankroll(prev => prev - totalStake);
+        setPnl(prev => prev - totalStake);
+        setLosses(prev => prev + 1);
+      }
 
-    setTotalBets(prev => prev + selectedBets.length);
-    setSelectedBets([]);
-    setShowBetSlip(false);
+      setTotalBets(prev => prev + selectedBets.length);
+      setSelectedBets([]);
+      setShowBetSlip(false);
+    }, 500);
   };
 
   const resetDemo = () => {
@@ -528,6 +553,18 @@ export default function DemoDashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Bet Receipt Modal */}
+      {showReceipt && currentReceipt && (
+        <BetReceipt 
+          bet={currentReceipt} 
+          isDemo={true}
+          onClose={() => {
+            setShowReceipt(false);
+            setCurrentReceipt(null);
+          }}
+        />
       )}
     </div>
   );

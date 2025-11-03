@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import ShareableBetSlip from './ShareableBetSlip';
+import BetReceipt from './BetReceipt';
 
 export default function BetSlip({ bankroll, onClose }) {
   const { betSlip: bets, removeBet, updateStake, clearBetSlip } = useBetSlip();
@@ -9,6 +10,8 @@ export default function BetSlip({ bankroll, onClose }) {
   const [parlayStake, setParlayStake] = useState(0);
   const [showShareModal, setShowShareModal] = useState(false);
   const [selectedWinningBet, setSelectedWinningBet] = useState(null);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [currentReceipt, setCurrentReceipt] = useState(null);
 
   // TODO: Get user's challenge from context/props - will be implemented when challenge specs are provided
   const userChallenge = 'basic'; // Placeholder - will be dynamic
@@ -85,20 +88,49 @@ export default function BetSlip({ bankroll, onClose }) {
 
     setIsPlacing(true);
 
+    // Show receipt for bet(s) placed
+    if (bets.length > 0) {
+      if (betType === 'parlay' && parlayStake > 0) {
+        // Calculate parlay odds
+        const parlayDecimal = bets.reduce((acc, bet) => {
+          const oddsValue = typeof bet.odds === 'object' ? bet.odds.odds || bet.odds.value || 0 : bet.odds;
+          const decimal = oddsValue > 0 ? (oddsValue/100 + 1) : (100/Math.abs(oddsValue) + 1);
+          return acc * decimal;
+        }, 1);
+        const americanOdds = parlayDecimal >= 2 ? Math.round((parlayDecimal - 1) * 100) : Math.round(-100 / (parlayDecimal - 1));
+        
+        setCurrentReceipt({
+          matchup: `${bets.length}-Leg Parlay`,
+          team: bets.map(b => b.selection).join(', '),
+          betType: 'parlay',
+          odds: americanOdds,
+          stake: parlayStake
+        });
+      } else if (bets[0].stake > 0) {
+        const firstBet = bets[0];
+        setCurrentReceipt({
+          matchup: firstBet.matchup,
+          team: firstBet.selection,
+          betType: firstBet.betType,
+          odds: typeof firstBet.odds === 'object' ? firstBet.odds.odds || firstBet.odds.value : firstBet.odds,
+          stake: firstBet.stake
+        });
+      }
+      setShowReceipt(true);
+    }
+
     // Simulate bet placement
     setTimeout(() => {
       // Simulate some bets winning (for demo purposes)
       const winningBet = bets[0]; // Just take the first bet as winning for demo
       if (winningBet && winningBet.stake > 0) {
         setSelectedWinningBet(winningBet);
-        setShowShareModal(true);
       }
       
-      alert(`${bets.length} bet(s) placed successfully!`);
       clearBetSlip();
       setIsPlacing(false);
-      onClose();
-    }, 1500);
+      // Don't close immediately - let receipt show
+    }, 500);
   };
 
   const formatOdds = (odds) => {
@@ -417,6 +449,19 @@ export default function BetSlip({ bankroll, onClose }) {
           setSelectedWinningBet(null);
         }}
       />
+
+      {/* Bet Receipt Modal */}
+      {showReceipt && currentReceipt && (
+        <BetReceipt 
+          bet={currentReceipt} 
+          isDemo={false}
+          onClose={() => {
+            setShowReceipt(false);
+            setCurrentReceipt(null);
+            onClose(); // Close bet slip after receipt is dismissed
+          }}
+        />
+      )}
     </>
   );
 }

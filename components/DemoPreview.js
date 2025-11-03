@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import BetReceipt from './BetReceipt';
 
 export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, showDemoBetSlip, setShowDemoBetSlip }) {
   const [selectedBets, setSelectedBets] = useState([]);
@@ -9,6 +10,8 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
   const [betType, setBetType] = useState('single');
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [showDetailedStats, setShowDetailedStats] = useState(false);
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [currentReceipt, setCurrentReceipt] = useState(null);
 
   const mockGames = [
     {
@@ -389,12 +392,50 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
               <button
                 onClick={() => {
                   if (selectedBets.some(bet => bet.stake > 0)) {
-                    alert('Demo bets placed successfully! This shows how your real challenge would work.');
+                    // Save demo bets to localStorage
+                    const demoBets = JSON.parse(localStorage.getItem('demo_bet_history') || '[]');
+                    const newBets = selectedBets
+                      .filter(bet => bet.stake > 0)
+                      .map(bet => ({
+                        id: `demo_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                        matchup: bet.matchup,
+                        selection: bet.team,
+                        betType: bet.betType,
+                        odds: bet.odds,
+                        stake: bet.stake,
+                        status: 'open',
+                        placedAt: new Date().toISOString(),
+                        profit: 0,
+                        isDemo: true
+                      }));
+                    
+                    localStorage.setItem('demo_bet_history', JSON.stringify([...demoBets, ...newBets]));
+                    
+                    // Show receipt for first bet (or combined for parlay)
+                    if (betType === 'parlay') {
+                      const parlayOdds = selectedBets.reduce((acc, bet) => {
+                        const decimalOdds = bet.odds > 0 ? (bet.odds / 100 + 1) : (100 / Math.abs(bet.odds) + 1);
+                        return acc * decimalOdds;
+                      }, 1);
+                      const americanOdds = Math.round((parlayOdds - 1) * 100);
+                      
+                      setCurrentReceipt({
+                        matchup: `${selectedBets.length}-Leg Parlay`,
+                        team: selectedBets.map(b => b.team).join(', '),
+                        betType: 'parlay',
+                        odds: americanOdds,
+                        stake: selectedBets[0].stake
+                      });
+                    } else {
+                      setCurrentReceipt(selectedBets.find(bet => bet.stake > 0));
+                    }
+                    
+                    setShowReceipt(true);
                     setSelectedBets([]);
                     setShowDemoBetSlip(false);
                     setDemoBetSlipCount?.(0);
                   } else {
-                    alert('This is just a demo! Sign up to start your real funded challenge.');
+                    alert('Please enter a wager amount for your bet(s)');
                   }
                 }}
                 className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-all duration-300 text-sm"
@@ -654,6 +695,18 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
           </div>
         </div>
       </div>
+
+      {/* Bet Receipt Modal */}
+      {showReceipt && currentReceipt && (
+        <BetReceipt 
+          bet={currentReceipt} 
+          isDemo={true}
+          onClose={() => {
+            setShowReceipt(false);
+            setCurrentReceipt(null);
+          }}
+        />
+      )}
     </div>
   );
 }

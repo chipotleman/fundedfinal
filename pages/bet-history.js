@@ -85,8 +85,12 @@ export default function BetHistory() {
   const [expandedShare, setExpandedShare] = useState({});
 
   useEffect(() => {
-    // In a real app, this would fetch from your API
-    setAllBets(mockBets);
+    // Load demo bets from localStorage
+    const demoBets = JSON.parse(localStorage.getItem('demo_bet_history') || '[]');
+    
+    // Combine mock bets with demo bets
+    const combinedBets = [...mockBets, ...demoBets];
+    setAllBets(combinedBets);
   }, []);
 
   const formatOdds = (odds) => {
@@ -340,7 +344,14 @@ export default function BetHistory() {
                     <div className="mb-8">
                       <div className="bg-slate-800/60 backdrop-blur-md rounded-2xl p-6 border border-slate-600/30">
                         <div className="text-gray-400 text-xs font-bold tracking-widest uppercase mb-2">Game</div>
-                        <div className="text-white font-black text-xl mb-4">{bet.matchup}</div>
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="text-white font-black text-xl">{bet.matchup}</div>
+                          {bet.isDemo && (
+                            <span className="bg-orange-500/20 border border-orange-500/50 text-orange-400 px-3 py-1 rounded-full text-xs font-bold">
+                              DEMO
+                            </span>
+                          )}
+                        </div>
 
                         <div className="flex items-center justify-between">
                           <div>
