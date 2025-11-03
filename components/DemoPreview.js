@@ -567,14 +567,14 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                             <div className="text-white font-bold text-xs sm:text-sm truncate">{game.awayTeam}</div>
                           </div>
                           <button
-                            onClick={() => placeDemoBet(game, 'spread', -110, `${game.awayTeam} ${game.spread > 0 ? -game.spread : Math.abs(game.spread)}`, `${game.id}-spread-away`)}
+                            onClick={() => placeDemoBet(game, 'spread', -110, `${game.awayTeam} ${game.spread > 0 ? -game.spread : '+' + Math.abs(game.spread)}`, `${game.id}-spread-away`)}
                             className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
                               isBetSelected(`${game.id}-spread-away`)
                                 ? 'bg-green-600 border-green-500 text-white'
                                 : 'bg-gray-700 border-gray-600 text-white'
                             }`}
                           >
-                            <div className="text-gray-300 text-xs">{game.spread > 0 ? -game.spread : Math.abs(game.spread)}</div>
+                            <div className="text-gray-300 text-xs">{game.spread > 0 ? -game.spread : '+' + Math.abs(game.spread)}</div>
                             <div className="text-green-400 text-xs font-medium">-110</div>
                           </button>
                           <button
