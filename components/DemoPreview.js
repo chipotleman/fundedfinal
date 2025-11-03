@@ -191,14 +191,14 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
             <div className="flex-shrink-0 p-3 lg:p-3 border-b border-slate-700">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center space-x-2">
-                  {/* Challenge 1 - Active */}
+                  {/* Phase 1 - Active */}
                   <button className="bg-green-500/20 border border-green-500 text-green-400 font-bold py-1.5 px-3 rounded-lg text-sm flex items-center space-x-1">
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
-                    <span>Challenge 1</span>
+                    <span>Phase 1</span>
                   </button>
-                  {/* Challenge 2 - Locked */}
+                  {/* Phase 2 - Locked */}
                   <button 
                     onClick={() => setShowChallengeRequirements(true)}
                     className="bg-slate-700/50 border border-slate-600 text-slate-400 font-bold py-1.5 px-3 rounded-lg text-sm flex items-center space-x-1 hover:bg-slate-700 transition-colors"
@@ -206,7 +206,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
                     </svg>
-                    <span>Challenge 2</span>
+                    <span>Phase 2</span>
                   </button>
                 </div>
                 <button
@@ -499,8 +499,8 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">Challenge 2</h3>
-                  <p className="text-sm text-slate-400">Complete Challenge 1 to unlock</p>
+                  <h3 className="text-xl font-bold text-white">Phase 2</h3>
+                  <p className="text-sm text-slate-400">Complete Phase 1 to unlock</p>
                 </div>
               </div>
               <button
@@ -514,7 +514,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
             </div>
 
             <div className="space-y-3 mb-6">
-              <p className="text-gray-300 text-sm mb-4">Complete these requirements to unlock Challenge 2:</p>
+              <p className="text-gray-300 text-sm mb-4">Complete these requirements to unlock Phase 2:</p>
               
               {/* Requirement 1: Place 5 bets */}
               <div className={`flex items-center justify-between p-3 rounded-lg border ${demoStats.totalBets >= 5 ? 'bg-green-500/10 border-green-500/30' : 'bg-slate-700/30 border-slate-600'}`}>
