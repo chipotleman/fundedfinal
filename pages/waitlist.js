@@ -28,14 +28,14 @@ export default function Waitlist() {
       <div className="max-w-6xl mx-auto px-6 py-16">
         <div className="text-center mb-16">
           <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-6 leading-tight">
-            Introducing the <span className="bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">Thunder Card</span>
+            Introducing the <span className="bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">Piks Card</span>
           </h1>
           <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
             The first prepaid bank card that gets funded directly from your betting profits. Use it anywhere, just like a regular debit card.
           </p>
         </div>
 
-        {/* Thunder Card Preview */}
+        {/* Piks Card Preview */}
             <div className="relative max-w-sm mx-auto mb-12 flex justify-center">
               <div className="relative">
                 {/* Card with gradient background - more rectangular aspect ratio like real debit card */}
@@ -43,7 +43,7 @@ export default function Waitlist() {
                   {/* Card Header */}
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <div className="text-blue-300 text-xs font-medium mb-1">THUNDER CARD</div>
+                      <div className="text-blue-300 text-xs font-medium mb-1">PIKS CARD</div>
                       <div className="text-white text-base font-bold">PREMIUM</div>
                     </div>
                     <div className="w-10 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded flex items-center justify-center">
@@ -147,7 +147,7 @@ export default function Waitlist() {
                 </button>
               </form>
               <p className="text-gray-400 text-sm text-center mt-4">
-                Be among the first to get your Thunder Card when we launch
+                Be among the first to get your Piks Card when we launch
               </p>
             </div>
           ) : (
@@ -159,7 +159,7 @@ export default function Waitlist() {
               </div>
               <h2 className="text-2xl font-bold text-white mb-2">You're In!</h2>
               <p className="text-gray-300 mb-6">
-                Thanks for joining the waitlist. We'll notify you as soon as the Thunder Card is available.
+                Thanks for joining the waitlist. We'll notify you as soon as the Piks Card is available.
               </p>
               <Link href="/auth" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 inline-block">
                 Start Your Challenge

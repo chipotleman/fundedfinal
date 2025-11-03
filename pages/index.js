@@ -8,7 +8,7 @@ import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 
-// Thunder Card Module Component
+// Piks Card Module Component
 function ThunderCardModule() {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -17,7 +17,7 @@ function ThunderCardModule() {
     e.preventDefault();
     if (email) {
       // Here you would typically send to your backend
-      console.log('Thunder Card waitlist signup:', email);
+      console.log('Piks Card waitlist signup:', email);
       setIsSubmitted(true);
       setEmail('');
     }
@@ -30,7 +30,7 @@ function ThunderCardModule() {
           {/* Header */}
           <div className="p-8 sm:p-12">
             <h2 className="text-4xl sm:text-5xl font-black text-white mb-4">
-              Introducing the <span className="bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">Thunder Card</span>
+              Introducing the <span className="bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">Piks Card</span>
             </h2>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-8">
               The first prepaid bank card that gets funded directly from your betting profits. Use it anywhere, just like a regular debit card.
@@ -38,7 +38,7 @@ function ThunderCardModule() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 px-8 pb-8">
-            {/* Thunder Card Preview */}
+            {/* Piks Card Preview */}
             <div className="flex justify-center items-center">
               <div className="relative">
                 {/* Card with gradient background */}
@@ -46,7 +46,7 @@ function ThunderCardModule() {
                   {/* Card Header */}
                   <div className="flex justify-between items-start mb-4">
                     <div>
-                      <div className="text-blue-300 text-xs font-medium mb-1">THUNDER CARD</div>
+                      <div className="text-blue-300 text-xs font-medium mb-1">PIKS CARD</div>
                       <div className="text-white text-base font-bold">PREMIUM</div>
                     </div>
                     <div className="w-10 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded flex items-center justify-center">
@@ -85,7 +85,7 @@ function ThunderCardModule() {
                   </div>
                   <h3 className="text-2xl font-bold text-white mb-3">Get Early Access</h3>
                   <p className="text-gray-400 text-base">
-                    Be the first to know when the Thunder Card launches. Join our exclusive waitlist for early access and special perks.
+                    Be the first to know when the Piks Card launches. Join our exclusive waitlist for early access and special perks.
                   </p>
                 </div>
 
@@ -110,7 +110,7 @@ function ThunderCardModule() {
                   <div className="text-center">
                     <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
                       <div className="text-green-400 font-medium">
-                        ✅ You're on the list! We'll notify you when the Thunder Card is ready.
+                        ✅ You're on the list! We'll notify you when the Piks Card is ready.
                       </div>
                     </div>
                   </div>
@@ -118,7 +118,7 @@ function ThunderCardModule() {
 
                 <div className="mt-6 text-center">
                   <Link href="/waitlist" className="text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors">
-                    Learn more about Thunder Card →
+                    Learn more about Piks Card →
                   </Link>
                 </div>
               </div>
@@ -271,7 +271,7 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Thunder Card Coming Soon Module */}
+            {/* Piks Card Coming Soon Module */}
             <ThunderCardModule />
           </div>
         </div>

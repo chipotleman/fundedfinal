@@ -17,6 +17,9 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
   - Changed all text references from "Funder"/"FundMyBet" to "Piks"
   - Updated meta tags and SEO content
   - New logo file: `/public/funderlogo/Piks.png`
+  - Logo size increased by 125% for better visibility
+  - Logo positioned slightly higher in navbar
+- **Renamed "Thunder Card" to "Piks Card"** across all pages and navigation
 
 ### Simplified Demo Bet Slip
 - **Removed Phase 1/Phase 2 progression system** from demo bet slip for cleaner UX

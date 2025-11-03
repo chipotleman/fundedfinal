@@ -138,7 +138,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                     How It Works
                   </button>
                   <Link href="/waitlist" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Thunder Card
+                    Piks Card
                   </Link>
                   <Link href="/promos" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     Promos
@@ -156,7 +156,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                     How It Works
                   </button>
                   <Link href="/waitlist" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Thunder Card
+                    Piks Card
                   </Link>
                   <Link href="/leaderboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     Leaderboard
@@ -386,7 +386,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                         </svg>
-                        <span className="font-medium">Thunder Card</span>
+                        <span className="font-medium">Piks Card</span>
                       </Link>
                       <Link
                         href="/promos"
@@ -479,7 +479,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                         <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                         </svg>
-                        <span className="font-medium">Thunder Card</span>
+                        <span className="font-medium">Piks Card</span>
                       </Link>
                       <Link
                         href="/leaderboard"

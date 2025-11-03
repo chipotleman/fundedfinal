@@ -84,7 +84,7 @@ export default function MobileNavMenu({ open, onClose, bankroll, progressPercent
             <button onClick={handleDemoClick} className="text-green-300 hover:text-green-200 transition-colors">Demo</button>
             <Link href="/leaderboard" onClick={onClose}>Leaderboard</Link>
             <Link href="/how-it-works" onClick={onClose}>How it Works</Link>
-            <Link href="/waitlist" onClick={onClose}>Thunder Card</Link>
+            <Link href="/waitlist" onClick={onClose}>Piks Card</Link>
           </>
         )}
       </div>

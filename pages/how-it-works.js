@@ -168,7 +168,7 @@ const HowItWorks = () => {
                 Start a Challenge
               </Link>
               <Link href="/waitlist" className="bg-black hover:bg-gray-900 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-gray-700">
-                Join Thunder Card Waitlist
+                Join Piks Card Waitlist
               </Link>
             </div>
           </div>
