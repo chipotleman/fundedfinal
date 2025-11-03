@@ -181,7 +181,7 @@ export default function DemoPage() {
                 <div className="flex items-center justify-center gap-3 text-sm">
                   <span className="text-green-400 font-bold">You: {userSplit}%</span>
                   <span className="text-gray-500">|</span>
-                  <span className="text-orange-400 font-bold">Us: {100 - userSplit}%</span>
+                  <span className="text-pink-400 font-bold">Us: {100 - userSplit}%</span>
                 </div>
               </div>
               <input
@@ -194,8 +194,8 @@ export default function DemoPage() {
                 className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
               />
               <div className="flex justify-between text-xs mt-2">
-                <span className="text-green-400 font-medium">You: 50%</span>
-                <span className="text-orange-400 font-medium">Us: 10%</span>
+                <span className="text-gray-400 font-medium">Min: 50%</span>
+                <span className="text-gray-400 font-medium">Max: 90%</span>
               </div>
             </div>
           </div>
