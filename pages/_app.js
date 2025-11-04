@@ -5,6 +5,7 @@ import { BetSlipProvider } from '../contexts/BetSlipContext';
 import { UserProfilesProvider } from '../contexts/UserProfilesContext';
 import ChallengePopup from '../components/ChallengePopup';
 import HowItWorksPopup from '../components/HowItWorksPopup';
+import LiquidEther from '../components/LiquidEther';
 
 function MyApp({ Component, pageProps }) {
   const [showChallengePopup, setShowChallengePopup] = useState(false);
@@ -38,6 +39,19 @@ function MyApp({ Component, pageProps }) {
     <AuthProvider>
       <BetSlipProvider>
         <UserProfilesProvider>
+          {/* Global Liquid Ether Background */}
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            zIndex: -1,
+            pointerEvents: 'none'
+          }}>
+            <LiquidEther />
+          </div>
+
           <Component {...pageProps} />
           
           {/* Global Popups - Available on all pages */}
