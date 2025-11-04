@@ -722,7 +722,8 @@ export default function LiquidEther({
         this.init();
       }
       init() {
-        super.init();
+        this.scene = new THREE.Scene();
+        this.camera = new THREE.Camera();
         const outputM = new THREE.RawShaderMaterial({
           vertexShader: face_vert,
           fragmentShader: color_frag,
@@ -734,7 +735,9 @@ export default function LiquidEther({
             bgColor: { value: bgVec4 }
           }
         });
-        this.plane.material = outputM;
+        this.geometry = new THREE.PlaneGeometry(2.0, 2.0);
+        this.plane = new THREE.Mesh(this.geometry, outputM);
+        this.scene.add(this.plane);
         this.simulation = null;
       }
       update({ vel }) {
