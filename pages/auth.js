@@ -442,7 +442,7 @@ export default function AuthPage() {
                 <img
                   src="/pikslogotransparent.png"
                   alt="Sign In"
-                  className="h-20 sm:h-24 w-auto mx-auto"
+                  className="h-40 sm:h-48 w-auto mx-auto"
                 />
               </div>
               <p className="text-gray-400 font-medium text-sm sm:text-base">
