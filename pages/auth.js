@@ -440,7 +440,7 @@ export default function AuthPage() {
             <div className="text-center mb-8">
               <div className="mb-6 mx-auto">
                 <img
-                  src="/favicon.ico"
+                  src="/pikslogotransparent.png"
                   alt="Sign In"
                   className="h-20 sm:h-24 w-auto mx-auto"
                 />
