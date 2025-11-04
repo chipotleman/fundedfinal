@@ -311,8 +311,8 @@ export default function AuthPage() {
           <div className="max-w-7xl mx-auto">
             <Link href="/" className="flex items-center justify-center">
               <img
-                src="/funderlogo/Funder.png?v=4"
-                alt="Funder"
+                src="/funderlogo/Piks.png?v=5"
+                alt="Piks"
                 className="h-12 sm:h-16 w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
                 style={{
                   filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
@@ -446,8 +446,8 @@ export default function AuthPage() {
             <div className="text-center mb-8">
               <div className="mb-4 mx-auto">
                 <img
-                  src="/funderlogo/Funder.png?v=4"
-                  alt="Funder"
+                  src="/funderlogo/Piks.png?v=5"
+                  alt="Piks"
                   className="h-16 w-auto mx-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
                   style={{
                     filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
