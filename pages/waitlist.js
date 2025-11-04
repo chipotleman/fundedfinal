@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
@@ -8,13 +8,20 @@ export default function Waitlist() {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [isFlipping, setIsFlipping] = useState(false);
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
 
   const handleSubmit = (e) => {
     e.preventDefault();
     // Here you would typically send the data to your backend
     console.log('Waitlist signup:', { name, email });
-    setSubmitted(true);
+    setIsFlipping(true);
+    
+    // After animation completes, show success message
+    setTimeout(() => {
+      setIsFlipping(false);
+      setSubmitted(true);
+    }, 1500);
   };
 
   return (
@@ -36,10 +43,19 @@ export default function Waitlist() {
         </div>
 
         {/* Piks Card Preview */}
-            <div className="relative max-w-sm mx-auto mb-12 flex justify-center">
-              <div className="relative">
+            <div className="relative max-w-sm mx-auto mb-12 flex justify-center" style={{perspective: '1000px', height: '220px'}}>
+              <div className="relative" style={{width: '320px', transformStyle: 'preserve-3d'}}>
                 {/* Card with gradient background - more rectangular aspect ratio like real debit card */}
-                <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 rounded-xl p-6 shadow-2xl border border-blue-500/30 transform hover:scale-105 transition-all duration-300 mx-auto" style={{aspectRatio: '1.586/1', width: '320px'}}>
+                <div 
+                  className={`bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 rounded-xl p-6 shadow-2xl border border-blue-500/30 mx-auto ${isFlipping ? '' : 'hover:scale-105'}`} 
+                  style={{
+                    aspectRatio: '1.586/1', 
+                    width: '320px',
+                    transformStyle: 'preserve-3d',
+                    transition: isFlipping ? 'transform 1.5s' : 'transform 0.3s',
+                    transform: isFlipping ? 'rotateY(720deg) rotateX(360deg)' : 'rotateY(0deg) rotateX(0deg)'
+                  }}
+                >
                   {/* Card Header */}
                   <div className="flex justify-between items-start mb-4">
                     <div>
@@ -151,18 +167,21 @@ export default function Waitlist() {
               </p>
             </div>
           ) : (
-            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-green-500/30 text-center">
-              <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-green-500/30 text-center animate-fadeIn">
+              <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+                <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">You're In!</h2>
-              <p className="text-gray-300 mb-6">
-                Thanks for joining the waitlist. We'll notify you as soon as the Piks Card is available.
+              <h2 className="text-3xl font-bold text-white mb-3">You're on the Waitlist!</h2>
+              <p className="text-gray-300 text-lg mb-2">
+                🎉 Welcome to the Piks Card waitlist, <span className="text-green-400 font-bold">{name}</span>!
               </p>
-              <Link href="/auth" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 inline-block">
-                Start Your Challenge
+              <p className="text-gray-400 mb-6">
+                We'll notify you at <span className="text-blue-400">{email}</span> as soon as the Piks Card is available.
+              </p>
+              <Link href="/auth" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 inline-block shadow-lg">
+                Start Your Challenge Now
               </Link>
             </div>
           )}
