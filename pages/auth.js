@@ -439,9 +439,11 @@ export default function AuthPage() {
           <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-slate-700/50 shadow-2xl">
             <div className="text-center mb-8">
               <div className="mb-6 mx-auto">
-                <h1 className="text-6xl sm:text-7xl font-bold text-white lowercase tracking-tight">
-                  sign in
-                </h1>
+                <img
+                  src="/signin.png"
+                  alt="Sign In"
+                  className="h-20 sm:h-24 w-auto mx-auto"
+                />
               </div>
               <p className="text-gray-400 font-medium text-sm sm:text-base">
                 {isSignUp ? 'Join our funded challenge platform' : 'Sign in to your account'}
