@@ -43,6 +43,22 @@ body {
   position: relative;
 }
 
+/* Remove default mobile spacing */
+@media (max-width: 768px) {
+  html, body {
+    padding: 0 !important;
+  }
+  
+  main, section, div {
+    margin-top: 0 !important;
+  }
+  
+  /* Ensure no extra top padding on mobile */
+  .min-h-screen {
+    padding-top: 0 !important;
+  }
+}
+
 /* Glass Morphism Components */
 .glass-card {
   background: var(--glass-bg);
@@ -304,7 +320,7 @@ body {
   
   /* Mobile-specific utilities */
   .mobile-padding {
-    padding: 1rem;
+    padding: 0.5rem !important;
   }
   
   .mobile-text {
@@ -312,7 +328,17 @@ body {
   }
   
   .mobile-spacing {
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem !important;
+  }
+  
+  /* Remove excessive mobile gaps */
+  .mobile-no-gap {
+    gap: 0.5rem !important;
+  }
+  
+  .mobile-compact {
+    padding: 0.75rem !important;
+    margin: 0 !important;
   }
   
   /* Hide scrollbars on mobile but keep functionality */
@@ -323,6 +349,18 @@ body {
   
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
+  }
+  
+  /* Fix min-height on mobile */
+  .min-h-screen {
+    min-height: 100vh !important;
+    padding-top: 60px !important; /* Only account for navbar */
+  }
+  
+  /* Compact containers on mobile */
+  .container {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
   }
 }
 
@@ -363,6 +401,22 @@ body {
 
 .bg-mesh {
   background: transparent;
+}
+
+/* Mobile page wrapper - use this on main content containers */
+.mobile-page-wrapper {
+  padding-top: 60px;
+  padding-bottom: 1rem;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .mobile-page-wrapper {
+    padding-top: 80px;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
 }
 
 /* Unified Hover Effects */
