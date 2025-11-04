@@ -310,15 +310,9 @@ export default function AuthPage() {
         <div className="relative z-10 px-6 py-8">
           <div className="max-w-7xl mx-auto">
             <Link href="/" className="flex items-center justify-center">
-              <img
-                src="/funderlogo/Piks.png?v=5"
-                alt="Piks"
-                className="h-12 sm:h-16 w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
-                style={{
-                  filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
-                  animation: 'logoRedYellowGlow 4s infinite ease-in-out'
-                }}
-              />
+              <h1 className="text-5xl sm:text-6xl font-bold text-white lowercase tracking-tight">
+                sign in
+              </h1>
             </Link>
           </div>
         </div>
@@ -444,16 +438,10 @@ export default function AuthPage() {
         <div className="relative max-w-md w-full">
           <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-slate-700/50 shadow-2xl">
             <div className="text-center mb-8">
-              <div className="mb-4 mx-auto">
-                <img
-                  src="/funderlogo/Piks.png?v=5"
-                  alt="Piks"
-                  className="h-16 w-auto mx-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
-                  style={{
-                    filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
-                    animation: 'logoRedYellowGlow 4s infinite ease-in-out'
-                  }}
-                />
+              <div className="mb-6 mx-auto">
+                <h1 className="text-6xl sm:text-7xl font-bold text-white lowercase tracking-tight">
+                  sign in
+                </h1>
               </div>
               <p className="text-gray-400 font-medium text-sm sm:text-base">
                 {isSignUp ? 'Join our funded challenge platform' : 'Sign in to your account'}
