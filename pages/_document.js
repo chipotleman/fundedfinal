@@ -5,10 +5,10 @@ export default function Document() {
   return (
     <Html>
       <Head>
-        <link rel="icon" href="/favicon.ico?v=2" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico?v=2" />
-        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico?v=2" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico?v=2" />
+        <link rel="icon" href="/favicon.ico?v=3" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico?v=3" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico?v=3" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico?v=3" />
         
         {/* Open Graph / Social Media Meta Tags */}
         <meta property="og:title" content="Piks - Get Funded to Bet" />
