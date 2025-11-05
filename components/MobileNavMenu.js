@@ -58,18 +58,19 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
       onTouchEnd={onTouchEnd}
     >
       <div className="flex flex-col h-full">
-        <div className="p-4 flex justify-end">
+        {/* X button positioned at exact height of plus sign */}
+        <div className="absolute top-0 right-0 pt-4 pr-4">
           <button
             onClick={onClose}
-            className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-600 hover:border-slate-500"
+            className="p-2 flex items-center justify-center"
           >
-            <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+            <svg className="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 overflow-y-auto px-6 py-4 mt-16">
           {isLoggedIn ? (
             <div className="space-y-4">
               <Link
