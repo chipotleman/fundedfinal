@@ -71,8 +71,7 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
 ### Logo Updates
 - Increased mobile logo size by 60% (from 56px to 90px)
 - Increased desktop logo size proportionally (from 90px to 115px)
-- Logo now centered on mobile screens (previously left-aligned)
-- Logo remains left-aligned on desktop
+- Logo left-aligned on all screen sizes (mobile and desktop)
 - Logo now more prominent on all screen sizes
 
 ### Background
