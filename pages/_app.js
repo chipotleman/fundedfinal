@@ -106,12 +106,24 @@ function MyApp({ Component, pageProps }) {
         />
         <BetaLanding onAuthenticated={() => {
           setBetaAuthenticated(true);
-          // Scroll to top when entering the main site
-          setTimeout(() => {
+          // Scroll to top immediately when entering the main site
+          window.scrollTo(0, 0);
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+          
+          // Also scroll after render completes
+          requestAnimationFrame(() => {
             window.scrollTo(0, 0);
             document.documentElement.scrollTop = 0;
             document.body.scrollTop = 0;
-          }, 50);
+            
+            // And one more time with setTimeout to ensure it sticks
+            setTimeout(() => {
+              window.scrollTo(0, 0);
+              document.documentElement.scrollTop = 0;
+              document.body.scrollTop = 0;
+            }, 100);
+          });
         }} />
       </>
     );
