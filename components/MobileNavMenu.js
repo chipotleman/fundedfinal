@@ -58,20 +58,12 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
           
           {/* Black background cover - stays fixed */}
           <div 
-            className="fixed top-0 bottom-0 right-0 w-64 bg-black lg:hidden z-[59]"
-            style={{
-              height: '100vh',
-            }}
+            className="fixed inset-0 right-0 left-auto w-64 bg-black lg:hidden z-[59]"
           />
           
           {/* Menu drawer - appears instantly when open */}
           <div 
-            className="fixed top-0 bottom-0 right-0 w-64 bg-black shadow-xl border-l border-gray-800 lg:hidden z-[60]"
-            style={{
-              height: '100vh',
-              minHeight: '100vh',
-              maxHeight: '100vh',
-            }}
+            className="fixed inset-0 right-0 left-auto w-64 bg-black shadow-xl border-l border-gray-800 lg:hidden z-[60] overflow-hidden"
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
