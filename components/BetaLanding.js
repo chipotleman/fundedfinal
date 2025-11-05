@@ -64,7 +64,7 @@ export default function BetaLanding({ onAuthenticated }) {
       <nav className="sticky top-0 left-0 right-0 bg-black z-50">
         <div className="px-3 sm:px-6 py-1 sm:py-3">
           <div className="flex items-center justify-center sm:justify-between min-h-[56px] sm:min-h-[60px] relative">
-            <div className="flex-none -mt-0.5 sm:mt-0">
+            <div className="flex-none -mt-1 sm:-mt-0.5">
               <div className="flex items-center">
                 <img
                   src="/funderlogo/Piks.png?v=5"
