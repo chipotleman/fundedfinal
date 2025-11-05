@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 import BalanceModal from './BalanceModal';
 import WithdrawModal from './WithdrawModal';
 import { supabase } from '../lib/supabaseClient';
-import { PiPlusBold, PiXBold } from 'react-icons/pi';
 
 export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick, demoBetSlipCount, onDemoBetSlipClick }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -292,9 +291,13 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                 className="lg:hidden p-2 flex items-center justify-center flex-shrink-0"
               >
                 {showMobileMenu ? (
-                  <PiXBold className="w-7 h-7 text-gray-300" />
+                  <svg className="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 ) : (
-                  <PiPlusBold className="w-7 h-7 text-gray-300" />
+                  <svg className="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 4v16m8-8H4" />
+                  </svg>
                 )}
               </button>
             </div>
