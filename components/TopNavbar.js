@@ -308,9 +308,9 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
       {/* Mobile Menu - Flush against right edge */}
       <>
         <div 
-          className="fixed top-0 bottom-0 w-80 max-w-sm bg-black shadow-xl border-l border-gray-800 lg:hidden z-[60]"
+          className="fixed top-0 bottom-0 w-64 bg-black shadow-xl border-l border-gray-800 lg:hidden z-[60]"
           style={{
-            right: showMobileMenu ? '0' : '-320px',
+            right: showMobileMenu ? '0' : '-256px',
             transition: 'right 0.3s ease-in-out',
           }}
           onTouchStart={onTouchStart}

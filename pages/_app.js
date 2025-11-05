@@ -70,7 +70,7 @@ function MyApp({ Component, pageProps }) {
           {/* Page wrapper that slides left on mobile when menu opens */}
           <div 
             style={{
-              transform: mobileMenuOpen ? 'translateX(-320px)' : 'translateX(0)',
+              transform: mobileMenuOpen ? 'translateX(-256px)' : 'translateX(0)',
               transition: 'transform 0.3s ease-in-out',
               minHeight: '100vh',
             }}
