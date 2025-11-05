@@ -10,7 +10,7 @@ export default function BetaLanding({ onAuthenticated }) {
   const [signupSuccess, setSignupSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const BETA_PASSWORD = 'piks2025';
+  const BETA_PASSWORD = 'baldwin';
 
   const handlePasswordSubmit = (e) => {
     e.preventDefault();

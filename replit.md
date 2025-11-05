@@ -15,13 +15,14 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
 ### Password-Protected Beta Landing Page
 - **Created BetaLanding component** that wraps entire site with password protection
   - Beautiful landing page with Piks logo and animated gradient background
-  - Password protection: `piks2025` (stored in component, can be moved to environment variable)
+  - Password protection: `baldwin` (stored in component, can be moved to environment variable)
   - Beta access signup form for waitlist
   - Signups stored in localStorage (can be migrated to database later)
   - Access persists via localStorage - users don't need to re-enter password
   - Matches current theme with purple/pink/blue gradient animation
   - Integrated into _app.js to gate all site content
   - Clean, professional design with glass-morphism effects
+  - Mobile status bar color matches page gradient
 
 ### Authentication Migration: Phone to Email
 - **Migrated authentication from phone numbers to email addresses**:
@@ -156,7 +157,7 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
 - **DemoPreview**: Allows non-authenticated users to try the platform
 
 ### Authentication Flow
-1. User enters beta access code on BetaLanding page (password: `piks2025`)
+1. User enters beta access code on BetaLanding page (password: `baldwin`)
 2. Upon successful password entry, access stored in localStorage
 3. User signs up/logs in via Supabase Auth (email + password)
 4. Session persists via Supabase's `persistSession: true` configuration
