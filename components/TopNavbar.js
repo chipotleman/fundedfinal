@@ -89,8 +89,8 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
     <>
       <nav className="sticky top-0 left-0 right-0 bg-black z-50">
         <div className="px-3 sm:px-6 py-1 sm:py-3">
-          <div className="flex items-center justify-between min-h-[56px] sm:min-h-[60px]">
-            {/* Logo - left-aligned on both mobile and desktop */}
+          <div className="flex items-center justify-center sm:justify-between min-h-[56px] sm:min-h-[60px] relative">
+            {/* Logo - centered on mobile, left-aligned on desktop */}
             <div className="flex-none">
               <Link href="/" className="flex items-center">
                 <img
@@ -166,7 +166,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
             </div>
 
             {/* Right Side - Desktop: Bankroll + Bet Slip + Buttons, Mobile: Hamburger + Bet Slip */}
-            <div className="flex items-center space-x-2 sm:space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4 absolute right-3 sm:relative sm:right-0">
               {/* Desktop Bankroll - Only show when logged in */}
               {isLoggedIn && (
                 <div className="hidden sm:flex items-center space-x-4">
