@@ -59,12 +59,12 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
     >
       <div className="flex flex-col h-full">
         {/* X button positioned at exact height of plus sign */}
-        <div className="absolute top-0 right-0 pt-[24px] pr-4">
+        <div className="absolute top-0 right-0 pt-[20px] pr-4">
           <button
             onClick={onClose}
             className="p-2 flex items-center justify-center"
           >
-            <svg className="w-9 h-9 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+            <svg className="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
