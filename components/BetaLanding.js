@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Image from 'next/image';
 import Head from 'next/head';
 
@@ -9,8 +9,12 @@ export default function BetaLanding({ onAuthenticated }) {
   const [error, setError] = useState('');
   const [signupSuccess, setSignupSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [sliderPosition, setSliderPosition] = useState(0);
+  const startX = useRef(0);
 
   const BETA_PASSWORD = 'baldwin';
+  const maxSlide = 250; // Max slider distance
 
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
@@ -20,6 +24,45 @@ export default function BetaLanding({ onAuthenticated }) {
     } else {
       setError('Incorrect password');
       setPassword('');
+    }
+  };
+
+  const handleSlideStart = (e) => {
+    setIsDragging(true);
+    const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+    startX.current = clientX - sliderPosition;
+  };
+
+  const handleSlideMove = (e) => {
+    if (!isDragging) return;
+    
+    const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+    const newPosition = clientX - startX.current;
+    
+    if (newPosition >= 0 && newPosition <= maxSlide) {
+      setSliderPosition(newPosition);
+    }
+  };
+
+  const handleSlideEnd = () => {
+    setIsDragging(false);
+    
+    if (sliderPosition > maxSlide * 0.8) {
+      // Unlocked - submit form
+      setSliderPosition(maxSlide);
+      if (password === BETA_PASSWORD) {
+        setTimeout(() => {
+          localStorage.setItem('beta_access', 'true');
+          onAuthenticated();
+        }, 200);
+      } else {
+        setError('Incorrect password');
+        setPassword('');
+        setSliderPosition(0);
+      }
+    } else {
+      // Reset
+      setSliderPosition(0);
     }
   };
 
@@ -100,12 +143,39 @@ export default function BetaLanding({ onAuthenticated }) {
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 rounded-xl transition-all shadow-lg transform hover:scale-105"
+                {/* Slide to Enter Button */}
+                <div 
+                  className="relative w-full h-16 rounded-xl overflow-hidden select-none"
+                  style={{
+                    background: `linear-gradient(to right, #10b981 ${(sliderPosition / maxSlide) * 100}%, #3b82f6 ${(sliderPosition / maxSlide) * 100}%, #1e293b ${(sliderPosition / maxSlide) * 100}%)`,
+                    touchAction: 'none'
+                  }}
                 >
-                  Enter Platform
-                </button>
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span className="text-white font-bold text-lg drop-shadow-lg">
+                      {sliderPosition > maxSlide * 0.8 ? 'Release to Enter!' : 'Slide to Enter'}
+                    </span>
+                  </div>
+                  
+                  <div
+                    className="absolute left-1 top-1 bottom-1 w-14 bg-white rounded-lg flex items-center justify-center text-2xl cursor-grab shadow-lg"
+                    style={{
+                      transform: `translateX(${sliderPosition}px)`,
+                      transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                      willChange: 'transform'
+                    }}
+                    onMouseDown={handleSlideStart}
+                    onMouseMove={handleSlideMove}
+                    onMouseUp={handleSlideEnd}
+                    onMouseLeave={handleSlideEnd}
+                    onTouchStart={handleSlideStart}
+                    onTouchMove={handleSlideMove}
+                    onTouchEnd={handleSlideEnd}
+                  >
+                    <span className="text-green-500">→</span>
+                  </div>
+                </div>
               </form>
 
               <div className="mt-8 text-center">
