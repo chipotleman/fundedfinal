@@ -192,7 +192,7 @@ export default function BetaLanding({ onAuthenticated }) {
                 </div>
 
                 {/* Terms Agreement Checkbox */}
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2">
                   <input
                     type="checkbox"
                     id="terms"
@@ -201,9 +201,9 @@ export default function BetaLanding({ onAuthenticated }) {
                       setAgreedToTerms(e.target.checked);
                       setError('');
                     }}
-                    className="h-5 w-5 rounded border-gray-600 bg-slate-700 text-green-500 focus:ring-2 focus:ring-green-400 focus:ring-offset-0 cursor-pointer flex-shrink-0"
+                    className="h-4 w-4 rounded border-gray-600 bg-slate-700 text-green-500 focus:ring-2 focus:ring-green-400 focus:ring-offset-0 cursor-pointer flex-shrink-0"
                   />
-                  <label htmlFor="terms" className="text-gray-400 text-sm leading-tight cursor-pointer select-none">
+                  <label htmlFor="terms" className="text-gray-400 text-xs whitespace-nowrap cursor-pointer select-none flex items-center">
                     I agree to the{' '}
                     <button
                       type="button"
@@ -211,7 +211,7 @@ export default function BetaLanding({ onAuthenticated }) {
                         e.preventDefault();
                         setShowTerms(true);
                       }}
-                      className="text-green-400 hover:text-green-300 underline inline"
+                      className="text-green-400 hover:text-green-300 underline mx-1"
                     >
                       Terms of Service
                     </button>{' '}
@@ -222,7 +222,7 @@ export default function BetaLanding({ onAuthenticated }) {
                         e.preventDefault();
                         setShowPrivacy(true);
                       }}
-                      className="text-green-400 hover:text-green-300 underline inline"
+                      className="text-green-400 hover:text-green-300 underline ml-1"
                     >
                       Privacy Policy
                     </button>
