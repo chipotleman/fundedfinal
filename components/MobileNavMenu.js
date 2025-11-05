@@ -60,6 +60,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
         className="fixed top-0 bottom-0 w-64 bg-black shadow-xl border-l border-gray-800 lg:hidden z-[60]"
         style={{
           right: isOpen ? '0' : '-256px',
+          transition: 'right 0.3s ease-in-out',
         }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
