@@ -12,6 +12,7 @@ export default function BetaLanding({ onAuthenticated }) {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   const BETA_PASSWORDS = ['baldwin', 'mbarlow99'];
   const isButtonEnabled = agreedToTerms && password.length > 0;
@@ -81,7 +82,16 @@ export default function BetaLanding({ onAuthenticated }) {
         </div>
       </nav>
 
-      <div className="flex items-center justify-center p-6 relative" style={{ minHeight: 'calc(100vh - 120px)' }}>
+      <div 
+        className="flex items-center justify-center relative transition-all duration-300"
+        style={{ 
+          minHeight: isInputFocused ? '50vh' : 'calc(100vh - 120px)',
+          paddingTop: isInputFocused ? '1rem' : '1.5rem',
+          paddingBottom: isInputFocused ? '1rem' : '1.5rem',
+          paddingLeft: '1.5rem',
+          paddingRight: '1.5rem'
+        }}
+      >
 
       {/* Terms of Service Modal */}
       {showTerms && (
@@ -197,6 +207,8 @@ export default function BetaLanding({ onAuthenticated }) {
                       setPassword(e.target.value);
                       setError('');
                     }}
+                    onFocus={() => setIsInputFocused(true)}
+                    onBlur={() => setIsInputFocused(false)}
                     className="w-full px-4 py-4 bg-black border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all font-medium text-center text-lg tracking-widest"
                     placeholder="Enter access code"
                     required
