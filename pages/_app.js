@@ -17,6 +17,34 @@ function MyApp({ Component, pageProps }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [betaAuthenticated, setBetaAuthenticated] = useState(false);
 
+  // Scroll to top when beta authentication changes to true
+  useEffect(() => {
+    if (betaAuthenticated) {
+      // Force scroll to top multiple times to ensure it works
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+      
+      requestAnimationFrame(() => {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      });
+      
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }, 50);
+      
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      }, 150);
+    }
+  }, [betaAuthenticated]);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const betaAccess = localStorage.getItem('beta_access');
@@ -104,27 +132,7 @@ function MyApp({ Component, pageProps }) {
             backgroundColor: '#000000',
           }}
         />
-        <BetaLanding onAuthenticated={() => {
-          setBetaAuthenticated(true);
-          // Scroll to top immediately when entering the main site
-          window.scrollTo(0, 0);
-          document.documentElement.scrollTop = 0;
-          document.body.scrollTop = 0;
-          
-          // Also scroll after render completes
-          requestAnimationFrame(() => {
-            window.scrollTo(0, 0);
-            document.documentElement.scrollTop = 0;
-            document.body.scrollTop = 0;
-            
-            // And one more time with setTimeout to ensure it sticks
-            setTimeout(() => {
-              window.scrollTo(0, 0);
-              document.documentElement.scrollTop = 0;
-              document.body.scrollTop = 0;
-            }, 100);
-          });
-        }} />
+        <BetaLanding onAuthenticated={() => setBetaAuthenticated(true)} />
       </>
     );
   }
