@@ -88,10 +88,10 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
   return (
     <>
       <nav className="sticky top-0 left-0 right-0 bg-black z-50">
-        <div className="pl-0 pr-3 sm:px-6 py-1 sm:py-3">
-          <div className="flex items-center justify-between min-h-[56px] sm:min-h-[60px]">
+        <div className="pl-0 pr-3 sm:px-6">
+          <div className="flex items-center justify-between">
             {/* Logo - left-aligned on both mobile and desktop */}
-            <div className="flex-none">
+            <div className="flex-none -mt-2">
               <Link href="/" className="flex items-center">
                 <img
                   src="/pikslogotransparent.png"
