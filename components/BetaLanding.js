@@ -59,9 +59,6 @@ export default function BetaLanding({ onAuthenticated }) {
               style={{ width: 'auto', height: 'auto' }}
             />
           </div>
-          <p className="text-lg text-gray-300 font-medium">
-            The future of funded sports betting challenges
-          </p>
         </div>
 
         <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-slate-700/50 shadow-2xl">
