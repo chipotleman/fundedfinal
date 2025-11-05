@@ -5,20 +5,58 @@ import { BetSlipProvider } from '../contexts/BetSlipContext';
 import { UserProfilesProvider } from '../contexts/UserProfilesContext';
 import ChallengePopup from '../components/ChallengePopup';
 import HowItWorksPopup from '../components/HowItWorksPopup';
+import MobileNavMenu from '../components/MobileNavMenu';
+import { supabase } from '../lib/supabaseClient';
 
 function MyApp({ Component, pageProps }) {
   const [showChallengePopup, setShowChallengePopup] = useState(false);
   const [showHowItWorksPopup, setShowHowItWorksPopup] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
+    const fetchUser = async () => {
+      const storedUser = localStorage.getItem('current_user');
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          if (parsedUser && parsedUser.id) {
+            setCurrentUser(parsedUser);
+            setIsLoggedIn(true);
+            return;
+          }
+        } catch (error) {
+          localStorage.removeItem('current_user');
+        }
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUser(user);
+        setIsLoggedIn(true);
+      }
+    };
+
+    fetchUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN') {
+        setCurrentUser(session.user);
+        setIsLoggedIn(true);
+        localStorage.setItem('current_user', JSON.stringify(session.user));
+      } else if (event === 'SIGNED_OUT') {
+        setCurrentUser(null);
+        setIsLoggedIn(false);
+        localStorage.removeItem('current_user');
+      }
+    });
+
     const handleOpenChallengePopup = () => {
-      console.log('Opening challenge popup');
       setShowChallengePopup(true);
     };
 
     const handleOpenHowItWorks = () => {
-      console.log('Opening how it works popup');
       setShowHowItWorksPopup(true);
     };
 
@@ -33,6 +71,7 @@ function MyApp({ Component, pageProps }) {
     }
 
     return () => {
+      subscription?.unsubscribe();
       if (typeof window !== 'undefined') {
         window.removeEventListener('openChallengePopup', handleOpenChallengePopup);
         window.removeEventListener('openHowItWorks', handleOpenHowItWorks);
@@ -88,6 +127,14 @@ function MyApp({ Component, pageProps }) {
           <HowItWorksPopup 
             isOpen={showHowItWorksPopup} 
             onClose={() => setShowHowItWorksPopup(false)} 
+          />
+
+          {/* Mobile Menu - Rendered outside page wrapper via portal */}
+          <MobileNavMenu
+            isOpen={mobileMenuOpen}
+            onClose={() => setMobileMenuOpen(false)}
+            currentUser={currentUser}
+            isLoggedIn={isLoggedIn}
           />
         </UserProfilesProvider>
       </BetSlipProvider>

@@ -1,93 +1,200 @@
-// components/MobileNavMenu.js
+import { useEffect, useState } from 'react';
+import ReactDOM from 'react-dom';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 
-export default function MobileNavMenu({ open, onClose, bankroll, progressPercent }) {
-  const [avatarUrl, setAvatarUrl] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn }) {
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      const userId = session?.user?.id;
-      
-      if (userId) {
-        setIsAuthenticated(true);
-        const { data } = await supabase
-          .from('profiles')
-          .select('avatar_url')
-          .eq('id', userId)
-          .single();
-
-        if (data?.avatar_url) {
-          setAvatarUrl(data.avatar_url);
-        }
-      } else {
-        setIsAuthenticated(false);
-      }
-    };
-    checkAuth();
+    setMounted(true);
+    return () => setMounted(false);
   }, []);
 
-  const handleDemoClick = () => {
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    localStorage.removeItem('current_user');
     onClose();
-    if (router.pathname !== '/') {
-      router.push('/#demo');
-    } else {
-      // Scroll to demo section
-      const demoSection = document.querySelector('[data-demo-section]');
-      if (demoSection) {
-        demoSection.scrollIntoView({ behavior: 'smooth' });
-      }
+    router.push('/');
+  };
+
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isRightSwipe && isOpen) {
+      onClose();
     }
   };
 
-  return (
-    <div className={`fixed inset-0 z-50 bg-black text-green-300 transition-transform duration-300 ${open ? 'translate-x-0' : 'translate-x-full'} sm:hidden`}>
-      <div className="flex justify-between items-center p-4">
-        <div className="text-lg font-bold">Menu</div>
-        <button onClick={onClose} className="text-2xl text-green-400">×</button>
-      </div>
+  if (!mounted) return null;
 
-      {/* Avatar & Progress - Only show for authenticated users */}
-      {isAuthenticated && (
-        <div className="flex flex-col items-center my-4 space-y-2">
-          {avatarUrl ? (
-            <img src={avatarUrl} alt="Profile" className="w-20 h-20 rounded-full border-2 border-green-400" />
-          ) : (
-            <div className="w-20 h-20 rounded-full bg-zinc-800 border-2 border-green-400 flex items-center justify-center text-3xl">👤</div>
-          )}
-          <div className="text-sm">Balance: ${bankroll}</div>
-          <div className="w-4/5 bg-zinc-800 rounded-full h-3 mt-2">
-            <div className="bg-green-400 h-3 rounded-full" style={{ width: `${progressPercent}%` }} />
-          </div>
-          <div className="text-xs">{progressPercent.toFixed(1)}% to $2500</div>
+  return ReactDOM.createPortal(
+    <div 
+      className="fixed top-0 bottom-0 w-64 bg-black shadow-xl border-l border-gray-800 lg:hidden z-[60]"
+      style={{
+        right: isOpen ? '0' : '-256px',
+        transition: 'right 0.3s ease-in-out',
+      }}
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
+      <div className="flex flex-col h-full">
+        <div className="p-4 flex justify-end">
+          <button
+            onClick={onClose}
+            className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-600 hover:border-slate-500"
+          >
+            <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+              <path d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
-      )}
 
-      {/* Navigation Links */}
-      <div className="flex flex-col items-center space-y-4 mt-6 text-lg font-semibold">
-        {isAuthenticated ? (
-          <>
-            <Link href="/home" onClick={onClose}>Home</Link>
-            <Link href="/dashboard" onClick={onClose}>Dashboard</Link>
-            <Link href="/bet-history" onClick={onClose}>Bet History</Link>
-            <Link href="/rules" onClick={onClose}>Rules</Link>
-            <Link href="/how-it-works" onClick={onClose}>How it Works</Link>
-          </>
-        ) : (
-          <>
-            <Link href="/" onClick={onClose}>Home</Link>
-            <button onClick={handleDemoClick} className="text-green-300 hover:text-green-200 transition-colors">Demo</button>
-            <Link href="/leaderboard" onClick={onClose}>Leaderboard</Link>
-            <Link href="/how-it-works" onClick={onClose}>How it Works</Link>
-            <Link href="/waitlist" onClick={onClose}>Piks Card</Link>
-          </>
-        )}
+        <div className="flex-1 overflow-y-auto px-6 py-4">
+          {isLoggedIn ? (
+            <div className="space-y-4">
+              <Link
+                href="/dashboard"
+                onClick={onClose}
+                className="block text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/bet-history"
+                onClick={onClose}
+                className="block text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+              >
+                Bet History
+              </Link>
+              <Link
+                href="/demo"
+                onClick={onClose}
+                className="block text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+              >
+                Free Trial
+              </Link>
+              <button 
+                onClick={() => {
+                  onClose();
+                  window.dispatchEvent(new CustomEvent('openHowItWorks'));
+                }}
+                className="block w-full text-left text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+              >
+                How It Works
+              </button>
+              <Link
+                href="/waitlist"
+                onClick={onClose}
+                className="block text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+              >
+                Piks Card
+              </Link>
+              <Link
+                href="/promos"
+                onClick={onClose}
+                className="block text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+              >
+                Promos
+              </Link>
+              <Link
+                href="/leaderboard"
+                onClick={onClose}
+                className="block text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+              >
+                Leaderboard
+              </Link>
+
+              <div className="border-t border-gray-700 pt-4 mt-6">
+                <div className="mb-4">
+                  <p className="text-sm text-gray-400 mb-1">Signed in as</p>
+                  <p className="text-white font-semibold">
+                    {currentUser?.email || currentUser?.phone || 'User'}
+                  </p>
+                </div>
+                <button
+                  onClick={handleSignOut}
+                  className="w-full text-left text-red-400 hover:text-red-300 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+                >
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <Link
+                href="/demo"
+                onClick={onClose}
+                className="block text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+              >
+                Free Trial
+              </Link>
+              <button 
+                onClick={() => {
+                  onClose();
+                  window.dispatchEvent(new CustomEvent('openHowItWorks'));
+                }}
+                className="block w-full text-left text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+              >
+                How It Works
+              </button>
+              <Link
+                href="/waitlist"
+                onClick={onClose}
+                className="block text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+              >
+                Piks Card
+              </Link>
+              <Link
+                href="/leaderboard"
+                onClick={onClose}
+                className="block text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+              >
+                Leaderboard
+              </Link>
+
+              <div className="mt-6 space-y-3">
+                <Link
+                  href="/auth"
+                  onClick={onClose}
+                  className="w-full text-center text-gray-300 hover:text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm border border-gray-600 hover:border-gray-500 flex items-center justify-center"
+                >
+                  <span>SIGN IN</span>
+                </Link>
+                <button
+                  onClick={() => {
+                    onClose();
+                    window.dispatchEvent(new CustomEvent('openChallengePopup'));
+                  }}
+                  className="w-full text-center bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                >
+                  <span className="text-base">GET FUNDED</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
