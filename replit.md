@@ -14,6 +14,8 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
 ## Recent Changes (November 5, 2025)
 ### Password-Protected Beta Landing Page
 - **Created BetaLanding component** that wraps entire site with password protection
+  - Header with logo matching TopNavbar for seamless transition when logging in
+  - Logo positioned identically to main site (centered mobile, left desktop) - no movement when switching from landing to main site
   - Beautiful landing page with Piks logo (matches home page: `/funderlogo/Piks.png?v=5`, 90px mobile/115px desktop)
   - Password protection: `baldwin` or `mbarlow99` (stored in component, can be moved to environment variable)
   - **Terms agreement checkbox** with disabled button state:
@@ -49,8 +51,10 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
 - X button is 10% larger than plus sign (31px vs 28px) for easier tapping
 - User taps same spot to open (plus) and close (X in drawer) - optimized for mobile UX
 - Added swipe gestures: swipe left to open menu, swipe right to close
-- Menu now slides in from right while pushing entire page to the left (no overlay)
-- Menu uses React Portal to render outside page flow - prevents overlap and background showing through
+- Menu now slides in from right while pushing entire page to the left (page remains visible)
+- Transparent backdrop allows page content to remain visible when menu is open
+- Click outside menu (on backdrop) to close menu
+- Menu uses React Portal to render outside page flow
 - Smooth 0.3s transitions for page slide and menu appearance
 
 ### Logo Updates
