@@ -55,13 +55,10 @@ export default function BetaLanding({ onAuthenticated }) {
       <div className="relative max-w-md w-full">
         <div className="text-center mb-8">
           <div className="mb-8 flex justify-center">
-            <Image 
-              src="/pikslogotransparent.png" 
-              alt="Piks Logo" 
-              width={140}
-              height={140}
-              priority
-              style={{ width: 'auto', height: 'auto' }}
+            <img
+              src="/funderlogo/Piks.png?v=5"
+              alt="Piks"
+              className="h-[90px] sm:h-[115px] w-auto"
             />
           </div>
         </div>
@@ -111,15 +108,9 @@ export default function BetaLanding({ onAuthenticated }) {
                 </button>
               </form>
 
-              <div className="mt-6 text-center">
-                <div className="relative my-6">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-600"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="text-gray-400">Don't have access?</span>
-                  </div>
-                </div>
+              <div className="mt-8 text-center">
+                <div className="w-full border-t border-gray-600 mb-4"></div>
+                <p className="text-gray-400 text-sm mb-3">Don't have access?</p>
                 <button
                   onClick={() => setShowSignup(true)}
                   className="text-green-400 hover:text-green-300 font-semibold transition-colors"
