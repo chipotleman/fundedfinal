@@ -150,6 +150,7 @@ function MyApp({ Component, pageProps }) {
               transform: mobileMenuOpen ? 'translateX(-256px)' : 'translateX(0)',
               transition: 'transform 0.3s ease-in-out',
               minHeight: '100vh',
+              backgroundColor: '#000000',
             }}
             className="lg:transform-none"
           >
