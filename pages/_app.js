@@ -9,6 +9,7 @@ import HowItWorksPopup from '../components/HowItWorksPopup';
 function MyApp({ Component, pageProps }) {
   const [showChallengePopup, setShowChallengePopup] = useState(false);
   const [showHowItWorksPopup, setShowHowItWorksPopup] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleOpenChallengePopup = () => {
@@ -21,15 +22,21 @@ function MyApp({ Component, pageProps }) {
       setShowHowItWorksPopup(true);
     };
 
+    const handleMobileMenuToggle = (e) => {
+      setMobileMenuOpen(e.detail.isOpen);
+    };
+
     if (typeof window !== 'undefined') {
       window.addEventListener('openChallengePopup', handleOpenChallengePopup);
       window.addEventListener('openHowItWorks', handleOpenHowItWorks);
+      window.addEventListener('mobileMenuToggle', handleMobileMenuToggle);
     }
 
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('openChallengePopup', handleOpenChallengePopup);
         window.removeEventListener('openHowItWorks', handleOpenHowItWorks);
+        window.removeEventListener('mobileMenuToggle', handleMobileMenuToggle);
       }
     };
   }, []);
@@ -60,7 +67,17 @@ function MyApp({ Component, pageProps }) {
             }
           `}</style>
 
-          <Component {...pageProps} />
+          {/* Page wrapper that slides left on mobile when menu opens */}
+          <div 
+            style={{
+              transform: mobileMenuOpen ? 'translateX(-320px)' : 'translateX(0)',
+              transition: 'transform 0.3s ease-in-out',
+              minHeight: '100vh',
+            }}
+            className="lg:transform-none"
+          >
+            <Component {...pageProps} />
+          </div>
           
           {/* Global Popups - Available on all pages */}
           <ChallengePopup 

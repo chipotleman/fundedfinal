@@ -16,7 +16,9 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
 - Icon transitions from plus to X when menu is open
 - Plus and X icons are same size and position (no need to move finger)
 - Added swipe gestures: swipe left to open menu, swipe right to close
-- Removed redundant close button inside menu (use swipe or backdrop tap)
+- Menu now slides in from right while pushing entire page to the left (no overlay)
+- X button at top of menu panel for easy closing
+- Smooth 0.3s transitions for page slide and menu appearance
 
 ### Logo Updates
 - Increased mobile logo size by 60% (from 56px to 90px)

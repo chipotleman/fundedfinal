@@ -85,7 +85,23 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
     router.push('/auth');
   };
 
-  const closeMobileMenu = () => setShowMobileMenu(false);
+  const closeMobileMenu = () => {
+    setShowMobileMenu(false);
+    window.dispatchEvent(new CustomEvent('mobileMenuToggle', { detail: { isOpen: false } }));
+  };
+
+  const openMobileMenu = () => {
+    setShowMobileMenu(true);
+    window.dispatchEvent(new CustomEvent('mobileMenuToggle', { detail: { isOpen: true } }));
+  };
+
+  const toggleMobileMenu = () => {
+    if (showMobileMenu) {
+      closeMobileMenu();
+    } else {
+      openMobileMenu();
+    }
+  };
 
   const minSwipeDistance = 50;
 
@@ -271,7 +287,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
 
               {/* Mobile Menu Toggle - Plus/X Icon */}
               <button
-                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                onClick={toggleMobileMenu}
                 className="lg:hidden w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-600 hover:border-slate-500 flex-shrink-0"
               >
                 {showMobileMenu ? (
@@ -289,17 +305,18 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
         </div>
       </nav>
 
-      {/* Mobile Menu Overlay */}
-      {showMobileMenu && (
-        <div className="fixed inset-0 z-[60] lg:hidden">
-          <div className="fixed inset-0 bg-black/50" onClick={closeMobileMenu}></div>
-
-          <div 
-            className="fixed top-0 right-0 bottom-0 w-80 max-w-sm bg-black shadow-xl border-l border-gray-800"
-            onTouchStart={onTouchStart}
-            onTouchMove={onTouchMove}
-            onTouchEnd={onTouchEnd}
-          >
+      {/* Mobile Menu - Slides in from right */}
+      <>
+        <div 
+          className="fixed top-0 right-0 bottom-0 w-80 max-w-sm bg-black shadow-xl border-l border-gray-800 lg:hidden z-[60]"
+          style={{
+            transform: showMobileMenu ? 'translateX(0)' : 'translateX(100%)',
+            transition: 'transform 0.3s ease-in-out',
+          }}
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
             <div className="flex flex-col h-full">
               {/* Close Button at Top of Menu */}
               <div className="p-4 flex justify-end">
@@ -542,11 +559,9 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                 </div>
               )}
             </div>
-          </div>
         </div>
-      )}
 
-      <BalanceModal
+        <BalanceModal
         isOpen={showBalanceModal}
         onClose={() => setShowBalanceModal(false)}
         bankroll={bankroll || 10000}
@@ -564,13 +579,14 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
         bankroll={bankroll || 10000}
       />
 
-      <style jsx>{`
-        @keyframes logoRedYellowGlow {
-          0% { filter: hue-rotate(-30deg) saturate(1.2) brightness(1.1); }
-          50% { filter: hue-rotate(30deg) saturate(1.3) brightness(1.2); }
-          100% { filter: hue-rotate(-30deg) saturate(1.2) brightness(1.1); }
-        }
-      `}</style>
+        <style jsx>{`
+          @keyframes logoRedYellowGlow {
+            0% { filter: hue-rotate(-30deg) saturate(1.2) brightness(1.1); }
+            50% { filter: hue-rotate(30deg) saturate(1.3) brightness(1.2); }
+            100% { filter: hue-rotate(-30deg) saturate(1.2) brightness(1.1); }
+          }
+        `}</style>
+      </>
     </>
   );
 }
