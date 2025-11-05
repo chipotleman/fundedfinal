@@ -47,16 +47,25 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
   if (!mounted) return null;
 
   return ReactDOM.createPortal(
-    <div 
-      className="fixed top-0 bottom-0 w-64 bg-black shadow-xl border-l border-gray-800 lg:hidden z-[60]"
-      style={{
-        right: isOpen ? '0' : '-256px',
-        transition: 'right 0.3s ease-in-out',
-      }}
-      onTouchStart={onTouchStart}
-      onTouchMove={onTouchMove}
-      onTouchEnd={onTouchEnd}
-    >
+    <>
+      {/* Backdrop to cover gradient background */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black lg:hidden z-[59]"
+          onClick={onClose}
+        />
+      )}
+      
+      <div 
+        className="fixed top-0 bottom-0 w-64 bg-black shadow-xl border-l border-gray-800 lg:hidden z-[60]"
+        style={{
+          right: isOpen ? '0' : '-256px',
+          transition: 'right 0.3s ease-in-out',
+        }}
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
       <div className="flex flex-col h-full">
         {/* X button positioned at exact height of plus sign */}
         <div className="absolute top-0 right-0 pt-[22.5px] pr-4">
@@ -195,7 +204,8 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
           )}
         </div>
       </div>
-    </div>,
+    </div>
+    </>,
     document.body
   );
 }
