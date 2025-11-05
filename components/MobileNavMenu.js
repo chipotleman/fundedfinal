@@ -48,35 +48,24 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
 
   return ReactDOM.createPortal(
     <>
-      {/* Transparent backdrop - click outside menu to close */}
       {isOpen && (
-        <div 
-          className="fixed inset-0 lg:hidden z-[59]"
-          onClick={onClose}
-        />
-      )}
-      
-      {/* Black cover layer behind menu to block gradient */}
-      {isOpen && (
-        <div 
-          className="fixed top-0 bottom-0 right-0 w-64 bg-black lg:hidden z-[59]"
-          style={{
-            height: '100vh',
-          }}
-        />
-      )}
-      
-      <div 
-        className="fixed top-0 bottom-0 w-64 bg-black shadow-xl border-l border-gray-800 lg:hidden z-[60]"
-        style={{
-          right: isOpen ? '0' : '-256px',
-          transition: 'right 0.3s ease-in-out',
-          height: '100vh',
-        }}
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
-      >
+        <>
+          {/* Transparent backdrop - click outside menu to close */}
+          <div 
+            className="fixed inset-0 lg:hidden z-[59]"
+            onClick={onClose}
+          />
+          
+          {/* Menu drawer - appears instantly when open */}
+          <div 
+            className="fixed top-0 bottom-0 right-0 w-64 bg-black shadow-xl border-l border-gray-800 lg:hidden z-[60]"
+            style={{
+              height: '100vh',
+            }}
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
       <div className="flex flex-col h-full">
         {/* X button positioned at exact height of plus sign */}
         <div className="absolute top-0 right-0 pt-[22.5px] pr-4">
@@ -215,7 +204,9 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
           )}
         </div>
       </div>
-    </div>
+          </div>
+        </>
+      )}
     </>,
     document.body
   );
