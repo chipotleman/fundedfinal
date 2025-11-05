@@ -55,10 +55,33 @@ export default function BetaLanding({ onAuthenticated }) {
       <Head>
         <meta name="theme-color" content="#000000" />
       </Head>
-      <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden bg-black">
+      <div className="min-h-screen relative overflow-hidden bg-black">
         <div className="absolute inset-0 opacity-20" style={{
         backgroundImage: "url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22m36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"
       }}></div>
+
+      {/* Header with logo matching TopNavbar */}
+      <nav className="sticky top-0 left-0 right-0 bg-black z-50">
+        <div className="px-3 sm:px-6 py-1 sm:py-3">
+          <div className="flex items-center justify-center sm:justify-between min-h-[56px] sm:min-h-[60px] relative">
+            <div className="flex-none -mt-0.5 sm:mt-0">
+              <div className="flex items-center">
+                <img
+                  src="/funderlogo/Piks.png?v=5"
+                  alt="Piks"
+                  className="h-[90px] sm:h-[115px] w-auto brightness-100 transition-all duration-300"
+                  style={{
+                    filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
+                    animation: 'logoRedYellowGlow 4s infinite ease-in-out'
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="flex items-center justify-center p-6 relative" style={{ minHeight: 'calc(100vh - 120px)' }}>
 
       {/* Terms of Service Modal */}
       {showTerms && (
@@ -148,16 +171,6 @@ export default function BetaLanding({ onAuthenticated }) {
       )}
 
       <div className="relative max-w-md w-full">
-        <div className="text-center mb-8">
-          <div className="mb-8 flex justify-center">
-            <img
-              src="/funderlogo/Piks.png?v=5"
-              alt="Piks"
-              className="h-[90px] sm:h-[115px] w-auto"
-            />
-          </div>
-        </div>
-
         <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-slate-700/50 shadow-2xl">
           {!showSignup ? (
             <>
@@ -329,6 +342,15 @@ export default function BetaLanding({ onAuthenticated }) {
         </div>
       </div>
       </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes logoRedYellowGlow {
+          0% { filter: hue-rotate(-30deg) saturate(1.2) brightness(1.1); }
+          50% { filter: hue-rotate(30deg) saturate(1.3) brightness(1.2); }
+          100% { filter: hue-rotate(-30deg) saturate(1.2) brightness(1.1); }
+        }
+      `}</style>
     </>
   );
 }
