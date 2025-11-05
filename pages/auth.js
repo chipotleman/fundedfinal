@@ -10,7 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 export default function AuthPage() {
   const [username, setUsername] = useState('');
-  const [phone, setPhone] = useState(''); // Changed from email to phone
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
@@ -88,8 +88,8 @@ export default function AuthPage() {
     e.preventDefault();
 
     // Validation
-    if (!phone.trim()) {
-      setError('Please enter a phone number');
+    if (!email.trim()) {
+      setError('Please enter an email address');
       return;
     }
 
@@ -135,9 +135,9 @@ export default function AuthPage() {
           // Continue with signup even if profile check fails
         }
 
-        // Sign up with Supabase using phone
+        // Sign up with Supabase using email
         const { data, error } = await supabase.auth.signUp({
-          phone: phone.trim(),
+          email: email.trim(),
           password: password,
           options: {
             data: {
@@ -151,17 +151,17 @@ export default function AuthPage() {
         }
 
         if (data.user) {
-          if (data.user.phone_confirmed_at) {
+          if (data.user.email_confirmed_at) {
             // User is auto-confirmed, redirect to dashboard
             router.push('/dashboard');
           } else {
-            // User needs SMS confirmation
-            setError('✅ Account created successfully! Please check your phone for a verification code.');
+            // User needs email confirmation
+            setError('✅ Account created successfully! Please check your email for a verification link.');
             setStep('auth');
             setIsSignUp(false);
             // Clear form
             setUsername('');
-            setPhone('');
+            setEmail('');
             setPassword('');
             setConfirmPassword('');
           }
@@ -169,7 +169,7 @@ export default function AuthPage() {
       } else {
         // Sign in
         const { data, error } = await supabase.auth.signInWithPassword({
-          phone: phone.trim(),
+          email: email.trim(),
           password: password,
         });
 
@@ -190,13 +190,13 @@ export default function AuthPage() {
       } else if (error.message?.includes('Invalid API key') || error.message?.includes('Invalid URL')) {
         setError('Configuration error. Please contact support.');
       } else if (error.message?.includes('Invalid login credentials')) {
-        setError('Invalid phone number or password. Please try again.');
-      } else if (error.message?.includes('Phone not confirmed')) {
-        setError('Please check your phone and enter the verification code before signing in.');
+        setError('Invalid email or password. Please try again.');
+      } else if (error.message?.includes('Email not confirmed')) {
+        setError('Please check your email and verify your account before signing in.');
       } else if (error.message?.includes('User already registered')) {
-        setError('This phone number is already registered. Please sign in instead.');
-      } else if (error.message?.includes('Unable to validate phone number')) {
-        setError('Please enter a valid phone number.');
+        setError('This email is already registered. Please sign in instead.');
+      } else if (error.message?.includes('Unable to validate email')) {
+        setError('Please enter a valid email address.');
       } else {
         setError(error.message || 'An error occurred. Please try again.');
       }
@@ -487,7 +487,7 @@ export default function AuthPage() {
                     <div className="w-full border-t border-gray-600"></div>
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-4 bg-slate-800/50 text-gray-400">Or continue with phone</span>
+                    <span className="px-4 bg-slate-800/50 text-gray-400">Or continue with email</span>
                   </div>
                 </div>
               </div>
@@ -523,14 +523,14 @@ export default function AuthPage() {
 
               <div>
                 <label className="block text-sm font-semibold text-gray-300 mb-3">
-                  Phone Number
+                  Email Address
                 </label>
                 <input
-                  type="tel" // Use type="tel" for phone numbers
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-4 py-3 sm:py-4 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium text-sm sm:text-base"
-                  placeholder="Enter your phone number (e.g., +11234567890)"
+                  placeholder="Enter your email address"
                   required
                 />
               </div>
