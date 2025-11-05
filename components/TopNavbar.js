@@ -88,13 +88,13 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
   return (
     <>
       <nav className="sticky top-0 left-0 right-0 bg-black z-50">
-        <div className="px-3 sm:px-6 py-1 sm:py-3">
+        <div className="pl-0 pr-3 sm:px-6 py-1 sm:py-3">
           <div className="flex items-center justify-between min-h-[56px] sm:min-h-[60px]">
             {/* Logo - left-aligned on both mobile and desktop */}
-            <div className="flex-none -ml-2 sm:ml-0">
+            <div className="flex-none">
               <Link href="/" className="flex items-center">
                 <img
-                  src="/funderlogo/Piks.png?v=5"
+                  src="/pikslogotransparent.png"
                   alt="Piks"
                   className="h-[90px] sm:h-[115px] w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
                   style={{
