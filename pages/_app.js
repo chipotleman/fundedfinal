@@ -132,7 +132,10 @@ function MyApp({ Component, pageProps }) {
           {/* Mobile Menu - Rendered outside page wrapper via portal */}
           <MobileNavMenu
             isOpen={mobileMenuOpen}
-            onClose={() => setMobileMenuOpen(false)}
+            onClose={() => {
+              setMobileMenuOpen(false);
+              window.dispatchEvent(new CustomEvent('mobileMenuClosed'));
+            }}
             currentUser={currentUser}
             isLoggedIn={isLoggedIn}
           />

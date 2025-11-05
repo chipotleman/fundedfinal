@@ -68,6 +68,19 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
     };
   }, [router]);
 
+  useEffect(() => {
+    // Listen for menu close event from MobileNavMenu X button
+    const handleMenuClosed = () => {
+      setShowMobileMenu(false);
+    };
+
+    window.addEventListener('mobileMenuClosed', handleMenuClosed);
+
+    return () => {
+      window.removeEventListener('mobileMenuClosed', handleMenuClosed);
+    };
+  }, []);
+
   const handleSignOut = async () => {
     // Clear any stored user data
     if (typeof window !== 'undefined') {
