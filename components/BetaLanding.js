@@ -117,7 +117,7 @@ export default function BetaLanding({ onAuthenticated }) {
                     <div className="w-full border-t border-gray-600"></div>
                   </div>
                   <div className="relative flex justify-center text-sm">
-                    <span className="px-4 bg-black text-gray-400">Don't have access?</span>
+                    <span className="text-gray-400">Don't have access?</span>
                   </div>
                 </div>
                 <button

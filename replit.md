@@ -14,15 +14,16 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
 ## Recent Changes (November 5, 2025)
 ### Password-Protected Beta Landing Page
 - **Created BetaLanding component** that wraps entire site with password protection
-  - Beautiful landing page with Piks logo and animated gradient background
+  - Beautiful landing page with transparent Piks logo on black background
   - Password protection: `baldwin` (stored in component, can be moved to environment variable)
   - Beta access signup form for waitlist
   - Signups stored in localStorage (can be migrated to database later)
   - Access persists via localStorage - users don't need to re-enter password
-  - Matches current theme with purple/pink/blue gradient animation
+  - Black background for minimal, professional aesthetic
+  - Access code input box features purple/pink/blue gradient outline with glow effect
   - Integrated into _app.js to gate all site content
-  - Clean, professional design with glass-morphism effects
-  - Mobile status bar color matches page gradient
+  - Clean, professional design with glass-morphism card effects
+  - Mobile status bar color matches black background
 
 ### Authentication Migration: Phone to Email
 - **Migrated authentication from phone numbers to email addresses**:
