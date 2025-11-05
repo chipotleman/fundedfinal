@@ -69,6 +69,8 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
             className="fixed top-0 bottom-0 right-0 w-64 bg-black shadow-xl border-l border-gray-800 lg:hidden z-[60]"
             style={{
               height: '100vh',
+              minHeight: '100vh',
+              maxHeight: '100vh',
             }}
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
@@ -87,7 +89,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4 mt-16">
+        <div className="flex-1 overflow-hidden px-6 py-4 mt-16">
           {isLoggedIn ? (
             <div className="space-y-4">
               <Link
