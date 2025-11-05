@@ -76,7 +76,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
           >
       <div className="flex flex-col h-full">
         {/* X button positioned at exact height of plus sign */}
-        <div className="absolute top-0 right-0 pt-[22.5px] pr-4">
+        <div className="absolute top-0 right-0 pt-[22.5px] md:pt-[29.5px] pr-4">
           <button
             onClick={onClose}
             className="p-2 flex items-center justify-center"
