@@ -11,6 +11,13 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
 - **State Management**: React Context (AuthContext, BetSlipContext, UserProfilesContext)
 
 ## Recent Changes (November 5, 2025)
+### Mobile Menu Improvements
+- Changed menu icon from hamburger to plus sign (+)
+- Icon transitions from plus to X when menu is open
+- Plus and X icons are same size and position (no need to move finger)
+- Added swipe gestures: swipe left to open menu, swipe right to close
+- Removed redundant close button inside menu (use swipe or backdrop tap)
+
 ### Logo Updates
 - Increased mobile logo size by 60% (from 56px to 90px)
 - Increased desktop logo size proportionally (from 90px to 115px)

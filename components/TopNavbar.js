@@ -11,7 +11,9 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
   const [showBalanceModal, setShowBalanceModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // New state to track login status
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -84,6 +86,33 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
   };
 
   const closeMobileMenu = () => setShowMobileMenu(false);
+
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe && !showMobileMenu) {
+      setShowMobileMenu(true);
+    }
+    
+    if (isRightSwipe && showMobileMenu) {
+      setShowMobileMenu(false);
+    }
+  };
 
   return (
     <>
@@ -240,16 +269,16 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                 )}
               </div>
 
-              {/* Mobile Hamburger Menu */}
+              {/* Mobile Menu Toggle - Plus/X Icon */}
               <button
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
                 className="lg:hidden w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-600 hover:border-slate-500 transition-colors flex-shrink-0"
               >
-                <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                   {showMobileMenu ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                   ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                   )}
                 </svg>
               </button>
@@ -263,19 +292,15 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
         <div className="fixed inset-0 z-[60] lg:hidden">
           <div className="fixed inset-0 bg-black/50" onClick={closeMobileMenu}></div>
 
-          <div className="fixed top-0 right-0 bottom-0 w-80 max-w-sm bg-black shadow-xl border-l border-gray-800">
+          <div 
+            className="fixed top-0 right-0 bottom-0 w-80 max-w-sm bg-black shadow-xl border-l border-gray-800"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
             <div className="flex flex-col h-full">
-              {/* Close Button */}
-              <div className="p-4 flex justify-end">
-                <button
-                  onClick={closeMobileMenu}
-                  className="w-8 h-8 bg-slate-800 rounded-lg flex items-center justify-center text-gray-400 hover:text-white"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
+              {/* Close Button - Hidden, swipe or click backdrop to close */}
+              <div className="p-4"></div>
 
               {isLoggedIn ? (
                 <>
