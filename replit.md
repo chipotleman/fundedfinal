@@ -10,7 +10,12 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
 - **Styling**: Tailwind CSS
 - **State Management**: React Context (AuthContext, BetSlipContext, UserProfilesContext)
 
-## Recent Changes (November 4, 2025)
+## Recent Changes (November 5, 2025)
+### Logo Size Update
+- Increased mobile logo size by 60% (from 56px to 90px)
+- Increased desktop logo size proportionally (from 90px to 115px)
+- Logo now more prominent on all screen sizes
+
 ### Animated Gradient Background
 - Added CSS gradient animation background across all pages (purple/pink/blue colors)
 - Background animates smoothly shifting colors over 12 seconds
