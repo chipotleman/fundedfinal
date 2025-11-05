@@ -6,6 +6,7 @@ import { UserProfilesProvider } from '../contexts/UserProfilesContext';
 import ChallengePopup from '../components/ChallengePopup';
 import HowItWorksPopup from '../components/HowItWorksPopup';
 import MobileNavMenu from '../components/MobileNavMenu';
+import BetaLanding from '../components/BetaLanding';
 import { supabase } from '../lib/supabaseClient';
 
 function MyApp({ Component, pageProps }) {
@@ -14,8 +15,16 @@ function MyApp({ Component, pageProps }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [betaAuthenticated, setBetaAuthenticated] = useState(false);
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const betaAccess = localStorage.getItem('beta_access');
+      if (betaAccess === 'true') {
+        setBetaAuthenticated(true);
+      }
+    }
+
     const fetchUser = async () => {
       const storedUser = localStorage.getItem('current_user');
       if (storedUser) {
@@ -79,6 +88,35 @@ function MyApp({ Component, pageProps }) {
       }
     };
   }, []);
+
+  if (!betaAuthenticated) {
+    return (
+      <>
+        {/* Animated Gradient Background */}
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100vh',
+            zIndex: -1,
+            background: 'linear-gradient(-45deg, #1a0033, #330066, #5227FF, #7B3FF2, #FF9FFC, #B19EEF)',
+            backgroundSize: '400% 400%',
+            animation: 'gradientShift 12s ease infinite',
+          }}
+        />
+        <style jsx global>{`
+          @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+        `}</style>
+        <BetaLanding onAuthenticated={() => setBetaAuthenticated(true)} />
+      </>
+    );
+  }
 
   return (
     <AuthProvider>

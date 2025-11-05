@@ -5,12 +5,31 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
 
 ## Current State
 - **Framework**: Next.js 14.2.30
-- **Authentication**: Supabase Auth (configured with phone/password login)
+- **Authentication**: Supabase Auth (configured with email/password login)
 - **Database**: Supabase PostgreSQL
 - **Styling**: Tailwind CSS
 - **State Management**: React Context (AuthContext, BetSlipContext, UserProfilesContext)
+- **Access Control**: Password-protected beta landing page
 
 ## Recent Changes (November 5, 2025)
+### Password-Protected Beta Landing Page
+- **Created BetaLanding component** that wraps entire site with password protection
+  - Beautiful landing page with Piks logo and animated gradient background
+  - Password protection: `piks2025` (stored in component, can be moved to environment variable)
+  - Beta access signup form for waitlist
+  - Signups stored in localStorage (can be migrated to database later)
+  - Access persists via localStorage - users don't need to re-enter password
+  - Matches current theme with purple/pink/blue gradient animation
+  - Integrated into _app.js to gate all site content
+  - Clean, professional design with glass-morphism effects
+
+### Authentication Migration: Phone to Email
+- **Migrated authentication from phone numbers to email addresses**:
+  - Updated auth.js form labels and inputs
+  - Changed Supabase auth calls from phone-based to email-based
+  - Updated error messages and confirmation text
+  - Users now sign up and sign in with email + password
+  - Email verification instead of SMS verification
 ### Mobile Menu Improvements
 - Changed menu icon from hamburger to plus sign (+)
 - Plus sign disappears when menu opens - only one icon visible at a time (plus or X)
@@ -137,11 +156,13 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
 - **DemoPreview**: Allows non-authenticated users to try the platform
 
 ### Authentication Flow
-1. User signs up/logs in via Supabase Auth (phone + password)
-2. Session persists via Supabase's `persistSession: true` configuration
-3. User profile automatically created in `profiles` table upon first login
-4. User can select and purchase a challenge tier
-5. Challenge details and user state stored in database
+1. User enters beta access code on BetaLanding page (password: `piks2025`)
+2. Upon successful password entry, access stored in localStorage
+3. User signs up/logs in via Supabase Auth (email + password)
+4. Session persists via Supabase's `persistSession: true` configuration
+5. User profile automatically created in `profiles` table upon first login
+6. User can select and purchase a challenge tier
+7. Challenge details and user state stored in database
 
 ### Challenge Tiers
 1. **Starter Challenge**: $5,000 funding, $149 price, 80% profit split
