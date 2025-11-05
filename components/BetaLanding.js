@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import Head from 'next/head';
 
@@ -9,76 +9,22 @@ export default function BetaLanding({ onAuthenticated }) {
   const [error, setError] = useState('');
   const [signupSuccess, setSignupSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [sliderPosition, setSliderPosition] = useState(0);
-  const [maxSlide, setMaxSlide] = useState(250);
-  const startX = useRef(0);
-  const containerRef = useRef(null);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const BETA_PASSWORD = 'baldwin';
 
-  useEffect(() => {
-    const updateMaxSlide = () => {
-      if (containerRef.current) {
-        const containerWidth = containerRef.current.offsetWidth;
-        const thumbWidth = 56; // w-14 = 3.5rem = 56px
-        const padding = 8; // left-1 and right space = 8px total
-        setMaxSlide(containerWidth - thumbWidth - padding);
-      }
-    };
-
-    updateMaxSlide();
-    window.addEventListener('resize', updateMaxSlide);
-    return () => window.removeEventListener('resize', updateMaxSlide);
-  }, []);
-
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
+    if (!agreedToTerms) {
+      setError('Please agree to the terms to continue');
+      return;
+    }
     if (password === BETA_PASSWORD) {
       localStorage.setItem('beta_access', 'true');
       onAuthenticated();
     } else {
       setError('Incorrect password');
       setPassword('');
-    }
-  };
-
-  const handleSlideStart = (e) => {
-    setIsDragging(true);
-    const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
-    startX.current = clientX - sliderPosition;
-  };
-
-  const handleSlideMove = (e) => {
-    if (!isDragging) return;
-    
-    const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
-    const newPosition = clientX - startX.current;
-    
-    if (newPosition >= 0 && newPosition <= maxSlide) {
-      setSliderPosition(newPosition);
-    }
-  };
-
-  const handleSlideEnd = () => {
-    setIsDragging(false);
-    
-    if (sliderPosition > maxSlide * 0.8) {
-      // Unlocked - submit form
-      setSliderPosition(maxSlide);
-      if (password === BETA_PASSWORD) {
-        setTimeout(() => {
-          localStorage.setItem('beta_access', 'true');
-          onAuthenticated();
-        }, 200);
-      } else {
-        setError('Incorrect password');
-        setPassword('');
-        setSliderPosition(0);
-      }
-    } else {
-      // Reset
-      setSliderPosition(0);
     }
   };
 
@@ -159,40 +105,41 @@ export default function BetaLanding({ onAuthenticated }) {
                   />
                 </div>
 
-                {/* Slide to Enter Button */}
-                <div 
-                  ref={containerRef}
-                  className="relative w-full h-16 rounded-xl overflow-hidden select-none"
-                  style={{
-                    background: `linear-gradient(to right, #10b981 ${(sliderPosition / maxSlide) * 100}%, #3b82f6 ${(sliderPosition / maxSlide) * 100}%, #1e293b ${(sliderPosition / maxSlide) * 100}%)`,
-                    touchAction: 'none'
-                  }}
-                >
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <span className="text-white font-bold text-lg drop-shadow-lg">
-                      {sliderPosition > maxSlide * 0.8 ? 'Release to Enter!' : 'Slide to Enter'}
-                    </span>
-                  </div>
-                  
-                  <div
-                    className="absolute left-1 top-1 bottom-1 w-14 bg-white rounded-lg flex items-center justify-center text-2xl cursor-grab shadow-lg"
-                    style={{
-                      transform: `translateX(${sliderPosition}px)`,
-                      transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-                      willChange: 'transform'
+                {/* Terms Agreement Checkbox */}
+                <div className="flex items-start space-x-3">
+                  <input
+                    type="checkbox"
+                    id="terms"
+                    checked={agreedToTerms}
+                    onChange={(e) => {
+                      setAgreedToTerms(e.target.checked);
+                      setError('');
                     }}
-                    onMouseDown={handleSlideStart}
-                    onMouseMove={handleSlideMove}
-                    onMouseUp={handleSlideEnd}
-                    onMouseLeave={handleSlideEnd}
-                    onTouchStart={handleSlideStart}
-                    onTouchMove={handleSlideMove}
-                    onTouchEnd={handleSlideEnd}
-                  >
-                    <span className="text-green-500">→</span>
-                  </div>
+                    className="mt-1 h-5 w-5 rounded border-gray-600 bg-slate-700 text-green-500 focus:ring-2 focus:ring-green-400 focus:ring-offset-0 cursor-pointer"
+                  />
+                  <label htmlFor="terms" className="text-gray-400 text-sm cursor-pointer select-none">
+                    I agree to the{' '}
+                    <a href="#" className="text-green-400 hover:text-green-300 underline">
+                      Terms of Service
+                    </a>{' '}
+                    and{' '}
+                    <a href="#" className="text-green-400 hover:text-green-300 underline">
+                      Privacy Policy
+                    </a>
+                  </label>
                 </div>
+
+                <button
+                  type="submit"
+                  disabled={!agreedToTerms}
+                  className={`w-full font-bold py-4 rounded-xl transition-all shadow-lg ${
+                    agreedToTerms
+                      ? 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white transform hover:scale-105 cursor-pointer'
+                      : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
+                  }`}
+                >
+                  Enter Platform
+                </button>
               </form>
 
               <div className="mt-8 text-center">
