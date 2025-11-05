@@ -17,9 +17,12 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
   - Beautiful landing page with Piks logo (matches home page: `/funderlogo/Piks.png?v=5`, 90px mobile/115px desktop)
   - Password protection: `baldwin` (stored in component, can be moved to environment variable)
   - **Terms agreement checkbox** with disabled button state:
-    - Button is disabled (grayed out) until user agrees to terms
-    - Links to Terms of Service and Privacy Policy
-    - Button changes to active green-to-blue gradient when checkbox is checked
+    - Button is disabled (grayed out) until BOTH conditions are met:
+      - User has entered an access code
+      - User has checked the terms agreement checkbox
+    - Button turns orange gradient when enabled (both conditions met)
+    - Clickable Terms of Service and Privacy Policy links that open modal dialogs
+    - Full readable terms and privacy policy content in modals
     - Clear visual feedback for enabled/disabled states
   - Beta access signup form for waitlist
   - Signups stored in localStorage (can be migrated to database later)

@@ -10,8 +10,11 @@ export default function BetaLanding({ onAuthenticated }) {
   const [signupSuccess, setSignupSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
 
   const BETA_PASSWORD = 'baldwin';
+  const isButtonEnabled = agreedToTerms && password.length > 0;
 
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
@@ -56,6 +59,93 @@ export default function BetaLanding({ onAuthenticated }) {
         <div className="absolute inset-0 opacity-20" style={{
         backgroundImage: "url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22m36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"
       }}></div>
+
+      {/* Terms of Service Modal */}
+      {showTerms && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => setShowTerms(false)}>
+          <div className="bg-slate-800 rounded-2xl p-8 max-w-2xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-white">Terms of Service</h2>
+              <button onClick={() => setShowTerms(false)} className="text-gray-400 hover:text-white text-2xl">×</button>
+            </div>
+            <div className="text-gray-300 space-y-4 text-sm leading-relaxed">
+              <p className="font-semibold text-white">Last Updated: November 5, 2025</p>
+              
+              <h3 className="text-lg font-bold text-white mt-6">1. Acceptance of Terms</h3>
+              <p>By accessing and using Piks, you accept and agree to be bound by the terms and provision of this agreement.</p>
+              
+              <h3 className="text-lg font-bold text-white mt-6">2. Beta Access</h3>
+              <p>Piks is currently in private beta. Access is granted by invitation only through beta access codes. Beta users understand that the platform is under active development and may contain bugs or incomplete features.</p>
+              
+              <h3 className="text-lg font-bold text-white mt-6">3. Betting Challenges</h3>
+              <p>Users participate in funded betting challenges where Piks provides virtual funds. Profit sharing is determined by the challenge tier selected. All betting activities must comply with local gambling laws and regulations.</p>
+              
+              <h3 className="text-lg font-bold text-white mt-6">4. User Responsibilities</h3>
+              <p>Users must be of legal gambling age in their jurisdiction. Users are responsible for maintaining the confidentiality of their account credentials and for all activities under their account.</p>
+              
+              <h3 className="text-lg font-bold text-white mt-6">5. Prohibited Activities</h3>
+              <p>Users may not engage in fraudulent activity, use automated systems, or attempt to manipulate the platform. Violation of these terms may result in account suspension or termination.</p>
+              
+              <h3 className="text-lg font-bold text-white mt-6">6. Disclaimer</h3>
+              <p>Piks is provided "as is" without warranties of any kind. We do not guarantee uninterrupted or error-free service.</p>
+              
+              <h3 className="text-lg font-bold text-white mt-6">7. Changes to Terms</h3>
+              <p>We reserve the right to modify these terms at any time. Continued use of the platform constitutes acceptance of modified terms.</p>
+            </div>
+            <button
+              onClick={() => setShowTerms(false)}
+              className="mt-6 w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 rounded-xl transition-all"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Privacy Policy Modal */}
+      {showPrivacy && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => setShowPrivacy(false)}>
+          <div className="bg-slate-800 rounded-2xl p-8 max-w-2xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold text-white">Privacy Policy</h2>
+              <button onClick={() => setShowPrivacy(false)} className="text-gray-400 hover:text-white text-2xl">×</button>
+            </div>
+            <div className="text-gray-300 space-y-4 text-sm leading-relaxed">
+              <p className="font-semibold text-white">Last Updated: November 5, 2025</p>
+              
+              <h3 className="text-lg font-bold text-white mt-6">1. Information We Collect</h3>
+              <p>We collect information you provide directly to us, including email addresses, account credentials, and betting activity data. We also collect usage data, device information, and log data automatically.</p>
+              
+              <h3 className="text-lg font-bold text-white mt-6">2. How We Use Your Information</h3>
+              <p>We use your information to provide and improve our services, process transactions, send notifications about your account and bets, prevent fraud, and comply with legal obligations.</p>
+              
+              <h3 className="text-lg font-bold text-white mt-6">3. Information Sharing</h3>
+              <p>We do not sell your personal information. We may share information with service providers who assist in operating our platform, when required by law, or with your consent.</p>
+              
+              <h3 className="text-lg font-bold text-white mt-6">4. Data Security</h3>
+              <p>We implement reasonable security measures to protect your information. However, no method of transmission over the internet is 100% secure.</p>
+              
+              <h3 className="text-lg font-bold text-white mt-6">5. Your Rights</h3>
+              <p>You have the right to access, correct, or delete your personal information. You may also object to processing or request data portability.</p>
+              
+              <h3 className="text-lg font-bold text-white mt-6">6. Cookies and Tracking</h3>
+              <p>We use cookies and similar technologies to enhance user experience, analyze platform usage, and provide personalized features.</p>
+              
+              <h3 className="text-lg font-bold text-white mt-6">7. Children's Privacy</h3>
+              <p>Our platform is not intended for individuals under the legal gambling age. We do not knowingly collect information from minors.</p>
+              
+              <h3 className="text-lg font-bold text-white mt-6">8. Contact Us</h3>
+              <p>If you have questions about this Privacy Policy, please contact us through our support channels.</p>
+            </div>
+            <button
+              onClick={() => setShowPrivacy(false)}
+              className="mt-6 w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 rounded-xl transition-all"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="relative max-w-md w-full">
         <div className="text-center mb-8">
@@ -115,22 +205,36 @@ export default function BetaLanding({ onAuthenticated }) {
                   />
                   <label htmlFor="terms" className="text-gray-400 text-sm cursor-pointer select-none">
                     I agree to the{' '}
-                    <a href="#" className="text-green-400 hover:text-green-300 underline">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setShowTerms(true);
+                      }}
+                      className="text-green-400 hover:text-green-300 underline"
+                    >
                       Terms of Service
-                    </a>{' '}
+                    </button>{' '}
                     and{' '}
-                    <a href="#" className="text-green-400 hover:text-green-300 underline">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setShowPrivacy(true);
+                      }}
+                      className="text-green-400 hover:text-green-300 underline"
+                    >
                       Privacy Policy
-                    </a>
+                    </button>
                   </label>
                 </div>
 
                 <button
                   type="submit"
-                  disabled={!agreedToTerms}
+                  disabled={!isButtonEnabled}
                   className={`w-full font-bold py-4 rounded-xl transition-all shadow-lg ${
-                    agreedToTerms
-                      ? 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white transform hover:scale-105 cursor-pointer'
+                    isButtonEnabled
+                      ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white transform hover:scale-105 cursor-pointer'
                       : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
                   }`}
                 >
