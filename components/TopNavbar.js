@@ -285,15 +285,17 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                 )}
               </div>
 
-              {/* Mobile Menu Toggle - Plus Icon (always plus) */}
-              <button
-                onClick={toggleMobileMenu}
-                className="lg:hidden p-2 flex items-center justify-center flex-shrink-0"
-              >
-                <svg className="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 4v16m8-8H4" />
-                </svg>
-              </button>
+              {/* Mobile Menu Toggle - Plus Icon (only visible when menu is closed) */}
+              {!showMobileMenu && (
+                <button
+                  onClick={toggleMobileMenu}
+                  className="lg:hidden p-2 flex items-center justify-center flex-shrink-0"
+                >
+                  <svg className="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 4v16m8-8H4" />
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
         </div>
