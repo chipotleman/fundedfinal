@@ -56,6 +56,14 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
             onClick={onClose}
           />
           
+          {/* Black background cover - stays fixed */}
+          <div 
+            className="fixed top-0 bottom-0 right-0 w-64 bg-black lg:hidden z-[59]"
+            style={{
+              height: '100vh',
+            }}
+          />
+          
           {/* Menu drawer - appears instantly when open */}
           <div 
             className="fixed top-0 bottom-0 right-0 w-64 bg-black shadow-xl border-l border-gray-800 lg:hidden z-[60]"

@@ -51,14 +51,16 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
 - X button is 10% larger than menu icon (31px vs 28px) for easier tapping
 - User taps same spot to open (menu icon) and close (X in drawer) - optimized for mobile UX
 - Added swipe gestures: swipe left to open menu, swipe right to close
-- Menu now slides in from right while pushing entire page to the left (page remains visible)
+- Menu appears instantly (no animation) while page slides left
 - Transparent backdrop allows page content to remain visible when menu is open
 - Click outside menu (on backdrop) to close menu
-- Black background on page wrapper (100vw width with relative positioning) prevents gradient showing through during slide animation
-- Body overflow-x hidden to prevent gradient from appearing in exposed area when page slides
+- Multiple black layers prevent any purple gradient from showing:
+  - Black page wrapper (100vw width, relative positioning)
+  - Black background cover fixed behind menu (256px wide, full height)
+  - Black menu drawer (256px wide, full height)
+- Body overflow-x hidden to prevent gradient from appearing when page slides
 - Menu uses React Portal to render outside page flow
-- Smooth 0.3s transitions for page slide and menu appearance
-- Full viewport height (100vh) prevents any background bleed at bottom of menu
+- Page slide transition (0.3s) - menu appears/disappears instantly
 
 ### Logo Updates
 - Increased mobile logo size by 60% (from 56px to 90px)
