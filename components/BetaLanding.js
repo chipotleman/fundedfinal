@@ -63,7 +63,7 @@ export default function BetaLanding({ onAuthenticated }) {
       {/* Header with logo matching TopNavbar */}
       <nav className="sticky top-0 left-0 right-0 bg-black z-50">
         <div className="px-3 sm:px-6 py-1 sm:py-3">
-          <div className="flex items-center justify-start min-h-[56px] sm:min-h-[60px] relative">
+          <div className="flex items-center justify-center sm:justify-between min-h-[56px] sm:min-h-[60px] relative">
             <div className="flex-none -mt-[7.75px] sm:-mt-[5.75px]">
               <div className="flex items-center">
                 <img
