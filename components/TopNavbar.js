@@ -301,8 +301,17 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
             onTouchEnd={onTouchEnd}
           >
             <div className="flex flex-col h-full">
-              {/* Close Button - Hidden, swipe or click backdrop to close */}
-              <div className="p-4"></div>
+              {/* Close Button at Top of Menu */}
+              <div className="p-4 flex justify-end">
+                <button
+                  onClick={closeMobileMenu}
+                  className="w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-600 hover:border-slate-500"
+                >
+                  <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
 
               {isLoggedIn ? (
                 <>
