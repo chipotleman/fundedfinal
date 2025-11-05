@@ -54,6 +54,7 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
 - Menu now slides in from right while pushing entire page to the left (page remains visible)
 - Transparent backdrop allows page content to remain visible when menu is open
 - Click outside menu (on backdrop) to close menu
+- Black background on page wrapper prevents gradient showing through during slide animation
 - Menu uses React Portal to render outside page flow
 - Smooth 0.3s transitions for page slide and menu appearance
 
