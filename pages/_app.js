@@ -92,7 +92,7 @@ function MyApp({ Component, pageProps }) {
   if (!betaAuthenticated) {
     return (
       <>
-        {/* Animated Gradient Background */}
+        {/* Solid Black Background */}
         <div
           style={{
             position: 'fixed',
@@ -101,18 +101,9 @@ function MyApp({ Component, pageProps }) {
             width: '100%',
             height: '100vh',
             zIndex: -1,
-            background: 'linear-gradient(-45deg, #1a0033, #330066, #5227FF, #7B3FF2, #FF9FFC, #B19EEF)',
-            backgroundSize: '400% 400%',
-            animation: 'gradientShift 12s ease infinite',
+            backgroundColor: '#000000',
           }}
         />
-        <style jsx global>{`
-          @keyframes gradientShift {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-          }
-        `}</style>
         <BetaLanding onAuthenticated={() => setBetaAuthenticated(true)} />
       </>
     );
@@ -122,7 +113,7 @@ function MyApp({ Component, pageProps }) {
     <AuthProvider>
       <BetSlipProvider>
         <UserProfilesProvider>
-          {/* Animated Gradient Background */}
+          {/* Solid Black Background */}
           <div
             style={{
               position: 'fixed',
@@ -131,17 +122,10 @@ function MyApp({ Component, pageProps }) {
               width: '100%',
               height: '100vh',
               zIndex: -1,
-              background: 'linear-gradient(-45deg, #1a0033, #330066, #5227FF, #7B3FF2, #FF9FFC, #B19EEF)',
-              backgroundSize: '400% 400%',
-              animation: 'gradientShift 12s ease infinite',
+              backgroundColor: '#000000',
             }}
           />
           <style jsx global>{`
-            @keyframes gradientShift {
-              0% { background-position: 0% 50%; }
-              50% { background-position: 100% 50%; }
-              100% { background-position: 0% 50%; }
-            }
             body {
               overflow-x: hidden;
             }

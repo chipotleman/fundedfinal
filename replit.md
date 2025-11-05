@@ -69,11 +69,9 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
 - Logo remains left-aligned on desktop
 - Logo now more prominent on all screen sizes
 
-### Animated Gradient Background
-- Added CSS gradient animation background across all pages (purple/pink/blue colors)
-- Background animates smoothly shifting colors over 12 seconds
-- Gradient applied via inline styles in _app.js to ensure it loads correctly
-- Note: WebGL-based 3D backgrounds not supported in Replit environment
+### Background
+- Solid black background (#000000) applied across all pages
+- Background layer applied via inline styles in _app.js
 
 ## Recent Changes (November 3, 2025)
 ### Brand Update: Piks
