@@ -79,7 +79,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
         <div className="absolute top-0 right-0 pt-[22.5px] md:pt-[29.5px] pr-4">
           <button
             onClick={onClose}
-            className="p-2 flex items-center justify-center"
+            className="flex items-center justify-center"
           >
             <svg className="w-[31px] h-[31px] text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 18L18 6M6 6l12 12" />
