@@ -305,13 +305,14 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
         </div>
       </nav>
 
-      {/* Mobile Menu - Slides in from right */}
+      {/* Mobile Menu - Slides in from right, transparent to show gradient */}
       <>
         <div 
-          className="fixed top-0 right-0 bottom-0 w-80 max-w-sm bg-black shadow-xl border-l border-gray-800 lg:hidden z-[60]"
+          className="fixed top-0 right-0 bottom-0 w-80 max-w-sm lg:hidden z-[60]"
           style={{
             transform: showMobileMenu ? 'translateX(0)' : 'translateX(100%)',
             transition: 'transform 0.3s ease-in-out',
+            background: 'transparent',
           }}
           onTouchStart={onTouchStart}
           onTouchMove={onTouchMove}
