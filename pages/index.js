@@ -174,6 +174,13 @@ export default function Home() {
   const [showDemoBetSlip, setShowDemoBetSlip] = useState(false);
   const [showFloatingButton, setShowFloatingButton] = useState(false);
 
+  // Force scroll to top when page loads (especially after beta landing)
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, []);
+
   useEffect(() => {
     const handleScroll = () => {
       // Show floating button when scrolled down past 200px (below header)
