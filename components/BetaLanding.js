@@ -110,23 +110,6 @@ export default function BetaLanding({ onAuthenticated }) {
                   Enter Platform
                 </button>
               </form>
-
-              <div className="mt-6 text-center">
-                <div className="relative my-6">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-gray-600"></div>
-                  </div>
-                  <div className="relative flex justify-center text-sm">
-                    <span className="text-gray-400">Don't have access?</span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowSignup(true)}
-                  className="text-green-400 hover:text-green-300 font-semibold transition-colors"
-                >
-                  Request Beta Access →
-                </button>
-              </div>
             </>
           ) : (
             <>
