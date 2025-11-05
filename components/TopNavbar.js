@@ -120,7 +120,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
         <div className="px-3 sm:px-6 py-1 sm:py-3">
           <div className="flex items-center justify-center sm:justify-between min-h-[56px] sm:min-h-[60px] relative">
             {/* Logo - centered on mobile, left-aligned on desktop */}
-            <div className="flex-none">
+            <div className="flex-none -mt-0.5 sm:mt-0">
               <Link href="/" className="flex items-center">
                 <img
                   src="/funderlogo/Piks.png?v=5"
@@ -272,15 +272,17 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
               {/* Mobile Menu Toggle - Plus/X Icon */}
               <button
                 onClick={() => setShowMobileMenu(!showMobileMenu)}
-                className="lg:hidden w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-600 hover:border-slate-500 transition-colors flex-shrink-0"
+                className="lg:hidden w-10 h-10 bg-slate-800 rounded-lg flex items-center justify-center border border-slate-600 hover:border-slate-500 flex-shrink-0"
               >
-                <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                  {showMobileMenu ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                  )}
-                </svg>
+                {showMobileMenu ? (
+                  <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 4v16m8-8H4" />
+                  </svg>
+                )}
               </button>
             </div>
           </div>
