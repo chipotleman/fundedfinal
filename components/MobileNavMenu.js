@@ -164,6 +164,15 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
                 >
                   Sign Out
                 </button>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('beta_access');
+                    window.location.href = '/';
+                  }}
+                  className="w-full text-left text-gray-500 font-light text-sm uppercase tracking-wider py-3"
+                >
+                  Back to Landing
+                </button>
               </div>
             </div>
           ) : (
@@ -215,6 +224,15 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
                   className="w-full text-center bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center space-x-3 shadow-lg"
                 >
                   <span className="text-base">GET FUNDED</span>
+                </button>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('beta_access');
+                    window.location.href = '/';
+                  }}
+                  className="w-full text-center text-gray-500 font-light text-sm uppercase tracking-wider py-3"
+                >
+                  Back to Landing
                 </button>
               </div>
             </div>
