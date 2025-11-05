@@ -142,6 +142,9 @@ function MyApp({ Component, pageProps }) {
               50% { background-position: 100% 50%; }
               100% { background-position: 0% 50%; }
             }
+            body {
+              overflow-x: hidden;
+            }
           `}</style>
 
           {/* Page wrapper that slides left on mobile when menu opens */}
