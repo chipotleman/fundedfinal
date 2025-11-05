@@ -48,16 +48,16 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
 
   return ReactDOM.createPortal(
     <>
-      {/* Black backdrop to hide purple gradient - click outside menu to close */}
+      {/* Transparent backdrop - click outside menu to close */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black lg:hidden z-[59]"
+          className="fixed inset-0 lg:hidden z-[59]"
           onClick={onClose}
         />
       )}
       
       <div 
-        className="fixed inset-0 w-64 bg-black shadow-xl border-l border-gray-800 lg:hidden z-[60]"
+        className="fixed top-0 bottom-0 w-64 bg-black shadow-xl border-l border-gray-800 lg:hidden z-[60]"
         style={{
           right: isOpen ? '0' : '-256px',
           transition: 'right 0.3s ease-in-out',
