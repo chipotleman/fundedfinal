@@ -59,6 +59,11 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
 - Body overflow-x hidden to prevent horizontal scroll
 - Menu uses React Portal to render outside page flow
 - Page slide transition (0.3s) - menu appears/disappears instantly
+- **All hover effects and tap highlights disabled on mobile** via global CSS rules:
+  - No tap highlights on any elements (`-webkit-tap-highlight-color: transparent`)
+  - No hover effects on touch devices (all :hover states disabled)
+  - No active/focus highlights
+  - Clean tap experience with no visual feedback boxes
 
 ### Logo Updates
 - Increased mobile logo size by 60% (from 56px to 90px)

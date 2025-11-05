@@ -461,3 +461,59 @@ button:hover, .btn:hover {
     transform: translateX(0);
   }
 }
+
+/* Disable ALL hover and highlight effects on mobile/touch devices */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove tap highlights globally */
+  * {
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-touch-callout: none !important;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+  }
+  
+  /* Disable all hover effects on touch devices */
+  *:hover {
+    background-color: inherit !important;
+    color: inherit !important;
+    transform: none !important;
+    box-shadow: none !important;
+    border-color: inherit !important;
+  }
+  
+  /* Disable hover effects on specific elements */
+  button:hover,
+  a:hover,
+  .btn:hover,
+  .glass-button:hover,
+  .modern-card:hover,
+  .card-hover:hover,
+  .unified-hover:hover {
+    transform: none !important;
+    box-shadow: none !important;
+    background: inherit !important;
+    color: inherit !important;
+    border-color: inherit !important;
+    text-shadow: none !important;
+  }
+  
+  /* Remove active/focus highlights */
+  *:active,
+  *:focus {
+    outline: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+  
+  /* Disable text selection on touch */
+  body {
+    -webkit-user-select: none !important;
+    user-select: none !important;
+  }
+  
+  /* Allow text selection only in inputs and textareas */
+  input,
+  textarea {
+    -webkit-user-select: text !important;
+    user-select: text !important;
+  }
+}
