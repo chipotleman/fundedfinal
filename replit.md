@@ -64,6 +64,8 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
   - No hover effects on touch devices (all :hover states disabled)
   - No active/focus highlights
   - Clean tap experience with no visual feedback boxes
+- **Body scroll locked when menu is open** - page cannot be scrolled while menu is visible
+- Menu covers entire viewport height (inset-0) with no scrolling inside menu
 
 ### Logo Updates
 - Increased mobile logo size by 60% (from 56px to 90px)
@@ -73,8 +75,12 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
 - Logo now more prominent on all screen sizes
 
 ### Background
-- Solid black background (#000000) applied across all pages
-- Background layer applied via inline styles in _app.js
+- Solid black background (#000000) applied across entire site
+- All purple gradients completely removed from:
+  - html element in globals.css
+  - body element in globals.css  
+  - _app.js inline styles
+- Zero purple anywhere on the site - pure black (#000000) only
 
 ## Recent Changes (November 3, 2025)
 ### Brand Update: Piks

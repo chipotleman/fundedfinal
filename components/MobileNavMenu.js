@@ -15,6 +15,21 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
     return () => setMounted(false);
   }, []);
 
+  // Lock body scroll when menu is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.height = '100vh';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.height = '';
+    }
+  }, [isOpen]);
+
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     localStorage.removeItem('current_user');

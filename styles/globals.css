@@ -23,9 +23,7 @@
 html {
   margin: 0;
   padding: 0;
-  background: linear-gradient(-45deg, #1a0033, #330066, #5227FF, #7B3FF2, #FF9FFC, #B19EEF);
-  background-size: 400% 400%;
-  animation: gradientShift 12s ease infinite;
+  background: #000000;
   color: #ffffff;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   min-height: 100vh;
@@ -39,7 +37,7 @@ html {
 body {
   margin: 0;
   padding: 0;
-  background: transparent;
+  background: #000000;
   color: #ffffff;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   min-height: 100vh;
