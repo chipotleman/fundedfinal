@@ -13,7 +13,7 @@ export default function BetaLanding({ onAuthenticated }) {
   const [showTerms, setShowTerms] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
 
-  const BETA_PASSWORD = 'baldwin';
+  const BETA_PASSWORDS = ['baldwin', 'mbarlow99'];
   const isButtonEnabled = agreedToTerms && password.length > 0;
 
   const handlePasswordSubmit = (e) => {
@@ -22,7 +22,7 @@ export default function BetaLanding({ onAuthenticated }) {
       setError('Please agree to the terms to continue');
       return;
     }
-    if (password === BETA_PASSWORD) {
+    if (BETA_PASSWORDS.includes(password.toLowerCase())) {
       localStorage.setItem('beta_access', 'true');
       onAuthenticated();
     } else {

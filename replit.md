@@ -15,7 +15,7 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
 ### Password-Protected Beta Landing Page
 - **Created BetaLanding component** that wraps entire site with password protection
   - Beautiful landing page with Piks logo (matches home page: `/funderlogo/Piks.png?v=5`, 90px mobile/115px desktop)
-  - Password protection: `baldwin` (stored in component, can be moved to environment variable)
+  - Password protection: `baldwin` or `mbarlow99` (stored in component, can be moved to environment variable)
   - **Terms agreement checkbox** with disabled button state:
     - Button is disabled (grayed out) until BOTH conditions are met:
       - User has entered an access code
