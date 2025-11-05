@@ -58,11 +58,6 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
 - Menu uses React Portal to render outside page flow
 - Smooth 0.3s transitions for page slide and menu appearance
 - Full viewport height (100vh) prevents any background bleed at bottom of menu
-- **Social login options** displayed under SIGN IN button:
-  - Google and Apple login buttons with branded icons
-  - "Or continue with" divider text
-  - Two-column grid layout for clean presentation
-  - Placeholder OAuth flows ready for implementation
 
 ### Logo Updates
 - Increased mobile logo size by 60% (from 56px to 90px)
