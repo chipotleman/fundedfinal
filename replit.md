@@ -25,7 +25,7 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
   - Signups stored in localStorage (can be migrated to database later)
   - Access persists via localStorage - users don't need to re-enter password
   - Black background for minimal, professional aesthetic
-  - Access code input box features purple/pink/blue gradient outline with glow effect
+  - Clean, simple access code input box with subtle border
   - "Don't have access?" text properly separated from divider line
   - Integrated into _app.js to gate all site content
   - Clean, professional design with glass-morphism card effects

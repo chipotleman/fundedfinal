@@ -94,11 +94,7 @@ export default function BetaLanding({ onAuthenticated }) {
                       setPassword(e.target.value);
                       setError('');
                     }}
-                    className="w-full px-4 py-4 bg-black border-2 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all font-medium text-center text-lg tracking-widest"
-                    style={{
-                      borderImage: 'linear-gradient(135deg, #7B3FF2, #5227FF, #FF9FFC) 1',
-                      boxShadow: '0 0 20px rgba(123, 63, 242, 0.5), 0 0 40px rgba(82, 39, 255, 0.3)'
-                    }}
+                    className="w-full px-4 py-4 bg-black border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all font-medium text-center text-lg tracking-widest"
                     placeholder="Enter access code"
                     required
                     autoFocus
