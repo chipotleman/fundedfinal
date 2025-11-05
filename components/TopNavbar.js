@@ -91,7 +91,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
         <div className="px-3 sm:px-6 py-1 sm:py-3">
           <div className="flex items-center justify-between min-h-[56px] sm:min-h-[60px]">
             {/* Logo - left-aligned on both mobile and desktop */}
-            <div className="flex-none">
+            <div className="flex-none -ml-2 sm:ml-0">
               <Link href="/" className="flex items-center">
                 <img
                   src="/funderlogo/Piks.png?v=5"
