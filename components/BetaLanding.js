@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Head from 'next/head';
 
@@ -11,10 +11,26 @@ export default function BetaLanding({ onAuthenticated }) {
   const [loading, setLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [sliderPosition, setSliderPosition] = useState(0);
+  const [maxSlide, setMaxSlide] = useState(250);
   const startX = useRef(0);
+  const containerRef = useRef(null);
 
   const BETA_PASSWORD = 'baldwin';
-  const maxSlide = 250; // Max slider distance
+
+  useEffect(() => {
+    const updateMaxSlide = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.offsetWidth;
+        const thumbWidth = 56; // w-14 = 3.5rem = 56px
+        const padding = 8; // left-1 and right space = 8px total
+        setMaxSlide(containerWidth - thumbWidth - padding);
+      }
+    };
+
+    updateMaxSlide();
+    window.addEventListener('resize', updateMaxSlide);
+    return () => window.removeEventListener('resize', updateMaxSlide);
+  }, []);
 
   const handlePasswordSubmit = (e) => {
     e.preventDefault();
@@ -145,6 +161,7 @@ export default function BetaLanding({ onAuthenticated }) {
 
                 {/* Slide to Enter Button */}
                 <div 
+                  ref={containerRef}
                   className="relative w-full h-16 rounded-xl overflow-hidden select-none"
                   style={{
                     background: `linear-gradient(to right, #10b981 ${(sliderPosition / maxSlide) * 100}%, #3b82f6 ${(sliderPosition / maxSlide) * 100}%, #1e293b ${(sliderPosition / maxSlide) * 100}%)`,
