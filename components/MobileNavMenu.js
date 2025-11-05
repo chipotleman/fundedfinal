@@ -78,7 +78,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
           
           {/* Menu drawer - appears instantly when open */}
           <div 
-            className="fixed inset-0 right-0 left-auto w-64 bg-black shadow-xl border-l border-gray-800 lg:hidden z-[60] overflow-hidden"
+            className="fixed inset-0 right-0 left-auto w-64 bg-black shadow-xl lg:hidden z-[60] overflow-hidden"
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
