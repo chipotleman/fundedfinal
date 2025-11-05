@@ -192,7 +192,7 @@ export default function BetaLanding({ onAuthenticated }) {
                 </div>
 
                 {/* Terms Agreement Checkbox */}
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center justify-center space-x-2">
                   <input
                     type="checkbox"
                     id="terms"
