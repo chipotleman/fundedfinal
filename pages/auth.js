@@ -25,7 +25,16 @@ export default function AuthPage() {
 
   // Scroll to top when component mounts
   useEffect(() => {
+    // Scroll immediately
     window.scrollTo(0, 0);
+    // And also after a short delay to ensure it sticks
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []);
 
   // Load purchased challenge from localStorage if it exists

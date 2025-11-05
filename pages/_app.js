@@ -104,7 +104,15 @@ function MyApp({ Component, pageProps }) {
             backgroundColor: '#000000',
           }}
         />
-        <BetaLanding onAuthenticated={() => setBetaAuthenticated(true)} />
+        <BetaLanding onAuthenticated={() => {
+          setBetaAuthenticated(true);
+          // Scroll to top when entering the main site
+          setTimeout(() => {
+            window.scrollTo(0, 0);
+            document.documentElement.scrollTop = 0;
+            document.body.scrollTop = 0;
+          }, 50);
+        }} />
       </>
     );
   }
