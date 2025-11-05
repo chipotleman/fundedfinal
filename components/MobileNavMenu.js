@@ -79,7 +79,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
         <div className="absolute top-0 right-0 pt-[22.5px] md:pt-[29.5px] pr-4">
           <button
             onClick={onClose}
-            className="flex items-center justify-center"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             <svg className="w-[31px] h-[31px] text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
               <path d="M6 18L18 6M6 6l12 12" />
@@ -93,21 +93,21 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
               <Link
                 href="/dashboard"
                 onClick={onClose}
-                className="block text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 Dashboard
               </Link>
               <Link
                 href="/bet-history"
                 onClick={onClose}
-                className="block text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 Bet History
               </Link>
               <Link
                 href="/demo"
                 onClick={onClose}
-                className="block text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 Free Trial
               </Link>
@@ -116,28 +116,28 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
                   onClose();
                   window.dispatchEvent(new CustomEvent('openHowItWorks'));
                 }}
-                className="block w-full text-left text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+                className="block w-full text-left text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 How It Works
               </button>
               <Link
                 href="/waitlist"
                 onClick={onClose}
-                className="block text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 Piks Card
               </Link>
               <Link
                 href="/promos"
                 onClick={onClose}
-                className="block text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 Promos
               </Link>
               <Link
                 href="/leaderboard"
                 onClick={onClose}
-                className="block text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 Leaderboard
               </Link>
@@ -151,7 +151,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
                 </div>
                 <button
                   onClick={handleSignOut}
-                  className="w-full text-left text-red-400 hover:text-red-300 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+                  className="w-full text-left text-red-400 font-light text-base uppercase tracking-wider py-3"
                 >
                   Sign Out
                 </button>
@@ -162,7 +162,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
               <Link
                 href="/demo"
                 onClick={onClose}
-                className="block text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 Free Trial
               </Link>
@@ -171,21 +171,21 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
                   onClose();
                   window.dispatchEvent(new CustomEvent('openHowItWorks'));
                 }}
-                className="block w-full text-left text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+                className="block w-full text-left text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 How It Works
               </button>
               <Link
                 href="/waitlist"
                 onClick={onClose}
-                className="block text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 Piks Card
               </Link>
               <Link
                 href="/leaderboard"
                 onClick={onClose}
-                className="block text-gray-300 hover:text-blue-400 font-light text-base uppercase tracking-wider py-3 transition-all duration-300"
+                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 Leaderboard
               </Link>
@@ -194,7 +194,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
                 <Link
                   href="/auth"
                   onClick={onClose}
-                  className="w-full text-center text-gray-300 hover:text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm border border-gray-600 hover:border-gray-500 flex items-center justify-center"
+                  className="w-full text-center text-gray-300 font-bold py-3 px-6 rounded-lg text-sm border border-gray-600 flex items-center justify-center"
                 >
                   <span>SIGN IN</span>
                 </Link>
@@ -203,7 +203,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
                     onClose();
                     window.dispatchEvent(new CustomEvent('openChallengePopup'));
                   }}
-                  className="w-full text-center bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center space-x-3 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                  className="w-full text-center bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center space-x-3 shadow-lg"
                 >
                   <span className="text-base">GET FUNDED</span>
                 </button>
