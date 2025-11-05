@@ -468,22 +468,12 @@ button:hover, .btn:hover {
   * {
     -webkit-tap-highlight-color: transparent !important;
     -webkit-touch-callout: none !important;
-    -webkit-user-select: none !important;
-    user-select: none !important;
   }
   
-  /* Disable all hover effects on touch devices */
-  *:hover {
-    background-color: inherit !important;
-    color: inherit !important;
-    transform: none !important;
-    box-shadow: none !important;
-    border-color: inherit !important;
-  }
-  
-  /* Disable hover effects on specific elements */
-  button:hover,
-  a:hover,
+  /* Disable hover effects on specific elements - exclude SVGs to preserve icons */
+  button:not(svg):hover,
+  a:not(svg):hover,
+  div:not(svg):hover,
   .btn:hover,
   .glass-button:hover,
   .modern-card:hover,
@@ -491,8 +481,7 @@ button:hover, .btn:hover {
   .unified-hover:hover {
     transform: none !important;
     box-shadow: none !important;
-    background: inherit !important;
-    color: inherit !important;
+    background-color: inherit !important;
     border-color: inherit !important;
     text-shadow: none !important;
   }
