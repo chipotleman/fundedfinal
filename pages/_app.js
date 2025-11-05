@@ -151,6 +151,8 @@ function MyApp({ Component, pageProps }) {
               transition: 'transform 0.3s ease-in-out',
               minHeight: '100vh',
               backgroundColor: '#000000',
+              width: '100vw',
+              position: 'relative',
             }}
             className="lg:transform-none"
           >

@@ -48,10 +48,10 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
 
   return ReactDOM.createPortal(
     <>
-      {/* Black backdrop - click outside menu to close */}
+      {/* Transparent backdrop - click outside menu to close */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black lg:hidden z-[59]"
+          className="fixed inset-0 lg:hidden z-[59]"
           onClick={onClose}
         />
       )}
