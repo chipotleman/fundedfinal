@@ -413,7 +413,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
             {/* Header */}
             <div className="text-center mb-6">
               <div className="mb-4">
-                <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-18 mx-auto" />
+                <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-12 mx-auto" />
               </div>
               <h2 className="text-xl font-bold text-white mb-2">Complete Purchase</h2>
               <div className="flex items-center justify-center space-x-2 text-gray-400 text-sm">
