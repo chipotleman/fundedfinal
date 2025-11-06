@@ -193,9 +193,43 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
 7. Challenge details and user state stored in database
 
 ### Challenge Tiers
-1. **Starter Challenge**: $5,000 funding, $149 price, 80% profit split
-2. **Pro Challenge**: $10,000 funding, $249 price, 80% profit split (most popular)
-3. **Elite Challenge**: $25,000 funding, $399 price, 80% profit split
+1. **Starter Challenge**: $5,000 funding, $149 price, 90% profit split (Reward phase)
+2. **Pro Challenge**: $10,000 funding, $249 price, 90% profit split (Reward phase) - most popular
+3. **Elite Challenge**: $25,000 funding, $399 price, 90% profit split (Reward phase)
+
+### Challenge Phase Rules
+All challenges progress through three phases with specific requirements:
+
+#### Phase 1 & Phase 2
+- **Pick Minimum**: 20 picks required
+- **Risk Range**: 1% - 5% per pick
+- **Max Daily Loss**: 10%
+- **Max Drawdown**: 15%
+- **Profit Target**: 20% to advance to next phase
+- **Pick Cashout Fee**: 10%
+- **Inactivity Timer**: None
+- **Reward Split**: None (profit target phase)
+- **Live Picking**: YES (coming soon)
+- **Same Game Parlays**: YES
+
+#### Reward Phase (After completing Phase 1 & Phase 2)
+- **Pick Minimum**: 20 picks required
+- **Risk Range**: 1% - 5% per pick
+- **Max Daily Loss**: 10%
+- **Max Drawdown**: 15%
+- **Profit Target**: None (unlimited earning potential)
+- **Pick Cashout Fee**: 10%
+- **Inactivity Timer**: 5 days
+- **Reward Split**: 90% (user keeps 90% of all profits)
+- **Live Picking**: YES (coming soon)
+- **Same Game Parlays**: YES
+
+#### Phase Progression
+1. Users start in **Phase 1** with their chosen challenge tier balance
+2. Must achieve 20% profit while following all rules to advance to **Phase 2**
+3. Must achieve another 20% profit in **Phase 2** to unlock **Reward Phase**
+4. In **Reward Phase**, users keep 90% of unlimited profits with no profit target
+5. Inactivity timer of 5 days only applies during Reward Phase
 
 ### Database Tables
 - `profiles`: User profiles linked to Supabase auth
