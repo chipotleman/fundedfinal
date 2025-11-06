@@ -624,11 +624,9 @@ export default function AuthPage() {
                   // Clear fields when switching modes if desired
                   if (!isSignUp) { // Switching from sign in to sign up
                     setUsername('');
-                    setPhone(''); // Clear phone when switching to sign up
                     setConfirmPassword('');
                   } else { // Switching from sign up to sign in
                     setUsername(''); // Clear username if it's not needed for sign in
-                    setPhone(''); // Clear phone when switching to sign in
                   }
                   setPassword(''); // Always clear password
                 }}
