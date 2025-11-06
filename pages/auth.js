@@ -18,6 +18,7 @@ export default function AuthPage() {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const router = useRouter();
   const { login, signUp } = useAuth();
@@ -25,6 +26,17 @@ export default function AuthPage() {
   // Password strength check
   const isPasswordStrong = password.length >= 6;
   const passwordsMatch = isSignUp && confirmPassword.length > 0 && password === confirmPassword;
+
+  // Load saved email from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedEmail = localStorage.getItem('remembered_email');
+      if (savedEmail) {
+        setEmail(savedEmail);
+        setRememberMe(true);
+      }
+    }
+  }, []);
 
   // Scroll to top when component mounts
   useEffect(() => {
@@ -146,6 +158,13 @@ export default function AuthPage() {
     setError('');
 
     try {
+      // Handle Remember Me functionality
+      if (rememberMe) {
+        localStorage.setItem('remembered_email', email.trim());
+      } else {
+        localStorage.removeItem('remembered_email');
+      }
+
       if (isSignUp) {
         // Sign up with Supabase using email
         const { data, error } = await supabase.auth.signUp({
@@ -589,6 +608,20 @@ export default function AuthPage() {
                   )}
                 </div>
               )}
+
+              {/* Remember Me Checkbox */}
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 bg-slate-700 border-2 border-slate-600 rounded focus:ring-2 focus:ring-green-400 text-green-500"
+                />
+                <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-300 cursor-pointer">
+                  Remember my email
+                </label>
+              </div>
 
               <button
                 type="submit"
