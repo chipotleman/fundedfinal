@@ -7,9 +7,9 @@ export default function ProfileModal({ profile, isOpen, onClose }) {
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 transition-opacity bg-gray-900 bg-opacity-75" onClick={onClose}></div>
+        <div className="fixed inset-0 transition-opacity bg-black/90" onClick={onClose}></div>
 
-        <div className="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-slate-800 shadow-2xl rounded-2xl border border-slate-700">
+        <div className="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform bg-black shadow-2xl rounded-2xl border-2 border-gray-800">
           <div className="flex justify-between items-start mb-6">
             <div>
               <h2 className="text-3xl font-bold text-white">{profile.username}</h2>
@@ -23,7 +23,7 @@ export default function ProfileModal({ profile, isOpen, onClose }) {
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white p-2 rounded-lg hover:bg-slate-700 transition-colors"
+              className="text-gray-400 hover:text-white p-2 rounded-lg hover:bg-gray-900 transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -32,19 +32,19 @@ export default function ProfileModal({ profile, isOpen, onClose }) {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-slate-700/50 rounded-xl p-4 text-center">
+            <div className="bg-gray-900/50 rounded-xl p-4 text-center border border-gray-800">
               <div className="text-2xl font-bold text-green-400">${profile.stats.totalProfit.toLocaleString()}</div>
               <div className="text-gray-300 text-sm">Total Profit</div>
             </div>
-            <div className="bg-slate-700/50 rounded-xl p-4 text-center">
+            <div className="bg-gray-900/50 rounded-xl p-4 text-center border border-gray-800">
               <div className="text-2xl font-bold text-blue-400">{profile.stats.winRate}%</div>
               <div className="text-gray-300 text-sm">Win Rate</div>
             </div>
-            <div className="bg-slate-700/50 rounded-xl p-4 text-center">
+            <div className="bg-gray-900/50 rounded-xl p-4 text-center border border-gray-800">
               <div className="text-2xl font-bold text-purple-400">{profile.stats.roi}%</div>
               <div className="text-gray-300 text-sm">ROI</div>
             </div>
-            <div className="bg-slate-700/50 rounded-xl p-4 text-center">
+            <div className="bg-gray-900/50 rounded-xl p-4 text-center border border-gray-800">
               <div className="text-2xl font-bold text-orange-400">{profile.stats.currentStreak}</div>
               <div className="text-gray-300 text-sm">Current Streak</div>
             </div>
@@ -56,7 +56,7 @@ export default function ProfileModal({ profile, isOpen, onClose }) {
               <h3 className="text-xl font-bold text-white mb-4">Achievements</h3>
               <div className="space-y-3">
                 {profile.achievements.map((achievement, index) => (
-                  <div key={index} className="flex items-center space-x-3 bg-slate-700/30 rounded-lg p-3">
+                  <div key={index} className="flex items-center space-x-3 bg-gray-900/50 rounded-lg p-3 border border-gray-800">
                     <span className="text-2xl">{achievement.icon}</span>
                     <div>
                       <div className="text-white font-medium">{achievement.name}</div>
@@ -72,7 +72,7 @@ export default function ProfileModal({ profile, isOpen, onClose }) {
               <h3 className="text-xl font-bold text-white mb-4">Recent Bets</h3>
               <div className="space-y-3">
                 {profile.recentBets.map((bet, index) => (
-                  <div key={index} className="bg-slate-700/30 rounded-lg p-3">
+                  <div key={index} className="bg-gray-900/50 rounded-lg p-3 border border-gray-800">
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="text-white font-medium text-sm">{bet.game}</div>

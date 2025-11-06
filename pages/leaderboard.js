@@ -186,21 +186,20 @@ const Leaderboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {leaderboardData.slice(0, 3).map((user, index) => (
               <div key={user.rank} className={`relative ${index === 0 ? 'md:order-2' : index === 1 ? 'md:order-1' : 'md:order-3'}`}>
-                <div className={`bg-gradient-to-br ${
-                  user.rank === 1 
-                    ? 'from-yellow-500/20 to-orange-500/20 border-yellow-500/30' 
-                    : user.rank === 2 
-                    ? 'from-gray-400/20 to-gray-600/20 border-gray-400/30'
-                    : 'from-orange-600/20 to-orange-800/20 border-orange-600/30'
-                } backdrop-blur-lg rounded-2xl p-8 border text-center ${index === 0 ? 'transform scale-105' : ''}`}>
-
+                <div 
+                  onClick={() => openProfile(user.username)}
+                  className={`bg-gradient-to-br ${
+                    user.rank === 1 
+                      ? 'from-yellow-500/20 to-orange-500/20 border-yellow-500/30' 
+                      : user.rank === 2 
+                      ? 'from-gray-400/20 to-gray-600/20 border-gray-400/30'
+                      : 'from-orange-600/20 to-orange-800/20 border-orange-600/30'
+                  } backdrop-blur-lg rounded-2xl p-8 border text-center ${index === 0 ? 'transform scale-105' : ''} cursor-pointer hover:scale-110 transition-transform duration-300`}
+                >
                   <div className="text-6xl mb-4">{getRankIcon(user.rank)}</div>
-                  <button 
-                    onClick={() => openProfile(user.username)}
-                    className="text-2xl font-bold text-white mb-2 hover:text-blue-400 transition-colors cursor-pointer"
-                  >
+                  <div className="text-2xl font-bold text-white mb-2 hover:text-blue-400 transition-colors">
                     {user.username}
-                  </button>
+                  </div>
                   <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium mb-4 ${getTierColor(user.tier)}`}>
                     {user.tier}
                   </div>
