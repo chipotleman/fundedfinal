@@ -267,21 +267,52 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   )}
                 </div>
 
-                <div className="flex justify-between items-center py-2 px-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-gray-300 font-medium text-sm">Target Balance</span>
+                {/* Challenge Rules */}
+                <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-white font-semibold text-sm">Challenge Rules</h4>
                     <button
                       onClick={() => setShowTargetExplainer(true)}
-                      className="w-3 h-3 bg-blue-500 hover:bg-blue-400 rounded-full flex items-center justify-center transition-colors"
+                      className="w-4 h-4 bg-blue-500 hover:bg-blue-400 rounded-full flex items-center justify-center transition-colors"
                     >
                       <span className="text-white text-xs font-bold">?</span>
                     </button>
                   </div>
-                  <span className="text-blue-400 font-bold">${(currentChallenge.startingBalance + currentChallenge.target).toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between items-center py-2 px-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
-                  <span className="text-gray-300 font-medium text-sm">Max Bet Size</span>
-                  <span className="text-white font-bold">${currentChallenge.maxBet}</span>
+                  
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Pick Minimum</span>
+                      <span className="text-white font-medium">20 picks</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Risk Range</span>
+                      <span className="text-white font-medium">1% - 5%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Max Daily Loss</span>
+                      <span className="text-white font-medium">10%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Max Drawdown</span>
+                      <span className="text-white font-medium">15%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Profit Target (Phase 1 & 2)</span>
+                      <span className="text-green-400 font-medium">20%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Pick Cashout Fee</span>
+                      <span className="text-white font-medium">10%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Reward Split (After Phase 2)</span>
+                      <span className="text-blue-400 font-medium">90%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Same Game Parlays</span>
+                      <span className="text-green-400 font-medium">YES</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
