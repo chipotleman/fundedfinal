@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import bcrypt from "bcryptjs";
 import { db } from "../../../lib/db";
-import { users } from "../../../shared/schema";
+import { users, profiles } from "../../../shared/schema";
 import { eq } from "drizzle-orm";
 
 export default async function handler(
@@ -44,6 +44,18 @@ export default async function handler(
         password: hashedPassword,
       })
       .returning();
+
+    // Create profile for the new user
+    await db.insert(profiles).values({
+      id: newUser.id,
+      username: email.split('@')[0] || 'user',
+      bankroll: '0',
+      pnl: '0',
+      totalBets: 0,
+      winRate: '0',
+      challengePhase: 1,
+      dailyLoss: '0',
+    });
 
     return res.status(201).json({
       message: "Account created successfully",
