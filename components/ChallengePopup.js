@@ -413,7 +413,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
             {/* Header */}
             <div className="text-center mb-6">
               <div className="mb-4">
-                <img src="/funderlogo/Funder.png" alt="Funder Logo" className="h-8 mx-auto" />
+                <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-8 mx-auto" />
               </div>
               <h2 className="text-xl font-bold text-white mb-2">Complete Purchase</h2>
               <div className="flex items-center justify-center space-x-2 text-gray-400 text-sm">
@@ -548,7 +548,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
             {/* Header */}
             <div className="text-center mb-6">
               <div className="mb-4">
-                <img src="/funderlogo/Funder.png" alt="Funder Logo" className="h-8 mx-auto" />
+                <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-8 mx-auto" />
               </div>
               <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mb-4 mx-auto">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
