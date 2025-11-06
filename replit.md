@@ -19,10 +19,15 @@ None documented yet.
 - **Framework**: Next.js 14.2.30
 - **Styling**: Tailwind CSS
 - **State Management**: React Context (AuthContext, BetSlipContext, UserProfilesContext)
-- **Authentication**: Supabase Auth (email/password, OAuth with Apple, Google, Facebook), with PKCE flow and session persistence (`persistSession: true`, `autoRefreshToken: true`). "Remember Me" functionality saves user emails locally.
+- **Authentication**: NextAuth.js v4 with multiple providers:
+  - Credentials provider (email/password with bcrypt hashing)
+  - OAuth providers (Google, Apple, Facebook - configurable via environment variables)
+  - JWT-based sessions with 7-day expiry
+  - "Remember Me" functionality saves user emails locally
+- **Database ORM**: Drizzle ORM with @neondatabase/serverless driver
 - **Beta Access**: Password-protected beta landing page with access persistence via localStorage.
 - **Demo Platform**: Fully functional demo experience with localStorage persistence, allowing users to customize challenge tiers and practice betting without authentication.
-- **Challenge Persistence**: Challenge selections and customizations are stored in localStorage post-payment and loaded automatically during authentication, then saved to Supabase.
+- **Challenge Persistence**: Challenge selections and customizations are stored in localStorage post-payment and loaded automatically during authentication, then saved to database via API.
 
 ### Feature Specifications
 - **Challenge Tiers**:
@@ -36,10 +41,21 @@ None documented yet.
 - **Global Popups**: Challenge and How-It-Works popups are globally accessible via `_app.js`.
 
 ### System Design Choices
-- **Authentication Flow**: Beta access -> Supabase Auth (email/password or OAuth) -> Session persistence -> User profile creation -> Challenge selection & purchase -> Challenge data persistence.
-- **Database Schema**: `profiles` (user data), `user_challenges` (challenge progress), and other marketplace/betting-related tables.
+- **Authentication Flow**: Beta access -> NextAuth.js (email/password or OAuth) -> JWT session -> User profile creation (via createUser event) -> Challenge selection & purchase -> Challenge data persistence via API.
+- **Database Schema** (Drizzle ORM):
+  - `users` - Authentication data (id, email, password hash, emailVerified)
+  - `profiles` - User betting data (bankroll, challenge info, stats, bets history)
+  - `user_bets` - Individual bet records
+  - `accounts`, `sessions`, `verification_tokens` - NextAuth.js required tables
+- **API Architecture**: RESTful API routes in `/pages/api/*` for database operations
+  - `/api/auth/*` - NextAuth.js endpoints
+  - `/api/profiles/[id]` - User profile CRUD operations
+  - `/api/auth/signup` - User registration endpoint
+
+## Recent Changes
+- **November 2025**: Migrated from Supabase to Replit PostgreSQL + NextAuth.js for improved control and Replit integration
 
 ## External Dependencies
-- **Authentication**: Supabase Auth
-- **Database**: Supabase PostgreSQL
+- **Authentication**: NextAuth.js v4
+- **Database**: Replit PostgreSQL (Neon-backed) via Drizzle ORM
 - **Payment Processing**: Stripe (environment variables for keys)

@@ -2,13 +2,9 @@
 
 import { buffer } from 'micro';
 import Stripe from 'stripe';
-import { createClient } from '@supabase/supabase-js';
+import { db } from '../../lib/db';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2023-08-16' });
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
 
 export const config = {
   api: {
@@ -34,22 +30,8 @@ export default async function handler(req, res) {
       const session = event.data.object;
       const customerEmail = session.customer_details.email;
 
-      const { data, error } = await supabase.from('evaluations').insert([
-        {
-          email: customerEmail,
-          status: 'active',
-          total_pnl: 0,
-          evaluation_start_date: new Date(),
-          evaluation_end_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), // 14 days
-        },
-      ]);
-
-      if (error) {
-        console.error('❌ Supabase insertion error:', error);
-        return res.status(500).json({ error: error.message });
-      }
-
-      console.log(`✅ Funded pass created for ${customerEmail}.`, data);
+      // TODO: Handle successful payment and create evaluation
+      console.log(`✅ Payment received for ${customerEmail}`);
     }
 
     res.status(200).json({ received: true });

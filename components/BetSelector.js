@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
 
 export default function BetSelector({ user }) {
   const [bets, setBets] = useState([]);
@@ -7,16 +6,7 @@ export default function BetSelector({ user }) {
 
   useEffect(() => {
     const fetchBets = async () => {
-      const { data, error } = await supabase
-        .from('available_bets')
-        .select('*')
-        .order('commence_time', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching available bets:', error);
-      } else {
-        setBets(data);
-      }
+      // TODO: Implement with new database
       setLoading(false);
     };
 
@@ -24,23 +14,8 @@ export default function BetSelector({ user }) {
   }, []);
 
   const handleSelect = async (bet) => {
-    const { error } = await supabase.from('user_bets').insert([
-      {
-        user_email: user.email,
-        evaluation_id: bet.evaluation_id || null,
-        bet_id: bet.id,
-        market_type: bet.market_type,
-        selection: bet.home_team,
-        stake: 0
-      }
-    ]);
-
-    if (error) {
-      console.error('Error saving user bet:', error);
-      alert('Error saving bet');
-    } else {
-      alert('Bet selected!');
-    }
+    // TODO: Implement with new database
+    alert('Bet selection coming soon!');
   };
 
   if (loading) return <p style={{ color: "#fff" }}>Loading bets...</p>;

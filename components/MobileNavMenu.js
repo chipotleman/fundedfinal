@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { supabase } from '../lib/supabaseClient';
+import { signOut } from 'next-auth/react';
 
 export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn }) {
   const [touchStart, setTouchStart] = useState(null);
@@ -31,7 +31,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
   }, [isOpen]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOut({ redirect: false });
     localStorage.removeItem('current_user');
     onClose();
     router.push('/');

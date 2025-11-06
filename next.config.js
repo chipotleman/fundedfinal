@@ -8,6 +8,7 @@ const withPWA = require('next-pwa')({
 
 const nextConfig = {
   reactStrictMode: true,
+  allowedDevOrigins: ['*'],
 }
 
 module.exports = withPWA(nextConfig)

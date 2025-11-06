@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useSession, signOut } from 'next-auth/react';
 import BalanceModal from './BalanceModal';
 import WithdrawModal from './WithdrawModal';
-import { supabase } from '../lib/supabaseClient';
 
 export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick, demoBetSlipCount, onDemoBetSlipClick }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -15,15 +15,24 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const router = useRouter();
+  const { data: session } = useSession();
 
   useEffect(() => {
     const fetchUser = async () => {
-      // First check localStorage for user data
+      // Check NextAuth session first
+      if (session?.user) {
+        setCurrentUser(session.user);
+        setIsLoggedIn(true);
+        localStorage.setItem('current_user', JSON.stringify(session.user));
+        return;
+      }
+
+      // Check localStorage for demo/local users
       const storedUser = localStorage.getItem('current_user');
       if (storedUser) {
         try {
           const parsedUser = JSON.parse(storedUser);
-          if (parsedUser && parsedUser.id && parsedUser.username) {
+          if (parsedUser && parsedUser.id) {
             setCurrentUser(parsedUser);
             setIsLoggedIn(true);
             return;
@@ -34,39 +43,12 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
         }
       }
 
-      // Fallback to Supabase auth
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setCurrentUser(user);
-        setIsLoggedIn(true);
-      } else {
-        setIsLoggedIn(false);
-        setCurrentUser(null);
-      }
+      setIsLoggedIn(false);
+      setCurrentUser(null);
     };
 
     fetchUser();
-
-    // Subscribe to authentication state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN') {
-        setCurrentUser(session.user);
-        setIsLoggedIn(true);
-        localStorage.setItem('current_user', JSON.stringify(session.user));
-      } else if (event === 'SIGNED_OUT') {
-        setIsLoggedIn(false);
-        setCurrentUser(null);
-        localStorage.removeItem('current_user');
-        sessionStorage.clear();
-        router.push('/auth');
-      }
-    });
-
-    // Cleanup the listener on component unmount
-    return () => {
-      subscription?.unsubscribe();
-    };
-  }, [router]);
+  }, [session, router]);
 
   useEffect(() => {
     // Listen for menu close event from MobileNavMenu X button
@@ -86,13 +68,12 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
     if (typeof window !== 'undefined') {
       localStorage.removeItem('demo_user');
       localStorage.removeItem('user_session');
+      localStorage.removeItem('current_user');
       sessionStorage.clear();
     }
 
-    // Sign out from Supabase if authenticated
-    if (typeof supabase !== 'undefined') {
-      await supabase.auth.signOut();
-    }
+    // Sign out from NextAuth
+    await signOut({ redirect: false });
 
     // Redirect to auth page
     router.push('/auth');
