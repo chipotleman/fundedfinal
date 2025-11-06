@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import '../styles/globals.css';
+import { SessionProvider } from 'next-auth/react';
 import { AuthProvider } from '../contexts/AuthContext';
 import { BetSlipProvider } from '../contexts/BetSlipContext';
 import { UserProfilesProvider } from '../contexts/UserProfilesContext';
@@ -7,9 +8,8 @@ import ChallengePopup from '../components/ChallengePopup';
 import HowItWorksPopup from '../components/HowItWorksPopup';
 import MobileNavMenu from '../components/MobileNavMenu';
 import BetaLanding from '../components/BetaLanding';
-import { supabase } from '../lib/supabaseClient';
 
-function MyApp({ Component, pageProps }) {
+function MyApp({ Component, pageProps: { session, ...pageProps } }) {
   const [showChallengePopup, setShowChallengePopup] = useState(false);
   const [showHowItWorksPopup, setShowHowItWorksPopup] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -61,33 +61,14 @@ function MyApp({ Component, pageProps }) {
           if (parsedUser && parsedUser.id) {
             setCurrentUser(parsedUser);
             setIsLoggedIn(true);
-            return;
           }
         } catch (error) {
           localStorage.removeItem('current_user');
         }
       }
-
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setCurrentUser(user);
-        setIsLoggedIn(true);
-      }
     };
 
     fetchUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN') {
-        setCurrentUser(session.user);
-        setIsLoggedIn(true);
-        localStorage.setItem('current_user', JSON.stringify(session.user));
-      } else if (event === 'SIGNED_OUT') {
-        setCurrentUser(null);
-        setIsLoggedIn(false);
-        localStorage.removeItem('current_user');
-      }
-    });
 
     const handleOpenChallengePopup = () => {
       setShowChallengePopup(true);
@@ -108,7 +89,6 @@ function MyApp({ Component, pageProps }) {
     }
 
     return () => {
-      subscription?.unsubscribe();
       if (typeof window !== 'undefined') {
         window.removeEventListener('openChallengePopup', handleOpenChallengePopup);
         window.removeEventListener('openHowItWorks', handleOpenHowItWorks);
@@ -138,9 +118,10 @@ function MyApp({ Component, pageProps }) {
   }
 
   return (
-    <AuthProvider>
-      <BetSlipProvider>
-        <UserProfilesProvider>
+    <SessionProvider session={session}>
+      <AuthProvider>
+        <BetSlipProvider>
+          <UserProfilesProvider>
           {/* Solid Black Background */}
           <div
             style={{
@@ -195,9 +176,10 @@ function MyApp({ Component, pageProps }) {
             currentUser={currentUser}
             isLoggedIn={isLoggedIn}
           />
-        </UserProfilesProvider>
-      </BetSlipProvider>
-    </AuthProvider>
+          </UserProfilesProvider>
+        </BetSlipProvider>
+      </AuthProvider>
+    </SessionProvider>
   );
 }
 

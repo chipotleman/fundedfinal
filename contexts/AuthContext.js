@@ -1,6 +1,6 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { useSession, signIn, signOut } from 'next-auth/react';
+import { useRouter } from 'next/router';
 
 const AuthContext = createContext();
 
@@ -9,126 +9,98 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }) {
+  const { data: session, status } = useSession();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    // Check Supabase auth first (primary source of truth)
-    const checkAuth = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          // Ensure user has a profile in the database
-          await ensureUserProfile(user);
-          setUser(user);
-          localStorage.setItem('current_user', JSON.stringify(user));
-        } else {
-          // Check localStorage as fallback for demo/local users
-          const storedUser = localStorage.getItem('current_user');
-          if (storedUser) {
-            try {
-              const parsedUser = JSON.parse(storedUser);
-              if (parsedUser && parsedUser.id) {
-                setUser(parsedUser);
-              }
-            } catch (error) {
-              console.error('Error parsing stored user:', error);
-              localStorage.removeItem('current_user');
-            }
+    if (status === 'loading') {
+      setLoading(true);
+      return;
+    }
+
+    if (session?.user) {
+      setUser(session.user);
+      localStorage.setItem('current_user', JSON.stringify(session.user));
+    } else {
+      // Check localStorage as fallback for demo/local users
+      const storedUser = localStorage.getItem('current_user');
+      if (storedUser) {
+        try {
+          const parsedUser = JSON.parse(storedUser);
+          if (parsedUser && parsedUser.id && !parsedUser.email?.includes('@')) {
+            // This is a demo user (no @ in email means local/demo user)
+            setUser(parsedUser);
+          } else {
+            // Real user but no session - clear it
+            localStorage.removeItem('current_user');
           }
+        } catch (error) {
+          console.error('Error parsing stored user:', error);
+          localStorage.removeItem('current_user');
         }
-      } catch (error) {
-        console.error('Auth check error:', error);
-      } finally {
-        setLoading(false);
       }
-    };
+      setUser(null);
+    }
+    
+    setLoading(false);
+  }, [session, status]);
 
-    checkAuth();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        await ensureUserProfile(session.user);
-        setUser(session.user);
-        localStorage.setItem('current_user', JSON.stringify(session.user));
-      } else if (event === 'SIGNED_OUT') {
-        setUser(null);
-        localStorage.removeItem('current_user');
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  // Ensure user has a profile in the database
-  const ensureUserProfile = async (user) => {
+  const login = async (email, password, rememberMe = false) => {
     try {
-      const { data: existingProfile, error: fetchError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle();
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+      });
 
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        console.error('Error fetching profile:', fetchError);
-        return;
+      if (result?.error) {
+        throw new Error(result.error);
       }
 
-      if (!existingProfile) {
-        // Create profile for new user
-        const { error } = await supabase
-          .from('profiles')
-          .insert([
-            {
-              id: user.id,
-              username: user.user_metadata?.username || user.email?.split('@')[0] || 'user',
-              email: user.email,
-              bankroll: 0,
-              challenge: null,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            }
-          ]);
-        
-        if (error && error.code !== '23505') { // Ignore duplicate key errors
-          console.error('Error creating profile:', error);
-        }
+      // Store email if remember me is checked
+      if (rememberMe) {
+        localStorage.setItem('remembered_email', email);
+      } else {
+        localStorage.removeItem('remembered_email');
       }
+
+      return { success: true };
     } catch (error) {
-      console.error('Error ensuring user profile:', error);
+      throw error;
     }
   };
 
-  const login = async (email, password) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    
-    if (error) throw error;
-    return data;
-  };
+  const signUp = async (email, password) => {
+    try {
+      // Create account via API
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-  const signUp = async (email, password, username) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          username: username
-        }
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Failed to create account');
       }
-    });
-    
-    if (error) throw error;
-    return data;
+
+      // Auto-login after signup
+      return await login(email, password);
+    } catch (error) {
+      throw error;
+    }
   };
 
   const logout = async () => {
-    await supabase.auth.signOut();
+    await signOut({ redirect: false });
     localStorage.removeItem('current_user');
     setUser(null);
+    router.push('/');
   };
 
   const value = {

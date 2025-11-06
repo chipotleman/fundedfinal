@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
-import { supabase } from '../lib/supabaseClient';
+import { signIn, useSession } from 'next-auth/react';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
@@ -21,7 +21,8 @@ export default function AuthPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const router = useRouter();
-  const { login, signUp } = useAuth();
+  const { login, signUp: signUpUser } = useAuth();
+  const { data: session } = useSession();
 
   // Password strength check
   const isPasswordStrong = password.length >= 6;
@@ -61,18 +62,16 @@ export default function AuthPage() {
           const challengeData = JSON.parse(purchasedChallenge);
           setSelectedChallenge(challengeData);
           // If user already authenticated, go straight to challenge start
-          supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session?.user) {
-              setStep('challenge');
-            }
-          });
+          if (session?.user) {
+            setStep('challenge');
+          }
         } catch (error) {
           console.error('Error loading purchased challenge:', error);
           localStorage.removeItem('purchased_challenge');
         }
       }
     }
-  }, []);
+  }, [session]);
 
   const challenges = [
     {
@@ -118,16 +117,9 @@ export default function AuthPage() {
     setError('');
     
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: provider,
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
+      await signIn(provider, {
+        callbackUrl: '/dashboard',
       });
-
-      if (error) {
-        throw error;
-      }
     } catch (error) {
       console.error('OAuth error:', error);
       setError(`Failed to sign in with ${provider}. Please try again.`);
@@ -158,53 +150,26 @@ export default function AuthPage() {
     setError('');
 
     try {
-      // Handle Remember Me functionality
-      if (rememberMe) {
-        localStorage.setItem('remembered_email', email.trim());
-      } else {
-        localStorage.removeItem('remembered_email');
-      }
-
       if (isSignUp) {
-        // Sign up with Supabase using email
-        const { data, error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password: password
-        });
-
-        if (error) {
-          throw error;
+        // Sign up with our API
+        await signUpUser(email.trim(), password);
+        
+        // Success - account created and logged in
+        setError('✅ Account created successfully!');
+        
+        // Store remember me preference
+        if (rememberMe) {
+          localStorage.setItem('remembered_email', email.trim());
         }
-
-        if (data.user) {
-          if (data.user.email_confirmed_at) {
-            // User is auto-confirmed, redirect to dashboard
-            router.push('/dashboard');
-          } else {
-            // User needs email confirmation
-            setError('✅ Account created successfully! Please check your email for a verification link.');
-            setStep('auth');
-            setIsSignUp(false);
-            // Clear form
-            setEmail('');
-            setPassword('');
-            setConfirmPassword('');
-          }
-        }
+        
+        // Redirect to dashboard after short delay
+        setTimeout(() => {
+          router.push('/dashboard');
+        }, 1000);
       } else {
         // Sign in
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password: password,
-        });
-
-        if (error) {
-          throw error;
-        }
-
-        if (data.user) {
-          router.push('/dashboard');
-        }
+        await login(email.trim(), password, rememberMe);
+        router.push('/dashboard');
       }
     } catch (error) {
       console.error('Auth error:', error);
@@ -212,13 +177,9 @@ export default function AuthPage() {
       // Handle network and configuration errors
       if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
         setError('Network error. Please check your internet connection and try again.');
-      } else if (error.message?.includes('Invalid API key') || error.message?.includes('Invalid URL')) {
-        setError('Configuration error. Please contact support.');
-      } else if (error.message?.includes('Invalid login credentials')) {
+      } else if (error.message?.includes('Invalid email or password')) {
         setError('Invalid email or password. Please try again.');
-      } else if (error.message?.includes('Email not confirmed')) {
-        setError('Please check your email and verify your account before signing in.');
-      } else if (error.message?.includes('User already registered')) {
+      } else if (error.message?.includes('Email already registered')) {
         setError('This email is already registered. Please sign in instead.');
       } else if (error.message?.includes('Unable to validate email')) {
         setError('Please enter a valid email address.');
@@ -240,25 +201,20 @@ export default function AuthPage() {
     setLoading(true);
 
     try {
-      // Get current user from Supabase session
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData?.session?.user?.id;
-
-      if (!userId) {
+      // Get current user from session
+      if (!session?.user?.id) {
         setError('You must be logged in to start a challenge.');
         setLoading(false);
         return;
       }
 
-      // Fetch current user profile data from Supabase
-      const { data: currentUser, error: fetchError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      const userId = session.user.id;
 
-      if (fetchError) throw fetchError;
-      if (!currentUser) throw new Error('User profile not found.');
+      // Fetch current user profile data from database
+      const response = await fetch(`/api/profiles/${userId}`);
+      if (!response.ok) throw new Error('User profile not found');
+      
+      const currentUser = await response.json();
 
       // Use selected package data or fallback to default challenge
       const challengeData = {
@@ -303,13 +259,16 @@ export default function AuthPage() {
         }
       };
 
-      // Update user profile in Supabase
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update(updatedUserProfile)
-        .eq('id', userId);
+      // Update user profile in database
+      const updateResponse = await fetch(`/api/profiles/${userId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedUserProfile),
+      });
 
-      if (updateError) throw updateError;
+      if (!updateResponse.ok) throw new Error('Failed to update profile');
 
       // Clear the purchased challenge from localStorage after successful save
       localStorage.removeItem('purchased_challenge');
