@@ -56,7 +56,10 @@ export default function BetaLanding({ onAuthenticated }) {
       <Head>
         <meta name="theme-color" content="#000000" />
       </Head>
-      <div className="min-h-screen relative overflow-hidden bg-black">
+      <div 
+        className="relative overflow-hidden bg-black transition-all duration-300"
+        style={{ minHeight: isInputFocused ? 'auto' : '100vh' }}
+      >
         <div className="absolute inset-0 opacity-20" style={{
         backgroundImage: "url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22m36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"
       }}></div>
@@ -85,9 +88,9 @@ export default function BetaLanding({ onAuthenticated }) {
       <div 
         className="flex items-center justify-center relative transition-all duration-300"
         style={{ 
-          minHeight: isInputFocused ? '50vh' : 'calc(100vh - 120px)',
-          paddingTop: isInputFocused ? '1rem' : '1.5rem',
-          paddingBottom: isInputFocused ? '1rem' : '1.5rem',
+          minHeight: isInputFocused ? '300px' : 'calc(100vh - 120px)',
+          paddingTop: isInputFocused ? '0.5rem' : '1.5rem',
+          paddingBottom: isInputFocused ? '0.5rem' : '1.5rem',
           paddingLeft: '1.5rem',
           paddingRight: '1.5rem'
         }}
@@ -190,6 +193,9 @@ export default function BetaLanding({ onAuthenticated }) {
                 </div>
                 <h2 className="text-2xl font-bold text-white mb-2">Enter Access Code</h2>
                 <p className="text-gray-400 text-sm">Have a beta access code? Enter it below</p>
+                {isInputFocused && (
+                  <p className="text-xs text-yellow-400 mt-2">🔍 Container shrunk for keyboard</p>
+                )}
               </div>
 
               {error && (
@@ -207,8 +213,14 @@ export default function BetaLanding({ onAuthenticated }) {
                       setPassword(e.target.value);
                       setError('');
                     }}
-                    onFocus={() => setIsInputFocused(true)}
-                    onBlur={() => setIsInputFocused(false)}
+                    onFocus={() => {
+                      console.log('Input focused - container should shrink');
+                      setIsInputFocused(true);
+                    }}
+                    onBlur={() => {
+                      console.log('Input blurred - container should expand');
+                      setIsInputFocused(false);
+                    }}
                     className="w-full px-4 py-4 bg-black border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all font-medium text-center text-lg tracking-widest"
                     placeholder="Enter access code"
                     required
