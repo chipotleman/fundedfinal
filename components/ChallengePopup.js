@@ -687,12 +687,12 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
       {/* Account Info Modal */}
       {showAccountInfo && (
-        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-900 border-2 border-slate-700 rounded-2xl max-w-md w-full p-6">
+        <div className="absolute inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-black border-2 border-gray-800 rounded-2xl max-w-md w-full p-6 relative">
             {/* Close Button */}
             <button
               onClick={() => setShowAccountInfo(false)}
-              className="absolute top-4 right-4 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
+              className="absolute top-4 right-4 w-8 h-8 bg-gray-900/70 hover:bg-gray-800 rounded-full flex items-center justify-center transition-colors"
             >
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -701,7 +701,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
             {/* Header */}
             <div className="text-center mb-6">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-green-500 rounded-full flex items-center justify-center mb-4 mx-auto">
+              <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mb-4 mx-auto">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                 </svg>
@@ -711,7 +711,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
             {/* Content */}
             <div className="space-y-4 text-gray-300">
-              <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+              <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-800">
                 <div className="flex items-start space-x-3">
                   <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -725,7 +725,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                 </div>
               </div>
 
-              <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+              <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-800">
                 <div className="flex items-start space-x-3">
                   <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -749,7 +749,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
             {/* Close Button */}
             <button
               onClick={() => setShowAccountInfo(false)}
-              className="w-full mt-6 bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
+              className="w-full mt-6 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
             >
               Got it!
             </button>
