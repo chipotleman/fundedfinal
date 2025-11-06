@@ -701,8 +701,8 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
             {/* Header */}
             <div className="text-center mb-6">
-              <div className="mb-4 flex justify-center">
-                <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-16" />
+              <div className="mb-4">
+                <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-20 mx-auto" />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">How Do I Get My Account?</h3>
             </div>
