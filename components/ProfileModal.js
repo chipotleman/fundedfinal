@@ -18,7 +18,7 @@ export default function ProfileModal({ profile, isOpen, onClose }) {
                 profile.tier === 'Pro' ? 'bg-blue-500/20 text-blue-400' :
                 'bg-green-500/20 text-green-400'
               }`}>
-                {profile.tier} Trader
+                {profile.tier} User
               </span>
             </div>
             <button
