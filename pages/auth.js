@@ -125,37 +125,10 @@ export default function AuthPage() {
 
     try {
       if (isSignUp) {
-        // Check if username already exists
-        try {
-          const { data: existingUser, error: checkUserError } = await supabase
-            .from('profiles')
-            .select('username')
-            .eq('username', username.trim())
-            .maybeSingle();
-
-          if (checkUserError) {
-            console.error('Error checking username:', checkUserError);
-          }
-
-          if (existingUser) {
-            setError('Username already exists. Please choose a different one.');
-            setLoading(false);
-            return;
-          }
-        } catch (profileError) {
-          console.warn('Could not check existing username:', profileError);
-          // Continue with signup even if profile check fails
-        }
-
         // Sign up with Supabase using email
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
-          password: password,
-          options: {
-            data: {
-              username: username.trim()
-            }
-          }
+          password: password
         });
 
         if (error) {
@@ -172,7 +145,6 @@ export default function AuthPage() {
             setStep('auth');
             setIsSignUp(false);
             // Clear form
-            setUsername('');
             setEmail('');
             setPassword('');
             setConfirmPassword('');

@@ -43,6 +43,11 @@ Piks is a Next.js-based sports betting platform that provides users with funded 
   - Updated error messages and confirmation text
   - Users now sign up and sign in with email + password
   - Email verification instead of SMS verification
+  - **Removed username requirement**: Users only need email and password to sign up
+  - **Added password strength indicators**:
+    - Green checkmark when password is 6+ characters
+    - Green checkmark when confirm password matches during signup
+    - Real-time visual feedback for better UX
 ### Mobile Menu Improvements
 - Changed menu icon to standard hamburger menu (three equal horizontal lines)
 - Menu icon disappears when menu opens - only one icon visible at a time (menu icon or X)
