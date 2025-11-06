@@ -9,7 +9,6 @@ import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function AuthPage() {
-  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,6 +21,10 @@ export default function AuthPage() {
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const router = useRouter();
   const { login, signUp } = useAuth();
+
+  // Password strength check
+  const isPasswordStrong = password.length >= 6;
+  const passwordsMatch = isSignUp && confirmPassword.length > 0 && password === confirmPassword;
 
   // Scroll to top when component mounts
   useEffect(() => {
@@ -104,11 +107,6 @@ export default function AuthPage() {
     // Validation
     if (!email.trim()) {
       setError('Please enter an email address');
-      return;
-    }
-
-    if (isSignUp && !username.trim()) {
-      setError('Please enter a username');
       return;
     }
 
@@ -518,23 +516,6 @@ export default function AuthPage() {
             )}
 
             <form onSubmit={handleAuth} className="space-y-6">
-              {isSignUp && ( // Only show username field during sign up
-                <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-3">
-                    Username
-                  </label>
-                  <input
-                    type="text"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    className="w-full px-4 py-3 sm:py-4 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium text-sm sm:text-base"
-                    placeholder="Create a username"
-                    minLength="3"
-                    required
-                  />
-                </div>
-              )}
-
               <div>
                 <label className="block text-sm font-semibold text-gray-300 mb-3">
                   Email Address
@@ -580,7 +561,11 @@ export default function AuthPage() {
                     )}
                   </button>
                 </div>
-                <p className="text-gray-400 text-xs mt-2">Minimum 6 characters required</p>
+                {password.length > 0 && (
+                  <p className={`text-xs mt-2 ${isPasswordStrong ? 'text-green-400' : 'text-gray-400'}`}>
+                    {isPasswordStrong ? '✓ Password is strong enough' : 'Minimum 6 characters required'}
+                  </p>
+                )}
               </div>
 
               {isSignUp && (
@@ -597,6 +582,11 @@ export default function AuthPage() {
                     minLength="6"
                     required
                   />
+                  {confirmPassword.length > 0 && (
+                    <p className={`text-xs mt-2 ${passwordsMatch ? 'text-green-400' : 'text-gray-400'}`}>
+                      {passwordsMatch ? '✓ Passwords match' : 'Passwords must match'}
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -621,14 +611,8 @@ export default function AuthPage() {
                 onClick={() => {
                   setIsSignUp(!isSignUp);
                   setError('');
-                  // Clear fields when switching modes if desired
-                  if (!isSignUp) { // Switching from sign in to sign up
-                    setUsername('');
-                    setConfirmPassword('');
-                  } else { // Switching from sign up to sign in
-                    setUsername(''); // Clear username if it's not needed for sign in
-                  }
-                  setPassword(''); // Always clear password
+                  setPassword('');
+                  setConfirmPassword('');
                 }}
                 className="text-green-400 hover:text-green-300 font-medium transition-colors text-sm sm:text-base"
               >
