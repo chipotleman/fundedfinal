@@ -1,48 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { supabase } from '../../lib/supabaseClient';
 
 export default function AuthCallback() {
   const router = useRouter();
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const handleCallback = async () => {
-      try {
-        const { code } = router.query;
-
-        if (code) {
-          // Exchange the code for a session (client-side)
-          const { data, error } = await supabase.auth.exchangeCodeForSession({ 
-            authCode: code 
-          });
-
-          if (error) {
-            console.error('OAuth callback error:', error);
-            setError('Authentication failed. Redirecting...');
-            setTimeout(() => router.push('/auth?error=oauth_failed'), 2000);
-            return;
-          }
-
-          if (data.session) {
-            // Successfully authenticated - redirect to dashboard
-            router.push('/dashboard');
-          }
-        } else {
-          // No code present, redirect to auth
-          router.push('/auth');
-        }
-      } catch (error) {
-        console.error('OAuth callback exception:', error);
-        setError('Something went wrong. Redirecting...');
-        setTimeout(() => router.push('/auth?error=oauth_exception'), 2000);
-      }
-    };
-
+    // NextAuth.js handles OAuth callbacks automatically via /api/auth/callback/[provider]
+    // This page is no longer needed with NextAuth.js, redirecting to auth page
     if (router.isReady) {
-      handleCallback();
+      router.push('/auth');
     }
-  }, [router.isReady, router.query]);
+  }, [router.isReady, router]);
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center">

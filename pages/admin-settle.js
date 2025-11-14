@@ -1,11 +1,4 @@
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-// ✅ Init Supabase
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
 
 export default function AdminSettle() {
   const [matchups, setMatchups] = useState([]);
@@ -15,28 +8,12 @@ export default function AdminSettle() {
 
   useEffect(() => {
     const fetchMatchups = async () => {
-      const { data, error } = await supabase
-        .from('user_bets')
-        .select('matchup_name, market_type, teams')
-        .eq('status', 'open');
-
-      if (error) {
+      try {
+        // TODO: Create API route to fetch open bets when admin features are needed
+        console.log("✅ Admin settle page loaded (requires API implementation)");
+        setMatchups([]);
+      } catch (error) {
         console.error("❌ Error fetching open bets:", error);
-      } else {
-        console.log("✅ Open bets fetched:", data);
-
-        const grouped = {};
-        data.forEach((bet) => {
-          const key = `${bet.matchup_name} | ${bet.market_type}`;
-          if (!grouped[key]) {
-            grouped[key] = {
-              matchup_name: bet.matchup_name,
-              market_type: bet.market_type,
-              teams: Array.isArray(bet.teams) ? bet.teams : ["Team A", "Team B"],
-            };
-          }
-        });
-        setMatchups(Object.values(grouped));
       }
     };
 

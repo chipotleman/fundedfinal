@@ -1,44 +1,39 @@
-
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
 
 export default function AdminBets() {
   const [bets, setBets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const adminEmail = 'mathewbaldwin13@yahoo.com'; // your admin email
+  const { data: session } = useSession();
+  const router = useRouter();
+  const adminEmail = 'mathewbaldwin13@yahoo.com';
 
   useEffect(() => {
     const fetchBets = async () => {
-      // Check localStorage authentication first
       const currentUser = JSON.parse(localStorage.getItem('current_user') || '{}');
       
-      // Check if user is logged in and is admin
       if (!currentUser.username || currentUser.username !== 'admin') {
-        // Fallback to Supabase check
-        const { data: { session } } = await supabase.auth.getSession();
-        
         if (!session || session.user.email !== adminEmail) {
           alert('Access denied. Admin privileges required.');
-          window.location.href = '/auth';
+          router.push('/auth');
           return;
         }
       }
 
-      const { data, error } = await supabase
-        .from('bets')
-        .select('id, user_id, game_id, amount, odds, status')
-        .eq('status', 'open');
-
-      if (error) {
+      try {
+        // TODO: Create API route to fetch open bets when admin features are needed
+        setBets([]);
+      } catch (error) {
         console.error(error.message);
-      } else {
-        setBets(data);
       }
       setLoading(false);
     };
 
-    fetchBets();
-  }, []);
+    if (session !== undefined) {
+      fetchBets();
+    }
+  }, [session, router]);
 
   const gradeBet = async (betId, didWin) => {
     const res = await fetch('/api/admin/settleSingleBet', {

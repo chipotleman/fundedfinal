@@ -1,0 +1,62 @@
+12:51:32.428 Running build in Washington, D.C., USA (East) – iad1
+12:51:32.429 Build machine configuration: 4 cores, 8 GB
+12:51:32.549 Cloning github.com/chipotleman/fundedfinal (Branch: main, Commit: 46cf8ae)
+12:51:33.800 Cloning completed: 1.251s
+12:51:33.907 Restored build cache from previous deployment (98jMTmKJwXwrKnwgFFnxDkFmZGwJ)
+12:51:34.484 Running "vercel build"
+12:51:34.897 Vercel CLI 48.9.2
+12:51:35.652 Installing dependencies...
+12:51:37.248 npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+12:51:37.248 npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+12:51:38.961 
+12:51:38.961 added 52 packages, and removed 18 packages in 3s
+12:51:38.961 
+12:51:38.961 138 packages are looking for funding
+12:51:38.961   run `npm fund` for details
+12:51:38.996 Detected Next.js version: 14.2.30
+12:51:39.004 Running "npm run build"
+12:51:39.147 
+12:51:39.148 > fundedfinal@1.0.0 build
+12:51:39.148 > next build
+12:51:39.148 
+12:51:40.382   ▲ Next.js 14.2.30
+12:51:40.382   - Environments: .env.local
+12:51:40.383 
+12:51:40.439    Creating an optimized production build ...
+12:51:40.973 > [PWA] Compile server
+12:51:40.974 > [PWA] Compile server
+12:51:40.975 > [PWA] Compile client (static)
+12:51:40.976 > [PWA] Auto register service worker with: /vercel/path0/node_modules/next-pwa/register.js
+12:51:40.976 > [PWA] Service worker: /vercel/path0/public/sw.js
+12:51:40.976 > [PWA]   url: /sw.js
+12:51:40.976 > [PWA]   scope: /
+12:51:49.026 Failed to compile.
+12:51:49.026 
+12:51:49.026 ./pages/admin-settle.js
+12:51:49.027 Module not found: Can't resolve '@supabase/supabase-js'
+12:51:49.027 
+12:51:49.027 https://nextjs.org/docs/messages/module-not-found
+12:51:49.027 
+12:51:49.027 ./pages/admin.js
+12:51:49.027 Module not found: Can't resolve '../lib/supabaseClient'
+12:51:49.027 
+12:51:49.027 https://nextjs.org/docs/messages/module-not-found
+12:51:49.027 
+12:51:49.027 ./pages/adminBets.js
+12:51:49.027 Module not found: Can't resolve '../lib/supabaseClient'
+12:51:49.027 
+12:51:49.027 https://nextjs.org/docs/messages/module-not-found
+12:51:49.027 
+12:51:49.028 ./pages/auth/callback.js
+12:51:49.028 Module not found: Can't resolve '../../lib/supabaseClient'
+12:51:49.028 
+12:51:49.028 https://nextjs.org/docs/messages/module-not-found
+12:51:49.028 
+12:51:49.028 ./pages/capper/[id].js
+12:51:49.028 Module not found: Can't resolve '../../lib/supabaseClient'
+12:51:49.028 
+12:51:49.028 https://nextjs.org/docs/messages/module-not-found
+12:51:49.028 
+12:51:49.028 
+12:51:49.029 > Build failed because of webpack errors
+12:51:49.092 Error: Command "npm run build" exited with 1

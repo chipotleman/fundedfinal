@@ -1,50 +1,43 @@
-// pages/admin.js
-
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
 
 export default function AdminPanel() {
   const [evaluations, setEvaluations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const adminEmail = 'mathewbaldwin13@yahoo.com'; // Update as needed
+  const { data: session } = useSession();
+  const router = useRouter();
+  const adminEmail = 'mathewbaldwin13@yahoo.com';
 
   useEffect(() => {
     const fetchData = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-
       if (!session || session.user.email !== adminEmail) {
         alert('Access denied.');
-        window.location.href = '/';
+        router.push('/');
         return;
       }
 
-      const { data, error } = await supabase
-        .from('evaluations')
-        .select('*');
-
-      if (error) {
+      try {
+        // TODO: Create API route to fetch evaluations when admin features are needed
+        setEvaluations([]);
+      } catch (error) {
         console.error(error.message);
-      } else {
-        setEvaluations(data);
       }
       setLoading(false);
     };
 
-    fetchData();
-  }, []);
+    if (session !== undefined) {
+      fetchData();
+    }
+  }, [session, router]);
 
   const markAsPaid = async (id) => {
-    const { error } = await supabase
-      .from('evaluations')
-      .update({ payout_status: 'paid', status: 'completed' })
-      .eq('id', id);
-
-    if (error) {
+    try {
+      // TODO: Create API route to update evaluation status when admin features are needed
+      alert('Admin feature requires API implementation');
+    } catch (error) {
       console.error(error.message);
       alert('Error marking as paid.');
-    } else {
-      alert('Marked as paid.');
-      location.reload();
     }
   };
 
