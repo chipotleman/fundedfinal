@@ -53,25 +53,9 @@ export default function Profile() {
     e.preventDefault();
     
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .update({
-          username: formData.username,
-          bio: formData.bio,
-          avatar_url: formData.avatar_url
-        })
-        .eq('id', user.id)
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error updating profile:', error);
-        alert('Error updating profile');
-      } else {
-        setProfile(data);
-        setEditing(false);
-        alert('Profile updated successfully!');
-      }
+      // TODO: Implement profile update API when needed
+      alert('Profile editing will be available soon');
+      setEditing(false);
     } catch (error) {
       console.error('Error:', error);
       alert('Error updating profile');
