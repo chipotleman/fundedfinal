@@ -1,20 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { useSession, signOut } from 'next-auth/react';
 
 export default function ProfileDrawer() {
   const [open, setOpen] = useState(false);
-  const [userEmail, setUserEmail] = useState<string>('');
+  const { data: session } = useSession();
   const drawerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user?.email) {
-        setUserEmail(session.user.email);
-      }
-    };
-    fetchUser();
-
     const handleClickOutside = (e: MouseEvent) => {
       if (drawerRef.current && !drawerRef.current.contains(e.target as Node)) {
         setOpen(false);
@@ -25,9 +17,11 @@ export default function ProfileDrawer() {
   }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    window.location.href = '/login';
+    await signOut({ redirect: false });
+    window.location.href = '/auth';
   };
+
+  const userEmail = session?.user?.email || '';
 
   return (
     <div

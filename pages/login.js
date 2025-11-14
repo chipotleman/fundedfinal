@@ -20,14 +20,8 @@ export default function Login() {
       fontFamily: "sans-serif",
       flexDirection: "column"
     }}>
-      <h1 style={{ color: "#a020f0", marginBottom: "20px" }}>Login to RollrFunded</h1>
-      <Auth
-        supabaseClient={supabase}
-        appearance={{ theme: ThemeSupa }}
-        theme="dark"
-        providers={[]}
-        magicLink
-      />
+      <h1 style={{ color: "#a020f0", marginBottom: "20px" }}>Redirecting to Login...</h1>
+      <div className="w-16 h-16 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto"></div>
     </div>
   );
 }
