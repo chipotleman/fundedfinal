@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { supabase } from '../lib/supabaseClient';
 import TopNavbar from '../components/TopNavbar';
 import { useBetSlip } from '../contexts/BetSlipContext';
 

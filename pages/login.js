@@ -1,24 +1,12 @@
-// pages/login.js
-
 import { useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { useRouter } from 'next/router';
 
 export default function Login() {
   const router = useRouter();
 
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
-        router.push('/dashboard');
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    // Redirect to new auth page (NextAuth.js)
+    router.push('/auth');
   }, [router]);
 
   return (

@@ -1,6 +1,6 @@
-
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
 import { useBetSlip } from '../contexts/BetSlipContext';
 
@@ -15,56 +15,32 @@ export default function Profile() {
     avatar_url: ''
   });
   const { betSlip } = useBetSlip();
+  const { data: session } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
     fetchProfile();
-  }, []);
+  }, [session]);
 
   const fetchProfile = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
       if (session?.user) {
         setUser(session.user);
         
-        // Fetch or create profile
-        const { data: profileData, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (error && error.code === 'PGRST116') {
-          // Profile doesn't exist, create one
-          const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .insert([{
-              id: session.user.id,
-              username: session.user.email?.split('@')[0] || 'User',
-              bio: '',
-              avatar_url: ''
-            }])
-            .select()
-            .single();
-
-          if (createError) {
-            console.error('Error creating profile:', createError);
-          } else {
-            setProfile(newProfile);
-            setFormData({
-              username: newProfile.username,
-              bio: newProfile.bio || '',
-              avatar_url: newProfile.avatar_url || ''
-            });
-          }
-        } else if (!error) {
-          setProfile(profileData);
-          setFormData({
-            username: profileData.username,
-            bio: profileData.bio || '',
-            avatar_url: profileData.avatar_url || ''
-          });
-        }
+        // TODO: Fetch profile from API route when needed
+        const mockProfile = {
+          id: session.user.id,
+          username: session.user.email?.split('@')[0] || 'User',
+          bio: '',
+          avatar_url: ''
+        };
+        
+        setProfile(mockProfile);
+        setFormData({
+          username: mockProfile.username,
+          bio: mockProfile.bio || '',
+          avatar_url: mockProfile.avatar_url || ''
+        });
       }
     } catch (error) {
       console.error('Error fetching profile:', error);

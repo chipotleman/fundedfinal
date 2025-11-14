@@ -1,7 +1,5 @@
-
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { supabase } from '../lib/supabaseClient';
 
 export default function Withdraw() {
   const [selectedMethod, setSelectedMethod] = useState('');
