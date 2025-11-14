@@ -19,9 +19,9 @@ None documented yet.
 - **Framework**: Next.js 14.2.30
 - **Styling**: Tailwind CSS
 - **State Management**: React Context (AuthContext, BetSlipContext, UserProfilesContext)
-- **Authentication**: NextAuth.js v4 with multiple providers:
-  - Credentials provider (email/password with bcrypt hashing)
-  - OAuth providers (Google, Apple, Facebook - configurable via environment variables)
+- **Authentication**: NextAuth.js v4 with email/password authentication
+  - Credentials provider (email/password with bcrypt hashing) - **Active**
+  - OAuth providers (Google, Apple, Facebook) - **Disabled** until API credentials are configured
   - JWT-based sessions with 7-day expiry
   - "Remember Me" functionality saves user emails locally
 - **Database ORM**: Drizzle ORM with @neondatabase/serverless driver
@@ -53,7 +53,27 @@ None documented yet.
   - `/api/auth/signup` - User registration endpoint
 
 ## Recent Changes
-- **November 2025**: Migrated from Supabase to Replit PostgreSQL + NextAuth.js for improved control and Replit integration
+- **November 14, 2025**: 
+  - ✅ Complete Supabase migration to NextAuth + PostgreSQL
+  - ✅ OAuth buttons removed from UI (prevents 500 errors until credentials configured)
+  - ✅ Production build verified and ready for Vercel deployment
+  - Non-essential features stubbed for future implementation (admin panels, marketplace, profile editing)
+
+## OAuth Setup (Optional)
+OAuth sign-in is currently disabled. To enable Google, Apple, or Facebook sign-in:
+
+1. **Add environment secrets** for the provider(s) you want:
+   - Google: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+   - Apple: `APPLE_ID`, `APPLE_SECRET`
+   - Facebook: `FACEBOOK_CLIENT_ID`, `FACEBOOK_CLIENT_SECRET`
+
+2. **Add NEXTAUTH_SECRET**: Required for NextAuth.js session encryption
+   - Generate with: `openssl rand -base64 32`
+
+3. **Restore OAuth buttons** in `pages/auth.js` (currently commented out around line 433)
+
+4. **Configure OAuth apps** with your providers and add redirect URLs:
+   - Callback URL format: `https://your-domain.com/api/auth/callback/[provider]`
 
 ## External Dependencies
 - **Authentication**: NextAuth.js v4
