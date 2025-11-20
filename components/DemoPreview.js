@@ -681,7 +681,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                     Start Betting for Real
                   </Link>
                   <p className="text-center text-gray-400 text-sm mt-2">
-                    Get funded up to $50K
+                    Get funded up to $100K
                   </p>
                 </div>
               </div>
