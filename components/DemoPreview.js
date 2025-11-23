@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import BetReceipt from './BetReceipt';
 
@@ -12,6 +12,11 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
   const [showDetailedStats, setShowDetailedStats] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [currentReceipt, setCurrentReceipt] = useState(null);
+
+  // Sync bet count with parent component
+  useEffect(() => {
+    setDemoBetSlipCount?.(selectedBets.length);
+  }, [selectedBets.length, setDemoBetSlipCount]);
 
   const mockGames = [
     {
@@ -91,7 +96,6 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
         if (newBets.length === 0) {
           setShowDemoBetSlip(false);
         }
-        setDemoBetSlipCount?.(newBets.length);
         return newBets;
       }
 
@@ -102,13 +106,11 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
           !(bet.gameId === newBet.gameId && bet.betType === newBet.betType)
         );
         const finalBets = [...filteredBets, newBet];
-        setDemoBetSlipCount?.(finalBets.length);
         return finalBets;
       }
 
       // Add the new bet
       const finalBets = [...prev, newBet];
-      setDemoBetSlipCount?.(finalBets.length);
       return finalBets;
     });
   };
@@ -131,7 +133,6 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
       if (newBets.length === 0) {
         setShowDemoBetSlip(false);
       }
-      setDemoBetSlipCount?.(newBets.length);
       return newBets;
     });
   };
@@ -168,19 +169,18 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
   const clearAllBets = () => {
     setSelectedBets([]);
     setShowDemoBetSlip(false);
-    setDemoBetSlipCount?.(0);
   };
 
   return (
     <div className="bg-black py-4 relative" data-demo-section>
       {/* Demo Challenge Dashboard - Floating responsive */}
       {showDemoBetSlip && (
-        <div className="fixed inset-0 z-50 lg:inset-auto lg:top-0 lg:right-8 lg:bottom-0 lg:w-[480px]">
+        <div className="fixed inset-0 z-50 lg:inset-auto lg:top-4 lg:right-8 lg:bottom-4 lg:w-[480px]">
           {/* Mobile Overlay */}
           <div className="fixed inset-0 bg-black/80 lg:hidden" onClick={() => setShowDemoBetSlip(false)}></div>
 
-          {/* Challenge Dashboard Panel - Full screen mobile, full height desktop */}
-          <div className="absolute inset-0 lg:relative bg-black border-0 lg:border border-slate-700 rounded-none lg:rounded-none shadow-2xl lg:h-full w-full lg:w-[480px] flex flex-col">
+          {/* Challenge Dashboard Panel - Full screen mobile, sticky desktop */}
+          <div className="absolute inset-0 lg:relative bg-black border-0 lg:border border-slate-700 rounded-none lg:rounded-xl shadow-2xl lg:h-full w-full lg:w-[480px] flex flex-col">
             <div className="flex-shrink-0 p-3 lg:p-3 border-b border-slate-700">
               <div className="flex items-center justify-between">
                 <h3 className="text-white font-bold text-lg">Demo Bet Slip</h3>
