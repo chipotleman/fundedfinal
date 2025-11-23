@@ -652,38 +652,8 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
 
                 {/* Demo Balance */}
                 <div className="bg-slate-700/30 rounded-xl p-4 mb-6">
-                  <div className="text-gray-400 text-sm mb-2">Demo Balance</div>
-                  <div className="text-2xl font-bold text-green-400 mb-4">${demoBalance.toLocaleString()}</div>
-                  
-                  {/* Balance Controls */}
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-3 gap-2">
-                      <button
-                        onClick={() => setDemoBalance(prev => prev + 1000)}
-                        className="bg-green-600/20 hover:bg-green-600/30 border border-green-600/50 text-green-400 text-xs font-medium py-2 px-2 rounded-lg transition-all duration-200"
-                      >
-                        +$1K
-                      </button>
-                      <button
-                        onClick={() => setDemoBalance(prev => prev + 5000)}
-                        className="bg-green-600/20 hover:bg-green-600/30 border border-green-600/50 text-green-400 text-xs font-medium py-2 px-2 rounded-lg transition-all duration-200"
-                      >
-                        +$5K
-                      </button>
-                      <button
-                        onClick={() => setDemoBalance(prev => prev + 10000)}
-                        className="bg-green-600/20 hover:bg-green-600/30 border border-green-600/50 text-green-400 text-xs font-medium py-2 px-2 rounded-lg transition-all duration-200"
-                      >
-                        +$10K
-                      </button>
-                    </div>
-                    <button
-                      onClick={() => setDemoBalance(10000)}
-                      className="w-full bg-slate-600/30 hover:bg-slate-600/50 border border-slate-600 text-gray-300 text-xs font-medium py-2 px-3 rounded-lg transition-all duration-200"
-                    >
-                      Reset to $10,000
-                    </button>
-                  </div>
+                  <div className="text-gray-400 text-sm">Demo Balance</div>
+                  <div className="text-2xl font-bold text-green-400">${demoBalance.toLocaleString()}</div>
                 </div>
 
                 <div className="space-y-4 text-sm text-gray-300">
