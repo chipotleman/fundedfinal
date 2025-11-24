@@ -67,18 +67,18 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
         <>
           {/* Transparent backdrop - click outside menu to close */}
           <div 
-            className="fixed inset-0 z-[59]"
+            className="fixed inset-0 lg:hidden z-[59]"
             onClick={onClose}
           />
           
           {/* Black background cover - stays fixed */}
           <div 
-            className="fixed inset-0 right-0 left-auto w-64 lg:w-80 bg-black z-[59]"
+            className="fixed inset-0 right-0 left-auto w-64 bg-black lg:hidden z-[59]"
           />
           
           {/* Menu drawer - appears instantly when open */}
           <div 
-            className="fixed inset-0 right-0 left-auto w-64 lg:w-80 bg-black shadow-xl z-[60] overflow-hidden border-l border-slate-700"
+            className="fixed inset-0 right-0 left-auto w-64 bg-black shadow-xl lg:hidden z-[60] overflow-hidden"
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
