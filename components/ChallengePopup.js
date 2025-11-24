@@ -249,8 +249,8 @@ export default function ChallengePopup({ isOpen, onClose }) {
   const buttonColors = getButtonColors();
 
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
-      <div className={`relative border-2 border-slate-700 rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto transition-all duration-700 ${getBackgroundGradient()}`}>
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[9999] p-4" style={{ WebkitBackfaceVisibility: 'hidden', perspective: '1000px' }}>
+      <div className={`relative border-2 border-slate-700 rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto transition-all duration-700 z-[10000] ${getBackgroundGradient()}`} style={{ WebkitBackfaceVisibility: 'hidden', perspective: '1000px' }}>
         {/* Close Button - Always visible */}
         <button
           onClick={onClose}
