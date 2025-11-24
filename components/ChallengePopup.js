@@ -174,9 +174,23 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
   const adjustedPrice = Math.round(currentChallenge.price * priceMultiplier);
 
+  // Get background gradient based on selected challenge
+  const getBackgroundGradient = () => {
+    switch(currentIndex) {
+      case 0: // Starter Challenge - Blue theme
+        return 'bg-gradient-to-br from-blue-950 via-slate-950 to-black';
+      case 1: // Pro Challenge - Green theme
+        return 'bg-gradient-to-br from-green-950 via-slate-950 to-black';
+      case 2: // Elite Challenge - Purple theme
+        return 'bg-gradient-to-br from-purple-950 via-slate-950 to-black';
+      default:
+        return 'bg-black';
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
-      <div className="relative bg-black border-2 border-slate-700 rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className={`relative border-2 border-slate-700 rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto transition-all duration-700 ${getBackgroundGradient()}`}>
         {/* Close Button - Always visible */}
         <button
           onClick={onClose}
