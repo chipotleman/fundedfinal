@@ -188,6 +188,38 @@ export default function ChallengePopup({ isOpen, onClose }) {
     }
   };
 
+  // Get profit split colors based on selected challenge
+  const getProfitSplitColors = () => {
+    switch(currentIndex) {
+      case 0: // Starter Challenge - Blue theme
+        return {
+          container: 'bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/30',
+          userBar: 'bg-gradient-to-r from-blue-400 to-blue-500',
+          userText: 'text-blue-300'
+        };
+      case 1: // Pro Challenge - Green theme
+        return {
+          container: 'bg-gradient-to-r from-green-500/10 to-blue-500/10 border-green-500/30',
+          userBar: 'bg-gradient-to-r from-green-400 to-green-500',
+          userText: 'text-green-300'
+        };
+      case 2: // Elite Challenge - Purple theme
+        return {
+          container: 'bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/30',
+          userBar: 'bg-gradient-to-r from-purple-400 to-purple-500',
+          userText: 'text-purple-300'
+        };
+      default:
+        return {
+          container: 'bg-gradient-to-r from-green-500/10 to-blue-500/10 border-green-500/30',
+          userBar: 'bg-gradient-to-r from-green-400 to-green-500',
+          userText: 'text-green-300'
+        };
+    }
+  };
+
+  const splitColors = getProfitSplitColors();
+
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
       <div className={`relative border-2 border-slate-700 rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto transition-all duration-700 ${getBackgroundGradient()}`}>
@@ -331,7 +363,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
               </div>
 
               {/* Profit Split */}
-              <div className="p-4 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/30 mb-4 relative">
+              <div className={`p-4 rounded-2xl border mb-4 relative transition-all duration-700 ${splitColors.container}`}>
                 {/* Reset Button */}
                 <button
                   onClick={() => setUserSplit(80)}
@@ -393,7 +425,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   }}
                 >
                   <div
-                    className="bg-gradient-to-r from-green-400 to-green-500 flex items-center justify-center text-white text-xs font-bold transition-all duration-150"
+                    className={`${splitColors.userBar} flex items-center justify-center text-white text-xs font-bold transition-all duration-150`}
                     style={{ width: `${userSplit}%` }}
                   >
                     You {userSplit}%
