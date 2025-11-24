@@ -174,83 +174,9 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
   const adjustedPrice = Math.round(currentChallenge.price * priceMultiplier);
 
-  // Get background gradient based on selected challenge
-  const getBackgroundGradient = () => {
-    switch(currentIndex) {
-      case 0: // Starter Challenge - Blue theme
-        return 'bg-gradient-to-br from-blue-950 via-slate-950 to-black';
-      case 1: // Pro Challenge - Green theme
-        return 'bg-gradient-to-br from-green-950 via-slate-950 to-black';
-      case 2: // Elite Challenge - Purple theme
-        return 'bg-gradient-to-br from-purple-950 via-slate-950 to-black';
-      default:
-        return 'bg-black';
-    }
-  };
-
-  // Get profit split colors based on selected challenge
-  const getProfitSplitColors = () => {
-    switch(currentIndex) {
-      case 0: // Starter Challenge - Blue theme
-        return {
-          container: 'bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/30',
-          userBar: 'bg-gradient-to-r from-blue-400 to-blue-500',
-          userText: 'text-blue-300'
-        };
-      case 1: // Pro Challenge - Green theme
-        return {
-          container: 'bg-gradient-to-r from-green-500/10 to-blue-500/10 border-green-500/30',
-          userBar: 'bg-gradient-to-r from-green-400 to-green-500',
-          userText: 'text-green-300'
-        };
-      case 2: // Elite Challenge - Purple theme
-        return {
-          container: 'bg-gradient-to-r from-purple-500/10 to-pink-500/10 border-purple-500/30',
-          userBar: 'bg-gradient-to-r from-purple-400 to-purple-500',
-          userText: 'text-purple-300'
-        };
-      default:
-        return {
-          container: 'bg-gradient-to-r from-green-500/10 to-blue-500/10 border-green-500/30',
-          userBar: 'bg-gradient-to-r from-green-400 to-green-500',
-          userText: 'text-green-300'
-        };
-    }
-  };
-
-  const splitColors = getProfitSplitColors();
-
-  // Get button colors based on selected challenge
-  const getButtonColors = () => {
-    switch(currentIndex) {
-      case 0: // Starter Challenge - Blue theme
-        return {
-          button: 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600',
-          indicator: 'bg-blue-400'
-        };
-      case 1: // Pro Challenge - Green theme
-        return {
-          button: 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600',
-          indicator: 'bg-green-400'
-        };
-      case 2: // Elite Challenge - Purple theme
-        return {
-          button: 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600',
-          indicator: 'bg-purple-400'
-        };
-      default:
-        return {
-          button: 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600',
-          indicator: 'bg-green-400'
-        };
-    }
-  };
-
-  const buttonColors = getButtonColors();
-
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
-      <div className={`relative border-2 border-slate-700 rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto transition-all duration-700 ${getBackgroundGradient()}`}>
+      <div className="relative bg-black border-2 border-slate-700 rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto">
         {/* Close Button - Always visible */}
         <button
           onClick={onClose}
@@ -391,7 +317,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
               </div>
 
               {/* Profit Split */}
-              <div className={`p-4 rounded-2xl border mb-4 relative transition-all duration-700 ${splitColors.container}`}>
+              <div className="p-4 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/30 mb-4 relative">
                 {/* Reset Button */}
                 <button
                   onClick={() => setUserSplit(80)}
@@ -453,7 +379,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   }}
                 >
                   <div
-                    className={`${splitColors.userBar} flex items-center justify-center text-white text-xs font-bold transition-all duration-150`}
+                    className="bg-gradient-to-r from-green-400 to-green-500 flex items-center justify-center text-white text-xs font-bold transition-all duration-150"
                     style={{ width: `${userSplit}%` }}
                   >
                     You {userSplit}%
@@ -494,7 +420,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
               {/* Action Button */}
               <button
                 onClick={handleNext}
-                className={`w-full ${buttonColors.button} text-white font-bold py-3 px-6 rounded-xl shadow-2xl mb-4 transform hover:scale-105 transition-all duration-300`}
+                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-2xl mb-4 transform hover:scale-105 transition-all duration-300"
               >
                 Next - Get Set Up (${adjustedPrice})
               </button>
@@ -504,8 +430,8 @@ export default function ChallengePopup({ isOpen, onClose }) {
                 {challenges.map((_, index) => (
                   <div
                     key={index}
-                    className={`w-2 h-2 rounded-full transition-colors duration-700 ${
-                      index === currentIndex ? buttonColors.indicator : 'bg-gray-600'
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      index === currentIndex ? 'bg-green-400' : 'bg-gray-600'
                     }`}
                   />
                 ))}
