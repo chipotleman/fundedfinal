@@ -220,6 +220,34 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
   const splitColors = getProfitSplitColors();
 
+  // Get button colors based on selected challenge
+  const getButtonColors = () => {
+    switch(currentIndex) {
+      case 0: // Starter Challenge - Blue theme
+        return {
+          button: 'bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600',
+          indicator: 'bg-blue-400'
+        };
+      case 1: // Pro Challenge - Green theme
+        return {
+          button: 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600',
+          indicator: 'bg-green-400'
+        };
+      case 2: // Elite Challenge - Purple theme
+        return {
+          button: 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600',
+          indicator: 'bg-purple-400'
+        };
+      default:
+        return {
+          button: 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600',
+          indicator: 'bg-green-400'
+        };
+    }
+  };
+
+  const buttonColors = getButtonColors();
+
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
       <div className={`relative border-2 border-slate-700 rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto transition-all duration-700 ${getBackgroundGradient()}`}>
@@ -466,7 +494,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
               {/* Action Button */}
               <button
                 onClick={handleNext}
-                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-2xl mb-4 transform hover:scale-105 transition-all duration-300"
+                className={`w-full ${buttonColors.button} text-white font-bold py-3 px-6 rounded-xl shadow-2xl mb-4 transform hover:scale-105 transition-all duration-300`}
               >
                 Next - Get Set Up (${adjustedPrice})
               </button>
@@ -476,8 +504,8 @@ export default function ChallengePopup({ isOpen, onClose }) {
                 {challenges.map((_, index) => (
                   <div
                     key={index}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      index === currentIndex ? 'bg-green-400' : 'bg-gray-600'
+                    className={`w-2 h-2 rounded-full transition-colors duration-700 ${
+                      index === currentIndex ? buttonColors.indicator : 'bg-gray-600'
                     }`}
                   />
                 ))}
