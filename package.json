@@ -13,7 +13,6 @@
     "@neondatabase/serverless": "^1.0.2",
     "@types/bcryptjs": "^2.4.6",
     "bcryptjs": "^3.0.3",
-    "daisyui": "^5.5.5",
     "drizzle-kit": "^0.31.6",
     "drizzle-orm": "^0.44.7",
     "html2canvas": "^1.4.1",
