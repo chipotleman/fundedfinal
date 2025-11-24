@@ -160,49 +160,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
               </Link>
             </div>
 
-            {/* Desktop Navigation - Show different links based on auth status */}
-            <div className="hidden lg:flex items-center space-x-8">
-              {isLoggedIn ? (
-                <>
-                  <Link href="/dashboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Dashboard
-                  </Link>
-                  <Link href="/bet-history" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Bet History
-                  </Link>
-                  <Link href="/demo" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Free Trial
-                  </Link>
-                  <button onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    How It Works
-                  </button>
-                  <Link href="/waitlist" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Piks Card
-                  </Link>
-                  <Link href="/promos" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Promos
-                  </Link>
-                  <Link href="/leaderboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Leaderboard
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link href="/demo" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Free Trial
-                  </Link>
-                  <button onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    How It Works
-                  </button>
-                  <Link href="/waitlist" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Piks Card
-                  </Link>
-                  <Link href="/leaderboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Leaderboard
-                  </Link>
-                </>
-              )}
-            </div>
+            {/* Desktop Navigation - Hidden, now using side panel menu */}
 
             {/* Right Side - Desktop: Bankroll + Bet Slip + Buttons, Mobile: Hamburger + Bet Slip */}
             <div className="flex items-center space-x-2 sm:space-x-4 absolute right-3 sm:relative sm:right-0">
@@ -279,14 +237,14 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                 )}
               </div>
 
-              {/* Mobile Menu Toggle - Menu Icon (only visible when menu is closed) */}
+              {/* Menu Toggle - Hamburger Icon (visible on all screen sizes when menu is closed) */}
               {!showMobileMenu && (
                 <button
                   onClick={toggleMobileMenu}
-                  className="lg:hidden"
+                  className="text-gray-300 hover:text-white transition-colors"
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
-                  <svg className="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                     <path d="M3 7h18M3 12h18M3 17h18" />
                   </svg>
                 </button>
