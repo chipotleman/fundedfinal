@@ -1,8 +1,5 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import GoogleProvider from "next-auth/providers/google";
-import AppleProvider from "next-auth/providers/apple";
-import FacebookProvider from "next-auth/providers/facebook";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { db } from "./db";
 import { users, profiles } from "../shared/schema";
@@ -49,34 +46,6 @@ export const authOptions: NextAuthOptions = {
         };
       },
     }),
-
-    // OAuth Providers (configure these in environment variables when ready)
-    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
-      ? [
-          GoogleProvider({
-            clientId: process.env.GOOGLE_CLIENT_ID,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-          }),
-        ]
-      : []),
-
-    ...(process.env.APPLE_ID && process.env.APPLE_SECRET
-      ? [
-          AppleProvider({
-            clientId: process.env.APPLE_ID,
-            clientSecret: process.env.APPLE_SECRET,
-          }),
-        ]
-      : []),
-
-    ...(process.env.FACEBOOK_CLIENT_ID && process.env.FACEBOOK_CLIENT_SECRET
-      ? [
-          FacebookProvider({
-            clientId: process.env.FACEBOOK_CLIENT_ID,
-            clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
-          }),
-        ]
-      : []),
   ],
   
   session: {
