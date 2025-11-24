@@ -260,7 +260,11 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[9999] p-4" style={{ WebkitBackfaceVisibility: 'hidden', perspective: '1000px' }}>
-      <div className="relative border-2 border-slate-700 rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto transition-all duration-700 z-[10000]" style={{ ...gradientStyle, WebkitBackfaceVisibility: 'hidden', perspective: '1000px', backfaceVisibility: 'hidden', WebkitTapHighlightColor: 'transparent', WebkitTextFillColor: 'inherit' }}>
+      {/* Background layer - fixed gradient */}
+      <div className="absolute inset-0 rounded-3xl border-2 border-slate-700 max-w-md w-full max-h-[90vh] pointer-events-none" style={{ ...gradientStyle, WebkitBackfaceVisibility: 'hidden' }}></div>
+      
+      {/* Content layer - scrollable */}
+      <div className="relative border-2 border-slate-700 rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto transition-all duration-700 z-[10000]" style={{ background: 'transparent', WebkitBackfaceVisibility: 'hidden', perspective: '1000px', backfaceVisibility: 'hidden', WebkitTapHighlightColor: 'transparent', WebkitTextFillColor: 'inherit' }}>
         {/* Close Button - Always visible */}
         <button
           onClick={onClose}
