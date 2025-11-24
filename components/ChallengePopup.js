@@ -178,21 +178,13 @@ export default function ChallengePopup({ isOpen, onClose }) {
   const getBackgroundGradient = () => {
     switch(currentIndex) {
       case 0: // Starter Challenge - Blue theme
-        return {
-          background: 'linear-gradient(to bottom right, rgb(30, 27, 75), rgb(15, 23, 42), rgb(0, 0, 0))'
-        };
+        return 'bg-gradient-to-br from-blue-950 via-slate-950 to-black';
       case 1: // Pro Challenge - Green theme
-        return {
-          background: 'linear-gradient(to bottom right, rgb(20, 83, 45), rgb(15, 23, 42), rgb(0, 0, 0))'
-        };
+        return 'bg-gradient-to-br from-green-950 via-slate-950 to-black';
       case 2: // Elite Challenge - Purple theme
-        return {
-          background: 'linear-gradient(to bottom right, rgb(88, 28, 135), rgb(15, 23, 42), rgb(0, 0, 0))'
-        };
+        return 'bg-gradient-to-br from-purple-950 via-slate-950 to-black';
       default:
-        return {
-          background: 'rgb(0, 0, 0)'
-        };
+        return 'bg-black';
     }
   };
 
@@ -256,15 +248,9 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
   const buttonColors = getButtonColors();
 
-  const gradientStyle = getBackgroundGradient();
-
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-[9999] p-4" style={{ WebkitBackfaceVisibility: 'hidden', perspective: '1000px' }}>
-      {/* Background layer - fixed gradient */}
-      <div className="absolute inset-0 rounded-3xl border-2 border-slate-700 max-w-md w-full max-h-[90vh] pointer-events-none" style={{ ...gradientStyle, WebkitBackfaceVisibility: 'hidden' }}></div>
-      
-      {/* Content layer - scrollable */}
-      <div className="relative border-2 border-slate-700 rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto transition-all duration-700 z-[10000]" style={{ background: 'transparent', WebkitBackfaceVisibility: 'hidden', perspective: '1000px', backfaceVisibility: 'hidden', WebkitTapHighlightColor: 'transparent', WebkitTextFillColor: 'inherit' }}>
+      <div className={`relative border-2 border-slate-700 rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto transition-all duration-700 z-[10000] ${getBackgroundGradient()}`} style={{ WebkitBackfaceVisibility: 'hidden', perspective: '1000px' }}>
         {/* Close Button - Always visible */}
         <button
           onClick={onClose}
