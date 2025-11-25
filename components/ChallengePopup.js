@@ -175,9 +175,58 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
   const adjustedPrice = Math.round(currentChallenge.price * priceMultiplier);
 
+  // Theme colors based on challenge badge
+  const getThemeColors = () => {
+    if (currentChallenge.badge === 'BEGINNER') {
+      return {
+        primary: 'blue',
+        border: 'border-blue-500',
+        borderLight: 'border-blue-400/50',
+        shadow: 'shadow-blue-400/20',
+        bg: 'bg-blue-500/20',
+        text: 'text-blue-400',
+        gradient: 'from-blue-500 to-blue-600',
+        gradientHover: 'hover:from-blue-600 hover:to-blue-700',
+        splitGradient: 'from-blue-500/10 to-blue-600/10',
+        splitBorder: 'border-blue-500/30',
+        splitBar: 'from-blue-400 to-blue-500'
+      };
+    } else if (currentChallenge.badge === 'POPULAR') {
+      return {
+        primary: 'green',
+        border: 'border-green-500',
+        borderLight: 'border-green-400/50',
+        shadow: 'shadow-green-400/20',
+        bg: 'bg-green-500/20',
+        text: 'text-green-400',
+        gradient: 'from-green-500 to-blue-500',
+        gradientHover: 'hover:from-green-600 hover:to-blue-600',
+        splitGradient: 'from-green-500/10 to-blue-500/10',
+        splitBorder: 'border-green-500/30',
+        splitBar: 'from-green-400 to-green-500'
+      };
+    } else {
+      return {
+        primary: 'purple',
+        border: 'border-purple-500',
+        borderLight: 'border-purple-400/50',
+        shadow: 'shadow-purple-400/20',
+        bg: 'bg-purple-500/20',
+        text: 'text-purple-400',
+        gradient: 'from-purple-500 to-purple-600',
+        gradientHover: 'hover:from-purple-600 hover:to-purple-700',
+        splitGradient: 'from-purple-500/10 to-purple-600/10',
+        splitBorder: 'border-purple-500/30',
+        splitBar: 'from-purple-400 to-purple-500'
+      };
+    }
+  };
+
+  const theme = getThemeColors();
+
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
-      <div className="relative bg-black border-2 border-slate-700 rounded-3xl max-w-md w-full max-h-[90vh] overflow-hidden">
+      <div className={`relative bg-black border-2 ${theme.border} rounded-3xl max-w-md w-full max-h-[90vh] overflow-hidden`}>
         {/* Close Button - Always visible */}
         <button
           onClick={onClose}
@@ -238,15 +287,15 @@ export default function ChallengePopup({ isOpen, onClose }) {
                 <div className="relative">
                   <div
                     onClick={() => setShowDropdown(!showDropdown)}
-                    className="flex justify-between items-center py-3 px-4 bg-slate-800/50 rounded-xl border-2 border-green-400/50 cursor-pointer hover:border-green-400 transition-all duration-300 shadow-lg shadow-green-400/20"
+                    className={`flex justify-between items-center py-3 px-4 bg-slate-800/50 rounded-xl border-2 ${theme.borderLight} cursor-pointer hover:${theme.border} transition-all duration-300 shadow-lg ${theme.shadow}`}
                   >
                     <div>
                       <span className="text-gray-300 font-medium text-sm">Starting Balance</span>
-                      <div className="text-xs text-green-400 font-medium">Click to change</div>
+                      <div className={`text-xs ${theme.text} font-medium`}>Click to change</div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className="text-green-400 font-bold">${currentChallenge.startingBalance.toLocaleString()}</span>
-                      <svg className={`w-4 h-4 text-green-400 transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <span className={`${theme.text} font-bold`}>${currentChallenge.startingBalance.toLocaleString()}</span>
+                      <svg className={`w-4 h-4 ${theme.text} transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
                     </div>
@@ -260,14 +309,14 @@ export default function ChallengePopup({ isOpen, onClose }) {
                           key={challenge.id}
                           onClick={() => handleChallengeSelect(index)}
                           className={`flex justify-between items-center py-3 px-4 cursor-pointer hover:bg-slate-700/50 transition-all duration-200 ${
-                            index === currentIndex ? 'bg-green-500/20 border-l-4 border-green-400' : ''
+                            index === currentIndex ? `${theme.bg} border-l-4 ${theme.border}` : ''
                           } ${index === 0 ? 'rounded-t-xl' : ''} ${index === challenges.length - 1 ? 'rounded-b-xl' : ''}`}
                         >
                           <div>
                             <span className="text-white font-medium text-sm">{challenge.name}</span>
                             <div className="text-xs text-gray-400">{challenge.badge} • ${challenge.price}</div>
                           </div>
-                          <span className="text-green-400 font-bold">${challenge.startingBalance.toLocaleString()}</span>
+                          <span className={`${theme.text} font-bold`}>${challenge.startingBalance.toLocaleString()}</span>
                         </div>
                       ))}
                     </div>
@@ -343,7 +392,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
               {/* Profit Split - Hidden when rules are expanded */}
               {!showRules && (
-                <div className="p-4 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/30 mb-4 relative">
+                <div className={`p-4 bg-gradient-to-r ${theme.splitGradient} rounded-2xl border ${theme.splitBorder} mb-4 relative`}>
                   {/* Reset Button */}
                   <button
                     onClick={() => setUserSplit(80)}
@@ -405,7 +454,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                     }}
                   >
                     <div
-                      className="bg-gradient-to-r from-green-400 to-green-500 flex items-center justify-center text-white text-xs font-bold transition-all duration-150"
+                      className={`bg-gradient-to-r ${theme.splitBar} flex items-center justify-center text-white text-xs font-bold transition-all duration-150`}
                       style={{ width: `${userSplit}%` }}
                     >
                       You {userSplit}%
@@ -428,7 +477,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                     {adjustedPrice !== currentChallenge.price && (
                       <div className="text-xs">
                         {userSplit < 80 ? (
-                          <span className="text-green-400">(-${currentChallenge.price - adjustedPrice})</span>
+                          <span className={theme.text}>(-${currentChallenge.price - adjustedPrice})</span>
                         ) : (
                           <span className="text-orange-400">(+${adjustedPrice - currentChallenge.price})</span>
                         )}
@@ -449,7 +498,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
               {/* Action Button */}
               <button
                 onClick={handleNext}
-                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-2xl mb-4 transform hover:scale-105 transition-all duration-300"
+                className={`w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} text-white font-bold py-3 px-6 rounded-xl shadow-2xl mb-4 transform hover:scale-105 transition-all duration-300`}
               >
                 Continue With {userSplit}% Split (${adjustedPrice})
               </button>
@@ -460,7 +509,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   <div
                     key={index}
                     className={`w-2 h-2 rounded-full transition-colors ${
-                      index === currentIndex ? 'bg-green-400' : 'bg-gray-600'
+                      index === currentIndex ? theme.text : 'bg-gray-600'
                     }`}
                   />
                 ))}
