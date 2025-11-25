@@ -206,6 +206,9 @@ export default function ChallengePopup({ isOpen, onClose }) {
             <div className="p-6 pt-8">
               {/* Header */}
               <div className="text-center mb-4">
+                <div className="mb-4">
+                  <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-16 mx-auto" />
+                </div>
                 <h2 className="text-xl font-bold text-white">Choose Your Challenge</h2>
               </div>
 
