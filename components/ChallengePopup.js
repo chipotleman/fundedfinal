@@ -61,6 +61,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
   const [termsAccepted, setTermsAccepted] = useState({ gambling: false, propFirm: false });
   const [showGamblingTerms, setShowGamblingTerms] = useState(false);
   const [showPropFirmTerms, setShowPropFirmTerms] = useState(false);
+  const [showRules, setShowRules] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -269,50 +270,68 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
                 {/* Challenge Rules */}
                 <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4">
-                  <div className="flex items-center justify-between mb-3">
+                  <div 
+                    className="flex items-center justify-between cursor-pointer"
+                    onClick={() => setShowRules(!showRules)}
+                  >
                     <h4 className="text-white font-semibold text-sm">Challenge Rules</h4>
-                    <button
-                      onClick={() => setShowTargetExplainer(true)}
-                      className="w-4 h-4 bg-blue-500 hover:bg-blue-400 rounded-full flex items-center justify-center transition-colors"
-                    >
-                      <span className="text-white text-xs font-bold">?</span>
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowTargetExplainer(true);
+                        }}
+                        className="w-4 h-4 bg-blue-500 hover:bg-blue-400 rounded-full flex items-center justify-center transition-colors"
+                      >
+                        <span className="text-white text-xs font-bold">?</span>
+                      </button>
+                      <svg 
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${showRules ? 'rotate-180' : ''}`} 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
                   </div>
                   
-                  <div className="space-y-2 text-xs">
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Pick Minimum</span>
-                      <span className="text-white font-medium">20 picks</span>
+                  {showRules && (
+                    <div className="space-y-2 text-xs mt-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Pick Minimum</span>
+                        <span className="text-white font-medium">20 picks</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Risk Range</span>
+                        <span className="text-white font-medium">1% - 5%</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Max Daily Loss</span>
+                        <span className="text-white font-medium">10%</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Max Drawdown</span>
+                        <span className="text-white font-medium">15%</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Profit Target (Phase 1 & 2)</span>
+                        <span className="text-green-400 font-medium">20%</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Pick Cashout Fee</span>
+                        <span className="text-white font-medium">10%</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Reward Split (After Phase 2)</span>
+                        <span className="text-blue-400 font-medium">90%</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-400">Same Game Parlays</span>
+                        <span className="text-green-400 font-medium">YES</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Risk Range</span>
-                      <span className="text-white font-medium">1% - 5%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Max Daily Loss</span>
-                      <span className="text-white font-medium">10%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Max Drawdown</span>
-                      <span className="text-white font-medium">15%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Profit Target (Phase 1 & 2)</span>
-                      <span className="text-green-400 font-medium">20%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Pick Cashout Fee</span>
-                      <span className="text-white font-medium">10%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Reward Split (After Phase 2)</span>
-                      <span className="text-blue-400 font-medium">90%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Same Game Parlays</span>
-                      <span className="text-green-400 font-medium">YES</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
 
