@@ -177,7 +177,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
-      <div className="relative bg-black border-2 border-slate-700 rounded-3xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-black border-2 border-slate-700 rounded-3xl max-w-md w-full max-h-[90vh] overflow-hidden">
         {/* Close Button - Always visible */}
         <button
           onClick={onClose}
