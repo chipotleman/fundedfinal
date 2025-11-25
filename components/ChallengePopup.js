@@ -239,9 +239,18 @@ export default function ChallengePopup({ isOpen, onClose }) {
   return (
     <div 
       className="challenge-popup-container fixed inset-0 bg-black/90 backdrop-blur-md flex items-start justify-center z-50 p-4 pt-10 overflow-y-auto"
+      style={{ touchAction: 'pan-y' }}
     >
       <div 
-        className={`relative bg-black border-2 ${theme.border} rounded-3xl max-w-md w-full my-auto`}
+        className={`popup-box relative bg-black border-2 ${theme.border} rounded-3xl max-w-md w-full my-auto`}
+        style={{ 
+          outline: 'none', 
+          WebkitTapHighlightColor: 'transparent',
+          WebkitAppearance: 'none',
+          willChange: 'transform',
+          transform: 'translateZ(0)',
+          isolation: 'isolate'
+        }}
       >
         {/* Close Button - Always visible */}
         <button
@@ -1153,12 +1162,58 @@ export default function ChallengePopup({ isOpen, onClose }) {
           -webkit-touch-callout: none;
           -webkit-user-select: none;
           user-select: none;
+          outline: none !important;
+        }
+        
+        .challenge-popup-container *:focus,
+        .challenge-popup-container *:active,
+        .challenge-popup-container *:focus-visible {
+          outline: none !important;
+          box-shadow: none !important;
         }
         
         .challenge-popup-container input,
         .challenge-popup-container textarea {
           -webkit-user-select: text;
           user-select: text;
+        }
+        
+        .challenge-popup-container input:focus,
+        .challenge-popup-container textarea:focus {
+          outline: none !important;
+        }
+        
+        /* Prevent Safari scroll indicator styling issues */
+        .challenge-popup-container::-webkit-scrollbar {
+          display: none;
+        }
+        
+        .challenge-popup-container {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        
+        /* Prevent any border/outline changes on interaction */
+        .challenge-popup-container > div {
+          border-color: inherit !important;
+        }
+        
+        /* Force popup box styling to persist on touch */
+        .popup-box {
+          -webkit-appearance: none !important;
+          -moz-appearance: none !important;
+          appearance: none !important;
+          border-radius: 1.5rem !important;
+          outline: none !important;
+          box-shadow: none !important;
+        }
+        
+        .popup-box:focus,
+        .popup-box:active,
+        .popup-box:focus-within {
+          outline: none !important;
+          box-shadow: none !important;
+          border-radius: 1.5rem !important;
         }
 
         .slider::-webkit-slider-thumb {
