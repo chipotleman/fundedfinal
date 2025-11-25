@@ -10,28 +10,80 @@ export default function BalanceModal({
   totalChallenges,
   progressPercent,
   challengeGoal,
-  startingBankroll 
+  startingBankroll,
+  themeColor = 'green'
 }) {
   const [activeTab, setActiveTab] = useState('overview');
 
   // Lock body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
       document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = 'unset';
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
+      window.scrollTo(0, parseInt(scrollY || '0') * -1);
     }
     
-    // Cleanup on unmount
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      document.body.style.overflow = '';
     };
   }, [isOpen]);
+
+  const getThemeColors = () => {
+    switch (themeColor) {
+      case 'blue':
+        return {
+          border: 'border-blue-500',
+          text: 'text-blue-400',
+          bg: 'bg-blue-500',
+          bgHover: 'hover:bg-blue-600',
+          bgLight: 'bg-blue-500/20',
+          gradient: 'from-blue-400 to-cyan-500',
+          ring: 'stroke-blue-400',
+          ringBg: 'stroke-blue-400/20'
+        };
+      case 'purple':
+        return {
+          border: 'border-purple-500',
+          text: 'text-purple-400',
+          bg: 'bg-purple-500',
+          bgHover: 'hover:bg-purple-600',
+          bgLight: 'bg-purple-500/20',
+          gradient: 'from-purple-400 to-pink-500',
+          ring: 'stroke-purple-400',
+          ringBg: 'stroke-purple-400/20'
+        };
+      default:
+        return {
+          border: 'border-green-500',
+          text: 'text-green-400',
+          bg: 'bg-green-500',
+          bgHover: 'hover:bg-green-600',
+          bgLight: 'bg-green-500/20',
+          gradient: 'from-green-400 to-emerald-500',
+          ring: 'stroke-green-400',
+          ringBg: 'stroke-green-400/20'
+        };
+    }
+  };
+
+  const theme = getThemeColors();
 
   if (!isOpen) return null;
 
   const challengeRequirements = [
-    '• Reach $25,000 profit target',
+    '• Reach profit target',
     '• Maximum 8% daily loss limit', 
     '• Minimum 10 betting days',
     '• No overnight positions on major events'
@@ -44,8 +96,14 @@ export default function BalanceModal({
   ];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex justify-center items-start pt-20 z-50 overflow-y-auto">
-      <div className="relative bg-slate-900 rounded-2xl border border-slate-700 p-6 w-full max-w-2xl mx-4 mb-10">
+    <div 
+      className={`fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex justify-center items-start pt-20 z-50 overflow-y-auto`}
+      onClick={onClose}
+    >
+      <div 
+        className={`relative bg-black rounded-2xl border-2 ${theme.border} p-6 w-full max-w-2xl mx-4 mb-10`}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -61,12 +119,12 @@ export default function BalanceModal({
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-slate-700 mb-6">
+        <div className={`flex border-b ${theme.border.replace('border-', 'border-').replace('-500', '-500/30')} mb-6`}>
           <button
             onClick={() => setActiveTab('overview')}
             className={`px-6 py-3 font-medium ${
               activeTab === 'overview'
-                ? 'text-green-400 border-b-2 border-green-400'
+                ? `${theme.text} border-b-2 ${theme.border}`
                 : 'text-gray-400 hover:text-white'
             }`}
           >
@@ -76,7 +134,7 @@ export default function BalanceModal({
             onClick={() => setActiveTab('history')}
             className={`px-6 py-3 font-medium ${
               activeTab === 'history'
-                ? 'text-green-400 border-b-2 border-green-400'
+                ? `${theme.text} border-b-2 ${theme.border}`
                 : 'text-gray-400 hover:text-white'
             }`}
           >
@@ -86,7 +144,7 @@ export default function BalanceModal({
             onClick={() => setActiveTab('rules')}
             className={`px-6 py-3 font-medium ${
               activeTab === 'rules'
-                ? 'text-green-400 border-b-2 border-green-400'
+                ? `${theme.text} border-b-2 ${theme.border}`
                 : 'text-gray-400 hover:text-white'
             }`}
           >
@@ -99,33 +157,33 @@ export default function BalanceModal({
           <div className="space-y-6">
             {/* Balance Info */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-slate-800 rounded-xl p-4 text-center">
+              <div className={`bg-zinc-900 rounded-xl p-4 text-center border ${theme.border.replace('-500', '-500/30')}`}>
                 <p className="text-gray-400 text-sm">Current Balance</p>
                 <p className="text-2xl font-bold text-white">${bankroll?.toLocaleString()}</p>
               </div>
-              <div className="bg-slate-800 rounded-xl p-4 text-center">
+              <div className={`bg-zinc-900 rounded-xl p-4 text-center border ${theme.border.replace('-500', '-500/30')}`}>
                 <p className="text-gray-400 text-sm">Total P&L</p>
                 <p className={`text-2xl font-bold ${pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                   {pnl >= 0 ? '+' : ''}${pnl?.toLocaleString()}
                 </p>
               </div>
-              <div className="bg-slate-800 rounded-xl p-4 text-center">
+              <div className={`bg-zinc-900 rounded-xl p-4 text-center border ${theme.border.replace('-500', '-500/30')}`}>
                 <p className="text-gray-400 text-sm">Progress</p>
-                <p className="text-2xl font-bold text-blue-400">{progressPercent}%</p>
+                <p className={`text-2xl font-bold ${theme.text}`}>{progressPercent}%</p>
               </div>
             </div>
 
             {/* Progress Bar */}
-            <div className="bg-slate-800 rounded-xl p-6">
+            <div className={`bg-zinc-900 rounded-xl p-6 border ${theme.border.replace('-500', '-500/30')}`}>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-white">Challenge Progress</h3>
                 <span className="text-sm text-gray-400">
                   ${(startingBankroll + pnl)?.toLocaleString()} / ${challengeGoal?.toLocaleString()}
                 </span>
               </div>
-              <div className="w-full bg-slate-700 rounded-full h-3">
+              <div className="w-full bg-zinc-800 rounded-full h-3">
                 <div
-                  className="bg-gradient-to-r from-green-400 to-blue-500 h-3 rounded-full transition-all duration-500"
+                  className={`bg-gradient-to-r ${theme.gradient} h-3 rounded-full transition-all duration-500`}
                   style={{ width: `${Math.min(progressPercent, 100)}%` }}
                 ></div>
               </div>
@@ -136,21 +194,21 @@ export default function BalanceModal({
 
             {/* Quick Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-slate-800 rounded-xl p-4 text-center">
+              <div className={`bg-zinc-900 rounded-xl p-4 text-center border ${theme.border.replace('-500', '-500/30')}`}>
                 <p className="text-gray-400 text-sm">Win Rate</p>
-                <p className="text-xl font-bold text-green-400">67%</p>
+                <p className={`text-xl font-bold ${theme.text}`}>67%</p>
               </div>
-              <div className="bg-slate-800 rounded-xl p-4 text-center">
+              <div className={`bg-zinc-900 rounded-xl p-4 text-center border ${theme.border.replace('-500', '-500/30')}`}>
                 <p className="text-gray-400 text-sm">Total Bets</p>
                 <p className="text-xl font-bold text-white">42</p>
               </div>
-              <div className="bg-slate-800 rounded-xl p-4 text-center">
+              <div className={`bg-zinc-900 rounded-xl p-4 text-center border ${theme.border.replace('-500', '-500/30')}`}>
                 <p className="text-gray-400 text-sm">Best Day</p>
                 <p className="text-xl font-bold text-green-400">+$1,250</p>
               </div>
-              <div className="bg-slate-800 rounded-xl p-4 text-center">
+              <div className={`bg-zinc-900 rounded-xl p-4 text-center border ${theme.border.replace('-500', '-500/30')}`}>
                 <p className="text-gray-400 text-sm">Days Active</p>
-                <p className="text-xl font-bold text-blue-400">8</p>
+                <p className={`text-xl font-bold ${theme.text}`}>8</p>
               </div>
             </div>
           </div>
@@ -160,7 +218,7 @@ export default function BalanceModal({
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white mb-4">Recent Bets</h3>
             {bettingHistory.map((bet, index) => (
-              <div key={index} className="bg-slate-800 rounded-xl p-4 flex justify-between items-center">
+              <div key={index} className={`bg-zinc-900 rounded-xl p-4 flex justify-between items-center border ${theme.border.replace('-500', '-500/30')}`}>
                 <div>
                   <p className="text-white font-medium">{bet.bet}</p>
                   <p className="text-gray-400 text-sm">{bet.sport} • {bet.date}</p>
@@ -180,7 +238,7 @@ export default function BalanceModal({
 
         {activeTab === 'rules' && (
           <div className="space-y-6">
-            <div className="bg-slate-800 rounded-xl p-6">
+            <div className={`bg-zinc-900 rounded-xl p-6 border ${theme.border.replace('-500', '-500/30')}`}>
               <h3 className="text-lg font-semibold text-white mb-4">Challenge Requirements</h3>
               <div className="space-y-3">
                 {challengeRequirements.map((req, index) => (
@@ -189,20 +247,20 @@ export default function BalanceModal({
               </div>
             </div>
 
-            <div className="bg-slate-800 rounded-xl p-6">
+            <div className={`bg-zinc-900 rounded-xl p-6 border ${theme.border.replace('-500', '-500/30')}`}>
               <h3 className="text-lg font-semibold text-white mb-4">Payout Structure</h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-300">Phase 1 Completion:</span>
-                  <span className="text-green-400 font-medium">Account Funded</span>
+                  <span className={`${theme.text} font-medium`}>Account Funded</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-300">Your Share:</span>
-                  <span className="text-green-400 font-medium">80%</span>
+                  <span className={`${theme.text} font-medium`}>80%</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-300">Payout Method:</span>
-                  <span className="text-blue-400 font-medium">Direct Deposit</span>
+                  <span className={`${theme.text} font-medium`}>Direct Deposit</span>
                 </div>
               </div>
             </div>

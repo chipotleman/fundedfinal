@@ -14,8 +14,42 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
+  const [themeColor, setThemeColor] = useState('green');
   const router = useRouter();
   const { data: session } = useSession();
+
+  // Get theme color from purchased challenge
+  useEffect(() => {
+    const getThemeFromChallenge = () => {
+      try {
+        const storedChallenge = localStorage.getItem('purchased_challenge');
+        if (storedChallenge) {
+          const challenge = JSON.parse(storedChallenge);
+          if (challenge.badge === 'BEGINNER') {
+            setThemeColor('blue');
+          } else if (challenge.badge === 'POPULAR') {
+            setThemeColor('green');
+          } else {
+            setThemeColor('purple');
+          }
+        }
+      } catch (error) {
+        console.error('Error reading challenge theme:', error);
+      }
+    };
+    
+    getThemeFromChallenge();
+    
+    // Listen for challenge updates
+    const handleStorageChange = () => getThemeFromChallenge();
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('challengeUpdated', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('challengeUpdated', handleStorageChange);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -382,6 +416,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
         progressPercent={((bankroll || 10000) - 10000) / (25000 - 10000) * 100}
         challengeGoal={25000}
         startingBankroll={10000}
+        themeColor={themeColor}
       />
 
       <WithdrawModal
