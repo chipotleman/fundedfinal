@@ -239,18 +239,9 @@ export default function ChallengePopup({ isOpen, onClose }) {
   return (
     <div 
       className="challenge-popup-container fixed inset-0 bg-black/90 backdrop-blur-md flex items-start justify-center z-50 p-4 pt-10 overflow-y-auto"
-      style={{ touchAction: 'pan-y' }}
     >
       <div 
-        className={`popup-box relative bg-black border-2 ${theme.border} rounded-3xl max-w-md w-full my-auto`}
-        style={{ 
-          outline: 'none', 
-          WebkitTapHighlightColor: 'transparent',
-          WebkitAppearance: 'none',
-          willChange: 'transform',
-          transform: 'translateZ(0)',
-          isolation: 'isolate'
-        }}
+        className={`popup-content relative bg-black border-2 ${theme.border} rounded-3xl max-w-md w-full my-auto`}
       >
         {/* Close Button - Always visible */}
         <button
@@ -1156,34 +1147,32 @@ export default function ChallengePopup({ isOpen, onClose }) {
       )}
 
       <style jsx global>{`
-        .challenge-popup-container,
-        .challenge-popup-container * {
+        /* Apply tap highlight removal only to interactive children, not the border container */
+        .popup-content > *,
+        .popup-content button,
+        .popup-content input,
+        .popup-content div[class*="cursor-"] {
           -webkit-tap-highlight-color: transparent !important;
-          -webkit-touch-callout: none;
+        }
+        
+        /* Prevent user select on non-input elements */
+        .popup-content {
           -webkit-user-select: none;
           user-select: none;
-          outline: none !important;
         }
         
-        .challenge-popup-container *:focus,
-        .challenge-popup-container *:active,
-        .challenge-popup-container *:focus-visible {
-          outline: none !important;
-          box-shadow: none !important;
-        }
-        
-        .challenge-popup-container input,
-        .challenge-popup-container textarea {
+        .popup-content input,
+        .popup-content textarea {
           -webkit-user-select: text;
           user-select: text;
         }
         
-        .challenge-popup-container input:focus,
-        .challenge-popup-container textarea:focus {
+        /* Remove outlines on focus but preserve borders */
+        .popup-content *:focus {
           outline: none !important;
         }
         
-        /* Prevent Safari scroll indicator styling issues */
+        /* Hide scrollbar */
         .challenge-popup-container::-webkit-scrollbar {
           display: none;
         }
@@ -1191,29 +1180,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
         .challenge-popup-container {
           -ms-overflow-style: none;
           scrollbar-width: none;
-        }
-        
-        /* Prevent any border/outline changes on interaction */
-        .challenge-popup-container > div {
-          border-color: inherit !important;
-        }
-        
-        /* Force popup box styling to persist on touch */
-        .popup-box {
-          -webkit-appearance: none !important;
-          -moz-appearance: none !important;
-          appearance: none !important;
-          border-radius: 1.5rem !important;
-          outline: none !important;
-          box-shadow: none !important;
-        }
-        
-        .popup-box:focus,
-        .popup-box:active,
-        .popup-box:focus-within {
-          outline: none !important;
-          box-shadow: none !important;
-          border-radius: 1.5rem !important;
+          -webkit-tap-highlight-color: transparent;
         }
 
         .slider::-webkit-slider-thumb {
