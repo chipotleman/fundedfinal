@@ -1,7 +1,20 @@
 
-import { Fragment } from 'react';
+import { Fragment, useEffect } from 'react';
 
 export default function ProfileModal({ profile, isOpen, onClose }) {
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   if (!isOpen || !profile) return null;
 
   return (

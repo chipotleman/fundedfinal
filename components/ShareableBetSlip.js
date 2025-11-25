@@ -1,10 +1,23 @@
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 
 export default function ShareableBetSlip({ bet, isVisible, onClose }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const betSlipRef = useRef(null);
+
+  // Lock body scroll when modal is visible
+  useEffect(() => {
+    if (isVisible) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isVisible]);
 
   const formatOdds = (odds) => {
     const oddsValue = typeof odds === 'object' ? odds.odds || odds.value || 0 : odds;

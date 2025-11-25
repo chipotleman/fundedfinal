@@ -21,6 +21,19 @@ export default function WithdrawModal({ isOpen, onClose, bankroll = 10000 }) {
     paypalEmail: ''
   });
 
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   useEffect(() => {
     if (!isOpen) {
       // Reset form when modal closes
