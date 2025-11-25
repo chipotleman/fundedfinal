@@ -335,82 +335,84 @@ export default function ChallengePopup({ isOpen, onClose }) {
                 </div>
               </div>
 
-              {/* Profit Split */}
-              <div className="p-4 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/30 mb-4 relative">
-                {/* Reset Button */}
-                <button
-                  onClick={() => setUserSplit(80)}
-                  className="absolute top-2 right-2 w-6 h-6 bg-slate-700/80 hover:bg-slate-600 rounded-full flex items-center justify-center transition-colors"
-                  title="Reset to 80%"
-                >
-                  <svg className="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                </button>
-
-                <div className="text-center mb-3">
-                  <div className="text-sm font-medium text-gray-300">Profit Split</div>
-                  <div className="text-xs text-gray-400">Drag anywhere on the bar to adjust</div>
-                </div>
-
-                {/* Draggable Split Visual */}
-                <div
-                  className="flex h-10 rounded-xl overflow-hidden border border-slate-600 cursor-grab active:cursor-grabbing relative"
-                  onMouseDown={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const startX = e.clientX;
-                    const startSplit = userSplit;
-
-                    const handleMouseMove = (e) => {
-                      const deltaX = e.clientX - startX;
-                      const deltaPercent = (deltaX / rect.width) * 100;
-                      const newSplit = Math.max(50, Math.min(90, startSplit + deltaPercent));
-                      setUserSplit(Math.round(newSplit));
-                    };
-
-                    const handleMouseUp = () => {
-                      document.removeEventListener('mousemove', handleMouseMove);
-                      document.removeEventListener('mouseup', handleMouseUp);
-                    };
-
-                    document.addEventListener('mousemove', handleMouseMove);
-                    document.addEventListener('mouseup', handleMouseUp);
-                  }}
-                  onTouchStart={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const startX = e.touches[0].clientX;
-                    const startSplit = userSplit;
-
-                    const handleTouchMove = (e) => {
-                      const deltaX = e.touches[0].clientX - startX;
-                      const deltaPercent = (deltaX / rect.width) * 100;
-                      const newSplit = Math.max(50, Math.min(90, startSplit + deltaPercent));
-                      setUserSplit(Math.round(newSplit));
-                    };
-
-                    const handleTouchEnd = () => {
-                      document.removeEventListener('touchmove', handleTouchMove);
-                      document.removeEventListener('touchend', handleTouchEnd);
-                    };
-
-                    document.addEventListener('touchmove', handleTouchMove);
-                    document.addEventListener('touchend', handleTouchEnd);
-                  }}
-                >
-                  <div
-                    className="bg-gradient-to-r from-green-400 to-green-500 flex items-center justify-center text-white text-xs font-bold transition-all duration-150"
-                    style={{ width: `${userSplit}%` }}
+              {/* Profit Split - Hidden when rules are expanded */}
+              {!showRules && (
+                <div className="p-4 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/30 mb-4 relative">
+                  {/* Reset Button */}
+                  <button
+                    onClick={() => setUserSplit(80)}
+                    className="absolute top-2 right-2 w-6 h-6 bg-slate-700/80 hover:bg-slate-600 rounded-full flex items-center justify-center transition-colors"
+                    title="Reset to 80%"
                   >
-                    You {userSplit}%
+                    <svg className="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </button>
+
+                  <div className="text-center mb-3">
+                    <div className="text-sm font-medium text-gray-300">Profit Split</div>
+                    <div className="text-xs text-gray-400">Drag anywhere on the bar to adjust</div>
                   </div>
+
+                  {/* Draggable Split Visual */}
                   <div
-                    className="bg-gradient-to-r from-slate-600 to-slate-700 flex items-center justify-center text-white text-xs font-bold transition-all duration-150"
-                    style={{ width: `${100 - userSplit}%` }}
+                    className="flex h-10 rounded-xl overflow-hidden border border-slate-600 cursor-grab active:cursor-grabbing relative"
+                    onMouseDown={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const startX = e.clientX;
+                      const startSplit = userSplit;
+
+                      const handleMouseMove = (e) => {
+                        const deltaX = e.clientX - startX;
+                        const deltaPercent = (deltaX / rect.width) * 100;
+                        const newSplit = Math.max(50, Math.min(90, startSplit + deltaPercent));
+                        setUserSplit(Math.round(newSplit));
+                      };
+
+                      const handleMouseUp = () => {
+                        document.removeEventListener('mousemove', handleMouseMove);
+                        document.removeEventListener('mouseup', handleMouseUp);
+                      };
+
+                      document.addEventListener('mousemove', handleMouseMove);
+                      document.addEventListener('mouseup', handleMouseUp);
+                    }}
+                    onTouchStart={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      const startX = e.touches[0].clientX;
+                      const startSplit = userSplit;
+
+                      const handleTouchMove = (e) => {
+                        const deltaX = e.touches[0].clientX - startX;
+                        const deltaPercent = (deltaX / rect.width) * 100;
+                        const newSplit = Math.max(50, Math.min(90, startSplit + deltaPercent));
+                        setUserSplit(Math.round(newSplit));
+                      };
+
+                      const handleTouchEnd = () => {
+                        document.removeEventListener('touchmove', handleTouchMove);
+                        document.removeEventListener('touchend', handleTouchEnd);
+                      };
+
+                      document.addEventListener('touchmove', handleTouchMove);
+                      document.addEventListener('touchend', handleTouchEnd);
+                    }}
                   >
-                    Us {100 - userSplit}%
+                    <div
+                      className="bg-gradient-to-r from-green-400 to-green-500 flex items-center justify-center text-white text-xs font-bold transition-all duration-150"
+                      style={{ width: `${userSplit}%` }}
+                    >
+                      You {userSplit}%
+                    </div>
+                    <div
+                      className="bg-gradient-to-r from-slate-600 to-slate-700 flex items-center justify-center text-white text-xs font-bold transition-all duration-150"
+                      style={{ width: `${100 - userSplit}%` }}
+                    >
+                      Us {100 - userSplit}%
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               {/* Price Display */}
               <div className="text-center mb-4 p-3 bg-slate-800/30 rounded-xl border border-slate-600">
