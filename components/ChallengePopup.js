@@ -1007,7 +1007,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
       {/* Target Explainer Modal */}
       {showTargetExplainer && (
         <div className="absolute inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-black border-2 border-slate-700 rounded-2xl max-w-md w-full p-6 pt-8">
+          <div className={`bg-black border-2 ${theme.border} rounded-2xl max-w-md w-full p-6 pt-8`}>
             {/* Close Button */}
             <button
               onClick={() => setShowTargetExplainer(false)}
@@ -1031,7 +1031,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
             <div className="mb-6">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-lg font-semibold text-white">Phase 1 - Evaluation</h4>
-                <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full border border-blue-500/30">CURRENT</span>
+                <span className={`text-xs ${theme.bg} ${theme.text} px-2 py-1 rounded-full border ${theme.splitBorder}`}>CURRENT</span>
               </div>
               
               {/* Phase 1 Progress Bar */}
@@ -1045,21 +1045,21 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   <div className="absolute left-0 top-0 h-full bg-gradient-to-r from-red-600 to-red-500 w-[15%]"></div>
                   {/* Safe Zone (Gray) */}
                   <div className="absolute left-[15%] top-0 h-full bg-slate-600 w-[65%]"></div>
-                  {/* Target Zone (Green) */}
-                  <div className="absolute right-0 top-0 h-full bg-gradient-to-r from-green-500 to-green-400 w-[20%]"></div>
+                  {/* Target Zone (Themed) */}
+                  <div className={`absolute right-0 top-0 h-full bg-gradient-to-r ${theme.splitBar} w-[20%]`}></div>
                   {/* Current Position Indicator */}
                   <div className="absolute left-[15%] top-0 h-full w-1 bg-white shadow-lg"></div>
                 </div>
                 <div className="flex justify-between text-xs mt-1">
                   <span className="text-red-400">Fail Zone</span>
                   <span className="text-gray-400">Starting: ${currentChallenge.startingBalance.toLocaleString()}</span>
-                  <span className="text-green-400">Pass Zone</span>
+                  <span className={theme.text}>Pass Zone</span>
                 </div>
               </div>
 
               <div className="text-sm text-gray-300 space-y-1">
                 <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <div className={`w-2 h-2 ${theme.text.replace('text-', 'bg-')} rounded-full`}></div>
                   <span>Reach ${(currentChallenge.startingBalance + currentChallenge.target).toLocaleString()} to advance</span>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -1087,19 +1087,19 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   <div className="absolute left-0 top-0 h-full bg-gradient-to-r from-red-600 to-red-500 w-[15%]"></div>
                   {/* Safe Zone (Gray) */}
                   <div className="absolute left-[15%] top-0 h-full bg-slate-600 w-[65%]"></div>
-                  {/* Target Zone (Green) */}
-                  <div className="absolute right-0 top-0 h-full bg-gradient-to-r from-green-500 to-green-400 w-[20%]"></div>
+                  {/* Target Zone (Themed) */}
+                  <div className={`absolute right-0 top-0 h-full bg-gradient-to-r ${theme.splitBar} w-[20%]`}></div>
                 </div>
                 <div className="flex justify-between text-xs mt-1">
                   <span className="text-red-400">Fail Zone</span>
                   <span className="text-gray-400">Starting: ${(currentChallenge.startingBalance + currentChallenge.target).toLocaleString()}</span>
-                  <span className="text-green-400">Pass Zone</span>
+                  <span className={theme.text}>Pass Zone</span>
                 </div>
               </div>
 
               <div className="text-sm text-gray-300 space-y-1 opacity-50">
                 <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                  <div className={`w-2 h-2 ${theme.text.replace('text-', 'bg-')} rounded-full`}></div>
                   <span>Reach ${(currentChallenge.startingBalance + currentChallenge.target * 2).toLocaleString()} to get funded</span>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -1112,7 +1112,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
             {/* Close Button */}
             <button
               onClick={() => setShowTargetExplainer(false)}
-              className="w-full bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
+              className={`w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} text-white font-bold py-3 px-6 rounded-xl transition-all duration-300`}
             >
               Got it!
             </button>
