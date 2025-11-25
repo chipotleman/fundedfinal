@@ -269,7 +269,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                 </div>
 
                 {/* Challenge Rules */}
-                <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4">
+                <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4 mb-4">
                   <div 
                     className="flex items-center justify-between cursor-pointer"
                     onClick={() => setShowRules(!showRules)}
@@ -297,7 +297,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   </div>
                   
                   {showRules && (
-                    <div className="space-y-2 text-xs mt-3">
+                    <div className="space-y-1 text-xs mt-2 pb-1">
                       <div className="flex justify-between items-center">
                         <span className="text-gray-400">Pick Minimum</span>
                         <span className="text-white font-medium">20 picks</span>
