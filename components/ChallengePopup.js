@@ -237,12 +237,17 @@ export default function ChallengePopup({ isOpen, onClose }) {
   const theme = getThemeColors();
 
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-start justify-center z-50 p-4 pt-10 overflow-y-auto">
-      <div className={`relative bg-black border-2 ${theme.border} rounded-3xl max-w-md w-full my-auto`}>
+    <div 
+      className="challenge-popup-container fixed inset-0 bg-black/90 backdrop-blur-md flex items-start justify-center z-50 p-4 pt-10 overflow-y-auto"
+    >
+      <div 
+        className={`relative bg-black border-2 ${theme.border} rounded-3xl max-w-md w-full my-auto`}
+      >
         {/* Close Button - Always visible */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-20 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
+          style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -258,6 +263,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
               }
             }}
             className="absolute top-4 left-4 z-20 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -294,12 +300,13 @@ export default function ChallengePopup({ isOpen, onClose }) {
               </div>
 
               {/* Challenge Details */}
-              <div className="space-y-3 mb-6">
+              <div className="space-y-3 mb-6" style={{ WebkitTapHighlightColor: 'transparent' }}>
                 {/* Starting Balance with Dropdown */}
                 <div className="relative">
                   <div
                     onClick={() => setShowDropdown(!showDropdown)}
                     className={`flex justify-between items-center py-3 px-4 bg-slate-800/50 rounded-xl border-2 ${theme.borderLight} cursor-pointer hover:${theme.border} transition-all duration-300 shadow-lg ${theme.shadow}`}
+                    style={{ WebkitTapHighlightColor: 'transparent' }}
                   >
                     <div>
                       <span className="text-gray-300 font-medium text-sm">Starting Balance</span>
@@ -315,7 +322,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
                   {/* Dropdown */}
                   {showDropdown && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800 border border-slate-600 rounded-xl shadow-2xl z-20">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800 border border-slate-600 rounded-xl shadow-2xl z-20" style={{ WebkitTapHighlightColor: 'transparent' }}>
                       {challenges.map((challenge, index) => (
                         <div
                           key={challenge.id}
@@ -323,6 +330,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                           className={`flex justify-between items-center py-3 px-4 cursor-pointer hover:bg-slate-700/50 transition-all duration-200 ${
                             index === currentIndex ? `${theme.bg} border-l-4 ${theme.border}` : ''
                           } ${index === 0 ? 'rounded-t-xl' : ''} ${index === challenges.length - 1 ? 'rounded-b-xl' : ''}`}
+                          style={{ WebkitTapHighlightColor: 'transparent' }}
                         >
                           <div>
                             <span className="text-white font-medium text-sm">{challenge.name}</span>
@@ -336,10 +344,11 @@ export default function ChallengePopup({ isOpen, onClose }) {
                 </div>
 
                 {/* Challenge Rules */}
-                <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4 mb-4">
+                <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4 mb-4" style={{ WebkitTapHighlightColor: 'transparent' }}>
                   <div 
                     className="flex items-center justify-between cursor-pointer"
                     onClick={() => setShowRules(!showRules)}
+                    style={{ WebkitTapHighlightColor: 'transparent' }}
                   >
                     <h4 className="text-white font-semibold text-sm">Challenge Rules</h4>
                     <div className="flex items-center space-x-2">
@@ -349,6 +358,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                           setShowTargetExplainer(true);
                         }}
                         className={`w-4 h-4 ${theme.bg.replace('/20', '')} hover:opacity-80 rounded-full flex items-center justify-center transition-colors border ${theme.splitBorder}`}
+                        style={{ WebkitTapHighlightColor: 'transparent' }}
                       >
                         <span className="text-white text-xs font-bold">?</span>
                       </button>
@@ -404,12 +414,13 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
               {/* Split Boost - Hidden when rules are expanded */}
               {!showRules && (
-                <div className={`p-4 bg-gradient-to-r ${theme.splitGradient} rounded-2xl border ${theme.splitBorder} mb-4 relative`}>
+                <div className={`p-4 bg-gradient-to-r ${theme.splitGradient} rounded-2xl border ${theme.splitBorder} mb-4 relative`} style={{ WebkitTapHighlightColor: 'transparent' }}>
                   {/* Reset Button */}
                   <button
                     onClick={() => setUserSplit(70)}
                     className="absolute top-2 right-2 w-6 h-6 bg-slate-700/80 hover:bg-slate-600 rounded-full flex items-center justify-center transition-colors"
                     title="Reset to 70%"
+                    style={{ WebkitTapHighlightColor: 'transparent' }}
                   >
                     <svg className="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -424,6 +435,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   {/* Draggable Split Visual */}
                   <div
                     className="flex h-10 rounded-xl overflow-hidden border border-slate-600 cursor-grab active:cursor-grabbing relative"
+                    style={{ WebkitTapHighlightColor: 'transparent' }}
                     onMouseDown={(e) => {
                       const rect = e.currentTarget.getBoundingClientRect();
                       const startX = e.clientX;
@@ -483,7 +495,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
               {/* Price Display - Hidden when rules are expanded */}
               {!showRules && (
-                <div className="text-center mb-4 p-3 bg-slate-800/30 rounded-xl border border-slate-600">
+                <div className="text-center mb-4 p-3 bg-slate-800/30 rounded-xl border border-slate-600" style={{ WebkitTapHighlightColor: 'transparent' }}>
                   <div className="flex items-center justify-center space-x-2">
                     <div className="text-xl font-bold text-white">${adjustedPrice}</div>
                     {adjustedPrice !== currentChallenge.price && (
@@ -507,18 +519,20 @@ export default function ChallengePopup({ isOpen, onClose }) {
               <button
                 onClick={handleNext}
                 className={`w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} text-white font-bold py-3 px-6 rounded-xl shadow-2xl mb-4 transform hover:scale-105 transition-all duration-300`}
+                style={{ WebkitTapHighlightColor: 'transparent' }}
               >
                 Continue With {userSplit}% Split (${adjustedPrice})
               </button>
 
               {/* Challenge indicator */}
-              <div className="flex justify-center space-x-2">
+              <div className="flex justify-center space-x-2" style={{ WebkitTapHighlightColor: 'transparent' }}>
                 {challenges.map((_, index) => (
                   <div
                     key={index}
                     className={`w-2 h-2 rounded-full transition-colors ${
                       index === currentIndex ? theme.text : 'bg-gray-600'
                     }`}
+                    style={{ WebkitTapHighlightColor: 'transparent' }}
                   />
                 ))}
               </div>
@@ -526,7 +540,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
           </>
         ) : step === 'payment' ? (
           /* Payment Step */
-          <div className="p-6 pt-12">
+          <div className="p-6 pt-12" style={{ WebkitTapHighlightColor: 'transparent' }}>
             {/* Header */}
             <div className="text-center mb-6">
               <div className="mb-4">
@@ -1132,7 +1146,21 @@ export default function ChallengePopup({ isOpen, onClose }) {
         </div>
       )}
 
-      <style jsx>{`
+      <style jsx global>{`
+        .challenge-popup-container,
+        .challenge-popup-container * {
+          -webkit-tap-highlight-color: transparent !important;
+          -webkit-touch-callout: none;
+          -webkit-user-select: none;
+          user-select: none;
+        }
+        
+        .challenge-popup-container input,
+        .challenge-popup-container textarea {
+          -webkit-user-select: text;
+          user-select: text;
+        }
+
         .slider::-webkit-slider-thumb {
           appearance: none;
           height: 20px;
