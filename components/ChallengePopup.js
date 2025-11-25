@@ -336,7 +336,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                           e.stopPropagation();
                           setShowTargetExplainer(true);
                         }}
-                        className="w-4 h-4 bg-blue-500 hover:bg-blue-400 rounded-full flex items-center justify-center transition-colors"
+                        className={`w-4 h-4 ${theme.bg.replace('/20', '')} hover:opacity-80 rounded-full flex items-center justify-center transition-colors border ${theme.splitBorder}`}
                       >
                         <span className="text-white text-xs font-bold">?</span>
                       </button>
@@ -528,9 +528,9 @@ export default function ChallengePopup({ isOpen, onClose }) {
               <div className="flex items-center justify-center space-x-2 text-gray-400 text-sm">
                 <span>{currentChallenge.name}</span>
                 <span>•</span>
-                <span className="text-green-400 font-bold">${adjustedPrice}</span>
+                <span className={`${theme.text} font-bold`}>${adjustedPrice}</span>
                 <span>•</span>
-                <span className="text-blue-400 font-medium">{userSplit}% split</span>
+                <span className={`${theme.text} font-medium`}>{userSplit}% split</span>
               </div>
             </div>
 
@@ -542,7 +542,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   type="email"
                   value={cardInfo.email}
                   onChange={(e) => handleCardInputChange('email', e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:border-green-400 focus:outline-none transition-colors text-sm"
+                  className={`w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:${theme.border} focus:outline-none transition-colors text-sm`}
                   placeholder="your@email.com"
                   style={{ fontSize: '16px' }}
                 />
@@ -554,7 +554,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   type="text"
                   value={cardInfo.name}
                   onChange={(e) => handleCardInputChange('name', e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:border-green-400 focus:outline-none transition-colors text-sm"
+                  className={`w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:${theme.border} focus:outline-none transition-colors text-sm`}
                   placeholder="John Doe"
                   style={{ fontSize: '16px' }}
                 />
@@ -566,7 +566,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   type="text"
                   value={cardInfo.cardNumber}
                   onChange={(e) => handleCardInputChange('cardNumber', e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:border-green-400 focus:outline-none transition-colors text-sm"
+                  className={`w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:${theme.border} focus:outline-none transition-colors text-sm`}
                   placeholder="1234 5678 9012 3456"
                   style={{ fontSize: '16px' }}
                 />
@@ -579,7 +579,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                     type="text"
                     value={cardInfo.expiry}
                     onChange={(e) => handleCardInputChange('expiry', e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:border-green-400 focus:outline-none transition-colors text-sm"
+                    className={`w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:${theme.border} focus:outline-none transition-colors text-sm`}
                     placeholder="MM/YY"
                     style={{ fontSize: '16px' }}
                   />
@@ -590,7 +590,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                     type="text"
                     value={cardInfo.cvv}
                     onChange={(e) => handleCardInputChange('cvv', e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:border-green-400 focus:outline-none transition-colors text-sm"
+                    className={`w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:${theme.border} focus:outline-none transition-colors text-sm`}
                     placeholder="123"
                     style={{ fontSize: '16px' }}
                   />
@@ -605,7 +605,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                     type="text"
                     value={cardInfo.zipCode}
                     onChange={(e) => handleCardInputChange('zipCode', e.target.value)}
-                    className="w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:border-green-400 focus:outline-none transition-colors text-sm"
+                    className={`w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:${theme.border} focus:outline-none transition-colors text-sm`}
                     placeholder="12345"
                     style={{ fontSize: '16px' }}
                   />
@@ -617,7 +617,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
             <div className="space-y-3 mb-4">
               <div className="text-center p-2 bg-slate-800/30 rounded-xl border border-slate-600">
                 <div className="flex items-center justify-center space-x-2 text-xs text-gray-400">
-                  <svg className="w-3 h-3 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-3 h-3 ${theme.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                   <span>Secured with SSL encryption</span>
@@ -628,7 +628,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
               <div className="text-center">
                 <button
                   onClick={() => setShowAccountInfo(true)}
-                  className="text-blue-400 hover:text-blue-300 text-sm font-medium underline transition-colors"
+                  className={`${theme.text} hover:opacity-80 text-sm font-medium underline transition-colors`}
                 >
                   How Do I Get My Account?
                 </button>
@@ -639,7 +639,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
             <button
               onClick={handlePayment}
               disabled={loading}
-              className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3 px-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 disabled:transform-none disabled:cursor-not-allowed"
+              className={`w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3 px-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 disabled:transform-none disabled:cursor-not-allowed`}
             >
               {loading ? (
                 <div className="flex items-center justify-center space-x-2">
@@ -659,7 +659,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
               <div className="mb-4">
                 <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-8 mx-auto" />
               </div>
-              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mb-4 mx-auto">
+              <div className={`w-16 h-16 bg-gradient-to-r ${theme.gradient} rounded-full flex items-center justify-center mb-4 mx-auto`}>
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
@@ -669,10 +669,10 @@ export default function ChallengePopup({ isOpen, onClose }) {
             </div>
 
             {/* License Key */}
-            <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/30 p-4 mb-6">
+            <div className={`bg-gradient-to-r ${theme.splitGradient} rounded-xl border ${theme.splitBorder} p-4 mb-6`}>
               <div className="text-center">
                 <div className="text-gray-300 text-xs font-medium mb-1">License Key</div>
-                <div className="text-green-400 font-mono font-bold text-lg tracking-wider">{licenseKey}</div>
+                <div className={`${theme.text} font-mono font-bold text-lg tracking-wider`}>{licenseKey}</div>
                 <div className="text-gray-400 text-xs mt-1">Keep this safe - you'll need it to access your challenge</div>
               </div>
             </div>
@@ -685,17 +685,17 @@ export default function ChallengePopup({ isOpen, onClose }) {
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-300 text-sm">Starting Balance</span>
-                    <span className="text-green-400 font-bold">${currentChallenge.startingBalance.toLocaleString()}</span>
+                    <span className={`${theme.text} font-bold`}>${currentChallenge.startingBalance.toLocaleString()}</span>
                   </div>
                   
                   <div className="flex justify-between items-center">
                     <span className="text-gray-300 text-sm">Target Balance (Phase 1)</span>
-                    <span className="text-blue-400 font-bold">${(currentChallenge.startingBalance + currentChallenge.target).toLocaleString()}</span>
+                    <span className={`${theme.text} font-bold`}>${(currentChallenge.startingBalance + currentChallenge.target).toLocaleString()}</span>
                   </div>
                   
                   <div className="flex justify-between items-center">
                     <span className="text-gray-300 text-sm">Target Balance (Phase 2)</span>
-                    <span className="text-purple-400 font-bold">${(currentChallenge.startingBalance + currentChallenge.target * 2).toLocaleString()}</span>
+                    <span className={`${theme.text} font-bold`}>${(currentChallenge.startingBalance + currentChallenge.target * 2).toLocaleString()}</span>
                   </div>
 
                   <div className="border-t border-slate-600 pt-2 mt-3">
@@ -718,7 +718,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                     
                     <div className="flex justify-between items-center">
                       <span className="text-gray-300 text-sm">Profit Split</span>
-                      <span className="text-green-400 font-bold">{userSplit}% / {100 - userSplit}%</span>
+                      <span className={`${theme.text} font-bold`}>{userSplit}% / {100 - userSplit}%</span>
                     </div>
                     
                     <div className="flex justify-between items-center">
@@ -741,7 +741,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   id="gambling-terms"
                   checked={termsAccepted.gambling}
                   onChange={(e) => setTermsAccepted(prev => ({ ...prev, gambling: e.target.checked }))}
-                  className="mt-1 w-4 h-4 text-green-500 bg-slate-800 border-slate-600 rounded focus:ring-green-500"
+                  className="mt-1 w-4 h-4 bg-slate-800 border-slate-600 rounded"
                 />
                 <div className="flex-1">
                   <label htmlFor="gambling-terms" className="text-gray-300 text-sm cursor-pointer">
@@ -749,7 +749,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   </label>
                   <button
                     onClick={() => setShowGamblingTerms(true)}
-                    className="text-blue-400 hover:text-blue-300 text-xs ml-2 underline"
+                    className={`${theme.text} hover:opacity-80 text-xs ml-2 underline`}
                   >
                     (Read Full Terms)
                   </button>
@@ -763,7 +763,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   id="propfirm-terms"
                   checked={termsAccepted.propFirm}
                   onChange={(e) => setTermsAccepted(prev => ({ ...prev, propFirm: e.target.checked }))}
-                  className="mt-1 w-4 h-4 text-green-500 bg-slate-800 border-slate-600 rounded focus:ring-green-500"
+                  className="mt-1 w-4 h-4 bg-slate-800 border-slate-600 rounded"
                 />
                 <div className="flex-1">
                   <label htmlFor="propfirm-terms" className="text-gray-300 text-sm cursor-pointer">
@@ -771,7 +771,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   </label>
                   <button
                     onClick={() => setShowPropFirmTerms(true)}
-                    className="text-blue-400 hover:text-blue-300 text-xs ml-2 underline"
+                    className={`${theme.text} hover:opacity-80 text-xs ml-2 underline`}
                   >
                     (Read Full Terms)
                   </button>
@@ -783,7 +783,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
             <button
               onClick={handleBeginChallenge}
               disabled={!termsAccepted.gambling || !termsAccepted.propFirm}
-              className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-4 px-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 disabled:transform-none disabled:cursor-not-allowed"
+              className={`w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-4 px-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 disabled:transform-none disabled:cursor-not-allowed`}
             >
               {(!termsAccepted.gambling || !termsAccepted.propFirm) ? 
                 'Please Accept Terms to Continue' : 
