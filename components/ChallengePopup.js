@@ -445,7 +445,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                 onClick={handleNext}
                 className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-2xl mb-4 transform hover:scale-105 transition-all duration-300"
               >
-                Next - Get Set Up (${adjustedPrice}) - {userSplit}% Split
+                Continue With {userSplit}% Split (${adjustedPrice})
               </button>
 
               {/* Challenge indicator */}
