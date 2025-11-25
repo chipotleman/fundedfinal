@@ -225,8 +225,8 @@ export default function ChallengePopup({ isOpen, onClose }) {
   const theme = getThemeColors();
 
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-start justify-center z-50 p-4 pt-8 overflow-y-auto">
-      <div className={`relative bg-black border-2 ${theme.border} rounded-3xl max-w-md w-full flex flex-col`} style={{ maxHeight: 'calc(100vh - 4rem)' }}>
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
+      <div className={`relative bg-black border-2 ${theme.border} rounded-3xl max-w-md w-full max-h-[90vh] overflow-hidden`}>
         {/* Close Button - Always visible */}
         <button
           onClick={onClose}
@@ -256,7 +256,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
         {step === 'selection' ? (
           <>
             {/* Challenge Selection */}
-            <div className="p-6 pt-8 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 4rem)' }}>
+            <div className="p-6 pt-8">
               {/* Header */}
               <div className="text-center mb-6">
                 <div className="mb-4">
@@ -514,7 +514,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
           </>
         ) : step === 'payment' ? (
           /* Payment Step */
-          <div className="p-6 pt-12 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 4rem)' }}>
+          <div className="p-6 pt-12">
             {/* Header */}
             <div className="text-center mb-6">
               <div className="mb-4">
@@ -648,56 +648,77 @@ export default function ChallengePopup({ isOpen, onClose }) {
             </button>
           </div>
         ) : (
-          /* Receipt Step - with scrollable content and sticky footer */
-          <div className="flex flex-col h-full max-h-[calc(100vh-4rem)]">
-            {/* Scrollable Content Area */}
-            <div className="flex-1 overflow-y-auto p-6 pt-12">
-              {/* Header */}
-              <div className="text-center mb-6">
-                <div className="mb-4">
-                  <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-8 mx-auto" />
-                </div>
-                <div className={`w-16 h-16 bg-gradient-to-r ${theme.gradient} rounded-full flex items-center justify-center mb-4 mx-auto`}>
-                  <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <h2 className="text-xl font-bold text-white mb-2">Payment Successful!</h2>
-                <p className="text-gray-400 text-sm">Your challenge is ready to begin</p>
+          /* Receipt Step */
+          <div className="p-6 pt-12">
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="mb-4">
+                <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-8 mx-auto" />
               </div>
-
-              {/* License Key */}
-              <div className={`bg-gradient-to-r ${theme.splitGradient} rounded-xl border ${theme.splitBorder} p-4 mb-6`}>
-                <div className="text-center">
-                  <div className="text-gray-300 text-xs font-medium mb-1">License Key</div>
-                  <div className={`${theme.text} font-mono font-bold text-lg tracking-wider`}>{licenseKey}</div>
-                  <div className="text-gray-400 text-xs mt-1">Keep this safe - you'll need it to access your challenge</div>
-                </div>
+              <div className={`w-16 h-16 bg-gradient-to-r ${theme.gradient} rounded-full flex items-center justify-center mb-4 mx-auto`}>
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
               </div>
+              <h2 className="text-xl font-bold text-white mb-2">Payment Successful!</h2>
+              <p className="text-gray-400 text-sm">Your challenge is ready to begin</p>
+            </div>
 
-              {/* Challenge Details - Collapsible */}
-              <div className="space-y-3 mb-4">
-                <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
-                  <h3 className="text-white font-bold text-base mb-3">{currentChallenge.name}</h3>
+            {/* License Key */}
+            <div className={`bg-gradient-to-r ${theme.splitGradient} rounded-xl border ${theme.splitBorder} p-4 mb-6`}>
+              <div className="text-center">
+                <div className="text-gray-300 text-xs font-medium mb-1">License Key</div>
+                <div className={`${theme.text} font-mono font-bold text-lg tracking-wider`}>{licenseKey}</div>
+                <div className="text-gray-400 text-xs mt-1">Keep this safe - you'll need it to access your challenge</div>
+              </div>
+            </div>
+
+            {/* Challenge Details */}
+            <div className="space-y-3 mb-6">
+              <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+                <h3 className="text-white font-bold text-lg mb-3">{currentChallenge.name}</h3>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300 text-sm">Starting Balance</span>
+                    <span className={`${theme.text} font-bold`}>${currentChallenge.startingBalance.toLocaleString()}</span>
+                  </div>
                   
-                  <div className="space-y-2 text-sm">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300 text-sm">Target Balance (Phase 1)</span>
+                    <span className={`${theme.text} font-bold`}>${(currentChallenge.startingBalance + currentChallenge.target).toLocaleString()}</span>
+                  </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300 text-sm">Target Balance (Phase 2)</span>
+                    <span className={`${theme.text} font-bold`}>${(currentChallenge.startingBalance + currentChallenge.target * 2).toLocaleString()}</span>
+                  </div>
+
+                  <div className="border-t border-slate-600 pt-2 mt-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-300">Starting Balance</span>
-                      <span className={`${theme.text} font-bold`}>${currentChallenge.startingBalance.toLocaleString()}</span>
+                      <span className="text-gray-300 text-sm">Minimum Balance (Phase 1)</span>
+                      <span className="text-red-400 font-bold">${(currentChallenge.startingBalance * 0.85).toLocaleString()}</span>
                     </div>
                     
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-300">Profit Target</span>
-                      <span className={`${theme.text} font-bold`}>20% per phase</span>
+                      <span className="text-gray-300 text-sm">Minimum Balance (Phase 2)</span>
+                      <span className="text-red-400 font-bold">${(currentChallenge.startingBalance + currentChallenge.target * 0.85).toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-600 pt-2 mt-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-300 text-sm">Max Bet Size</span>
+                      <span className="text-white font-bold">${currentChallenge.maxBet}</span>
                     </div>
                     
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-300">Profit Split</span>
+                      <span className="text-gray-300 text-sm">Profit Split</span>
                       <span className={`${theme.text} font-bold`}>{userSplit}% / {100 - userSplit}%</span>
                     </div>
                     
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-300">Challenge Fee</span>
+                      <span className="text-gray-300 text-sm">Challenge Fee</span>
                       <span className="text-white font-bold">${adjustedPrice}</span>
                     </div>
                   </div>
@@ -705,69 +726,66 @@ export default function ChallengePopup({ isOpen, onClose }) {
               </div>
             </div>
 
-            {/* Sticky Footer - Terms and Button */}
-            <div className="flex-shrink-0 border-t border-slate-700 bg-black p-4 rounded-b-3xl">
-              {/* Terms and Conditions */}
-              <div className="space-y-3 mb-4">
-                <div className="text-white font-medium text-sm">Accept terms to continue:</div>
-                
-                {/* Gambling Risk Terms */}
-                <div className="flex items-start space-x-3">
-                  <input
-                    type="checkbox"
-                    id="gambling-terms"
-                    checked={termsAccepted.gambling}
-                    onChange={(e) => setTermsAccepted(prev => ({ ...prev, gambling: e.target.checked }))}
-                    className="mt-0.5 w-4 h-4 bg-slate-800 border-slate-600 rounded"
-                  />
-                  <div className="flex-1">
-                    <label htmlFor="gambling-terms" className="text-gray-300 text-xs cursor-pointer">
-                      I understand the gambling risks
-                    </label>
-                    <button
-                      onClick={() => setShowGamblingTerms(true)}
-                      className={`${theme.text} hover:opacity-80 text-xs ml-1 underline`}
-                    >
-                      (View)
-                    </button>
-                  </div>
-                </div>
-
-                {/* Prop Firm Terms */}
-                <div className="flex items-start space-x-3">
-                  <input
-                    type="checkbox"
-                    id="propfirm-terms"
-                    checked={termsAccepted.propFirm}
-                    onChange={(e) => setTermsAccepted(prev => ({ ...prev, propFirm: e.target.checked }))}
-                    className="mt-0.5 w-4 h-4 bg-slate-800 border-slate-600 rounded"
-                  />
-                  <div className="flex-1">
-                    <label htmlFor="propfirm-terms" className="text-gray-300 text-xs cursor-pointer">
-                      I understand this is a prop firm simulation
-                    </label>
-                    <button
-                      onClick={() => setShowPropFirmTerms(true)}
-                      className={`${theme.text} hover:opacity-80 text-xs ml-1 underline`}
-                    >
-                      (View)
-                    </button>
-                  </div>
+            {/* Terms and Conditions */}
+            <div className="space-y-3 mb-6">
+              <div className="text-white font-medium text-sm mb-3">Please accept the following terms:</div>
+              
+              {/* Gambling Risk Terms */}
+              <div className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  id="gambling-terms"
+                  checked={termsAccepted.gambling}
+                  onChange={(e) => setTermsAccepted(prev => ({ ...prev, gambling: e.target.checked }))}
+                  className="mt-1 w-4 h-4 bg-slate-800 border-slate-600 rounded"
+                />
+                <div className="flex-1">
+                  <label htmlFor="gambling-terms" className="text-gray-300 text-sm cursor-pointer">
+                    I understand the gambling risks and responsibilities
+                  </label>
+                  <button
+                    onClick={() => setShowGamblingTerms(true)}
+                    className={`${theme.text} hover:opacity-80 text-xs ml-2 underline`}
+                  >
+                    (Read Full Terms)
+                  </button>
                 </div>
               </div>
 
-              {/* Begin Challenge Button */}
-              <button
-                onClick={handleBeginChallenge}
-                disabled={!termsAccepted.gambling || !termsAccepted.propFirm}
-                className={`w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3 px-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 disabled:transform-none disabled:cursor-not-allowed`}
-              >
-                {(!termsAccepted.gambling || !termsAccepted.propFirm) ? 
-                  'Accept Terms to Continue' : 
-                  'Begin Challenge'
-                }
-              </button>
+              {/* Prop Firm Terms */}
+              <div className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  id="propfirm-terms"
+                  checked={termsAccepted.propFirm}
+                  onChange={(e) => setTermsAccepted(prev => ({ ...prev, propFirm: e.target.checked }))}
+                  className="mt-1 w-4 h-4 bg-slate-800 border-slate-600 rounded"
+                />
+                <div className="flex-1">
+                  <label htmlFor="propfirm-terms" className="text-gray-300 text-sm cursor-pointer">
+                    I understand this is a proprietary trading firm simulation
+                  </label>
+                  <button
+                    onClick={() => setShowPropFirmTerms(true)}
+                    className={`${theme.text} hover:opacity-80 text-xs ml-2 underline`}
+                  >
+                    (Read Full Terms)
+                  </button>
+                </div>
+              </div>
             </div>
+
+            {/* Begin Challenge Button */}
+            <button
+              onClick={handleBeginChallenge}
+              disabled={!termsAccepted.gambling || !termsAccepted.propFirm}
+              className={`w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-4 px-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 disabled:transform-none disabled:cursor-not-allowed`}
+            >
+              {(!termsAccepted.gambling || !termsAccepted.propFirm) ? 
+                'Please Accept Terms to Continue' : 
+                'Begin Challenge'
+              }
+            </button>
           </div>
         )}
       </div>
