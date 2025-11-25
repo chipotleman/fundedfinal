@@ -167,9 +167,6 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                   <Link href="/dashboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     Dashboard
                   </Link>
-                  <Link href="/bet-history" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Bet History
-                  </Link>
                   <Link href="/demo" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     Free Trial
                   </Link>
@@ -178,9 +175,6 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                   </button>
                   <Link href="/waitlist" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     Piks Card
-                  </Link>
-                  <Link href="/promos" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Promos
                   </Link>
                   <Link href="/leaderboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     Leaderboard
@@ -220,17 +214,6 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                       </svg>
                       <span className="text-white font-bold text-sm">${bankroll?.toLocaleString() || '10,000'}</span>
                     </button>
-                  </div>
-
-                  <div className="bg-slate-800 rounded-lg px-3 py-2 border border-slate-700">
-                    <div className="flex items-center space-x-2">
-                      <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <span className={`font-bold text-sm ${(pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {(pnl || 0) >= 0 ? '+' : ''}${pnl?.toLocaleString() || '0'}
-                      </span>
-                    </div>
                   </div>
                 </div>
               )}
