@@ -188,10 +188,14 @@ export default function ChallengePopup({ isOpen, onClose }) {
           </svg>
         </button>
 
-        {/* Back Button (Payment Step) */}
-        {step === 'payment' && (
+        {/* Back Button - Visible on selection and payment steps */}
+        {(step === 'selection' || step === 'payment') && (
           <button
-            onClick={handleBack}
+            onClick={step === 'payment' ? handleBack : () => {
+              if (currentIndex > 0) {
+                setCurrentIndex(currentIndex - 1);
+              }
+            }}
             className="absolute top-4 left-4 z-10 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
           >
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -205,11 +209,10 @@ export default function ChallengePopup({ isOpen, onClose }) {
             {/* Challenge Selection */}
             <div className="p-6 pt-8">
               {/* Header */}
-              <div className="text-center mb-4">
+              <div className="text-center mb-6">
                 <div className="mb-4">
                   <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-16 mx-auto" />
                 </div>
-                <h2 className="text-xl font-bold text-white">Choose Your Challenge</h2>
               </div>
 
               {/* Badge */}
@@ -959,7 +962,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
       {/* Target Explainer Modal */}
       {showTargetExplainer && (
         <div className="absolute inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-black border-2 border-slate-700 rounded-2xl max-w-md w-full p-6">
+          <div className="bg-black border-2 border-slate-700 rounded-2xl max-w-md w-full p-6 pt-8">
             {/* Close Button */}
             <button
               onClick={() => setShowTargetExplainer(false)}
