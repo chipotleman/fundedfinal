@@ -242,6 +242,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
     >
       <div 
         className={`popup-content relative bg-black border-2 ${theme.border} rounded-3xl max-w-md w-full my-auto`}
+        style={{ WebkitTapHighlightColor: 'transparent' }}
       >
         {/* Close Button - Always visible */}
         <button
@@ -1147,12 +1148,13 @@ export default function ChallengePopup({ isOpen, onClose }) {
       )}
 
       <style jsx global>{`
-        /* Apply tap highlight removal only to interactive children, not the border container */
-        .popup-content > *,
-        .popup-content button,
-        .popup-content input,
-        .popup-content div[class*="cursor-"] {
+        /* Disable tap highlight on the popup and all its contents */
+        .popup-content,
+        .popup-content *,
+        .challenge-popup-container,
+        .challenge-popup-container * {
           -webkit-tap-highlight-color: transparent !important;
+          -webkit-touch-callout: none !important;
         }
         
         /* Prevent user select on non-input elements */
@@ -1168,7 +1170,8 @@ export default function ChallengePopup({ isOpen, onClose }) {
         }
         
         /* Remove outlines on focus but preserve borders */
-        .popup-content *:focus {
+        .popup-content *:focus,
+        .popup-content:focus {
           outline: none !important;
         }
         
@@ -1180,7 +1183,6 @@ export default function ChallengePopup({ isOpen, onClose }) {
         .challenge-popup-container {
           -ms-overflow-style: none;
           scrollbar-width: none;
-          -webkit-tap-highlight-color: transparent;
         }
 
         .slider::-webkit-slider-thumb {
