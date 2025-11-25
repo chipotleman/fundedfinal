@@ -193,6 +193,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
       return {
         primary: 'blue',
         border: 'border-blue-500',
+        borderColor: '#3b82f6',
         borderLight: 'border-blue-400/50',
         shadow: 'shadow-blue-400/20',
         bg: 'bg-blue-500/20',
@@ -207,6 +208,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
       return {
         primary: 'green',
         border: 'border-green-500',
+        borderColor: '#22c55e',
         borderLight: 'border-green-400/50',
         shadow: 'shadow-green-400/20',
         bg: 'bg-green-500/20',
@@ -221,6 +223,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
       return {
         primary: 'purple',
         border: 'border-purple-500',
+        borderColor: '#a855f7',
         borderLight: 'border-purple-400/50',
         shadow: 'shadow-purple-400/20',
         bg: 'bg-purple-500/20',
@@ -241,8 +244,11 @@ export default function ChallengePopup({ isOpen, onClose }) {
       className="challenge-popup-container fixed inset-0 bg-black/90 backdrop-blur-md flex items-start justify-center z-50 p-4 pt-10 overflow-y-auto"
     >
       <div 
-        className={`popup-content relative bg-black border-2 ${theme.border} rounded-3xl max-w-md w-full my-auto`}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
+        className="popup-content relative bg-black rounded-3xl max-w-md w-full my-auto"
+        style={{ 
+          boxShadow: `0 0 0 2px ${theme.borderColor}`,
+          WebkitTapHighlightColor: 'transparent'
+        }}
       >
         {/* Close Button - Always visible */}
         <button
