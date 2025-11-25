@@ -414,29 +414,31 @@ export default function ChallengePopup({ isOpen, onClose }) {
                 </div>
               )}
 
-              {/* Price Display */}
-              <div className="text-center mb-4 p-3 bg-slate-800/30 rounded-xl border border-slate-600">
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="text-xl font-bold text-white">${adjustedPrice}</div>
-                  {adjustedPrice !== currentChallenge.price && (
-                    <div className="text-xs">
-                      {userSplit < 80 ? (
-                        <span className="text-green-400">(-${currentChallenge.price - adjustedPrice})</span>
-                      ) : (
-                        <span className="text-orange-400">(+${adjustedPrice - currentChallenge.price})</span>
-                      )}
-                    </div>
-                  )}
+              {/* Price Display - Hidden when rules are expanded */}
+              {!showRules && (
+                <div className="text-center mb-4 p-3 bg-slate-800/30 rounded-xl border border-slate-600">
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="text-xl font-bold text-white">${adjustedPrice}</div>
+                    {adjustedPrice !== currentChallenge.price && (
+                      <div className="text-xs">
+                        {userSplit < 80 ? (
+                          <span className="text-green-400">(-${currentChallenge.price - adjustedPrice})</span>
+                        ) : (
+                          <span className="text-orange-400">(+${adjustedPrice - currentChallenge.price})</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-gray-400 text-xs">
+                    Challenge fee
+                    {adjustedPrice !== currentChallenge.price && (
+                      <span className="ml-1">
+                        {userSplit < 80 ? '(discount applied)' : '(surcharge applied)'}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <div className="text-gray-400 text-xs">
-                  Challenge fee
-                  {adjustedPrice !== currentChallenge.price && (
-                    <span className="ml-1">
-                      {userSplit < 80 ? '(discount applied)' : '(surcharge applied)'}
-                    </span>
-                  )}
-                </div>
-              </div>
+              )}
 
               {/* Action Button */}
               <button
