@@ -44,8 +44,8 @@ export default function BalanceModal({
   ];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex justify-center items-center z-50">
-      <div className="relative bg-slate-900 rounded-2xl border border-slate-700 p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
+    <div className="fixed inset-0 bg-black bg-opacity-80 backdrop-blur-sm flex justify-center items-start pt-20 z-50 overflow-y-auto">
+      <div className="relative bg-slate-900 rounded-2xl border border-slate-700 p-6 w-full max-w-2xl mx-4 mb-10">
         {/* Close Button */}
         <button
           onClick={onClose}
