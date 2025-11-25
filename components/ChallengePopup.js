@@ -246,7 +246,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
       <div 
         className="popup-content relative bg-black rounded-3xl max-w-md w-full my-auto"
         style={{ 
-          boxShadow: `0 0 0 2px ${theme.borderColor}`,
+          boxShadow: `inset 0 0 0 2px ${theme.borderColor}`,
           WebkitTapHighlightColor: 'transparent'
         }}
       >
