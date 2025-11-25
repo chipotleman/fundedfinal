@@ -479,7 +479,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
                         {userSplit < 80 ? (
                           <span className={theme.text}>(-${currentChallenge.price - adjustedPrice})</span>
                         ) : (
-                          <span className="text-orange-400">(+${adjustedPrice - currentChallenge.price})</span>
+                          <span className={theme.text}>(+${adjustedPrice - currentChallenge.price})</span>
                         )}
                       </div>
                     )}
