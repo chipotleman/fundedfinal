@@ -575,9 +575,6 @@ export default function ChallengePopup({ isOpen, onClose }) {
                   placeholder="your@email.com"
                   style={{ fontSize: '16px' }}
                 />
-                <p className={`text-xs ${theme.text} mt-1 opacity-80`}>
-                  Challenge pass instructions will be sent to this email
-                </p>
               </div>
 
               <div>

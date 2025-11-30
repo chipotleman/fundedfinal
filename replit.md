@@ -53,12 +53,6 @@ None documented yet.
   - `/api/auth/signup` - User registration endpoint
 
 ## Recent Changes
-- **November 30, 2025**:
-  - ✅ Fixed Safari mobile tap highlight issue on Challenge Popup borders using CSS pseudo-element approach
-  - ✅ Added themed sign in/sign up page that matches selected challenge colors (BEGINNER=blue, POPULAR=green, ADVANCED=purple)
-  - ✅ Payment page now shows note under email field: "Challenge pass instructions will be sent to this email"
-  - ✅ Dynamic theming system: borders, buttons, focus states, validation text all use challenge-based colors
-  
 - **November 14, 2025**: 
   - ✅ Complete Supabase migration to NextAuth + PostgreSQL
   - ✅ OAuth buttons removed from UI (prevents 500 errors until credentials configured)
