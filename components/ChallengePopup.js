@@ -246,7 +246,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
       <div 
         className="popup-content relative bg-black rounded-3xl max-w-md w-full my-auto"
         style={{ 
-          boxShadow: `inset 0 0 0 2px ${theme.borderColor}`,
+          '--theme-border-color': theme.borderColor,
           WebkitTapHighlightColor: 'transparent'
         }}
       >
@@ -1154,6 +1154,17 @@ export default function ChallengePopup({ isOpen, onClose }) {
       )}
 
       <style jsx global>{`
+        /* Create border using pseudo-element - immune to tap highlights */
+        .popup-content::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border: 2px solid var(--theme-border-color);
+          border-radius: 1.5rem;
+          pointer-events: none;
+          z-index: 9999;
+        }
+        
         /* Disable tap highlight on the popup and all its contents */
         .popup-content,
         .popup-content *,
