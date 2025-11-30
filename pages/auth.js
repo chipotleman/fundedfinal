@@ -24,6 +24,53 @@ export default function AuthPage() {
   const { login, signUp: signUpUser } = useAuth();
   const { data: session } = useSession();
 
+  // Theme colors based on purchased challenge badge
+  const getThemeColors = () => {
+    const badge = selectedChallenge?.badge || 'POPULAR';
+    if (badge === 'BEGINNER') {
+      return {
+        primary: 'blue',
+        border: 'border-blue-500',
+        borderColor: '#3b82f6',
+        bg: 'bg-blue-500/20',
+        text: 'text-blue-400',
+        gradient: 'from-blue-500 to-blue-600',
+        gradientHover: 'hover:from-blue-600 hover:to-blue-700',
+        focusBorder: 'focus:border-blue-400',
+        shadow: 'shadow-blue-400/20',
+        ring: 'focus:ring-blue-400'
+      };
+    } else if (badge === 'POPULAR') {
+      return {
+        primary: 'green',
+        border: 'border-green-500',
+        borderColor: '#22c55e',
+        bg: 'bg-green-500/20',
+        text: 'text-green-400',
+        gradient: 'from-green-500 to-blue-500',
+        gradientHover: 'hover:from-green-600 hover:to-blue-600',
+        focusBorder: 'focus:border-green-400',
+        shadow: 'shadow-green-400/20',
+        ring: 'focus:ring-green-400'
+      };
+    } else {
+      return {
+        primary: 'purple',
+        border: 'border-purple-500',
+        borderColor: '#a855f7',
+        bg: 'bg-purple-500/20',
+        text: 'text-purple-400',
+        gradient: 'from-purple-500 to-purple-600',
+        gradientHover: 'hover:from-purple-600 hover:to-purple-700',
+        focusBorder: 'focus:border-purple-400',
+        shadow: 'shadow-purple-400/20',
+        ring: 'focus:ring-purple-400'
+      };
+    }
+  };
+
+  const theme = getThemeColors();
+
   // Password strength check
   const isPasswordStrong = password.length >= 6;
   const passwordsMatch = isSignUp && confirmPassword.length > 0 && password === confirmPassword;
@@ -404,16 +451,36 @@ export default function AuthPage() {
       }}></div>
 
       {/* Main Auth Form */}
-      <div className="flex-1 flex items-center justify-center p-6">
+      <div className="flex-1 flex items-center justify-center p-6 pt-24">
         <div className="relative max-w-md w-full">
-          <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-slate-700/50 shadow-2xl">
+          <div 
+            className="auth-form-container bg-slate-800/50 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 shadow-2xl relative"
+            style={{ '--theme-border-color': theme.borderColor }}
+          >
             <div className="text-center mb-8">
+              {/* Piks Logo */}
               <div className="mb-6">
-                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
+                <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-16 mx-auto mb-4" />
+              </div>
+              
+              {/* Challenge Badge */}
+              {selectedChallenge && (
+                <div className="mb-4">
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${theme.bg} ${theme.text} border ${theme.border}`}>
+                    {selectedChallenge.badge}
+                  </span>
+                </div>
+              )}
+              
+              <div className="mb-2">
+                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
                   {isSignUp ? 'Create Account' : 'Sign In'}
                 </h2>
                 <p className="text-gray-400 font-medium text-sm sm:text-base">
-                  {isSignUp ? 'Join our funded challenge platform' : 'Sign in to your account'}
+                  {selectedChallenge 
+                    ? `Complete sign up to start your ${selectedChallenge.name}`
+                    : isSignUp ? 'Join our funded challenge platform' : 'Sign in to your account'
+                  }
                 </p>
               </div>
             </div>
@@ -437,7 +504,7 @@ export default function AuthPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 sm:py-4 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium text-sm sm:text-base"
+                  className={`w-full px-4 py-3 sm:py-4 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none ${theme.focusBorder} transition-all duration-300 font-medium text-sm sm:text-base`}
                   placeholder="Enter your email address"
                   required
                 />
@@ -452,7 +519,7 @@ export default function AuthPage() {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 sm:py-4 pr-12 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium text-sm sm:text-base"
+                    className={`w-full px-4 py-3 sm:py-4 pr-12 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none ${theme.focusBorder} transition-all duration-300 font-medium text-sm sm:text-base`}
                     placeholder="Enter your password"
                     minLength="6"
                     required
@@ -475,7 +542,7 @@ export default function AuthPage() {
                   </button>
                 </div>
                 {password.length > 0 && (
-                  <p className={`text-xs mt-2 ${isPasswordStrong ? 'text-green-400' : 'text-gray-400'}`}>
+                  <p className={`text-xs mt-2 ${isPasswordStrong ? theme.text : 'text-gray-400'}`}>
                     {isPasswordStrong ? '✓ Password is strong enough' : 'Minimum 6 characters required'}
                   </p>
                 )}
@@ -490,13 +557,13 @@ export default function AuthPage() {
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-4 py-3 sm:py-4 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium text-sm sm:text-base"
+                    className={`w-full px-4 py-3 sm:py-4 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none ${theme.focusBorder} transition-all duration-300 font-medium text-sm sm:text-base`}
                     placeholder="Confirm your password"
                     minLength="6"
                     required
                   />
                   {confirmPassword.length > 0 && (
-                    <p className={`text-xs mt-2 ${passwordsMatch ? 'text-green-400' : 'text-gray-400'}`}>
+                    <p className={`text-xs mt-2 ${passwordsMatch ? theme.text : 'text-gray-400'}`}>
                       {passwordsMatch ? '✓ Passwords match' : 'Passwords must match'}
                     </p>
                   )}
@@ -510,7 +577,8 @@ export default function AuthPage() {
                   id="rememberMe"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 bg-slate-700 border-2 border-slate-600 rounded focus:ring-2 focus:ring-green-400 text-green-500"
+                  className={`w-4 h-4 bg-slate-700 border-2 border-slate-600 rounded focus:ring-2 ${theme.ring}`}
+                  style={{ accentColor: theme.borderColor }}
                 />
                 <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-300 cursor-pointer">
                   Remember my email
@@ -520,7 +588,7 @@ export default function AuthPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3 sm:py-4 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 text-sm sm:text-base"
+                className={`w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3 sm:py-4 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 text-sm sm:text-base`}
               >
                 {loading ? (
                   <div className="flex items-center justify-center space-x-2">
@@ -541,7 +609,7 @@ export default function AuthPage() {
                   setPassword('');
                   setConfirmPassword('');
                 }}
-                className="text-green-400 hover:text-green-300 font-medium transition-colors text-sm sm:text-base"
+                className={`${theme.text} hover:opacity-80 font-medium transition-colors text-sm sm:text-base`}
               >
                 {isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
               </button>
@@ -567,11 +635,21 @@ export default function AuthPage() {
         />
       )}
 
-      <style jsx>{`
-        @keyframes logoRedYellowGlow {
-          0% { filter: hue-rotate(-30deg) saturate(1.2) brightness(1.1); }
-          50% { filter: hue-rotate(30deg) saturate(1.3) brightness(1.2); }
-          100% { filter: hue-rotate(-30deg) saturate(1.2) brightness(1.1); }
+      <style jsx global>{`
+        .auth-form-container::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          border: 2px solid var(--theme-border-color);
+          border-radius: 1rem;
+          pointer-events: none;
+          z-index: 9999;
+        }
+        
+        @media (min-width: 640px) {
+          .auth-form-container::before {
+            border-radius: 1.5rem;
+          }
         }
       `}</style>
     </div>
