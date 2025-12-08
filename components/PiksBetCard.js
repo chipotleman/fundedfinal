@@ -118,7 +118,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
               <div className="text-white font-bold text-sm">{bet.selection}</div>
               <div className="text-gray-400 text-xs uppercase">{bet.betType}</div>
             </div>
-            <div className={`font-bold text-lg ${isWon ? 'text-green-400' : isOpen ? 'text-blue-400' : 'text-white'}`}>
+            <div className={`font-bold text-lg ${isOpen ? 'text-blue-400' : 'text-white'}`}>
               {formatOdds(bet.odds)}
             </div>
           </div>
@@ -133,7 +133,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                       {scores.homeQuarters.map((q, i) => <span key={i}>{q}</span>)}
                     </div>
                   )}
-                  <span className={`font-bold ${isWon ? 'text-green-400' : 'text-white'}`}>{scores.homeScore}</span>
+                  <span className="text-white font-bold">{scores.homeScore}</span>
                 </div>
               </div>
               <div className="flex justify-between items-center text-xs">
@@ -185,7 +185,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                 </svg>
                 <div className="text-right">
                   <div className="text-green-400 font-bold text-lg">${payout.toFixed(2)}</div>
-                  <div className="text-gray-400 text-[10px] uppercase">Won on Piks</div>
+                  <div className="text-green-400 text-[10px] uppercase">Won on Piks</div>
                 </div>
               </div>
             )}

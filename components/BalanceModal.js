@@ -90,29 +90,21 @@ export default function BalanceModal({
         </button>
 
         <div className="p-6">
-          <div className="flex items-center justify-center mb-6">
-            <img src="/funderlogo/Piks.png" alt="Piks" className="h-12" />
-          </div>
-
-          <div className={`text-center p-4 rounded-xl mb-6 ${isFunded ? 'bg-green-500/10 border border-green-500/30' : 'bg-[#111111] border border-gray-800/50'}`}>
-            <div className="flex items-center justify-center gap-2 mb-2">
+          <div className="flex items-center gap-4 mb-6">
+            <img src="/funderlogo/Piks.png" alt="Piks" className="h-10" />
+            <div className={`flex-1 flex items-center gap-2 px-4 py-2 rounded-xl ${isFunded ? 'bg-green-500/10 border border-green-500/30' : 'bg-[#111111] border border-gray-800/50'}`}>
               {isFunded ? (
                 <>
-                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-green-400 font-bold text-lg">FUNDED ACCOUNT</span>
+                  <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-green-400 font-bold text-sm">FUNDED ACCOUNT</span>
                 </>
               ) : (
                 <>
-                  <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
-                  <span className="text-orange-400 font-bold text-lg">EVALUATION PHASE</span>
+                  <div className="w-2.5 h-2.5 bg-orange-500 rounded-full animate-pulse"></div>
+                  <span className="text-orange-400 font-bold text-sm">EVALUATION PHASE</span>
                 </>
               )}
             </div>
-            <p className="text-gray-400 text-sm">
-              {isFunded 
-                ? 'Congratulations! You are trading with funded capital.' 
-                : 'Complete the challenge to unlock your funded account.'}
-            </p>
           </div>
 
           <div className="bg-[#111111] rounded-xl p-5 border border-gray-800/50 mb-6">
