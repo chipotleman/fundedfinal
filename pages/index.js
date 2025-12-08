@@ -25,72 +25,54 @@ function ThunderCardModule() {
 
   return (
     <div className="text-center px-4 mb-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-gradient-to-br from-slate-900 via-purple-900 to-blue-900 rounded-2xl border border-purple-500/30 overflow-hidden">
-          {/* Header */}
-          <div className="p-4 sm:p-6">
-            <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">
-              Introducing the <span className="bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">Piks Card</span>
-            </h2>
-            <p className="text-sm sm:text-base text-gray-300 max-w-2xl mx-auto leading-relaxed">
-              The first prepaid bank card funded directly from your betting profits.
-            </p>
-          </div>
-
-          <div className="flex flex-col lg:flex-row items-center gap-4 px-4 pb-4">
-            {/* Piks Card Preview */}
-            <div className="flex-shrink-0">
-              <div className="relative transform hover:scale-105 transition-all duration-300">
-                <img 
-                  src="/piks-card.png" 
-                  alt="Piks Card" 
-                  className="w-48 sm:w-64 drop-shadow-2xl"
-                />
-              </div>
-            </div>
-
-            {/* Coming Soon Sign Up */}
-            <div className="flex-1 w-full">
-              <div className="bg-black/40 backdrop-blur-lg rounded-xl p-4 border border-slate-700">
-                <div className="text-center mb-3">
-                  <div className="inline-flex items-center bg-purple-600/20 text-purple-300 px-3 py-1 rounded-full text-xs font-medium mb-2">
-                    🚀 Coming Soon
-                  </div>
-                  <h3 className="text-lg font-bold text-white mb-1">Get Early Access</h3>
-                  <p className="text-gray-400 text-sm">
-                    Join our waitlist for early access and special perks.
-                  </p>
-                </div>
-
-                {!isSubmitted ? (
-                  <form onSubmit={handleSubmit} className="flex gap-2">
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email"
-                      className="flex-1 px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 text-sm"
-                      required
-                    />
-                    <button
-                      type="submit"
-                      className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm"
-                    >
-                      Join
-                    </button>
-                  </form>
-                ) : (
-                  <div className="text-center">
-                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
-                      <div className="text-green-400 font-medium text-sm">
-                        ✅ You're on the list!
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+      <div className="max-w-3xl mx-auto">
+        <div className="bg-gradient-to-br from-slate-900 via-purple-900 to-blue-900 rounded-2xl border border-purple-500/30 overflow-hidden p-6">
+          {/* Card Image - Main Focus */}
+          <div className="flex justify-center mb-4">
+            <div className="relative transform hover:scale-105 transition-all duration-300">
+              <img 
+                src="/piks-card.png" 
+                alt="Piks Card" 
+                className="w-72 sm:w-96 drop-shadow-2xl"
+              />
             </div>
           </div>
+
+          {/* Title */}
+          <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">
+            The <span className="bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">Piks Card</span>
+          </h2>
+          <p className="text-sm text-gray-300 mb-4">
+            Get funded directly from your betting profits.
+          </p>
+
+          {/* Compact Sign Up */}
+          <div className="inline-flex items-center bg-purple-600/20 text-purple-300 px-3 py-1 rounded-full text-xs font-medium mb-3">
+            🚀 Coming Soon
+          </div>
+          
+          {!isSubmitted ? (
+            <form onSubmit={handleSubmit} className="flex gap-2 max-w-sm mx-auto">
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+                className="flex-1 px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 text-sm"
+                required
+              />
+              <button
+                type="submit"
+                className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm"
+              >
+                Join
+              </button>
+            </form>
+          ) : (
+            <div className="text-green-400 font-medium text-sm">
+              ✅ You're on the list!
+            </div>
+          )}
         </div>
       </div>
     </div>
