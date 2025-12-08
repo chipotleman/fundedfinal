@@ -220,15 +220,15 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Challenge Overview - 3 Challenges */}
+            {/* Compare Challenges */}
             <div className="mb-12 px-4">
-              <div className="max-w-5xl mx-auto">
-                <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold text-white mb-2">
-                    Choose Your <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Challenge</span>
+              <div className="max-w-4xl mx-auto">
+                <div className="text-center mb-6">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+                    Compare <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Challenges</span>
                   </h2>
                   <p className="text-gray-400 text-sm">
-                    Pick the challenge that fits your style
+                    See what's included at each level
                   </p>
                 </div>
                 <ChallengeOverview />
