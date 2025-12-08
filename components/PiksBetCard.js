@@ -36,8 +36,8 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
 
   return (
     <div 
-      className="relative bg-black rounded-lg overflow-hidden"
-      style={{ border: '2px solid #a855f7' }}
+      className="relative bg-black rounded-lg overflow-hidden mx-2 sm:mx-0"
+      style={{ border: '1px dashed #a855f7' }}
     >
       <div 
         className="absolute top-0 left-0 right-0 h-1"
