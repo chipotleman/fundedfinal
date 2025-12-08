@@ -1,8 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 
 export default function PiksBetCard({ bet, onCashOut, onShare }) {
   const [confirmingCashOut, setConfirmingCashOut] = useState(false);
   const buttonRef = useRef(null);
+  
+  const pikId = useMemo(() => {
+    if (bet.pikId) return bet.pikId;
+    return `${Date.now().toString().slice(-10)}${Math.floor(Math.random() * 100).toString().padStart(2, '0')}`;
+  }, [bet.id, bet.pikId]);
 
   useEffect(() => {
     if (confirmingCashOut) {
@@ -25,10 +30,6 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
     } else {
       return (stake * (100 / Math.abs(odds))) + stake;
     }
-  };
-
-  const generateBetId = () => {
-    return `${Date.now().toString().slice(-10)}${Math.floor(Math.random() * 100).toString().padStart(2, '0')}`;
   };
 
   const formatPlacedDate = () => {
@@ -180,7 +181,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         </div>
 
         <div className="border-t border-white/30 mt-1 pt-1 flex justify-between items-center">
-          <div className="text-gray-500 text-[10px] font-mono">PIK ID: {generateBetId()}</div>
+          <div className="text-gray-500 text-[10px] font-mono">PIK ID: {pikId}</div>
           <div className="text-gray-500 text-[10px]">PLACED: {formatPlacedDate()}</div>
         </div>
 
