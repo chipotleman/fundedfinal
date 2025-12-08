@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import BetReceipt from './BetReceipt';
+import LiveCommunityStats from './LiveCommunityStats';
 
 export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, showDemoBetSlip, setShowDemoBetSlip }) {
   const [selectedBets, setSelectedBets] = useState([]);
@@ -525,13 +526,19 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
 
       <div id="demo-section" className="py-8 sm:py-12">
         <div className="max-w-6xl mx-auto px-6">
-          {/* Header */}
-          <div className="text-center mb-8 sm:mb-12">
-            <h2 className="text-4xl font-bold text-white mb-4">
-              Want a <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Demo</span>?
-            </h2>
-            <p className="text-lg sm:text-xl text-gray-400 mb-2">No sign up required</p>
-            <p className="text-sm sm:text-base text-gray-500">Try placing bets with mock funds to see how our platform works</p>
+          {/* Community Stats Header */}
+          <div className="max-w-xl mx-auto mb-8 sm:mb-12">
+            <div className="text-center mb-6">
+              <h2 className="text-3xl font-bold text-white mb-2">
+                Community <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Stats</span>
+              </h2>
+              <p className="text-gray-400 text-sm">
+                Real-time data from our community
+              </p>
+            </div>
+            <div className="border border-gray-800/50 rounded-2xl">
+              <LiveCommunityStats />
+            </div>
           </div>
 
           {/* Demo Interface */}

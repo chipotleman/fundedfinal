@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
-import LiveCommunityStats from '../components/LiveCommunityStats';
+import ChallengeOverview from '../components/ChallengeOverview';
 import DemoPreview from '../components/DemoPreview';
 import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
@@ -220,18 +220,18 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Community Stats - Centered */}
+            {/* Challenge Overview - 3 Challenges */}
             <div className="mb-12 px-4">
-              <div className="max-w-xl mx-auto">
-                <div className="text-center mb-6">
+              <div className="max-w-5xl mx-auto">
+                <div className="text-center mb-8">
                   <h2 className="text-3xl font-bold text-white mb-2">
-                    Community <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Stats</span>
+                    Choose Your <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Challenge</span>
                   </h2>
                   <p className="text-gray-400 text-sm">
-                    Real-time data from our community
+                    Pick the challenge that fits your style
                   </p>
                 </div>
-                <LiveCommunityStats />
+                <ChallengeOverview />
               </div>
             </div>
 
