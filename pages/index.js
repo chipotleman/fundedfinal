@@ -24,76 +24,70 @@ function ThunderCardModule() {
   };
 
   return (
-    <div className="text-center px-4 mb-16">
-      <div className="max-w-6xl mx-auto">
+    <div className="text-center px-4 mb-8">
+      <div className="max-w-4xl mx-auto">
         <div className="bg-gradient-to-br from-slate-900 via-purple-900 to-blue-900 rounded-2xl border border-purple-500/30 overflow-hidden">
           {/* Header */}
-          <div className="p-8 sm:p-12">
-            <h2 className="text-4xl sm:text-5xl font-black text-white mb-4">
+          <div className="p-4 sm:p-6">
+            <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">
               Introducing the <span className="bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">Piks Card</span>
             </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-8">
-              The first prepaid bank card that gets funded directly from your betting profits. Use it anywhere, just like a regular debit card.
+            <p className="text-sm sm:text-base text-gray-300 max-w-2xl mx-auto leading-relaxed">
+              The first prepaid bank card funded directly from your betting profits.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 px-8 pb-8">
+          <div className="flex flex-col lg:flex-row items-center gap-4 px-4 pb-4">
             {/* Piks Card Preview */}
-            <div className="flex justify-center items-center">
+            <div className="flex-shrink-0">
               <div className="relative transform hover:scale-105 transition-all duration-300">
                 <img 
                   src="/piks-card.png" 
                   alt="Piks Card" 
-                  className="w-[640px] sm:w-[768px] drop-shadow-2xl"
+                  className="w-48 sm:w-64 drop-shadow-2xl"
                 />
               </div>
             </div>
 
             {/* Coming Soon Sign Up */}
-            <div className="flex flex-col justify-center">
-              <div className="bg-black/40 backdrop-blur-lg rounded-xl p-8 border border-slate-700">
-                <div className="text-center mb-6">
-                  <div className="inline-flex items-center bg-purple-600/20 text-purple-300 px-4 py-2 rounded-full text-sm font-medium mb-4">
+            <div className="flex-1 w-full">
+              <div className="bg-black/40 backdrop-blur-lg rounded-xl p-4 border border-slate-700">
+                <div className="text-center mb-3">
+                  <div className="inline-flex items-center bg-purple-600/20 text-purple-300 px-3 py-1 rounded-full text-xs font-medium mb-2">
                     🚀 Coming Soon
                   </div>
-                  <h3 className="text-2xl font-bold text-white mb-3">Get Early Access</h3>
-                  <p className="text-gray-400 text-base">
-                    Be the first to know when the Piks Card launches. Join our exclusive waitlist for early access and special perks.
+                  <h3 className="text-lg font-bold text-white mb-1">Get Early Access</h3>
+                  <p className="text-gray-400 text-sm">
+                    Join our waitlist for early access and special perks.
                   </p>
                 </div>
 
                 {!isSubmitted ? (
-                  <form onSubmit={handleSubmit} className="space-y-4">
+                  <form onSubmit={handleSubmit} className="flex gap-2">
                     <input
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter your email"
-                      className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
+                      className="flex-1 px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 text-sm"
                       required
                     />
                     <button
                       type="submit"
-                      className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                      className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm"
                     >
-                      Join Waitlist
+                      Join
                     </button>
                   </form>
                 ) : (
                   <div className="text-center">
-                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
-                      <div className="text-green-400 font-medium">
-                        ✅ You're on the list! We'll notify you when the Piks Card is ready.
+                    <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-2">
+                      <div className="text-green-400 font-medium text-sm">
+                        ✅ You're on the list!
                       </div>
                     </div>
                   </div>
                 )}
-
-                <div className="mt-6 text-center">
-                  <Link href="/waitlist" className="text-purple-400 hover:text-purple-300 text-sm font-medium transition-colors">
-                    Learn more about Piks Card →
-                  </Link>
-                </div>
               </div>
             </div>
           </div>
