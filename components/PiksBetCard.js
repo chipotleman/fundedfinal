@@ -36,8 +36,9 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
 
   return (
     <div 
-      className="relative bg-black rounded-lg overflow-hidden mx-2 sm:mx-0"
-      style={{ border: '1px dashed #a855f7' }}
+      className={`relative bg-black rounded-lg overflow-hidden mx-2 sm:mx-0 border ${
+        isWon ? 'border-green-500' : isOpen ? 'border-blue-500' : 'border-red-500'
+      }`}
     >
             
       <div className="px-2 pt-0 pb-1">

@@ -111,8 +111,7 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
         <div className="p-3">
           <div 
             ref={betSlipRef}
-            className="relative bg-black rounded-lg overflow-hidden"
-            style={{ border: '1px dashed #a855f7' }}
+            className="relative bg-black rounded-lg overflow-hidden border border-green-500"
           >
                         
             <div className="px-2 pt-0 pb-1">
