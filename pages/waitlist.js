@@ -43,56 +43,20 @@ export default function Waitlist() {
         </div>
 
         {/* Piks Card Preview */}
-            <div className="relative max-w-sm mx-auto mb-12 flex justify-center" style={{perspective: '1000px', height: '220px'}}>
-              <div className="relative" style={{width: '320px', transformStyle: 'preserve-3d'}}>
-                {/* Card with gradient background - more rectangular aspect ratio like real debit card */}
-                <div 
-                  className={`bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 rounded-xl p-6 shadow-2xl border border-blue-500/30 mx-auto ${isFlipping ? '' : 'hover:scale-105'}`} 
-                  style={{
-                    aspectRatio: '1.586/1', 
-                    width: '320px',
-                    transformStyle: 'preserve-3d',
-                    transition: isFlipping ? 'transform 1.5s' : 'transform 0.3s',
-                    transform: isFlipping ? 'rotateY(720deg) rotateX(360deg)' : 'rotateY(0deg) rotateX(0deg)'
-                  }}
-                >
-                  {/* Card Header */}
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <div className="text-blue-300 text-xs font-medium mb-1">PIKS CARD</div>
-                      <div className="text-white text-base font-bold">PREMIUM</div>
-                    </div>
-                    <div className="w-10 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded flex items-center justify-center">
-                      <div className="w-5 h-3 bg-yellow-300 rounded-sm"></div>
-                    </div>
-                  </div>
-
-                  {/* Card Number */}
-                  <div className="mb-4">
-                    <div className="text-white text-lg font-mono tracking-widest">
-                      •••• •••• •••• 1234
-                    </div>
-                  </div>
-
-                  {/* Card Details */}
-                  <div className="flex justify-between items-end mb-3">
-                    <div>
-                      <div className="text-blue-300 text-xs mb-1">CARDHOLDER</div>
-                      <div className="text-white text-xs font-medium">PIKS MEMBER</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-blue-300 text-xs mb-1">EXPIRES</div>
-                      <div className="text-white text-xs font-medium">12/28</div>
-                    </div>
-                  </div>
-
-                  {/* Funded by piks */}
-                  <div className="mt-2 pt-2 border-t border-blue-500/20">
-                    <div className="text-center text-blue-300 text-xs font-medium">
-                      funded by piks
-                    </div>
-                  </div>
-                </div>
+            <div className="relative max-w-md mx-auto mb-12 flex justify-center" style={{perspective: '1000px'}}>
+              <div 
+                className={`relative ${isFlipping ? '' : 'hover:scale-105'}`}
+                style={{
+                  transformStyle: 'preserve-3d',
+                  transition: isFlipping ? 'transform 1.5s' : 'transform 0.3s',
+                  transform: isFlipping ? 'rotateY(720deg) rotateX(360deg)' : 'rotateY(0deg) rotateX(0deg)'
+                }}
+              >
+                <img 
+                  src="/piks-card.png" 
+                  alt="Piks Card" 
+                  className="w-full max-w-md rounded-2xl shadow-2xl"
+                />
               </div>
             </div>
 
