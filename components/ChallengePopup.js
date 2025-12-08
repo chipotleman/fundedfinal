@@ -98,6 +98,12 @@ export default function ChallengePopup({ isOpen, onClose }) {
     setLoading(true);
     setCheckoutError(null);
     
+    localStorage.setItem('pending_challenge', JSON.stringify({
+      ...currentChallenge,
+      userSplit,
+      adjustedPrice
+    }));
+    
     try {
       const response = await fetch('/api/fanbasis-checkout', {
         method: 'POST',
@@ -110,15 +116,26 @@ export default function ChallengePopup({ isOpen, onClose }) {
           startingBalance: currentChallenge.startingBalance,
           userSplit: userSplit,
           adjustedPrice: adjustedPrice,
-          userEmail: cardInfo.email || ''
+          userEmail: cardInfo.email || '',
+          useRedirect: true
         })
       });
 
       const data = await response.json();
+      console.log('Fanbasis response:', data);
 
-      if (data.success && data.embedUrl) {
-        setCheckoutUrl(data.embedUrl);
-        setStep('checkout');
+      if (data.success && data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else if (data.success && data.rawData) {
+        console.log('Full API response data:', data.rawData);
+        const possibleUrl = data.rawData.url || data.rawData.checkout_url || 
+                           data.rawData.redirect_url || data.rawData.payment_url;
+        if (possibleUrl) {
+          window.location.href = possibleUrl;
+        } else {
+          setCheckoutError('Checkout created but no redirect URL found. Check console for details.');
+          setStep('payment');
+        }
       } else {
         setCheckoutError(data.error || 'Failed to create checkout session');
         setStep('payment');
