@@ -48,7 +48,6 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center">
             <span className="text-white font-bold text-xl tracking-wide">piks</span>
-            <span className="text-gray-400 font-semibold text-sm ml-2 tracking-widest">FUNDEDBOOK</span>
           </div>
           
           <div className={`flex items-center space-x-2 px-3 py-1 rounded-full ${
@@ -131,7 +130,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
           <div className="flex justify-between items-end">
             <div>
               <div className="text-white font-bold text-2xl">${bet.stake?.toFixed(2)}</div>
-              <div className="text-gray-400 text-xs uppercase tracking-wider">Total Wager</div>
+              <div className="text-gray-400 text-xs uppercase tracking-wider">Total Pikked</div>
             </div>
             {isWon && (
               <div className="flex items-center">
@@ -164,7 +163,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         </div>
 
         <div className="border-t border-purple-500/50 mt-4 pt-3 flex justify-between items-center">
-          <div className="text-gray-500 text-xs font-mono">BET ID: {generateBetId()}</div>
+          <div className="text-gray-500 text-xs font-mono">PIK ID: {generateBetId()}</div>
           <div className="text-gray-500 text-xs">PLACED: {formatPlacedDate()}</div>
         </div>
 

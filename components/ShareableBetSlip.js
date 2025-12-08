@@ -122,7 +122,6 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
             <div className="p-5">
               <div className="flex items-center justify-center mb-5">
                 <span className="text-white font-bold text-2xl tracking-wide">piks</span>
-                <span className="text-gray-400 font-semibold text-lg ml-2 tracking-widest">FUNDEDBOOK</span>
               </div>
 
               <div className="border-t border-purple-500/50 pt-4">
@@ -170,7 +169,7 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
                 <div className="flex justify-between items-end">
                   <div>
                     <div className="text-white font-bold text-2xl">${bet.stake?.toFixed(2)}</div>
-                    <div className="text-gray-400 text-xs uppercase tracking-wider">Total Wager</div>
+                    <div className="text-gray-400 text-xs uppercase tracking-wider">Total Pikked</div>
                   </div>
                   <div className="flex items-center">
                     <div className="mr-2">
@@ -188,7 +187,7 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
               </div>
 
               <div className="border-t border-purple-500/50 mt-4 pt-3 flex justify-between items-center">
-                <div className="text-gray-500 text-xs font-mono">BET ID: {generateBetId()}</div>
+                <div className="text-gray-500 text-xs font-mono">PIK ID: {generateBetId()}</div>
                 <div className="text-gray-500 text-xs">PLACED: {formatPlacedDate()}</div>
               </div>
             </div>
