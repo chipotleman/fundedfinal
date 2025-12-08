@@ -99,7 +99,7 @@ export default function DemoPage() {
         </div>
 
         {/* Challenge Selection Card */}
-        <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl border-2 border-slate-700 p-6 sm:p-8 mb-8">
+        <div className="bg-[#111111] backdrop-blur-lg rounded-2xl border border-gray-800/50 p-6 sm:p-8 mb-8">
           {/* Badge */}
           <div className="text-center mb-6">
             <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
@@ -123,7 +123,7 @@ export default function DemoPage() {
             <div className="relative">
               <div
                 onClick={() => setShowDropdown(!showDropdown)}
-                className="flex justify-between items-center py-4 px-5 bg-slate-800/50 rounded-xl border-2 border-green-400/50 cursor-pointer hover:border-green-400 transition-all duration-300 shadow-lg shadow-green-400/20"
+                className="flex justify-between items-center py-4 px-5 bg-[#1a1a1a] rounded-xl border-2 border-green-500/50 cursor-pointer hover:border-green-500 transition-all duration-300 shadow-lg shadow-green-500/20"
               >
                 <div>
                   <span className="text-gray-400 text-sm block mb-1">Starting Balance</span>
@@ -136,15 +136,15 @@ export default function DemoPage() {
 
               {/* Dropdown Menu */}
               {showDropdown && (
-                <div className="absolute z-10 w-full mt-2 bg-slate-800 border border-slate-600 rounded-xl shadow-2xl overflow-hidden">
+                <div className="absolute z-10 w-full mt-2 bg-[#0a0a0a] border border-gray-800/50 rounded-xl shadow-2xl overflow-hidden">
                   {challengeOptions.map((challenge, index) => (
                     <div
                       key={challenge.id}
                       onClick={() => handleChallengeSelect(index)}
                       className={`px-5 py-4 cursor-pointer transition-colors duration-200 ${
                         index === currentIndex 
-                          ? 'bg-green-400/20 border-l-4 border-green-400' 
-                          : 'hover:bg-slate-700 border-l-4 border-transparent'
+                          ? 'bg-green-500/20 border-l-4 border-green-500' 
+                          : 'hover:bg-[#1a1a1a] border-l-4 border-transparent'
                       }`}
                     >
                       <div className="flex justify-between items-center">
@@ -163,25 +163,25 @@ export default function DemoPage() {
             </div>
 
             {/* Profit Target */}
-            <div className="flex justify-between items-center py-4 px-5 bg-slate-700/30 rounded-xl">
+            <div className="flex justify-between items-center py-4 px-5 bg-[#1a1a1a] rounded-xl border border-gray-800/50">
               <span className="text-gray-300 font-medium">Profit Target</span>
-              <span className="text-blue-400 font-bold text-lg">${currentChallenge.target.toLocaleString()}</span>
+              <span className="text-green-400 font-bold text-lg">${currentChallenge.target.toLocaleString()}</span>
             </div>
 
             {/* Max Bet Size */}
-            <div className="flex justify-between items-center py-4 px-5 bg-slate-700/30 rounded-xl">
+            <div className="flex justify-between items-center py-4 px-5 bg-[#1a1a1a] rounded-xl border border-gray-800/50">
               <span className="text-gray-300 font-medium">Max Bet Size</span>
               <span className="text-white font-bold text-lg">${currentChallenge.maxBet.toLocaleString()}</span>
             </div>
 
             {/* Profit Split Slider */}
-            <div className="py-4 px-5 bg-gradient-to-r from-purple-500/10 to-blue-500/10 rounded-xl border border-purple-500/30">
+            <div className="py-4 px-5 bg-[#1a1a1a] rounded-xl border border-gray-800/50">
               <div className="text-center mb-3">
                 <span className="text-gray-300 font-medium block mb-1">Profit Split</span>
                 <div className="flex items-center justify-center gap-3 text-sm">
                   <span className="text-green-400 font-bold">You: {userSplit}%</span>
                   <span className="text-gray-500">|</span>
-                  <span className="text-blue-400 font-bold">Us: {100 - userSplit}%</span>
+                  <span className="text-gray-400 font-bold">Us: {100 - userSplit}%</span>
                 </div>
               </div>
               <input
@@ -191,11 +191,11 @@ export default function DemoPage() {
                 step="5"
                 value={userSplit}
                 onChange={(e) => setUserSplit(parseInt(e.target.value))}
-                className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                className="w-full h-3 bg-[#0a0a0a] rounded-lg appearance-none cursor-pointer accent-green-500"
               />
               <div className="flex justify-between text-xs mt-2">
-                <span className="text-gray-400 font-medium">Min: 50%</span>
-                <span className="text-gray-400 font-medium">Max: 90%</span>
+                <span className="text-gray-500 font-medium">Min: 50%</span>
+                <span className="text-gray-500 font-medium">Max: 90%</span>
               </div>
             </div>
           </div>
@@ -228,35 +228,35 @@ export default function DemoPage() {
 
         {/* Features Grid */}
         <div className="grid md:grid-cols-3 gap-6">
-          <div className="bg-slate-800/30 backdrop-blur-lg rounded-xl border border-slate-700 p-6 text-center">
+          <div className="bg-[#111111] backdrop-blur-lg rounded-xl border border-gray-800/50 p-6 text-center">
             <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
             </div>
             <h3 className="text-white font-bold mb-2">Full Features</h3>
-            <p className="text-gray-400 text-sm">Experience all platform features including real-time betting</p>
+            <p className="text-gray-500 text-sm">Experience all platform features including real-time betting</p>
           </div>
 
-          <div className="bg-slate-800/30 backdrop-blur-lg rounded-xl border border-slate-700 p-6 text-center">
-            <div className="w-12 h-12 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+          <div className="bg-[#111111] backdrop-blur-lg rounded-xl border border-gray-800/50 p-6 text-center">
+            <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
                 <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
               </svg>
             </div>
             <h3 className="text-white font-bold mb-2">No Signup</h3>
-            <p className="text-gray-400 text-sm">Start immediately without creating an account</p>
+            <p className="text-gray-500 text-sm">Start immediately without creating an account</p>
           </div>
 
-          <div className="bg-slate-800/30 backdrop-blur-lg rounded-xl border border-slate-700 p-6 text-center">
-            <div className="w-12 h-12 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+          <div className="bg-[#111111] backdrop-blur-lg rounded-xl border border-gray-800/50 p-6 text-center">
+            <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
               </svg>
             </div>
             <h3 className="text-white font-bold mb-2">Customizable</h3>
-            <p className="text-gray-400 text-sm">Choose your balance and profit split preferences</p>
+            <p className="text-gray-500 text-sm">Choose your balance and profit split preferences</p>
           </div>
         </div>
       </div>

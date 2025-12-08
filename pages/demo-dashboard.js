@@ -341,20 +341,20 @@ export default function DemoDashboard() {
       <div className="pt-6 px-4 sm:px-6 lg:px-8 pb-24">
         {/* Challenge Stats */}
         <div className="mb-6 grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-            <div className="text-gray-400 text-sm">Target</div>
+          <div className="bg-[#111111] rounded-xl p-4 border border-gray-800/50">
+            <div className="text-gray-500 text-sm">Target</div>
             <div className="text-white font-bold text-xl">${demoChallenge.target.toLocaleString()}</div>
           </div>
-          <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-            <div className="text-gray-400 text-sm">Progress</div>
-            <div className="text-blue-400 font-bold text-xl">{progress.toFixed(1)}%</div>
+          <div className="bg-[#111111] rounded-xl p-4 border border-gray-800/50">
+            <div className="text-gray-500 text-sm">Progress</div>
+            <div className="text-green-400 font-bold text-xl">{progress.toFixed(1)}%</div>
           </div>
-          <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-            <div className="text-gray-400 text-sm">Win Rate</div>
+          <div className="bg-[#111111] rounded-xl p-4 border border-gray-800/50">
+            <div className="text-gray-500 text-sm">Win Rate</div>
             <div className="text-green-400 font-bold text-xl">{winRate}%</div>
           </div>
-          <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-            <div className="text-gray-400 text-sm">Total Bets</div>
+          <div className="bg-[#111111] rounded-xl p-4 border border-gray-800/50">
+            <div className="text-gray-500 text-sm">Total Bets</div>
             <div className="text-white font-bold text-xl">{totalBets}</div>
           </div>
         </div>
@@ -368,8 +368,8 @@ export default function DemoDashboard() {
                 onClick={() => handleSportClick(sport)}
                 className={`flex-shrink-0 flex flex-col items-center justify-center w-20 h-20 rounded-full transition-all ${
                   selectedSport === sport
-                    ? 'bg-gray-800 text-white shadow-lg border-2 border-purple-500'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700'
+                    ? 'bg-[#111111] text-white shadow-lg border-2 border-green-500'
+                    : 'bg-[#111111] text-gray-300 hover:bg-[#1a1a1a] border border-gray-800/50'
                 }`}
               >
                 <span className="text-xl mb-1">{getSportIcon(sport)}</span>
@@ -382,8 +382,8 @@ export default function DemoDashboard() {
         {/* Games List */}
         <div className="space-y-4">
           {games.map(game => (
-            <div key={game.id} className="bg-gray-900 rounded-xl border border-gray-700 overflow-hidden">
-              <div className="bg-gray-800/50 px-6 py-4 border-b border-gray-600">
+            <div key={game.id} className="bg-[#111111] rounded-xl border border-gray-800/50 overflow-hidden">
+              <div className="bg-[#0a0a0a] px-6 py-4 border-b border-gray-800/50">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
@@ -395,7 +395,7 @@ export default function DemoDashboard() {
               </div>
 
               <div className="overflow-x-auto">
-                <div className="grid grid-cols-4 gap-4 px-4 py-2 text-xs text-gray-400 font-medium uppercase border-b border-slate-600">
+                <div className="grid grid-cols-4 gap-4 px-4 py-2 text-xs text-gray-500 font-medium uppercase border-b border-gray-800/50">
                   <div>Team</div>
                   <div className="text-center">Spread</div>
                   <div className="text-center">Total</div>
@@ -403,14 +403,14 @@ export default function DemoDashboard() {
                 </div>
 
                 {/* Away Team */}
-                <div className="grid grid-cols-4 gap-4 px-4 py-3 border-b border-slate-600/50">
+                <div className="grid grid-cols-4 gap-4 px-4 py-3 border-b border-gray-800/50">
                   <div className="text-white font-bold text-sm">{game.awayTeam}</div>
                   <button
                     onClick={() => addToBetSlip(game, 'spread', game.lines.spread.away, `${game.awayTeam} ${game.lines.spread.away.point}`)}
                     className={`border rounded-lg py-2 px-3 transition-all text-center ${
                       isBetInSlip(game, 'spread', `${game.awayTeam} ${game.lines.spread.away.point}`) 
                         ? 'bg-green-600 border-green-500 shadow-lg' 
-                        : 'bg-gray-700 border-gray-600 hover:bg-green-600'
+                        : 'bg-[#1a1a1a] border-gray-800/50 hover:bg-green-600'
                     }`}
                   >
                     <div className="text-gray-300 text-xs">{game.lines.spread.away.point}</div>
@@ -421,7 +421,7 @@ export default function DemoDashboard() {
                     className={`border rounded-lg py-2 px-3 transition-all text-center ${
                       isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) 
                         ? 'bg-green-600 border-green-500 shadow-lg' 
-                        : 'bg-gray-700 border-gray-600 hover:bg-green-600'
+                        : 'bg-[#1a1a1a] border-gray-800/50 hover:bg-green-600'
                     }`}
                   >
                     <div className="text-gray-300 text-xs">{game.lines.total.over.point}</div>
@@ -432,7 +432,7 @@ export default function DemoDashboard() {
                     className={`border rounded-lg py-2 px-3 transition-all text-center ${
                       isBetInSlip(game, 'moneyline', game.awayTeam) 
                         ? 'bg-green-600 border-green-500 shadow-lg' 
-                        : 'bg-gray-700 border-gray-600 hover:bg-green-600'
+                        : 'bg-[#1a1a1a] border-gray-800/50 hover:bg-green-600'
                     }`}
                   >
                     <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.moneyline.away)}</div>
@@ -447,7 +447,7 @@ export default function DemoDashboard() {
                     className={`border rounded-lg py-2 px-3 transition-all text-center ${
                       isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`) 
                         ? 'bg-green-600 border-green-500 shadow-lg' 
-                        : 'bg-gray-700 border-gray-600 hover:bg-green-600'
+                        : 'bg-[#1a1a1a] border-gray-800/50 hover:bg-green-600'
                     }`}
                   >
                     <div className="text-gray-300 text-xs">{game.lines.spread.home.point}</div>
@@ -458,7 +458,7 @@ export default function DemoDashboard() {
                     className={`border rounded-lg py-2 px-3 transition-all text-center ${
                       isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) 
                         ? 'bg-green-600 border-green-500 shadow-lg' 
-                        : 'bg-gray-700 border-gray-600 hover:bg-green-600'
+                        : 'bg-[#1a1a1a] border-gray-800/50 hover:bg-green-600'
                     }`}
                   >
                     <div className="text-gray-300 text-xs">{game.lines.total.under.point}</div>
@@ -469,7 +469,7 @@ export default function DemoDashboard() {
                     className={`border rounded-lg py-2 px-3 transition-all text-center ${
                       isBetInSlip(game, 'moneyline', game.homeTeam) 
                         ? 'bg-green-600 border-green-500 shadow-lg' 
-                        : 'bg-gray-700 border-gray-600 hover:bg-green-600'
+                        : 'bg-[#1a1a1a] border-gray-800/50 hover:bg-green-600'
                     }`}
                   >
                     <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.moneyline.home)}</div>
@@ -486,8 +486,8 @@ export default function DemoDashboard() {
         <div className="fixed inset-0 z-50 lg:inset-auto lg:top-20 lg:right-8 lg:w-[480px]">
           <div className="fixed inset-0 bg-black/50 lg:hidden" onClick={() => setShowBetSlip(false)}></div>
           
-          <div className="absolute bottom-0 left-0 right-0 h-[85vh] lg:relative bg-black border border-slate-700 rounded-t-2xl lg:rounded-2xl shadow-2xl flex flex-col">
-            <div className="flex-shrink-0 p-4 border-b border-slate-700 flex items-center justify-between">
+          <div className="absolute bottom-0 left-0 right-0 h-[85vh] lg:relative bg-[#0a0a0a] border border-gray-800/50 rounded-t-2xl lg:rounded-2xl shadow-2xl flex flex-col">
+            <div className="flex-shrink-0 p-4 border-b border-gray-800/50 flex items-center justify-between">
               <h3 className="text-white font-bold text-lg">Bet Slip ({selectedBets.length})</h3>
               <button
                 onClick={() => setShowBetSlip(false)}
@@ -501,7 +501,7 @@ export default function DemoDashboard() {
 
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {selectedBets.map(bet => (
-                <div key={bet.key} className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
+                <div key={bet.key} className="bg-[#111111] rounded-xl p-4 border border-gray-800/50">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
                       <div className="text-white font-medium text-sm">{bet.matchup}</div>
@@ -518,24 +518,24 @@ export default function DemoDashboard() {
                     </button>
                   </div>
                   <div>
-                    <label className="text-gray-400 text-xs block mb-1">Stake Amount</label>
+                    <label className="text-gray-500 text-xs block mb-1">Stake Amount</label>
                     <input
                       type="number"
                       value={bet.stake}
                       onChange={(e) => updateStake(bet.key, e.target.value)}
-                      className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-white"
+                      className="w-full bg-[#1a1a1a] border border-gray-800/50 rounded-lg px-3 py-2 text-white"
                       placeholder="0"
                     />
                   </div>
                   <div className="mt-2 text-sm">
-                    <span className="text-gray-400">To Win: </span>
+                    <span className="text-gray-500">To Win: </span>
                     <span className="text-green-400 font-bold">${calculatePayout(bet.stake, bet.odds).toFixed(2)}</span>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="flex-shrink-0 p-4 border-t border-slate-700 space-y-3">
+            <div className="flex-shrink-0 p-4 border-t border-gray-800/50 space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">Total Stake:</span>
                 <span className="text-white font-bold">${getTotalStake().toFixed(2)}</span>
