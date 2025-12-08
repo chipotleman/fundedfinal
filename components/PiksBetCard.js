@@ -160,7 +160,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
           </div>
         </div>
 
-        <div className="border-t border-purple-500/50 mt-1 pt-1 flex justify-between items-center">
+        <div className="border-t border-white/30 mt-1 pt-1 flex justify-between items-center">
           <div className="text-gray-500 text-[10px] font-mono">PIK ID: {generateBetId()}</div>
           <div className="text-gray-500 text-[10px]">PLACED: {formatPlacedDate()}</div>
         </div>
