@@ -36,7 +36,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
 
   return (
     <div 
-      className={`relative bg-black rounded-lg overflow-hidden mx-2 sm:mx-0 border ${
+      className={`relative bg-black rounded-lg overflow-hidden mx-2 sm:mx-0 border outline-none focus:outline-none focus:ring-0 ${
         isWon ? 'border-green-500' : isOpen ? 'border-blue-500' : 'border-red-500'
       }`}
     >

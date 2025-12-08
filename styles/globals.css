@@ -471,7 +471,6 @@ button:hover, .btn:hover {
   /* Disable hover effects on specific elements - exclude SVGs to preserve icons */
   button:not(svg):hover,
   a:not(svg):hover,
-  div:not(svg):hover,
   .btn:hover,
   .glass-button:hover,
   .modern-card:hover,
@@ -480,8 +479,14 @@ button:hover, .btn:hover {
     transform: none !important;
     box-shadow: none !important;
     background-color: inherit !important;
-    border-color: inherit !important;
     text-shadow: none !important;
+  }
+  
+  /* Preserve bet card border colors */
+  .border-green-500,
+  .border-blue-500,
+  .border-red-500 {
+    border-color: unset;
   }
   
   /* Remove active/focus highlights */
