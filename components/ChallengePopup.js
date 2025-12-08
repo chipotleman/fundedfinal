@@ -43,7 +43,9 @@ const challenges = [
 export default function ChallengePopup({ isOpen, onClose }) {
   const [currentIndex, setCurrentIndex] = useState(1); // Start with Pro Challenge (most popular)
   const [showDropdown, setShowDropdown] = useState(false);
-  const [step, setStep] = useState('selection'); // 'selection' or 'payment'
+  const [step, setStep] = useState('selection'); // 'selection', 'payment', 'checkout', or 'receipt'
+  const [checkoutUrl, setCheckoutUrl] = useState(null);
+  const [checkoutError, setCheckoutError] = useState(null);
   const [userSplit, setUserSplit] = useState(70); // Default 70% user split (base)
   const [cardInfo, setCardInfo] = useState({
     cardNumber: '',
@@ -92,8 +94,42 @@ export default function ChallengePopup({ isOpen, onClose }) {
     setShowDropdown(false);
   };
 
-  const handleNext = () => {
-    setStep('payment');
+  const handleNext = async () => {
+    setLoading(true);
+    setCheckoutError(null);
+    
+    try {
+      const response = await fetch('/api/fanbasis-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          challengeType: currentChallenge.badge,
+          challengeName: currentChallenge.name,
+          startingBalance: currentChallenge.startingBalance,
+          userSplit: userSplit,
+          adjustedPrice: adjustedPrice,
+          userEmail: cardInfo.email || ''
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.embedUrl) {
+        setCheckoutUrl(data.embedUrl);
+        setStep('checkout');
+      } else {
+        setCheckoutError(data.error || 'Failed to create checkout session');
+        setStep('payment');
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      setCheckoutError('Failed to initialize checkout. Please try again.');
+      setStep('payment');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBack = () => {
@@ -525,11 +561,25 @@ export default function ChallengePopup({ isOpen, onClose }) {
               {/* Action Button */}
               <button
                 onClick={handleNext}
-                className={`w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} text-white font-bold py-3 px-6 rounded-xl shadow-2xl mb-4 transform hover:scale-105 transition-all duration-300`}
+                disabled={loading}
+                className={`w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3 px-6 rounded-xl shadow-2xl mb-4 transform hover:scale-105 transition-all duration-300 disabled:transform-none disabled:cursor-not-allowed`}
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >
-                Continue With {userSplit}% Split (${adjustedPrice})
+                {loading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Loading Checkout...</span>
+                  </div>
+                ) : (
+                  `Continue With ${userSplit}% Split ($${adjustedPrice})`
+                )}
               </button>
+              
+              {checkoutError && (
+                <div className="text-red-400 text-sm text-center mb-4">
+                  {checkoutError}
+                </div>
+              )}
 
               {/* Challenge indicator */}
               <div className="flex justify-center space-x-2" style={{ WebkitTapHighlightColor: 'transparent' }}>
@@ -678,6 +728,45 @@ export default function ChallengePopup({ isOpen, onClose }) {
               ) : (
                 `Pay and Start Challenge - $${adjustedPrice}`
               )}
+            </button>
+          </div>
+        ) : step === 'checkout' ? (
+          /* Fanbasis Embedded Checkout */
+          <div className="p-6 pt-12" style={{ WebkitTapHighlightColor: 'transparent' }}>
+            <div className="text-center mb-4">
+              <div className="mb-4">
+                <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-16 mx-auto" />
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2">Complete Your Purchase</h2>
+              <p className="text-gray-400 text-sm mb-4">
+                {currentChallenge.name} • ${adjustedPrice} • {userSplit}% split
+              </p>
+            </div>
+            
+            {checkoutUrl ? (
+              <div className="relative rounded-xl overflow-hidden bg-white" style={{ minHeight: '500px' }}>
+                <iframe
+                  src={checkoutUrl}
+                  className="w-full h-full absolute inset-0"
+                  style={{ minHeight: '500px', border: 'none' }}
+                  allow="payment"
+                  title="Fanbasis Checkout"
+                />
+              </div>
+            ) : (
+              <div className="flex items-center justify-center py-12">
+                <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            )}
+            
+            <button
+              onClick={() => {
+                setStep('selection');
+                setCheckoutUrl(null);
+              }}
+              className="w-full mt-4 py-3 px-6 bg-slate-800/50 hover:bg-slate-700/50 text-gray-300 font-medium rounded-xl transition-all duration-300"
+            >
+              Cancel
             </button>
           </div>
         ) : (
