@@ -44,7 +44,7 @@ function ThunderCardModule() {
                 <img 
                   src="/piks-card.png" 
                   alt="Piks Card" 
-                  className="w-80 sm:w-96 drop-shadow-2xl"
+                  className="w-[640px] sm:w-[768px] drop-shadow-2xl"
                 />
               </div>
             </div>
