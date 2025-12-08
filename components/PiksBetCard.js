@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 export default function PiksBetCard({ bet, onCashOut, onShare }) {
+  const [confirmingCashOut, setConfirmingCashOut] = useState(false);
   const formatOdds = (odds) => {
     return odds > 0 ? `+${odds}` : odds.toString();
   };
@@ -30,6 +31,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
   const isWon = bet.status === 'won';
   const isOpen = bet.status === 'open';
   const isLost = bet.status === 'lost';
+  const isCashedOut = bet.status === 'cashed_out';
 
   const homeScore = bet.homeScore || (isWon || isLost ? Math.floor(Math.random() * 15 + 20) : null);
   const awayScore = bet.awayScore || (isWon || isLost ? Math.floor(Math.random() * 15 + 15) : null);
@@ -37,7 +39,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
   return (
     <div 
       className={`relative bg-black rounded-lg overflow-hidden mx-2 sm:mx-0 border outline-none focus:outline-none focus:ring-0 ${
-        isWon ? 'border-green-500' : isOpen ? 'border-blue-500' : 'border-red-500'
+        isWon ? 'border-green-500' : isOpen ? 'border-blue-500' : isCashedOut ? 'border-orange-500' : 'border-red-500'
       }`}
     >
             
@@ -50,15 +52,16 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
           <div className={`flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] ${
             isWon ? 'bg-green-500/20 border border-green-500/50' :
             isOpen ? 'bg-blue-500/20 border border-blue-500/50' :
+            isCashedOut ? 'bg-orange-500/20 border border-orange-500/50' :
             'bg-red-500/20 border border-red-500/50'
           }`}>
             <div className={`w-1.5 h-1.5 rounded-full ${
-              isWon ? 'bg-green-400' : isOpen ? 'bg-blue-400 animate-pulse' : 'bg-red-400'
+              isWon ? 'bg-green-400' : isOpen ? 'bg-blue-400 animate-pulse' : isCashedOut ? 'bg-orange-400' : 'bg-red-400'
             }`}></div>
             <span className={`font-bold ${
-              isWon ? 'text-green-400' : isOpen ? 'text-blue-400' : 'text-red-400'
+              isWon ? 'text-green-400' : isOpen ? 'text-blue-400' : isCashedOut ? 'text-orange-400' : 'text-red-400'
             }`}>
-              {isWon ? 'WON' : isOpen ? 'OPEN' : 'LOST'}
+              {isWon ? 'WON' : isOpen ? 'OPEN' : isCashedOut ? 'CASHED OUT' : 'LOST'}
             </span>
           </div>
         </div>
@@ -154,6 +157,12 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                 <div className="text-gray-400 text-[10px] uppercase">Payout</div>
               </div>
             )}
+            {isCashedOut && (
+              <div className="text-right">
+                <div className="text-orange-400 font-bold text-lg">${bet.profit?.toFixed(2) || (bet.stake * 0.8).toFixed(2)}</div>
+                <div className="text-gray-400 text-[10px] uppercase">Cashed Out</div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -164,10 +173,22 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
 
         {isOpen && onCashOut && (
           <button
-            onClick={() => onCashOut(bet.id)}
-            className="w-full mt-1 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-2 px-3 rounded-lg text-sm transition-all"
+            onClick={() => {
+              if (confirmingCashOut) {
+                onCashOut(bet.id);
+                setConfirmingCashOut(false);
+              } else {
+                setConfirmingCashOut(true);
+              }
+            }}
+            onBlur={() => setConfirmingCashOut(false)}
+            className={`w-full mt-1 text-white font-bold py-2 px-3 rounded-lg text-sm transition-all ${
+              confirmingCashOut 
+                ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800' 
+                : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'
+            }`}
           >
-            Cash Out (${(bet.stake * 0.8).toFixed(2)})
+            {confirmingCashOut ? `Confirm Cash Out ($${(bet.stake * 0.8).toFixed(2)})` : `Cash Out ($${(bet.stake * 0.8).toFixed(2)})`}
           </button>
         )}
 

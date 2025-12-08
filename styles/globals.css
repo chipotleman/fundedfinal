@@ -485,7 +485,8 @@ button:hover, .btn:hover {
   /* Preserve bet card border colors */
   .border-green-500,
   .border-blue-500,
-  .border-red-500 {
+  .border-red-500,
+  .border-orange-500 {
     border-color: unset;
   }
   
