@@ -244,17 +244,16 @@ export default function Dashboard() {
           ) : games.length > 0 ? (
             games.map(game => (
               <div key={game.id} className="bg-[#111111] rounded-2xl border border-gray-800/50 overflow-hidden">
-                {/* Card Header with Piks Logo */}
+                {/* Card Header */}
                 <div className="px-4 sm:px-5 py-3 sm:py-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <img src="/pikslogotransparent.png" alt="Piks" className="h-5 sm:h-6" />
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="text-white font-bold text-base sm:text-lg truncate">{game.awayTeam} @ {game.homeTeam}</h3>
                     <div className="flex items-center space-x-2 bg-red-500/20 px-3 py-1 rounded-full">
                       <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
                       <span className="text-red-400 text-xs font-semibold uppercase">Live</span>
                     </div>
                   </div>
-                  <h3 className="text-white font-bold text-base sm:text-lg truncate">{game.awayTeam} @ {game.homeTeam}</h3>
-                  <p className="text-gray-500 text-xs mt-1">{game.time}</p>
+                  <p className="text-gray-500 text-xs">{game.time}</p>
                 </div>
 
                 {/* Betting Options */}

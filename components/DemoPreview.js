@@ -543,16 +543,15 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                 <div className="space-y-3 sm:space-y-4">
                   {mockGames.map((game) => (
                     <div key={game.id} className="bg-[#111111] rounded-2xl border border-gray-800/50 overflow-hidden">
-                      {/* Card Header with Piks Logo */}
+                      {/* Card Header */}
                       <div className="px-4 sm:px-5 py-3 sm:py-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <img src="/pikslogotransparent.png" alt="Piks" className="h-5 sm:h-6" />
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-white font-bold text-base sm:text-lg truncate">{game.awayTeam} @ {game.homeTeam}</h3>
                           <div className="flex items-center space-x-2 bg-green-500/20 px-3 py-1 rounded-full">
                             <span className="text-green-400 text-xs font-semibold uppercase">Demo</span>
                           </div>
                         </div>
-                        <h3 className="text-white font-bold text-base sm:text-lg truncate">{game.awayTeam} @ {game.homeTeam}</h3>
-                        <p className="text-gray-500 text-xs mt-1">{game.sport} • Live</p>
+                        <p className="text-gray-500 text-xs">{game.sport} • Live</p>
                       </div>
 
                       {/* Betting Options */}
