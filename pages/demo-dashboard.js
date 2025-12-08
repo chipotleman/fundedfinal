@@ -328,10 +328,10 @@ export default function DemoDashboard() {
               Reset Demo
             </button>
             <button
-              onClick={() => router.push('/auth')}
+              onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
               className="bg-white hover:bg-gray-100 text-purple-600 font-bold text-sm px-4 py-2 rounded-lg transition-all"
             >
-              Sign Up for Real
+              Start for Real
             </button>
           </div>
         </div>

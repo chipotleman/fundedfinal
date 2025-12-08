@@ -739,7 +739,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
           </div>
         ) : step === 'checkout' ? (
           /* Fanbasis Embedded Checkout */
-          <div className="p-6 pt-12" style={{ WebkitTapHighlightColor: 'transparent' }}>
+          <div className="p-6 pt-12 max-h-[85vh] overflow-y-auto" style={{ WebkitTapHighlightColor: 'transparent' }}>
             <div className="text-center mb-4">
               <div className="mb-4">
                 <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-16 mx-auto" />
@@ -751,11 +751,11 @@ export default function ChallengePopup({ isOpen, onClose }) {
             </div>
             
             {checkoutUrl ? (
-              <div className="relative rounded-xl overflow-hidden bg-white" style={{ minHeight: '500px' }}>
+              <div className="relative rounded-xl overflow-hidden bg-white" style={{ height: '600px' }}>
                 <iframe
                   src={checkoutUrl}
-                  className="w-full h-full absolute inset-0"
-                  style={{ minHeight: '500px', border: 'none' }}
+                  className="w-full"
+                  style={{ height: '600px', border: 'none' }}
                   allow="payment"
                   title="Fanbasis Checkout"
                 />

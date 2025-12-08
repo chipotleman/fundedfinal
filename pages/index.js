@@ -185,7 +185,7 @@ export default function Home() {
                 Get <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent inline-block" style={{ transform: 'translateY(0.42px)' }}>Funded</span> to Bet
               </h1>
               <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-4 sm:mb-6 px-4">
-                Watch how you can get funded up to <Link href="/packages" className="text-green-400 font-bold hover:text-green-300 transition-colors cursor-pointer">$100,000</Link> to bet with and keep 90% of your profits
+                Watch how you can get funded up to <button onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))} className="text-green-400 font-bold hover:text-green-300 transition-colors cursor-pointer">$100,000</button> to bet with and keep 90% of your profits
               </p>
             </div>
 
@@ -221,17 +221,34 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Live Winners Section - Moved up for better visual flow */}
-            <div className="text-center mb-12 px-4">
-              <h2 className="text-4xl font-bold text-white mb-4">
-                See Real <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Winners</span>
-              </h2>
-              <p className="text-gray-300 text-lg max-w-2xl mx-auto mb-8">
-                Watch as bettors like you win real money in real-time. Click any user to see their full profile and betting history.
-              </p>
+            {/* Real Winners & Community Stats - Side by Side on Desktop */}
+            <div className="mb-12 px-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
+                {/* Live Winners Section */}
+                <div>
+                  <div className="text-center lg:text-left mb-6">
+                    <h2 className="text-3xl font-bold text-white mb-2">
+                      Real <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Winners</span>
+                    </h2>
+                    <p className="text-gray-400 text-sm">
+                      Watch bettors win in real-time
+                    </p>
+                  </div>
+                  <LiveFeed />
+                </div>
 
-              <div className="flex justify-center max-w-6xl mx-auto">
-                <LiveFeed />
+                {/* Live Community Stats Section */}
+                <div>
+                  <div className="text-center lg:text-left mb-6">
+                    <h2 className="text-3xl font-bold text-white mb-2">
+                      Community <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Stats</span>
+                    </h2>
+                    <p className="text-gray-400 text-sm">
+                      Real-time data from our community
+                    </p>
+                  </div>
+                  <LiveCommunityStats />
+                </div>
               </div>
             </div>
 
@@ -247,21 +264,6 @@ export default function Home() {
           showDemoBetSlip={showDemoBetSlip}
           setShowDemoBetSlip={setShowDemoBetSlip}
         />
-
-        {/* Live Community Stats Section */}
-        <div className="py-16 px-4">
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-8">
-              <h2 className="text-4xl font-bold text-white mb-4">
-                Live <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Community Stats</span>
-              </h2>
-              <p className="text-gray-300 text-lg">
-                Real-time data from our active betting community
-              </p>
-            </div>
-            <LiveCommunityStats />
-          </div>
-        </div>
       </div>
 
       {/* Bet Slip */}
