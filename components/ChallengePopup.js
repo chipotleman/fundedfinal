@@ -117,8 +117,8 @@ export default function ChallengePopup({ isOpen, onClose }) {
       const data = await response.json();
 
       if (data.success && data.embedUrl) {
-        // Redirect to Fanbasis checkout page
-        window.location.href = data.embedUrl;
+        setCheckoutUrl(data.embedUrl);
+        setStep('checkout');
       } else {
         setCheckoutError(data.error || 'Failed to create checkout session');
         setStep('payment');

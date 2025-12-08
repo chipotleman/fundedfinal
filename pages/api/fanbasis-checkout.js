@@ -46,11 +46,25 @@ export default async function handler(req, res) {
     });
 
     if (result.status === 'success' && result.data) {
+      const secret = result.data.checkout_session_secret;
+      const sessionId = result.data.id;
+      
+      // Try different possible embed URL formats
+      // You may need to adjust this based on Fanbasis documentation
+      const embedUrl = `https://www.fanbasis.com/embedded-checkout/${secret}`;
+      
       return res.status(200).json({
         success: true,
-        checkoutSessionId: result.data.id,
-        checkoutSessionSecret: result.data.checkout_session_secret,
-        embedUrl: `https://www.fanbasis.com/checkout/${result.data.checkout_session_secret}`
+        checkoutSessionId: sessionId,
+        checkoutSessionSecret: secret,
+        embedUrl: embedUrl,
+        // Alternative URLs to try if the main one doesn't work
+        alternativeUrls: [
+          `https://www.fanbasis.com/checkout/${secret}`,
+          `https://www.fanbasis.com/pay/${secret}`,
+          `https://checkout.fanbasis.com/${secret}`,
+          `https://www.fanbasis.com/embedded/${sessionId}`
+        ]
       });
     } else {
       return res.status(400).json({ 
