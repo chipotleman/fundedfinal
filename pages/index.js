@@ -28,7 +28,7 @@ function ThunderCardModule() {
       <div className="max-w-3xl mx-auto">
         <div className="bg-gradient-to-br from-slate-900 via-purple-900 to-blue-900 rounded-2xl border border-purple-500/30 overflow-hidden p-4 sm:p-6">
           {/* Card Image - Main Focus */}
-          <div className="flex justify-center mb-4">
+          <div className="flex justify-center mb-1">
             <div className="relative transform hover:scale-105 transition-all duration-300">
               <img 
                 src="/piks-card.png" 
