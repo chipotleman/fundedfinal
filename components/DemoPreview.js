@@ -535,107 +535,111 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
             {/* Games List */}
             <div className="lg:col-span-2">
-              <div className="bg-slate-800/50 backdrop-blur-lg rounded-xl sm:rounded-2xl border border-slate-700 p-3 sm:p-6">
+              <div className="bg-[#0a0a0a] backdrop-blur-lg rounded-xl sm:rounded-2xl border border-gray-800/50 p-3 sm:p-6">
                 <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6 flex items-center">
                   <span className="w-3 h-3 bg-green-400 rounded-full mr-3 animate-pulse"></span>
                   Live Games
                 </h3>
                 <div className="space-y-3 sm:space-y-4">
                   {mockGames.map((game) => (
-                    <div key={game.id} className="bg-slate-700/30 rounded-lg sm:rounded-xl p-3 sm:p-4 border border-slate-600">
-                      <div className="flex items-center justify-between mb-3 sm:mb-4">
-                        <div>
-                          <div className="text-white font-semibold text-sm sm:text-base">{game.awayTeam} @ {game.homeTeam}</div>
-                          <div className="text-gray-400 text-xs sm:text-sm">{game.sport} • Live</div>
+                    <div key={game.id} className="bg-[#111111] rounded-2xl border border-gray-800/50 overflow-hidden">
+                      {/* Card Header with Piks Logo */}
+                      <div className="px-4 sm:px-5 py-3 sm:py-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <img src="/piks-logo-white.png" alt="Piks" className="h-5 sm:h-6" />
+                          <div className="flex items-center space-x-2 bg-green-500/20 px-3 py-1 rounded-full">
+                            <span className="text-green-400 text-xs font-semibold uppercase">Demo</span>
+                          </div>
                         </div>
-                        <div className="text-green-400 font-bold text-xs sm:text-sm">DEMO</div>
+                        <h3 className="text-white font-bold text-base sm:text-lg truncate">{game.awayTeam} @ {game.homeTeam}</h3>
+                        <p className="text-gray-500 text-xs mt-1">{game.sport} • Live</p>
                       </div>
 
-                      {/* Betting Options - Dashboard Style Table */}
-                      <div className="overflow-x-auto">
+                      {/* Betting Options */}
+                      <div className="px-4 sm:px-5 pb-4">
                         {/* Header Row */}
-                        <div className="grid grid-cols-4 gap-1 sm:gap-4 px-2 sm:px-4 py-2 text-xs text-gray-400 font-medium uppercase tracking-wider border-b border-slate-600">
-                          <div className="text-left">Team</div>
+                        <div className="grid grid-cols-4 gap-2 sm:gap-3 mb-2 text-xs text-gray-500 font-medium uppercase">
+                          <div className="text-left"></div>
                           <div className="text-center">Spread</div>
                           <div className="text-center">Total</div>
-                          <div className="text-center">Moneyline</div>
+                          <div className="text-center">ML</div>
                         </div>
 
                         {/* Away Team Row */}
-                        <div className="grid grid-cols-4 gap-1 sm:gap-4 px-2 sm:px-4 py-2 sm:py-3 border-b border-slate-600/50">
+                        <div className="grid grid-cols-4 gap-2 sm:gap-3 mb-2">
                           <div className="flex items-center">
-                            <div className="text-white font-bold text-xs sm:text-sm truncate">{game.awayTeam}</div>
+                            <span className="text-white font-semibold text-sm truncate">{game.awayTeam}</span>
                           </div>
                           <button
                             onClick={() => placeDemoBet(game, 'spread', -110, `${game.awayTeam} ${game.spread > 0 ? -game.spread : '+' + Math.abs(game.spread)}`, `${game.id}-spread-away`)}
-                            className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
+                            className={`rounded-lg py-2.5 px-2 transition-all duration-200 text-center ${
                               isBetSelected(`${game.id}-spread-away`)
-                                ? 'bg-green-600 border-green-500 text-white'
-                                : 'bg-gray-700 border-gray-600 text-white'
+                                ? 'bg-green-600 shadow-lg shadow-green-500/20'
+                                : 'bg-[#1a1a1a] hover:bg-[#252525]'
                             }`}
                           >
-                            <div className={`text-xs ${isBetSelected(`${game.id}-spread-away`) ? 'text-white' : 'text-gray-300'}`}>{game.spread > 0 ? -game.spread : '+' + Math.abs(game.spread)}</div>
-                            <div className={`text-xs font-medium ${isBetSelected(`${game.id}-spread-away`) ? 'text-white' : 'text-green-400'}`}>-110</div>
+                            <div className="text-gray-400 text-xs">{game.spread > 0 ? -game.spread : '+' + Math.abs(game.spread)}</div>
+                            <div className="text-green-400 text-sm font-bold">-110</div>
                           </button>
                           <button
                             onClick={() => placeDemoBet(game, 'total', -110, `Over ${game.total}`, `${game.id}-total-over`)}
-                            className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
+                            className={`rounded-lg py-2.5 px-2 transition-all duration-200 text-center ${
                               isBetSelected(`${game.id}-total-over`)
-                                ? 'bg-green-600 border-green-500 text-white'
-                                : 'bg-gray-700 border-gray-600 text-white'
+                                ? 'bg-green-600 shadow-lg shadow-green-500/20'
+                                : 'bg-[#1a1a1a] hover:bg-[#252525]'
                             }`}
                           >
-                            <div className={`text-xs ${isBetSelected(`${game.id}-total-over`) ? 'text-white' : 'text-gray-300'}`}>O {game.total}</div>
-                            <div className={`text-xs font-medium ${isBetSelected(`${game.id}-total-over`) ? 'text-white' : 'text-green-400'}`}>-110</div>
+                            <div className="text-gray-400 text-xs">O {game.total}</div>
+                            <div className="text-green-400 text-sm font-bold">-110</div>
                           </button>
                           <button
                             onClick={() => placeDemoBet(game, 'moneyline', game.moneylineAway, game.awayTeam, `${game.id}-moneyline-away`)}
-                            className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
+                            className={`rounded-lg py-2.5 px-2 transition-all duration-200 text-center ${
                               isBetSelected(`${game.id}-moneyline-away`)
-                                ? 'bg-green-600 border-green-500 text-white'
-                                : 'bg-gray-700 border-gray-600 text-white'
+                                ? 'bg-green-600 shadow-lg shadow-green-500/20'
+                                : 'bg-[#1a1a1a] hover:bg-[#252525]'
                             }`}
                           >
-                            <div className={`text-xs font-medium ${isBetSelected(`${game.id}-moneyline-away`) ? 'text-white' : 'text-green-400'}`}>{game.moneylineAway > 0 ? '+' : ''}{game.moneylineAway}</div>
+                            <div className="text-green-400 text-sm font-bold">{game.moneylineAway > 0 ? '+' : ''}{game.moneylineAway}</div>
                           </button>
                         </div>
 
                         {/* Home Team Row */}
-                        <div className="grid grid-cols-4 gap-1 sm:gap-4 px-2 sm:px-4 py-2 sm:py-3">
+                        <div className="grid grid-cols-4 gap-2 sm:gap-3">
                           <div className="flex items-center">
-                            <div className="text-white font-bold text-xs sm:text-sm truncate">{game.homeTeam}</div>
+                            <span className="text-white font-semibold text-sm truncate">{game.homeTeam}</span>
                           </div>
                           <button
                             onClick={() => placeDemoBet(game, 'spread', -110, `${game.homeTeam} ${game.spread > 0 ? '+' + game.spread : game.spread}`, `${game.id}-spread-home`)}
-                            className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
+                            className={`rounded-lg py-2.5 px-2 transition-all duration-200 text-center ${
                               isBetSelected(`${game.id}-spread-home`)
-                                ? 'bg-green-600 border-green-500 text-white'
-                                : 'bg-gray-700 border-gray-600 text-white'
+                                ? 'bg-green-600 shadow-lg shadow-green-500/20'
+                                : 'bg-[#1a1a1a] hover:bg-[#252525]'
                             }`}
                           >
-                            <div className={`text-xs ${isBetSelected(`${game.id}-spread-home`) ? 'text-white' : 'text-gray-300'}`}>{game.spread > 0 ? '+' + game.spread : game.spread}</div>
-                            <div className={`text-xs font-medium ${isBetSelected(`${game.id}-spread-home`) ? 'text-white' : 'text-green-400'}`}>-110</div>
+                            <div className="text-gray-400 text-xs">{game.spread > 0 ? '+' + game.spread : game.spread}</div>
+                            <div className="text-green-400 text-sm font-bold">-110</div>
                           </button>
                           <button
                             onClick={() => placeDemoBet(game, 'total', -110, `Under ${game.total}`, `${game.id}-total-under`)}
-                            className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
+                            className={`rounded-lg py-2.5 px-2 transition-all duration-200 text-center ${
                               isBetSelected(`${game.id}-total-under`)
-                                ? 'bg-green-600 border-green-500 text-white'
-                                : 'bg-gray-700 border-gray-600 text-white'
+                                ? 'bg-green-600 shadow-lg shadow-green-500/20'
+                                : 'bg-[#1a1a1a] hover:bg-[#252525]'
                             }`}
                           >
-                            <div className={`text-xs ${isBetSelected(`${game.id}-total-under`) ? 'text-white' : 'text-gray-300'}`}>U {game.total}</div>
-                            <div className={`text-xs font-medium ${isBetSelected(`${game.id}-total-under`) ? 'text-white' : 'text-green-400'}`}>-110</div>
+                            <div className="text-gray-400 text-xs">U {game.total}</div>
+                            <div className="text-green-400 text-sm font-bold">-110</div>
                           </button>
                           <button
                             onClick={() => placeDemoBet(game, 'moneyline', game.moneylineHome, game.homeTeam, `${game.id}-moneyline-home`)}
-                            className={`border rounded-lg py-2 px-2 sm:px-3 text-center ${
+                            className={`rounded-lg py-2.5 px-2 transition-all duration-200 text-center ${
                               isBetSelected(`${game.id}-moneyline-home`)
-                                ? 'bg-green-600 border-green-500 text-white'
-                                : 'bg-gray-700 border-gray-600 text-white'
+                                ? 'bg-green-600 shadow-lg shadow-green-500/20'
+                                : 'bg-[#1a1a1a] hover:bg-[#252525]'
                             }`}
                           >
-                            <div className={`text-xs font-medium ${isBetSelected(`${game.id}-moneyline-home`) ? 'text-white' : 'text-green-400'}`}>{game.moneylineHome > 0 ? '+' : ''}{game.moneylineHome}</div>
+                            <div className="text-green-400 text-sm font-bold">{game.moneylineHome > 0 ? '+' : ''}{game.moneylineHome}</div>
                           </button>
                         </div>
                       </div>
