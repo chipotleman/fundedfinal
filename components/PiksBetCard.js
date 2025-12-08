@@ -39,11 +39,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
       className="relative bg-black rounded-lg overflow-hidden mx-2 sm:mx-0"
       style={{ border: '1px dashed #a855f7' }}
     >
-      <div 
-        className="absolute top-0 left-0 right-0 h-1"
-        style={{ background: 'linear-gradient(90deg, #a855f7, #7c3aed)' }}
-      />
-      
+            
       <div className="px-2 py-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
