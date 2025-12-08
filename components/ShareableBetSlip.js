@@ -121,7 +121,7 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
             
             <div className="px-2 py-1">
               <div className="flex items-center justify-center">
-                <img src="/funderlogo/Piks.png" alt="Piks" className="h-14 object-contain -ml-[20px]" />
+                <img src="/funderlogo/Piks.png" alt="Piks" className="h-20 object-contain -ml-[30px]" />
               </div>
 
               <div className="border-t border-purple-500/50 pt-1">
