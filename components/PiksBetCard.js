@@ -1,7 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function PiksBetCard({ bet, onCashOut, onShare }) {
   const [confirmingCashOut, setConfirmingCashOut] = useState(false);
+  const buttonRef = useRef(null);
+
+  useEffect(() => {
+    if (confirmingCashOut) {
+      const handleClickOutside = (e) => {
+        if (buttonRef.current && !buttonRef.current.contains(e.target)) {
+          setConfirmingCashOut(false);
+        }
+      };
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [confirmingCashOut]);
   const formatOdds = (odds) => {
     return odds > 0 ? `+${odds}` : odds.toString();
   };
@@ -173,6 +186,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
 
         {isOpen && onCashOut && (
           <button
+            ref={buttonRef}
             onClick={() => {
               if (confirmingCashOut) {
                 onCashOut(bet.id);
@@ -181,7 +195,6 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                 setConfirmingCashOut(true);
               }
             }}
-            onBlur={() => setConfirmingCashOut(false)}
             className={`w-full mt-1 text-white font-bold py-2 px-3 rounded-lg text-sm transition-all ${
               confirmingCashOut 
                 ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800' 
