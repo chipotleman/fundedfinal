@@ -66,7 +66,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
           </div>
         </div>
 
-        <div className="border-t border-purple-500/50 pt-1 mt-1">
+        <div className="pt-1 mt-1">
           <div className="flex justify-between items-start">
             <div className="flex-1">
               <div className="text-white font-bold text-sm">{bet.selection}</div>
@@ -126,7 +126,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
           )}
         </div>
 
-        <div className="border-t border-purple-500/50 mt-1 pt-1">
+        <div className="mt-1 pt-1">
           <div className="flex justify-between items-end">
             <div>
               <div className="text-white font-bold text-lg">${bet.stake?.toFixed(2)}</div>
