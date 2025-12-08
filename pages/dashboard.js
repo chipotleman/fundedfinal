@@ -279,8 +279,8 @@ export default function Dashboard() {
                           : 'bg-[#1a1a1a] hover:bg-[#252525]'
                       }`}
                     >
-                      <div className="text-gray-400 text-xs">{game.lines.spread.away.point}</div>
-                      <div className="text-green-400 text-sm font-bold">{formatOdds(game.lines.spread.away.odds)}</div>
+                      <div className={`text-xs ${isBetInSlip(game, 'spread', `${game.awayTeam} ${game.lines.spread.away.point}`) ? 'text-white' : 'text-gray-400'}`}>{game.lines.spread.away.point}</div>
+                      <div className={`text-sm font-bold ${isBetInSlip(game, 'spread', `${game.awayTeam} ${game.lines.spread.away.point}`) ? 'text-white' : 'text-green-400'}`}>{formatOdds(game.lines.spread.away.odds)}</div>
                     </button>
                     <button
                       onClick={() => addToBetSlip(game, 'total', game.lines.total.over, `Over ${game.lines.total.over.point}`)}
@@ -290,8 +290,8 @@ export default function Dashboard() {
                           : 'bg-[#1a1a1a] hover:bg-[#252525]'
                       }`}
                     >
-                      <div className="text-gray-400 text-xs">{game.lines.total.over.point}</div>
-                      <div className="text-green-400 text-sm font-bold">{formatOdds(game.lines.total.over.odds)}</div>
+                      <div className={`text-xs ${isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? 'text-white' : 'text-gray-400'}`}>{game.lines.total.over.point}</div>
+                      <div className={`text-sm font-bold ${isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? 'text-white' : 'text-green-400'}`}>{formatOdds(game.lines.total.over.odds)}</div>
                     </button>
                     <button
                       onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeam)}
@@ -301,7 +301,7 @@ export default function Dashboard() {
                           : 'bg-[#1a1a1a] hover:bg-[#252525]'
                       }`}
                     >
-                      <div className="text-green-400 text-sm font-bold">{formatOdds(game.lines.moneyline.away)}</div>
+                      <div className={`text-sm font-bold ${isBetInSlip(game, 'moneyline', game.awayTeam) ? 'text-white' : 'text-green-400'}`}>{formatOdds(game.lines.moneyline.away)}</div>
                     </button>
                   </div>
 
@@ -318,8 +318,8 @@ export default function Dashboard() {
                           : 'bg-[#1a1a1a] hover:bg-[#252525]'
                       }`}
                     >
-                      <div className="text-gray-400 text-xs">{game.lines.spread.home.point}</div>
-                      <div className="text-green-400 text-sm font-bold">{formatOdds(game.lines.spread.home.odds)}</div>
+                      <div className={`text-xs ${isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`) ? 'text-white' : 'text-gray-400'}`}>{game.lines.spread.home.point}</div>
+                      <div className={`text-sm font-bold ${isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`) ? 'text-white' : 'text-green-400'}`}>{formatOdds(game.lines.spread.home.odds)}</div>
                     </button>
                     <button
                       onClick={() => addToBetSlip(game, 'total', game.lines.total.under, `Under ${game.lines.total.under.point}`)}
@@ -329,8 +329,8 @@ export default function Dashboard() {
                           : 'bg-[#1a1a1a] hover:bg-[#252525]'
                       }`}
                     >
-                      <div className="text-gray-400 text-xs">{game.lines.total.under.point}</div>
-                      <div className="text-green-400 text-sm font-bold">{formatOdds(game.lines.total.under.odds)}</div>
+                      <div className={`text-xs ${isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? 'text-white' : 'text-gray-400'}`}>{game.lines.total.under.point}</div>
+                      <div className={`text-sm font-bold ${isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? 'text-white' : 'text-green-400'}`}>{formatOdds(game.lines.total.under.odds)}</div>
                     </button>
                     <button
                       onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeam)}
@@ -340,7 +340,7 @@ export default function Dashboard() {
                           : 'bg-[#1a1a1a] hover:bg-[#252525]'
                       }`}
                     >
-                      <div className="text-green-400 text-sm font-bold">{formatOdds(game.lines.moneyline.home)}</div>
+                      <div className={`text-sm font-bold ${isBetInSlip(game, 'moneyline', game.homeTeam) ? 'text-white' : 'text-green-400'}`}>{formatOdds(game.lines.moneyline.home)}</div>
                     </button>
                   </div>
                 </div>

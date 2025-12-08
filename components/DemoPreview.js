@@ -180,13 +180,16 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
           <div className="fixed inset-0 bg-black/80 lg:hidden" onClick={() => setShowDemoBetSlip(false)}></div>
 
           {/* Challenge Dashboard Panel - Full screen mobile, sticky desktop */}
-          <div className="absolute inset-0 lg:relative bg-black border-0 lg:border border-slate-700 rounded-none lg:rounded-xl shadow-2xl lg:h-full w-full lg:w-[480px] flex flex-col">
-            <div className="flex-shrink-0 p-3 lg:p-3 border-b border-slate-700">
+          <div className="absolute inset-0 lg:relative bg-black border-0 lg:border border-gray-800/50 rounded-none lg:rounded-xl shadow-2xl lg:h-full w-full lg:w-[480px] flex flex-col">
+            <div className="flex-shrink-0 p-4 lg:p-4 border-b border-gray-800/50">
               <div className="flex items-center justify-between">
-                <h3 className="text-white font-bold text-lg">Demo Bet Slip</h3>
+                <h3 className="text-white font-bold text-lg flex items-center">
+                  <img src="/pikslogotransparent.png" alt="Piks" className="h-5 mr-2" />
+                  Demo Bet Slip
+                </h3>
                 <button
                   onClick={() => setShowDemoBetSlip(false)}
-                  className="text-gray-400 hover:text-white transition-colors"
+                  className="text-gray-500 hover:text-white transition-colors"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -199,33 +202,33 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
             <div className="flex-1 flex flex-col p-3 lg:p-4 overflow-y-auto lg:overflow-y-auto relative">
               {/* Bet Type Toggle - Only show when multiple bets selected */}
               {selectedBets.length > 1 && (
-                <div className="bg-slate-700/50 rounded-xl p-3 lg:p-4 mb-4 lg:mb-6">
+                <div className="bg-[#111111] rounded-xl p-3 lg:p-4 mb-3 lg:mb-4 border border-gray-800/50">
                   <h3 className="text-white font-bold mb-2 lg:mb-3 text-base lg:text-lg">Bet Type</h3>
                   <div className="grid grid-cols-2 gap-2 lg:gap-3">
                     <button
                       onClick={() => setBetType('single')}
-                      className={`font-bold py-2 lg:py-3 px-3 lg:px-4 rounded-xl text-sm lg:text-base transition-all duration-200 ${
+                      className={`font-bold py-2.5 lg:py-3 px-3 lg:px-4 rounded-lg text-sm lg:text-base transition-all duration-200 ${
                         betType === 'single'
-                          ? 'bg-green-500 text-white shadow-lg'
-                          : 'bg-slate-800 hover:bg-slate-700 text-white'
+                          ? 'bg-green-600 text-white shadow-lg'
+                          : 'bg-[#1a1a1a] hover:bg-[#252525] text-white'
                       }`}
                     >
                       Single Bets
                     </button>
                     <button
                       onClick={() => setBetType('parlay')}
-                      className={`font-bold py-2 lg:py-3 px-3 lg:px-4 rounded-xl text-sm lg:text-base transition-all duration-200 ${
+                      className={`font-bold py-2.5 lg:py-3 px-3 lg:px-4 rounded-lg text-sm lg:text-base transition-all duration-200 ${
                         betType === 'parlay'
-                          ? 'bg-green-500 text-white shadow-lg'
-                          : 'bg-slate-800 hover:bg-slate-700 text-white'
+                          ? 'bg-green-600 text-white shadow-lg'
+                          : 'bg-[#1a1a1a] hover:bg-[#252525] text-white'
                       }`}
                     >
                       Parlay
                     </button>
                   </div>
                   {betType === 'parlay' && (
-                    <div className="mt-3 lg:mt-4 p-3 lg:p-4 bg-blue-500/20 border border-blue-500/30 rounded-xl">
-                      <p className="text-blue-400 font-bold text-center text-sm lg:text-base">
+                    <div className="mt-3 lg:mt-4 p-3 lg:p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
+                      <p className="text-green-400 font-bold text-center text-sm lg:text-base">
                         Parlay Odds: {calculateParlayOdds() > 0 ? '+' : ''}{calculateParlayOdds()}
                       </p>
                     </div>
@@ -248,7 +251,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
 
                   <div className="space-y-3 lg:space-y-4">
                     {selectedBets.map((bet) => (
-                      <div key={bet.id} className="bg-slate-700/30 rounded-xl p-3 lg:p-5 border border-slate-600/50">
+                      <div key={bet.id} className="bg-[#111111] rounded-xl p-3 lg:p-4 border border-gray-800/50">
                         {/* Bet Header */}
                         <div className="flex justify-between items-start mb-3 lg:mb-4">
                           <div className="flex-1">
@@ -275,7 +278,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                         <div className="space-y-2 lg:space-y-3">
                           <label className="text-gray-300 font-medium text-sm lg:text-base">Wager Amount</label>
                           <div className="relative">
-                            <div className="absolute left-3 lg:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 font-bold text-base lg:text-lg">$</div>
+                            <div className="absolute left-3 lg:left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-bold text-base lg:text-lg">$</div>
                             <input
                               type="number"
                               placeholder="Enter amount"
@@ -287,7 +290,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                                   updateBetStake(bet.id, e.target.value);
                                 }
                               }}
-                              className="w-full bg-gradient-to-r from-slate-700 to-slate-600 text-white font-bold text-base lg:text-lg pl-10 lg:pl-12 pr-4 lg:pr-6 py-3 lg:py-4 rounded-xl border border-slate-500 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 focus:outline-none transition-all duration-200"
+                              className="w-full bg-[#1a1a1a] text-white font-bold text-base lg:text-lg pl-10 lg:pl-12 pr-4 lg:pr-6 py-3 lg:py-4 rounded-lg border border-gray-700 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none transition-all duration-200"
                             />
                           </div>
                           {((betType === 'single' && bet.stake > 0) || (betType === 'parlay' && selectedBets[0]?.stake > 0)) && (
@@ -306,7 +309,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                   </div>
 
                   {/* Quick Bet Amounts */}
-                  <div className="bg-slate-700/30 rounded-xl p-3 lg:p-4">
+                  <div className="bg-[#111111] rounded-xl p-3 lg:p-4 border border-gray-800/50">
                     <h3 className="text-white font-bold mb-2 lg:mb-3 text-sm lg:text-base">Quick Amounts</h3>
                     <div className="grid grid-cols-5 gap-1.5 lg:gap-2">
                       {[25, 50, 100, 250, 500].map((amount) => (
@@ -319,7 +322,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                               selectedBets.forEach(bet => updateBetStake(bet.id, amount));
                             }
                           }}
-                          className="bg-slate-800 hover:bg-green-500 text-white font-bold py-1.5 lg:py-2 px-2 lg:px-3 rounded-lg transition-colors text-xs lg:text-sm"
+                          className="bg-[#1a1a1a] hover:bg-green-600 text-white font-bold py-1.5 lg:py-2 px-2 lg:px-3 rounded-lg transition-colors text-xs lg:text-sm"
                         >
                           ${amount}
                         </button>
@@ -343,38 +346,38 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
               <div className="mt-4 lg:mt-6 space-y-3 lg:space-y-4">
                 {!showDetailedStats ? (
                   <div className="grid grid-cols-2 gap-2 lg:gap-4">
-                    <div className="bg-slate-700/30 rounded-lg p-2 lg:p-3">
-                      <div className="text-gray-400 text-xs">Balance</div>
+                    <div className="bg-[#111111] rounded-lg p-2 lg:p-3 border border-gray-800/50">
+                      <div className="text-gray-500 text-xs">Balance</div>
                       <div className="text-base lg:text-lg font-bold text-green-400">${demoBalance.toLocaleString()}</div>
                     </div>
-                    <div className="bg-slate-700/30 rounded-lg p-2 lg:p-3">
-                      <div className="text-gray-400 text-xs">Challenge Progress</div>
-                      <div className="text-base lg:text-lg font-bold text-blue-400">78%</div>
+                    <div className="bg-[#111111] rounded-lg p-2 lg:p-3 border border-gray-800/50">
+                      <div className="text-gray-500 text-xs">Challenge Progress</div>
+                      <div className="text-base lg:text-lg font-bold text-green-400">78%</div>
                     </div>
                   </div>
                 ) : (
                   <div className="grid grid-cols-2 gap-2 lg:gap-4">
-                    <div className="bg-slate-700/30 rounded-lg p-2 lg:p-3">
-                      <div className="text-gray-400 text-xs">Bets Placed</div>
+                    <div className="bg-[#111111] rounded-lg p-2 lg:p-3 border border-gray-800/50">
+                      <div className="text-gray-500 text-xs">Bets Placed</div>
                       <div className="text-base lg:text-lg font-bold text-white">12</div>
                     </div>
-                    <div className="bg-slate-700/30 rounded-lg p-2 lg:p-3">
-                      <div className="text-gray-400 text-xs">Win Rate</div>
+                    <div className="bg-[#111111] rounded-lg p-2 lg:p-3 border border-gray-800/50">
+                      <div className="text-gray-500 text-xs">Win Rate</div>
                       <div className="text-base lg:text-lg font-bold text-green-400">67%</div>
                     </div>
-                    <div className="bg-slate-700/30 rounded-lg p-2 lg:p-3">
-                      <div className="text-gray-400 text-xs">Days Left</div>
+                    <div className="bg-[#111111] rounded-lg p-2 lg:p-3 border border-gray-800/50">
+                      <div className="text-gray-500 text-xs">Days Left</div>
                       <div className="text-base lg:text-lg font-bold text-orange-400">14</div>
                     </div>
-                    <div className="bg-slate-700/30 rounded-lg p-2 lg:p-3">
-                      <div className="text-gray-400 text-xs">Max Loss</div>
+                    <div className="bg-[#111111] rounded-lg p-2 lg:p-3 border border-gray-800/50">
+                      <div className="text-gray-500 text-xs">Max Loss</div>
                       <div className="text-base lg:text-lg font-bold text-red-400">$1,000</div>
                     </div>
                   </div>
                 )}
                 <button
                   onClick={() => setShowDetailedStats(!showDetailedStats)}
-                  className="w-full bg-slate-600/50 hover:bg-slate-600 text-white font-medium py-2 px-3 lg:px-4 rounded-lg transition-colors text-xs lg:text-sm"
+                  className="w-full bg-[#1a1a1a] hover:bg-[#252525] text-white font-medium py-2 px-3 lg:px-4 rounded-lg transition-colors text-xs lg:text-sm border border-gray-800/50"
                 >
                   {showDetailedStats ? 'VIEW LESS' : 'VIEW MORE'}
                 </button>
@@ -382,7 +385,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
             </div>
 
             {/* Bottom Actions - Fixed */}
-            <div className="flex-shrink-0 border-t border-slate-600 p-4 pb-6 lg:p-4">
+            <div className="flex-shrink-0 border-t border-gray-800/50 p-4 pb-6 lg:p-4 bg-[#0a0a0a]">
               <button
                 onClick={() => {
                   if (selectedBets.some(bet => bet.stake > 0)) {
@@ -577,8 +580,8 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                                 : 'bg-[#1a1a1a] hover:bg-[#252525]'
                             }`}
                           >
-                            <div className="text-gray-400 text-xs">{game.spread > 0 ? -game.spread : '+' + Math.abs(game.spread)}</div>
-                            <div className="text-green-400 text-sm font-bold">-110</div>
+                            <div className={`text-xs ${isBetSelected(`${game.id}-spread-away`) ? 'text-white' : 'text-gray-400'}`}>{game.spread > 0 ? -game.spread : '+' + Math.abs(game.spread)}</div>
+                            <div className={`text-sm font-bold ${isBetSelected(`${game.id}-spread-away`) ? 'text-white' : 'text-green-400'}`}>-110</div>
                           </button>
                           <button
                             onClick={() => placeDemoBet(game, 'total', -110, `Over ${game.total}`, `${game.id}-total-over`)}
@@ -588,8 +591,8 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                                 : 'bg-[#1a1a1a] hover:bg-[#252525]'
                             }`}
                           >
-                            <div className="text-gray-400 text-xs">O {game.total}</div>
-                            <div className="text-green-400 text-sm font-bold">-110</div>
+                            <div className={`text-xs ${isBetSelected(`${game.id}-total-over`) ? 'text-white' : 'text-gray-400'}`}>O {game.total}</div>
+                            <div className={`text-sm font-bold ${isBetSelected(`${game.id}-total-over`) ? 'text-white' : 'text-green-400'}`}>-110</div>
                           </button>
                           <button
                             onClick={() => placeDemoBet(game, 'moneyline', game.moneylineAway, game.awayTeam, `${game.id}-moneyline-away`)}
@@ -599,7 +602,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                                 : 'bg-[#1a1a1a] hover:bg-[#252525]'
                             }`}
                           >
-                            <div className="text-green-400 text-sm font-bold">{game.moneylineAway > 0 ? '+' : ''}{game.moneylineAway}</div>
+                            <div className={`text-sm font-bold ${isBetSelected(`${game.id}-moneyline-away`) ? 'text-white' : 'text-green-400'}`}>{game.moneylineAway > 0 ? '+' : ''}{game.moneylineAway}</div>
                           </button>
                         </div>
 
@@ -616,8 +619,8 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                                 : 'bg-[#1a1a1a] hover:bg-[#252525]'
                             }`}
                           >
-                            <div className="text-gray-400 text-xs">{game.spread > 0 ? '+' + game.spread : game.spread}</div>
-                            <div className="text-green-400 text-sm font-bold">-110</div>
+                            <div className={`text-xs ${isBetSelected(`${game.id}-spread-home`) ? 'text-white' : 'text-gray-400'}`}>{game.spread > 0 ? '+' + game.spread : game.spread}</div>
+                            <div className={`text-sm font-bold ${isBetSelected(`${game.id}-spread-home`) ? 'text-white' : 'text-green-400'}`}>-110</div>
                           </button>
                           <button
                             onClick={() => placeDemoBet(game, 'total', -110, `Under ${game.total}`, `${game.id}-total-under`)}
@@ -627,8 +630,8 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                                 : 'bg-[#1a1a1a] hover:bg-[#252525]'
                             }`}
                           >
-                            <div className="text-gray-400 text-xs">U {game.total}</div>
-                            <div className="text-green-400 text-sm font-bold">-110</div>
+                            <div className={`text-xs ${isBetSelected(`${game.id}-total-under`) ? 'text-white' : 'text-gray-400'}`}>U {game.total}</div>
+                            <div className={`text-sm font-bold ${isBetSelected(`${game.id}-total-under`) ? 'text-white' : 'text-green-400'}`}>-110</div>
                           </button>
                           <button
                             onClick={() => placeDemoBet(game, 'moneyline', game.moneylineHome, game.homeTeam, `${game.id}-moneyline-home`)}
@@ -638,7 +641,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                                 : 'bg-[#1a1a1a] hover:bg-[#252525]'
                             }`}
                           >
-                            <div className="text-green-400 text-sm font-bold">{game.moneylineHome > 0 ? '+' : ''}{game.moneylineHome}</div>
+                            <div className={`text-sm font-bold ${isBetSelected(`${game.id}-moneyline-home`) ? 'text-white' : 'text-green-400'}`}>{game.moneylineHome > 0 ? '+' : ''}{game.moneylineHome}</div>
                           </button>
                         </div>
                       </div>
