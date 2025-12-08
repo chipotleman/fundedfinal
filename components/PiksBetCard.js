@@ -40,8 +40,8 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
       style={{ border: '1px dashed #a855f7' }}
     >
             
-      <div className="px-2 py-1">
-        <div className="flex items-center justify-between">
+      <div className="px-2 pt-0 pb-1">
+        <div className="flex items-center justify-between -mt-1">
           <div className="flex items-center">
             <img src="/funderlogo/Piks.png" alt="Piks" className="h-20 object-contain -ml-[30px]" />
           </div>
