@@ -249,12 +249,7 @@ export default function BetHistory() {
       <div className="pt-8 px-4 sm:px-6 lg:px-8 pb-24">
         {/* Header */}
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h1 className="text-5xl font-black text-white mb-4 bg-gradient-to-r from-blue-400 via-purple-500 to-green-400 bg-clip-text text-transparent">
-              Bet History
-            </h1>
-          </div>
-
+          
           {/* Filter Tabs */}
           <div className="flex justify-center space-x-2 mb-12">
             <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-2 border border-slate-700/50">
