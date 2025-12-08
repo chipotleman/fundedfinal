@@ -165,7 +165,7 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
                 </div>
               </div>
 
-              <div className="mt-1 pt-1">
+              <div className="border-t border-white/30 mt-1 pt-1">
                 <div className="flex justify-between items-end">
                   <div>
                     <div className="text-white font-bold text-lg">${bet.stake?.toFixed(2)}</div>
