@@ -44,10 +44,10 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         style={{ background: 'linear-gradient(90deg, #a855f7, #7c3aed)' }}
       />
       
-      <div className="p-5">
-        <div className="flex items-center justify-between mb-4">
+      <div className="p-3">
+        <div className="flex items-center justify-between mb-2">
           <div className="flex items-center">
-            <img src="/funderlogo/Piks.png" alt="Piks" className="h-24 object-contain -ml-[40px]" />
+            <img src="/funderlogo/Piks.png" alt="Piks" className="h-36 object-contain -ml-[42px]" />
           </div>
           
           <div className={`flex items-center space-x-2 px-3 py-1 rounded-full ${

@@ -119,9 +119,9 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
               style={{ background: 'linear-gradient(90deg, #a855f7, #7c3aed)' }}
             />
             
-            <div className="p-5">
-              <div className="flex items-center justify-center mb-5">
-                <img src="/funderlogo/Piks.png" alt="Piks" className="h-32 object-contain -ml-[40px]" />
+            <div className="p-3">
+              <div className="flex items-center justify-center mb-3">
+                <img src="/funderlogo/Piks.png" alt="Piks" className="h-48 object-contain -ml-[42px]" />
               </div>
 
               <div className="border-t border-purple-500/50 pt-4">
