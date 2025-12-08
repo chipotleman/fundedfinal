@@ -177,16 +177,9 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
               <div className="text-gray-400 text-[10px] uppercase">Total Pikked</div>
             </div>
             {isWon && (
-              <div className="flex items-center">
-                <svg className="w-5 h-5 mr-1" viewBox="0 0 24 24" fill="none">
-                  <path d="M5 9V7C5 5.89543 5.89543 5 7 5H17C18.1046 5 19 5.89543 19 7V9" stroke="#a855f7" strokeWidth="2"/>
-                  <path d="M5 9H19V11C19 14.866 15.866 18 12 18C8.13401 18 5 14.866 5 11V9Z" fill="#a855f7"/>
-                  <path d="M12 18V21M9 21H15" stroke="#a855f7" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-                <div className="text-right">
-                  <div className="text-green-400 font-bold text-lg">${payout.toFixed(2)}</div>
-                  <div className="text-green-400 text-[10px] uppercase">Won on Piks</div>
-                </div>
+              <div className="text-right">
+                <div className="text-green-400 font-bold text-lg">${payout.toFixed(2)}</div>
+                <div className="text-green-400 text-[10px] uppercase">Won on Piks</div>
               </div>
             )}
             {isOpen && (
