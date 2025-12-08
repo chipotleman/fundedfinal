@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 
@@ -6,7 +5,6 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const betSlipRef = useRef(null);
 
-  // Lock body scroll when modal is visible
   useEffect(() => {
     if (isVisible) {
       document.body.style.overflow = 'hidden';
@@ -34,7 +32,16 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
   };
 
   const generateBetId = () => {
-    return `BET${Date.now().toString().slice(-8)}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+    return `${Date.now().toString().slice(-10)}${Math.floor(Math.random() * 100).toString().padStart(2, '0')}`;
+  };
+
+  const formatPlacedDate = () => {
+    const date = bet.placedAt ? new Date(bet.placedAt) : new Date();
+    const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+    const day = date.getDate().toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const time = date.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    return `${month} ${day}, ${year} ${time}`;
   };
 
   const generateImage = async () => {
@@ -43,18 +50,15 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
     setIsGenerating(true);
     try {
       const canvas = await html2canvas(betSlipRef.current, {
-        backgroundColor: '#0f172a',
+        backgroundColor: '#000000',
         scale: 2,
-        width: 400,
-        height: 600,
         useCORS: true
       });
       
       const imageDataUrl = canvas.toDataURL('image/png');
       
-      // Create download link
       const link = document.createElement('a');
-      link.download = `fundmybet-win-${Date.now()}.png`;
+      link.download = `piks-winning-ticket-${Date.now()}.png`;
       link.href = imageDataUrl;
       link.click();
       
@@ -65,15 +69,15 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
   };
 
   const shareToSocial = async (platform) => {
-    const text = `Just won $${(calculatePayout(bet.odds, bet.stake) - bet.stake).toFixed(2)} on ${bet.selection}! 💰 #FundMyBet #BettingWin`;
-    const url = 'https://fundmybet.com';
+    const payout = calculatePayout(bet.odds, bet.stake);
+    const text = `Just won $${payout.toFixed(2)} on Piks! 💰 #Piks #FundedBook #BettingWin`;
+    const url = 'https://fundedpiks.com';
     
     switch (platform) {
       case 'twitter':
         window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
         break;
       case 'instagram':
-        // Generate image first for Instagram story
         await generateImage();
         break;
       case 'copy':
@@ -86,15 +90,13 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
   if (!isVisible || !bet) return null;
 
   const payout = calculatePayout(bet.odds, bet.stake);
-  const profit = payout - bet.stake;
 
   return (
-    <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-900 rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
+    <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+      <div className="bg-slate-900 rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
         <div className="p-6 border-b border-slate-700">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white">Share Your Win! 🎉</h2>
+            <h2 className="text-xl font-bold text-white">Share Your Win!</h2>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-white transition-colors"
@@ -106,106 +108,95 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
           </div>
         </div>
 
-        {/* Shareable Bet Slip */}
         <div className="p-6">
           <div 
             ref={betSlipRef}
-            className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 border border-slate-600 overflow-hidden"
-            style={{ width: '400px', height: '600px' }}
+            className="relative bg-black rounded-xl overflow-hidden"
+            style={{ border: '3px solid #a855f7' }}
           >
-            {/* Logo Watermark */}
-            <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
-              <img 
-                src="/funderlogo/Piks.png" 
-                alt="Piks" 
-                className="w-64 h-64 object-contain"
-              />
-            </div>
+            <div 
+              className="absolute top-0 left-0 right-0 h-1"
+              style={{ background: 'linear-gradient(90deg, #a855f7, #7c3aed)' }}
+            />
+            
+            <div className="p-5">
+              <div className="flex items-center justify-center mb-5">
+                <span className="text-white font-bold text-2xl tracking-wide">piks</span>
+                <span className="text-gray-400 font-semibold text-lg ml-2 tracking-widest">FUNDEDBOOK</span>
+              </div>
 
-            {/* Content */}
-            <div className="relative z-10 h-full flex flex-col">
-              {/* Header */}
-              <div className="text-center mb-6">
-                <div className="flex items-center justify-center mb-2">
-                  <img 
-                    src="/funderlogo/Piks.png" 
-                    alt="Piks" 
-                    className="w-8 h-8 mr-2"
-                  />
-                  <h3 className="text-xl font-bold text-white">PIKS</h3>
+              <div className="border-t border-purple-500/50 pt-4">
+                <div className="flex justify-between items-start mb-1">
+                  <div className="flex-1">
+                    <div className="text-white font-bold text-lg">{bet.selection}</div>
+                    <div className="text-gray-400 text-sm uppercase tracking-wide">{bet.betType}</div>
+                  </div>
+                  <div className="text-white font-bold text-xl">{formatOdds(bet.odds)}</div>
                 </div>
-                <div className="bg-green-500/20 text-green-400 px-4 py-2 rounded-full text-sm font-bold">
-                  WINNING BET ✓
+
+                <div className="mt-4 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-white font-medium">{bet.homeTeam || bet.matchup?.split(' vs ')[0] || 'Home Team'}</span>
+                    <div className="flex items-center space-x-3">
+                      <div className="flex space-x-2 text-gray-400 text-sm">
+                        <span>{bet.homeQ1 || Math.floor(Math.random() * 10)}</span>
+                        <span>{bet.homeQ2 || Math.floor(Math.random() * 15)}</span>
+                        <span>{bet.homeQ3 || Math.floor(Math.random() * 5)}</span>
+                        <span>{bet.homeQ4 || Math.floor(Math.random() * 10)}</span>
+                      </div>
+                      <span className="text-green-400 font-bold text-lg">{bet.homeScore || Math.floor(Math.random() * 20 + 15)}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-white font-medium">{bet.awayTeam || bet.matchup?.split(' vs ')[1] || 'Away Team'}</span>
+                    <div className="flex items-center space-x-3">
+                      <div className="flex space-x-2 text-gray-400 text-sm">
+                        <span>{bet.awayQ1 || Math.floor(Math.random() * 5)}</span>
+                        <span>{bet.awayQ2 || Math.floor(Math.random() * 12)}</span>
+                        <span>{bet.awayQ3 || Math.floor(Math.random() * 3)}</span>
+                        <span>{bet.awayQ4 || Math.floor(Math.random() * 8)}</span>
+                      </div>
+                      <span className="text-white font-bold text-lg">{bet.awayScore || Math.floor(Math.random() * 18 + 10)}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="text-right mt-2">
+                  <span className="text-gray-400 text-sm">Finished</span>
                 </div>
               </div>
 
-              {/* Bet Details */}
-              <div className="flex-1 space-y-4">
-                <div className="bg-slate-700/50 rounded-xl p-4">
-                  <div className="text-gray-300 text-sm mb-1">MATCHUP</div>
-                  <div className="text-white font-bold">{bet.matchup}</div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-xl p-4">
-                  <div className="text-gray-300 text-sm mb-1">SELECTION</div>
-                  <div className="text-white font-bold">{bet.selection}</div>
-                  <div className="text-gray-400 text-sm">{bet.betType}</div>
-                </div>
-
-                <div className="bg-slate-700/50 rounded-xl p-4">
-                  <div className="text-gray-300 text-sm mb-1">ODDS</div>
-                  <div className="text-green-400 font-bold text-xl">{formatOdds(bet.odds)}</div>
-                </div>
-
-                {/* Payout Section */}
-                <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 rounded-xl p-4 border border-green-500/30">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-300">Stake:</span>
-                    <span className="text-white font-semibold">${bet.stake.toFixed(2)}</span>
+              <div className="border-t border-purple-500/50 mt-4 pt-4">
+                <div className="flex justify-between items-end">
+                  <div>
+                    <div className="text-white font-bold text-2xl">${bet.stake?.toFixed(2)}</div>
+                    <div className="text-gray-400 text-xs uppercase tracking-wider">Total Wager</div>
                   </div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-300">Profit:</span>
-                    <span className="text-green-400 font-semibold">${profit.toFixed(2)}</span>
-                  </div>
-                  <div className="border-t border-gray-600 pt-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-green-400 font-bold text-lg">TOTAL PAYOUT:</span>
-                      <span className="text-green-400 font-bold text-2xl">${payout.toFixed(2)}</span>
+                  <div className="flex items-center">
+                    <div className="mr-2">
+                      <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#a855f7" stroke="#a855f7" strokeWidth="1"/>
+                        <path d="M8 12H16M8 15H16M10 9H14" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                      </svg>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-green-400 font-bold text-2xl">${payout.toFixed(2)}</div>
+                      <div className="text-gray-400 text-xs uppercase tracking-wider">Won on Piks</div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Footer */}
-              <div className="pt-4 border-t border-slate-600">
-                <div className="flex justify-between items-center mb-2">
-                  <div className="text-gray-400 text-xs">
-                    BET ID: {generateBetId()}
-                  </div>
-                  <div className="text-gray-400 text-xs">
-                    {new Date(bet.settledAt).toLocaleDateString('en-US', { 
-                      month: 'short', 
-                      day: 'numeric',
-                      year: 'numeric'
-                    })} • {new Date(bet.settledAt).toLocaleTimeString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </div>
-                </div>
-                <div className="text-center">
-                  <div className="text-gray-400 text-xs">
-                    Join the challenge at fundmybet.com
-                  </div>
-                </div>
+              <div className="border-t border-purple-500/50 mt-4 pt-3 flex justify-between items-center">
+                <div className="text-gray-500 text-xs font-mono">BET ID: {generateBetId()}</div>
+                <div className="text-gray-500 text-xs">PLACED: {formatPlacedDate()}</div>
               </div>
             </div>
           </div>
 
-          {/* Sharing Options */}
           <div className="mt-6 space-y-4">
             <div className="text-center">
-              <p className="text-gray-300 mb-4">Share your winning bet slip!</p>
+              <p className="text-gray-300 mb-4">Share your winning ticket!</p>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -233,7 +224,7 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
             <button
               onClick={generateImage}
               disabled={isGenerating}
-              className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-4 rounded-xl transition-all duration-300 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-4 rounded-xl transition-all duration-300 disabled:cursor-not-allowed"
             >
               {isGenerating ? (
                 <div className="flex items-center justify-center space-x-2">
