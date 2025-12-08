@@ -26,9 +26,9 @@ function ThunderCardModule() {
   return (
     <div className="text-center px-4 mb-8">
       <div className="max-w-3xl mx-auto">
-        <div className="bg-gradient-to-br from-slate-900 via-purple-900 to-blue-900 rounded-2xl border border-purple-500/30 overflow-hidden p-6">
+        <div className="bg-gradient-to-br from-slate-900 via-purple-900 to-blue-900 rounded-2xl border border-purple-500/30 overflow-hidden p-6 sm:p-8">
           {/* Card Image - Main Focus */}
-          <div className="flex justify-center mb-4">
+          <div className="flex justify-center mb-6">
             <div className="relative transform hover:scale-105 transition-all duration-300">
               <img 
                 src="/piks-card.png" 
@@ -39,40 +39,48 @@ function ThunderCardModule() {
           </div>
 
           {/* Title */}
-          <h2 className="text-2xl sm:text-3xl font-black text-white mb-2">
-            The <span className="bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">Piks Card</span>
+          <h2 className="text-3xl sm:text-4xl font-black text-white mb-3">
+            Introducing the <span className="bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">Piks Card</span>
           </h2>
-          <p className="text-sm text-gray-300 mb-4">
-            Get funded directly from your betting profits.
+          <p className="text-base text-gray-300 mb-6 max-w-lg mx-auto">
+            The first prepaid bank card that gets funded directly from your betting profits. Use it anywhere.
           </p>
 
-          {/* Compact Sign Up */}
-          <div className="inline-flex items-center bg-purple-600/20 text-purple-300 px-3 py-1 rounded-full text-xs font-medium mb-3">
-            🚀 Coming Soon
-          </div>
-          
-          {!isSubmitted ? (
-            <form onSubmit={handleSubmit} className="flex gap-2 max-w-sm mx-auto">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-                className="flex-1 px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 text-sm"
-                required
-              />
-              <button
-                type="submit"
-                className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transition-all text-sm"
-              >
-                Join
-              </button>
-            </form>
-          ) : (
-            <div className="text-green-400 font-medium text-sm">
-              ✅ You're on the list!
+          {/* Sign Up Section */}
+          <div className="bg-black/30 backdrop-blur-lg rounded-xl p-5 max-w-md mx-auto border border-slate-700/50">
+            <div className="inline-flex items-center bg-purple-600/20 text-purple-300 px-4 py-1.5 rounded-full text-sm font-medium mb-3">
+              🚀 Coming Soon
             </div>
-          )}
+            <h3 className="text-lg font-bold text-white mb-2">Get Early Access</h3>
+            <p className="text-gray-400 text-sm mb-4">
+              Join our waitlist for early access and special perks.
+            </p>
+            
+            {!isSubmitted ? (
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter your email"
+                  className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
+                  required
+                />
+                <button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-all shadow-lg hover:shadow-xl"
+                >
+                  Join Waitlist
+                </button>
+              </form>
+            ) : (
+              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
+                <div className="text-green-400 font-medium">
+                  ✅ You're on the list! We'll notify you when the Piks Card is ready.
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
