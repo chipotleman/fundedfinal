@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
-import LiveFeed from '../components/LiveFeed';
 import LiveCommunityStats from '../components/LiveCommunityStats';
 import DemoPreview from '../components/DemoPreview';
 import BetSlip from '../components/BetSlip';
@@ -221,34 +220,18 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Real Winners & Community Stats - Side by Side on Desktop */}
+            {/* Community Stats - Centered */}
             <div className="mb-12 px-4">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-7xl mx-auto">
-                {/* Live Winners Section */}
-                <div>
-                  <div className="text-center lg:text-left mb-6">
-                    <h2 className="text-3xl font-bold text-white mb-2">
-                      Real <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Winners</span>
-                    </h2>
-                    <p className="text-gray-400 text-sm">
-                      Watch bettors win in real-time
-                    </p>
-                  </div>
-                  <LiveFeed />
+              <div className="max-w-xl mx-auto">
+                <div className="text-center mb-6">
+                  <h2 className="text-3xl font-bold text-white mb-2">
+                    Community <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Stats</span>
+                  </h2>
+                  <p className="text-gray-400 text-sm">
+                    Real-time data from our community
+                  </p>
                 </div>
-
-                {/* Live Community Stats Section */}
-                <div>
-                  <div className="text-center lg:text-left mb-6">
-                    <h2 className="text-3xl font-bold text-white mb-2">
-                      Community <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Stats</span>
-                    </h2>
-                    <p className="text-gray-400 text-sm">
-                      Real-time data from our community
-                    </p>
-                  </div>
-                  <LiveCommunityStats />
-                </div>
+                <LiveCommunityStats />
               </div>
             </div>
 

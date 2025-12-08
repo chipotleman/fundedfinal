@@ -373,7 +373,8 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                   <>
                     <Link
                       href="/auth"
-                      className="text-gray-300 hover:text-blue-400 font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm border border-gray-600 hover:border-blue-400"
+                      className="bg-[#111111] hover:bg-[#1a1a1a] text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm border border-gray-700 hover:border-gray-600"
+                      style={{ height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                       SIGN IN
                     </Link>

@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 
 const steps = [
   {
@@ -52,6 +53,7 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
+  const router = useRouter();
 
   useEffect(() => {
     if (isOpen) {
@@ -103,71 +105,60 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
     setCurrentIndex(index);
   };
 
+  const handleTryDemo = () => {
+    onClose();
+    router.push('/demo-dashboard');
+  };
+
   if (!isOpen) return null;
 
   const currentStep = steps[currentIndex];
 
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
-      <div className="relative bg-black border-2 border-slate-700 rounded-3xl max-w-md w-full overflow-hidden">
-        {/* Close Button */}
+      <div className="relative bg-[#0a0a0a] border border-gray-800/50 rounded-2xl max-w-md w-full overflow-hidden">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
+          className="absolute top-4 right-4 z-10 w-8 h-8 bg-[#1a1a1a] hover:bg-[#252525] rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-colors"
         >
-          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
 
-        {/* Step Number */}
         <div className="absolute top-4 left-4 z-10">
-          <span className="bg-gradient-to-r from-green-400 to-blue-500 text-black px-3 py-1 rounded-full text-xs font-bold">
+          <span className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold">
             {currentIndex + 1} of {steps.length}
           </span>
         </div>
 
-        {/* Step Content */}
         <div
           className="p-8 pt-16"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          {/* Icon */}
           <div className="text-center mb-6">
             <div className="text-6xl mb-4">{currentStep.icon}</div>
           </div>
 
-          {/* Title and Description */}
           <div className="text-center mb-8">
             <h3 className="text-2xl font-bold text-white mb-4">{currentStep.title}</h3>
             <p className="text-gray-300 text-lg leading-relaxed">{currentStep.description}</p>
           </div>
 
-          {/* Details */}
           <div className="space-y-3 mb-8">
             {currentStep.details.map((detail, index) => (
-              <div key={index} className="flex items-center space-x-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700/50">
-                <div className="w-2 h-2 bg-green-400 rounded-full flex-shrink-0"></div>
+              <div key={index} className="flex items-center space-x-3 p-3 bg-[#111111] rounded-lg border border-gray-800/50">
+                <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
                 <span className="text-gray-300">{detail}</span>
               </div>
             ))}
           </div>
 
-          {/* Action Button */}
           {currentIndex === steps.length - 1 ? (
             <button
-              onClick={() => {
-                onClose();
-                // Scroll to demo section
-                setTimeout(() => {
-                  const demoSection = document.getElementById('demo-section');
-                  if (demoSection) {
-                    demoSection.scrollIntoView({ behavior: 'smooth' });
-                  }
-                }, 100);
-              }}
+              onClick={handleTryDemo}
               className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl text-lg mb-6"
             >
               Try a Demo
@@ -175,23 +166,21 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
           ) : (
             <button
               onClick={nextStep}
-              className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-6 rounded-xl text-lg mb-6"
+              className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl text-lg mb-6"
             >
               Next Step
             </button>
           )}
 
-          {/* Progress Bar */}
           <div className="mb-4">
-            <div className="w-full bg-slate-700 rounded-full h-2">
+            <div className="w-full bg-[#1a1a1a] rounded-full h-2">
               <div 
-                className="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full"
+                className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${((currentIndex + 1) / steps.length) * 100}%` }}
               ></div>
             </div>
           </div>
 
-          {/* Desktop Navigation Buttons */}
           <div className="hidden md:flex items-center justify-between mb-4">
             <button
               onClick={prevStep}
@@ -199,7 +188,7 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
               className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors ${
                 currentIndex === 0 
                   ? 'text-gray-600 cursor-not-allowed' 
-                  : 'text-gray-400 hover:text-white hover:bg-slate-700'
+                  : 'text-gray-400 hover:text-white hover:bg-[#1a1a1a]'
               }`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -214,7 +203,7 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
                   key={index}
                   onClick={() => goToStep(index)}
                   className={`w-2 h-2 rounded-full transition-colors ${
-                    index === currentIndex ? 'bg-green-400' : 'bg-gray-600 hover:bg-gray-500'
+                    index === currentIndex ? 'bg-green-500' : 'bg-gray-700 hover:bg-gray-600'
                   }`}
                 />
               ))}
@@ -226,7 +215,7 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
               className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors ${
                 currentIndex === steps.length - 1 
                   ? 'text-gray-600 cursor-not-allowed' 
-                  : 'text-gray-400 hover:text-white hover:bg-slate-700'
+                  : 'text-gray-400 hover:text-white hover:bg-[#1a1a1a]'
               }`}
             >
               <span>Next</span>
@@ -236,9 +225,8 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
             </button>
           </div>
 
-          {/* Mobile Swipe Indicator */}
           {steps.length > 1 && (
-            <div className="md:hidden flex items-center justify-center space-x-4 text-gray-400 text-sm">
+            <div className="md:hidden flex items-center justify-center space-x-4 text-gray-500 text-sm">
               {currentIndex > 0 && (
                 <div className="flex items-center space-x-1">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -258,8 +246,6 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
             </div>
           )}
         </div>
-
-        
       </div>
     </div>
   );

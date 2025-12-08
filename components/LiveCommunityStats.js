@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 
 export default function LiveCommunityStats() {
   const [stats, setStats] = useState({
@@ -13,19 +12,16 @@ export default function LiveCommunityStats() {
   const [selectedStat, setSelectedStat] = useState(null);
 
   useEffect(() => {
-    // Get current date to track daily resets
     const getCurrentDayKey = () => {
       const now = new Date();
       return `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
     };
 
-    // Initialize daily values
     const initializeDailyStats = () => {
       const today = getCurrentDayKey();
       const storedDay = localStorage.getItem('statsDay');
       
       if (storedDay !== today) {
-        // New day - reset values
         localStorage.setItem('statsDay', today);
         localStorage.setItem('gambledToday', '0');
         localStorage.setItem('withdrawnToday', '0');
@@ -43,48 +39,36 @@ export default function LiveCommunityStats() {
 
     const dailyStats = initializeDailyStats();
 
-    // Update stats every second
     const interval = setInterval(() => {
       const now = Date.now();
-      
-      // Calculate progress rates
-      // $7,000 every 40 minutes = $175 per minute = ~$2.92 per second
       const gambledPerSecond = 7000 / (40 * 60);
-      
-      // $470 every 40 minutes = $11.75 per minute = ~$0.196 per second
       const withdrawnPerSecond = 470 / (40 * 60);
       
-      // Calculate elapsed time and new values
       const gambledElapsed = (now - dailyStats.gambledStartTime) / 1000;
       const withdrawnElapsed = (now - dailyStats.withdrawnStartTime) / 1000;
       
       const newGambledToday = dailyStats.gambledToday + (gambledElapsed * gambledPerSecond);
       const newWithdrawnToday = dailyStats.withdrawnToday + (withdrawnElapsed * withdrawnPerSecond);
       
-      // Update localStorage
       localStorage.setItem('gambledToday', newGambledToday.toString());
       localStorage.setItem('withdrawnToday', newWithdrawnToday.toString());
       
       setStats(prev => ({
         ...prev,
-        // Vary bettors online slightly (1200-1300)
         bettorsOnline: Math.floor(1200 + Math.random() * 100),
-        // Vary win rate slightly (70-75%)
         winRate: parseFloat((70 + Math.random() * 5).toFixed(1)),
         gambledToday: newGambledToday,
         withdrawnToday: newWithdrawnToday
       }));
     }, 1000);
 
-    // Also update withdrawn every 1-3 minutes with slight variations
     const withdrawnInterval = setInterval(() => {
-      // Add some randomness to withdrawal timing
-      const variation = (Math.random() - 0.5) * 100; // ±$50 variation
+      const variation = (Math.random() - 0.5) * 100;
       setStats(prev => ({
         ...prev,
         withdrawnToday: prev.withdrawnToday + variation
       }));
-    }, (1 + Math.random() * 2) * 60 * 1000); // 1-3 minutes
+    }, (1 + Math.random() * 2) * 60 * 1000);
 
     return () => {
       clearInterval(interval);
@@ -164,14 +148,13 @@ export default function LiveCommunityStats() {
     if (!statDetails) return null;
 
     return (
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border border-slate-700 max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-2xl">
-          {/* Header */}
-          <div className="p-4 border-b border-slate-700 flex items-center justify-between sticky top-0 bg-gradient-to-r from-slate-800 to-slate-900 rounded-t-2xl">
+      <div className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="bg-[#0a0a0a] rounded-2xl border border-gray-800/50 max-w-lg w-full max-h-[85vh] overflow-y-auto shadow-2xl">
+          <div className="p-4 border-b border-gray-800/50 flex items-center justify-between sticky top-0 bg-[#0a0a0a] rounded-t-2xl">
             <h3 className="text-lg font-bold text-white truncate pr-2">{statDetails.title}</h3>
             <button
               onClick={onClose}
-              className="w-8 h-8 bg-slate-700 hover:bg-slate-600 rounded-full flex items-center justify-center text-gray-300 hover:text-white transition-all duration-200 flex-shrink-0"
+              className="w-8 h-8 bg-[#1a1a1a] hover:bg-[#252525] rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-all duration-200 flex-shrink-0"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -179,22 +162,19 @@ export default function LiveCommunityStats() {
             </button>
           </div>
 
-          {/* Content */}
           <div className="p-4 space-y-4">
-            {/* Current Value */}
-            <div className="bg-gradient-to-r from-slate-700/50 to-slate-600/50 rounded-xl p-4 text-center border border-slate-600">
+            <div className="bg-[#111111] rounded-xl p-4 text-center border border-gray-800/50">
               <div className="text-2xl font-bold text-green-400 mb-1">{statDetails.data.current}</div>
-              <div className="text-gray-300 text-sm">Current Value</div>
+              <div className="text-gray-400 text-sm">Current Value</div>
               <div className="text-xs text-green-400 mt-1">{statDetails.data.trend}</div>
             </div>
 
-            {/* Detailed Stats Grid */}
             <div className="grid grid-cols-1 gap-3">
               {Object.entries(statDetails.data).filter(([key]) => 
                 !['current', 'trend'].includes(key)
               ).map(([key, value]) => (
-                <div key={key} className="bg-slate-700/30 rounded-lg p-3 border border-slate-600/50">
-                  <div className="text-gray-400 text-xs font-medium capitalize mb-2">
+                <div key={key} className="bg-[#111111] rounded-lg p-3 border border-gray-800/50">
+                  <div className="text-gray-500 text-xs font-medium capitalize mb-2">
                     {key.replace(/([A-Z])/g, ' $1').trim()}
                   </div>
                   <div className="text-white font-semibold text-sm">
@@ -202,24 +182,26 @@ export default function LiveCommunityStats() {
                       <ul className="text-xs space-y-1">
                         {value.map((item, idx) => (
                           <li key={idx} className="flex items-start">
-                            <span className="text-blue-400 mr-2">•</span>
-                            <span>{item}</span>
+                            <span className="text-green-500 mr-2">•</span>
+                            <span className="text-gray-300">{item}</span>
                           </li>
                         ))}
                       </ul>
                     ) : (
-                      value
+                      <span className="text-gray-300">{value}</span>
                     )}
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Action Button */}
             <div className="text-center pt-2">
-              <Link href="/auth" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 inline-block text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+              <button 
+                onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
+                className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 inline-block text-sm shadow-lg hover:shadow-xl"
+              >
                 Join the Community
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -229,19 +211,17 @@ export default function LiveCommunityStats() {
 
   return (
     <>
-      <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl border border-slate-700 h-96 flex flex-col">
-        {/* Header */}
-        <div className="p-4 border-b border-slate-700 flex items-center space-x-3">
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+      <div className="bg-[#0a0a0a] rounded-2xl border border-gray-800/50 h-96 flex flex-col">
+        <div className="p-4 border-b border-gray-800/50 flex items-center space-x-3">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
           <h3 className="text-white font-bold">Live Community Stats</h3>
-          <span className="text-gray-400 text-sm">Real-time updates</span>
+          <span className="text-gray-500 text-sm">Real-time updates</span>
         </div>
 
-        {/* Stats */}
         <div className="flex-1 overflow-y-auto p-2 space-y-2 font-mono text-sm">
           <div 
             onClick={() => setSelectedStat('bettorsOnline')}
-            className="bg-slate-700/30 hover:bg-slate-700/50 rounded-lg p-3 border-l-4 border-green-400 transition-all duration-300 cursor-pointer transform hover:scale-[1.02]"
+            className="bg-[#111111] hover:bg-[#1a1a1a] rounded-lg p-3 border-l-4 border-green-500 transition-all duration-300 cursor-pointer transform hover:scale-[1.02] border-t border-r border-b border-gray-800/50"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -250,7 +230,7 @@ export default function LiveCommunityStats() {
                   <div className="text-white">
                     <span className="text-green-400 font-bold">{stats.bettorsOnline.toLocaleString()}</span> Bettors Online
                   </div>
-                  <div className="text-gray-400 text-xs">Active right now</div>
+                  <div className="text-gray-500 text-xs">Active right now</div>
                 </div>
               </div>
               <div className="text-green-400 font-bold text-lg">Live</div>
@@ -259,7 +239,7 @@ export default function LiveCommunityStats() {
 
           <div 
             onClick={() => setSelectedStat('winRate')}
-            className="bg-slate-700/30 hover:bg-slate-700/50 rounded-lg p-3 border-l-4 border-blue-400 transition-all duration-300 cursor-pointer transform hover:scale-[1.02]"
+            className="bg-[#111111] hover:bg-[#1a1a1a] rounded-lg p-3 border-l-4 border-blue-500 transition-all duration-300 cursor-pointer transform hover:scale-[1.02] border-t border-r border-b border-gray-800/50"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -268,7 +248,7 @@ export default function LiveCommunityStats() {
                   <div className="text-white">
                     <span className="text-blue-400 font-bold">{stats.winRate}%</span> Win Rate
                   </div>
-                  <div className="text-gray-400 text-xs">Last hour performance</div>
+                  <div className="text-gray-500 text-xs">Last hour performance</div>
                 </div>
               </div>
               <div className="text-blue-400 font-bold text-lg">+{stats.winRate.toFixed(0)}%</div>
@@ -277,7 +257,7 @@ export default function LiveCommunityStats() {
 
           <div 
             onClick={() => setSelectedStat('gambledToday')}
-            className="bg-slate-700/30 hover:bg-slate-700/50 rounded-lg p-3 border-l-4 border-purple-400 transition-all duration-300 cursor-pointer transform hover:scale-[1.02]"
+            className="bg-[#111111] hover:bg-[#1a1a1a] rounded-lg p-3 border-l-4 border-purple-500 transition-all duration-300 cursor-pointer transform hover:scale-[1.02] border-t border-r border-b border-gray-800/50"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -286,7 +266,7 @@ export default function LiveCommunityStats() {
                   <div className="text-white">
                     <span className="text-purple-400 font-bold">{formatCurrency(stats.gambledToday)}</span> Gambled Today
                   </div>
-                  <div className="text-gray-400 text-xs">Total action today</div>
+                  <div className="text-gray-500 text-xs">Total action today</div>
                 </div>
               </div>
               <div className="text-purple-400 font-bold text-lg">{formatCurrency(stats.gambledToday)}</div>
@@ -295,7 +275,7 @@ export default function LiveCommunityStats() {
 
           <div 
             onClick={() => setSelectedStat('withdrawnToday')}
-            className="bg-slate-700/30 hover:bg-slate-700/50 rounded-lg p-3 border-l-4 border-orange-400 transition-all duration-300 cursor-pointer transform hover:scale-[1.02]"
+            className="bg-[#111111] hover:bg-[#1a1a1a] rounded-lg p-3 border-l-4 border-orange-500 transition-all duration-300 cursor-pointer transform hover:scale-[1.02] border-t border-r border-b border-gray-800/50"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
@@ -304,7 +284,7 @@ export default function LiveCommunityStats() {
                   <div className="text-white">
                     <span className="text-orange-400 font-bold">{formatCurrency(stats.withdrawnToday)}</span> Withdrawn Today
                   </div>
-                  <div className="text-gray-400 text-xs">Successful payouts</div>
+                  <div className="text-gray-500 text-xs">Successful payouts</div>
                 </div>
               </div>
               <div className="text-orange-400 font-bold text-lg">{formatCurrency(stats.withdrawnToday)}</div>
@@ -312,15 +292,13 @@ export default function LiveCommunityStats() {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="p-3 border-t border-slate-700 text-center">
-          <div className="text-gray-400 text-xs">
+        <div className="p-3 border-t border-gray-800/50 text-center">
+          <div className="text-gray-500 text-xs">
             All data is live • Click any dataset to expand
           </div>
         </div>
       </div>
 
-      {/* Research Popup */}
       {selectedStat && (
         <ResearchPopup 
           statType={selectedStat} 
