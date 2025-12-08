@@ -247,7 +247,7 @@ export default function Dashboard() {
                 {/* Card Header with Piks Logo */}
                 <div className="px-4 sm:px-5 py-3 sm:py-4">
                   <div className="flex items-center justify-between mb-3">
-                    <img src="/piks-logo-white.png" alt="Piks" className="h-5 sm:h-6" />
+                    <img src="/pikslogotransparent.png" alt="Piks" className="h-5 sm:h-6" />
                     <div className="flex items-center space-x-2 bg-red-500/20 px-3 py-1 rounded-full">
                       <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
                       <span className="text-red-400 text-xs font-semibold uppercase">Live</span>

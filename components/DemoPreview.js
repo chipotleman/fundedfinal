@@ -546,7 +546,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                       {/* Card Header with Piks Logo */}
                       <div className="px-4 sm:px-5 py-3 sm:py-4">
                         <div className="flex items-center justify-between mb-3">
-                          <img src="/piks-logo-white.png" alt="Piks" className="h-5 sm:h-6" />
+                          <img src="/pikslogotransparent.png" alt="Piks" className="h-5 sm:h-6" />
                           <div className="flex items-center space-x-2 bg-green-500/20 px-3 py-1 rounded-full">
                             <span className="text-green-400 text-xs font-semibold uppercase">Demo</span>
                           </div>
