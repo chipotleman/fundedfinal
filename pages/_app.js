@@ -11,6 +11,7 @@ import BetaLanding from '../components/BetaLanding';
 
 function MyApp({ Component, pageProps: { session, ...pageProps } }) {
   const [showChallengePopup, setShowChallengePopup] = useState(false);
+  const [selectedChallengeIndex, setSelectedChallengeIndex] = useState(1);
   const [showHowItWorksPopup, setShowHowItWorksPopup] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
@@ -70,7 +71,10 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
 
     fetchUser();
 
-    const handleOpenChallengePopup = () => {
+    const handleOpenChallengePopup = (e) => {
+      if (e.detail && typeof e.detail.challengeIndex === 'number') {
+        setSelectedChallengeIndex(e.detail.challengeIndex);
+      }
       setShowChallengePopup(true);
     };
 
@@ -158,7 +162,8 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
           {/* Global Popups - Available on all pages */}
           <ChallengePopup 
             isOpen={showChallengePopup} 
-            onClose={() => setShowChallengePopup(false)} 
+            onClose={() => setShowChallengePopup(false)}
+            initialIndex={selectedChallengeIndex}
           />
           
           <HowItWorksPopup 

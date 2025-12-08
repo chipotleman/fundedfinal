@@ -40,8 +40,8 @@ const challenges = [
   }
 ];
 
-export default function ChallengePopup({ isOpen, onClose }) {
-  const [currentIndex, setCurrentIndex] = useState(1); // Start with Pro Challenge (most popular)
+export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [showDropdown, setShowDropdown] = useState(false);
   const [step, setStep] = useState('selection'); // 'selection', 'payment', 'checkout', or 'receipt'
   const [checkoutUrl, setCheckoutUrl] = useState(null);
@@ -68,6 +68,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
 
   useEffect(() => {
     if (isOpen) {
+      setCurrentIndex(initialIndex);
       const scrollY = window.scrollY;
       document.body.style.position = 'fixed';
       document.body.style.top = `-${scrollY}px`;
@@ -87,7 +88,7 @@ export default function ChallengePopup({ isOpen, onClose }) {
       document.body.style.width = '';
       document.body.style.overflow = '';
     };
-  }, [isOpen]);
+  }, [isOpen, initialIndex]);
 
   const handleChallengeSelect = (index) => {
     setCurrentIndex(index);

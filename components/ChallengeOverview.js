@@ -54,8 +54,8 @@ const comparisonRows = [
 ];
 
 export default function ChallengeOverview() {
-  const handleStartChallenge = () => {
-    window.dispatchEvent(new CustomEvent('openChallengePopup'));
+  const handleStartChallenge = (challengeIndex) => {
+    window.dispatchEvent(new CustomEvent('openChallengePopup', { detail: { challengeIndex } }));
   };
 
   const getColorClass = (color, type) => {
@@ -133,7 +133,7 @@ export default function ChallengeOverview() {
               </div>
 
               <button
-                onClick={handleStartChallenge}
+                onClick={() => handleStartChallenge(challenge.id - 1)}
                 className={`w-full bg-gradient-to-r ${getColorClass(challenge.color, 'button')} text-white font-bold py-3 rounded-xl transition-all`}
               >
                 Start for ${challenge.price}
@@ -157,11 +157,6 @@ export default function ChallengeOverview() {
                         {challenge.badge}
                       </span>
                       <span className="text-white font-bold text-lg">{challenge.name}</span>
-                      {challenge.badge === 'POPULAR' && (
-                        <span className="bg-gradient-to-r from-green-500 to-blue-500 text-white text-xs font-bold px-2 py-0.5 rounded">
-                          MOST POPULAR
-                        </span>
-                      )}
                     </div>
                   </th>
                 ))}
@@ -185,7 +180,7 @@ export default function ChallengeOverview() {
                 {challenges.map((challenge) => (
                   <td key={challenge.id} className="p-4 text-center">
                     <button
-                      onClick={handleStartChallenge}
+                      onClick={() => handleStartChallenge(challenge.id - 1)}
                       className={`bg-gradient-to-r ${getColorClass(challenge.color, 'button')} text-white font-bold py-2.5 px-6 rounded-xl transition-all text-sm`}
                     >
                       Start Challenge
