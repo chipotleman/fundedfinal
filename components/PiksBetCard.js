@@ -47,7 +47,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
       <div className="p-3">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center">
-            <img src="/funderlogo/Piks.png" alt="Piks" className="h-36 object-contain -ml-[67px]" />
+            <img src="/funderlogo/Piks.png" alt="Piks" className="h-36 object-contain -ml-[52px]" />
           </div>
           
           <div className={`flex items-center space-x-2 px-3 py-1 rounded-full ${
