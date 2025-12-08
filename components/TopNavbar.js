@@ -237,7 +237,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
               {/* Desktop Bankroll - Only show when logged in */}
               {isLoggedIn && (
                 <div className="hidden sm:flex items-center space-x-4">
-                  <div className="bg-slate-800 hover:bg-slate-700 rounded-lg px-3 py-2 border border-slate-700 hover:border-slate-600 transition-colors">
+                  <div className="bg-[#111111] hover:bg-[#1a1a1a] rounded-lg px-3 py-2 border border-gray-800/50 hover:border-gray-700 transition-colors">
                     <button
                       onClick={() => setShowBalanceModal(true)}
                       className="flex items-center space-x-2"
@@ -274,9 +274,9 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                   <div className="relative">
                     <button
                       onClick={() => setShowUserMenu(!showUserMenu)}
-                      className="flex items-center space-x-2 bg-slate-800 hover:bg-slate-700 rounded-lg px-3 py-2 border border-slate-700 hover:border-blue-500 transition-all duration-300"
+                      className="flex items-center space-x-2 bg-[#111111] hover:bg-[#1a1a1a] rounded-lg px-3 py-2 border border-gray-800/50 hover:border-green-500 transition-all duration-300"
                     >
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                      <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-blue-500 rounded-full flex items-center justify-center">
                         <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                         </svg>
@@ -293,10 +293,10 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                         />
                         
                         {/* Menu */}
-                        <div className="absolute right-0 mt-2 w-56 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden">
+                        <div className="absolute right-0 mt-2 w-56 bg-[#0a0a0a] border border-gray-800/50 rounded-xl shadow-2xl z-50 overflow-hidden">
                           {/* User Info */}
-                          <div className="px-4 py-3 border-b border-slate-700 bg-slate-800/50">
-                            <p className="text-sm text-gray-400">Signed in as</p>
+                          <div className="px-4 py-3 border-b border-gray-800/50 bg-[#111111]">
+                            <p className="text-sm text-gray-500">Signed in as</p>
                             <p className="text-sm font-semibold text-white truncate">{currentUser?.email}</p>
                           </div>
 
@@ -305,7 +305,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                             <Link
                               href="/promos"
                               onClick={() => setShowUserMenu(false)}
-                              className="flex items-center space-x-3 px-4 py-3 hover:bg-slate-800 text-gray-300 hover:text-blue-400 transition-colors"
+                              className="flex items-center space-x-3 px-4 py-3 hover:bg-[#1a1a1a] text-gray-300 hover:text-green-400 transition-colors"
                             >
                               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clipRule="evenodd" />
@@ -316,7 +316,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                             <Link
                               href="/bet-history"
                               onClick={() => setShowUserMenu(false)}
-                              className="flex items-center space-x-3 px-4 py-3 hover:bg-slate-800 text-gray-300 hover:text-blue-400 transition-colors"
+                              className="flex items-center space-x-3 px-4 py-3 hover:bg-[#1a1a1a] text-gray-300 hover:text-green-400 transition-colors"
                             >
                               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
@@ -328,7 +328,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                             <Link
                               href="/dashboard"
                               onClick={() => setShowUserMenu(false)}
-                              className="flex items-center space-x-3 px-4 py-3 hover:bg-slate-800 text-gray-300 hover:text-blue-400 transition-colors"
+                              className="flex items-center space-x-3 px-4 py-3 hover:bg-[#1a1a1a] text-gray-300 hover:text-green-400 transition-colors"
                             >
                               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
@@ -339,10 +339,9 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                             <button
                               onClick={() => {
                                 setShowUserMenu(false);
-                                // Open settings modal (you can create this later)
                                 alert('Settings modal coming soon!');
                               }}
-                              className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-slate-800 text-gray-300 hover:text-blue-400 transition-colors"
+                              className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-[#1a1a1a] text-gray-300 hover:text-green-400 transition-colors"
                             >
                               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
@@ -352,7 +351,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                           </div>
 
                           {/* Sign Out */}
-                          <div className="border-t border-slate-700">
+                          <div className="border-t border-gray-800/50">
                             <button
                               onClick={() => {
                                 setShowUserMenu(false);

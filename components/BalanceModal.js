@@ -101,7 +101,7 @@ export default function BalanceModal({
       onClick={onClose}
     >
       <div 
-        className={`relative bg-black rounded-2xl border-2 ${theme.border} p-6 w-full max-w-2xl mx-4 mb-10`}
+        className={`relative bg-[#0a0a0a] rounded-2xl border ${theme.border} p-6 w-full max-w-2xl mx-4 mb-10`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
@@ -157,31 +157,31 @@ export default function BalanceModal({
           <div className="space-y-6">
             {/* Balance Info */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className={`bg-zinc-900 rounded-xl p-4 text-center border ${theme.border.replace('-500', '-500/30')}`}>
+              <div className={`bg-[#111111] rounded-xl p-4 text-center border ${theme.border.replace('-500', '-500/30')}`}>
                 <p className="text-gray-400 text-sm">Current Balance</p>
                 <p className="text-2xl font-bold text-white">${bankroll?.toLocaleString()}</p>
               </div>
-              <div className={`bg-zinc-900 rounded-xl p-4 text-center border ${theme.border.replace('-500', '-500/30')}`}>
+              <div className={`bg-[#111111] rounded-xl p-4 text-center border ${theme.border.replace('-500', '-500/30')}`}>
                 <p className="text-gray-400 text-sm">Total P&L</p>
                 <p className={`text-2xl font-bold ${pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                   {pnl >= 0 ? '+' : ''}${pnl?.toLocaleString()}
                 </p>
               </div>
-              <div className={`bg-zinc-900 rounded-xl p-4 text-center border ${theme.border.replace('-500', '-500/30')}`}>
+              <div className={`bg-[#111111] rounded-xl p-4 text-center border ${theme.border.replace('-500', '-500/30')}`}>
                 <p className="text-gray-400 text-sm">Progress</p>
                 <p className={`text-2xl font-bold ${theme.text}`}>{progressPercent}%</p>
               </div>
             </div>
 
             {/* Progress Bar */}
-            <div className={`bg-zinc-900 rounded-xl p-6 border ${theme.border.replace('-500', '-500/30')}`}>
+            <div className={`bg-[#111111] rounded-xl p-6 border ${theme.border.replace('-500', '-500/30')}`}>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-white">Challenge Progress</h3>
                 <span className="text-sm text-gray-400">
                   ${(startingBankroll + pnl)?.toLocaleString()} / ${challengeGoal?.toLocaleString()}
                 </span>
               </div>
-              <div className="w-full bg-zinc-800 rounded-full h-3">
+              <div className="w-full bg-[#1a1a1a] rounded-full h-3">
                 <div
                   className={`bg-gradient-to-r ${theme.gradient} h-3 rounded-full transition-all duration-500`}
                   style={{ width: `${Math.min(progressPercent, 100)}%` }}
@@ -194,19 +194,19 @@ export default function BalanceModal({
 
             {/* Quick Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className={`bg-zinc-900 rounded-xl p-4 text-center border ${theme.border.replace('-500', '-500/30')}`}>
+              <div className={`bg-[#111111] rounded-xl p-4 text-center border ${theme.border.replace('-500', '-500/30')}`}>
                 <p className="text-gray-400 text-sm">Win Rate</p>
                 <p className={`text-xl font-bold ${theme.text}`}>67%</p>
               </div>
-              <div className={`bg-zinc-900 rounded-xl p-4 text-center border ${theme.border.replace('-500', '-500/30')}`}>
+              <div className={`bg-[#111111] rounded-xl p-4 text-center border ${theme.border.replace('-500', '-500/30')}`}>
                 <p className="text-gray-400 text-sm">Total Bets</p>
                 <p className="text-xl font-bold text-white">42</p>
               </div>
-              <div className={`bg-zinc-900 rounded-xl p-4 text-center border ${theme.border.replace('-500', '-500/30')}`}>
+              <div className={`bg-[#111111] rounded-xl p-4 text-center border ${theme.border.replace('-500', '-500/30')}`}>
                 <p className="text-gray-400 text-sm">Best Day</p>
                 <p className="text-xl font-bold text-green-400">+$1,250</p>
               </div>
-              <div className={`bg-zinc-900 rounded-xl p-4 text-center border ${theme.border.replace('-500', '-500/30')}`}>
+              <div className={`bg-[#111111] rounded-xl p-4 text-center border ${theme.border.replace('-500', '-500/30')}`}>
                 <p className="text-gray-400 text-sm">Days Active</p>
                 <p className={`text-xl font-bold ${theme.text}`}>8</p>
               </div>
@@ -218,7 +218,7 @@ export default function BalanceModal({
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-white mb-4">Recent Bets</h3>
             {bettingHistory.map((bet, index) => (
-              <div key={index} className={`bg-zinc-900 rounded-xl p-4 flex justify-between items-center border ${theme.border.replace('-500', '-500/30')}`}>
+              <div key={index} className={`bg-[#111111] rounded-xl p-4 flex justify-between items-center border ${theme.border.replace('-500', '-500/30')}`}>
                 <div>
                   <p className="text-white font-medium">{bet.bet}</p>
                   <p className="text-gray-400 text-sm">{bet.sport} • {bet.date}</p>
@@ -238,7 +238,7 @@ export default function BalanceModal({
 
         {activeTab === 'rules' && (
           <div className="space-y-6">
-            <div className={`bg-zinc-900 rounded-xl p-6 border ${theme.border.replace('-500', '-500/30')}`}>
+            <div className={`bg-[#111111] rounded-xl p-6 border ${theme.border.replace('-500', '-500/30')}`}>
               <h3 className="text-lg font-semibold text-white mb-4">Challenge Requirements</h3>
               <div className="space-y-3">
                 {challengeRequirements.map((req, index) => (
@@ -247,7 +247,7 @@ export default function BalanceModal({
               </div>
             </div>
 
-            <div className={`bg-zinc-900 rounded-xl p-6 border ${theme.border.replace('-500', '-500/30')}`}>
+            <div className={`bg-[#111111] rounded-xl p-6 border ${theme.border.replace('-500', '-500/30')}`}>
               <h3 className="text-lg font-semibold text-white mb-4">Payout Structure</h3>
               <div className="space-y-3">
                 <div className="flex justify-between">

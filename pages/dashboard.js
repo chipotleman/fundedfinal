@@ -205,7 +205,7 @@ export default function Dashboard() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-end mb-4 space-y-4 sm:space-y-0">
           <div className="flex items-center space-x-2 sm:space-x-4">
-            <div className="bg-gray-800 px-4 py-3 rounded-lg border border-gray-700">
+            <div className="bg-[#111111] px-4 py-3 rounded-lg border border-gray-800/50">
               <div className="flex items-center space-x-2">
                 <span className="text-gray-300 text-sm sm:text-base whitespace-nowrap">Live Lines</span>
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
@@ -223,8 +223,8 @@ export default function Dashboard() {
                 onClick={() => handleSportClick(sport)}
                 className={`flex-shrink-0 flex flex-col items-center justify-center w-18 h-18 sm:w-20 sm:h-20 rounded-full transition-all duration-200 ${
                   selectedSport === sport
-                    ? 'bg-gray-800 text-white shadow-lg border-2 border-purple-500'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white border border-gray-700'
+                    ? 'bg-[#111111] text-white shadow-lg border-2 border-green-500'
+                    : 'bg-[#111111] text-gray-300 hover:bg-[#1a1a1a] hover:text-white border border-gray-800/50'
                 }`}
               >
                 <span className="text-lg sm:text-xl mb-1">{getSportIcon(sport)}</span>
@@ -348,7 +348,7 @@ export default function Dashboard() {
             ))
           ) : (
             <div className="text-center py-12">
-              <div className="bg-gray-900 rounded-2xl p-8 max-w-md mx-auto border border-gray-700">
+              <div className="bg-[#111111] rounded-2xl p-8 max-w-md mx-auto border border-gray-800/50">
                 <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
                 </svg>
