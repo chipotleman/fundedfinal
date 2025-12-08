@@ -26,9 +26,9 @@ function ThunderCardModule() {
   return (
     <div className="text-center px-4 mb-8">
       <div className="max-w-3xl mx-auto">
-        <div className="bg-gradient-to-br from-slate-900 via-purple-900 to-blue-900 rounded-2xl border border-purple-500/30 overflow-hidden p-6 sm:p-8">
+        <div className="bg-gradient-to-br from-slate-900 via-purple-900 to-blue-900 rounded-2xl border border-purple-500/30 overflow-hidden p-4 sm:p-6">
           {/* Card Image - Main Focus */}
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-4">
             <div className="relative transform hover:scale-105 transition-all duration-300">
               <img 
                 src="/piks-card.png" 
@@ -42,7 +42,7 @@ function ThunderCardModule() {
           <h2 className="text-3xl sm:text-4xl font-black text-white mb-3">
             Introducing the <span className="bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">Piks Card</span>
           </h2>
-          <p className="text-base text-gray-300 mb-6 max-w-lg mx-auto">
+          <p className="text-base text-gray-300 mb-4 max-w-lg mx-auto">
             The first prepaid bank card that gets funded directly from your betting profits. Use it anywhere.
           </p>
 
