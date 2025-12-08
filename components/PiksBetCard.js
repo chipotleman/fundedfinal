@@ -47,8 +47,40 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
   const isLost = bet.status === 'lost';
   const isCashedOut = bet.status === 'cashed_out';
 
-  const homeScore = bet.homeScore || (isWon || isLost ? Math.floor(Math.random() * 15 + 20) : null);
-  const awayScore = bet.awayScore || (isWon || isLost ? Math.floor(Math.random() * 15 + 15) : null);
+  // Memoize scores - will use real data from bet object when API is connected
+  const scores = useMemo(() => {
+    // If bet has real score data, use it
+    if (bet.homeScore !== undefined && bet.awayScore !== undefined) {
+      return {
+        homeScore: bet.homeScore,
+        awayScore: bet.awayScore,
+        homeQuarters: bet.homeQuarters || [],
+        awayQuarters: bet.awayQuarters || []
+      };
+    }
+    // Generate placeholder scores for finished games (won/lost)
+    if (isWon || isLost) {
+      const seed = bet.id ? bet.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) : 12345;
+      const pseudoRandom = (n) => ((seed * (n + 1) * 9301 + 49297) % 233280) / 233280;
+      return {
+        homeScore: Math.floor(pseudoRandom(1) * 15 + 24),
+        awayScore: Math.floor(pseudoRandom(2) * 15 + 17),
+        homeQuarters: [
+          Math.floor(pseudoRandom(3) * 10),
+          Math.floor(pseudoRandom(4) * 12),
+          Math.floor(pseudoRandom(5) * 8),
+          Math.floor(pseudoRandom(6) * 10)
+        ],
+        awayQuarters: [
+          Math.floor(pseudoRandom(7) * 8),
+          Math.floor(pseudoRandom(8) * 10),
+          Math.floor(pseudoRandom(9) * 6),
+          Math.floor(pseudoRandom(10) * 8)
+        ]
+      };
+    }
+    return { homeScore: null, awayScore: null, homeQuarters: [], awayQuarters: [] };
+  }, [bet.id, bet.homeScore, bet.awayScore, bet.homeQuarters, bet.awayQuarters, isWon, isLost]);
 
   return (
     <div 
@@ -96,25 +128,23 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
               <div className="flex justify-between items-center text-xs">
                 <span className="text-white">{bet.matchup?.split(' @ ')[1] || bet.matchup?.split(' vs ')[0] || 'Home Team'}</span>
                 <div className="flex items-center space-x-2">
-                  <div className="flex space-x-1 text-gray-400">
-                    <span>{Math.floor(Math.random() * 10)}</span>
-                    <span>{Math.floor(Math.random() * 15)}</span>
-                    <span>{Math.floor(Math.random() * 5)}</span>
-                    <span>{Math.floor(Math.random() * 10)}</span>
-                  </div>
-                  <span className={`font-bold ${isWon ? 'text-green-400' : 'text-white'}`}>{homeScore}</span>
+                  {scores.homeQuarters.length > 0 && (
+                    <div className="flex space-x-1 text-gray-400">
+                      {scores.homeQuarters.map((q, i) => <span key={i}>{q}</span>)}
+                    </div>
+                  )}
+                  <span className={`font-bold ${isWon ? 'text-green-400' : 'text-white'}`}>{scores.homeScore}</span>
                 </div>
               </div>
               <div className="flex justify-between items-center text-xs">
                 <span className="text-white">{bet.matchup?.split(' @ ')[0] || bet.matchup?.split(' vs ')[1] || 'Away Team'}</span>
                 <div className="flex items-center space-x-2">
-                  <div className="flex space-x-1 text-gray-400">
-                    <span>{Math.floor(Math.random() * 5)}</span>
-                    <span>{Math.floor(Math.random() * 12)}</span>
-                    <span>{Math.floor(Math.random() * 3)}</span>
-                    <span>{Math.floor(Math.random() * 8)}</span>
-                  </div>
-                  <span className="text-white font-bold">{awayScore}</span>
+                  {scores.awayQuarters.length > 0 && (
+                    <div className="flex space-x-1 text-gray-400">
+                      {scores.awayQuarters.map((q, i) => <span key={i}>{q}</span>)}
+                    </div>
+                  )}
+                  <span className="text-white font-bold">{scores.awayScore}</span>
                 </div>
               </div>
               <div className="text-right">
