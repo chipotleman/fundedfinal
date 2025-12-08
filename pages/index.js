@@ -40,39 +40,12 @@ function ThunderCardModule() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 px-8 pb-8">
             {/* Piks Card Preview */}
             <div className="flex justify-center items-center">
-              <div className="relative">
-                {/* Card with gradient background */}
-                <div className="bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 rounded-xl p-6 shadow-2xl border border-blue-500/30 transform hover:scale-105 transition-all duration-300" style={{aspectRatio: '1.586/1', width: '320px'}}>
-                  {/* Card Header */}
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <div className="text-blue-300 text-xs font-medium mb-1">PIKS CARD</div>
-                      <div className="text-white text-base font-bold">PREMIUM</div>
-                    </div>
-                    <div className="w-10 h-6 bg-gradient-to-r from-yellow-400 to-orange-500 rounded flex items-center justify-center">
-                      <div className="w-5 h-3 bg-yellow-300 rounded-sm"></div>
-                    </div>
-                  </div>
-
-                  {/* Card Number */}
-                  <div className="mb-4">
-                    <div className="text-white text-lg font-mono tracking-widest">
-                      •••• •••• •••• 1234
-                    </div>
-                  </div>
-
-                  {/* Card Footer */}
-                  <div className="flex justify-between items-end">
-                    <div>
-                      <div className="text-blue-300 text-xs mb-1">CARDHOLDER</div>
-                      <div className="text-white text-sm font-bold">YOUR NAME</div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-blue-300 text-xs mb-1">EXPIRES</div>
-                      <div className="text-white text-sm font-bold">12/28</div>
-                    </div>
-                  </div>
-                </div>
+              <div className="relative transform hover:scale-105 transition-all duration-300">
+                <img 
+                  src="/piks-card.png" 
+                  alt="Piks Card" 
+                  className="w-80 sm:w-96 drop-shadow-2xl"
+                />
               </div>
             </div>
 
