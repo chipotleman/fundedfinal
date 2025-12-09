@@ -1,7 +1,10 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import CoinBurst, { CountUpNumber } from './CoinBurst';
 
 export default function PiksBetCard({ bet, onCashOut, onShare }) {
   const [confirmingCashOut, setConfirmingCashOut] = useState(false);
+  const [showCoinBurst, setShowCoinBurst] = useState(false);
+  const [hasAnimated, setHasAnimated] = useState(false);
   const buttonRef = useRef(null);
   
   const pikId = useMemo(() => {
@@ -47,6 +50,16 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
   const isLost = bet.status === 'lost';
   const isCashedOut = bet.status === 'cashed_out';
 
+  useEffect(() => {
+    if (isWon && !hasAnimated) {
+      const timer = setTimeout(() => {
+        setShowCoinBurst(true);
+        setHasAnimated(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isWon, hasAnimated]);
+
   // Memoize scores - will use real data from bet object when API is connected
   const scores = useMemo(() => {
     // If bet has real score data, use it
@@ -88,6 +101,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         isWon ? 'border-green-500' : isOpen ? 'border-blue-500' : isCashedOut ? 'border-orange-500' : 'border-red-500'
       }`}
     >
+      <CoinBurst trigger={showCoinBurst} onComplete={() => setShowCoinBurst(false)} />
             
       <div className="px-4 pt-2 pb-3">
         <div className="flex items-center justify-between -mt-1">
@@ -178,7 +192,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
             </div>
             {isWon && (
               <div className="text-right">
-                <div className="text-green-400 font-bold text-lg">${payout.toFixed(2)}</div>
+                <CountUpNumber value={payout} className="text-green-400 font-bold text-lg" />
                 <div className="text-green-400 text-[10px] uppercase">Won on Piks</div>
               </div>
             )}
