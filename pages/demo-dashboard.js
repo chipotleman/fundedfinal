@@ -162,6 +162,31 @@ export default function DemoDashboard() {
     }
   }, [selectedSport]);
 
+  // Lock body scroll when bet slip is open
+  useEffect(() => {
+    if (showBetSlip) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.top = `-${window.scrollY}px`;
+    } else {
+      const scrollY = document.body.style.top;
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      }
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
+      document.body.style.top = '';
+    };
+  }, [showBetSlip]);
+
   const formatOdds = (odds) => {
     return odds > 0 ? `+${odds}` : odds.toString();
   };
@@ -310,21 +335,31 @@ export default function DemoDashboard() {
       {showBetSlip && (
         <>
           <div 
-            className="fixed inset-0 bg-black/80 z-[98] hidden md:block"
+            className="fixed inset-0 bg-black z-[98] hidden md:block"
             onClick={() => setShowBetSlip(false)}
           />
           
-          <div className="fixed inset-0 md:inset-auto md:top-0 md:right-0 md:bottom-0 md:w-96 bg-black md:border-l border-gray-800/50 z-[99] flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b border-gray-800/50">
-              <h2 className="text-white font-bold text-xl flex items-center">
-                <img src="/pikslogotransparent.png" alt="Piks" className="h-6 mr-2" />
-                Bet Slip ({selectedBets.length})
-              </h2>
-              <button onClick={() => setShowBetSlip(false)} className="text-gray-400 hover:text-white p-1">
-                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+          <div className="fixed inset-0 md:inset-auto md:top-0 md:right-0 md:bottom-0 md:w-[420px] bg-black z-[99] flex flex-col">
+            {/* Header with Piks branding */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800/50">
+              <div className="flex items-center">
+                <img src="/funderlogo/Piks.png" alt="Piks" className="h-14 object-contain -ml-4" />
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 bg-orange-500/20 border border-orange-500/50 px-2.5 py-1 rounded-full">
+                  <div className="w-2 h-2 bg-orange-400 rounded-full"></div>
+                  <span className="text-orange-400 text-xs font-bold">DEMO</span>
+                </div>
+                <div className="flex items-center gap-1.5 bg-blue-500/20 border border-blue-500/50 px-2.5 py-1 rounded-full">
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                  <span className="text-blue-400 text-xs font-bold">{selectedBets.length} PICK{selectedBets.length !== 1 ? 'S' : ''}</span>
+                </div>
+                <button onClick={() => setShowBetSlip(false)} className="text-gray-400 hover:text-white p-1">
+                  <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <div className="flex-1 overflow-y-auto">
@@ -334,43 +369,67 @@ export default function DemoDashboard() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
                   <p className="text-gray-400 font-medium text-lg mb-2">Your bet slip is empty</p>
-                  <p className="text-gray-600">Click on odds to add bets</p>
+                  <p className="text-gray-600">Click on odds to add picks</p>
                 </div>
               ) : (
-                <div className="p-4 space-y-4">
+                <div className="p-4 space-y-3">
                   {selectedBets.map(bet => (
-                    <div key={bet.key} className="bg-[#111111] rounded-xl p-4 border border-gray-800/50">
-                      <div className="flex items-start justify-between gap-3 mb-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="text-white font-semibold text-base">{bet.matchup}</div>
-                          <div className="flex items-center gap-2 mt-1.5">
-                            <span className="text-gray-300 text-sm">{bet.selection}</span>
-                            <span className="bg-green-500/20 text-green-400 px-2 py-0.5 rounded text-sm font-bold">
-                              {formatOdds(bet.odds)}
-                            </span>
-                          </div>
+                    <div key={bet.key} className="bg-black rounded-lg border border-blue-500/50 overflow-hidden">
+                      {/* Ticket Header */}
+                      <div className="bg-slate-900/80 px-4 py-2 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
+                          <span className="text-blue-400 text-xs font-bold uppercase">{bet.betType || 'Spread'}</span>
                         </div>
-                        <button onClick={() => removeBet(bet.key)} className="text-gray-500 hover:text-red-400 p-1">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <button onClick={() => removeBet(bet.key)} className="text-gray-500 hover:text-red-400">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                           </svg>
                         </button>
                       </div>
                       
-                      <div className="flex items-center gap-3">
-                        <div className="relative flex-1">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
-                          <input
-                            type="number"
-                            value={bet.stake || ''}
-                            onChange={(e) => updateStake(bet.key, e.target.value)}
-                            className="w-full pl-8 pr-3 py-3 bg-[#1a1a1a] border border-gray-700 rounded-xl text-white text-base focus:outline-none focus:border-green-500"
-                            placeholder="Enter stake"
-                          />
+                      {/* Selection & Odds */}
+                      <div className="px-4 py-3">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex-1">
+                            <div className="text-white font-bold text-base">{bet.selection}</div>
+                            <div className="text-gray-400 text-xs uppercase mt-0.5">{bet.betType}</div>
+                          </div>
+                          <div className="text-blue-400 font-bold text-xl">
+                            {formatOdds(bet.odds)}
+                          </div>
                         </div>
-                        <div className="text-right min-w-[80px]">
-                          <div className="text-gray-500 text-xs mb-0.5">TO WIN</div>
-                          <div className="text-green-400 font-bold text-lg">${calculatePayout(bet.stake || 0, bet.odds).toFixed(2)}</div>
+                        
+                        {/* Live Game Info */}
+                        <div className="bg-slate-800/50 rounded-lg p-3 mt-2">
+                          <div className="text-gray-500 text-[10px] uppercase mb-1">Game</div>
+                          <div className="text-white text-sm font-medium">{bet.matchup}</div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
+                            <span className="text-green-400 text-xs">Live</span>
+                            <span className="text-gray-500 text-xs">|</span>
+                            <span className="text-gray-400 text-xs">In Progress</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Stake Input */}
+                      <div className="px-4 pb-3 border-t border-gray-800/50 pt-3">
+                        <div className="flex items-center gap-3">
+                          <div className="relative flex-1">
+                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                            <input
+                              type="number"
+                              value={bet.stake || ''}
+                              onChange={(e) => updateStake(bet.key, e.target.value)}
+                              className="w-full pl-8 pr-3 py-3 bg-[#1a1a1a] border border-gray-700 rounded-lg text-white text-base focus:outline-none focus:border-blue-500"
+                              placeholder="Enter stake"
+                            />
+                          </div>
+                          <div className="text-right min-w-[80px]">
+                            <div className="text-gray-500 text-[10px] uppercase">To Win</div>
+                            <div className="text-green-400 font-bold text-lg">${calculatePayout(bet.stake || 0, bet.odds).toFixed(2)}</div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -380,14 +439,16 @@ export default function DemoDashboard() {
             </div>
 
             {selectedBets.length > 0 && (
-              <div className="p-4 border-t border-gray-800/50 bg-[#0a0a0a]">
-                <div className="flex justify-between text-base mb-2">
-                  <span className="text-gray-400">Total Stake</span>
-                  <span className="text-white font-bold">${getTotalStake().toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between text-base mb-4">
-                  <span className="text-gray-400">Potential Win</span>
-                  <span className="text-green-400 font-bold text-lg">${(getTotalStake() + getTotalPotentialWin()).toFixed(2)}</span>
+              <div className="p-4 border-t border-gray-800/50 bg-black">
+                <div className="bg-slate-900/50 rounded-lg p-3 mb-4">
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-gray-400">Total Pikked</span>
+                    <span className="text-white font-bold">${getTotalStake().toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-400">Potential Payout</span>
+                    <span className="text-green-400 font-bold text-lg">${(getTotalStake() + getTotalPotentialWin()).toFixed(2)}</span>
+                  </div>
                 </div>
 
                 <button
@@ -395,7 +456,7 @@ export default function DemoDashboard() {
                   disabled={getTotalStake() === 0}
                   className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-4 rounded-xl transition-all disabled:cursor-not-allowed text-lg"
                 >
-                  Place {selectedBets.length} Bet{selectedBets.length > 1 ? 's' : ''}
+                  Place {selectedBets.length} Pik{selectedBets.length > 1 ? 's' : ''}
                 </button>
               </div>
             )}
