@@ -204,70 +204,32 @@ export default function DemoDashboard() {
       setGames(prevGames => {
         const updatedGames = simulateOddsMovement(prevGames);
         
-        // Update selected bets with new odds from updated games
+        // Update selected bets with new odds using the dedicated function
         if (selectedBets.length > 0) {
-          setSelectedBets(prevBets => {
-            return prevBets.map(bet => {
-              const game = updatedGames.find(g => g.id === bet.gameId);
-              if (!game) return bet;
-
-              let newOdds = bet.odds;
-              let newPoint = bet.point;
-              let oddsMoved = null;
-
-              if (bet.betType === 'spread') {
-                const isAway = bet.selection.includes(game.awayTeam);
-                const lineData = isAway ? game.lines.spread.away : game.lines.spread.home;
-                if (lineData.odds !== bet.odds) {
-                  newOdds = lineData.odds;
-                  oddsMoved = newOdds > bet.odds ? 'up' : 'down';
-                }
-                if (lineData.point !== bet.point) {
-                  newPoint = lineData.point;
-                }
-              } else if (bet.betType === 'total') {
-                const isOver = bet.selection.toLowerCase().includes('over');
-                const lineData = isOver ? game.lines.total.over : game.lines.total.under;
-                if (lineData.odds !== bet.odds) {
-                  newOdds = lineData.odds;
-                  oddsMoved = newOdds > bet.odds ? 'up' : 'down';
-                }
-              } else if (bet.betType === 'moneyline') {
-                const isAway = bet.selection === game.awayTeam;
-                const ml = isAway ? game.lines.moneyline.away : game.lines.moneyline.home;
-                if (ml !== bet.odds) {
-                  oddsMoved = ml > bet.odds ? 'up' : 'down';
-                  newOdds = ml;
-                }
-              }
-
-              return {
-                ...bet,
-                odds: newOdds,
-                point: newPoint,
-                oddsMoved,
-                oddsChanged: oddsMoved !== null
-              };
-            });
-          });
+          const updatedBets = updateBetSlipWithNewOdds(selectedBets, updatedGames);
+          // Only update if there are actual changes
+          const hasChanges = updatedBets.some(bet => bet.oddsChanged || bet.lineChanged);
+          if (hasChanges) {
+            setSelectedBets(updatedBets);
+          }
         }
         
         return updatedGames;
       });
-    }, 5000);
+    }, 3000); // Faster updates - every 3 seconds
 
     return () => clearInterval(interval);
-  }, [selectedBets.length]);
+  }, [selectedBets]);
 
-  // Clear oddsMoved after flash animation
+  // Clear oddsMoved after flash animation (1.5 seconds)
   useEffect(() => {
-    const betsWithMovement = selectedBets.filter(b => b.oddsMoved);
+    const betsWithMovement = selectedBets.filter(b => b.oddsMoved || b.oddsChanged);
     if (betsWithMovement.length > 0) {
       const timeout = setTimeout(() => {
         setSelectedBets(prevBets => 
-          prevBets.map(bet => ({ ...bet, oddsMoved: null, oddsChanged: false }))
+          prevBets.map(bet => ({ ...bet, oddsMoved: null, oddsChanged: false, lineMoved: null, lineChanged: false }))
         );
-      }, 2000);
+      }, 1500);
       return () => clearTimeout(timeout);
     }
   }, [selectedBets]);
