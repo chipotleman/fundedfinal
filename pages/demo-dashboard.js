@@ -187,6 +187,17 @@ export default function DemoDashboard() {
   }, [bankroll, pnl, totalBets, wins, losses, demoChallenge]);
 
   const baseGamesRef = useRef({});
+  const selectedBetsRef = useRef(selectedBets);
+  const gamesRef = useRef(games);
+  
+  // Keep refs in sync
+  useEffect(() => {
+    selectedBetsRef.current = selectedBets;
+  }, [selectedBets]);
+  
+  useEffect(() => {
+    gamesRef.current = games;
+  }, [games]);
 
   useEffect(() => {
     if (selectedSport === 'All Sports') {
@@ -199,40 +210,36 @@ export default function DemoDashboard() {
     }
   }, [selectedSport]);
 
+  // Odds simulation - runs every 3 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      setGames(prevGames => {
-        const updatedGames = simulateOddsMovement(prevGames);
+      // Update games first
+      const updatedGames = simulateOddsMovement(gamesRef.current);
+      setGames(updatedGames);
+      
+      // Then update bets with new odds from games
+      const currentBets = selectedBetsRef.current;
+      if (currentBets.length > 0) {
+        const updatedBets = updateBetSlipWithNewOdds(currentBets, updatedGames);
+        setSelectedBets(updatedBets);
         
-        // Update selected bets with new odds using the dedicated function
-        if (selectedBets.length > 0) {
-          const updatedBets = updateBetSlipWithNewOdds(selectedBets, updatedGames);
-          // Only update if there are actual changes
-          const hasChanges = updatedBets.some(bet => bet.oddsChanged || bet.lineChanged);
-          if (hasChanges) {
-            setSelectedBets(updatedBets);
-          }
-        }
-        
-        return updatedGames;
-      });
-    }, 3000); // Faster updates - every 3 seconds
+        // Clear the flash indicators after 1.5 seconds
+        setTimeout(() => {
+          setSelectedBets(prevBets => 
+            prevBets.map(bet => ({ 
+              ...bet, 
+              oddsMoved: null, 
+              oddsChanged: false, 
+              lineMoved: null, 
+              lineChanged: false 
+            }))
+          );
+        }, 1500);
+      }
+    }, 3000);
 
     return () => clearInterval(interval);
-  }, [selectedBets]);
-
-  // Clear oddsMoved after flash animation (1.5 seconds)
-  useEffect(() => {
-    const betsWithMovement = selectedBets.filter(b => b.oddsMoved || b.oddsChanged);
-    if (betsWithMovement.length > 0) {
-      const timeout = setTimeout(() => {
-        setSelectedBets(prevBets => 
-          prevBets.map(bet => ({ ...bet, oddsMoved: null, oddsChanged: false, lineMoved: null, lineChanged: false }))
-        );
-      }, 1500);
-      return () => clearTimeout(timeout);
-    }
-  }, [selectedBets]);
+  }, []);
 
   // Lock body scroll when bet slip is open
   useEffect(() => {
