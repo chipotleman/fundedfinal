@@ -187,17 +187,6 @@ export default function DemoDashboard() {
   }, [bankroll, pnl, totalBets, wins, losses, demoChallenge]);
 
   const baseGamesRef = useRef({});
-  const selectedBetsRef = useRef(selectedBets);
-  const gamesRef = useRef(games);
-  
-  // Keep refs in sync
-  useEffect(() => {
-    selectedBetsRef.current = selectedBets;
-  }, [selectedBets]);
-  
-  useEffect(() => {
-    gamesRef.current = games;
-  }, [games]);
 
   useEffect(() => {
     if (selectedSport === 'All Sports') {
@@ -213,29 +202,31 @@ export default function DemoDashboard() {
   // Odds simulation - runs every 3 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      // Update games first
-      const updatedGames = simulateOddsMovement(gamesRef.current);
-      setGames(updatedGames);
-      
-      // Then update bets with new odds from games
-      const currentBets = selectedBetsRef.current;
-      if (currentBets.length > 0) {
-        const updatedBets = updateBetSlipWithNewOdds(currentBets, updatedGames);
-        setSelectedBets(updatedBets);
+      // Update games with new simulated odds
+      setGames(prevGames => {
+        const updatedGames = simulateOddsMovement(prevGames);
         
-        // Clear the flash indicators after 1.5 seconds
-        setTimeout(() => {
-          setSelectedBets(prevBets => 
-            prevBets.map(bet => ({ 
-              ...bet, 
-              oddsMoved: null, 
-              oddsChanged: false, 
-              lineMoved: null, 
-              lineChanged: false 
-            }))
-          );
-        }, 1500);
-      }
+        // Also update selected bets to sync with new game odds
+        setSelectedBets(prevBets => {
+          if (prevBets.length === 0) return prevBets;
+          return updateBetSlipWithNewOdds(prevBets, updatedGames);
+        });
+        
+        return updatedGames;
+      });
+      
+      // Clear the flash indicators after 1.5 seconds
+      setTimeout(() => {
+        setSelectedBets(prevBets => 
+          prevBets.map(bet => ({ 
+            ...bet, 
+            oddsMoved: null, 
+            oddsChanged: false, 
+            lineMoved: null, 
+            lineChanged: false 
+          }))
+        );
+      }, 1500);
     }, 3000);
 
     return () => clearInterval(interval);
