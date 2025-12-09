@@ -157,7 +157,7 @@ export default function BetSlip({ bankroll, onClose }) {
       {/* Bet Slip Panel */}
       <div className="fixed right-0 top-0 bottom-0 w-full max-w-sm lg:max-w-md lg:w-96 bg-black border-l border-gray-800/50 flex flex-col z-50 transform translate-x-0 transition-transform duration-300 ease-in-out">
         {/* Header */}
-        <div className="p-5 border-b border-gray-800/50">
+        <div className="flex-shrink-0 p-5 border-b border-gray-800/50">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold text-white flex items-center">
             <img src="/pikslogotransparent.png" alt="Piks" className="h-6 mr-2" />
@@ -374,9 +374,9 @@ export default function BetSlip({ bankroll, onClose }) {
         )}
       </div>
 
-      {/* Footer */}
+      {/* Footer - Always visible at bottom */}
       {bets.length > 0 && (
-        <div className="p-5 border-t border-gray-800/50 space-y-4 bg-[#0a0a0a]">
+        <div className="flex-shrink-0 p-5 border-t border-gray-800/50 space-y-4 bg-[#0a0a0a]">
           {/* Totals */}
           <div className="space-y-2">
             <div className="flex justify-between text-gray-300">
