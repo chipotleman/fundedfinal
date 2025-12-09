@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import TopNavbar from '../components/TopNavbar';
 import BetReceipt from '../components/BetReceipt';
+import CoinRain from '../components/CoinRain';
 
 const mockGames = {
   'NFL': [
@@ -116,6 +117,7 @@ export default function DemoDashboard() {
   const [losses, setLosses] = useState(0);
   const [showReceipt, setShowReceipt] = useState(false);
   const [currentReceipt, setCurrentReceipt] = useState(null);
+  const [showCoinRain, setShowCoinRain] = useState(false);
 
   const sports = ['NFL', 'NBA', 'MLB', 'NHL', 'Soccer'];
 
@@ -260,6 +262,9 @@ export default function DemoDashboard() {
       setShowReceipt(true);
     }
 
+    // Trigger coin rain animation
+    setShowCoinRain(true);
+
     // Simulate bet outcome (50/50 random)
     const won = Math.random() > 0.5;
     const potentialWin = getTotalPotentialWin();
@@ -299,6 +304,7 @@ export default function DemoDashboard() {
 
   return (
     <div className="min-h-screen bg-black">
+      <CoinRain trigger={showCoinRain} onComplete={() => setShowCoinRain(false)} />
       <Head>
         <title>Demo Dashboard - Funder</title>
       </Head>

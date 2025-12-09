@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import ShareableBetSlip from './ShareableBetSlip';
 import BetReceipt from './BetReceipt';
+import CoinRain from './CoinRain';
 
 export default function BetSlip({ bankroll, onClose }) {
   const { betSlip: bets, removeBet, updateStake, clearBetSlip } = useBetSlip();
@@ -12,6 +13,7 @@ export default function BetSlip({ bankroll, onClose }) {
   const [selectedWinningBet, setSelectedWinningBet] = useState(null);
   const [showReceipt, setShowReceipt] = useState(false);
   const [currentReceipt, setCurrentReceipt] = useState(null);
+  const [showCoinRain, setShowCoinRain] = useState(false);
 
   // TODO: Get user's challenge from context/props - will be implemented when challenge specs are provided
   const userChallenge = 'basic'; // Placeholder - will be dynamic
@@ -119,6 +121,9 @@ export default function BetSlip({ bankroll, onClose }) {
       setShowReceipt(true);
     }
 
+    // Trigger coin rain animation
+    setShowCoinRain(true);
+
     // Simulate bet placement
     setTimeout(() => {
       // Simulate some bets winning (for demo purposes)
@@ -143,6 +148,9 @@ export default function BetSlip({ bankroll, onClose }) {
 
   return (
     <>
+      {/* Coin Rain Animation */}
+      <CoinRain trigger={showCoinRain} onComplete={() => setShowCoinRain(false)} />
+
       {/* Desktop Overlay */}
       <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose}></div>
 
