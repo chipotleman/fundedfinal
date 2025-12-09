@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
+import { simulateOddsMovement } from '../lib/oddsSimulator';
 
 const mockGames = {
   'NFL': [
@@ -154,19 +155,46 @@ export default function Dashboard() {
 
   const sports = ['NFL', 'NBA', 'MLB', 'NHL', 'UFC', 'Soccer'];
 
+  const baseGamesRef = useRef({});
+
   useEffect(() => {
     if (selectedSport === 'All Sports') {
-      // Show all games from all sports
       const allGames = Object.values(mockGames).flat();
+      baseGamesRef.current = { 'All Sports': allGames };
       setGames(allGames);
     } else {
+      baseGamesRef.current = { [selectedSport]: mockGames[selectedSport] || [] };
       setGames(mockGames[selectedSport] || []);
     }
     setLoading(false);
   }, [selectedSport]);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setGames(prevGames => {
+        const updatedGames = simulateOddsMovement(prevGames);
+        return updatedGames;
+      });
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const formatOdds = (odds) => {
     return odds > 0 ? `+${odds}` : odds.toString();
+  };
+
+  const OddsDisplay = ({ odds, moved, isSelected }) => {
+    const baseClass = isSelected ? 'text-white' : 'text-green-400';
+    const moveClass = moved === 'up' ? 'animate-pulse text-green-400' : moved === 'down' ? 'animate-pulse text-red-400' : '';
+    
+    return (
+      <div className={`text-sm font-bold flex items-center justify-center gap-1 ${moveClass || baseClass}`}>
+        {moved === 'up' && <span className="text-xs">▲</span>}
+        {moved === 'down' && <span className="text-xs">▼</span>}
+        {formatOdds(odds)}
+      </div>
+    );
   };
 
   const getSportIcon = (sport) => {
@@ -276,32 +304,38 @@ export default function Dashboard() {
                       className={`rounded-lg py-2.5 px-2 transition-all duration-200 text-center ${
                         isBetInSlip(game, 'spread', `${game.awayTeam} ${game.lines.spread.away.point}`) 
                           ? 'bg-green-600 shadow-lg shadow-green-500/20' 
-                          : 'bg-[#1a1a1a] hover:bg-[#252525]'
+                          : game.lines.spread.away.oddsMoved ? 'bg-[#1a1a1a] ring-1 ring-yellow-500/50' : 'bg-[#1a1a1a] hover:bg-[#252525]'
                       }`}
                     >
-                      <div className={`text-xs ${isBetInSlip(game, 'spread', `${game.awayTeam} ${game.lines.spread.away.point}`) ? 'text-white' : 'text-gray-400'}`}>{game.lines.spread.away.point}</div>
-                      <div className={`text-sm font-bold ${isBetInSlip(game, 'spread', `${game.awayTeam} ${game.lines.spread.away.point}`) ? 'text-white' : 'text-green-400'}`}>{formatOdds(game.lines.spread.away.odds)}</div>
+                      <div className={`text-xs ${game.lines.spread.away.moved ? 'text-yellow-400' : isBetInSlip(game, 'spread', `${game.awayTeam} ${game.lines.spread.away.point}`) ? 'text-white' : 'text-gray-400'}`}>
+                        {game.lines.spread.away.moved && <span className="mr-0.5">{game.lines.spread.away.moved === 'up' ? '▲' : '▼'}</span>}
+                        {game.lines.spread.away.point}
+                      </div>
+                      <OddsDisplay odds={game.lines.spread.away.odds} moved={game.lines.spread.away.oddsMoved} isSelected={isBetInSlip(game, 'spread', `${game.awayTeam} ${game.lines.spread.away.point}`)} />
                     </button>
                     <button
                       onClick={() => addToBetSlip(game, 'total', game.lines.total.over, `Over ${game.lines.total.over.point}`)}
                       className={`rounded-lg py-2.5 px-2 transition-all duration-200 text-center ${
                         isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) 
                           ? 'bg-green-600 shadow-lg shadow-green-500/20' 
-                          : 'bg-[#1a1a1a] hover:bg-[#252525]'
+                          : game.lines.total.over.oddsMoved ? 'bg-[#1a1a1a] ring-1 ring-yellow-500/50' : 'bg-[#1a1a1a] hover:bg-[#252525]'
                       }`}
                     >
-                      <div className={`text-xs ${isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? 'text-white' : 'text-gray-400'}`}>{game.lines.total.over.point}</div>
-                      <div className={`text-sm font-bold ${isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? 'text-white' : 'text-green-400'}`}>{formatOdds(game.lines.total.over.odds)}</div>
+                      <div className={`text-xs ${game.lines.total.over.moved ? 'text-yellow-400' : isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? 'text-white' : 'text-gray-400'}`}>
+                        {game.lines.total.over.moved && <span className="mr-0.5">{game.lines.total.over.moved === 'up' ? '▲' : '▼'}</span>}
+                        {game.lines.total.over.point}
+                      </div>
+                      <OddsDisplay odds={game.lines.total.over.odds} moved={game.lines.total.over.oddsMoved} isSelected={isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`)} />
                     </button>
                     <button
                       onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeam)}
                       className={`rounded-lg py-2.5 px-2 transition-all duration-200 text-center ${
                         isBetInSlip(game, 'moneyline', game.awayTeam) 
                           ? 'bg-green-600 shadow-lg shadow-green-500/20' 
-                          : 'bg-[#1a1a1a] hover:bg-[#252525]'
+                          : game.lines.moneyline.awayMoved ? 'bg-[#1a1a1a] ring-1 ring-yellow-500/50' : 'bg-[#1a1a1a] hover:bg-[#252525]'
                       }`}
                     >
-                      <div className={`text-sm font-bold ${isBetInSlip(game, 'moneyline', game.awayTeam) ? 'text-white' : 'text-green-400'}`}>{formatOdds(game.lines.moneyline.away)}</div>
+                      <OddsDisplay odds={game.lines.moneyline.away} moved={game.lines.moneyline.awayMoved} isSelected={isBetInSlip(game, 'moneyline', game.awayTeam)} />
                     </button>
                   </div>
 
@@ -315,32 +349,38 @@ export default function Dashboard() {
                       className={`rounded-lg py-2.5 px-2 transition-all duration-200 text-center ${
                         isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`) 
                           ? 'bg-green-600 shadow-lg shadow-green-500/20' 
-                          : 'bg-[#1a1a1a] hover:bg-[#252525]'
+                          : game.lines.spread.home.oddsMoved ? 'bg-[#1a1a1a] ring-1 ring-yellow-500/50' : 'bg-[#1a1a1a] hover:bg-[#252525]'
                       }`}
                     >
-                      <div className={`text-xs ${isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`) ? 'text-white' : 'text-gray-400'}`}>{game.lines.spread.home.point}</div>
-                      <div className={`text-sm font-bold ${isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`) ? 'text-white' : 'text-green-400'}`}>{formatOdds(game.lines.spread.home.odds)}</div>
+                      <div className={`text-xs ${game.lines.spread.home.moved ? 'text-yellow-400' : isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`) ? 'text-white' : 'text-gray-400'}`}>
+                        {game.lines.spread.home.moved && <span className="mr-0.5">{game.lines.spread.home.moved === 'up' ? '▲' : '▼'}</span>}
+                        {game.lines.spread.home.point}
+                      </div>
+                      <OddsDisplay odds={game.lines.spread.home.odds} moved={game.lines.spread.home.oddsMoved} isSelected={isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`)} />
                     </button>
                     <button
                       onClick={() => addToBetSlip(game, 'total', game.lines.total.under, `Under ${game.lines.total.under.point}`)}
                       className={`rounded-lg py-2.5 px-2 transition-all duration-200 text-center ${
                         isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) 
                           ? 'bg-green-600 shadow-lg shadow-green-500/20' 
-                          : 'bg-[#1a1a1a] hover:bg-[#252525]'
+                          : game.lines.total.under.oddsMoved ? 'bg-[#1a1a1a] ring-1 ring-yellow-500/50' : 'bg-[#1a1a1a] hover:bg-[#252525]'
                       }`}
                     >
-                      <div className={`text-xs ${isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? 'text-white' : 'text-gray-400'}`}>{game.lines.total.under.point}</div>
-                      <div className={`text-sm font-bold ${isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? 'text-white' : 'text-green-400'}`}>{formatOdds(game.lines.total.under.odds)}</div>
+                      <div className={`text-xs ${game.lines.total.under.moved ? 'text-yellow-400' : isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? 'text-white' : 'text-gray-400'}`}>
+                        {game.lines.total.under.moved && <span className="mr-0.5">{game.lines.total.under.moved === 'up' ? '▲' : '▼'}</span>}
+                        {game.lines.total.under.point}
+                      </div>
+                      <OddsDisplay odds={game.lines.total.under.odds} moved={game.lines.total.under.oddsMoved} isSelected={isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`)} />
                     </button>
                     <button
                       onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeam)}
                       className={`rounded-lg py-2.5 px-2 transition-all duration-200 text-center ${
                         isBetInSlip(game, 'moneyline', game.homeTeam) 
                           ? 'bg-green-600 shadow-lg shadow-green-500/20' 
-                          : 'bg-[#1a1a1a] hover:bg-[#252525]'
+                          : game.lines.moneyline.homeMoved ? 'bg-[#1a1a1a] ring-1 ring-yellow-500/50' : 'bg-[#1a1a1a] hover:bg-[#252525]'
                       }`}
                     >
-                      <div className={`text-sm font-bold ${isBetInSlip(game, 'moneyline', game.homeTeam) ? 'text-white' : 'text-green-400'}`}>{formatOdds(game.lines.moneyline.home)}</div>
+                      <OddsDisplay odds={game.lines.moneyline.home} moved={game.lines.moneyline.homeMoved} isSelected={isBetInSlip(game, 'moneyline', game.homeTeam)} />
                     </button>
                   </div>
                 </div>

@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import TopNavbar from '../components/TopNavbar';
 import BetReceipt from '../components/BetReceipt';
 import CoinRain from '../components/CoinRain';
+import { simulateOddsMovement, updateBetSlipWithNewOdds } from '../lib/oddsSimulator';
 
 const mockGames = {
   'NFL': [
@@ -153,14 +154,76 @@ export default function DemoDashboard() {
     }
   }, [bankroll, pnl, totalBets, wins, losses, demoChallenge]);
 
+  const baseGamesRef = useRef({});
+
   useEffect(() => {
     if (selectedSport === 'All Sports') {
       const allGames = Object.values(mockGames).flat();
+      baseGamesRef.current = { 'All Sports': allGames };
       setGames(allGames);
     } else {
+      baseGamesRef.current = { [selectedSport]: mockGames[selectedSport] || [] };
       setGames(mockGames[selectedSport] || []);
     }
   }, [selectedSport]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setGames(prevGames => {
+        const updatedGames = simulateOddsMovement(prevGames);
+        return updatedGames;
+      });
+
+      if (selectedBets.length > 0) {
+        setSelectedBets(prevBets => {
+          return prevBets.map(bet => {
+            const game = games.find(g => g.id === bet.gameId);
+            if (!game) return bet;
+
+            let newOdds = bet.odds;
+            let newPoint = bet.point;
+            let oddsMoved = null;
+
+            if (bet.betType === 'spread') {
+              const isAway = bet.selection.includes(game.awayTeam);
+              const lineData = isAway ? game.lines.spread.away : game.lines.spread.home;
+              if (lineData.odds !== bet.odds) {
+                newOdds = lineData.odds;
+                oddsMoved = lineData.oddsMoved;
+              }
+              if (lineData.point !== bet.point) {
+                newPoint = lineData.point;
+              }
+            } else if (bet.betType === 'total') {
+              const isOver = bet.selection.toLowerCase().includes('over');
+              const lineData = isOver ? game.lines.total.over : game.lines.total.under;
+              if (lineData.odds !== bet.odds) {
+                newOdds = lineData.odds;
+                oddsMoved = lineData.oddsMoved;
+              }
+            } else if (bet.betType === 'moneyline') {
+              const isAway = bet.selection === game.awayTeam;
+              const ml = isAway ? game.lines.moneyline.away : game.lines.moneyline.home;
+              if (ml !== bet.odds) {
+                newOdds = ml;
+                oddsMoved = isAway ? game.lines.moneyline.awayMoved : game.lines.moneyline.homeMoved;
+              }
+            }
+
+            return {
+              ...bet,
+              odds: newOdds,
+              point: newPoint,
+              oddsMoved,
+              oddsChanged: newOdds !== bet.odds
+            };
+          });
+        });
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [games, selectedBets.length]);
 
   // Lock body scroll when bet slip is open
   useEffect(() => {
@@ -189,6 +252,19 @@ export default function DemoDashboard() {
 
   const formatOdds = (odds) => {
     return odds > 0 ? `+${odds}` : odds.toString();
+  };
+
+  const OddsDisplay = ({ odds, moved, isSelected }) => {
+    const baseClass = isSelected ? 'text-white' : 'text-green-400';
+    const moveClass = moved === 'up' ? 'animate-pulse text-green-400' : moved === 'down' ? 'animate-pulse text-red-400' : '';
+    
+    return (
+      <div className={`text-xs font-medium flex items-center justify-center gap-1 ${moveClass || baseClass}`}>
+        {moved === 'up' && <span className="text-[10px]">▲</span>}
+        {moved === 'down' && <span className="text-[10px]">▼</span>}
+        {formatOdds(odds)}
+      </div>
+    );
   };
 
   const getSportIcon = (sport) => {
@@ -395,10 +471,27 @@ export default function DemoDashboard() {
                             <div className="text-white font-bold text-base">{bet.selection}</div>
                             <div className="text-gray-400 text-xs uppercase mt-0.5">{bet.betType}</div>
                           </div>
-                          <div className="text-blue-400 font-bold text-xl">
+                          <div className={`font-bold text-xl flex items-center gap-1 ${
+                            bet.oddsMoved === 'up' ? 'text-green-400 animate-pulse' : 
+                            bet.oddsMoved === 'down' ? 'text-red-400 animate-pulse' : 'text-blue-400'
+                          }`}>
+                            {bet.oddsMoved === 'up' && <span className="text-sm">▲</span>}
+                            {bet.oddsMoved === 'down' && <span className="text-sm">▼</span>}
                             {formatOdds(bet.odds)}
                           </div>
                         </div>
+                        
+                        {/* Odds Change Alert */}
+                        {bet.oddsChanged && (
+                          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-2 mb-2">
+                            <p className="text-yellow-400 text-xs font-medium flex items-center gap-1">
+                              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                              </svg>
+                              Odds have changed
+                            </p>
+                          </div>
+                        )}
                         
                         {/* Live Game Info */}
                         <div className="bg-slate-800/50 rounded-lg p-3 mt-2">
@@ -408,7 +501,7 @@ export default function DemoDashboard() {
                             <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
                             <span className="text-green-400 text-xs">Live</span>
                             <span className="text-gray-500 text-xs">|</span>
-                            <span className="text-gray-400 text-xs">In Progress</span>
+                            <span className="text-gray-400 text-xs">Odds updating</span>
                           </div>
                         </div>
                       </div>
@@ -576,32 +669,38 @@ export default function DemoDashboard() {
                     className={`border rounded-lg py-2 px-3 transition-all text-center ${
                       isBetInSlip(game, 'spread', `${game.awayTeam} ${game.lines.spread.away.point}`) 
                         ? 'bg-green-600 border-green-500 shadow-lg' 
-                        : 'bg-[#1a1a1a] border-gray-800/50 hover:bg-green-600'
+                        : game.lines.spread.away.oddsMoved ? 'bg-[#1a1a1a] border-yellow-500/50 ring-1 ring-yellow-500/30' : 'bg-[#1a1a1a] border-gray-800/50 hover:bg-green-600'
                     }`}
                   >
-                    <div className="text-gray-300 text-xs">{game.lines.spread.away.point}</div>
-                    <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.spread.away.odds)}</div>
+                    <div className={`text-xs ${game.lines.spread.away.moved ? 'text-yellow-400' : 'text-gray-300'}`}>
+                      {game.lines.spread.away.moved && <span className="mr-0.5">{game.lines.spread.away.moved === 'up' ? '▲' : '▼'}</span>}
+                      {game.lines.spread.away.point}
+                    </div>
+                    <OddsDisplay odds={game.lines.spread.away.odds} moved={game.lines.spread.away.oddsMoved} isSelected={isBetInSlip(game, 'spread', `${game.awayTeam} ${game.lines.spread.away.point}`)} />
                   </button>
                   <button
                     onClick={() => addToBetSlip(game, 'total', game.lines.total.over, `Over ${game.lines.total.over.point}`)}
                     className={`border rounded-lg py-2 px-3 transition-all text-center ${
                       isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) 
                         ? 'bg-green-600 border-green-500 shadow-lg' 
-                        : 'bg-[#1a1a1a] border-gray-800/50 hover:bg-green-600'
+                        : game.lines.total.over.oddsMoved ? 'bg-[#1a1a1a] border-yellow-500/50 ring-1 ring-yellow-500/30' : 'bg-[#1a1a1a] border-gray-800/50 hover:bg-green-600'
                     }`}
                   >
-                    <div className="text-gray-300 text-xs">{game.lines.total.over.point}</div>
-                    <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.total.over.odds)}</div>
+                    <div className={`text-xs ${game.lines.total.over.moved ? 'text-yellow-400' : 'text-gray-300'}`}>
+                      {game.lines.total.over.moved && <span className="mr-0.5">{game.lines.total.over.moved === 'up' ? '▲' : '▼'}</span>}
+                      {game.lines.total.over.point}
+                    </div>
+                    <OddsDisplay odds={game.lines.total.over.odds} moved={game.lines.total.over.oddsMoved} isSelected={isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`)} />
                   </button>
                   <button
                     onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeam)}
                     className={`border rounded-lg py-2 px-3 transition-all text-center ${
                       isBetInSlip(game, 'moneyline', game.awayTeam) 
                         ? 'bg-green-600 border-green-500 shadow-lg' 
-                        : 'bg-[#1a1a1a] border-gray-800/50 hover:bg-green-600'
+                        : game.lines.moneyline.awayMoved ? 'bg-[#1a1a1a] border-yellow-500/50 ring-1 ring-yellow-500/30' : 'bg-[#1a1a1a] border-gray-800/50 hover:bg-green-600'
                     }`}
                   >
-                    <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.moneyline.away)}</div>
+                    <OddsDisplay odds={game.lines.moneyline.away} moved={game.lines.moneyline.awayMoved} isSelected={isBetInSlip(game, 'moneyline', game.awayTeam)} />
                   </button>
                 </div>
 
@@ -613,32 +712,38 @@ export default function DemoDashboard() {
                     className={`border rounded-lg py-2 px-3 transition-all text-center ${
                       isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`) 
                         ? 'bg-green-600 border-green-500 shadow-lg' 
-                        : 'bg-[#1a1a1a] border-gray-800/50 hover:bg-green-600'
+                        : game.lines.spread.home.oddsMoved ? 'bg-[#1a1a1a] border-yellow-500/50 ring-1 ring-yellow-500/30' : 'bg-[#1a1a1a] border-gray-800/50 hover:bg-green-600'
                     }`}
                   >
-                    <div className="text-gray-300 text-xs">{game.lines.spread.home.point}</div>
-                    <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.spread.home.odds)}</div>
+                    <div className={`text-xs ${game.lines.spread.home.moved ? 'text-yellow-400' : 'text-gray-300'}`}>
+                      {game.lines.spread.home.moved && <span className="mr-0.5">{game.lines.spread.home.moved === 'up' ? '▲' : '▼'}</span>}
+                      {game.lines.spread.home.point}
+                    </div>
+                    <OddsDisplay odds={game.lines.spread.home.odds} moved={game.lines.spread.home.oddsMoved} isSelected={isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`)} />
                   </button>
                   <button
                     onClick={() => addToBetSlip(game, 'total', game.lines.total.under, `Under ${game.lines.total.under.point}`)}
                     className={`border rounded-lg py-2 px-3 transition-all text-center ${
                       isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) 
                         ? 'bg-green-600 border-green-500 shadow-lg' 
-                        : 'bg-[#1a1a1a] border-gray-800/50 hover:bg-green-600'
+                        : game.lines.total.under.oddsMoved ? 'bg-[#1a1a1a] border-yellow-500/50 ring-1 ring-yellow-500/30' : 'bg-[#1a1a1a] border-gray-800/50 hover:bg-green-600'
                     }`}
                   >
-                    <div className="text-gray-300 text-xs">{game.lines.total.under.point}</div>
-                    <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.total.under.odds)}</div>
+                    <div className={`text-xs ${game.lines.total.under.moved ? 'text-yellow-400' : 'text-gray-300'}`}>
+                      {game.lines.total.under.moved && <span className="mr-0.5">{game.lines.total.under.moved === 'up' ? '▲' : '▼'}</span>}
+                      {game.lines.total.under.point}
+                    </div>
+                    <OddsDisplay odds={game.lines.total.under.odds} moved={game.lines.total.under.oddsMoved} isSelected={isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`)} />
                   </button>
                   <button
                     onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeam)}
                     className={`border rounded-lg py-2 px-3 transition-all text-center ${
                       isBetInSlip(game, 'moneyline', game.homeTeam) 
                         ? 'bg-green-600 border-green-500 shadow-lg' 
-                        : 'bg-[#1a1a1a] border-gray-800/50 hover:bg-green-600'
+                        : game.lines.moneyline.homeMoved ? 'bg-[#1a1a1a] border-yellow-500/50 ring-1 ring-yellow-500/30' : 'bg-[#1a1a1a] border-gray-800/50 hover:bg-green-600'
                     }`}
                   >
-                    <div className="text-green-400 text-xs font-medium">{formatOdds(game.lines.moneyline.home)}</div>
+                    <OddsDisplay odds={game.lines.moneyline.home} moved={game.lines.moneyline.homeMoved} isSelected={isBetInSlip(game, 'moneyline', game.homeTeam)} />
                   </button>
                 </div>
               </div>
