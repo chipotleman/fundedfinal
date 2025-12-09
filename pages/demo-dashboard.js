@@ -489,12 +489,16 @@ export default function DemoDashboard() {
 
       {/* Bet Slip */}
       {showBetSlip && selectedBets.length > 0 && (
-        <div className="fixed inset-0 z-50 lg:inset-auto lg:top-20 lg:right-8 lg:w-[480px]">
-          <div className="fixed inset-0 bg-black/50 lg:hidden" onClick={() => setShowBetSlip(false)}></div>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+          <div className="fixed inset-0 bg-black/80" onClick={() => setShowBetSlip(false)}></div>
           
-          <div className="absolute bottom-0 left-0 right-0 h-[85vh] lg:relative bg-[#0a0a0a] border border-gray-800/50 rounded-t-2xl lg:rounded-2xl shadow-2xl flex flex-col">
+          <div className="relative w-full max-w-md mx-4 mb-4 sm:mb-0 bg-black border border-gray-800/50 rounded-2xl shadow-2xl flex flex-col max-h-[80vh]">
+            {/* Header */}
             <div className="flex-shrink-0 p-4 border-b border-gray-800/50 flex items-center justify-between">
-              <h3 className="text-white font-bold text-lg">Bet Slip ({selectedBets.length})</h3>
+              <h3 className="text-white font-bold text-lg flex items-center">
+                <img src="/pikslogotransparent.png" alt="Piks" className="h-5 mr-2" />
+                Bet Slip ({selectedBets.length})
+              </h3>
               <button
                 onClick={() => setShowBetSlip(false)}
                 className="text-gray-400 hover:text-white"
@@ -505,56 +509,65 @@ export default function DemoDashboard() {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {/* Bets - Scrollable */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
               {selectedBets.map(bet => (
-                <div key={bet.key} className="bg-[#111111] rounded-xl p-4 border border-gray-800/50">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                      <div className="text-white font-medium text-sm">{bet.matchup}</div>
-                      <div className="text-gray-400 text-xs mt-1">{bet.selection}</div>
-                      <div className="text-green-400 text-xs font-medium mt-1">{formatOdds(bet.odds)}</div>
+                <div key={bet.key} className="bg-[#111111] rounded-xl p-3 border border-gray-800/50">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white font-medium text-sm truncate">{bet.matchup}</div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-gray-300 text-xs truncate">{bet.selection}</span>
+                        <span className="bg-green-500/20 text-green-400 px-2 py-0.5 rounded text-xs font-semibold flex-shrink-0">
+                          {formatOdds(bet.odds)}
+                        </span>
+                      </div>
                     </div>
                     <button
                       onClick={() => removeBet(bet.key)}
-                      className="text-red-400 hover:text-red-300"
+                      className="text-gray-500 hover:text-red-400 flex-shrink-0"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
                   </div>
-                  <div>
-                    <label className="text-gray-500 text-xs block mb-1">Stake Amount</label>
-                    <input
-                      type="number"
-                      value={bet.stake}
-                      onChange={(e) => updateStake(bet.key, e.target.value)}
-                      className="w-full bg-[#1a1a1a] border border-gray-800/50 rounded-lg px-3 py-2 text-white"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className="mt-2 text-sm">
-                    <span className="text-gray-500">To Win: </span>
-                    <span className="text-green-400 font-bold">${calculatePayout(bet.stake, bet.odds).toFixed(2)}</span>
+                  <div className="flex items-center gap-3 mt-3">
+                    <div className="relative flex-1">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
+                      <input
+                        type="number"
+                        value={bet.stake || ''}
+                        onChange={(e) => updateStake(bet.key, e.target.value)}
+                        className="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg pl-7 pr-3 py-2 text-white text-sm focus:outline-none focus:border-green-500"
+                        placeholder="Stake"
+                      />
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="text-gray-500 text-[10px]">TO WIN</div>
+                      <div className="text-green-400 font-bold text-sm">${calculatePayout(bet.stake || 0, bet.odds).toFixed(2)}</div>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
 
-            <div className="flex-shrink-0 p-4 border-t border-gray-800/50 space-y-3">
-              <div className="flex justify-between text-sm">
+            {/* Footer - Always visible */}
+            <div className="flex-shrink-0 p-4 border-t border-gray-800/50 bg-[#0a0a0a] rounded-b-2xl">
+              <div className="flex justify-between text-sm mb-2">
                 <span className="text-gray-400">Total Stake:</span>
                 <span className="text-white font-bold">${getTotalStake().toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-sm mb-3">
                 <span className="text-gray-400">Potential Win:</span>
-                <span className="text-green-400 font-bold">${getTotalPotentialWin().toFixed(2)}</span>
+                <span className="text-green-400 font-bold">${(getTotalStake() + getTotalPotentialWin()).toFixed(2)}</span>
               </div>
               <button
                 onClick={placeBets}
-                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 rounded-xl transition-all"
+                disabled={getTotalStake() === 0}
+                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3 rounded-xl transition-all disabled:cursor-not-allowed"
               >
-                Place Bets
+                Place {selectedBets.length} Bet{selectedBets.length > 1 ? 's' : ''}
               </button>
             </div>
           </div>
