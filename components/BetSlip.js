@@ -151,12 +151,11 @@ export default function BetSlip({ bankroll, onClose }) {
       {/* Coin Rain Animation */}
       <CoinRain trigger={showCoinRain} onComplete={() => setShowCoinRain(false)} />
 
-      {/* Overlay */}
-      <div className="fixed inset-0 bg-black/80 z-40" onClick={onClose}></div>
-
-      {/* Bet Slip Modal - Centered */}
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none">
-        <div className="pointer-events-auto w-full max-w-md mx-4 mb-4 sm:mb-0 bg-black border border-gray-800/50 rounded-2xl shadow-2xl flex flex-col max-h-[80vh]">
+      {/* Bet Slip Modal Container - Fixed at top level with high z-index */}
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/80" onClick={onClose}></div>
+        
+        <div className="relative w-full max-w-md bg-black border border-gray-800/50 rounded-2xl shadow-2xl flex flex-col max-h-[80vh] z-[101]">
           {/* Header */}
           <div className="flex-shrink-0 p-4 border-b border-gray-800/50 flex items-center justify-between">
             <h2 className="text-lg font-bold text-white flex items-center">
