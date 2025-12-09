@@ -361,12 +361,11 @@ export default function Dashboard() {
       </div>
 
       {/* Bet Slip */}
-      {showBetSlip && (
-        <BetSlip
-          bankroll={bankroll}
-          onClose={() => setShowBetSlip(false)}
-        />
-      )}
+      <BetSlip
+        bankroll={bankroll}
+        isOpen={showBetSlip}
+        onClose={() => setShowBetSlip(false)}
+      />
       
       
 

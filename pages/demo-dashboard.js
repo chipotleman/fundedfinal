@@ -306,91 +306,101 @@ export default function DemoDashboard() {
     <>
       <CoinRain trigger={showCoinRain} onComplete={() => setShowCoinRain(false)} />
       
-      {/* Bet Slip Modal - Rendered at top level for proper fixed positioning */}
-      {showBetSlip && selectedBets.length > 0 && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/80" onClick={() => setShowBetSlip(false)}></div>
+      {/* Sliding Bet Slip Panel */}
+      {showBetSlip && (
+        <>
+          <div 
+            className="fixed inset-0 bg-black/60 z-[98]"
+            onClick={() => setShowBetSlip(false)}
+          />
           
-          <div className="relative w-full max-w-md bg-black border border-gray-800/50 rounded-2xl shadow-2xl flex flex-col max-h-[80vh] z-[101]">
-            {/* Header */}
-            <div className="flex-shrink-0 p-4 border-b border-gray-800/50 flex items-center justify-between">
-              <h3 className="text-white font-bold text-lg flex items-center">
+          <div className="fixed top-0 right-0 bottom-0 w-80 sm:w-96 bg-black border-l border-gray-800/50 z-[99] flex flex-col shadow-2xl">
+            <div className="flex items-center justify-between p-4 border-b border-gray-800/50">
+              <h2 className="text-white font-bold text-lg flex items-center">
                 <img src="/pikslogotransparent.png" alt="Piks" className="h-5 mr-2" />
                 Bet Slip ({selectedBets.length})
-              </h3>
-              <button
-                onClick={() => setShowBetSlip(false)}
-                className="text-gray-400 hover:text-white"
-              >
+              </h2>
+              <button onClick={() => setShowBetSlip(false)} className="text-gray-400 hover:text-white">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            {/* Bets - Scrollable */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-0">
-              {selectedBets.map(bet => (
-                <div key={bet.key} className="bg-[#111111] rounded-xl p-3 border border-gray-800/50">
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-white font-medium text-sm truncate">{bet.matchup}</div>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-gray-300 text-xs truncate">{bet.selection}</span>
-                        <span className="bg-green-500/20 text-green-400 px-2 py-0.5 rounded text-xs font-semibold flex-shrink-0">
-                          {formatOdds(bet.odds)}
-                        </span>
+            <div className="flex-1 overflow-y-auto">
+              {selectedBets.length === 0 ? (
+                <div className="p-6 text-center">
+                  <svg className="w-12 h-12 mx-auto text-gray-700 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  <p className="text-gray-400 font-medium mb-1">Your bet slip is empty</p>
+                  <p className="text-gray-600 text-sm">Click on odds to add bets</p>
+                </div>
+              ) : (
+                <div className="p-3 space-y-3">
+                  {selectedBets.map(bet => (
+                    <div key={bet.key} className="bg-[#111111] rounded-xl p-3 border border-gray-800/50">
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="text-white font-medium text-sm truncate">{bet.matchup}</div>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-gray-300 text-xs truncate">{bet.selection}</span>
+                            <span className="bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded text-xs font-semibold">
+                              {formatOdds(bet.odds)}
+                            </span>
+                          </div>
+                        </div>
+                        <button onClick={() => removeBet(bet.key)} className="text-gray-500 hover:text-red-400">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                      
+                      <div className="flex items-center gap-2">
+                        <div className="relative flex-1">
+                          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
+                          <input
+                            type="number"
+                            value={bet.stake || ''}
+                            onChange={(e) => updateStake(bet.key, e.target.value)}
+                            className="w-full pl-6 pr-2 py-2 bg-[#1a1a1a] border border-gray-700 rounded-lg text-white text-sm focus:outline-none focus:border-green-500"
+                            placeholder="Stake"
+                          />
+                        </div>
+                        <div className="text-right min-w-[70px]">
+                          <div className="text-gray-500 text-[10px]">TO WIN</div>
+                          <div className="text-green-400 font-bold text-sm">${calculatePayout(bet.stake || 0, bet.odds).toFixed(2)}</div>
+                        </div>
                       </div>
                     </div>
-                    <button
-                      onClick={() => removeBet(bet.key)}
-                      className="text-gray-500 hover:text-red-400 flex-shrink-0"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="flex items-center gap-3 mt-3">
-                    <div className="relative flex-1">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">$</span>
-                      <input
-                        type="number"
-                        value={bet.stake || ''}
-                        onChange={(e) => updateStake(bet.key, e.target.value)}
-                        className="w-full bg-[#1a1a1a] border border-gray-700 rounded-lg pl-7 pr-3 py-2 text-white text-sm focus:outline-none focus:border-green-500"
-                        placeholder="Stake"
-                      />
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="text-gray-500 text-[10px]">TO WIN</div>
-                      <div className="text-green-400 font-bold text-sm">${calculatePayout(bet.stake || 0, bet.odds).toFixed(2)}</div>
-                    </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
 
-            {/* Footer - Always visible */}
-            <div className="flex-shrink-0 p-4 border-t border-gray-800/50 bg-[#0a0a0a] rounded-b-2xl">
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-gray-400">Total Stake:</span>
-                <span className="text-white font-bold">${getTotalStake().toFixed(2)}</span>
+            {selectedBets.length > 0 && (
+              <div className="p-3 border-t border-gray-800/50 bg-[#0a0a0a]">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-gray-400">Total Stake</span>
+                  <span className="text-white font-bold">${getTotalStake().toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-sm mb-3">
+                  <span className="text-gray-400">Potential Win</span>
+                  <span className="text-green-400 font-bold">${(getTotalStake() + getTotalPotentialWin()).toFixed(2)}</span>
+                </div>
+
+                <button
+                  onClick={placeBets}
+                  disabled={getTotalStake() === 0}
+                  className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3 rounded-xl transition-all disabled:cursor-not-allowed"
+                >
+                  Place {selectedBets.length} Bet{selectedBets.length > 1 ? 's' : ''}
+                </button>
               </div>
-              <div className="flex justify-between text-sm mb-3">
-                <span className="text-gray-400">Potential Win:</span>
-                <span className="text-green-400 font-bold">${(getTotalStake() + getTotalPotentialWin()).toFixed(2)}</span>
-              </div>
-              <button
-                onClick={placeBets}
-                disabled={getTotalStake() === 0}
-                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3 rounded-xl transition-all disabled:cursor-not-allowed"
-              >
-                Place {selectedBets.length} Bet{selectedBets.length > 1 ? 's' : ''}
-              </button>
-            </div>
+            )}
           </div>
-        </div>
+        </>
       )}
       
       <div className="min-h-screen bg-black">
