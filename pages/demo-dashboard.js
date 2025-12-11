@@ -299,8 +299,12 @@ export default function DemoDashboard() {
     const existingIndex = selectedBets.findIndex(bet => bet.key === betKey);
 
     if (existingIndex >= 0) {
+      // Clicking same bet removes it
       setSelectedBets(prev => prev.filter(bet => bet.key !== betKey));
     } else {
+      // Remove any existing bet on the same game and bet type (opposite side)
+      const conflictKey = `${game.id}-${betType}`;
+      
       const newBet = {
         key: betKey,
         gameId: game.id,
@@ -310,7 +314,12 @@ export default function DemoDashboard() {
         selection: team,
         stake: 100
       };
-      setSelectedBets(prev => [...prev, newBet]);
+      
+      setSelectedBets(prev => {
+        // Filter out any bet on the same game with the same bet type (opposite side)
+        const filtered = prev.filter(bet => !bet.key.startsWith(conflictKey));
+        return [...filtered, newBet];
+      });
       setShowBetSlip(true);
     }
   };
@@ -515,7 +524,7 @@ export default function DemoDashboard() {
                     }
                     
                     return (
-                      <div key={bet.key} className={`bg-black rounded-lg border ${borderColor} overflow-hidden transition-all duration-300 ${flashClass}`}>
+                      <div key={bet.key} className={`bg-black rounded-lg border ${borderColor} overflow-hidden ${flashClass}`}>
                         {/* Collapsible Header */}
                         <div 
                           className={`bg-slate-900/80 px-4 py-2 flex items-center justify-between ${isCollapsible ? 'cursor-pointer hover:bg-slate-800/80' : ''}`}
@@ -722,10 +731,10 @@ export default function DemoDashboard() {
               <button
                 key={sport}
                 onClick={() => handleSportClick(sport)}
-                className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full transition-all text-sm font-medium ${
+                className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium ${
                   selectedSport === sport
                     ? 'bg-[#1a1a1a] text-white border border-gray-600'
-                    : 'bg-transparent text-gray-400 border border-gray-800 hover:border-gray-600'
+                    : 'bg-transparent text-gray-400 border border-gray-800'
                 }`}
               >
                 <span className="text-base">{getSportIcon(sport)}</span>
@@ -759,10 +768,10 @@ export default function DemoDashboard() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeam)}
-                      className={`flex-1 rounded-lg py-3 px-3 transition-all ${
+                      className={`flex-1 rounded-lg py-3 px-3 ${
                         isBetInSlip(game, 'moneyline', game.homeTeam) 
                           ? 'bg-green-600 border border-green-500' 
-                          : 'bg-[#1a1a1a] border border-gray-700 hover:border-green-500'
+                          : 'bg-[#1a1a1a] border border-gray-700 active:bg-green-600'
                       }`}
                     >
                       <div className="text-gray-400 text-xs mb-0.5">{game.homeTeam.split(' ').pop()}</div>
@@ -772,10 +781,10 @@ export default function DemoDashboard() {
                     </button>
                     <button
                       onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeam)}
-                      className={`flex-1 rounded-lg py-3 px-3 transition-all ${
+                      className={`flex-1 rounded-lg py-3 px-3 ${
                         isBetInSlip(game, 'moneyline', game.awayTeam) 
                           ? 'bg-green-600 border border-green-500' 
-                          : 'bg-[#1a1a1a] border border-gray-700 hover:border-green-500'
+                          : 'bg-[#1a1a1a] border border-gray-700 active:bg-green-600'
                       }`}
                     >
                       <div className="text-gray-400 text-xs mb-0.5">{game.awayTeam.split(' ').pop()}</div>
@@ -843,10 +852,10 @@ export default function DemoDashboard() {
                     <div className="flex gap-3">
                       <button
                         onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeam)}
-                        className={`flex-1 rounded-xl py-3 px-4 transition-all ${
+                        className={`flex-1 rounded-xl py-3 px-4 ${
                           isBetInSlip(game, 'moneyline', game.awayTeam) 
                             ? 'bg-green-600 border border-green-500' 
-                            : 'bg-[#1a1a1a] border border-gray-700 hover:border-green-500'
+                            : 'bg-[#1a1a1a] border border-gray-700 active:bg-green-600'
                         }`}
                       >
                         <div className="text-gray-400 text-xs mb-1">{game.awayTeam.split(' ').pop()}</div>
@@ -856,10 +865,10 @@ export default function DemoDashboard() {
                       </button>
                       <button
                         onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeam)}
-                        className={`flex-1 rounded-xl py-3 px-4 transition-all ${
+                        className={`flex-1 rounded-xl py-3 px-4 ${
                           isBetInSlip(game, 'moneyline', game.homeTeam) 
                             ? 'bg-green-600 border border-green-500' 
-                            : 'bg-[#1a1a1a] border border-gray-700 hover:border-green-500'
+                            : 'bg-[#1a1a1a] border border-gray-700 active:bg-green-600'
                         }`}
                       >
                         <div className="text-gray-400 text-xs mb-1">{game.homeTeam.split(' ').pop()}</div>
