@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
-import DualOutcomeButton from '../components/DualOutcomeButton';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 import { simulateOddsMovement, updateBetSlipWithNewOdds } from '../lib/oddsSimulator';
@@ -198,11 +197,6 @@ export default function Dashboard() {
     return icons[sport] || '🏆';
   };
 
-  const getShortName = (teamName) => {
-    const parts = teamName.split(' ');
-    return parts[parts.length - 1];
-  };
-
   const handleSportClick = (sport) => {
     if (selectedSport === sport) {
       setSelectedSport('All Sports');
@@ -352,46 +346,45 @@ export default function Dashboard() {
                       </div>
 
                       <div className="grid grid-cols-3 gap-2">
-                        <DualOutcomeButton
-                          betType="spread"
-                          leftLabel={getShortName(game.awayTeam)}
-                          rightLabel={getShortName(game.homeTeam)}
-                          leftSubLabel={game.lines.spread.away.point}
-                          rightSubLabel={game.lines.spread.home.point}
-                          leftOdds={game.lines.spread.away.odds}
-                          rightOdds={game.lines.spread.home.odds}
-                          leftSelected={isBetInSlip(game, 'spread', `${game.awayTeam} ${game.lines.spread.away.point}`)}
-                          rightSelected={isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`)}
-                          onLeftClick={() => addToBetSlip(game, 'spread', game.lines.spread.away, `${game.awayTeam} ${game.lines.spread.away.point}`)}
-                          onRightClick={() => addToBetSlip(game, 'spread', game.lines.spread.home, `${game.homeTeam} ${game.lines.spread.home.point}`)}
-                          formatOdds={formatOdds}
-                        />
-                        <DualOutcomeButton
-                          betType="total"
-                          leftLabel="Over"
-                          rightLabel="Under"
-                          leftSubLabel={game.lines.total.over.point}
-                          rightSubLabel={game.lines.total.under.point}
-                          leftOdds={game.lines.total.over.odds}
-                          rightOdds={game.lines.total.under.odds}
-                          leftSelected={isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`)}
-                          rightSelected={isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`)}
-                          onLeftClick={() => addToBetSlip(game, 'total', game.lines.total.over, `Over ${game.lines.total.over.point}`)}
-                          onRightClick={() => addToBetSlip(game, 'total', game.lines.total.under, `Under ${game.lines.total.under.point}`)}
-                          formatOdds={formatOdds}
-                        />
-                        <DualOutcomeButton
-                          betType="moneyline"
-                          leftLabel={getShortName(game.awayTeam)}
-                          rightLabel={getShortName(game.homeTeam)}
-                          leftOdds={game.lines.moneyline.away}
-                          rightOdds={game.lines.moneyline.home}
-                          leftSelected={isBetInSlip(game, 'moneyline', game.awayTeam)}
-                          rightSelected={isBetInSlip(game, 'moneyline', game.homeTeam)}
-                          onLeftClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeam)}
-                          onRightClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeam)}
-                          formatOdds={formatOdds}
-                        />
+                        <button
+                          onClick={() => addToBetSlip(game, 'spread', game.lines.spread.home, `${game.homeTeam} ${game.lines.spread.home.point}`)}
+                          className={`rounded-lg py-2.5 px-2 ${
+                            isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`) 
+                              ? 'bg-green-600 border border-green-500' 
+                              : 'bg-[#1a1a1a] border border-gray-700'
+                          }`}
+                        >
+                          <div className="text-gray-400 text-[10px] uppercase mb-1">Spread</div>
+                          <div className={`text-xs ${isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`) ? 'text-white' : 'text-gray-300'}`}>
+                            {game.lines.spread.home.point}
+                          </div>
+                          <OddsDisplay odds={game.lines.spread.home.odds} isSelected={isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`)} />
+                        </button>
+                        <button
+                          onClick={() => addToBetSlip(game, 'total', game.lines.total.over, `Over ${game.lines.total.over.point}`)}
+                          className={`rounded-lg py-2.5 px-2 ${
+                            isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) 
+                              ? 'bg-green-600 border border-green-500' 
+                              : 'bg-[#1a1a1a] border border-gray-700'
+                          }`}
+                        >
+                          <div className="text-gray-400 text-[10px] uppercase mb-1">Total</div>
+                          <div className={`text-xs ${isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? 'text-white' : 'text-gray-300'}`}>
+                            {game.lines.total.over.point}
+                          </div>
+                          <OddsDisplay odds={game.lines.total.over.odds} isSelected={isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`)} />
+                        </button>
+                        <button
+                          onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeam)}
+                          className={`rounded-lg py-2.5 px-2 ${
+                            isBetInSlip(game, 'moneyline', game.homeTeam) 
+                              ? 'bg-green-600 border border-green-500' 
+                              : 'bg-[#1a1a1a] border border-gray-700'
+                          }`}
+                        >
+                          <div className="text-gray-400 text-[10px] uppercase mb-1">ML</div>
+                          <OddsDisplay odds={game.lines.moneyline.home} isSelected={isBetInSlip(game, 'moneyline', game.homeTeam)} />
+                        </button>
                       </div>
                     </div>
                   </div>
