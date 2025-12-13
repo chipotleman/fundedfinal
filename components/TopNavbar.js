@@ -5,7 +5,7 @@ import { useSession, signOut } from 'next-auth/react';
 import BalanceModal from './BalanceModal';
 import WithdrawModal from './WithdrawModal';
 
-export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick, demoBetSlipCount, onDemoBetSlipClick }) {
+export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCount, onDemoBetSlipClick }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
@@ -15,6 +15,8 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const [themeColor, setThemeColor] = useState('green');
+  const [userProfile, setUserProfile] = useState(null);
+  const [hasActiveChallenge, setHasActiveChallenge] = useState(false);
   const router = useRouter();
   const { data: session } = useSession();
 
@@ -58,6 +60,20 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
         setCurrentUser(session.user);
         setIsLoggedIn(true);
         localStorage.setItem('current_user', JSON.stringify(session.user));
+        
+        // Fetch user profile to check for active challenge
+        try {
+          const response = await fetch(`/api/profiles/${session.user.id}`);
+          if (response.ok) {
+            const profile = await response.json();
+            setUserProfile(profile);
+            // User has active challenge if status is not 'inactive' and they have a bankroll > 0
+            const isActive = profile.status !== 'inactive' && parseFloat(profile.bankroll) > 0;
+            setHasActiveChallenge(isActive);
+          }
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+        }
         return;
       }
 
@@ -79,6 +95,8 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
 
       setIsLoggedIn(false);
       setCurrentUser(null);
+      setUserProfile(null);
+      setHasActiveChallenge(false);
     };
 
     fetchUser();
@@ -234,8 +252,8 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
 
             {/* Right Side - Desktop: Bankroll + Bet Slip + Buttons, Mobile: Hamburger + Bet Slip */}
             <div className="flex items-center space-x-2 sm:space-x-4 absolute right-3 sm:relative sm:right-0">
-              {/* Desktop Bankroll - Only show when logged in */}
-              {isLoggedIn && (
+              {/* Desktop Bankroll - Only show when user has an active challenge */}
+              {isLoggedIn && hasActiveChallenge && userProfile && (
                 <div className="hidden sm:flex items-center space-x-4">
                   <div className="bg-[#111111] hover:bg-[#1a1a1a] rounded-lg px-3 py-2 border border-gray-800/50 hover:border-gray-700 transition-colors">
                     <button
@@ -246,7 +264,7 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
                         <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
                       </svg>
-                      <span className="text-white font-bold text-sm">${bankroll?.toLocaleString() || '10,000'}</span>
+                      <span className="text-white font-bold text-sm">${parseFloat(userProfile.bankroll).toLocaleString()}</span>
                     </button>
                   </div>
                 </div>
@@ -406,24 +424,28 @@ export default function TopNavbar({ bankroll, pnl, betSlipCount, onBetSlipClick,
         </div>
       </nav>
 
-      <BalanceModal
-        isOpen={showBalanceModal}
-        onClose={() => setShowBalanceModal(false)}
-        bankroll={bankroll || 10000}
-        pnl={pnl || 0}
-        challengePhase={1}
-        totalChallenges={3}
-        progressPercent={((bankroll || 10000) - 10000) / (25000 - 10000) * 100}
-        challengeGoal={25000}
-        startingBankroll={10000}
-        themeColor={themeColor}
-      />
+      {hasActiveChallenge && userProfile && (
+        <BalanceModal
+          isOpen={showBalanceModal}
+          onClose={() => setShowBalanceModal(false)}
+          bankroll={parseFloat(userProfile.bankroll)}
+          pnl={parseFloat(userProfile.pnl || 0)}
+          challengePhase={userProfile.challengePhase || 1}
+          totalChallenges={3}
+          progressPercent={userProfile.profitTarget ? ((parseFloat(userProfile.bankroll) - (parseFloat(userProfile.profitTarget) * 0.8)) / (parseFloat(userProfile.profitTarget) * 0.2)) * 100 : 0}
+          challengeGoal={parseFloat(userProfile.profitTarget || 0)}
+          startingBankroll={parseFloat(userProfile.profitTarget || 0) * 0.8}
+          themeColor={themeColor}
+        />
+      )}
 
-      <WithdrawModal
-        isOpen={showWithdrawModal}
-        onClose={() => setShowWithdrawModal(false)}
-        bankroll={bankroll || 10000}
-      />
+      {hasActiveChallenge && userProfile && (
+        <WithdrawModal
+          isOpen={showWithdrawModal}
+          onClose={() => setShowWithdrawModal(false)}
+          bankroll={parseFloat(userProfile.bankroll)}
+        />
+      )}
 
       <style jsx>{`
         @keyframes logoRedYellowGlow {
