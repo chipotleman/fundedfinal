@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import { useSession } from 'next-auth/react';
+import { useSession, signIn } from 'next-auth/react';
 
 const challenges = [
   {
@@ -57,8 +57,14 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
   const [showGamblingTerms, setShowGamblingTerms] = useState(false);
   const [showPropFirmTerms, setShowPropFirmTerms] = useState(false);
   const [showRules, setShowRules] = useState(false);
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [authError, setAuthError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { data: session, status, update: updateSession } = useSession();
 
   useEffect(() => {
     if (isOpen) {
@@ -102,8 +108,8 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
     localStorage.setItem('pending_challenge', JSON.stringify(challengeData));
     
     if (!session?.user) {
-      onClose();
-      router.push('/auth?returnTo=checkout');
+      setStep('auth');
+      setLoading(false);
       return;
     }
     
@@ -142,9 +148,116 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
   };
 
   const handleBack = () => {
-    setStep('selection');
+    if (step === 'auth') {
+      setStep('selection');
+      setAuthError('');
+    } else {
+      setStep('selection');
+    }
   };
 
+  const proceedToCheckout = async (userSession) => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/fanbasis-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          challengeType: currentChallenge.badge,
+          challengeName: currentChallenge.name,
+          startingBalance: currentChallenge.startingBalance,
+          userSplit: userSplit,
+          adjustedPrice: adjustedPrice,
+          userId: userSession.user.id,
+          userEmail: userSession.user.email || ''
+        })
+      });
+
+      const data = await response.json();
+      console.log('Fanbasis response:', data);
+
+      if (data.success && data.paymentLink) {
+        setCheckoutUrl(data.paymentLink);
+        setStep('checkout');
+      } else {
+        setCheckoutError(data.error || 'Failed to create checkout session');
+        setStep('selection');
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      setCheckoutError('Failed to initialize checkout. Please try again.');
+      setStep('selection');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAuth = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setAuthError('');
+
+    if (!authEmail.trim()) {
+      setAuthError('Please enter an email address');
+      setLoading(false);
+      return;
+    }
+
+    if (authPassword.length < 6) {
+      setAuthError('Password must be at least 6 characters');
+      setLoading(false);
+      return;
+    }
+
+    if (isSignUp && authPassword !== confirmPassword) {
+      setAuthError('Passwords do not match');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      if (isSignUp) {
+        const signupRes = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: authEmail.trim(), password: authPassword })
+        });
+        const signupData = await signupRes.json();
+        if (!signupRes.ok) throw new Error(signupData.error || 'Signup failed');
+      }
+
+      const result = await signIn('credentials', {
+        redirect: false,
+        email: authEmail.trim(),
+        password: authPassword
+      });
+
+      if (result?.error) {
+        throw new Error('Invalid email or password');
+      }
+
+      const updatedSession = await updateSession();
+      if (updatedSession?.user) {
+        await proceedToCheckout(updatedSession);
+      } else {
+        setTimeout(async () => {
+          const res = await fetch('/api/auth/session');
+          const sess = await res.json();
+          if (sess?.user) {
+            await proceedToCheckout(sess);
+          } else {
+            setAuthError('Session error. Please try again.');
+            setLoading(false);
+          }
+        }, 500);
+      }
+    } catch (error) {
+      setAuthError(error.message || 'Authentication failed');
+      setLoading(false);
+    }
+  };
 
   const handleBeginChallenge = () => {
     onClose();
@@ -243,10 +356,10 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
           </svg>
         </button>
 
-        {/* Back Button - Visible on selection and checkout steps */}
-        {(step === 'selection' || step === 'checkout') && (
+        {/* Back Button - Visible on selection, checkout, and auth steps */}
+        {(step === 'selection' || step === 'checkout' || step === 'auth') && (
           <button
-            onClick={step === 'checkout' ? handleBack : () => {
+            onClick={step === 'checkout' || step === 'auth' ? handleBack : () => {
               if (currentIndex > 0) {
                 setCurrentIndex(currentIndex - 1);
               }
@@ -260,7 +373,127 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
           </button>
         )}
 
-        {step === 'selection' ? (
+        {step === 'auth' ? (
+          <div className="p-6 pt-12">
+            <div className="text-center mb-6">
+              <div className="mb-4">
+                <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-12 mx-auto" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">
+                {isSignUp ? 'Create Account' : 'Sign In'}
+              </h3>
+              <p className="text-gray-400 text-sm">
+                {isSignUp ? 'Create an account to start your challenge' : 'Sign in to continue to checkout'}
+              </p>
+            </div>
+
+            {authError && (
+              <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20">
+                <p className="text-red-400 text-sm text-center">{authError}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleAuth} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                <input
+                  type="email"
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  className="w-full px-4 py-3 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all"
+                  placeholder="Enter your email"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    value={authPassword}
+                    onChange={(e) => setAuthPassword(e.target.value)}
+                    className="w-full px-4 py-3 pr-12 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all"
+                    placeholder="Enter your password"
+                    minLength="6"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
+                  >
+                    {showPassword ? (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {isSignUp && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
+                  <input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all"
+                    placeholder="Confirm your password"
+                    minLength="6"
+                    required
+                  />
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 disabled:cursor-not-allowed`}
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>{isSignUp ? 'Creating Account...' : 'Signing In...'}</span>
+                  </div>
+                ) : (
+                  isSignUp ? 'Create Account & Continue' : 'Sign In & Continue'
+                )}
+              </button>
+            </form>
+
+            <div className="mt-6 text-center">
+              <button
+                onClick={() => {
+                  setIsSignUp(!isSignUp);
+                  setAuthError('');
+                  setAuthPassword('');
+                  setConfirmPassword('');
+                }}
+                className="text-gray-400 hover:text-white text-sm transition-colors"
+              >
+                {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
+              </button>
+            </div>
+
+            <div className="mt-4 p-3 bg-slate-800/30 rounded-xl border border-slate-700/50">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-400">Selected:</span>
+                <span className={`${theme.text} font-medium`}>{currentChallenge.name}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm mt-1">
+                <span className="text-gray-400">Price:</span>
+                <span className="text-white font-bold">${adjustedPrice}</span>
+              </div>
+            </div>
+          </div>
+        ) : step === 'selection' ? (
           <>
             {/* Challenge Selection */}
             <div className="p-6 pt-8">
