@@ -54,6 +54,8 @@ None documented yet.
 
 ## Recent Changes
 - **December 13, 2025**:
+  - ✅ Redesigned auth page (pages/auth.js) to match dashboard/popup theme
+  - ✅ Added toggle tabs for Sign In/Sign Up, Piks logo, green border card styling
   - ✅ Rebuilt authentication system for Vercel serverless compatibility
   - ✅ Switched database driver from WebSocket to HTTP-based Neon client
   - ✅ Created auth service layer (lib/auth/service.ts) with proper error handling

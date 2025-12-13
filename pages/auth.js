@@ -405,29 +405,51 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-black text-white flex flex-col">
       <TopNavbar 
         betSlipCount={betSlip.length}
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-20" style={{
-        backgroundImage: "url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22m36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"
-      }}></div>
 
       {/* Main Auth Form */}
-      <div className="flex-1 flex items-center justify-center p-6">
+      <div className="flex-1 flex items-center justify-center p-4 pt-8">
         <div className="relative max-w-md w-full">
-          <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-slate-700/50 shadow-2xl">
-            <div className="text-center mb-8">
-              <div className="mb-6">
-                <h2 className="text-2xl sm:text-3xl font-bold text-white mb-4">
-                  {isSignUp ? 'Create Account' : 'Sign In'}
-                </h2>
-                <p className="text-gray-400 font-medium text-sm sm:text-base">
-                  {isSignUp ? 'Join our funded challenge platform' : 'Sign in to your account'}
-                </p>
-              </div>
+          <div className="bg-black rounded-3xl p-6 sm:p-8 border-2 border-green-500">
+            {/* Logo */}
+            <div className="text-center mb-6">
+              <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-14 mx-auto mb-4" />
+            </div>
+
+            {/* Toggle Tabs */}
+            <div className="flex bg-slate-800/50 rounded-xl p-1 mb-6">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSignUp(false);
+                  setError('');
+                  setPassword('');
+                  setConfirmPassword('');
+                }}
+                className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all duration-200 ${
+                  !isSignUp ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-gray-300'
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsSignUp(true);
+                  setError('');
+                  setPassword('');
+                  setConfirmPassword('');
+                }}
+                className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all duration-200 ${
+                  isSignUp ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-gray-300'
+                }`}
+              >
+                Sign Up
+              </button>
             </div>
 
             {error && (
@@ -440,23 +462,23 @@ export default function AuthPage() {
               </div>
             )}
 
-            <form onSubmit={handleAuth} className="space-y-6">
+            <form onSubmit={handleAuth} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-300 mb-3">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Email Address
                 </label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 sm:py-4 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium text-sm sm:text-base"
-                  placeholder="Enter your email address"
+                  className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all duration-200"
+                  placeholder="Enter your email"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-300 mb-3">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Password
                 </label>
                 <div className="relative">
@@ -464,7 +486,7 @@ export default function AuthPage() {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 sm:py-4 pr-12 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium text-sm sm:text-base"
+                    className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 pr-12 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all duration-200"
                     placeholder="Enter your password"
                     minLength="6"
                     required
@@ -495,14 +517,14 @@ export default function AuthPage() {
 
               {isSignUp && (
                 <div>
-                  <label className="block text-sm font-semibold text-gray-300 mb-3">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Confirm Password
                   </label>
                   <input
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-4 py-3 sm:py-4 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all duration-300 font-medium text-sm sm:text-base"
+                    className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all duration-200"
                     placeholder="Confirm your password"
                     minLength="6"
                     required
@@ -522,9 +544,9 @@ export default function AuthPage() {
                   id="rememberMe"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 bg-slate-700 border-2 border-slate-600 rounded focus:ring-2 focus:ring-green-400 text-green-500"
+                  className="w-4 h-4 bg-slate-700 border border-slate-600 rounded focus:ring-2 focus:ring-green-500 text-green-500"
                 />
-                <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-300 cursor-pointer">
+                <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-400 cursor-pointer">
                   Remember my email
                 </label>
               </div>
@@ -532,7 +554,7 @@ export default function AuthPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3 sm:py-4 rounded-xl transition-all duration-300 transform hover:scale-105 disabled:scale-100 text-sm sm:text-base"
+                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3.5 rounded-xl transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 shadow-lg"
               >
                 {loading ? (
                   <div className="flex items-center justify-center space-x-2">
@@ -545,24 +567,10 @@ export default function AuthPage() {
               </button>
             </form>
 
-            <div className="mt-6 text-center">
-              <button
-                onClick={() => {
-                  setIsSignUp(!isSignUp);
-                  setError('');
-                  setPassword('');
-                  setConfirmPassword('');
-                }}
-                className="text-green-400 hover:text-green-300 font-medium transition-colors text-sm sm:text-base"
-              >
-                {isSignUp ? 'Already have an account? Sign in' : 'Need an account? Sign up'}
-              </button>
-            </div>
-
-            <div className="mt-6 text-center">
+            <div className="mt-6 pt-4 border-t border-slate-700/50 text-center">
               <Link
                 href="/"
-                className="text-gray-400 hover:text-gray-300 font-medium transition-colors text-sm"
+                className="text-gray-500 hover:text-gray-400 font-medium transition-colors text-sm"
               >
                 ← Back to Home
               </Link>
