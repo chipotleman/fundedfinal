@@ -9,18 +9,56 @@ export default function Waitlist() {
   const [name, setName] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [isFlipping, setIsFlipping] = useState(false);
+  const [trackingStep, setTrackingStep] = useState(0);
+  const [truckPosition, setTruckPosition] = useState(0);
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
+
+  const trackingSteps = [
+    { label: 'RELEASE DAY', icon: '🎉' },
+    { label: 'CARD BEING BUILT', icon: '🔨' },
+    { label: 'SHIPPED', icon: '📦' },
+    { label: 'ARRIVED', icon: '🏠' }
+  ];
+
+  useEffect(() => {
+    if (submitted) {
+      const stepInterval = setInterval(() => {
+        setTrackingStep(prev => {
+          if (prev < trackingSteps.length - 1) {
+            return prev + 1;
+          }
+          clearInterval(stepInterval);
+          return prev;
+        });
+      }, 1200);
+
+      const truckInterval = setInterval(() => {
+        setTruckPosition(prev => {
+          if (prev < 100) {
+            return prev + 2;
+          }
+          clearInterval(truckInterval);
+          return prev;
+        });
+      }, 50);
+
+      return () => {
+        clearInterval(stepInterval);
+        clearInterval(truckInterval);
+      };
+    }
+  }, [submitted]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Here you would typically send the data to your backend
     console.log('Waitlist signup:', { name, email });
     setIsFlipping(true);
     
-    // After animation completes, show success message
     setTimeout(() => {
       setIsFlipping(false);
       setSubmitted(true);
+      setTrackingStep(0);
+      setTruckPosition(0);
     }, 1500);
   };
 
@@ -98,22 +136,79 @@ export default function Waitlist() {
               </p>
             </div>
           ) : (
-            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-green-500/30 text-center animate-fadeIn">
-              <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
-                <svg className="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <h2 className="text-3xl font-bold text-white mb-3">You're on the Waitlist!</h2>
-              <p className="text-gray-300 text-lg mb-2">
-                🎉 Welcome to the Piks Card waitlist, <span className="text-green-400 font-bold">{name}</span>!
-              </p>
+            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-green-500/30 text-center">
+              <h2 className="text-2xl font-bold text-white mb-2">You're on the Waitlist!</h2>
               <p className="text-gray-400 mb-6">
-                We'll notify you at <span className="text-blue-400">{email}</span> as soon as the Piks Card is available.
+                We'll notify <span className="text-blue-400">{email}</span> when your card ships
               </p>
-              <Link href="/auth" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 inline-block shadow-lg">
+
+              {/* Mail Truck Animation */}
+              <div className="relative h-16 mb-8 overflow-hidden">
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-700 rounded-full"></div>
+                <div 
+                  className="absolute bottom-1 transition-all duration-100 ease-linear"
+                  style={{ left: `${Math.min(truckPosition, 85)}%` }}
+                >
+                  <div className="text-4xl transform -scale-x-100">🚚</div>
+                </div>
+                <div className="absolute bottom-1 right-2 text-2xl">🏠</div>
+              </div>
+
+              {/* Tracking Steps */}
+              <div className="relative mb-8">
+                {/* Progress Line */}
+                <div className="absolute top-5 left-0 right-0 h-1 bg-gray-700 rounded-full mx-8"></div>
+                <div 
+                  className="absolute top-5 left-0 h-1 bg-gradient-to-r from-green-500 to-blue-500 rounded-full mx-8 transition-all duration-500"
+                  style={{ width: `calc(${(trackingStep / (trackingSteps.length - 1)) * 100}% - 64px)` }}
+                ></div>
+
+                {/* Steps */}
+                <div className="flex justify-between relative">
+                  {trackingSteps.map((step, index) => (
+                    <div key={index} className="flex flex-col items-center z-10">
+                      <div 
+                        className={`w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all duration-500 ${
+                          index <= trackingStep 
+                            ? 'bg-gradient-to-r from-green-500 to-blue-500 scale-110' 
+                            : 'bg-gray-700'
+                        }`}
+                      >
+                        {index <= trackingStep ? (
+                          <span className="animate-pulse">{step.icon}</span>
+                        ) : (
+                          <span className="text-gray-500 text-sm">{index + 1}</span>
+                        )}
+                      </div>
+                      <span className={`mt-2 text-xs font-medium transition-colors duration-300 ${
+                        index <= trackingStep ? 'text-green-400' : 'text-gray-500'
+                      }`}>
+                        {step.label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Status Message */}
+              <div className="mb-6">
+                {trackingStep < trackingSteps.length - 1 ? (
+                  <p className="text-gray-300 animate-pulse">
+                    Tracking your card journey...
+                  </p>
+                ) : (
+                  <p className="text-green-400 font-bold text-lg">
+                    Your Piks Card is on its way! 🎉
+                  </p>
+                )}
+              </div>
+
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
+                className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 inline-block shadow-lg"
+              >
                 Start Your Challenge Now
-              </Link>
+              </button>
             </div>
           )}
         </div>
