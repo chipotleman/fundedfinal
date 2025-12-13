@@ -1,0 +1,237 @@
+_app-363b0deb9adb04bd.js:1 Fanbasis response: {success: true, paymentLink: 'https://www.fanbasis.com/agency-checkout/piks/326Dn', checkoutSessionId: 266536}
+universal-script?ph=f63685ef2b3258b07c29893cc303e4b4b5fbaa06a53f69a177c5a48b7d8c3256&tag=!clicked&ref_url=https://www.fanbasis.com/agency-checkout/piks/326Dn:1  [UTS] [fp] init
+js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:1346 Google Maps JavaScript API has been loaded directly without loading=async. This can result in suboptimal performance. For best-practice loading patterns please see https://goo.gle/js-api-loading
+iea @ js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:1346
+google.maps.Load @ js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:14
+(anonymous) @ js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:1650
+(anonymous) @ js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:1650
+326Dn:2151 analyticsSessionId a5ff14b6-d021-4c1d-90be-a381742d11cb
+326Dn:2154 analyticsClientToken eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmYW5iYXNpc1VzZXJJZCI6IiIsImFwcGxpY2F0aW9uIjoiZmFuYmFzaXMtbGFyYXZlbC1hcHAiLCJzZWxsZXJJZCI6IjgwMjg2NSIsInNlc3Npb25JZCI6ImE1ZmYxNGI2LWQwMjEtNGMxZC05MGJlLWEzODE3NDJkMTFjYiIsImlhdCI6MTc2NTY1MDgxMywiZXhwIjoxNzY1NjU0NDEzfQ.l4qVZaW7AkTm1ndhq93NR09039NxsfpkIoh3Are5sqU
+326Dn:1 [DOM] Found 2 elements with non-unique id #email: (More info: https://goo.gl/9p2vKq) <input type=​"email" class=​"checkout-input billing-input" name=​"email" id=​"email" value required placeholder=​"Email">​flex <input class=​"form-control" type=​"email" placeholder=​"Email Address" name=​"email" id=​"email" required>​
+326Dn:1 [DOM] Found 2 elements with non-unique id #email: (More info: https://goo.gl/9p2vKq) %o %o
+326Dn:1 [DOM] Found 2 elements with non-unique id #firstname: (More info: https://goo.gl/9p2vKq) <input type=​"text" class=​"checkout-input billing-input" name=​"first_name" id=​"firstname" value required placeholder=​"First Name">​flex <input class=​"form-control" type=​"text" placeholder=​"First Name *" name=​"firstname" id=​"firstname" required>​
+326Dn:1 [DOM] Found 2 elements with non-unique id #firstname: (More info: https://goo.gl/9p2vKq) %o %o
+326Dn:1 [DOM] Found 2 elements with non-unique id #lastname: (More info: https://goo.gl/9p2vKq) <input type=​"text" class=​"checkout-input billing-input" name=​"last_name" id=​"lastname" value required placeholder=​"Last Name">​flex <input class=​"form-control" type=​"text" placeholder=​"Last Name *" name=​"lastname" id=​"lastname" required>​
+326Dn:1 [DOM] Found 2 elements with non-unique id #lastname: (More info: https://goo.gl/9p2vKq) %o %o
+326Dn:1 [DOM] Found 2 elements with non-unique id #referral_code: (More info: https://goo.gl/9p2vKq) <input class=​"form-control" type=​"text" name=​"referral_code" placeholder=​"Referral Code (Optional)​" id=​"referral_code" value required>​ <input class=​"form-control" type=​"text" name=​"referral_code" placeholder=​"Referral Code (Optional)​" id=​"referral_code" value required>​
+326Dn:1 [DOM] Found 2 elements with non-unique id #referral_code: (More info: https://goo.gl/9p2vKq) %o %o
+326Dn:1 [DOM] Found 3 elements with non-unique id #role_type: (More info: https://goo.gl/9p2vKq) <input type=​"hidden" id=​"role_type" value=​"creator">​ <input type=​"hidden" id=​"role_type" value=​"creator">​ <input type=​"hidden" id=​"role_type" value=​"fan">​
+326Dn:1 [DOM] Found 3 elements with non-unique id #role_type: (More info: https://goo.gl/9p2vKq) %o %o %o
+326Dn:1 [DOM] Found 2 elements with non-unique id #show_signup_referal: (More info: https://goo.gl/9p2vKq) <input class=​"form-control" type=​"hidden" id=​"show_signup_referal" placeholder=​"Referral Code (Optional)​" value>​ <input class=​"form-control" type=​"hidden" id=​"show_signup_referal" placeholder=​"Referral Code (Optional)​" value>​
+www.fanbasis.com/agency-checkout/piks/326Dn:1 [DOM] Found 2 elements with non-unique id #show_signup_referal: (More info: https://goo.gl/9p2vKq) %o %o
+js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:65 As of March 1st, 2025, google.maps.places.Autocomplete is not available to new customers. Please use google.maps.places.PlaceAutocompleteElement instead. At this time, google.maps.places.Autocomplete is not scheduled to be discontinued, but google.maps.places.PlaceAutocompleteElement is recommended over google.maps.places.Autocomplete. While google.maps.places.Autocomplete will continue to receive bug fixes for any major regressions, existing bugs in google.maps.places.Autocomplete will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/legacy for additional details and https://developers.google.com/maps/documentation/javascript/places-migration-overview for the migration guide.
+PD @ js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:65
+x @ spreedly-checkout.min.js?id=2f7894414b1a25383516:1
+(anonymous) @ spreedly-checkout.min.js?id=2f7894414b1a25383516:1
+e @ jquery.min.js:2
+t @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+datadog-logs.js:1 Datadog Browser SDK: SDK is loaded more than once. This is unsupported and might have unexpected behavior.
+(anonymous) @ datadog-logs.js:1
+(anonymous) @ datadog-logs.js:1
+(anonymous) @ datadog-logs.js:1
+universal-script?ph=f63685ef2b3258b07c29893cc303e4b4b5fbaa06a53f69a177c5a48b7d8c3256&tag=!clicked&ref_url=https://www.fanbasis.com/agency-checkout/piks/326Dn:1  [UTS] [fp]: cc81b1004fa7e384778671480155c572
+js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:65 As of March 1st, 2025, google.maps.places.Autocomplete is not available to new customers. Please use google.maps.places.PlaceAutocompleteElement instead. At this time, google.maps.places.Autocomplete is not scheduled to be discontinued, but google.maps.places.PlaceAutocompleteElement is recommended over google.maps.places.Autocomplete. While google.maps.places.Autocomplete will continue to receive bug fixes for any major regressions, existing bugs in google.maps.places.Autocomplete will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/legacy for additional details and https://developers.google.com/maps/documentation/javascript/places-migration-overview for the migration guide.
+PD @ js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:65
+x @ spreedly-checkout.min.js?id=2f7894414b1a25383516:1
+C @ spreedly-checkout.min.js?id=2f7894414b1a25383516:1
+(anonymous) @ spreedly-checkout.min.js?id=2f7894414b1a25383516:1
+(anonymous) @ spreedly-checkout.min.js?id=2f7894414b1a25383516:1
+Promise.then
+(anonymous) @ spreedly-checkout.min.js?id=2f7894414b1a25383516:1
+e @ jquery.min.js:2
+t @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+universal-script?ph=f63685ef2b3258b07c29893cc303e4b4b5fbaa06a53f69a177c5a48b7d8c3256&tag=!clicked&ref_url=https://www.fanbasis.com/agency-checkout/piks/326Dn:1  [UTS] [gusid]: HB-ET_0c2b0bbfa0ce6cf1ee17e94abb9467c5141b52a3469bb64daebb046bde632bd3
+http.js:14  POST https://www.fanbasis.com/livewire/message/checkout.agency.spreedly-checkout 419
+sendMessage @ http.js:14
+value @ index.js:43
+value @ index.js:142
+later @ debounce.js:50
+setTimeout
+(anonymous) @ debounce.js:54
+value @ index.js:131
+(anonymous) @ Store.js:55
+emit @ Store.js:54
+value @ index.js:55
+(anonymous) @ 326Dn:2161
+  POST https://www.fanbasis.com/livewire/message/checkout.agency.spreedly-checkout 419
+sendMessage @ livewire.js:1
+value @ livewire.js:1
+value @ livewire.js:1
+later @ livewire.js:1
+setTimeout
+(anonymous) @ livewire.js:1
+value @ livewire.js:1
+(anonymous) @ livewire.js:1
+emit @ livewire.js:1
+value @ livewire.js:1
+(anonymous) @ 326Dn:2161
+  POST https://www.fanbasis.com/livewire/message/checkout.agency.spreedly-checkout 419
+sendMessage @ livewire.js:1
+value @ livewire.js:1
+value @ livewire.js:1
+later @ livewire.js:1
+setTimeout
+(anonymous) @ livewire.js:1
+value @ livewire.js:1
+(anonymous) @ livewire.js:1
+emit @ livewire.js:1
+value @ livewire.js:1
+(anonymous) @ www.fanbasis.com/age…out/piks/326Dn:2161
+universal-script?ph=f63685ef2b3258b07c29893cc303e4b4b5fbaa06a53f69a177c5a48b7d8c3256&tag=!clicked&ref_url=https://www.fanbasis.com/agency-checkout/piks/326Dn:1  [UTS] [pc]
+universal-script?ph=f63685ef2b3258b07c29893cc303e4b4b5fbaa06a53f69a177c5a48b7d8c3256&tag=!clicked&ref_url=https://www.fanbasis.com/agency-checkout/piks/326Dn:1  [UTS] [fp] init
+js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:1346 Google Maps JavaScript API has been loaded directly without loading=async. This can result in suboptimal performance. For best-practice loading patterns please see https://goo.gle/js-api-loading
+iea @ js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:1346
+google.maps.Load @ js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:14
+(anonymous) @ js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:1650
+(anonymous) @ js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:1650
+326Dn:2151 analyticsSessionId 3e8b592b-64bb-4243-be04-5ebb7ccc12de
+326Dn:2154 analyticsClientToken eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmYW5iYXNpc1VzZXJJZCI6IiIsImFwcGxpY2F0aW9uIjoiZmFuYmFzaXMtbGFyYXZlbC1hcHAiLCJzZWxsZXJJZCI6IjgwMjg2NSIsInNlc3Npb25JZCI6IjNlOGI1OTJiLTY0YmItNDI0My1iZTA0LTVlYmI3Y2NjMTJkZSIsImlhdCI6MTc2NTY1MDgyMywiZXhwIjoxNzY1NjU0NDIzfQ.axTMCJoZDGLCWnsccvhXXAa10wB87_UCPqD-1oQMaIY
+326Dn:1 [DOM] Found 2 elements with non-unique id #email: (More info: https://goo.gl/9p2vKq) <input type=​"email" class=​"checkout-input billing-input" name=​"email" id=​"email" value required placeholder=​"Email">​flex <input class=​"form-control" type=​"email" placeholder=​"Email Address" name=​"email" id=​"email" required>​
+326Dn:1 [DOM] Found 2 elements with non-unique id #firstname: (More info: https://goo.gl/9p2vKq) <input type=​"text" class=​"checkout-input billing-input" name=​"first_name" id=​"firstname" value required placeholder=​"First Name">​flex <input class=​"form-control" type=​"text" placeholder=​"First Name *" name=​"firstname" id=​"firstname" required>​
+326Dn:1 [DOM] Found 2 elements with non-unique id #lastname: (More info: https://goo.gl/9p2vKq) <input type=​"text" class=​"checkout-input billing-input" name=​"last_name" id=​"lastname" value required placeholder=​"Last Name">​flex <input class=​"form-control" type=​"text" placeholder=​"Last Name *" name=​"lastname" id=​"lastname" required>​
+326Dn:1 [DOM] Found 2 elements with non-unique id #referral_code: (More info: https://goo.gl/9p2vKq) <input class=​"form-control" type=​"text" name=​"referral_code" placeholder=​"Referral Code (Optional)​" id=​"referral_code" value required>​ <input class=​"form-control" type=​"text" name=​"referral_code" placeholder=​"Referral Code (Optional)​" id=​"referral_code" value required>​
+326Dn:1 [DOM] Found 3 elements with non-unique id #role_type: (More info: https://goo.gl/9p2vKq) <input type=​"hidden" id=​"role_type" value=​"creator">​ <input type=​"hidden" id=​"role_type" value=​"creator">​ <input type=​"hidden" id=​"role_type" value=​"fan">​
+326Dn:1 [DOM] Found 2 elements with non-unique id #show_signup_referal: (More info: https://goo.gl/9p2vKq) <input class=​"form-control" type=​"hidden" id=​"show_signup_referal" placeholder=​"Referral Code (Optional)​" value>​ <input class=​"form-control" type=​"hidden" id=​"show_signup_referal" placeholder=​"Referral Code (Optional)​" value>​
+js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:65 As of March 1st, 2025, google.maps.places.Autocomplete is not available to new customers. Please use google.maps.places.PlaceAutocompleteElement instead. At this time, google.maps.places.Autocomplete is not scheduled to be discontinued, but google.maps.places.PlaceAutocompleteElement is recommended over google.maps.places.Autocomplete. While google.maps.places.Autocomplete will continue to receive bug fixes for any major regressions, existing bugs in google.maps.places.Autocomplete will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/legacy for additional details and https://developers.google.com/maps/documentation/javascript/places-migration-overview for the migration guide.
+PD @ js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:65
+x @ spreedly-checkout.min.js?id=2f7894414b1a25383516:1
+(anonymous) @ spreedly-checkout.min.js?id=2f7894414b1a25383516:1
+e @ jquery.min.js:2
+t @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+universal-script?ph=f63685ef2b3258b07c29893cc303e4b4b5fbaa06a53f69a177c5a48b7d8c3256&tag=!clicked&ref_url=https://www.fanbasis.com/agency-checkout/piks/326Dn:1  [UTS] [fp]: cc81b1004fa7e384778671480155c572
+js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:65 As of March 1st, 2025, google.maps.places.Autocomplete is not available to new customers. Please use google.maps.places.PlaceAutocompleteElement instead. At this time, google.maps.places.Autocomplete is not scheduled to be discontinued, but google.maps.places.PlaceAutocompleteElement is recommended over google.maps.places.Autocomplete. While google.maps.places.Autocomplete will continue to receive bug fixes for any major regressions, existing bugs in google.maps.places.Autocomplete will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/legacy for additional details and https://developers.google.com/maps/documentation/javascript/places-migration-overview for the migration guide.
+PD @ js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:65
+x @ spreedly-checkout.min.js?id=2f7894414b1a25383516:1
+C @ spreedly-checkout.min.js?id=2f7894414b1a25383516:1
+(anonymous) @ spreedly-checkout.min.js?id=2f7894414b1a25383516:1
+(anonymous) @ spreedly-checkout.min.js?id=2f7894414b1a25383516:1
+Promise.then
+(anonymous) @ spreedly-checkout.min.js?id=2f7894414b1a25383516:1
+e @ jquery.min.js:2
+t @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+universal-script?ph=f63685ef2b3258b07c29893cc303e4b4b5fbaa06a53f69a177c5a48b7d8c3256&tag=!clicked&ref_url=https://www.fanbasis.com/agency-checkout/piks/326Dn:1  [UTS] [gusid]: HB-ET_0c2b0bbfa0ce6cf1ee17e94abb9467c5141b52a3469bb64daebb046bde632bd3
+http.js:14  POST https://www.fanbasis.com/livewire/message/checkout.agency.spreedly-checkout 419
+sendMessage @ http.js:14
+value @ index.js:43
+value @ index.js:142
+later @ debounce.js:50
+setTimeout
+(anonymous) @ debounce.js:54
+value @ index.js:131
+(anonymous) @ Store.js:55
+emit @ Store.js:54
+value @ index.js:55
+(anonymous) @ 326Dn:2161
+  POST https://www.fanbasis.com/livewire/message/checkout.agency.spreedly-checkout 419
+sendMessage @ livewire.js:1
+value @ livewire.js:1
+value @ livewire.js:1
+later @ livewire.js:1
+setTimeout
+(anonymous) @ livewire.js:1
+value @ livewire.js:1
+(anonymous) @ livewire.js:1
+emit @ livewire.js:1
+value @ livewire.js:1
+(anonymous) @ www.fanbasis.com/age…out/piks/326Dn:2161
+universal-script?ph=f63685ef2b3258b07c29893cc303e4b4b5fbaa06a53f69a177c5a48b7d8c3256&tag=!clicked&ref_url=https://www.fanbasis.com/agency-checkout/piks/326Dn:1  [UTS] [pc]
+js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:1346 Google Maps JavaScript API has been loaded directly without loading=async. This can result in suboptimal performance. For best-practice loading patterns please see https://goo.gle/js-api-loading
+iea @ js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:1346
+google.maps.Load @ js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:14
+(anonymous) @ js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:1650
+(anonymous) @ js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:1650
+326Dn:2151 analyticsSessionId 06d9c80f-05cf-4ec2-8d99-63b1e6780554
+universal-script?ph=f63685ef2b3258b07c29893cc303e4b4b5fbaa06a53f69a177c5a48b7d8c3256&tag=!clicked&ref_url=https://www.fanbasis.com/agency-checkout/piks/326Dn:1  [UTS] [fp] init
+326Dn:2154 analyticsClientToken eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmYW5iYXNpc1VzZXJJZCI6IiIsImFwcGxpY2F0aW9uIjoiZmFuYmFzaXMtbGFyYXZlbC1hcHAiLCJzZWxsZXJJZCI6IjgwMjg2NSIsInNlc3Npb25JZCI6IjA2ZDljODBmLTA1Y2YtNGVjMi04ZDk5LTYzYjFlNjc4MDU1NCIsImlhdCI6MTc2NTY1MDgyNSwiZXhwIjoxNzY1NjU0NDI1fQ.3QwB_r1zWf2NVAduLbFjr4xlERmjxWO-cCm1tqOdHwQ
+326Dn:1 [DOM] Found 2 elements with non-unique id #email: (More info: https://goo.gl/9p2vKq) <input type=​"email" class=​"checkout-input billing-input" name=​"email" id=​"email" value required placeholder=​"Email">​flex <input class=​"form-control" type=​"email" placeholder=​"Email Address" name=​"email" id=​"email" required>​
+326Dn:1 [DOM] Found 2 elements with non-unique id #firstname: (More info: https://goo.gl/9p2vKq) <input type=​"text" class=​"checkout-input billing-input" name=​"first_name" id=​"firstname" value required placeholder=​"First Name">​flex <input class=​"form-control" type=​"text" placeholder=​"First Name *" name=​"firstname" id=​"firstname" required>​
+326Dn:1 [DOM] Found 2 elements with non-unique id #lastname: (More info: https://goo.gl/9p2vKq) <input type=​"text" class=​"checkout-input billing-input" name=​"last_name" id=​"lastname" value required placeholder=​"Last Name">​flex <input class=​"form-control" type=​"text" placeholder=​"Last Name *" name=​"lastname" id=​"lastname" required>​
+326Dn:1 [DOM] Found 2 elements with non-unique id #referral_code: (More info: https://goo.gl/9p2vKq) <input class=​"form-control" type=​"text" name=​"referral_code" placeholder=​"Referral Code (Optional)​" id=​"referral_code" value required>​ <input class=​"form-control" type=​"text" name=​"referral_code" placeholder=​"Referral Code (Optional)​" id=​"referral_code" value required>​
+326Dn:1 [DOM] Found 3 elements with non-unique id #role_type: (More info: https://goo.gl/9p2vKq) <input type=​"hidden" id=​"role_type" value=​"creator">​ <input type=​"hidden" id=​"role_type" value=​"creator">​ <input type=​"hidden" id=​"role_type" value=​"fan">​
+326Dn:1 [DOM] Found 2 elements with non-unique id #show_signup_referal: (More info: https://goo.gl/9p2vKq) <input class=​"form-control" type=​"hidden" id=​"show_signup_referal" placeholder=​"Referral Code (Optional)​" value>​ <input class=​"form-control" type=​"hidden" id=​"show_signup_referal" placeholder=​"Referral Code (Optional)​" value>​
+js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:65 As of March 1st, 2025, google.maps.places.Autocomplete is not available to new customers. Please use google.maps.places.PlaceAutocompleteElement instead. At this time, google.maps.places.Autocomplete is not scheduled to be discontinued, but google.maps.places.PlaceAutocompleteElement is recommended over google.maps.places.Autocomplete. While google.maps.places.Autocomplete will continue to receive bug fixes for any major regressions, existing bugs in google.maps.places.Autocomplete will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/legacy for additional details and https://developers.google.com/maps/documentation/javascript/places-migration-overview for the migration guide.
+PD @ js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:65
+x @ spreedly-checkout.min.js?id=2f7894414b1a25383516:1
+(anonymous) @ spreedly-checkout.min.js?id=2f7894414b1a25383516:1
+e @ jquery.min.js:2
+t @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+universal-script?ph=f63685ef2b3258b07c29893cc303e4b4b5fbaa06a53f69a177c5a48b7d8c3256&tag=!clicked&ref_url=https://www.fanbasis.com/agency-checkout/piks/326Dn:1  [UTS] [fp]: cc81b1004fa7e384778671480155c572
+js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:65 As of March 1st, 2025, google.maps.places.Autocomplete is not available to new customers. Please use google.maps.places.PlaceAutocompleteElement instead. At this time, google.maps.places.Autocomplete is not scheduled to be discontinued, but google.maps.places.PlaceAutocompleteElement is recommended over google.maps.places.Autocomplete. While google.maps.places.Autocomplete will continue to receive bug fixes for any major regressions, existing bugs in google.maps.places.Autocomplete will not be addressed. At least 12 months notice will be given before support is discontinued. Please see https://developers.google.com/maps/legacy for additional details and https://developers.google.com/maps/documentation/javascript/places-migration-overview for the migration guide.
+PD @ js?key=AIzaSyC-nEy_yB6mAAoj-92umJa_UpwE7058KiQ&libraries=places&callback=Function.prototype:65
+x @ spreedly-checkout.min.js?id=2f7894414b1a25383516:1
+C @ spreedly-checkout.min.js?id=2f7894414b1a25383516:1
+(anonymous) @ spreedly-checkout.min.js?id=2f7894414b1a25383516:1
+(anonymous) @ spreedly-checkout.min.js?id=2f7894414b1a25383516:1
+Promise.then
+(anonymous) @ spreedly-checkout.min.js?id=2f7894414b1a25383516:1
+e @ jquery.min.js:2
+t @ jquery.min.js:2
+setTimeout
+(anonymous) @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+fire @ jquery.min.js:2
+c @ jquery.min.js:2
+fireWith @ jquery.min.js:2
+ready @ jquery.min.js:2
+B @ jquery.min.js:2
+universal-script?ph=f63685ef2b3258b07c29893cc303e4b4b5fbaa06a53f69a177c5a48b7d8c3256&tag=!clicked&ref_url=https://www.fanbasis.com/agency-checkout/piks/326Dn:1  [UTS] [gusid]: HB-ET_0c2b0bbfa0ce6cf1ee17e94abb9467c5141b52a3469bb64daebb046bde632bd3
+universal-script?ph=f63685ef2b3258b07c29893cc303e4b4b5fbaa06a53f69a177c5a48b7d8c3256&tag=!clicked&ref_url=https://www.fanbasis.com/agency-checkout/piks/326Dn:1  [UTS] [pc]
+http.js:14  POST https://www.fanbasis.com/livewire/message/checkout.agency.spreedly-checkout 419
+sendMessage @ http.js:14
+value @ index.js:43
+value @ index.js:142
+later @ debounce.js:50
+setTimeout
+(anonymous) @ debounce.js:54
+value @ index.js:131
+(anonymous) @ Store.js:55
+emit @ Store.js:54
+value @ index.js:55
+(anonymous) @ 326Dn:2161
+universal-script?ph=f63685ef2b3258b07c29893cc303e4b4b5fbaa06a53f69a177c5a48b7d8c3256&tag=!clicked&ref_url=https://www.fanbasis.com/agency-checkout/piks/326Dn:1  [UTS] No NF on page
