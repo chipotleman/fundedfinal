@@ -170,21 +170,6 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
             <p className="text-gray-400 text-xs">Practice with virtual funds - No payment required</p>
           </div>
 
-          <div className="text-center mb-4">
-            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
-              currentChallenge.badge === 'BEGINNER' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
-              currentChallenge.badge === 'POPULAR' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
-              'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-            }`}>
-              {currentChallenge.badge}
-            </span>
-          </div>
-
-          <div className="text-center mb-6">
-            <h3 className="text-xl font-bold text-white mb-2">{currentChallenge.name}</h3>
-            <p className="text-gray-400 text-sm">{currentChallenge.description}</p>
-          </div>
-
           <div className="space-y-3 mb-6" style={{ WebkitTapHighlightColor: 'transparent' }}>
             <div className="relative">
               <div
