@@ -213,13 +213,15 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
               </Link>
 
               <div className="mt-6 space-y-3">
-                <Link
-                  href="/auth"
-                  onClick={onClose}
+                <button
+                  onClick={() => {
+                    onClose();
+                    window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signin' } }));
+                  }}
                   className="w-full text-center text-gray-300 font-bold py-3 px-6 rounded-lg text-sm border border-gray-600 flex items-center justify-center"
                 >
                   <span>SIGN IN</span>
-                </Link>
+                </button>
                 <button
                   onClick={() => {
                     onClose();

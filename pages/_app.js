@@ -7,6 +7,7 @@ import { UserProfilesProvider } from '../contexts/UserProfilesContext';
 import ChallengePopup from '../components/ChallengePopup';
 import HowItWorksPopup from '../components/HowItWorksPopup';
 import DemoPopup from '../components/DemoPopup';
+import AuthPopup from '../components/AuthPopup';
 import MobileNavMenu from '../components/MobileNavMenu';
 import BetaLanding from '../components/BetaLanding';
 
@@ -15,6 +16,8 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
   const [selectedChallengeIndex, setSelectedChallengeIndex] = useState(1);
   const [showHowItWorksPopup, setShowHowItWorksPopup] = useState(false);
   const [showDemoPopup, setShowDemoPopup] = useState(false);
+  const [showAuthPopup, setShowAuthPopup] = useState(false);
+  const [authPopupMode, setAuthPopupMode] = useState('signin');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -92,11 +95,21 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
       setShowDemoPopup(true);
     };
 
+    const handleOpenAuthPopup = (e) => {
+      if (e.detail && e.detail.mode) {
+        setAuthPopupMode(e.detail.mode);
+      } else {
+        setAuthPopupMode('signin');
+      }
+      setShowAuthPopup(true);
+    };
+
     if (typeof window !== 'undefined') {
       window.addEventListener('openChallengePopup', handleOpenChallengePopup);
       window.addEventListener('openHowItWorks', handleOpenHowItWorks);
       window.addEventListener('mobileMenuToggle', handleMobileMenuToggle);
       window.addEventListener('openDemoPopup', handleOpenDemoPopup);
+      window.addEventListener('openAuthPopup', handleOpenAuthPopup);
     }
 
     return () => {
@@ -105,6 +118,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
         window.removeEventListener('openHowItWorks', handleOpenHowItWorks);
         window.removeEventListener('mobileMenuToggle', handleMobileMenuToggle);
         window.removeEventListener('openDemoPopup', handleOpenDemoPopup);
+        window.removeEventListener('openAuthPopup', handleOpenAuthPopup);
       }
     };
   }, []);
@@ -182,6 +196,12 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
           <DemoPopup 
             isOpen={showDemoPopup} 
             onClose={() => setShowDemoPopup(false)} 
+          />
+
+          <AuthPopup 
+            isOpen={showAuthPopup} 
+            onClose={() => setShowAuthPopup(false)}
+            initialMode={authPopupMode}
           />
 
           {/* Mobile Menu - Rendered outside page wrapper via portal */}
