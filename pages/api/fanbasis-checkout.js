@@ -36,11 +36,11 @@ export default async function handler(req, res) {
       metadata: {
         userId: userId || '',
         userEmail: userEmail || '',
-        challengeType: challengeType,
-        challengeName: challengeName,
-        startingBalance: startingBalance,
-        userSplit: userSplit,
-        adjustedPrice: adjustedPrice
+        challengeType: String(challengeType || ''),
+        challengeName: String(challengeName || ''),
+        startingBalance: String(startingBalance || 0),
+        userSplit: String(userSplit || 70),
+        adjustedPrice: String(adjustedPrice || 0)
       }
     });
 
