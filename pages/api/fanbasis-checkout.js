@@ -15,7 +15,6 @@ export default async function handler(req, res) {
       startingBalance,
       userSplit,
       adjustedPrice,
-      userId,
       userEmail
     } = req.body;
 
@@ -32,16 +31,7 @@ export default async function handler(req, res) {
       type: 'onetime_non_reusable',
       successUrl: `${origin}/payment-success`,
       cancelUrl: `${origin}/?canceled=true`,
-      webhookUrl: `${origin}/api/fanbasis-webhook`,
-      metadata: {
-        userId: userId || '',
-        userEmail: userEmail || '',
-        challengeType: String(challengeType || ''),
-        challengeName: String(challengeName || ''),
-        startingBalance: String(startingBalance || 0),
-        userSplit: String(userSplit || 70),
-        adjustedPrice: String(adjustedPrice || 0)
-      }
+      webhookUrl: `${origin}/api/fanbasis-webhook`
     });
 
     console.log('Fanbasis checkout response:', JSON.stringify(result, null, 2));

@@ -148,26 +148,14 @@ export default function AuthPage() {
           localStorage.setItem('remembered_email', email.trim());
         }
         
-        // Check if returning to checkout flow
-        const returnTo = router.query.returnTo;
+        // Redirect to dashboard after short delay
         setTimeout(() => {
-          if (returnTo === 'checkout') {
-            router.push('/checkout-redirect');
-          } else {
-            router.push('/dashboard');
-          }
+          router.push('/dashboard');
         }, 1000);
       } else {
         // Sign in
         await login(email.trim(), password, rememberMe);
-        
-        // Check if returning to checkout flow
-        const returnTo = router.query.returnTo;
-        if (returnTo === 'checkout') {
-          router.push('/checkout-redirect');
-        } else {
-          router.push('/dashboard');
-        }
+        router.push('/dashboard');
       }
     } catch (error) {
       console.error('Auth error:', error);
