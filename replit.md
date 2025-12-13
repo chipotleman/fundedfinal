@@ -72,7 +72,6 @@ None documented yet.
 
 ## Recent Changes
 - **December 13, 2025**:
-  - ✅ Fixed login/signup cross-origin blocking issue - updated `allowedDevOrigins` in next.config.js
   - ✅ Full admin backend panel implemented at `/admin`
   - ✅ User management (search, edit, delete, promote to admin)
   - ✅ Challenge management (view, edit status/phase/balance, delete)
