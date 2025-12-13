@@ -377,7 +377,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
           <div className="p-6 pt-12">
             <div className="text-center mb-6">
               <div className="mb-4">
-                <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-12 mx-auto" />
+                <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-16 mx-auto" />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">
                 {isSignUp ? 'Create Account' : 'Sign In'}
@@ -520,6 +520,10 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-400">Selected:</span>
                 <span className={`${theme.text} font-medium`}>{currentChallenge.name}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm mt-1">
+                <span className="text-gray-400">Your Split:</span>
+                <span className={`${theme.text} font-medium`}>{userSplit}%</span>
               </div>
               <div className="flex items-center justify-between text-sm mt-1">
                 <span className="text-gray-400">Price:</span>
