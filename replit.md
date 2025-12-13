@@ -51,13 +51,37 @@ None documented yet.
   - `/api/auth/*` - NextAuth.js endpoints
   - `/api/profiles/[id]` - User profile CRUD operations
   - `/api/auth/signup` - User registration endpoint
+  - `/api/admin/*` - Admin panel API routes (protected by role check)
+
+### Admin Panel
+- **Access**: `/admin` - Role-based access control (requires `role = 'admin'` in users table)
+- **Features**:
+  - **Overview**: Analytics dashboard with total users, challenges, revenue, and 30-day metrics
+  - **User Management**: Search, edit, delete users; promote to admin role; gift challenges directly
+  - **Challenge Management**: View all challenges, edit status/phase/balance, delete, gift new challenges
+- **API Routes**:
+  - `GET/POST /api/admin/challenges` - List/create challenges
+  - `GET/PUT/DELETE /api/admin/challenges/[id]` - Individual challenge operations
+  - `GET /api/admin/users` - List users with search
+  - `GET/PUT/DELETE /api/admin/users/[id]` - Individual user operations
+  - `GET /api/admin/analytics` - Platform analytics data
+- **Setting Up Admin Access**: Run SQL to grant admin role:
+  ```sql
+  UPDATE users SET role = 'admin' WHERE email = 'your-admin@email.com';
+  ```
 
 ## Recent Changes
+- **December 13, 2025**:
+  - ✅ Full admin backend panel implemented at `/admin`
+  - ✅ User management (search, edit, delete, promote to admin)
+  - ✅ Challenge management (view, edit status/phase/balance, delete)
+  - ✅ Challenge gifting for staff/testing
+  - ✅ Analytics dashboard with user/challenge/revenue insights
+  - ✅ Role-based access control via `role` column in users table
 - **November 14, 2025**: 
   - ✅ Complete Supabase migration to NextAuth + PostgreSQL
   - ✅ OAuth buttons removed from UI (prevents 500 errors until credentials configured)
   - ✅ Production build verified and ready for Vercel deployment
-  - Non-essential features stubbed for future implementation (admin panels, marketplace, profile editing)
 
 ## OAuth Setup (Optional)
 OAuth sign-in is currently disabled. To enable Google, Apple, or Facebook sign-in:
