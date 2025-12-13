@@ -91,6 +91,34 @@ export const verificationTokens = pgTable("verification_tokens", {
   expires: timestamp("expires").notNull(),
 });
 
+export const userChallenges = pgTable("user_challenges", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  challengeType: varchar("challenge_type", { length: 50 }).notNull(),
+  challengeName: varchar("challenge_name", { length: 255 }).notNull(),
+  startingBalance: decimal("starting_balance", { precision: 10, scale: 2 }).notNull(),
+  currentBalance: decimal("current_balance", { precision: 10, scale: 2 }).notNull(),
+  userSplit: integer("user_split").notNull(),
+  pricePaid: decimal("price_paid", { precision: 10, scale: 2 }).notNull(),
+  status: varchar("status", { length: 50 }).default('active').notNull(),
+  phase: integer("phase").default(1).notNull(),
+  pnl: decimal("pnl", { precision: 10, scale: 2 }).default('0'),
+  totalBets: integer("total_bets").default(0),
+  winRate: decimal("win_rate", { precision: 5, scale: 2 }).default('0'),
+  dailyLoss: decimal("daily_loss", { precision: 10, scale: 2 }).default('0'),
+  maxDailyLoss: decimal("max_daily_loss", { precision: 10, scale: 2 }),
+  profitTarget: decimal("profit_target", { precision: 10, scale: 2 }),
+  transactionId: varchar("transaction_id", { length: 255 }).unique(),
+  purchasedAt: timestamp("purchased_at").defaultNow().notNull(),
+  activatedAt: timestamp("activated_at"),
+  completedAt: timestamp("completed_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  userIdIdx: index("user_challenges_user_id_idx").on(table.userId),
+  transactionIdIdx: index("user_challenges_transaction_id_idx").on(table.transactionId),
+}));
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -98,3 +126,5 @@ export type Profile = typeof profiles.$inferSelect;
 export type InsertProfile = typeof profiles.$inferInsert;
 export type UserBet = typeof userBets.$inferSelect;
 export type InsertUserBet = typeof userBets.$inferInsert;
+export type UserChallenge = typeof userChallenges.$inferSelect;
+export type InsertUserChallenge = typeof userChallenges.$inferInsert;

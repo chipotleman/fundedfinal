@@ -1,0 +1,30 @@
+react-dom.development.js:29835 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+websocket.js:64 WebSocket connection to 'wss://a01a394d-2456-4999-a4ea-cf4251dbb624-00-2sfh6gnzo798j.janeway.replit.dev/_next/webpack-hmr' failed: 
+init @ websocket.js:64
+a01a394d-2456-4999-a4ea-cf4251dbb624-00-2sfh6gnzo798j.janeway.replit.dev/:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+websocket.js:64 WebSocket connection to 'wss://a01a394d-2456-4999-a4ea-cf4251dbb624-00-2sfh6gnzo798j.janeway.replit.dev/_next/webpack-hmr' failed: 
+init @ websocket.js:64
+websocket.js:64 WebSocket connection to 'wss://a01a394d-2456-4999-a4ea-cf4251dbb624-00-2sfh6gnzo798j.janeway.replit.dev/_next/webpack-hmr' failed: 
+init @ websocket.js:64
+websocket.js:64 WebSocket connection to 'wss://a01a394d-2456-4999-a4ea-cf4251dbb624-00-2sfh6gnzo798j.janeway.replit.dev/_next/webpack-hmr' failed: 
+init @ websocket.js:64
+websocket.js:64 WebSocket connection to 'wss://a01a394d-2456-4999-a4ea-cf4251dbb624-00-2sfh6gnzo798j.janeway.replit.dev/_next/webpack-hmr' failed: 
+init @ websocket.js:64
+TopNavbar.js:178 Logo loaded successfully
+websocket.js:64 WebSocket connection to 'wss://a01a394d-2456-4999-a4ea-cf4251dbb624-00-2sfh6gnzo798j.janeway.replit.dev/_next/webpack-hmr' failed: 
+init @ websocket.js:64
+TopNavbar.js:178 Logo loaded successfully
+websocket.js:64 WebSocket connection to 'wss://a01a394d-2456-4999-a4ea-cf4251dbb624-00-2sfh6gnzo798j.janeway.replit.dev/_next/webpack-hmr' failed: 
+init @ websocket.js:64
+websocket.js:64 WebSocket connection to 'wss://a01a394d-2456-4999-a4ea-cf4251dbb624-00-2sfh6gnzo798j.janeway.replit.dev/_next/webpack-hmr' failed: 
+init @ websocket.js:64
+websocket.js:64 WebSocket connection to 'wss://a01a394d-2456-4999-a4ea-cf4251dbb624-00-2sfh6gnzo798j.janeway.replit.dev/_next/webpack-hmr' failed: 
+init @ websocket.js:64
+websocket.js:64 WebSocket connection to 'wss://a01a394d-2456-4999-a4ea-cf4251dbb624-00-2sfh6gnzo798j.janeway.replit.dev/_next/webpack-hmr' failed: 
+init @ websocket.js:64
+api/fanbasis-checkout:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+api/fanbasis-checkout:1  Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+websocket.js:64 WebSocket connection to 'wss://a01a394d-2456-4999-a4ea-cf4251dbb624-00-2sfh6gnzo798j.janeway.replit.dev/_next/webpack-hmr' failed: 
+init @ websocket.js:64
+websocket.js:64 WebSocket connection to 'wss://a01a394d-2456-4999-a4ea-cf4251dbb624-00-2sfh6gnzo798j.janeway.replit.dev/_next/webpack-hmr' failed: 
+init @ websocket.js:64
