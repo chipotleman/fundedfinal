@@ -523,7 +523,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
               </div>
               <div className="flex items-center justify-between text-sm mt-1">
                 <span className="text-gray-400">Your Split:</span>
-                <span className={`${theme.text} font-medium`}>{userSplit}%</span>
+                <span className="text-green-400 font-medium">{userSplit}%</span>
               </div>
               <div className="flex items-center justify-between text-sm mt-1">
                 <span className="text-gray-400">Price:</span>
@@ -817,18 +817,13 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
           <div className="p-6 pt-12" style={{ WebkitTapHighlightColor: 'transparent' }}>
             <div className="text-center mb-6">
               <div className="mb-4">
-                <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-12 mx-auto" />
-              </div>
-              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
+                <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-16 mx-auto" />
               </div>
               <h2 className="text-xl font-bold text-white mb-2">Complete Your Purchase</h2>
-              <p className="text-gray-400 text-sm mb-1">
+              <p className={`${theme.text} text-sm font-medium mb-1`}>
                 {currentChallenge.name} • ${adjustedPrice}
               </p>
-              <p className="text-gray-500 text-xs">
+              <p className="text-green-400 text-xs font-medium">
                 {userSplit}% profit split
               </p>
             </div>
@@ -839,7 +834,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   href={checkoutUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl text-center text-lg shadow-lg"
+                  className={`block w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} text-white font-bold py-4 px-6 rounded-xl text-center text-lg shadow-lg transition-all duration-300`}
                 >
                   Continue to Checkout →
                 </a>
@@ -849,7 +844,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
               </div>
             ) : (
               <div className="flex items-center justify-center py-8">
-                <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                <div className={`w-8 h-8 border-2 border-t-transparent rounded-full animate-spin`} style={{ borderColor: theme.borderColor, borderTopColor: 'transparent' }}></div>
               </div>
             )}
             
@@ -858,7 +853,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 setStep('selection');
                 setCheckoutUrl(null);
               }}
-              className="w-full mt-6 py-3 px-6 bg-slate-800/50 hover:bg-slate-700/50 text-gray-300 font-medium rounded-xl"
+              className={`w-full mt-6 py-3 px-6 bg-slate-800/50 hover:bg-slate-700/50 text-gray-300 font-medium rounded-xl border ${theme.borderLight}`}
             >
               Back
             </button>
