@@ -1,6 +1,4 @@
 import { buffer } from 'micro';
-import { db } from '../../lib/db';
-import { challenges } from '../../shared/schema';
 import crypto from 'crypto';
 
 export const config = {
@@ -88,39 +86,11 @@ async function handlePaymentCompleted(payload) {
   console.log('Payment completed!', {
     metadata,
     transactionId: transaction.id,
-    amount: transaction.amount_cents
+    amount: transaction.amount_cents,
+    challengeType: metadata.challengeType,
+    challengeName: metadata.challengeName,
+    startingBalance: metadata.startingBalance,
+    userSplit: metadata.userSplit,
+    userEmail: metadata.userEmail
   });
-
-  const challengeType = metadata.challengeType;
-  const challengeName = metadata.challengeName;
-  const startingBalance = parseInt(metadata.startingBalance) || 5000;
-  const userSplit = parseInt(metadata.userSplit) || 70;
-  const userEmail = metadata.userEmail;
-
-  if (!userEmail) {
-    console.log('No user email in metadata, skipping challenge creation');
-    return;
-  }
-
-  const target = Math.round(startingBalance * 0.2);
-  const maxBet = Math.round(startingBalance * 0.05);
-
-  try {
-    await db.insert(challenges).values({
-      name: challengeName || `${challengeType} Challenge`,
-      badge: challengeType,
-      startingBalance: startingBalance,
-      currentBalance: startingBalance,
-      target: target,
-      maxBet: maxBet,
-      profitSplit: userSplit,
-      status: 'active',
-      userEmail: userEmail,
-      createdAt: new Date(),
-      expiresAt: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
-    });
-    console.log('Challenge created successfully for:', userEmail);
-  } catch (dbError) {
-    console.error('Error creating challenge:', dbError);
-  }
 }
