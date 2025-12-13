@@ -398,13 +398,15 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
                     >
                       SIGN IN
                     </Link>
-                    <button
-                      onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
-                      className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                      style={{ height: '48px' }}
-                    >
-                      GET FUNDED
-                    </button>
+                    <div className="snake-border-container relative">
+                      <button
+                        onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
+                        className="relative bg-black text-white font-bold py-3 px-6 rounded-lg text-sm z-10"
+                        style={{ height: '48px' }}
+                      >
+                        GET FUNDED
+                      </button>
+                    </div>
                   </>
                 )}
               </div>
@@ -454,6 +456,51 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
           0% { filter: hue-rotate(-30deg) saturate(1.2) brightness(1.1); }
           50% { filter: hue-rotate(30deg) saturate(1.3) brightness(1.2); }
           100% { filter: hue-rotate(-30deg) saturate(1.2) brightness(1.1); }
+        }
+        
+        .snake-border-container {
+          position: relative;
+          border-radius: 8px;
+          padding: 2px;
+          background: #111111;
+          overflow: hidden;
+        }
+        
+        .snake-border-container::before {
+          content: '';
+          position: absolute;
+          top: -50%;
+          left: -50%;
+          width: 200%;
+          height: 200%;
+          background: conic-gradient(
+            from 0deg,
+            transparent 0deg,
+            transparent 60deg,
+            #22c55e 120deg,
+            #3b82f6 180deg,
+            transparent 240deg,
+            transparent 360deg
+          );
+          animation: snakeRotate 3s linear infinite;
+        }
+        
+        .snake-border-container::after {
+          content: '';
+          position: absolute;
+          inset: 2px;
+          background: #000000;
+          border-radius: 6px;
+        }
+        
+        .snake-border-container button {
+          position: relative;
+          z-index: 10;
+        }
+        
+        @keyframes snakeRotate {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
       `}</style>
     </>
