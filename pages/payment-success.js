@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 import Head from 'next/head';
 
 export default function PaymentSuccess() {
   const router = useRouter();
+  const { data: session } = useSession();
   const [challengeData, setChallengeData] = useState(null);
   const [licenseKey, setLicenseKey] = useState('');
 
@@ -44,7 +46,7 @@ export default function PaymentSuccess() {
   };
 
   const handleBeginChallenge = () => {
-    router.push('/auth');
+    router.push('/dashboard');
   };
 
   const getThemeColors = () => {

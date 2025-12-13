@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 
 const challenges = [
   {
@@ -57,6 +58,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
   const [showPropFirmTerms, setShowPropFirmTerms] = useState(false);
   const [showRules, setShowRules] = useState(false);
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     if (isOpen) {
@@ -91,11 +93,19 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
     setLoading(true);
     setCheckoutError(null);
     
-    localStorage.setItem('pending_challenge', JSON.stringify({
+    const challengeData = {
       ...currentChallenge,
       userSplit,
       adjustedPrice
-    }));
+    };
+    
+    localStorage.setItem('pending_challenge', JSON.stringify(challengeData));
+    
+    if (!session?.user) {
+      onClose();
+      router.push('/auth?returnTo=checkout');
+      return;
+    }
     
     try {
       const response = await fetch('/api/fanbasis-checkout', {
@@ -109,7 +119,8 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
           startingBalance: currentChallenge.startingBalance,
           userSplit: userSplit,
           adjustedPrice: adjustedPrice,
-          userEmail: ''
+          userId: session.user.id,
+          userEmail: session.user.email || ''
         })
       });
 
