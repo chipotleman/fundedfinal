@@ -401,13 +401,9 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                     type="email"
                     value={authEmail}
                     onChange={(e) => setAuthEmail(e.target.value)}
-                    className={`w-full px-4 py-3 pr-12 bg-slate-700/50 border-2 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all ${
-                      authEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(authEmail) 
-                        ? `${theme.border}` 
-                        : 'border-slate-600'
-                    }`}
+                    className="w-full px-4 py-3 pr-12 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all auth-input"
                     style={{ 
-                      borderColor: authEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(authEmail) ? theme.borderColor : undefined 
+                      '--focus-color': theme.borderColor
                     }}
                     placeholder="Enter your email"
                     required
@@ -429,11 +425,9 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                     type={showPassword ? "text" : "password"}
                     value={authPassword}
                     onChange={(e) => setAuthPassword(e.target.value)}
-                    className={`w-full px-4 py-3 pr-20 bg-slate-700/50 border-2 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all ${
-                      authPassword.length >= 6 ? `${theme.border}` : 'border-slate-600'
-                    }`}
+                    className="w-full px-4 py-3 pr-20 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all auth-input"
                     style={{ 
-                      borderColor: authPassword.length >= 6 ? theme.borderColor : undefined 
+                      '--focus-color': theme.borderColor
                     }}
                     placeholder="Enter your password"
                     minLength="6"
@@ -473,13 +467,9 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className={`w-full px-4 py-3 pr-12 bg-slate-700/50 border-2 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all ${
-                        confirmPassword.length >= 6 && confirmPassword === authPassword 
-                          ? `${theme.border}` 
-                          : 'border-slate-600'
-                      }`}
+                      className="w-full px-4 py-3 pr-12 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all auth-input"
                       style={{ 
-                        borderColor: confirmPassword.length >= 6 && confirmPassword === authPassword ? theme.borderColor : undefined 
+                        '--focus-color': theme.borderColor
                       }}
                       placeholder="Confirm your password"
                       minLength="6"
