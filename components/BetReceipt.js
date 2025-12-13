@@ -4,13 +4,14 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
+    if (!bet) return;
     setIsVisible(true);
     const timer = setTimeout(() => {
       handleClose();
     }, 8000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [bet]);
 
   const handleClose = () => {
     setIsVisible(false);
@@ -42,6 +43,8 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
   const calculatePayout = (odds, stake) => {
     return stake + calculateProfit(odds, stake);
   };
+
+  if (!bet) return null;
 
   const toWin = bet.stake ? calculateProfit(bet.odds, bet.stake) : 0;
   const potentialPayout = bet.stake ? calculatePayout(bet.odds, bet.stake) : 0;

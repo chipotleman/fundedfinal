@@ -120,9 +120,10 @@ const mockGames = {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { betSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
+  const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
   const [selectedSport, setSelectedSport] = useState('All Sports');
   const [games, setGames] = useState([]);
+  const [allGames, setAllGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [bankroll, setBankroll] = useState(10000);
   const [pnl, setPnl] = useState(0);
@@ -134,12 +135,19 @@ export default function Dashboard() {
   const sports = ['NFL', 'NBA', 'MLB', 'NHL', 'Soccer'];
 
   const baseGamesRef = useRef({});
+  const betSlipRef = useRef(betSlip);
+  
+  useEffect(() => {
+    betSlipRef.current = betSlip;
+  }, [betSlip]);
 
   useEffect(() => {
+    const allGamesList = Object.values(mockGames).flat();
+    setAllGames(allGamesList);
+    
     if (selectedSport === 'All Sports') {
-      const allGames = Object.values(mockGames).flat();
-      baseGamesRef.current = { 'All Sports': allGames };
-      setGames(allGames);
+      baseGamesRef.current = { 'All Sports': allGamesList };
+      setGames(allGamesList);
     } else {
       baseGamesRef.current = { [selectedSport]: mockGames[selectedSport] || [] };
       setGames(mockGames[selectedSport] || []);
@@ -149,14 +157,21 @@ export default function Dashboard() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setGames(prevGames => {
-        const updatedGames = simulateOddsMovement(prevGames);
-        return updatedGames;
+      setGames(prevGames => simulateOddsMovement(prevGames));
+      
+      setAllGames(prevAll => {
+        const updatedAll = simulateOddsMovement(prevAll);
+        
+        if (setBetSlip && betSlipRef.current.length > 0) {
+          setBetSlip(prevBets => updateBetSlipWithNewOdds(prevBets, updatedAll));
+        }
+        
+        return updatedAll;
       });
     }, 3000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [setBetSlip]);
 
   const formatOdds = (odds) => {
     return odds > 0 ? `+${odds}` : odds.toString();
@@ -238,7 +253,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {games.slice(0, 3).map((game) => (
+            {allGames.slice(0, 3).map((game) => (
               <div key={game.id} className="flex-shrink-0 w-[280px] bg-[#111111] rounded-2xl border border-gray-800/50 overflow-hidden">
                 <div className="p-4">
                   <div className="flex items-center gap-2 mb-3">
