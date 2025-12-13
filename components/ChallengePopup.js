@@ -757,7 +757,10 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   src={checkoutUrl}
                   className="w-full"
                   style={{ height: '600px', border: 'none' }}
-                  allow="payment"
+                  allow="payment *; accelerometer; autoplay; clipboard-write; encrypted-media"
+                  allowFullScreen
+                  referrerPolicy="no-referrer-when-downgrade"
+                  loading="eager"
                   title="Fanbasis Checkout"
                 />
               </div>
