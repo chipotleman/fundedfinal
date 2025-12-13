@@ -739,55 +739,60 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
             </button>
           </div>
         ) : step === 'checkout' ? (
-          /* Fanbasis Checkout - Opens in New Tab */
-          <div className="p-6 pt-12 max-h-[85vh] overflow-y-auto" style={{ WebkitTapHighlightColor: 'transparent' }}>
-            <div className="text-center mb-6">
-              <div className="mb-4">
-                <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-16 mx-auto" />
+          /* Fanbasis Embedded Checkout */
+          <div className="flex flex-col h-[90vh] md:h-[85vh]" style={{ WebkitTapHighlightColor: 'transparent' }}>
+            {/* Minimal Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 bg-black">
+              <div className="flex items-center gap-2">
+                <img src="/funderlogo/Piks.png" alt="Piks" className="h-8" />
+                <span className="text-gray-400 text-sm">|</span>
+                <span className="text-white text-sm font-medium">{currentChallenge.name}</span>
               </div>
-              <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
+              <div className="flex items-center gap-3">
+                <span className={`${theme.text} font-bold`}>${adjustedPrice}</span>
+                <button
+                  onClick={() => {
+                    setStep('selection');
+                    setCheckoutUrl(null);
+                  }}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
-              <h2 className="text-xl font-bold text-white mb-2">Complete Your Purchase</h2>
-              <p className="text-gray-400 text-sm mb-2">
-                {currentChallenge.name} • ${adjustedPrice} • {userSplit}% split
-              </p>
-              <p className="text-gray-500 text-xs">
-                Secure checkout powered by Fanbasis
-              </p>
             </div>
             
-            {checkoutUrl ? (
-              <div className="space-y-4">
-                <a
-                  href={checkoutUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl text-center text-lg"
-                >
-                  Continue to Secure Checkout →
-                </a>
-                <p className="text-gray-500 text-xs text-center">
-                  You'll be redirected to complete payment. Return here after purchase.
-                </p>
-              </div>
-            ) : (
-              <div className="flex items-center justify-center py-12">
-                <div className="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            )}
+            {/* Embedded Checkout Frame */}
+            <div className="flex-1 bg-white relative">
+              {checkoutUrl ? (
+                <iframe
+                  src={checkoutUrl}
+                  className="w-full h-full border-0"
+                  title="Secure Checkout"
+                  allow="payment"
+                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full bg-black">
+                  <div className="text-center">
+                    <div className="w-10 h-10 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <p className="text-gray-400 text-sm">Loading secure checkout...</p>
+                  </div>
+                </div>
+              )}
+            </div>
             
-            <button
-              onClick={() => {
-                setStep('selection');
-                setCheckoutUrl(null);
-              }}
-              className="w-full mt-4 py-3 px-6 bg-slate-800/50 hover:bg-slate-700/50 text-gray-300 font-medium rounded-xl"
-            >
-              Cancel
-            </button>
+            {/* Footer with security badge */}
+            <div className="px-4 py-2 border-t border-slate-800 bg-black">
+              <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+                <svg className="w-3 h-3 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <span>Secured by SSL • Powered by Fanbasis</span>
+              </div>
+            </div>
           </div>
         ) : (
           /* Receipt Step */
