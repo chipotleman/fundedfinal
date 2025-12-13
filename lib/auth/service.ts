@@ -67,12 +67,7 @@ export async function createUserWithProfile(email: string, password: string): Pr
       await db.insert(profiles).values({
         id: newUser.id,
         username: normalizedEmail.split('@')[0] || 'user',
-        bankroll: '0',
-        pnl: '0',
-        totalBets: 0,
-        winRate: '0',
-        challengePhase: 1,
-        dailyLoss: '0',
+        status: 'inactive',
       });
     } catch (profileError) {
       console.error('Profile creation failed, cleaning up user:', profileError);
