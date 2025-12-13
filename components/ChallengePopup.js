@@ -43,18 +43,10 @@ const challenges = [
 export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [step, setStep] = useState('selection'); // 'selection', 'payment', 'checkout', or 'receipt'
+  const [step, setStep] = useState('selection'); // 'selection', 'checkout', or 'receipt'
   const [checkoutUrl, setCheckoutUrl] = useState(null);
   const [checkoutError, setCheckoutError] = useState(null);
   const [userSplit, setUserSplit] = useState(70); // Default 70% user split (base)
-  const [cardInfo, setCardInfo] = useState({
-    cardNumber: '',
-    expiry: '',
-    cvv: '',
-    name: '',
-    email: '',
-    zipCode: ''
-  });
   const [loading, setLoading] = useState(false);
   const [showAccountInfo, setShowAccountInfo] = useState(false);
   const [showTargetExplainer, setShowTargetExplainer] = useState(false);
@@ -117,7 +109,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
           startingBalance: currentChallenge.startingBalance,
           userSplit: userSplit,
           adjustedPrice: adjustedPrice,
-          userEmail: cardInfo.email || ''
+          userEmail: ''
         })
       });
 
@@ -129,12 +121,10 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
         setStep('checkout');
       } else {
         setCheckoutError(data.error || 'Failed to create checkout session');
-        setStep('payment');
       }
     } catch (error) {
       console.error('Checkout error:', error);
       setCheckoutError('Failed to initialize checkout. Please try again.');
-      setStep('payment');
     } finally {
       setLoading(false);
     }
@@ -144,69 +134,6 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
     setStep('selection');
   };
 
-  const handleCardInputChange = (field, value) => {
-    if (field === 'cardNumber') {
-      // Format card number with spaces
-      value = value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
-      if (value.length > 19) return; // Max length for formatted card number
-    }
-    if (field === 'expiry') {
-      // Format expiry as MM/YY
-      value = value.replace(/\D/g, '').replace(/(\d{2})(\d)/, '$1/$2');
-      if (value.length > 5) return;
-    }
-    if (field === 'cvv') {
-      value = value.replace(/\D/g, '');
-      if (value.length > 4) return;
-    }
-    if (field === 'zipCode') {
-      value = value.replace(/\D/g, '');
-      if (value.length > 5) return;
-    }
-
-    setCardInfo(prev => ({ ...prev, [field]: value }));
-  };
-
-  // Generate unique license key
-  const generateLicenseKey = () => {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    const segments = 4;
-    const segmentLength = 4;
-    let result = '';
-    
-    for (let i = 0; i < segments; i++) {
-      if (i > 0) result += '-';
-      for (let j = 0; j < segmentLength; j++) {
-        result += characters.charAt(Math.floor(Math.random() * characters.length));
-      }
-    }
-    
-    // Add timestamp to ensure uniqueness
-    const timestamp = Date.now().toString().slice(-4);
-    return `${result}-${timestamp}`;
-  };
-
-  const handlePayment = async () => {
-    setLoading(true);
-    // Simulate payment processing
-    setTimeout(() => {
-      setLoading(false);
-      const newLicenseKey = generateLicenseKey();
-      setLicenseKey(newLicenseKey);
-      
-      // Store selected challenge data in localStorage for auth page
-      const challengeData = {
-        ...currentChallenge,
-        userSplit,
-        adjustedPrice,
-        licenseKey: newLicenseKey,
-        purchaseDate: new Date().toISOString()
-      };
-      localStorage.setItem('purchased_challenge', JSON.stringify(challengeData));
-      
-      setStep('receipt');
-    }, 2000);
-  };
 
   const handleBeginChallenge = () => {
     onClose();
@@ -305,10 +232,10 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
           </svg>
         </button>
 
-        {/* Back Button - Visible on selection and payment steps */}
-        {(step === 'selection' || step === 'payment') && (
+        {/* Back Button - Visible on selection and checkout steps */}
+        {(step === 'selection' || step === 'checkout') && (
           <button
-            onClick={step === 'payment' ? handleBack : () => {
+            onClick={step === 'checkout' ? handleBack : () => {
               if (currentIndex > 0) {
                 setCurrentIndex(currentIndex - 1);
               }
@@ -603,141 +530,6 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
               </div>
             </div>
           </>
-        ) : step === 'payment' ? (
-          /* Payment Step */
-          <div className="p-6 pt-12" style={{ WebkitTapHighlightColor: 'transparent' }}>
-            {/* Header */}
-            <div className="text-center mb-6">
-              <div className="mb-4">
-                <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-20 mx-auto" />
-              </div>
-              <h2 className="text-xl font-bold text-white mb-2">Complete Purchase</h2>
-              <div className="flex items-center justify-center space-x-2 text-gray-400 text-sm">
-                <span>{currentChallenge.name}</span>
-                <span>•</span>
-                <span className={`${theme.text} font-bold`}>${adjustedPrice}</span>
-                <span>•</span>
-                <span className={`${theme.text} font-medium`}>{userSplit}% split</span>
-              </div>
-            </div>
-
-            {/* Payment Form */}
-            <div className="space-y-3 mb-6">
-              <div>
-                <label className="block text-gray-300 text-xs font-medium mb-1">Email</label>
-                <input
-                  type="email"
-                  value={cardInfo.email}
-                  onChange={(e) => handleCardInputChange('email', e.target.value)}
-                  className={`w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:${theme.border} focus:outline-none transition-colors text-sm`}
-                  placeholder="your@email.com"
-                  style={{ fontSize: '16px' }}
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-300 text-xs font-medium mb-1">Name</label>
-                <input
-                  type="text"
-                  value={cardInfo.name}
-                  onChange={(e) => handleCardInputChange('name', e.target.value)}
-                  className={`w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:${theme.border} focus:outline-none transition-colors text-sm`}
-                  placeholder="John Doe"
-                  style={{ fontSize: '16px' }}
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-300 text-xs font-medium mb-1">Card Number</label>
-                <input
-                  type="text"
-                  value={cardInfo.cardNumber}
-                  onChange={(e) => handleCardInputChange('cardNumber', e.target.value)}
-                  className={`w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:${theme.border} focus:outline-none transition-colors text-sm`}
-                  placeholder="1234 5678 9012 3456"
-                  style={{ fontSize: '16px' }}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-gray-300 text-xs font-medium mb-1">Expiry</label>
-                  <input
-                    type="text"
-                    value={cardInfo.expiry}
-                    onChange={(e) => handleCardInputChange('expiry', e.target.value)}
-                    className={`w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:${theme.border} focus:outline-none transition-colors text-sm`}
-                    placeholder="MM/YY"
-                    style={{ fontSize: '16px' }}
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-300 text-xs font-medium mb-1">CVV</label>
-                  <input
-                    type="text"
-                    value={cardInfo.cvv}
-                    onChange={(e) => handleCardInputChange('cvv', e.target.value)}
-                    className={`w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:${theme.border} focus:outline-none transition-colors text-sm`}
-                    placeholder="123"
-                    style={{ fontSize: '16px' }}
-                  />
-                </div>
-              </div>
-
-              {/* Zip Code Field - Shows when card number is being entered */}
-              {cardInfo.cardNumber.length > 0 && (
-                <div className="animate-in slide-in-from-top-2 duration-300">
-                  <label className="block text-gray-300 text-xs font-medium mb-1">Zip Code</label>
-                  <input
-                    type="text"
-                    value={cardInfo.zipCode}
-                    onChange={(e) => handleCardInputChange('zipCode', e.target.value)}
-                    className={`w-full px-3 py-2 bg-slate-800/50 border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:${theme.border} focus:outline-none transition-colors text-sm`}
-                    placeholder="12345"
-                    style={{ fontSize: '16px' }}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Security Notice and Account Info */}
-            <div className="space-y-3 mb-4">
-              <div className="text-center p-2 bg-slate-800/30 rounded-xl border border-slate-600">
-                <div className="flex items-center justify-center space-x-2 text-xs text-gray-400">
-                  <svg className={`w-3 h-3 ${theme.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                  <span>Secured with SSL encryption</span>
-                </div>
-              </div>
-
-              {/* Account Info Button */}
-              <div className="text-center">
-                <button
-                  onClick={() => setShowAccountInfo(true)}
-                  className={`${theme.text} hover:opacity-80 text-sm font-medium underline transition-colors`}
-                >
-                  How Do I Get My Account?
-                </button>
-              </div>
-            </div>
-
-            {/* Complete Purchase Button */}
-            <button
-              onClick={handlePayment}
-              disabled={loading}
-              className={`w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3 px-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 disabled:transform-none disabled:cursor-not-allowed`}
-            >
-              {loading ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>Processing...</span>
-                </div>
-              ) : (
-                `Pay and Start Challenge - $${adjustedPrice}`
-              )}
-            </button>
-          </div>
         ) : step === 'checkout' ? (
           /* Fanbasis Checkout - Opens in New Tab */
           <div className="p-6 pt-12 max-h-[85vh] overflow-y-auto" style={{ WebkitTapHighlightColor: 'transparent' }}>
