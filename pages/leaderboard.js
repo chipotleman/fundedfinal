@@ -98,16 +98,6 @@ const Leaderboard = () => {
       />
 
       <div className="pt-2 pb-16">
-        {/* Header */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-2 pb-4 sm:pb-8 text-center">
-          <h1 className="text-4xl md:text-6xl font-black text-white mb-4">
-            <span className="bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent">Leaderboard</span>
-          </h1>
-          <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-            See how you stack up against the best funded bettors. Track performance, ROI, and climb the ranks.
-          </p>
-        </div>
-
         {/* Filters */}
         <div className="max-w-7xl mx-auto px-6 mb-8">
           <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-800">
