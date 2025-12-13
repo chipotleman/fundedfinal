@@ -24,7 +24,7 @@ None documented yet.
   - OAuth providers (Google, Apple, Facebook) - **Disabled** until API credentials are configured
   - JWT-based sessions with 7-day expiry
   - "Remember Me" functionality saves user emails locally
-- **Database ORM**: Drizzle ORM with @neondatabase/serverless driver
+- **Database ORM**: Drizzle ORM with @neondatabase/serverless HTTP driver (Vercel-compatible)
 - **Beta Access**: Password-protected beta landing page with access persistence via localStorage.
 - **Demo Platform**: Fully functional demo experience with localStorage persistence, allowing users to customize challenge tiers and practice betting without authentication.
 - **Challenge Persistence**: Challenge selections and customizations are stored in localStorage post-payment and loaded automatically during authentication, then saved to database via API.
@@ -53,6 +53,12 @@ None documented yet.
   - `/api/auth/signup` - User registration endpoint
 
 ## Recent Changes
+- **December 13, 2025**:
+  - ✅ Rebuilt authentication system for Vercel serverless compatibility
+  - ✅ Switched database driver from WebSocket to HTTP-based Neon client
+  - ✅ Created auth service layer (lib/auth/service.ts) with proper error handling
+  - ✅ Simplified NextAuth configuration with cleaner JWT callbacks
+  - ✅ Added Vercel environment setup documentation (VERCEL_ENV_SETUP.md)
 - **November 14, 2025**: 
   - ✅ Complete Supabase migration to NextAuth + PostgreSQL
   - ✅ OAuth buttons removed from UI (prevents 500 errors until credentials configured)

@@ -1,15 +1,9 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { DrizzleAdapter } from "@auth/drizzle-adapter";
-import { db } from "./db";
-import { users, profiles } from "../shared/schema";
-import { eq } from "drizzle-orm";
-import bcrypt from "bcryptjs";
+import { authenticateUser } from "./auth/service";
 
 export const authOptions: NextAuthOptions = {
-  adapter: DrizzleAdapter(db) as any,
   providers: [
-    // Email/Password Authentication
     CredentialsProvider({
       name: "credentials",
       credentials: {
@@ -21,28 +15,16 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Please enter an email and password");
         }
 
-        const [user] = await db
-          .select()
-          .from(users)
-          .where(eq(users.email, credentials.email));
+        const result = await authenticateUser(credentials.email, credentials.password);
 
-        if (!user || !user.password) {
-          throw new Error("Invalid email or password");
-        }
-
-        const isValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
-
-        if (!isValid) {
-          throw new Error("Invalid email or password");
+        if (!result.success || !result.user) {
+          throw new Error(result.error || "Invalid email or password");
         }
 
         return {
-          id: user.id,
-          email: user.email,
-          image: user.image,
+          id: result.user.id,
+          email: result.user.email,
+          image: result.user.image,
         };
       },
     }),
@@ -50,7 +32,7 @@ export const authOptions: NextAuthOptions = {
   
   session: {
     strategy: "jwt",
-    maxAge: 7 * 24 * 60 * 60, // 7 days
+    maxAge: 7 * 24 * 60 * 60,
   },
 
   pages: {
@@ -59,35 +41,21 @@ export const authOptions: NextAuthOptions = {
   },
 
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.email = user.email;
       }
       return token;
     },
-    async session({ session, token }: any) {
+    async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string;
+        (session.user as any).id = token.id as string;
       }
       return session;
     },
   },
 
-  events: {
-    async createUser({ user }) {
-      // Create profile for new user
-      await db.insert(profiles).values({
-        id: user.id!,
-        username: user.email?.split('@')[0] || 'user',
-        bankroll: '0',
-        pnl: '0',
-        totalBets: 0,
-        winRate: '0',
-        challengePhase: 1,
-        dailyLoss: '0',
-      });
-    },
-  },
-
+  secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === "development",
 };

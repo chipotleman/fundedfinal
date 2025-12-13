@@ -22,25 +22,7 @@ export function AuthProvider({ children }) {
 
     if (session?.user) {
       setUser(session.user);
-      localStorage.setItem('current_user', JSON.stringify(session.user));
     } else {
-      // Check localStorage as fallback for demo/local users
-      const storedUser = localStorage.getItem('current_user');
-      if (storedUser) {
-        try {
-          const parsedUser = JSON.parse(storedUser);
-          if (parsedUser && parsedUser.id && !parsedUser.email?.includes('@')) {
-            // This is a demo user (no @ in email means local/demo user)
-            setUser(parsedUser);
-          } else {
-            // Real user but no session - clear it
-            localStorage.removeItem('current_user');
-          }
-        } catch (error) {
-          console.error('Error parsing stored user:', error);
-          localStorage.removeItem('current_user');
-        }
-      }
       setUser(null);
     }
     
@@ -50,7 +32,7 @@ export function AuthProvider({ children }) {
   const login = async (email, password, rememberMe = false) => {
     try {
       const result = await signIn('credentials', {
-        email,
+        email: email.toLowerCase().trim(),
         password,
         redirect: false,
       });
@@ -59,7 +41,6 @@ export function AuthProvider({ children }) {
         throw new Error(result.error);
       }
 
-      // Store email if remember me is checked
       if (rememberMe) {
         localStorage.setItem('remembered_email', email);
       } else {
@@ -74,22 +55,23 @@ export function AuthProvider({ children }) {
 
   const signUp = async (email, password) => {
     try {
-      // Create account via API
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ 
+          email: email.toLowerCase().trim(), 
+          password 
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'Failed to create account');
+        throw new Error(data.error || 'Failed to create account');
       }
 
-      // Auto-login after signup
       return await login(email, password);
     } catch (error) {
       throw error;
@@ -98,7 +80,6 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     await signOut({ redirect: false });
-    localStorage.removeItem('current_user');
     setUser(null);
     router.push('/');
   };
@@ -106,6 +87,7 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     loading,
+    isAuthenticated: !!user,
     login,
     signUp,
     logout,
