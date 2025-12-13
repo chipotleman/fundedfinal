@@ -113,13 +113,15 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
               >
                 Bet History
               </Link>
-              <Link
-                href="/demo"
-                onClick={onClose}
-                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
+              <button
+                onClick={() => {
+                  onClose();
+                  window.dispatchEvent(new CustomEvent('openDemoPopup'));
+                }}
+                className="block w-full text-left text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 Free Trial
-              </Link>
+              </button>
               <button 
                 onClick={() => {
                   onClose();
@@ -177,13 +179,15 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
             </div>
           ) : (
             <div className="space-y-4">
-              <Link
-                href="/demo"
-                onClick={onClose}
-                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
+              <button
+                onClick={() => {
+                  onClose();
+                  window.dispatchEvent(new CustomEvent('openDemoPopup'));
+                }}
+                className="block w-full text-left text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 Free Trial
-              </Link>
+              </button>
               <button 
                 onClick={() => {
                   onClose();

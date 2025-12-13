@@ -6,6 +6,7 @@ import { BetSlipProvider } from '../contexts/BetSlipContext';
 import { UserProfilesProvider } from '../contexts/UserProfilesContext';
 import ChallengePopup from '../components/ChallengePopup';
 import HowItWorksPopup from '../components/HowItWorksPopup';
+import DemoPopup from '../components/DemoPopup';
 import MobileNavMenu from '../components/MobileNavMenu';
 import BetaLanding from '../components/BetaLanding';
 
@@ -13,6 +14,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
   const [showChallengePopup, setShowChallengePopup] = useState(false);
   const [selectedChallengeIndex, setSelectedChallengeIndex] = useState(1);
   const [showHowItWorksPopup, setShowHowItWorksPopup] = useState(false);
+  const [showDemoPopup, setShowDemoPopup] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -86,10 +88,15 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
       setMobileMenuOpen(e.detail.isOpen);
     };
 
+    const handleOpenDemoPopup = () => {
+      setShowDemoPopup(true);
+    };
+
     if (typeof window !== 'undefined') {
       window.addEventListener('openChallengePopup', handleOpenChallengePopup);
       window.addEventListener('openHowItWorks', handleOpenHowItWorks);
       window.addEventListener('mobileMenuToggle', handleMobileMenuToggle);
+      window.addEventListener('openDemoPopup', handleOpenDemoPopup);
     }
 
     return () => {
@@ -97,6 +104,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
         window.removeEventListener('openChallengePopup', handleOpenChallengePopup);
         window.removeEventListener('openHowItWorks', handleOpenHowItWorks);
         window.removeEventListener('mobileMenuToggle', handleMobileMenuToggle);
+        window.removeEventListener('openDemoPopup', handleOpenDemoPopup);
       }
     };
   }, []);
@@ -169,6 +177,11 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
           <HowItWorksPopup 
             isOpen={showHowItWorksPopup} 
             onClose={() => setShowHowItWorksPopup(false)} 
+          />
+
+          <DemoPopup 
+            isOpen={showDemoPopup} 
+            onClose={() => setShowDemoPopup(false)} 
           />
 
           {/* Mobile Menu - Rendered outside page wrapper via portal */}

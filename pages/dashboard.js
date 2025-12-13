@@ -3,7 +3,7 @@ import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
-import { simulateOddsMovement } from '../lib/oddsSimulator';
+import { simulateOddsMovement, updateBetSlipWithNewOdds } from '../lib/oddsSimulator';
 
 const mockGames = {
   'NFL': [
@@ -12,6 +12,9 @@ const mockGames = {
       awayTeam: 'LA Chargers',
       homeTeam: 'Detroit Lions',
       time: '1:00 PM ET',
+      awayScore: 14,
+      homeScore: 21,
+      quarter: '3rd',
       lines: {
         spread: {
           away: { point: '+10.5', odds: -115 },
@@ -21,10 +24,7 @@ const mockGames = {
           over: { point: 'O 37.5', odds: -115 },
           under: { point: 'U 37.5', odds: -115 }
         },
-        moneyline: {
-          away: +520,
-          home: -850
-        }
+        moneyline: { away: +520, home: -850 }
       }
     }
   ],
@@ -34,6 +34,9 @@ const mockGames = {
       awayTeam: 'Lakers',
       homeTeam: 'Warriors',
       time: '10:00 PM ET',
+      awayScore: 87,
+      homeScore: 92,
+      quarter: '3rd',
       lines: {
         spread: {
           away: { point: '+3.5', odds: -110 },
@@ -43,10 +46,7 @@ const mockGames = {
           over: { point: 'O 225.5', odds: -110 },
           under: { point: 'U 225.5', odds: -110 }
         },
-        moneyline: {
-          away: +140,
-          home: -160
-        }
+        moneyline: { away: +140, home: -160 }
       }
     }
   ],
@@ -56,6 +56,9 @@ const mockGames = {
       awayTeam: 'Yankees',
       homeTeam: 'Red Sox',
       time: '7:30 PM ET',
+      awayScore: 4,
+      homeScore: 3,
+      quarter: '7th',
       lines: {
         spread: {
           away: { point: '+1.5', odds: -140 },
@@ -65,10 +68,7 @@ const mockGames = {
           over: { point: 'O 9.5', odds: -105 },
           under: { point: 'U 9.5', odds: -115 }
         },
-        moneyline: {
-          away: +130,
-          home: -150
-        }
+        moneyline: { away: +130, home: -150 }
       }
     }
   ],
@@ -78,6 +78,9 @@ const mockGames = {
       awayTeam: 'Rangers',
       homeTeam: 'Bruins',
       time: '8:00 PM ET',
+      awayScore: 2,
+      homeScore: 3,
+      quarter: '2nd',
       lines: {
         spread: {
           away: { point: '+1.5', odds: -180 },
@@ -87,32 +90,7 @@ const mockGames = {
           over: { point: 'O 6.5', odds: +110 },
           under: { point: 'U 6.5', odds: -130 }
         },
-        moneyline: {
-          away: +120,
-          home: -140
-        }
-      }
-    }
-  ],
-  'UFC': [
-    {
-      id: 5,
-      awayTeam: 'Fighter A',
-      homeTeam: 'Fighter B',
-      time: '10:00 PM ET',
-      lines: {
-        spread: {
-          away: { point: 'N/A', odds: 'N/A' },
-          home: { point: 'N/A', odds: 'N/A' }
-        },
-        total: {
-          over: { point: 'N/A', odds: 'N/A' },
-          under: { point: 'N/A', odds: 'N/A' }
-        },
-        moneyline: {
-          away: +180,
-          home: -220
-        }
+        moneyline: { away: +120, home: -140 }
       }
     }
   ],
@@ -122,6 +100,9 @@ const mockGames = {
       awayTeam: 'Manchester United',
       homeTeam: 'Liverpool',
       time: '12:30 PM ET',
+      awayScore: 1,
+      homeScore: 2,
+      quarter: "65'",
       lines: {
         spread: {
           away: { point: '+0.5', odds: -110 },
@@ -131,10 +112,7 @@ const mockGames = {
           over: { point: 'O 2.5', odds: -120 },
           under: { point: 'U 2.5', odds: +100 }
         },
-        moneyline: {
-          away: +250,
-          home: -150
-        }
+        moneyline: { away: +250, home: -150 }
       }
     }
   ]
@@ -153,7 +131,7 @@ export default function Dashboard() {
     setShowBetSlip(!showBetSlip);
   };
 
-  const sports = ['NFL', 'NBA', 'MLB', 'NHL', 'UFC', 'Soccer'];
+  const sports = ['NFL', 'NBA', 'MLB', 'NHL', 'Soccer'];
 
   const baseGamesRef = useRef({});
 
@@ -175,7 +153,7 @@ export default function Dashboard() {
         const updatedGames = simulateOddsMovement(prevGames);
         return updatedGames;
       });
-    }, 5000);
+    }, 3000);
 
     return () => clearInterval(interval);
   }, []);
@@ -199,7 +177,6 @@ export default function Dashboard() {
       'NBA': '🏀', 
       'MLB': '⚾',
       'NHL': '🏒',
-      'UFC': '🥊',
       'Soccer': '⚽'
     };
     return icons[sport] || '🏆';
@@ -213,8 +190,6 @@ export default function Dashboard() {
     }
   };
 
-
-
   return (
     <div className="min-h-screen bg-black">
       <TopNavbar 
@@ -224,9 +199,7 @@ export default function Dashboard() {
         onBetSlipClick={handleBetSlipClick}
       />
 
-      {/* Main Content */}
       <div className="pt-2 sm:pt-6 lg:pt-8 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-end mb-4 space-y-4 sm:space-y-0">
           <div className="flex items-center space-x-2 sm:space-x-4">
             <div className="bg-[#111111] px-4 py-3 rounded-lg border border-gray-800/50">
@@ -238,168 +211,190 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Sports Selection - DraftKings Style Horizontal Scroll */}
         <div className="mb-4">
-          <div className="flex space-x-3 overflow-x-auto pb-4 pt-2 px-1 scrollbar-hide">
+          <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
             {sports.map((sport) => (
               <button
                 key={sport}
                 onClick={() => handleSportClick(sport)}
-                className={`flex-shrink-0 flex flex-col items-center justify-center w-18 h-18 sm:w-20 sm:h-20 rounded-full transition-all duration-200 ${
+                className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium ${
                   selectedSport === sport
-                    ? 'bg-[#111111] text-white shadow-lg border-2 border-green-500'
-                    : 'bg-[#111111] text-gray-300 hover:bg-[#1a1a1a] hover:text-white border border-gray-800/50'
+                    ? 'bg-[#1a1a1a] text-white border border-gray-600'
+                    : 'bg-transparent text-gray-400 border border-gray-800'
                 }`}
               >
-                <span className="text-lg sm:text-xl mb-1">{getSportIcon(sport)}</span>
-                <span className="text-xs font-medium text-center leading-tight">{sport}</span>
+                <span className="text-base">{getSportIcon(sport)}</span>
+                <span>{sport === 'NFL' ? 'Football' : sport === 'NBA' ? 'Basketball' : sport === 'MLB' ? 'Baseball' : sport === 'NHL' ? 'Hockey' : sport}</span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Games List */}
-        <div className="space-y-4">
-          {loading ? (
-            <div className="text-center py-12">
-              <div className="w-12 h-12 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-white text-lg">Loading games...</p>
+        <div className="mb-6">
+          <div className="flex items-center justify-between px-1 mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">📈</span>
+              <h2 className="text-white font-bold text-lg">Featured</h2>
             </div>
-          ) : games.length > 0 ? (
-            games.map(game => (
-              <div key={game.id} className="bg-[#111111] rounded-2xl border border-gray-800/50 overflow-hidden">
-                {/* Card Header */}
-                <div className="px-4 sm:px-5 py-3 sm:py-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-white font-bold text-base sm:text-lg truncate">{game.awayTeam} @ {game.homeTeam}</h3>
-                    <div className="flex items-center space-x-2 bg-red-500/20 px-3 py-1 rounded-full">
-                      <div className="w-2 h-2 bg-red-400 rounded-full animate-pulse"></div>
-                      <span className="text-red-400 text-xs font-semibold uppercase">Live</span>
-                    </div>
+          </div>
+          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            {games.slice(0, 3).map((game) => (
+              <div key={game.id} className="flex-shrink-0 w-[280px] bg-[#111111] rounded-2xl border border-gray-800/50 overflow-hidden">
+                <div className="p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="bg-green-500 text-black text-[10px] font-bold px-2 py-0.5 rounded">FEATURED</span>
+                    <span className="text-gray-500 text-xs">{sports.find(s => mockGames[s]?.some(g => g.id === game.id)) || 'NFL'}</span>
                   </div>
-                  <p className="text-gray-500 text-xs">{game.time}</p>
-                </div>
-
-                {/* Betting Options */}
-                <div className="px-4 sm:px-5 pb-4">
-                  {/* Header Row */}
-                  <div className="grid grid-cols-4 gap-2 sm:gap-3 mb-2 text-xs text-gray-500 font-medium uppercase">
-                    <div className="text-left"></div>
-                    <div className="text-center">Spread</div>
-                    <div className="text-center">Total</div>
-                    <div className="text-center">ML</div>
+                  <div className="mb-4">
+                    <div className="text-white font-bold text-base">{game.awayTeam}</div>
+                    <div className="text-gray-500 text-xs">@</div>
+                    <div className="text-white font-bold text-base">{game.homeTeam}</div>
                   </div>
-
-                  {/* Away Team Row */}
-                  <div className="grid grid-cols-4 gap-2 sm:gap-3 mb-2">
-                    <div className="flex items-center">
-                      <span className="text-white font-semibold text-sm truncate">{game.awayTeam}</span>
-                    </div>
+                  <div className="flex gap-2">
                     <button
-                      onClick={() => addToBetSlip(game, 'spread', game.lines.spread.away, `${game.awayTeam} ${game.lines.spread.away.point}`)}
-                      className={`rounded-lg py-2.5 px-2 transition-all duration-200 text-center ${
-                        isBetInSlip(game, 'spread', `${game.awayTeam} ${game.lines.spread.away.point}`) 
-                          ? 'bg-green-600 shadow-lg shadow-green-500/20' 
-                          : 'bg-[#1a1a1a] hover:bg-[#252525]'
+                      onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeam)}
+                      className={`flex-1 rounded-lg py-3 px-3 ${
+                        isBetInSlip(game, 'moneyline', game.homeTeam) 
+                          ? 'bg-green-600 border border-green-500' 
+                          : 'bg-[#1a1a1a] border border-gray-700 active:bg-green-600'
                       }`}
                     >
-                      <div className={`text-xs ${isBetInSlip(game, 'spread', `${game.awayTeam} ${game.lines.spread.away.point}`) ? 'text-white' : 'text-gray-400'}`}>
-                        {game.lines.spread.away.point}
+                      <div className="text-gray-400 text-xs mb-0.5">{game.homeTeam.split(' ').pop()}</div>
+                      <div className={`font-bold ${isBetInSlip(game, 'moneyline', game.homeTeam) ? 'text-white' : 'text-green-400'}`}>
+                        {formatOdds(game.lines.moneyline.home)}
                       </div>
-                      <OddsDisplay odds={game.lines.spread.away.odds} isSelected={isBetInSlip(game, 'spread', `${game.awayTeam} ${game.lines.spread.away.point}`)} />
-                    </button>
-                    <button
-                      onClick={() => addToBetSlip(game, 'total', game.lines.total.over, `Over ${game.lines.total.over.point}`)}
-                      className={`rounded-lg py-2.5 px-2 transition-all duration-200 text-center ${
-                        isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) 
-                          ? 'bg-green-600 shadow-lg shadow-green-500/20' 
-                          : 'bg-[#1a1a1a] hover:bg-[#252525]'
-                      }`}
-                    >
-                      <div className={`text-xs ${isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? 'text-white' : 'text-gray-400'}`}>
-                        {game.lines.total.over.point}
-                      </div>
-                      <OddsDisplay odds={game.lines.total.over.odds} isSelected={isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`)} />
                     </button>
                     <button
                       onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeam)}
-                      className={`rounded-lg py-2.5 px-2 transition-all duration-200 text-center ${
+                      className={`flex-1 rounded-lg py-3 px-3 ${
                         isBetInSlip(game, 'moneyline', game.awayTeam) 
-                          ? 'bg-green-600 shadow-lg shadow-green-500/20' 
-                          : 'bg-[#1a1a1a] hover:bg-[#252525]'
+                          ? 'bg-green-600 border border-green-500' 
+                          : 'bg-[#1a1a1a] border border-gray-700 active:bg-green-600'
                       }`}
                     >
-                      <OddsDisplay odds={game.lines.moneyline.away} isSelected={isBetInSlip(game, 'moneyline', game.awayTeam)} />
-                    </button>
-                  </div>
-
-                  {/* Home Team Row */}
-                  <div className="grid grid-cols-4 gap-2 sm:gap-3">
-                    <div className="flex items-center">
-                      <span className="text-white font-semibold text-sm truncate">{game.homeTeam}</span>
-                    </div>
-                    <button
-                      onClick={() => addToBetSlip(game, 'spread', game.lines.spread.home, `${game.homeTeam} ${game.lines.spread.home.point}`)}
-                      className={`rounded-lg py-2.5 px-2 transition-all duration-200 text-center ${
-                        isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`) 
-                          ? 'bg-green-600 shadow-lg shadow-green-500/20' 
-                          : 'bg-[#1a1a1a] hover:bg-[#252525]'
-                      }`}
-                    >
-                      <div className={`text-xs ${isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`) ? 'text-white' : 'text-gray-400'}`}>
-                        {game.lines.spread.home.point}
+                      <div className="text-gray-400 text-xs mb-0.5">{game.awayTeam.split(' ').pop()}</div>
+                      <div className={`font-bold ${isBetInSlip(game, 'moneyline', game.awayTeam) ? 'text-white' : 'text-green-400'}`}>
+                        {formatOdds(game.lines.moneyline.away)}
                       </div>
-                      <OddsDisplay odds={game.lines.spread.home.odds} isSelected={isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`)} />
-                    </button>
-                    <button
-                      onClick={() => addToBetSlip(game, 'total', game.lines.total.under, `Under ${game.lines.total.under.point}`)}
-                      className={`rounded-lg py-2.5 px-2 transition-all duration-200 text-center ${
-                        isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) 
-                          ? 'bg-green-600 shadow-lg shadow-green-500/20' 
-                          : 'bg-[#1a1a1a] hover:bg-[#252525]'
-                      }`}
-                    >
-                      <div className={`text-xs ${isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? 'text-white' : 'text-gray-400'}`}>
-                        {game.lines.total.under.point}
-                      </div>
-                      <OddsDisplay odds={game.lines.total.under.odds} isSelected={isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`)} />
-                    </button>
-                    <button
-                      onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeam)}
-                      className={`rounded-lg py-2.5 px-2 transition-all duration-200 text-center ${
-                        isBetInSlip(game, 'moneyline', game.homeTeam) 
-                          ? 'bg-green-600 shadow-lg shadow-green-500/20' 
-                          : 'bg-[#1a1a1a] hover:bg-[#252525]'
-                      }`}
-                    >
-                      <OddsDisplay odds={game.lines.moneyline.home} isSelected={isBetInSlip(game, 'moneyline', game.homeTeam)} />
                     </button>
                   </div>
                 </div>
               </div>
-            ))
-          ) : (
-            <div className="text-center py-12">
-              <div className="bg-[#111111] rounded-2xl p-8 max-w-md mx-auto border border-gray-800/50">
-                <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
-                </svg>
-                <h3 className="text-xl font-bold text-white mb-2">No Games Available</h3>
-                <p className="text-gray-400">Check back later for {selectedSport} games and betting lines.</p>
-              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-4 px-1">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">⚡</span>
+              <h2 className="text-white font-bold text-lg">Live Now</h2>
+              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
             </div>
-          )}
+          </div>
+
+          <div className="space-y-3">
+            {loading ? (
+              <div className="text-center py-12">
+                <div className="w-12 h-12 border-4 border-purple-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-white text-lg">Loading games...</p>
+              </div>
+            ) : games.length > 0 ? (
+              games.map(game => {
+                const sport = sports.find(s => mockGames[s]?.some(g => g.id === game.id)) || 'NFL';
+                
+                return (
+                  <div key={game.id} className="bg-[#111111] rounded-xl border border-gray-800/50 overflow-hidden">
+                    <div className="px-4 py-3">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <span className="text-gray-500 text-xs font-medium">{sport}</span>
+                          <div className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
+                            <span className="text-red-500 text-xs font-medium">LIVE</span>
+                          </div>
+                          {game.quarter && (
+                            <span className="text-gray-400 text-xs">• {game.quarter}</span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-white font-medium">{game.awayTeam}</span>
+                          <span className="text-white font-bold text-lg">{game.awayScore || 0}</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-white font-medium">{game.homeTeam}</span>
+                          <span className="text-white font-bold text-lg">{game.homeScore || 0}</span>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2">
+                        <button
+                          onClick={() => addToBetSlip(game, 'spread', game.lines.spread.home, `${game.homeTeam} ${game.lines.spread.home.point}`)}
+                          className={`rounded-lg py-2.5 px-2 ${
+                            isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`) 
+                              ? 'bg-green-600 border border-green-500' 
+                              : 'bg-[#1a1a1a] border border-gray-700'
+                          }`}
+                        >
+                          <div className="text-gray-400 text-[10px] uppercase mb-1">Spread</div>
+                          <div className={`text-xs ${isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`) ? 'text-white' : 'text-gray-300'}`}>
+                            {game.lines.spread.home.point}
+                          </div>
+                          <OddsDisplay odds={game.lines.spread.home.odds} isSelected={isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`)} />
+                        </button>
+                        <button
+                          onClick={() => addToBetSlip(game, 'total', game.lines.total.over, `Over ${game.lines.total.over.point}`)}
+                          className={`rounded-lg py-2.5 px-2 ${
+                            isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) 
+                              ? 'bg-green-600 border border-green-500' 
+                              : 'bg-[#1a1a1a] border border-gray-700'
+                          }`}
+                        >
+                          <div className="text-gray-400 text-[10px] uppercase mb-1">Total</div>
+                          <div className={`text-xs ${isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? 'text-white' : 'text-gray-300'}`}>
+                            {game.lines.total.over.point}
+                          </div>
+                          <OddsDisplay odds={game.lines.total.over.odds} isSelected={isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`)} />
+                        </button>
+                        <button
+                          onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeam)}
+                          className={`rounded-lg py-2.5 px-2 ${
+                            isBetInSlip(game, 'moneyline', game.homeTeam) 
+                              ? 'bg-green-600 border border-green-500' 
+                              : 'bg-[#1a1a1a] border border-gray-700'
+                          }`}
+                        >
+                          <div className="text-gray-400 text-[10px] uppercase mb-1">ML</div>
+                          <OddsDisplay odds={game.lines.moneyline.home} isSelected={isBetInSlip(game, 'moneyline', game.homeTeam)} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-center py-12">
+                <div className="bg-[#111111] rounded-2xl p-8 max-w-md mx-auto border border-gray-800/50">
+                  <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
+                  </svg>
+                  <h3 className="text-xl font-bold text-white mb-2">No Games Available</h3>
+                  <p className="text-gray-400">Check back later for {selectedSport} games and betting lines.</p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Bet Slip */}
       <BetSlip
         bankroll={bankroll}
         isOpen={showBetSlip}
         onClose={() => setShowBetSlip(false)}
       />
-      
-      
 
       <style jsx>{`
         .scrollbar-hide {
@@ -409,14 +404,7 @@ export default function Dashboard() {
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
         }
-        .w-18 {
-          width: 4.5rem;
-        }
-        .h-18 {
-          height: 4.5rem;
-        }
 
-        /* Disable hover effects on touch devices */
         @media (hover: none) and (pointer: coarse) {
           button:hover {
             background-color: inherit !important;

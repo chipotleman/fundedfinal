@@ -219,9 +219,9 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
                   <Link href="/dashboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     Dashboard
                   </Link>
-                  <Link href="/demo" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('openDemoPopup'))} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     Free Trial
-                  </Link>
+                  </button>
                   <button onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     How It Works
                   </button>
@@ -234,9 +234,9 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
                 </>
               ) : (
                 <>
-                  <Link href="/demo" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('openDemoPopup'))} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     Free Trial
-                  </Link>
+                  </button>
                   <button onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     How It Works
                   </button>
