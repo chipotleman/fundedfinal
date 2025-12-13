@@ -64,6 +64,8 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
   const [showGamblingTerms, setShowGamblingTerms] = useState(false);
   const [showPropFirmTerms, setShowPropFirmTerms] = useState(false);
   const [showRules, setShowRules] = useState(false);
+  const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [iframeFailed, setIframeFailed] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -767,13 +769,37 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
             {/* Embedded Checkout Frame */}
             <div className="flex-1 bg-white relative">
               {checkoutUrl ? (
-                <iframe
-                  src={checkoutUrl}
-                  className="w-full h-full border-0"
-                  title="Secure Checkout"
-                  allow="payment"
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
-                />
+                <>
+                  {!iframeFailed && (
+                    <iframe
+                      src={checkoutUrl}
+                      className="w-full h-full border-0"
+                      title="Secure Checkout"
+                      allow="payment"
+                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-top-navigation"
+                      onLoad={() => setIframeLoaded(true)}
+                      onError={() => setIframeFailed(true)}
+                    />
+                  )}
+                  {/* Fallback if iframe blocked - show after 3 seconds */}
+                  {!iframeLoaded && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black">
+                      <div className="text-center p-6">
+                        <div className="w-10 h-10 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                        <p className="text-gray-400 text-sm mb-4">Loading secure checkout...</p>
+                        <a
+                          href={checkoutUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-block bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl text-sm"
+                        >
+                          Open Checkout in New Tab →
+                        </a>
+                        <p className="text-gray-500 text-xs mt-2">Click above if checkout doesn't load</p>
+                      </div>
+                    </div>
+                  )}
+                </>
               ) : (
                 <div className="flex items-center justify-center h-full bg-black">
                   <div className="text-center">
