@@ -1,55 +1,60 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
+
+const challenges = [
+  {
+    id: 1,
+    name: "Starter Challenge",
+    description: "Perfect for beginners looking to get started",
+    startingBalance: 5000,
+    target: 1000,
+    maxBet: 250,
+    payout: 800,
+    price: 149,
+    badge: "BEGINNER",
+    popular: false
+  },
+  {
+    id: 2,
+    name: "Pro Challenge",
+    description: "For experienced bettors ready to scale up",
+    startingBalance: 10000,
+    target: 2000,
+    maxBet: 500,
+    payout: 1600,
+    price: 249,
+    badge: "POPULAR",
+    popular: true
+  },
+  {
+    id: 3,
+    name: "Elite Challenge",
+    description: "Maximum stakes for serious professionals",
+    startingBalance: 25000,
+    target: 5000,
+    maxBet: 1250,
+    payout: 4000,
+    price: 399,
+    badge: "ADVANCED",
+    popular: false
+  }
+];
 
 export default function DemoPage() {
   const router = useRouter();
-  const [currentIndex, setCurrentIndex] = useState(1); // Start with Pro Challenge
-  const [userSplit, setUserSplit] = useState(80); // Default 80% user split
+  const [currentIndex, setCurrentIndex] = useState(1);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [userSplit, setUserSplit] = useState(70);
+  const [showRules, setShowRules] = useState(false);
 
-  const challengeOptions = [
-    {
-      id: 1,
-      name: "Starter Challenge",
-      description: "Perfect for beginners looking to get started",
-      startingBalance: 5000,
-      target: 1000,
-      maxBet: 250,
-      payout: 800,
-      price: 149,
-      badge: "BEGINNER",
-      popular: false
-    },
-    {
-      id: 2,
-      name: "Pro Challenge",
-      description: "For experienced bettors ready to scale up",
-      startingBalance: 10000,
-      target: 2000,
-      maxBet: 500,
-      payout: 1600,
-      price: 249,
-      badge: "POPULAR",
-      popular: true
-    },
-    {
-      id: 3,
-      name: "Elite Challenge",
-      description: "Maximum stakes for serious professionals",
-      startingBalance: 25000,
-      target: 5000,
-      maxBet: 1250,
-      payout: 4000,
-      price: 399,
-      badge: "ADVANCED",
-      popular: false
-    }
-  ];
-
-  const currentChallenge = challengeOptions[currentIndex];
+  useEffect(() => {
+    document.body.style.overflow = 'auto';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   const handleChallengeSelect = (index) => {
     setCurrentIndex(index);
@@ -57,7 +62,6 @@ export default function DemoPage() {
   };
 
   const handleStartDemo = () => {
-    // Save demo challenge to localStorage
     const demoChallenge = {
       ...currentChallenge,
       userSplit,
@@ -65,198 +69,332 @@ export default function DemoPage() {
       startedAt: new Date().toISOString()
     };
     localStorage.setItem('demo_challenge', JSON.stringify(demoChallenge));
-    
-    // Navigate to demo dashboard
     router.push('/demo-dashboard');
   };
+
+  const currentChallenge = challenges[currentIndex];
+
+  const getThemeColors = () => {
+    if (currentChallenge.badge === 'BEGINNER') {
+      return {
+        primary: 'blue',
+        border: 'border-blue-500',
+        borderColor: '#3b82f6',
+        borderLight: 'border-blue-400/50',
+        shadow: 'shadow-blue-400/20',
+        bg: 'bg-blue-500/20',
+        text: 'text-blue-400',
+        gradient: 'from-blue-500 to-blue-600',
+        gradientHover: 'hover:from-blue-600 hover:to-blue-700',
+        splitGradient: 'from-blue-500/10 to-blue-600/10',
+        splitBorder: 'border-blue-500/30',
+        splitBar: 'from-blue-400 to-blue-500'
+      };
+    } else if (currentChallenge.badge === 'POPULAR') {
+      return {
+        primary: 'green',
+        border: 'border-green-500',
+        borderColor: '#22c55e',
+        borderLight: 'border-green-400/50',
+        shadow: 'shadow-green-400/20',
+        bg: 'bg-green-500/20',
+        text: 'text-green-400',
+        gradient: 'from-green-500 to-blue-500',
+        gradientHover: 'hover:from-green-600 hover:to-blue-600',
+        splitGradient: 'from-green-500/10 to-blue-500/10',
+        splitBorder: 'border-green-500/30',
+        splitBar: 'from-green-400 to-green-500'
+      };
+    } else {
+      return {
+        primary: 'purple',
+        border: 'border-purple-500',
+        borderColor: '#a855f7',
+        borderLight: 'border-purple-400/50',
+        shadow: 'shadow-purple-400/20',
+        bg: 'bg-purple-500/20',
+        text: 'text-purple-400',
+        gradient: 'from-purple-500 to-purple-600',
+        gradientHover: 'hover:from-purple-600 hover:to-purple-700',
+        splitGradient: 'from-purple-500/10 to-purple-600/10',
+        splitBorder: 'border-purple-500/30',
+        splitBar: 'from-purple-400 to-purple-500'
+      };
+    }
+  };
+
+  const theme = getThemeColors();
 
   return (
     <div className="min-h-screen bg-black">
       <Head>
-        <title>Try Demo - Funder</title>
+        <title>Free Trial - Piks</title>
         <meta name="description" content="Try our platform with a free demo challenge" />
       </Head>
 
       <TopNavbar />
 
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-20" style={{
-        backgroundImage: "url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.03%22%3E%3Cpath%20d%3D%22m36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"
-      }}></div>
+      <div className="flex items-start justify-center px-4 pt-6 pb-12 sm:pt-10">
+        <div 
+          className="popup-content relative bg-black rounded-3xl max-w-md w-full border-2"
+          style={{ 
+            borderColor: theme.borderColor,
+            WebkitTapHighlightColor: 'transparent'
+          }}
+        >
+          <div className="p-6 pt-8">
+            <div className="text-center mb-4">
+              <div className="mb-4">
+                <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-16 mx-auto" />
+              </div>
+            </div>
 
-      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center bg-green-500/20 text-green-400 px-4 py-2 rounded-full text-sm font-medium mb-4">
-            🎮 100% FREE - No Payment Required
-          </div>
-          <h1 className="text-4xl sm:text-5xl font-black text-white mb-4">
-            Try Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">Demo Platform</span>
-          </h1>
-          <p className="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto">
-            Experience the full betting challenge platform with customizable settings. No signup required!
-          </p>
-        </div>
-
-        {/* Challenge Selection Card */}
-        <div className="bg-[#111111] backdrop-blur-lg rounded-2xl border border-gray-800/50 p-6 sm:p-8 mb-8">
-          {/* Badge */}
-          <div className="text-center mb-6">
-            <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
-              currentChallenge.badge === 'BEGINNER' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
-              currentChallenge.badge === 'POPULAR' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
-              'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-            }`}>
-              {currentChallenge.badge}
-            </span>
-          </div>
-
-          {/* Title and Description */}
-          <div className="text-center mb-6">
-            <h3 className="text-2xl font-bold text-white mb-2">{currentChallenge.name}</h3>
-            <p className="text-gray-400">{currentChallenge.description}</p>
-          </div>
-
-          {/* Challenge Details */}
-          <div className="space-y-4 mb-8">
-            {/* Starting Balance with Dropdown */}
-            <div className="relative">
-              <div
-                onClick={() => setShowDropdown(!showDropdown)}
-                className="flex justify-between items-center py-4 px-5 bg-[#1a1a1a] rounded-xl border-2 border-green-500/50 cursor-pointer hover:border-green-500 transition-all duration-300 shadow-lg shadow-green-500/20"
-              >
-                <div>
-                  <span className="text-gray-400 text-sm block mb-1">Starting Balance</span>
-                  <span className="text-green-400 font-bold text-xl">${currentChallenge.startingBalance.toLocaleString()}</span>
-                </div>
-                <svg className={`w-5 h-5 text-green-400 transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            <div className="text-center mb-4">
+              <div className="inline-flex items-center bg-amber-500/20 text-amber-400 px-3 py-1.5 rounded-full text-xs font-bold border border-amber-500/30 mb-3">
+                <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm2.5 3a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm6.207.293a1 1 0 00-1.414 0l-6 6a1 1 0 101.414 1.414l6-6a1 1 0 000-1.414zM12.5 10a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" clipRule="evenodd" />
                 </svg>
+                FREE DEMO MODE
               </div>
+              <p className="text-gray-400 text-xs">Practice with virtual funds - No payment required</p>
+            </div>
 
-              {/* Dropdown Menu */}
-              {showDropdown && (
-                <div className="absolute z-10 w-full mt-2 bg-[#0a0a0a] border border-gray-800/50 rounded-xl shadow-2xl overflow-hidden">
-                  {challengeOptions.map((challenge, index) => (
-                    <div
-                      key={challenge.id}
-                      onClick={() => handleChallengeSelect(index)}
-                      className={`px-5 py-4 cursor-pointer transition-colors duration-200 ${
-                        index === currentIndex 
-                          ? 'bg-green-500/20 border-l-4 border-green-500' 
-                          : 'hover:bg-[#1a1a1a] border-l-4 border-transparent'
-                      }`}
-                    >
-                      <div className="flex justify-between items-center">
+            <div className="text-center mb-4">
+              <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
+                currentChallenge.badge === 'BEGINNER' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
+                currentChallenge.badge === 'POPULAR' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+              }`}>
+                {currentChallenge.badge}
+              </span>
+            </div>
+
+            <div className="text-center mb-6">
+              <h3 className="text-xl font-bold text-white mb-2">{currentChallenge.name}</h3>
+              <p className="text-gray-400 text-sm">{currentChallenge.description}</p>
+            </div>
+
+            <div className="space-y-3 mb-6" style={{ WebkitTapHighlightColor: 'transparent' }}>
+              <div className="relative">
+                <div
+                  onClick={() => setShowDropdown(!showDropdown)}
+                  className={`flex justify-between items-center py-3 px-4 bg-slate-800/50 rounded-xl border-2 ${theme.borderLight} cursor-pointer hover:${theme.border} transition-all duration-300 shadow-lg ${theme.shadow}`}
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                >
+                  <div>
+                    <span className="text-gray-300 font-medium text-sm">Starting Balance</span>
+                    <div className={`text-xs ${theme.text} font-medium`}>Click to change</div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <span className={`${theme.text} font-bold`}>${currentChallenge.startingBalance.toLocaleString()}</span>
+                    <svg className={`w-4 h-4 ${theme.text} transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
+
+                {showDropdown && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800 border border-slate-600 rounded-xl shadow-2xl z-20" style={{ WebkitTapHighlightColor: 'transparent' }}>
+                    {challenges.map((challenge, index) => (
+                      <div
+                        key={challenge.id}
+                        onClick={() => handleChallengeSelect(index)}
+                        className={`flex justify-between items-center py-3 px-4 cursor-pointer hover:bg-slate-700/50 transition-all duration-200 ${
+                          index === currentIndex ? `${theme.bg} border-l-4 ${theme.border}` : ''
+                        } ${index === 0 ? 'rounded-t-xl' : ''} ${index === challenges.length - 1 ? 'rounded-b-xl' : ''}`}
+                        style={{ WebkitTapHighlightColor: 'transparent' }}
+                      >
                         <div>
-                          <div className="text-white font-bold">{challenge.name}</div>
-                          <div className="text-gray-400 text-sm">{challenge.description}</div>
+                          <span className="text-white font-medium text-sm">{challenge.name}</span>
+                          <div className="text-xs text-gray-400">{challenge.badge}</div>
                         </div>
-                        <div className="text-green-400 font-bold text-lg">
-                          ${challenge.startingBalance.toLocaleString()}
-                        </div>
+                        <span className={`${theme.text} font-bold`}>${challenge.startingBalance.toLocaleString()}</span>
                       </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4" style={{ WebkitTapHighlightColor: 'transparent' }}>
+                <div 
+                  className="flex items-center justify-between cursor-pointer"
+                  onClick={() => setShowRules(!showRules)}
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                >
+                  <h4 className="text-white font-semibold text-sm">Challenge Rules</h4>
+                  <svg 
+                    className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${showRules ? 'rotate-180' : ''}`} 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+                
+                {showRules && (
+                  <div className="space-y-1 text-xs mt-2 pb-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Pick Minimum</span>
+                      <span className="text-white font-medium">20 picks</span>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Profit Target */}
-            <div className="flex justify-between items-center py-4 px-5 bg-[#1a1a1a] rounded-xl border border-gray-800/50">
-              <span className="text-gray-300 font-medium">Profit Target</span>
-              <span className="text-green-400 font-bold text-lg">${currentChallenge.target.toLocaleString()}</span>
-            </div>
-
-            {/* Max Bet Size */}
-            <div className="flex justify-between items-center py-4 px-5 bg-[#1a1a1a] rounded-xl border border-gray-800/50">
-              <span className="text-gray-300 font-medium">Max Bet Size</span>
-              <span className="text-white font-bold text-lg">${currentChallenge.maxBet.toLocaleString()}</span>
-            </div>
-
-            {/* Profit Split Slider */}
-            <div className="py-4 px-5 bg-[#1a1a1a] rounded-xl border border-gray-800/50">
-              <div className="text-center mb-3">
-                <span className="text-gray-300 font-medium block mb-1">Profit Split</span>
-                <div className="flex items-center justify-center gap-3 text-sm">
-                  <span className="text-green-400 font-bold">You: {userSplit}%</span>
-                  <span className="text-gray-500">|</span>
-                  <span className="text-gray-400 font-bold">Us: {100 - userSplit}%</span>
-                </div>
-              </div>
-              <input
-                type="range"
-                min="50"
-                max="90"
-                step="5"
-                value={userSplit}
-                onChange={(e) => setUserSplit(parseInt(e.target.value))}
-                className="w-full h-3 bg-[#0a0a0a] rounded-lg appearance-none cursor-pointer accent-green-500"
-              />
-              <div className="flex justify-between text-xs mt-2">
-                <span className="text-gray-500 font-medium">Min: 50%</span>
-                <span className="text-gray-500 font-medium">Max: 90%</span>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Risk Range</span>
+                      <span className="text-white font-medium">1% - 5%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Max Daily Loss</span>
+                      <span className="text-white font-medium">10%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Max Drawdown</span>
+                      <span className="text-white font-medium">15%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Profit Target (Phase 1 & 2)</span>
+                      <span className="text-green-400 font-medium">20%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Pick Cashout Fee</span>
+                      <span className="text-white font-medium">10%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Reward Split (After Phase 2)</span>
+                      <span className="text-blue-400 font-medium">90%</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-gray-400">Same Game Parlays</span>
+                      <span className="text-green-400 font-medium">YES</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
 
-          {/* Potential Payout Display */}
-          <div className="text-center p-6 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/20 mb-8">
-            <div className="text-gray-300 text-sm font-medium mb-1">Demo Experience - Practice Mode</div>
-            <div className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-400">
-              100% FREE
+            {!showRules && (
+              <div className={`p-4 bg-gradient-to-r ${theme.splitGradient} rounded-2xl border ${theme.splitBorder} mb-4 relative`} style={{ WebkitTapHighlightColor: 'transparent' }}>
+                <button
+                  onClick={() => setUserSplit(70)}
+                  className="absolute top-2 right-2 w-6 h-6 bg-slate-700/80 hover:bg-slate-600 rounded-full flex items-center justify-center transition-colors"
+                  title="Reset to 70%"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                >
+                  <svg className="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                </button>
+
+                <div className="text-center mb-3">
+                  <div className="text-sm font-medium text-gray-300">Split Boost</div>
+                  <div className="text-xs text-gray-400">Drag anywhere on the bar to boost your split</div>
+                </div>
+
+                <div
+                  className="flex h-10 rounded-xl overflow-hidden border border-slate-600 cursor-grab active:cursor-grabbing relative"
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                  onMouseDown={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const startX = e.clientX;
+                    const startSplit = userSplit;
+
+                    const handleMouseMove = (e) => {
+                      const deltaX = e.clientX - startX;
+                      const deltaPercent = (deltaX / rect.width) * 100;
+                      const newSplit = Math.max(70, Math.min(90, startSplit + deltaPercent));
+                      setUserSplit(Math.round(newSplit));
+                    };
+
+                    const handleMouseUp = () => {
+                      document.removeEventListener('mousemove', handleMouseMove);
+                      document.removeEventListener('mouseup', handleMouseUp);
+                    };
+
+                    document.addEventListener('mousemove', handleMouseMove);
+                    document.addEventListener('mouseup', handleMouseUp);
+                  }}
+                  onTouchStart={(e) => {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const startX = e.touches[0].clientX;
+                    const startSplit = userSplit;
+
+                    const handleTouchMove = (e) => {
+                      const deltaX = e.touches[0].clientX - startX;
+                      const deltaPercent = (deltaX / rect.width) * 100;
+                      const newSplit = Math.max(70, Math.min(90, startSplit + deltaPercent));
+                      setUserSplit(Math.round(newSplit));
+                    };
+
+                    const handleTouchEnd = () => {
+                      document.removeEventListener('touchmove', handleTouchMove);
+                      document.removeEventListener('touchend', handleTouchEnd);
+                    };
+
+                    document.addEventListener('touchmove', handleTouchMove);
+                    document.addEventListener('touchend', handleTouchEnd);
+                  }}
+                >
+                  <div
+                    className={`bg-gradient-to-r ${theme.splitBar} flex items-center justify-center text-white text-xs font-bold transition-all duration-150`}
+                    style={{ width: `${userSplit}%` }}
+                  >
+                    You {userSplit}%
+                  </div>
+                  <div
+                    className="bg-gradient-to-r from-slate-600 to-slate-700 flex items-center justify-center text-white text-xs font-bold transition-all duration-150"
+                    style={{ width: `${100 - userSplit}%` }}
+                  >
+                    Us {100 - userSplit}%
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!showRules && (
+              <div className="text-center mb-4 p-3 bg-slate-800/30 rounded-xl border border-slate-600" style={{ WebkitTapHighlightColor: 'transparent' }}>
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-500">FREE</div>
+                </div>
+                <div className="text-gray-400 text-xs">
+                  Demo experience - practice mode
+                </div>
+              </div>
+            )}
+
+            <button
+              onClick={handleStartDemo}
+              className={`w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} text-white font-bold py-3 px-6 rounded-xl shadow-2xl mb-4 transform hover:scale-105 transition-all duration-300`}
+              style={{ WebkitTapHighlightColor: 'transparent' }}
+            >
+              Start Demo Challenge
+            </button>
+
+            <div className="flex justify-center space-x-2 mb-4" style={{ WebkitTapHighlightColor: 'transparent' }}>
+              {challenges.map((_, index) => (
+                <div
+                  key={index}
+                  onClick={() => setCurrentIndex(index)}
+                  className={`w-2 h-2 rounded-full transition-colors cursor-pointer ${
+                    index === currentIndex ? theme.bg.replace('/20', '') + ' ' + theme.text : 'bg-gray-600'
+                  }`}
+                  style={{ 
+                    WebkitTapHighlightColor: 'transparent',
+                    backgroundColor: index === currentIndex ? theme.borderColor : undefined
+                  }}
+                />
+              ))}
             </div>
-            <div className="text-gray-400 text-xs mt-2">Full platform features • No credit card required</div>
-          </div>
 
-          {/* Start Demo Button */}
-          <button
-            onClick={handleStartDemo}
-            className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg shadow-2xl transform hover:scale-105"
-          >
-            Start Demo Challenge
-          </button>
-
-          {/* Info Text */}
-          <div className="text-center mt-6 text-sm text-gray-400">
-            <p>Your demo settings and progress will be saved in your browser</p>
-            <Link href="/auth" className="text-purple-400 hover:text-purple-300 mt-2 inline-block">
-              Ready for real betting? Sign up here →
-            </Link>
-          </div>
-        </div>
-
-        {/* Features Grid */}
-        <div className="grid md:grid-cols-3 gap-6">
-          <div className="bg-[#111111] backdrop-blur-lg rounded-xl border border-gray-800/50 p-6 text-center">
-            <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
+            <div className="text-center pt-2 border-t border-slate-700/50">
+              <p className="text-gray-500 text-xs mb-2">
+                This is a simulated experience with virtual funds.
+              </p>
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
+                className={`${theme.text} hover:opacity-80 text-sm font-medium transition-colors`}
+              >
+                Ready for the real thing? Get Funded →
+              </button>
             </div>
-            <h3 className="text-white font-bold mb-2">Full Features</h3>
-            <p className="text-gray-500 text-sm">Experience all platform features including real-time betting</p>
-          </div>
-
-          <div className="bg-[#111111] backdrop-blur-lg rounded-xl border border-gray-800/50 p-6 text-center">
-            <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-                <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <h3 className="text-white font-bold mb-2">No Signup</h3>
-            <p className="text-gray-500 text-sm">Start immediately without creating an account</p>
-          </div>
-
-          <div className="bg-[#111111] backdrop-blur-lg rounded-xl border border-gray-800/50 p-6 text-center">
-            <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-6 h-6 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <h3 className="text-white font-bold mb-2">Customizable</h3>
-            <p className="text-gray-500 text-sm">Choose your balance and profit split preferences</p>
           </div>
         </div>
       </div>
