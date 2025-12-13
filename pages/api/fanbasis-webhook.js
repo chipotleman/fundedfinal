@@ -1,12 +1,33 @@
 import { buffer } from 'micro';
 import { db } from '../../lib/db';
 import { challenges } from '../../shared/schema';
+import crypto from 'crypto';
 
 export const config = {
   api: {
     bodyParser: false,
   },
 };
+
+function verifySignature(payload, signature, secret) {
+  if (!signature || !secret) {
+    return false;
+  }
+  
+  const expectedSignature = crypto
+    .createHmac('sha256', secret)
+    .update(payload, 'utf8')
+    .digest('hex');
+  
+  const signatureBuffer = Buffer.from(signature, 'hex');
+  const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+  
+  if (signatureBuffer.length !== expectedBuffer.length) {
+    return false;
+  }
+  
+  return crypto.timingSafeEqual(signatureBuffer, expectedBuffer);
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -16,7 +37,23 @@ export default async function handler(req, res) {
 
   try {
     const buf = await buffer(req);
-    const payload = JSON.parse(buf.toString());
+    const rawBody = buf.toString();
+    
+    const signature = req.headers['x-fanbasis-signature'] || req.headers['x-webhook-signature'];
+    const webhookSecret = process.env.FANBASIS_WEBHOOK_SECRET;
+    
+    if (webhookSecret && signature) {
+      const isValid = verifySignature(rawBody, signature, webhookSecret);
+      if (!isValid) {
+        console.error('Invalid webhook signature');
+        return res.status(401).json({ error: 'Invalid signature' });
+      }
+      console.log('Webhook signature verified successfully');
+    } else if (webhookSecret && !signature) {
+      console.warn('Webhook secret configured but no signature header received');
+    }
+    
+    const payload = JSON.parse(rawBody);
 
     console.log('Fanbasis webhook received:', JSON.stringify(payload, null, 2));
 

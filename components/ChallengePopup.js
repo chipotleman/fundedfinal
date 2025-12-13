@@ -739,30 +739,39 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
             </button>
           </div>
         ) : step === 'checkout' ? (
-          /* Fanbasis Embedded Checkout */
+          /* Fanbasis Checkout - Opens in New Tab */
           <div className="p-6 pt-12 max-h-[85vh] overflow-y-auto" style={{ WebkitTapHighlightColor: 'transparent' }}>
-            <div className="text-center mb-4">
+            <div className="text-center mb-6">
               <div className="mb-4">
                 <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-16 mx-auto" />
               </div>
+              <div className="w-20 h-20 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+              </div>
               <h2 className="text-xl font-bold text-white mb-2">Complete Your Purchase</h2>
-              <p className="text-gray-400 text-sm mb-4">
+              <p className="text-gray-400 text-sm mb-2">
                 {currentChallenge.name} • ${adjustedPrice} • {userSplit}% split
+              </p>
+              <p className="text-gray-500 text-xs">
+                Secure checkout powered by Fanbasis
               </p>
             </div>
             
             {checkoutUrl ? (
-              <div className="relative rounded-xl overflow-hidden bg-white" style={{ height: '600px' }}>
-                <iframe
-                  src={checkoutUrl}
-                  className="w-full"
-                  style={{ height: '600px', border: 'none' }}
-                  allow="payment *; accelerometer; autoplay; clipboard-write; encrypted-media"
-                  allowFullScreen
-                  referrerPolicy="no-referrer-when-downgrade"
-                  loading="eager"
-                  title="Fanbasis Checkout"
-                />
+              <div className="space-y-4">
+                <a
+                  href={checkoutUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl text-center text-lg"
+                >
+                  Continue to Secure Checkout →
+                </a>
+                <p className="text-gray-500 text-xs text-center">
+                  You'll be redirected to complete payment. Return here after purchase.
+                </p>
               </div>
             ) : (
               <div className="flex items-center justify-center py-12">
@@ -775,7 +784,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 setStep('selection');
                 setCheckoutUrl(null);
               }}
-              className="w-full mt-4 py-3 px-6 bg-slate-800/50 hover:bg-slate-700/50 text-gray-300 font-medium rounded-xl transition-all duration-300"
+              className="w-full mt-4 py-3 px-6 bg-slate-800/50 hover:bg-slate-700/50 text-gray-300 font-medium rounded-xl"
             >
               Cancel
             </button>
