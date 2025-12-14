@@ -38,7 +38,8 @@ None documented yet.
     - **Phase 1 & 2**: 20 picks min, 1-5% risk/pick, 10% max daily loss, 15% max drawdown, 20% profit target. 10% pick cashout fee.
     - **Reward Phase**: 20 picks min, 1-5% risk/pick, 10% max daily loss, 15% max drawdown, no profit target, 90% reward split. 5-day inactivity timer.
     - All phases allow same-game parlays. Live picking is a planned feature.
-- **Global Popups**: Challenge and How-It-Works popups are globally accessible via `_app.js`.
+- **Global Popups**: Challenge, How-It-Works, Demo, Auth, and Session Summary popups are globally accessible via `_app.js`.
+- **Session Summary Popup**: Displays when user signs out, showing session duration, bets placed, wins/losses, pending bets, profit/loss, and challenge info. After closing, redirects to home page.
 
 ### System Design Choices
 - **Authentication Flow**: Beta access -> NextAuth.js (email/password or OAuth) -> JWT session -> User profile creation (via createUser event) -> Challenge selection & purchase -> Challenge data persistence via API.
@@ -53,6 +54,11 @@ None documented yet.
   - `/api/auth/signup` - User registration endpoint
 
 ## Recent Changes
+- **December 14, 2025**:
+  - ✅ Added Session Summary Popup that displays on sign out with session stats
+  - ✅ Tracks session duration from login to logout
+  - ✅ Shows bets placed, wins/losses, pending bets, profit/loss, and challenge info
+  - ✅ Redirects to home page after closing summary
 - **December 13, 2025**:
   - ✅ Created AuthPopup component with Sign In/Sign Up toggle tabs
   - ✅ Added OAuth buttons (Google, Apple, Facebook) - UI ready for future integration
