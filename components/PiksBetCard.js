@@ -322,12 +322,23 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         <div className="flex items-center justify-between">
           <span className="text-white font-black text-xl tracking-tight">piks</span>
           
-          <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-black/30 border border-white/20 text-white">
-            <div className={`w-2 h-2 rounded-full ${
-              isWon ? 'bg-green-300' : isOpen ? 'bg-white animate-pulse' : isCashedOut ? 'bg-orange-300' : 'bg-red-300'
-            }`}></div>
-            <span>{isWon ? 'WON' : isOpen ? 'OPEN' : isCashedOut ? 'CASHED OUT' : 'LOST'}</span>
-          </div>
+          {isWon ? (
+            <div className="flex items-center">
+              <svg className="w-8 h-8" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M32 8L38 20L52 22L42 32L44 46L32 40L20 46L22 32L12 22L26 20L32 8Z" fill="#FFD700" stroke="#FFA500" strokeWidth="2"/>
+                <path d="M26 46L24 58L32 54L40 58L38 46" fill="#22C55E" stroke="#16A34A" strokeWidth="1"/>
+                <path d="M20 46L16 58L24 54" fill="#22C55E" stroke="#16A34A" strokeWidth="1"/>
+                <path d="M44 46L48 58L40 54" fill="#22C55E" stroke="#16A34A" strokeWidth="1"/>
+              </svg>
+            </div>
+          ) : (
+            <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-black/30 border border-white/20 text-white">
+              <div className={`w-2 h-2 rounded-full ${
+                isOpen ? 'bg-white animate-pulse' : isCashedOut ? 'bg-orange-300' : 'bg-red-300'
+              }`}></div>
+              <span>{isOpen ? 'OPEN' : isCashedOut ? 'CASHED OUT' : 'LOST'}</span>
+            </div>
+          )}
         </div>
       </div>
 
