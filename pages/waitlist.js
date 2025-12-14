@@ -6,9 +6,9 @@ import { useBetSlip } from '../contexts/BetSlipContext';
 
 export default function Waitlist() {
   const [email, setEmail] = useState('');
-  const [name, setName] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [isFlipping, setIsFlipping] = useState(false);
+  const [savedEmail, setSavedEmail] = useState('');
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
 
   const trackingSteps = [
@@ -18,13 +18,23 @@ export default function Waitlist() {
     { label: 'ARRIVED', icon: '🏠' }
   ];
 
+  useEffect(() => {
+    const storedEmail = localStorage.getItem('piksCardWaitlistEmail');
+    if (storedEmail) {
+      setSavedEmail(storedEmail);
+      setSubmitted(true);
+    }
+  }, []);
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Waitlist signup:', { name, email });
+    console.log('Waitlist signup:', email);
     setIsFlipping(true);
     
     setTimeout(() => {
       setIsFlipping(false);
+      localStorage.setItem('piksCardWaitlistEmail', email);
+      setSavedEmail(email);
       setSubmitted(true);
     }, 1500);
   };
@@ -73,16 +83,6 @@ export default function Waitlist() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <input
-                    type="text"
-                    placeholder="Your Name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
-                  />
-                </div>
-                <div>
-                  <input
                     type="email"
                     placeholder="Your Email"
                     value={email}
@@ -106,24 +106,16 @@ export default function Waitlist() {
             <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-gray-700 text-center">
               <h2 className="text-2xl font-bold text-white mb-2">You're on the Waitlist!</h2>
               <p className="text-gray-400 mb-6">
-                We'll notify <span className="text-white">{email}</span> when production begins
+                We'll notify <span className="text-white">{savedEmail || email}</span> when production begins
               </p>
 
-              {/* Tracking Steps with Truck */}
-              <div className="relative mb-8 pt-12">
-                {/* Truck positioned above PLANNING bubble */}
-                <div 
-                  className="absolute top-0 z-20"
-                  style={{ left: 'calc(12.5% - 24px)' }}
-                >
-                  <div className="text-5xl transform -scale-x-100">🚚</div>
-                </div>
-
+              {/* Tracking Steps */}
+              <div className="relative mb-8">
                 {/* Progress Line */}
-                <div className="absolute top-16 left-0 right-0 h-1 bg-gray-700 rounded-full mx-8"></div>
+                <div className="absolute top-5 left-0 right-0 h-1 bg-gray-700 rounded-full mx-8"></div>
 
                 {/* Steps */}
-                <div className="flex justify-between relative pt-4">
+                <div className="flex justify-between relative">
                   {trackingSteps.map((step, index) => (
                     <div key={index} className="flex flex-col items-center z-10">
                       <div 
