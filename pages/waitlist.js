@@ -9,45 +9,14 @@ export default function Waitlist() {
   const [name, setName] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [isFlipping, setIsFlipping] = useState(false);
-  const [trackingStep, setTrackingStep] = useState(0);
-  const [truckPosition, setTruckPosition] = useState(0);
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
 
   const trackingSteps = [
-    { label: 'PRODUCTION', icon: '🎉' },
-    { label: 'CARD BEING BUILT', icon: '🔨' },
+    { label: 'PLANNING', icon: '📋' },
+    { label: 'PRODUCTION', icon: '🔨' },
     { label: 'SHIPPED', icon: '📦' },
     { label: 'ARRIVED', icon: '🏠' }
   ];
-
-  useEffect(() => {
-    if (submitted) {
-      const stepInterval = setInterval(() => {
-        setTrackingStep(prev => {
-          if (prev < trackingSteps.length - 1) {
-            return prev + 1;
-          }
-          clearInterval(stepInterval);
-          return prev;
-        });
-      }, 1200);
-
-      const truckInterval = setInterval(() => {
-        setTruckPosition(prev => {
-          if (prev < 25) {
-            return prev + 1;
-          }
-          clearInterval(truckInterval);
-          return prev;
-        });
-      }, 80);
-
-      return () => {
-        clearInterval(stepInterval);
-        clearInterval(truckInterval);
-      };
-    }
-  }, [submitted]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -57,8 +26,6 @@ export default function Waitlist() {
     setTimeout(() => {
       setIsFlipping(false);
       setSubmitted(true);
-      setTrackingStep(0);
-      setTruckPosition(0);
     }, 1500);
   };
 
@@ -142,46 +109,38 @@ export default function Waitlist() {
                 We'll notify <span className="text-white">{email}</span> when production begins
               </p>
 
-              {/* Mail Truck Animation */}
-              <div className="relative h-16 mb-8 overflow-hidden">
-                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-700 rounded-full"></div>
+              {/* Tracking Steps with Truck */}
+              <div className="relative mb-8 pt-12">
+                {/* Truck positioned above PLANNING bubble */}
                 <div 
-                  className="absolute bottom-1 transition-all duration-100 ease-linear"
-                  style={{ left: `${truckPosition}%` }}
+                  className="absolute top-0 z-20"
+                  style={{ left: 'calc(12.5% - 24px)' }}
                 >
-                  <div className="text-4xl transform -scale-x-100">🚚</div>
+                  <div className="text-5xl transform -scale-x-100">🚚</div>
                 </div>
-                <div className="absolute bottom-1 right-2 text-2xl opacity-30">🏠</div>
-              </div>
 
-              {/* Tracking Steps */}
-              <div className="relative mb-8">
                 {/* Progress Line */}
-                <div className="absolute top-5 left-0 right-0 h-1 bg-gray-700 rounded-full mx-8"></div>
-                <div 
-                  className="absolute top-5 left-0 h-1 bg-white rounded-full mx-8 transition-all duration-500"
-                  style={{ width: `calc(${(trackingStep / (trackingSteps.length - 1)) * 100}% - 64px)` }}
-                ></div>
+                <div className="absolute top-16 left-0 right-0 h-1 bg-gray-700 rounded-full mx-8"></div>
 
                 {/* Steps */}
-                <div className="flex justify-between relative">
+                <div className="flex justify-between relative pt-4">
                   {trackingSteps.map((step, index) => (
                     <div key={index} className="flex flex-col items-center z-10">
                       <div 
                         className={`w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all duration-500 ${
-                          index <= trackingStep 
+                          index === 0 
                             ? 'bg-white scale-110' 
                             : 'bg-gray-700'
                         }`}
                       >
-                        {index <= trackingStep ? (
+                        {index === 0 ? (
                           <span>{step.icon}</span>
                         ) : (
                           <span className="text-gray-500 text-sm">{index + 1}</span>
                         )}
                       </div>
                       <span className={`mt-2 text-xs font-medium transition-colors duration-300 ${
-                        index <= trackingStep ? 'text-white' : 'text-gray-500'
+                        index === 0 ? 'text-white' : 'text-gray-500'
                       }`}>
                         {step.label}
                       </span>
@@ -193,7 +152,7 @@ export default function Waitlist() {
               {/* Status Message */}
               <div className="mb-6">
                 <p className="text-white font-medium">
-                  You'll be notified when cards enter production
+                  Your card is in the planning stage
                 </p>
                 <p className="text-gray-500 text-sm mt-1">
                   Expected launch: Q1 2026
@@ -202,9 +161,9 @@ export default function Waitlist() {
 
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
-                className="bg-white hover:bg-gray-100 text-black font-bold py-3 px-8 rounded-xl transition-all duration-300 inline-block shadow-lg"
+                className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 inline-block shadow-lg"
               >
-                Start Your Challenge Now
+                Start Your Challenge
               </button>
             </div>
           )}
