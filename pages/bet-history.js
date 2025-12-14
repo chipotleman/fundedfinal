@@ -6,79 +6,6 @@ import ShareableBetSlip from '../components/ShareableBetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 
-// Mock bets data with realistic recent dates
-const mockBets = [
-  {
-    id: 'bet_001',
-    matchup: 'LA Chargers @ Detroit Lions',
-    selection: 'Detroit Lions -10.5',
-    betType: 'spread',
-    odds: -115,
-    stake: 100,
-    status: 'won',
-    settledAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-    profit: 87.0
-  },
-  {
-    id: 'bet_002',
-    matchup: 'Lakers @ Warriors',
-    selection: 'Over 225.5',
-    betType: 'total',
-    odds: -110,
-    stake: 50,
-    status: 'won',
-    settledAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
-    profit: 45.45
-  },
-  {
-    id: 'bet_003',
-    matchup: 'Yankees @ Red Sox',
-    selection: 'Yankees +130',
-    betType: 'moneyline',
-    odds: 130,
-    stake: 75,
-    status: 'lost',
-    settledAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
-    profit: -75
-  },
-  {
-    id: 'bet_004',
-    matchup: 'Chiefs @ Bills',
-    selection: 'Kansas City Chiefs -3.5',
-    betType: 'spread',
-    odds: -108,
-    stake: 150,
-    status: 'open',
-    placedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
-    gameStart: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days from now
-    profit: 0
-  },
-  {
-    id: 'bet_005',
-    matchup: 'Celtics @ Heat',
-    selection: 'Under 210.5',
-    betType: 'total',
-    odds: -112,
-    stake: 80,
-    status: 'open',
-    placedAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), // 3 hours ago
-    gameStart: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day from now
-    profit: 0
-  },
-  {
-    id: 'bet_006',
-    matchup: 'Dallas Cowboys @ Philadelphia Eagles',
-    selection: 'Under 48.5',
-    betType: 'total',
-    odds: -115,
-    stake: 10000,
-    status: 'open',
-    placedAt: new Date().toISOString(), // Now
-    gameStart: new Date(new Date().setHours(20, 20, 0, 0)).toISOString(), // Today at 8:20 PM
-    profit: 0
-  }
-];
-
 export default function BetHistory() {
   const { user } = useAuth();
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
@@ -88,14 +15,30 @@ export default function BetHistory() {
   const [shareModalBet, setShareModalBet] = useState(null);
   const [bankroll, setBankroll] = useState(10000);
 
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
-    // Load demo bets from localStorage
-    const demoBets = JSON.parse(localStorage.getItem('demo_bet_history') || '[]');
+    const fetchBetHistory = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/bets/history');
+        if (response.ok) {
+          const bets = await response.json();
+          setAllBets(bets);
+        }
+      } catch (error) {
+        console.error('Error fetching bet history:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
     
-    // Combine mock bets with demo bets
-    const combinedBets = [...mockBets, ...demoBets];
-    setAllBets(combinedBets);
-  }, []);
+    fetchBetHistory();
+  }, [user]);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -123,6 +66,7 @@ export default function BetHistory() {
   const filteredBets = allBets
     .filter(bet => {
       if (selectedFilter === 'all') return true;
+      if (selectedFilter === 'won') return bet.status === 'won' || bet.status === 'cashed_out';
       return bet.status === selectedFilter;
     })
     .sort((a, b) => {
@@ -135,12 +79,29 @@ export default function BetHistory() {
 
   const totalProfit = allBets.reduce((sum, bet) => sum + bet.profit, 0);
 
-  const cashOutBet = (betId) => {
-    setAllBets(prev => prev.map(bet => 
-      bet.id === betId 
-        ? { ...bet, status: 'cashed_out', settledAt: new Date().toISOString(), profit: bet.stake * 0.8 }
-        : bet
-    ));
+  const cashOutBet = async (betId) => {
+    try {
+      const response = await fetch('/api/bets/cashout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ betId })
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setAllBets(prev => prev.map(bet => 
+          bet.id === betId 
+            ? { ...bet, status: 'cashed_out', settledAt: new Date().toISOString(), profit: bet.stake * -0.2 }
+            : bet
+        ));
+        setBankroll(result.newBankroll);
+      } else {
+        const error = await response.json();
+        console.error('Cash out failed:', error.error);
+      }
+    } catch (error) {
+      console.error('Error cashing out bet:', error);
+    }
   };
 
   const shareToSocial = (platform, bet) => {
