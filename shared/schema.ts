@@ -240,6 +240,60 @@ export const pageViews = pgTable("page_views", {
   createdAtIdx: index("page_views_created_at_idx").on(table.createdAt),
 }));
 
+// Saved payment methods for withdrawals
+export const paymentMethods = pgTable("payment_methods", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  methodType: varchar("method_type", { length: 50 }).notNull(), // bank_transfer, instant_transfer, venmo, wire, check
+  nickname: varchar("nickname", { length: 100 }),
+  isDefault: boolean("is_default").default(false),
+  // Bank transfer fields
+  bankName: varchar("bank_name", { length: 255 }),
+  accountNumber: varchar("account_number", { length: 50 }), // Last 4 stored
+  routingNumber: varchar("routing_number", { length: 20 }),
+  accountType: varchar("account_type", { length: 20 }), // checking, savings
+  // Instant transfer (debit card)
+  cardLast4: varchar("card_last4", { length: 4 }),
+  cardBrand: varchar("card_brand", { length: 20 }),
+  cardExpiry: varchar("card_expiry", { length: 10 }),
+  // Venmo
+  venmoUsername: varchar("venmo_username", { length: 100 }),
+  // Wire transfer
+  swiftCode: varchar("swift_code", { length: 20 }),
+  // Check
+  mailingAddress: jsonb("mailing_address"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  userIdIdx: index("payment_methods_user_id_idx").on(table.userId),
+}));
+
+// Withdrawal requests
+export const withdrawals = pgTable("withdrawals", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  paymentMethodId: varchar("payment_method_id"),
+  methodType: varchar("method_type", { length: 50 }).notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  fee: decimal("fee", { precision: 10, scale: 2 }).default('0'),
+  netAmount: decimal("net_amount", { precision: 10, scale: 2 }).notNull(),
+  status: varchar("status", { length: 50 }).default('under_review').notNull(), // under_review, awaiting_processing, finalized, denied
+  statusHistory: jsonb("status_history").default([]),
+  paymentDetails: jsonb("payment_details"), // Stores method-specific details
+  adminNotes: text("admin_notes"),
+  denialReason: text("denial_reason"),
+  reviewedBy: varchar("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at"),
+  processedAt: timestamp("processed_at"),
+  finalizedAt: timestamp("finalized_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  userIdIdx: index("withdrawals_user_id_idx").on(table.userId),
+  statusIdx: index("withdrawals_status_idx").on(table.status),
+  createdAtIdx: index("withdrawals_created_at_idx").on(table.createdAt),
+}));
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -263,3 +317,7 @@ export type UnplacedBet = typeof unplacedBets.$inferSelect;
 export type InsertUnplacedBet = typeof unplacedBets.$inferInsert;
 export type PageView = typeof pageViews.$inferSelect;
 export type InsertPageView = typeof pageViews.$inferInsert;
+export type PaymentMethod = typeof paymentMethods.$inferSelect;
+export type InsertPaymentMethod = typeof paymentMethods.$inferInsert;
+export type Withdrawal = typeof withdrawals.$inferSelect;
+export type InsertWithdrawal = typeof withdrawals.$inferInsert;
