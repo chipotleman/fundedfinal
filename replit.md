@@ -58,10 +58,26 @@ None documented yet.
 - **Credentials**: `admin@piks.com` / `AdminPiks2024!`
 - **Features**:
   - Dashboard with platform stats (users, bets, challenges)
-  - User management with search and profile details
+  - User management with search, clickable rows, multi-select, CSV export, and password reset
   - Bet management with edit/settle functionality
-- **API Routes**: `/api/admin-panel/*` (auth, stats, users, bets)
-- **Database**: Uses separate `admin_users` table for admin authentication
+  - Staff management with roles (admin, manager, staff) and granular permissions
+  - Analytics dashboard showing events, sessions, page views, demo bets, and unplaced bets
+- **Staff Roles & Permissions**:
+  - admin: Full access to all features
+  - manager: Can manage users and view analytics
+  - staff: Basic access to user management
+  - Permissions: users:read, users:write, users:delete, bets:read, bets:write, staff:read, staff:write, analytics:read
+- **API Routes**: `/api/admin-panel/*` (auth, stats, users, bets, staff, analytics)
+- **Database**: Uses `admin_users` for super admin and `admin_staff` for staff accounts
+
+## User Tracking & Analytics
+- **Event Tracking**: All user interactions tracked via `user_events` table
+- **Session Metrics**: Session duration, pages viewed, events count via `session_metrics` table
+- **Page Views**: Detailed page view tracking with time on page and scroll depth via `page_views` table
+- **Demo Bets**: All demo betting activity tracked via `demo_bets` table
+- **Unplaced Bets**: Bets added to slip but not placed tracked via `unplaced_bets` table
+- **Client Hook**: `useEventTracking.js` provides trackEvent, trackPageView, trackDemoBet, trackUnplacedBet functions
+- **APIs**: `/api/analytics/*` (events, page-view, demo-bet, unplaced-bet, session)
 
 ## Recent Changes
 - **December 14, 2025**:
@@ -75,6 +91,14 @@ None documented yet.
   - ✅ Tracks session duration from login to logout
   - ✅ Shows bets placed, wins/losses, pending bets, profit/loss, and challenge info
   - ✅ Redirects to home page after closing summary
+  - ✅ **MAJOR: Staff Management System** - Added admin_staff table with roles/permissions, staff management page with full CRUD
+  - ✅ **MAJOR: Admin Login Redesign** - Matches site auth page with Piks logo and green-bordered card design
+  - ✅ **MAJOR: AdminLayout Update** - Replaced "Piks Admin" text with Piks logo, added Staff and Analytics nav items
+  - ✅ **MAJOR: Enhanced User Management** - Clickable rows to expand, multi-select with bulk actions, CSV export, password reset
+  - ✅ **MAJOR: Analytics Dashboard** - Shows total events, sessions, page views, demo bets, unplaced bets, events by type, top pages
+  - ✅ **MAJOR: User Tracking System** - Complete tracking infrastructure with 6 new database tables (admin_staff, user_events, session_metrics, demo_bets, unplaced_bets, page_views)
+  - ✅ **Tracking APIs** - Created /api/analytics/* endpoints for event ingestion (events, page-view, demo-bet, unplaced-bet, session)
+  - ✅ **Client Tracking Hook** - useEventTracking.js for easy integration with session heartbeat and batch event sending
 - **December 13, 2025**:
   - ✅ Created AuthPopup component with Sign In/Sign Up toggle tabs
   - ✅ Added OAuth buttons (Google, Apple, Facebook) - UI ready for future integration

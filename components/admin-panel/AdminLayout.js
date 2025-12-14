@@ -60,6 +60,8 @@ export default function AdminLayout({ children, title = 'Admin Panel' }) {
     { href: '/admin-panel', label: 'Dashboard', icon: '📊' },
     { href: '/admin-panel/users', label: 'Users', icon: '👥' },
     { href: '/admin-panel/bets', label: 'Bets', icon: '🎲' },
+    { href: '/admin-panel/staff', label: 'Staff', icon: '🔐' },
+    { href: '/admin-panel/analytics', label: 'Analytics', icon: '📈' },
   ];
 
   return (
@@ -77,8 +79,11 @@ export default function AdminLayout({ children, title = 'Admin Panel' }) {
 
         <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-gray-900 border-r border-gray-800 transform transition-transform duration-200 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
           <div className="p-6 border-b border-gray-800">
-            <h1 className="text-2xl font-bold text-green-500">Piks Admin</h1>
-            <p className="text-sm text-gray-400 mt-1">{admin?.email}</p>
+            <div className="flex items-center gap-3 mb-2">
+              <img src="/funderlogo/Piks.png" alt="Piks" className="h-8" />
+              <span className="text-xs px-2 py-0.5 bg-green-600/20 text-green-400 rounded-full font-medium">Admin</span>
+            </div>
+            <p className="text-sm text-gray-400">{admin?.email}</p>
           </div>
           
           <nav className="p-4 space-y-2">
