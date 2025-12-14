@@ -131,6 +131,60 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
     };
   };
 
+  const getWinHighlight = (leg, legTeams, homeScore, awayScore) => {
+    const selection = leg.selection?.toLowerCase() || '';
+    const betType = leg.betType?.toLowerCase() || '';
+    const homeTeamLower = legTeams.homeTeam?.toLowerCase() || '';
+    const awayTeamLower = legTeams.awayTeam?.toLowerCase() || '';
+    
+    const spreadMatch = selection.match(/([+-]?\d+\.?\d*)/);
+    const spread = spreadMatch ? parseFloat(spreadMatch[0]) : null;
+    
+    const isHomeTeamPick = selection.includes(homeTeamLower.split(' ')[0]?.toLowerCase()) || 
+                           homeTeamLower.includes(selection.split(' ')[0]?.toLowerCase());
+    const isAwayTeamPick = selection.includes(awayTeamLower.split(' ')[0]?.toLowerCase()) || 
+                           awayTeamLower.includes(selection.split(' ')[0]?.toLowerCase());
+    
+    if (betType.includes('spread') || selection.includes('+') || selection.includes('-')) {
+      if (spread !== null) {
+        if (isHomeTeamPick) {
+          const adjustedScore = homeScore + spread;
+          if (adjustedScore > awayScore) return { home: true, away: false };
+        } else if (isAwayTeamPick) {
+          const adjustedScore = awayScore + spread;
+          if (adjustedScore > homeScore) return { home: false, away: true };
+        }
+      }
+    }
+    
+    if (betType.includes('moneyline') || betType.includes('ml') || 
+        (!betType.includes('spread') && !betType.includes('total') && !selection.includes('+') && !selection.includes('-'))) {
+      if (isHomeTeamPick && homeScore > awayScore) {
+        return { home: true, away: false };
+      } else if (isAwayTeamPick && awayScore > homeScore) {
+        return { home: false, away: true };
+      } else if (homeScore > awayScore) {
+        return { home: true, away: false };
+      } else if (awayScore > homeScore) {
+        return { home: false, away: true };
+      }
+    }
+    
+    if (betType.includes('over')) {
+      const totalTarget = spread;
+      if (totalTarget && (homeScore + awayScore) > totalTarget) {
+        return { home: true, away: true };
+      }
+    } else if (betType.includes('under')) {
+      const totalTarget = spread;
+      if (totalTarget && (homeScore + awayScore) < totalTarget) {
+        return { home: true, away: true };
+      }
+    }
+    
+    return { home: false, away: false };
+  };
+
   const scores = useMemo(() => {
     if (bet.homeScore !== undefined && bet.awayScore !== undefined) {
       return {
@@ -285,6 +339,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
             {parlayLegs.legs.map((leg, index) => {
               const legScores = generateScoresForLeg(leg, index);
               const legTeams = getTeamNamesForLeg(leg, index);
+              const winHighlight = isWon ? getWinHighlight(leg, legTeams, legScores.homeScore, legScores.awayScore) : { home: false, away: false };
               
               return (
                 <div key={index} className="pb-3 border-b border-white/10 last:border-b-0 last:pb-0">
@@ -303,21 +358,21 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-white/90 text-sm">{legTeams.homeTeam}</span>
+                      <span className={`text-sm ${winHighlight.home ? 'text-green-400 font-semibold' : 'text-white/90'}`}>{legTeams.homeTeam}</span>
                       <div className="flex items-center gap-3">
                         <div className="flex gap-2 text-gray-400 text-sm">
                           {legScores.homeQuarters.map((q, i) => <span key={i}>{q}</span>)}
                         </div>
-                        <span className="text-white font-bold text-lg w-8 text-right">{legScores.homeScore}</span>
+                        <span className={`font-bold text-lg w-8 text-right ${winHighlight.home ? 'text-green-400' : 'text-white'}`}>{legScores.homeScore}</span>
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-white/90 text-sm">{legTeams.awayTeam}</span>
+                      <span className={`text-sm ${winHighlight.away ? 'text-green-400 font-semibold' : 'text-white/90'}`}>{legTeams.awayTeam}</span>
                       <div className="flex items-center gap-3">
                         <div className="flex gap-2 text-gray-400 text-sm">
                           {legScores.awayQuarters.map((q, i) => <span key={i}>{q}</span>)}
                         </div>
-                        <span className="text-white font-bold text-lg w-8 text-right">{legScores.awayScore}</span>
+                        <span className={`font-bold text-lg w-8 text-right ${winHighlight.away ? 'text-green-400' : 'text-white'}`}>{legScores.awayScore}</span>
                       </div>
                     </div>
                   </div>
