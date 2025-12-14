@@ -51,20 +51,10 @@ export default function DemoPage() {
 
   useEffect(() => {
     document.body.style.overflow = 'auto';
-    
-    // Check if user already has an active demo trial
-    const existingChallenge = localStorage.getItem('demo_challenge');
-    const existingState = localStorage.getItem('demo_state');
-    if (existingChallenge && existingState) {
-      // User already has a demo trial in progress, redirect to dashboard
-      router.push('/demo-dashboard');
-      return;
-    }
-    
     return () => {
       document.body.style.overflow = '';
     };
-  }, [router]);
+  }, []);
 
   const handleChallengeSelect = (index) => {
     setCurrentIndex(index);

@@ -242,15 +242,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
                 </>
               ) : (
                 <>
-                  <button onClick={() => {
-                      const existingChallenge = localStorage.getItem('demo_challenge');
-                      const existingState = localStorage.getItem('demo_state');
-                      if (existingChallenge && existingState) {
-                        router.push('/demo-dashboard');
-                      } else {
-                        window.dispatchEvent(new CustomEvent('openDemoPopup'));
-                      }
-                    }} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('openDemoPopup'))} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     Free Trial
                   </button>
                   <button onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
