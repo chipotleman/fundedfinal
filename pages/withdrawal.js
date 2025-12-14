@@ -131,8 +131,8 @@ export default function WithdrawalPage() {
       try {
         const [profileRes, methodsRes, withdrawalsRes] = await Promise.all([
           fetch(`/api/profiles/${session.user.id}`),
-          fetch(`/api/payment-methods?userId=${session.user.id}`),
-          fetch(`/api/withdrawals?userId=${session.user.id}`),
+          fetch(`/api/payment-methods`),
+          fetch(`/api/withdrawals`),
         ]);
 
         if (profileRes.ok) {
@@ -228,7 +228,6 @@ export default function WithdrawalPage() {
 
       if (saveMethod && !selectedSavedMethod) {
         const methodData = {
-          userId: session.user.id,
           methodType: selectedMethod,
           nickname: methodNickname || `My ${withdrawalMethods.find(m => m.id === selectedMethod)?.name}`,
           isDefault: savedMethods.length === 0,
@@ -246,7 +245,6 @@ export default function WithdrawalPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userId: session.user.id,
           paymentMethodId: selectedSavedMethod,
           methodType: selectedMethod,
           amount: parseFloat(amount),

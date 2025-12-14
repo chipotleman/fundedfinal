@@ -82,6 +82,14 @@ None documented yet.
 
 ## Recent Changes
 - **December 14, 2025**:
+  - ✅ **MAJOR: Withdrawal System** - Complete withdrawal management with payment method-specific forms
+  - ✅ **Database**: Added `payment_methods` and `withdrawals` tables
+  - ✅ **APIs**: Created secure `/api/payment-methods` and `/api/withdrawals` endpoints with session auth
+  - ✅ **Admin API**: Created `/api/admin-panel/withdrawals` for admin management
+  - ✅ **Withdrawal Page**: Enhanced with payment forms (Bank, Instant, Venmo, Wire, Check), saved methods, history
+  - ✅ **Admin Withdrawals Page**: New `/admin-panel/withdrawals` page with approve/deny/complete functionality
+  - ✅ **Status Flow**: Under Review → Awaiting Processing → Finalized (or Denied)
+  - ✅ **Security**: All payment/withdrawal APIs use session authentication, balance validation, method ownership verification
   - ✅ **FEATURE: User Activity Modal** - Admin can view detailed user activity from User Management page with tabs for timeline, bets, events, and sessions. Shows balance snapshots (before/after) for each bet.
   - ✅ **FEATURE: BetSlip Event Tracking** - BetSlip now tracks bet_added, bet_removed, stake_updated events with user/session context
   - ✅ **FEATURE: Balance Snapshots** - Bet placement API records balanceBefore and balanceAfter for each bet

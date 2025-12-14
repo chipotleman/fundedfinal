@@ -1,4 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]";
 import { db } from "../../../lib/db";
 import { paymentMethods } from "../../../shared/schema";
 import { eq, and } from "drizzle-orm";
@@ -7,6 +9,13 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  const session = await getServerSession(req, res, authOptions);
+  
+  if (!session?.user?.id) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const userId = session.user.id;
   const { id } = req.query;
 
   if (!id || typeof id !== "string") {
@@ -18,7 +27,7 @@ export default async function handler(
       const [method] = await db
         .select()
         .from(paymentMethods)
-        .where(eq(paymentMethods.id, id));
+        .where(and(eq(paymentMethods.id, id), eq(paymentMethods.userId, userId)));
 
       if (!method) {
         return res.status(404).json({ message: "Payment method not found" });
@@ -33,9 +42,9 @@ export default async function handler(
 
   if (req.method === "PATCH" || req.method === "PUT") {
     try {
-      const { userId, isDefault, ...updateData } = req.body;
+      const { isDefault, ...updateData } = req.body;
 
-      if (isDefault && userId) {
+      if (isDefault) {
         await db
           .update(paymentMethods)
           .set({ isDefault: false })
@@ -49,7 +58,7 @@ export default async function handler(
           isDefault: isDefault || false,
           updatedAt: new Date(),
         })
-        .where(eq(paymentMethods.id, id))
+        .where(and(eq(paymentMethods.id, id), eq(paymentMethods.userId, userId)))
         .returning();
 
       if (!updatedMethod) {
@@ -67,7 +76,7 @@ export default async function handler(
     try {
       const [deletedMethod] = await db
         .delete(paymentMethods)
-        .where(eq(paymentMethods.id, id))
+        .where(and(eq(paymentMethods.id, id), eq(paymentMethods.userId, userId)))
         .returning();
 
       if (!deletedMethod) {

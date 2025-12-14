@@ -1,4 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]";
 import { db } from "../../../lib/db";
 import { paymentMethods } from "../../../shared/schema";
 import { eq } from "drizzle-orm";
@@ -7,16 +9,32 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  const session = await getServerSession(req, res, authOptions);
+  
+  if (!session?.user?.id) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const userId = session.user.id;
+
   if (req.method === "GET") {
-    const { userId } = req.query;
-
-    if (!userId || typeof userId !== "string") {
-      return res.status(400).json({ message: "User ID is required" });
-    }
-
     try {
       const methods = await db
-        .select()
+        .select({
+          id: paymentMethods.id,
+          methodType: paymentMethods.methodType,
+          nickname: paymentMethods.nickname,
+          isDefault: paymentMethods.isDefault,
+          bankName: paymentMethods.bankName,
+          accountNumber: paymentMethods.accountNumber,
+          accountType: paymentMethods.accountType,
+          cardLast4: paymentMethods.cardLast4,
+          cardBrand: paymentMethods.cardBrand,
+          cardExpiry: paymentMethods.cardExpiry,
+          venmoUsername: paymentMethods.venmoUsername,
+          mailingAddress: paymentMethods.mailingAddress,
+          createdAt: paymentMethods.createdAt,
+        })
         .from(paymentMethods)
         .where(eq(paymentMethods.userId, userId));
 
@@ -30,7 +48,6 @@ export default async function handler(
   if (req.method === "POST") {
     try {
       const {
-        userId,
         methodType,
         nickname,
         isDefault,
@@ -46,8 +63,8 @@ export default async function handler(
         mailingAddress,
       } = req.body;
 
-      if (!userId || !methodType) {
-        return res.status(400).json({ message: "User ID and method type are required" });
+      if (!methodType) {
+        return res.status(400).json({ message: "Method type is required" });
       }
 
       if (isDefault) {
@@ -65,7 +82,7 @@ export default async function handler(
           nickname,
           isDefault: isDefault || false,
           bankName,
-          accountNumber,
+          accountNumber: accountNumber?.slice(-4),
           routingNumber,
           accountType,
           cardLast4,
