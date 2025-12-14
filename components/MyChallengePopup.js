@@ -55,9 +55,10 @@ export default function MyChallengePopup({ isOpen, onClose }) {
 
   if (!isOpen) return null;
 
-  const challengeName = userProfile?.challenge || challengeData?.name || 'Pro Challenge';
-  const userSplit = userProfile?.profit_split ? parseFloat(userProfile.profit_split) : (challengeData?.userSplit || 80);
-  const startingBalance = userProfile?.starting_bankroll ? parseFloat(userProfile.starting_bankroll) : (challengeData?.startingBalance || 10000);
+  const challengeObj = typeof userProfile?.challenge === 'object' ? userProfile.challenge : null;
+  const challengeName = challengeObj?.name || challengeData?.name || 'Pro Challenge';
+  const userSplit = challengeObj?.userSplit || (userProfile?.profit_split ? parseFloat(userProfile.profit_split) : (challengeData?.userSplit || 80));
+  const startingBalance = challengeObj?.startingBalance || (userProfile?.starting_bankroll ? parseFloat(userProfile.starting_bankroll) : (challengeData?.startingBalance || 10000));
   const currentBalance = userProfile?.bankroll ? parseFloat(userProfile.bankroll) : startingBalance;
   const profitTarget = startingBalance * 1.2;
   const pnl = currentBalance - startingBalance;
@@ -70,9 +71,9 @@ export default function MyChallengePopup({ isOpen, onClose }) {
   const losses = userProfile?.losses || 0;
   const winRate = totalBets > 0 ? Math.round((wins / totalBets) * 100) : 0;
   
-  const challengeStr = typeof userProfile?.challenge === 'string' ? userProfile.challenge : '';
-  const badgeFromProfile = challengeStr.includes('Starter') ? 'BEGINNER' : 
-                          challengeStr.includes('Elite') ? 'ADVANCED' : 'POPULAR';
+  const challengeNameStr = challengeObj?.name || challengeData?.name || '';
+  const badgeFromProfile = challengeNameStr.includes('Starter') ? 'BEGINNER' : 
+                          challengeNameStr.includes('Elite') ? 'ADVANCED' : 'POPULAR';
 
   const handleGoToLab = () => {
     onClose();
