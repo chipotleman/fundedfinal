@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import TopNavbar from '../../components/TopNavbar';
+import BetSlip from '../../components/BetSlip';
 import { useBetSlip } from '../../contexts/BetSlipContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function CapperProfile() {
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
+  const { user } = useAuth();
   const router = useRouter();
   const { id } = router.query;
   const [capper, setCapper] = useState(null);
@@ -12,6 +15,26 @@ export default function CapperProfile() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('picks');
+  const [bankroll, setBankroll] = useState(10000);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user?.id) {
+        try {
+          const response = await fetch(`/api/user/profile?userId=${user.id}`);
+          if (response.ok) {
+            const profile = await response.json();
+            if (profile?.bankroll) {
+              setBankroll(profile.bankroll);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+        }
+      }
+    };
+    fetchUserProfile();
+  }, [user]);
 
   // Mock data for now
   const mockCapper = {
@@ -102,7 +125,7 @@ export default function CapperProfile() {
   return (
     <div className="min-h-screen bg-black">
       <TopNavbar 
-        bankroll={10000}
+        bankroll={user ? bankroll : null}
         pnl={0}
         betSlipCount={betSlip.length}
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
@@ -343,6 +366,14 @@ export default function CapperProfile() {
           )}
         </div>
       </div>
+
+      {showBetSlip && (
+        <BetSlip
+          bankroll={bankroll}
+          isOpen={showBetSlip}
+          onClose={() => setShowBetSlip(false)}
+        />
+      )}
     </div>
   );
 }

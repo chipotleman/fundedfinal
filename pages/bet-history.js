@@ -86,6 +86,7 @@ export default function BetHistory() {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [expandedShare, setExpandedShare] = useState({});
   const [shareModalBet, setShareModalBet] = useState(null);
+  const [bankroll, setBankroll] = useState(10000);
 
   useEffect(() => {
     // Load demo bets from localStorage
@@ -95,6 +96,25 @@ export default function BetHistory() {
     const combinedBets = [...mockBets, ...demoBets];
     setAllBets(combinedBets);
   }, []);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user?.id) {
+        try {
+          const response = await fetch(`/api/user/profile?userId=${user.id}`);
+          if (response.ok) {
+            const profile = await response.json();
+            if (profile?.bankroll) {
+              setBankroll(profile.bankroll);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+        }
+      }
+    };
+    fetchUserProfile();
+  }, [user]);
 
   const formatOdds = (odds) => {
     return odds > 0 ? `+${odds}` : odds.toString();
@@ -240,7 +260,7 @@ export default function BetHistory() {
   return (
     <div className="min-h-screen bg-black">
       <TopNavbar 
-        bankroll={10000}
+        bankroll={user ? bankroll : null}
         pnl={totalProfit}
         betSlipCount={betSlip.length}
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
@@ -302,7 +322,8 @@ export default function BetHistory() {
       {/* Bet Slip */}
       {showBetSlip && (
         <BetSlip
-          bankroll={10000}
+          bankroll={bankroll}
+          isOpen={showBetSlip}
           onClose={() => setShowBetSlip(false)}
         />
       )}

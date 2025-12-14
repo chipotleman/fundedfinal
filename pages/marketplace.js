@@ -3,12 +3,34 @@ import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Marketplace() {
   const router = useRouter();
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
+  const { user } = useAuth();
   const [cappers, setCappers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [bankroll, setBankroll] = useState(10000);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user?.id) {
+        try {
+          const response = await fetch(`/api/user/profile?userId=${user.id}`);
+          if (response.ok) {
+            const profile = await response.json();
+            if (profile?.bankroll) {
+              setBankroll(profile.bankroll);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+        }
+      }
+    };
+    fetchUserProfile();
+  }, [user]);
 
   // Mock data for now - will be replaced with actual Supabase data
   const mockCappers = [
@@ -269,7 +291,7 @@ export default function Marketplace() {
   return (
     <div className="min-h-screen bg-black">
       <TopNavbar 
-        bankroll={10000}
+        bankroll={user ? bankroll : null}
         pnl={0}
         betSlipCount={betSlip.length}
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
@@ -395,7 +417,7 @@ export default function Marketplace() {
       </div>
 
       <BetSlip
-        bankroll={10000}
+        bankroll={bankroll}
         isOpen={showBetSlip}
         onClose={() => setShowBetSlip(false)}
       />

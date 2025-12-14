@@ -184,6 +184,7 @@ function CustomVideoPlayer() {
 export default function Home() {
   const { user } = useAuth();
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
+  const [bankroll, setBankroll] = useState(10000);
 
   // Force scroll to top when page loads (especially after beta landing)
   useEffect(() => {
@@ -192,10 +193,29 @@ export default function Home() {
     document.body.scrollTop = 0;
   }, []);
 
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user?.id) {
+        try {
+          const response = await fetch(`/api/user/profile?userId=${user.id}`);
+          if (response.ok) {
+            const profile = await response.json();
+            if (profile?.bankroll) {
+              setBankroll(profile.bankroll);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+        }
+      }
+    };
+    fetchUserProfile();
+  }, [user]);
+
   return (
     <div className="min-h-screen bg-black w-full overflow-x-hidden" style={{scrollBehavior: 'smooth'}}>
       <TopNavbar 
-        bankroll={user ? 10000 : null}
+        bankroll={user ? bankroll : null}
         pnl={user ? 0 : null}
         betSlipCount={betSlip.length}
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
@@ -278,7 +298,8 @@ export default function Home() {
       {/* Bet Slip */}
       {showBetSlip && (
         <BetSlip
-          bankroll={10000}
+          bankroll={bankroll}
+          isOpen={showBetSlip}
           onClose={() => setShowBetSlip(false)}
         />
       )}

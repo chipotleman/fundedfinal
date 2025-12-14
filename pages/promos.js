@@ -1,11 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Promos() {
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
+  const { user } = useAuth();
+  const [bankroll, setBankroll] = useState(10000);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user?.id) {
+        try {
+          const response = await fetch(`/api/user/profile?userId=${user.id}`);
+          if (response.ok) {
+            const profile = await response.json();
+            if (profile?.bankroll) {
+              setBankroll(profile.bankroll);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+        }
+      }
+    };
+    fetchUserProfile();
+  }, [user]);
   const [copiedCode, setCopiedCode] = useState(false);
   const [activeTab, setActiveTab] = useState('referrals');
 
@@ -114,7 +136,7 @@ export default function Promos() {
   return (
     <div className="min-h-screen bg-black">
       <TopNavbar 
-        bankroll={10000}
+        bankroll={user ? bankroll : null}
         pnl={0}
         betSlipCount={betSlip.length}
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}

@@ -583,6 +583,7 @@ export default function AuthPage() {
       {showBetSlip && (
         <BetSlip
           bankroll={10000}
+          isOpen={showBetSlip}
           onClose={() => setShowBetSlip(false)}
         />
       )}
