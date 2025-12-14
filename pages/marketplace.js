@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
+import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 
 export default function Marketplace() {
@@ -392,6 +393,12 @@ export default function Marketplace() {
           </div>
         )}
       </div>
+
+      <BetSlip
+        bankroll={10000}
+        isOpen={showBetSlip}
+        onClose={() => setShowBetSlip(false)}
+      />
     </div>
   );
 }

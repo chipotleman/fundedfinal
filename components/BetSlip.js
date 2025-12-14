@@ -224,6 +224,9 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                 <img src="/funderlogo/Piks.png" alt="Piks" className="h-14 object-contain -ml-4" />
               </div>
               <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 bg-green-500/20 border border-green-500/50 px-2.5 py-1 rounded-full">
+                  <span className="text-green-400 text-xs font-bold">${typeof bankroll === 'number' ? bankroll.toLocaleString() : parseFloat(bankroll || 0).toLocaleString()}</span>
+                </div>
                 <div className="flex items-center gap-1.5 bg-blue-500/20 border border-blue-500/50 px-2.5 py-1 rounded-full">
                   <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
                   <span className="text-blue-400 text-xs font-bold">{bets.length} PICK{bets.length !== 1 ? 'S' : ''}</span>
