@@ -175,9 +175,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
             <div className="text-white font-bold text-base">{bet.selection}</div>
             <div className="text-gray-400 text-xs uppercase tracking-wide">{bet.betType}</div>
           </div>
-          <div className={`font-bold text-xl ${
-            isWon ? 'text-green-300' : isOpen ? 'text-blue-300' : isCashedOut ? 'text-orange-300' : 'text-gray-300'
-          }`}>
+          <div className="font-bold text-xl text-white">
             {formatOdds(bet.odds)}
           </div>
         </div>
