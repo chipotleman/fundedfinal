@@ -704,7 +704,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                       const handleMouseMove = (e) => {
                         const deltaX = e.clientX - startX;
                         const deltaPercent = (deltaX / rect.width) * 100;
-                        const newSplit = Math.max(70, Math.min(90, startSplit + deltaPercent));
+                        const newSplit = Math.max(50, Math.min(100, startSplit + deltaPercent));
                         setUserSplit(Math.round(newSplit));
                       };
 
@@ -724,7 +724,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                       const handleTouchMove = (e) => {
                         const deltaX = e.touches[0].clientX - startX;
                         const deltaPercent = (deltaX / rect.width) * 100;
-                        const newSplit = Math.max(70, Math.min(90, startSplit + deltaPercent));
+                        const newSplit = Math.max(50, Math.min(100, startSplit + deltaPercent));
                         setUserSplit(Math.round(newSplit));
                       };
 

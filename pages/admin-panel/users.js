@@ -7,7 +7,6 @@ const CHALLENGES = [
   { type: 'elite', name: 'Elite Challenge', balance: '$25,000', price: '$399' },
 ];
 
-const SPLIT_OPTIONS = [80, 85, 90];
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -531,20 +530,28 @@ export default function AdminUsers() {
 
             <div className="mb-4">
               <label className="block text-sm text-gray-400 mb-2">Profit Split (User's Share)</label>
-              <div className="flex gap-2">
-                {SPLIT_OPTIONS.map((split) => (
-                  <button
-                    key={split}
-                    onClick={() => setSelectedSplit(split)}
-                    className={`flex-1 py-3 rounded-lg border font-medium transition-colors ${
-                      selectedSplit === split
-                        ? 'border-green-500 bg-green-500/10 text-green-400'
-                        : 'border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600'
-                    }`}
-                  >
-                    {split}%
-                  </button>
-                ))}
+              <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-2xl font-bold text-green-400">{selectedSplit}%</span>
+                  <span className="text-gray-400 text-sm">Piks: {100 - selectedSplit}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="50"
+                  max="100"
+                  step="1"
+                  value={selectedSplit}
+                  onChange={(e) => setSelectedSplit(parseInt(e.target.value))}
+                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+                  style={{
+                    background: `linear-gradient(to right, #22c55e 0%, #22c55e ${(selectedSplit - 50) * 2}%, #374151 ${(selectedSplit - 50) * 2}%, #374151 100%)`
+                  }}
+                />
+                <div className="flex justify-between text-xs text-gray-500 mt-2">
+                  <span>50%</span>
+                  <span>75%</span>
+                  <span>100%</span>
+                </div>
               </div>
               <p className="text-xs text-gray-500 mt-2">
                 User receives {selectedSplit}% of profits, Piks keeps {100 - selectedSplit}%
