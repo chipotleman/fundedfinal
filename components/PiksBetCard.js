@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 
 export default function PiksBetCard({ bet, onCashOut, onShare }) {
   const [confirmingCashOut, setConfirmingCashOut] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const buttonRef = useRef(null);
   
   const pikId = useMemo(() => {
@@ -182,6 +183,44 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
             {formatOdds(bet.odds)}
           </div>
         </div>
+
+        {isParlay && bet.legs && bet.legs.length > 0 && (
+          <div className="mb-3">
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="w-full flex items-center justify-between py-2 px-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-lg transition-all"
+            >
+              <span className="text-gray-300 text-sm font-medium">{bet.legs.length} Legs</span>
+              <svg 
+                className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            
+            {isExpanded && (
+              <div className="mt-2 space-y-2">
+                {bet.legs.map((leg, index) => (
+                  <div key={index} className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-3">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="text-white text-sm font-medium">{leg.selection}</div>
+                        <div className="text-gray-500 text-xs mt-0.5">{leg.matchup}</div>
+                        <div className="text-gray-500 text-xs">{leg.betType}</div>
+                      </div>
+                      <div className="text-blue-400 font-bold text-sm">
+                        {leg.odds > 0 ? `+${leg.odds}` : leg.odds}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {(isWon || isLost || isCashedOut) && !isParlay && (
           <div className="mb-3 space-y-1">
