@@ -148,7 +148,10 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
       }
 
       if (onBetPlaced && data.newBankroll !== undefined) {
-        onBetPlaced(data.newBankroll);
+        const bankrollValue = Number(data.newBankroll);
+        if (!isNaN(bankrollValue)) {
+          onBetPlaced(bankrollValue);
+        }
       }
 
       if (bets.length > 0) {

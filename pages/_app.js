@@ -12,6 +12,42 @@ import SessionSummaryPopup from '../components/SessionSummaryPopup';
 import MyChallengePopup from '../components/MyChallengePopup';
 import MobileNavMenu from '../components/MobileNavMenu';
 import BetaLanding from '../components/BetaLanding';
+import { useEventTracking } from '../hooks/useEventTracking';
+import { useRouter } from 'next/router';
+
+function AnalyticsTracker() {
+  const { trackPageView, trackEvent } = useEventTracking();
+  const router = useRouter();
+
+  useEffect(() => {
+    trackPageView(router.pathname, document.title);
+    
+    const handleRouteChange = (url) => {
+      trackPageView(url, document.title);
+    };
+
+    router.events.on('routeChangeComplete', handleRouteChange);
+    return () => {
+      router.events.off('routeChangeComplete', handleRouteChange);
+    };
+  }, [router, trackPageView]);
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      const target = e.target.closest('button, a, [role="button"]');
+      if (target) {
+        const text = target.textContent?.slice(0, 50) || '';
+        const tag = target.tagName.toLowerCase();
+        trackEvent('click', { element: tag, text, path: router.pathname });
+      }
+    };
+
+    document.addEventListener('click', handleClick);
+    return () => document.removeEventListener('click', handleClick);
+  }, [trackEvent, router.pathname]);
+
+  return null;
+}
 
 function MyApp({ Component, pageProps: { session, ...pageProps } }) {
   const [showChallengePopup, setShowChallengePopup] = useState(false);
@@ -168,6 +204,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
       <AuthProvider>
         <BetSlipProvider>
           <UserProfilesProvider>
+          <AnalyticsTracker />
           {/* Solid Black Background */}
           <div
             style={{

@@ -17,11 +17,16 @@ export default async function handler(req, res) {
     }
 
     try {
-      await sql`
-        INSERT INTO session_metrics (user_id, visitor_id, session_id)
-        VALUES (${userId || null}, ${visitorId || null}, ${sessionId})
-        ON CONFLICT (session_id) DO NOTHING
+      const existing = await sql`
+        SELECT id FROM session_metrics WHERE session_id = ${sessionId} LIMIT 1
       `;
+      
+      if (existing.length === 0) {
+        await sql`
+          INSERT INTO session_metrics (user_id, visitor_id, session_id)
+          VALUES (${userId || null}, ${visitorId || null}, ${sessionId})
+        `;
+      }
 
       return res.status(200).json({ success: true });
     } catch (error) {

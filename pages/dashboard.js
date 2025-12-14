@@ -152,7 +152,10 @@ export default function Dashboard() {
   }, [user]);
 
   const handleBetPlaced = (newBankroll) => {
-    setBankroll(newBankroll);
+    const bankrollValue = Number(newBankroll);
+    if (!isNaN(bankrollValue)) {
+      setBankroll(bankrollValue);
+    }
   };
 
   const toggleGameExpanded = (gameId) => {
