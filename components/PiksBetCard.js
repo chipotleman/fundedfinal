@@ -327,7 +327,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
               <img 
                 src="/trophy-winner.png" 
                 alt="Winner" 
-                className="h-10 w-auto"
+                className="h-[60px] w-auto"
               />
             </div>
           ) : (
