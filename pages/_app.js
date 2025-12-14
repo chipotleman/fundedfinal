@@ -161,6 +161,9 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
       if (e.detail) {
         setSessionSummaryData(e.detail);
         setShowSessionSummary(true);
+        // User is signing out - update login state immediately
+        setCurrentUser(null);
+        setIsLoggedIn(false);
       }
     };
 
