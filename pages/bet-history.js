@@ -6,78 +6,6 @@ import ShareableBetSlip from '../components/ShareableBetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 
-// Mock bets data with realistic recent dates
-const mockBets = [
-  {
-    id: 'bet_001',
-    matchup: 'LA Chargers @ Detroit Lions',
-    selection: 'Detroit Lions -10.5',
-    betType: 'spread',
-    odds: -115,
-    stake: 100,
-    status: 'won',
-    settledAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days ago
-    profit: 87.0
-  },
-  {
-    id: 'bet_002',
-    matchup: 'Lakers @ Warriors',
-    selection: 'Over 225.5',
-    betType: 'total',
-    odds: -110,
-    stake: 50,
-    status: 'won',
-    settledAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(), // 5 days ago
-    profit: 45.45
-  },
-  {
-    id: 'bet_003',
-    matchup: 'Yankees @ Red Sox',
-    selection: 'Yankees +130',
-    betType: 'moneyline',
-    odds: 130,
-    stake: 75,
-    status: 'lost',
-    settledAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
-    profit: -75
-  },
-  {
-    id: 'bet_004',
-    matchup: 'Chiefs @ Bills',
-    selection: 'Kansas City Chiefs -3.5',
-    betType: 'spread',
-    odds: -108,
-    stake: 150,
-    status: 'open',
-    placedAt: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(), // 1 hour ago
-    gameStart: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days from now
-    profit: 0
-  },
-  {
-    id: 'bet_005',
-    matchup: 'Celtics @ Heat',
-    selection: 'Under 210.5',
-    betType: 'total',
-    odds: -112,
-    stake: 80,
-    status: 'open',
-    placedAt: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(), // 3 hours ago
-    gameStart: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(), // 1 day from now
-    profit: 0
-  },
-  {
-    id: 'bet_006',
-    matchup: 'Dallas Cowboys @ Philadelphia Eagles',
-    selection: 'Under 48.5',
-    betType: 'total',
-    odds: -115,
-    stake: 10000,
-    status: 'open',
-    placedAt: new Date().toISOString(), // Now
-    gameStart: new Date(new Date().setHours(20, 20, 0, 0)).toISOString(), // Today at 8:20 PM
-    profit: 0
-  }
-];
 
 export default function BetHistory() {
   const { user } = useAuth();
@@ -89,13 +17,21 @@ export default function BetHistory() {
   const [bankroll, setBankroll] = useState(10000);
 
   useEffect(() => {
-    // Load demo bets from localStorage
-    const demoBets = JSON.parse(localStorage.getItem('demo_bet_history') || '[]');
-    
-    // Combine mock bets with demo bets
-    const combinedBets = [...mockBets, ...demoBets];
-    setAllBets(combinedBets);
-  }, []);
+    const fetchBets = async () => {
+      if (user?.id) {
+        try {
+          const response = await fetch('/api/bets/history');
+          if (response.ok) {
+            const bets = await response.json();
+            setAllBets(bets);
+          }
+        } catch (error) {
+          console.error('Error fetching bet history:', error);
+        }
+      }
+    };
+    fetchBets();
+  }, [user]);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
