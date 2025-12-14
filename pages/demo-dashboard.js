@@ -440,7 +440,7 @@ export default function DemoDashboard() {
     <>
       <CoinRain trigger={showCoinRain} onComplete={() => setShowCoinRain(false)} />
       
-      {/* Bet Slip - Full screen on mobile, side panel on desktop */}
+      {/* Demo Slip - Full screen on mobile, side panel on desktop */}
       {mounted && showBetSlip && ReactDOM.createPortal(
         <>
           <div 
@@ -509,7 +509,7 @@ export default function DemoDashboard() {
                   <svg className="w-16 h-16 mx-auto text-gray-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                   </svg>
-                  <p className="text-gray-400 font-medium text-lg mb-2">Your bet slip is empty</p>
+                  <p className="text-gray-400 font-medium text-lg mb-2">Your demo slip is empty</p>
                   <p className="text-gray-600">Click on odds to add picks</p>
                 </div>
               ) : (
@@ -937,7 +937,7 @@ export default function DemoDashboard() {
                 {selectedBets.length}
               </span>
             )}
-            <span className="text-xs mt-1">My Bets</span>
+            <span className="text-xs mt-1">Demo Slip</span>
           </button>
           <button className="flex flex-col items-center py-2 px-4 text-gray-500 hover:text-white">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
