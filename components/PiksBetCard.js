@@ -32,6 +32,10 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
     }
   };
 
+  const formatMoney = (amount) => {
+    return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
   const formatPlacedDate = () => {
     const date = bet.placedAt ? new Date(bet.placedAt) : bet.settledAt ? new Date(bet.settledAt) : new Date();
     const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
@@ -171,18 +175,18 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         <div className="border-t border-white/30 mt-1 pt-1">
           <div className="flex justify-between items-end">
             <div>
-              <div className="text-white font-bold text-lg">${bet.stake?.toFixed(2)}</div>
+              <div className="text-white font-bold text-lg">${formatMoney(bet.stake || 0)}</div>
               <div className="text-gray-400 text-[10px] uppercase">Total Pikked</div>
             </div>
             {isWon && (
               <div className="text-right">
-                <div className="text-green-400 font-bold text-lg">${payout.toFixed(2)}</div>
+                <div className="text-green-400 font-bold text-lg">${formatMoney(payout)}</div>
                 <div className="text-green-400 text-[10px] uppercase">Won on Piks</div>
               </div>
             )}
             {isOpen && (
               <div className="text-right">
-                <div className="text-blue-400 font-bold text-lg">${payout.toFixed(2)}</div>
+                <div className="text-blue-400 font-bold text-lg">${formatMoney(payout)}</div>
                 <div className="text-gray-400 text-[10px] uppercase">Potential Payout</div>
               </div>
             )}
@@ -194,7 +198,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
             )}
             {isCashedOut && (
               <div className="text-right">
-                <div className="text-orange-400 font-bold text-lg">${bet.profit?.toFixed(2) || (bet.stake * 0.8).toFixed(2)}</div>
+                <div className="text-orange-400 font-bold text-lg">${formatMoney(bet.profit || (bet.stake * 0.8))}</div>
                 <div className="text-gray-400 text-[10px] uppercase">Cashed Out</div>
               </div>
             )}
@@ -220,10 +224,10 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
             className={`w-full mt-1 text-white font-bold py-2 px-3 rounded-lg text-sm transition-all ${
               confirmingCashOut 
                 ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700' 
-                : 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600'
+                : 'bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600'
             }`}
           >
-            {confirmingCashOut ? `Confirm Cash Out ($${(bet.stake * 0.8).toFixed(2)})` : `Cash Out ($${(bet.stake * 0.8).toFixed(2)})`}
+            {confirmingCashOut ? `Confirm Cash Out ($${formatMoney(bet.stake * 0.8)})` : `Cash Out ($${formatMoney(bet.stake * 0.8)})`}
           </button>
         )}
 
