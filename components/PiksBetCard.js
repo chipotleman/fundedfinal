@@ -64,6 +64,22 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
   const isParlay = bet.betType?.toLowerCase().includes('parlay') || 
                    (bet.legs && bet.legs.length > 1);
 
+  const parlayLegs = useMemo(() => {
+    if (bet.legs && bet.legs.length > 0) {
+      return bet.legs;
+    }
+    if (isParlay && bet.selection) {
+      const selections = bet.selection.split(', ');
+      return selections.map((sel, i) => ({
+        selection: sel.trim(),
+        matchup: `Game ${i + 1}`,
+        betType: 'Spread',
+        odds: Math.round((bet.odds || 0) / selections.length)
+      }));
+    }
+    return [];
+  }, [bet.legs, bet.selection, bet.odds, isParlay]);
+
   const generateScoresForLeg = (leg, index) => {
     const seed = bet.id ? (typeof bet.id === 'string' ? bet.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) : bet.id) : 12345;
     const pseudoRandom = (n) => ((seed * (n + 1 + index * 10) * 9301 + 49297) % 233280) / 233280;
@@ -248,9 +264,9 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
           </div>
         </div>
 
-        {isParlay && isSettled && isExpanded && bet.legs && bet.legs.length > 0 && (
+        {isParlay && isSettled && isExpanded && parlayLegs.length > 0 && (
           <div className="mb-3 space-y-3 border-t border-white/10 pt-3">
-            {bet.legs.map((leg, index) => {
+            {parlayLegs.map((leg, index) => {
               const legTeams = parseTeamsFromMatchup(leg.matchup);
               const legScores = generateScoresForLeg(leg, index);
               
@@ -314,14 +330,14 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
           </div>
         )}
 
-        {isOpen && isParlay && bet.legs && bet.legs.length > 0 && (
+        {isOpen && isParlay && parlayLegs.length > 0 && (
           <div className="mb-3">
             <div 
               className="flex items-center justify-between cursor-pointer"
               onClick={() => setIsExpanded(!isExpanded)}
             >
               <div className="text-gray-400 text-xs uppercase">
-                {bet.legs.length} Games
+                {parlayLegs.length} Games
               </div>
               <svg 
                 className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
@@ -334,7 +350,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
             </div>
             {isExpanded && (
               <div className="mt-2 space-y-2">
-                {bet.legs.map((leg, index) => (
+                {parlayLegs.map((leg, index) => (
                   <div key={index} className="border-b border-white/10 pb-2 last:border-b-0">
                     <div className="text-white text-sm font-medium">{leg.selection}</div>
                     <div className="text-gray-500 text-xs">{leg.matchup}</div>
