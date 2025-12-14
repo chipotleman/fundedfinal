@@ -60,6 +60,7 @@ export const userBets = pgTable("user_bets", {
   pnl: decimal("pnl", { precision: 10, scale: 2 }),
   balanceBefore: decimal("balance_before", { precision: 10, scale: 2 }),
   balanceAfter: decimal("balance_after", { precision: 10, scale: 2 }),
+  legs: jsonb("legs"), // Store parlay leg details
   placedAt: timestamp("placed_at").defaultNow().notNull(),
   settledAt: timestamp("settled_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),

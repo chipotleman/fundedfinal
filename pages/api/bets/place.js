@@ -66,6 +66,13 @@ export default async function handler(req, res) {
       const americanOdds = parlayDecimal >= 2 ? Math.round((parlayDecimal - 1) * 100) : Math.round(-100 / (parlayDecimal - 1));
       const potentialPayout = parlayStake * parlayDecimal;
 
+      const legsData = bets.map(b => ({
+        selection: b.selection,
+        matchup: b.matchup,
+        betType: b.betType,
+        odds: typeof b.odds === 'object' ? b.odds.odds || b.odds.value || 0 : parseInt(b.odds)
+      }));
+
       const parlayBet = {
         userId,
         matchupName: `${bets.length}-Leg Parlay`,
@@ -77,6 +84,7 @@ export default async function handler(req, res) {
         status: 'pending',
         balanceBefore: currentBankroll.toFixed(2),
         balanceAfter: (currentBankroll - parlayStake).toFixed(2),
+        legs: legsData,
       };
 
       await db.insert(userBets).values(parlayBet);

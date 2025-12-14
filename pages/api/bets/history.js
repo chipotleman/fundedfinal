@@ -41,7 +41,8 @@ export default async function handler(req, res) {
         : bet.status === 'lost'
         ? -parseFloat(bet.stake)
         : 0,
-      potentialPayout: parseFloat(bet.potentialPayout) || 0
+      potentialPayout: parseFloat(bet.potentialPayout) || 0,
+      legs: bet.legs || null
     }));
 
     formattedBets.sort((a, b) => {
