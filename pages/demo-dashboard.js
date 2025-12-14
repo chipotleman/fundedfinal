@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import TopNavbar from '../components/TopNavbar';
@@ -137,8 +138,14 @@ export default function DemoDashboard() {
   const [expandedBets, setExpandedBets] = useState({});
   const [betMode, setBetMode] = useState('straight'); // 'straight' or 'parlay'
   const [parlayStake, setParlayStake] = useState('');
+  const [mounted, setMounted] = useState(false);
 
   const sports = ['NFL', 'NBA', 'MLB', 'NHL', 'Soccer'];
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   // Calculate parlay odds from all selected bets
   const calculateParlayOdds = () => {
@@ -434,14 +441,14 @@ export default function DemoDashboard() {
       <CoinRain trigger={showCoinRain} onComplete={() => setShowCoinRain(false)} />
       
       {/* Bet Slip - Full screen on mobile, side panel on desktop */}
-      {showBetSlip && (
+      {mounted && showBetSlip && ReactDOM.createPortal(
         <>
           <div 
             className="fixed inset-0 bg-black z-[98] hidden md:block"
             onClick={() => setShowBetSlip(false)}
           />
           
-          <div className="fixed inset-0 md:inset-auto md:top-0 md:right-0 md:bottom-0 md:w-[420px] bg-black z-[99] flex flex-col">
+          <div className="fixed inset-0 md:inset-auto md:top-0 md:right-0 md:bottom-0 md:w-[420px] bg-black z-[99] flex flex-col h-full">
             {/* Header with Piks branding */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800/50">
               <div className="flex items-center">
@@ -679,7 +686,8 @@ export default function DemoDashboard() {
               </div>
             )}
           </div>
-        </>
+        </>,
+        document.body
       )}
       
       <div className="min-h-screen bg-black">
