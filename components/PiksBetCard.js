@@ -263,7 +263,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
   };
 
   const getBorderColor = () => {
-    if (isWon) return 'border-green-500/50';
+    if (isWon) return 'border-yellow-500/70';
     if (isLost) return 'border-red-700/50';
     if (isCashedOut) return 'border-orange-600/50';
     return 'border-blue-600/50';
@@ -317,10 +317,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
   );
 
   return (
-    <div className={`relative rounded-2xl overflow-hidden mx-2 sm:mx-0 border bg-[#0a0a0a] ${getBorderColor()}`}>
-      {isWon && (
-        <div className="h-1 bg-gradient-to-r from-yellow-500 via-yellow-400 to-amber-500"></div>
-      )}
+    <div className={`relative rounded-2xl overflow-hidden mx-2 sm:mx-0 bg-[#0a0a0a] ${isWon ? 'border-2 border-yellow-500/70' : `border ${getBorderColor()}`}`}>
       <div className={`px-4 py-3 ${isWon ? 'bg-transparent' : getHeaderBackground()}`}>
         <div className="flex items-center justify-between">
           <span className="text-white font-black text-xl tracking-tight">piks</span>
@@ -560,8 +557,8 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
             </div>
             {isWon && (
               <div className="text-right">
-                <div className="text-green-400 font-bold text-xl">${formatMoney(payout)}</div>
-                <div className="text-green-400/80 text-xs uppercase">Won on Piks</div>
+                <div className="text-yellow-400 font-bold text-xl">${formatMoney(payout)}</div>
+                <div className="text-yellow-400/80 text-xs uppercase">Won on Piks</div>
               </div>
             )}
             {isOpen && (
