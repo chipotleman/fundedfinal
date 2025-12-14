@@ -82,6 +82,9 @@ None documented yet.
 
 ## Recent Changes
 - **December 14, 2025**:
+  - ✅ **FEATURE: Withdrawal Split Display** - Shows user's profit split percentage prominently on withdrawal page, reads from profile.challenge
+  - ✅ **FEATURE: Admin Split Selection** - Admin can now select 80%, 85%, or 90% profit split when granting challenges
+  - ✅ **FEATURE: Demo/Real Bets Tabs** - Admin user activity modal now has separate tabs for "Real Bets" and "Demo Bets"
   - ✅ **MAJOR: Withdrawal System** - Complete withdrawal management with payment method-specific forms
   - ✅ **Database**: Added `payment_methods` and `withdrawals` tables
   - ✅ **APIs**: Created secure `/api/payment-methods` and `/api/withdrawals` endpoints with session auth
