@@ -81,6 +81,8 @@ None documented yet.
 
 ## Recent Changes
 - **December 14, 2025**:
+  - ✅ **BUG FIX: Admin Panel Logo** - Updated to use `/pikslogotransparent.png` with doubled sizes (login: h-28, sidebar: h-16)
+  - ✅ **BUG FIX: Admin API Auth** - Fixed token decoding in staff.js, analytics.js, and reset-password.js APIs (was using raw token instead of decoding base64)
   - ✅ Built complete admin panel at `/admin-panel/*`
   - ✅ Added admin authentication system (separate from user auth)
   - ✅ Created user management page with search and details

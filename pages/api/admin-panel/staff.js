@@ -3,10 +3,27 @@ import bcrypt from 'bcryptjs';
 
 const sql = neon(process.env.DATABASE_URL);
 
+function decodeToken(token) {
+  try {
+    const decoded = JSON.parse(Buffer.from(token, 'base64').toString());
+    if (decoded.exp < Date.now()) {
+      return null;
+    }
+    return decoded;
+  } catch {
+    return null;
+  }
+}
+
 async function verifyAdminAuth(token) {
   if (!token) return { authorized: false };
 
-  const adminCheck = await sql`SELECT id, 'admin' as type FROM admin_users WHERE id = ${token}`;
+  const decoded = decodeToken(token);
+  if (!decoded || !decoded.id) {
+    return { authorized: false };
+  }
+
+  const adminCheck = await sql`SELECT id, 'admin' as type FROM admin_users WHERE id = ${decoded.id}`;
   if (adminCheck.length > 0) {
     return { authorized: true, type: 'admin', id: adminCheck[0].id };
   }
@@ -14,7 +31,7 @@ async function verifyAdminAuth(token) {
   const staffCheck = await sql`
     SELECT id, role, permissions, is_active 
     FROM admin_staff 
-    WHERE id = ${token} AND is_active = true
+    WHERE id = ${decoded.id} AND is_active = true
   `;
   if (staffCheck.length > 0) {
     return { 
