@@ -10,14 +10,52 @@ import { useAuth } from '../contexts/AuthContext';
 function ThunderCardModule() {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [trackingStep, setTrackingStep] = useState(0);
+  const [truckPosition, setTruckPosition] = useState(0);
+
+  const trackingSteps = [
+    { label: 'PRODUCTION', icon: '🎉' },
+    { label: 'CARD BEING BUILT', icon: '🔨' },
+    { label: 'SHIPPED', icon: '📦' },
+    { label: 'ARRIVED', icon: '🏠' }
+  ];
+
+  useEffect(() => {
+    if (isSubmitted) {
+      const stepInterval = setInterval(() => {
+        setTrackingStep(prev => {
+          if (prev < trackingSteps.length - 1) {
+            return prev + 1;
+          }
+          clearInterval(stepInterval);
+          return prev;
+        });
+      }, 1200);
+
+      const truckInterval = setInterval(() => {
+        setTruckPosition(prev => {
+          if (prev < 25) {
+            return prev + 1;
+          }
+          clearInterval(truckInterval);
+          return prev;
+        });
+      }, 80);
+
+      return () => {
+        clearInterval(stepInterval);
+        clearInterval(truckInterval);
+      };
+    }
+  }, [isSubmitted]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (email) {
-      // Here you would typically send to your backend
       console.log('Piks Card waitlist signup:', email);
       setIsSubmitted(true);
-      setEmail('');
+      setTrackingStep(0);
+      setTruckPosition(0);
     }
   };
 
@@ -46,36 +84,98 @@ function ThunderCardModule() {
 
           {/* Sign Up Section */}
           <div className="bg-black/30 backdrop-blur-lg rounded-xl p-5 max-w-md mx-auto border border-slate-700/50">
-            <div className="inline-flex items-center bg-purple-600/20 text-purple-300 px-4 py-1.5 rounded-full text-sm font-medium mb-3">
-              🚀 Coming Soon
-            </div>
-            <h3 className="text-lg font-bold text-white mb-2">Get Early Access</h3>
-            <p className="text-gray-400 text-sm mb-4">
-              Join our waitlist for early access and special perks.
-            </p>
-            
             {!isSubmitted ? (
-              <form onSubmit={handleSubmit} className="space-y-3">
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
-                  required
-                />
-                <button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-all shadow-lg hover:shadow-xl"
-                >
-                  Join Waitlist
-                </button>
-              </form>
-            ) : (
-              <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
-                <div className="text-green-400 font-medium">
-                  ✅ You're on the list! We'll notify you when the Piks Card is ready.
+              <>
+                <div className="inline-flex items-center bg-purple-600/20 text-purple-300 px-4 py-1.5 rounded-full text-sm font-medium mb-3">
+                  🚀 Coming Soon
                 </div>
+                <h3 className="text-lg font-bold text-white mb-2">Get Early Access</h3>
+                <p className="text-gray-400 text-sm mb-4">
+                  Join our waitlist for early access and special perks.
+                </p>
+                <form onSubmit={handleSubmit} className="space-y-3">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
+                    required
+                  />
+                  <button
+                    type="submit"
+                    className="w-full bg-white hover:bg-gray-100 text-black font-bold py-3 px-6 rounded-lg transition-all shadow-lg hover:shadow-xl"
+                  >
+                    Join Waitlist
+                  </button>
+                </form>
+              </>
+            ) : (
+              <div className="text-center">
+                <h3 className="text-xl font-bold text-white mb-2">You're on the Waitlist!</h3>
+                <p className="text-gray-400 text-sm mb-4">
+                  We'll notify you when production begins
+                </p>
+
+                {/* Mail Truck Animation */}
+                <div className="relative h-14 mb-6 overflow-hidden">
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-700 rounded-full"></div>
+                  <div 
+                    className="absolute bottom-1 transition-all duration-100 ease-linear"
+                    style={{ left: `${truckPosition}%` }}
+                  >
+                    <div className="text-3xl transform -scale-x-100">🚚</div>
+                  </div>
+                  <div className="absolute bottom-1 right-2 text-xl opacity-30">🏠</div>
+                </div>
+
+                {/* Tracking Steps */}
+                <div className="relative mb-6">
+                  {/* Progress Line */}
+                  <div className="absolute top-4 left-0 right-0 h-1 bg-gray-700 rounded-full mx-6"></div>
+                  <div 
+                    className="absolute top-4 left-0 h-1 bg-white rounded-full mx-6 transition-all duration-500"
+                    style={{ width: `calc(${(trackingStep / (trackingSteps.length - 1)) * 100}% - 48px)` }}
+                  ></div>
+
+                  {/* Steps */}
+                  <div className="flex justify-between relative">
+                    {trackingSteps.map((step, index) => (
+                      <div key={index} className="flex flex-col items-center z-10">
+                        <div 
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-all duration-500 ${
+                            index <= trackingStep 
+                              ? 'bg-white scale-110' 
+                              : 'bg-gray-700'
+                          }`}
+                        >
+                          {index <= trackingStep ? (
+                            <span>{step.icon}</span>
+                          ) : (
+                            <span className="text-gray-500 text-xs">{index + 1}</span>
+                          )}
+                        </div>
+                        <span className={`mt-1 text-[10px] font-medium transition-colors duration-300 ${
+                          index <= trackingStep ? 'text-white' : 'text-gray-500'
+                        }`}>
+                          {step.label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Status Message */}
+                <p className="text-white font-medium text-sm mb-4">
+                  You'll be notified when cards enter production
+                </p>
+
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
+                  className="bg-white hover:bg-gray-100 text-black font-bold py-2.5 px-6 rounded-lg transition-all duration-300 text-sm shadow-lg"
+                >
+                  Start Your Challenge Now
+                </button>
               </div>
             )}
           </div>

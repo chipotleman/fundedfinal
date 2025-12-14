@@ -14,7 +14,7 @@ export default function Waitlist() {
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
 
   const trackingSteps = [
-    { label: 'RELEASE DAY', icon: '🎉' },
+    { label: 'PRODUCTION', icon: '🎉' },
     { label: 'CARD BEING BUILT', icon: '🔨' },
     { label: 'SHIPPED', icon: '📦' },
     { label: 'ARRIVED', icon: '🏠' }
@@ -34,13 +34,13 @@ export default function Waitlist() {
 
       const truckInterval = setInterval(() => {
         setTruckPosition(prev => {
-          if (prev < 100) {
-            return prev + 2;
+          if (prev < 25) {
+            return prev + 1;
           }
           clearInterval(truckInterval);
           return prev;
         });
-      }, 50);
+      }, 80);
 
       return () => {
         clearInterval(stepInterval);
@@ -136,10 +136,10 @@ export default function Waitlist() {
               </p>
             </div>
           ) : (
-            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-green-500/30 text-center">
+            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-gray-700 text-center">
               <h2 className="text-2xl font-bold text-white mb-2">You're on the Waitlist!</h2>
               <p className="text-gray-400 mb-6">
-                We'll notify <span className="text-blue-400">{email}</span> when your card ships
+                We'll notify <span className="text-white">{email}</span> when production begins
               </p>
 
               {/* Mail Truck Animation */}
@@ -147,11 +147,11 @@ export default function Waitlist() {
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-700 rounded-full"></div>
                 <div 
                   className="absolute bottom-1 transition-all duration-100 ease-linear"
-                  style={{ left: `${Math.min(truckPosition, 85)}%` }}
+                  style={{ left: `${truckPosition}%` }}
                 >
                   <div className="text-4xl transform -scale-x-100">🚚</div>
                 </div>
-                <div className="absolute bottom-1 right-2 text-2xl">🏠</div>
+                <div className="absolute bottom-1 right-2 text-2xl opacity-30">🏠</div>
               </div>
 
               {/* Tracking Steps */}
@@ -159,7 +159,7 @@ export default function Waitlist() {
                 {/* Progress Line */}
                 <div className="absolute top-5 left-0 right-0 h-1 bg-gray-700 rounded-full mx-8"></div>
                 <div 
-                  className="absolute top-5 left-0 h-1 bg-gradient-to-r from-green-500 to-blue-500 rounded-full mx-8 transition-all duration-500"
+                  className="absolute top-5 left-0 h-1 bg-white rounded-full mx-8 transition-all duration-500"
                   style={{ width: `calc(${(trackingStep / (trackingSteps.length - 1)) * 100}% - 64px)` }}
                 ></div>
 
@@ -170,18 +170,18 @@ export default function Waitlist() {
                       <div 
                         className={`w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all duration-500 ${
                           index <= trackingStep 
-                            ? 'bg-gradient-to-r from-green-500 to-blue-500 scale-110' 
+                            ? 'bg-white scale-110' 
                             : 'bg-gray-700'
                         }`}
                       >
                         {index <= trackingStep ? (
-                          <span className="animate-pulse">{step.icon}</span>
+                          <span>{step.icon}</span>
                         ) : (
                           <span className="text-gray-500 text-sm">{index + 1}</span>
                         )}
                       </div>
                       <span className={`mt-2 text-xs font-medium transition-colors duration-300 ${
-                        index <= trackingStep ? 'text-green-400' : 'text-gray-500'
+                        index <= trackingStep ? 'text-white' : 'text-gray-500'
                       }`}>
                         {step.label}
                       </span>
@@ -192,20 +192,17 @@ export default function Waitlist() {
 
               {/* Status Message */}
               <div className="mb-6">
-                {trackingStep < trackingSteps.length - 1 ? (
-                  <p className="text-gray-300 animate-pulse">
-                    Tracking your card journey...
-                  </p>
-                ) : (
-                  <p className="text-green-400 font-bold text-lg">
-                    Your Piks Card is on its way! 🎉
-                  </p>
-                )}
+                <p className="text-white font-medium">
+                  You'll be notified when cards enter production
+                </p>
+                <p className="text-gray-500 text-sm mt-1">
+                  Expected launch: Q1 2026
+                </p>
               </div>
 
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
-                className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 inline-block shadow-lg"
+                className="bg-white hover:bg-gray-100 text-black font-bold py-3 px-8 rounded-xl transition-all duration-300 inline-block shadow-lg"
               >
                 Start Your Challenge Now
               </button>
