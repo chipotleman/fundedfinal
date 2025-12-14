@@ -14,7 +14,7 @@ export default function Promos() {
     const fetchUserProfile = async () => {
       if (user?.id) {
         try {
-          const response = await fetch(`/api/user/profile?userId=${user.id}`);
+          const response = await fetch(`/api/profiles/${user.id}`);
           if (response.ok) {
             const profile = await response.json();
             if (profile?.bankroll) {
