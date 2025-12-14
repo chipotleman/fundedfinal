@@ -268,19 +268,26 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
 
   const currentChallenge = challenges[currentIndex];
 
-  // Calculate price based on split boost (70% is base price, higher = surcharge)
+  // Calculate price based on split (70% is base price)
   const baseSplit = 70;
   let priceMultiplier;
 
   if (userSplit > baseSplit) {
-    // Surcharge for splits above 70%
-    priceMultiplier = 1 + ((userSplit - baseSplit) * 0.08); // 8% surcharge per % above 70%
+    // Surcharge for splits above 70% - 8% increase per percentage point
+    priceMultiplier = 1 + ((userSplit - baseSplit) * 0.08);
+  } else if (userSplit < baseSplit) {
+    // Discount for splits below 70% - 3% decrease per percentage point (less aggressive than increases)
+    priceMultiplier = 1 - ((baseSplit - userSplit) * 0.03);
   } else {
     // Base price at 70%
     priceMultiplier = 1;
   }
 
   const adjustedPrice = Math.round(currentChallenge.price * priceMultiplier);
+  
+  // Calculate color based on split (50% = blue, 100% = green)
+  const splitColorProgress = (userSplit - 50) / 50; // 0 at 50%, 1 at 100%
+  const splitBarColor = `rgb(${Math.round(59 + (34 - 59) * splitColorProgress)}, ${Math.round(130 + (197 - 130) * splitColorProgress)}, ${Math.round(246 + (94 - 246) * splitColorProgress)})`; // Blue to Green
 
   // Theme colors based on challenge badge
   const getThemeColors = () => {
@@ -672,9 +679,9 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 </div>
               </div>
 
-              {/* Split Boost - Hidden when rules are expanded */}
+              {/* Choose Your Split - Hidden when rules are expanded */}
               {!showRules && (
-                <div className={`p-4 bg-gradient-to-r ${theme.splitGradient} rounded-2xl border ${theme.splitBorder} mb-4 relative`} style={{ WebkitTapHighlightColor: 'transparent' }}>
+                <div className="p-4 bg-slate-800/50 rounded-2xl border border-slate-600/50 mb-4 relative" style={{ WebkitTapHighlightColor: 'transparent' }}>
                   {/* Reset Button */}
                   <button
                     onClick={() => setUserSplit(70)}
@@ -688,8 +695,8 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   </button>
 
                   <div className="text-center mb-3">
-                    <div className="text-sm font-medium text-gray-300">Split Boost</div>
-                    <div className="text-xs text-gray-400">Drag anywhere on the bar to boost your split</div>
+                    <div className="text-sm font-medium text-gray-300">Choose Your Split</div>
+                    <div className="text-xs text-gray-400">Drag to adjust your profit share</div>
                   </div>
 
                   {/* Draggable Split Visual */}
@@ -738,8 +745,11 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                     }}
                   >
                     <div
-                      className={`bg-gradient-to-r ${theme.splitBar} flex items-center justify-center text-white text-xs font-bold transition-all duration-150`}
-                      style={{ width: `${userSplit}%` }}
+                      className="flex items-center justify-center text-white text-xs font-bold transition-all duration-150"
+                      style={{ 
+                        width: `${userSplit}%`,
+                        backgroundColor: splitBarColor
+                      }}
                     >
                       You {userSplit}%
                     </div>
@@ -750,6 +760,13 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                       Us {100 - userSplit}%
                     </div>
                   </div>
+                  
+                  {/* Split scale labels */}
+                  <div className="flex justify-between text-xs mt-2 px-1">
+                    <span className="text-blue-400">50%</span>
+                    <span className="text-gray-500">70%</span>
+                    <span className="text-green-400">100%</span>
+                  </div>
                 </div>
               )}
 
@@ -758,17 +775,27 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 <div className="text-center mb-4 p-3 bg-slate-800/30 rounded-xl border border-slate-600" style={{ WebkitTapHighlightColor: 'transparent' }}>
                   <div className="flex items-center justify-center space-x-2">
                     <div className="text-xl font-bold text-white">${adjustedPrice}</div>
-                    {adjustedPrice !== currentChallenge.price && (
+                    {adjustedPrice > currentChallenge.price && (
                       <div className="text-xs">
-                        <span className={theme.text}>(+${adjustedPrice - currentChallenge.price})</span>
+                        <span className="text-orange-400">(+${adjustedPrice - currentChallenge.price})</span>
+                      </div>
+                    )}
+                    {adjustedPrice < currentChallenge.price && (
+                      <div className="text-xs">
+                        <span className="text-green-400">(-${currentChallenge.price - adjustedPrice})</span>
                       </div>
                     )}
                   </div>
                   <div className="text-gray-400 text-xs">
                     Challenge fee
-                    {adjustedPrice !== currentChallenge.price && (
-                      <span className="ml-1">
-                        (boost surcharge)
+                    {adjustedPrice > currentChallenge.price && (
+                      <span className="ml-1 text-orange-400">
+                        (split premium)
+                      </span>
+                    )}
+                    {adjustedPrice < currentChallenge.price && (
+                      <span className="ml-1 text-green-400">
+                        (discount applied)
                       </span>
                     )}
                   </div>
