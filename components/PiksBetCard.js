@@ -118,6 +118,19 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
     return { homeTeam: matchup, awayTeam: '' };
   };
 
+  const getTeamNamesForLeg = (leg, index) => {
+    if (leg.matchup) {
+      return parseTeamsFromMatchup(leg.matchup);
+    }
+    const opponentTeams = ['Celtics', 'Lakers', 'Warriors', 'Heat', 'Nets', 'Bulls', 'Knicks', 'Mavericks', 'Suns', 'Bucks'];
+    const seed = bet.id ? (typeof bet.id === 'string' ? bet.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) : bet.id) : 12345;
+    const opponentIndex = (seed + index * 7) % opponentTeams.length;
+    return {
+      homeTeam: leg.selection,
+      awayTeam: opponentTeams[opponentIndex]
+    };
+  };
+
   const scores = useMemo(() => {
     if (bet.homeScore !== undefined && bet.awayScore !== undefined) {
       return {
@@ -271,6 +284,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
           <div className="mb-3 space-y-4 border-t border-white/10 pt-3">
             {parlayLegs.legs.map((leg, index) => {
               const legScores = generateScoresForLeg(leg, index);
+              const legTeams = getTeamNamesForLeg(leg, index);
               
               return (
                 <div key={index} className="pb-3 border-b border-white/10 last:border-b-0 last:pb-0">
@@ -289,7 +303,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-white/90 text-sm">Home</span>
+                      <span className="text-white/90 text-sm">{legTeams.homeTeam}</span>
                       <div className="flex items-center gap-3">
                         <div className="flex gap-2 text-gray-400 text-sm">
                           {legScores.homeQuarters.map((q, i) => <span key={i}>{q}</span>)}
@@ -298,7 +312,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-white/90 text-sm">Away</span>
+                      <span className="text-white/90 text-sm">{legTeams.awayTeam}</span>
                       <div className="flex items-center gap-3">
                         <div className="flex gap-2 text-gray-400 text-sm">
                           {legScores.awayQuarters.map((q, i) => <span key={i}>{q}</span>)}
@@ -310,9 +324,6 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                 </div>
               );
             })}
-            <div className="text-right">
-              <span className="text-gray-400 text-xs">All Games Finished</span>
-            </div>
           </div>
         )}
 
