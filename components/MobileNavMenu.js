@@ -4,13 +4,17 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { signOut, useSession } from 'next-auth/react';
 
-export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn }) {
+export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurrentUser, isLoggedIn: propIsLoggedIn }) {
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const [mounted, setMounted] = useState(false);
   const [hasActiveChallenge, setHasActiveChallenge] = useState(false);
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  
+  // Use session directly for login state - more reliable than prop
+  const isLoggedIn = status === 'authenticated' && !!session?.user;
+  const currentUser = session?.user || propCurrentUser;
 
   useEffect(() => {
     setMounted(true);
