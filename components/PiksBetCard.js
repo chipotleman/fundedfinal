@@ -66,19 +66,22 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
 
   const parlayLegs = useMemo(() => {
     if (bet.legs && bet.legs.length > 0) {
-      return bet.legs;
+      return { legs: bet.legs, hasRealData: true };
     }
     if (isParlay && bet.selection) {
       const selections = bet.selection.split(', ');
-      return selections.map((sel, i) => ({
-        selection: sel.trim(),
-        matchup: `Game ${i + 1}`,
-        betType: 'Spread',
-        odds: Math.round((bet.odds || 0) / selections.length)
-      }));
+      return {
+        legs: selections.map((sel) => ({
+          selection: sel.trim(),
+          matchup: null,
+          betType: null,
+          odds: null
+        })),
+        hasRealData: false
+      };
     }
-    return [];
-  }, [bet.legs, bet.selection, bet.odds, isParlay]);
+    return { legs: [], hasRealData: false };
+  }, [bet.legs, bet.selection, isParlay]);
 
   const generateScoresForLeg = (leg, index) => {
     const seed = bet.id ? (typeof bet.id === 'string' ? bet.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) : bet.id) : 12345;
@@ -264,31 +267,46 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
           </div>
         </div>
 
-        {isParlay && isSettled && isExpanded && parlayLegs.length > 0 && (
-          <div className="mb-3 space-y-3 border-t border-white/10 pt-3">
-            {parlayLegs.map((leg, index) => {
-              const legTeams = parseTeamsFromMatchup(leg.matchup);
+        {isParlay && isSettled && isExpanded && parlayLegs.legs.length > 0 && (
+          <div className="mb-3 space-y-4 border-t border-white/10 pt-3">
+            {parlayLegs.legs.map((leg, index) => {
               const legScores = generateScoresForLeg(leg, index);
               
               return (
                 <div key={index} className="pb-3 border-b border-white/10 last:border-b-0 last:pb-0">
-                  <div className="flex justify-between items-start mb-2">
+                  <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
-                      <div className="text-white text-sm font-medium">{leg.selection}</div>
-                      <div className="text-gray-500 text-xs">{leg.betType}</div>
+                      <div className="text-white font-bold text-base">{leg.selection}</div>
+                      {parlayLegs.hasRealData && leg.betType && (
+                        <div className="text-gray-500 text-xs">{leg.betType}</div>
+                      )}
                     </div>
-                    <div className="text-white font-bold text-sm">
-                      {leg.odds > 0 ? `+${leg.odds}` : leg.odds}
+                    {parlayLegs.hasRealData && leg.odds && (
+                      <div className="text-white font-bold text-lg">
+                        {leg.odds > 0 ? `+${leg.odds}` : leg.odds}
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/90 text-sm">Home</span>
+                      <div className="flex items-center gap-3">
+                        <div className="flex gap-2 text-gray-400 text-sm">
+                          {legScores.homeQuarters.map((q, i) => <span key={i}>{q}</span>)}
+                        </div>
+                        <span className="text-white font-bold text-lg w-8 text-right">{legScores.homeScore}</span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-white/90 text-sm">Away</span>
+                      <div className="flex items-center gap-3">
+                        <div className="flex gap-2 text-gray-400 text-sm">
+                          {legScores.awayQuarters.map((q, i) => <span key={i}>{q}</span>)}
+                        </div>
+                        <span className="text-white font-bold text-lg w-8 text-right">{legScores.awayScore}</span>
+                      </div>
                     </div>
                   </div>
-                  <ScoreSection 
-                    homeTeam={legTeams.homeTeam}
-                    awayTeam={legTeams.awayTeam}
-                    homeScore={legScores.homeScore}
-                    awayScore={legScores.awayScore}
-                    homeQuarters={legScores.homeQuarters}
-                    awayQuarters={legScores.awayQuarters}
-                  />
                 </div>
               );
             })}
@@ -330,14 +348,14 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
           </div>
         )}
 
-        {isOpen && isParlay && parlayLegs.length > 0 && (
+        {isOpen && isParlay && parlayLegs.legs.length > 0 && (
           <div className="mb-3">
             <div 
               className="flex items-center justify-between cursor-pointer"
               onClick={() => setIsExpanded(!isExpanded)}
             >
               <div className="text-gray-400 text-xs uppercase">
-                {parlayLegs.length} Games
+                {parlayLegs.legs.length} Games
               </div>
               <svg 
                 className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
@@ -350,13 +368,14 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
             </div>
             {isExpanded && (
               <div className="mt-2 space-y-2">
-                {parlayLegs.map((leg, index) => (
+                {parlayLegs.legs.map((leg, index) => (
                   <div key={index} className="border-b border-white/10 pb-2 last:border-b-0">
                     <div className="text-white text-sm font-medium">{leg.selection}</div>
-                    <div className="text-gray-500 text-xs">{leg.matchup}</div>
-                    <div className="text-blue-400 text-xs font-bold">
-                      {leg.odds > 0 ? `+${leg.odds}` : leg.odds}
-                    </div>
+                    {parlayLegs.hasRealData && leg.odds && (
+                      <div className="text-blue-400 text-xs font-bold">
+                        {leg.odds > 0 ? `+${leg.odds}` : leg.odds}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
