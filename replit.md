@@ -81,6 +81,9 @@ None documented yet.
 
 ## Recent Changes
 - **December 14, 2025**:
+  - ✅ **BUG FIX: UI Balance Refresh** - Fixed bankroll not updating in UI after bet placement by handling numeric string coercion in BetSlip.js and dashboard.js
+  - ✅ **FEATURE: Analytics Integration** - Integrated useEventTracking hook globally in _app.js via AnalyticsTracker component for automatic page view and click tracking
+  - ✅ **BUG FIX: Session Analytics API** - Fixed ON CONFLICT issue in session.js by checking for existing session before insert
   - ✅ **FEATURE: My Challenge Navigation** - Navigation now shows "My Challenge" instead of "Free Trial" when user has an active challenge
   - ✅ **FEATURE: MyChallengePopup** - New popup (components/MyChallengePopup.js) shows challenge progress, stats, rules, and navigation buttons
   - ✅ **FEATURE: Withdrawal Page** - New page (pages/withdrawal.js) with 5 payment methods (Bank Transfer, Instant Transfer, Venmo, Wire, Check)
