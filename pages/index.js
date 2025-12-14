@@ -10,7 +10,6 @@ import { useAuth } from '../contexts/AuthContext';
 function ThunderCardModule() {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [truckPosition, setTruckPosition] = useState(0);
   const [savedEmail, setSavedEmail] = useState('');
 
   const trackingSteps = [
@@ -25,27 +24,8 @@ function ThunderCardModule() {
     if (storedEmail) {
       setSavedEmail(storedEmail);
       setIsSubmitted(true);
-      setTruckPosition(2);
     }
   }, []);
-
-  useEffect(() => {
-    if (isSubmitted && truckPosition < 2) {
-      const truckInterval = setInterval(() => {
-        setTruckPosition(prev => {
-          if (prev < 2) {
-            return prev + 1;
-          }
-          clearInterval(truckInterval);
-          return prev;
-        });
-      }, 80);
-
-      return () => {
-        clearInterval(truckInterval);
-      };
-    }
-  }, [isSubmitted]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -54,7 +34,6 @@ function ThunderCardModule() {
       localStorage.setItem('piksCardWaitlistEmail', email);
       setSavedEmail(email);
       setIsSubmitted(true);
-      setTruckPosition(0);
     }
   };
 
@@ -117,16 +96,8 @@ function ThunderCardModule() {
                   {savedEmail ? ' - ' : ''}We'll notify you when production begins
                 </p>
 
-                {/* Tracking Steps with Truck */}
+                {/* Tracking Steps */}
                 <div className="relative mb-6">
-                  {/* Truck positioned above PLANNING bubble */}
-                  <div 
-                    className="absolute -top-10 transition-all duration-100 ease-linear z-20"
-                    style={{ left: 'calc(12.5% - 20px)' }}
-                  >
-                    <div className="text-5xl transform -scale-x-100">🚚</div>
-                  </div>
-
                   {/* Progress Line */}
                   <div className="absolute top-4 left-0 right-0 h-1 bg-gray-700 rounded-full mx-6"></div>
 
