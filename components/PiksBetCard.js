@@ -378,17 +378,64 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
               </svg>
             </div>
             {isExpanded && (
-              <div className="mt-2 space-y-2">
-                {parlayLegs.legs.map((leg, index) => (
-                  <div key={index} className="border-b border-white/10 pb-2 last:border-b-0">
-                    <div className="text-white text-sm font-medium">{leg.selection}</div>
-                    {parlayLegs.hasRealData && leg.odds && (
-                      <div className="text-blue-400 text-xs font-bold">
-                        {leg.odds > 0 ? `+${leg.odds}` : leg.odds}
+              <div className="mt-3 space-y-4">
+                {parlayLegs.legs.map((leg, index) => {
+                  const legTeams = getTeamNamesForLeg(leg, index);
+                  const hasLiveData = leg.homeScore !== undefined && leg.awayScore !== undefined;
+                  
+                  return (
+                    <div key={index} className="pb-3 border-b border-white/10 last:border-b-0 last:pb-0">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1">
+                          <div className="text-white font-bold text-base">{leg.selection}</div>
+                          {parlayLegs.hasRealData && leg.betType && (
+                            <div className="text-gray-500 text-xs">{leg.betType}</div>
+                          )}
+                        </div>
+                        {parlayLegs.hasRealData && leg.odds && (
+                          <div className="text-blue-400 font-bold text-lg">
+                            {leg.odds > 0 ? `+${leg.odds}` : leg.odds}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                ))}
+                      <div className="space-y-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-white/90 text-sm">{legTeams.homeTeam}</span>
+                          {hasLiveData ? (
+                            <span className="text-white font-bold">{leg.homeScore}</span>
+                          ) : (
+                            <span className="text-blue-400 text-xs">-</span>
+                          )}
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-white/90 text-sm">{legTeams.awayTeam}</span>
+                          {hasLiveData ? (
+                            <span className="text-white font-bold">{leg.awayScore}</span>
+                          ) : (
+                            <span className="text-blue-400 text-xs">-</span>
+                          )}
+                        </div>
+                      </div>
+                      {leg.gameStart && (
+                        <div className="text-blue-300 text-xs mt-1.5">
+                          {new Date(leg.gameStart).toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: 'numeric',
+                            minute: '2-digit',
+                            hour12: true
+                          })}
+                        </div>
+                      )}
+                      {hasLiveData && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
+                          <span className="text-green-400 text-xs font-medium">LIVE</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
