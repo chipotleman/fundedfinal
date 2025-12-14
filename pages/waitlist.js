@@ -3,6 +3,7 @@ import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Waitlist() {
   const [email, setEmail] = useState('');
@@ -10,6 +11,27 @@ export default function Waitlist() {
   const [isFlipping, setIsFlipping] = useState(false);
   const [savedEmail, setSavedEmail] = useState('');
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
+  const { user } = useAuth();
+  const [bankroll, setBankroll] = useState(10000);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user?.id) {
+        try {
+          const response = await fetch(`/api/profiles/${user.id}`);
+          if (response.ok) {
+            const profile = await response.json();
+            if (profile?.bankroll) {
+              setBankroll(profile.bankroll);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+        }
+      }
+    };
+    fetchUserProfile();
+  }, [user]);
 
   const trackingSteps = [
     { label: 'PLANNING', icon: '📋' },
@@ -42,6 +64,7 @@ export default function Waitlist() {
   return (
     <div className="min-h-screen bg-black text-white">
       <TopNavbar
+        bankroll={user ? bankroll : null}
         betSlipCount={betSlip.length}
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
@@ -168,7 +191,13 @@ export default function Waitlist() {
           </p>
         </div>
       </div>
-      {betSlip.length > 0 && <BetSlip show={showBetSlip} onClose={() => setShowBetSlip(false)} />}
+      {showBetSlip && (
+        <BetSlip
+          bankroll={bankroll}
+          isOpen={showBetSlip}
+          onClose={() => setShowBetSlip(false)}
+        />
+      )}
     </div>
   );
 }
