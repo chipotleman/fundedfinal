@@ -391,20 +391,23 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
                     }} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     The Lab
                   </button>
-                  <button onClick={() => {
-                      const existingChallenge = localStorage.getItem('demo_challenge');
-                      const existingState = localStorage.getItem('demo_state');
-                      if (existingChallenge && existingState) {
-                        router.push('/demo-dashboard');
-                      } else {
-                        window.dispatchEvent(new CustomEvent('openDemoPopup'));
-                      }
-                    }} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    Free Trial
-                  </button>
-                  <button onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
-                    How It Works
-                  </button>
+                  {hasActiveChallenge ? (
+                    <button onClick={() => window.dispatchEvent(new CustomEvent('openMyChallengePopup'))} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                      My Challenge
+                    </button>
+                  ) : (
+                    <button onClick={() => {
+                        const existingChallenge = localStorage.getItem('demo_challenge');
+                        const existingState = localStorage.getItem('demo_state');
+                        if (existingChallenge && existingState) {
+                          router.push('/demo-dashboard');
+                        } else {
+                          window.dispatchEvent(new CustomEvent('openDemoPopup'));
+                        }
+                      }} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                      Free Trial
+                    </button>
+                  )}
                   <Link href="/waitlist" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
                     Piks Card
                   </Link>
@@ -438,7 +441,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
                   {hasActiveChallenge && userProfile ? (
                     <div className="bg-[#111111] hover:bg-[#1a1a1a] rounded-lg px-3 py-2 border border-gray-800/50 hover:border-gray-700 transition-colors">
                       <button
-                        onClick={() => setShowBalanceModal(true)}
+                        onClick={() => router.push('/withdrawal')}
                         className="flex items-center space-x-2"
                       >
                         <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">

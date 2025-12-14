@@ -9,6 +9,7 @@ import HowItWorksPopup from '../components/HowItWorksPopup';
 import DemoPopup from '../components/DemoPopup';
 import AuthPopup from '../components/AuthPopup';
 import SessionSummaryPopup from '../components/SessionSummaryPopup';
+import MyChallengePopup from '../components/MyChallengePopup';
 import MobileNavMenu from '../components/MobileNavMenu';
 import BetaLanding from '../components/BetaLanding';
 
@@ -21,6 +22,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
   const [authPopupMode, setAuthPopupMode] = useState('signin');
   const [showSessionSummary, setShowSessionSummary] = useState(false);
   const [sessionSummaryData, setSessionSummaryData] = useState(null);
+  const [showMyChallengePopup, setShowMyChallengePopup] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -114,6 +116,10 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
       }
     };
 
+    const handleOpenMyChallengePopup = () => {
+      setShowMyChallengePopup(true);
+    };
+
     if (typeof window !== 'undefined') {
       window.addEventListener('openChallengePopup', handleOpenChallengePopup);
       window.addEventListener('openHowItWorks', handleOpenHowItWorks);
@@ -121,6 +127,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
       window.addEventListener('openDemoPopup', handleOpenDemoPopup);
       window.addEventListener('openAuthPopup', handleOpenAuthPopup);
       window.addEventListener('openSessionSummary', handleOpenSessionSummary);
+      window.addEventListener('openMyChallengePopup', handleOpenMyChallengePopup);
     }
 
     return () => {
@@ -131,6 +138,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
         window.removeEventListener('openDemoPopup', handleOpenDemoPopup);
         window.removeEventListener('openAuthPopup', handleOpenAuthPopup);
         window.removeEventListener('openSessionSummary', handleOpenSessionSummary);
+        window.removeEventListener('openMyChallengePopup', handleOpenMyChallengePopup);
       }
     };
   }, []);
@@ -223,6 +231,11 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
               setSessionSummaryData(null);
             }}
             sessionData={sessionSummaryData}
+          />
+
+          <MyChallengePopup
+            isOpen={showMyChallengePopup}
+            onClose={() => setShowMyChallengePopup(false)}
           />
 
           {/* Mobile Menu - Rendered outside page wrapper via portal */}

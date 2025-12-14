@@ -2,18 +2,47 @@ import { useEffect, useState } from 'react';
 import ReactDOM from 'react-dom';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 
 export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn }) {
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const [mounted, setMounted] = useState(false);
+  const [hasActiveChallenge, setHasActiveChallenge] = useState(false);
   const router = useRouter();
+  const { data: session } = useSession();
 
   useEffect(() => {
     setMounted(true);
     return () => setMounted(false);
   }, []);
+
+  useEffect(() => {
+    const checkChallenge = async () => {
+      if (session?.user?.id) {
+        try {
+          const response = await fetch(`/api/profiles/${session.user.id}`);
+          if (response.ok) {
+            const profile = await response.json();
+            const isActive = profile.status !== 'inactive' && parseFloat(profile.bankroll) > 0;
+            setHasActiveChallenge(isActive);
+            return;
+          }
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+        }
+      }
+      const storedChallenge = localStorage.getItem('purchased_challenge');
+      setHasActiveChallenge(!!storedChallenge);
+    };
+    checkChallenge();
+    window.addEventListener('storage', checkChallenge);
+    window.addEventListener('challengeUpdated', checkChallenge);
+    return () => {
+      window.removeEventListener('storage', checkChallenge);
+      window.removeEventListener('challengeUpdated', checkChallenge);
+    };
+  }, [session]);
 
   // Lock body scroll when menu is open
   useEffect(() => {
@@ -120,30 +149,33 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
               >
                 Bet History
               </Link>
-              <button
-                onClick={() => {
-                  onClose();
-                  const existingChallenge = localStorage.getItem('demo_challenge');
-                  const existingState = localStorage.getItem('demo_state');
-                  if (existingChallenge && existingState) {
-                    window.location.href = '/demo-dashboard';
-                  } else {
-                    window.dispatchEvent(new CustomEvent('openDemoPopup'));
-                  }
-                }}
-                className="block w-full text-left text-gray-300 font-light text-base uppercase tracking-wider py-3"
-              >
-                Free Trial
-              </button>
-              <button 
-                onClick={() => {
-                  onClose();
-                  window.dispatchEvent(new CustomEvent('openHowItWorks'));
-                }}
-                className="block w-full text-left text-gray-300 font-light text-base uppercase tracking-wider py-3"
-              >
-                How It Works
-              </button>
+              {hasActiveChallenge ? (
+                <button
+                  onClick={() => {
+                    onClose();
+                    window.dispatchEvent(new CustomEvent('openMyChallengePopup'));
+                  }}
+                  className="block w-full text-left text-gray-300 font-light text-base uppercase tracking-wider py-3"
+                >
+                  My Challenge
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    onClose();
+                    const existingChallenge = localStorage.getItem('demo_challenge');
+                    const existingState = localStorage.getItem('demo_state');
+                    if (existingChallenge && existingState) {
+                      window.location.href = '/demo-dashboard';
+                    } else {
+                      window.dispatchEvent(new CustomEvent('openDemoPopup'));
+                    }
+                  }}
+                  className="block w-full text-left text-gray-300 font-light text-base uppercase tracking-wider py-3"
+                >
+                  Free Trial
+                </button>
+              )}
               <Link
                 href="/waitlist"
                 onClick={onClose}
