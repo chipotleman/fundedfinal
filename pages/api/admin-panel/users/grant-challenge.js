@@ -96,10 +96,10 @@ export default async function handler(req, res) {
         startingBalance: config.balance.toString(),
         currentBalance: config.balance.toString(),
         userSplit: config.userSplit,
+        pricePaid: '0',
         phase: 1,
         status: 'active',
         profitTarget: config.profitTarget.toString(),
-        maxDrawdown: config.maxDrawdown.toString(),
         maxDailyLoss: config.maxDailyLoss.toString(),
       })
       .returning();
