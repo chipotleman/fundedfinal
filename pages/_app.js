@@ -101,6 +101,14 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
     }
 
     const fetchUser = async () => {
+      // Check NextAuth session first (passed as prop from SessionProvider)
+      if (session?.user) {
+        setCurrentUser(session.user);
+        setIsLoggedIn(true);
+        return;
+      }
+      
+      // Fallback to localStorage for demo/local users
       const storedUser = localStorage.getItem('current_user');
       if (storedUser) {
         try {
@@ -112,6 +120,10 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
         } catch (error) {
           localStorage.removeItem('current_user');
         }
+      } else {
+        // No session and no stored user - ensure logged out state
+        setCurrentUser(null);
+        setIsLoggedIn(false);
       }
     };
 
@@ -177,7 +189,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
         window.removeEventListener('openMyChallengePopup', handleOpenMyChallengePopup);
       }
     };
-  }, []);
+  }, [session]);
 
   if (!betaAuthenticated) {
     return (
