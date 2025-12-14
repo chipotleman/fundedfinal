@@ -508,9 +508,9 @@ export default function AuthPage() {
                     )}
                   </button>
                 </div>
-                {password.length > 0 && (
-                  <p className={`text-xs mt-2 ${isPasswordStrong ? 'text-green-400' : 'text-gray-400'}`}>
-                    {isPasswordStrong ? '✓ Password is strong enough' : 'Minimum 6 characters required'}
+                {isSignUp && password.length > 0 && !isPasswordStrong && (
+                  <p className="text-xs mt-2 text-gray-400">
+                    Minimum 6 characters required
                   </p>
                 )}
               </div>
