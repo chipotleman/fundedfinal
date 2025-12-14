@@ -1,6 +1,12 @@
 import { useState, useEffect, Fragment } from 'react';
 import AdminLayout from '../../components/admin-panel/AdminLayout';
 
+const CHALLENGES = [
+  { type: 'starter', name: 'Starter Challenge', balance: '$5,000', price: '$149' },
+  { type: 'pro', name: 'Pro Challenge', balance: '$10,000', price: '$249' },
+  { type: 'elite', name: 'Elite Challenge', balance: '$25,000', price: '$399' },
+];
+
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -11,6 +17,12 @@ export default function AdminUsers() {
   const [resetUserId, setResetUserId] = useState(null);
   const [newPassword, setNewPassword] = useState('');
   const [resetMessage, setResetMessage] = useState('');
+  const [showChallengeModal, setShowChallengeModal] = useState(false);
+  const [challengeUserId, setChallengeUserId] = useState(null);
+  const [challengeUserEmail, setChallengeUserEmail] = useState('');
+  const [selectedChallenge, setSelectedChallenge] = useState('');
+  const [challengeMessage, setChallengeMessage] = useState('');
+  const [grantingChallenge, setGrantingChallenge] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -92,6 +104,58 @@ export default function AdminUsers() {
       }
     } catch (error) {
       setResetMessage('An error occurred');
+    }
+  };
+
+  const openChallengeModal = (userId, email, e) => {
+    e.stopPropagation();
+    setChallengeUserId(userId);
+    setChallengeUserEmail(email);
+    setSelectedChallenge('');
+    setChallengeMessage('');
+    setShowChallengeModal(true);
+  };
+
+  const handleGrantChallenge = async () => {
+    if (!selectedChallenge) {
+      setChallengeMessage('Please select a challenge type');
+      return;
+    }
+
+    setGrantingChallenge(true);
+    setChallengeMessage('');
+
+    try {
+      const token = localStorage.getItem('admin_token');
+      const res = await fetch('/api/admin-panel/users/grant-challenge', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ 
+          userId: challengeUserId, 
+          challengeType: selectedChallenge 
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setChallengeMessage(data.message || 'Challenge granted successfully');
+        fetchUsers();
+        setTimeout(() => {
+          setShowChallengeModal(false);
+          setChallengeUserId(null);
+          setChallengeUserEmail('');
+          setSelectedChallenge('');
+        }, 1500);
+      } else {
+        setChallengeMessage(data.error || 'Failed to grant challenge');
+      }
+    } catch (error) {
+      setChallengeMessage('An error occurred');
+    } finally {
+      setGrantingChallenge(false);
     }
   };
 
@@ -216,12 +280,20 @@ export default function AdminUsers() {
                         </span>
                       </td>
                       <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={(e) => openResetModal(user.id, e)}
-                          className="text-yellow-400 hover:text-yellow-300 text-sm"
-                        >
-                          Reset Password
-                        </button>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={(e) => openChallengeModal(user.id, user.email, e)}
+                            className="text-green-400 hover:text-green-300 text-sm"
+                          >
+                            Grant Challenge
+                          </button>
+                          <button
+                            onClick={(e) => openResetModal(user.id, e)}
+                            className="text-yellow-400 hover:text-yellow-300 text-sm"
+                          >
+                            Reset Password
+                          </button>
+                        </div>
                       </td>
                     </tr>
                     {expandedUser === user.id && (
@@ -328,6 +400,80 @@ export default function AdminUsers() {
                 className="flex-1 px-4 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition-colors"
               >
                 Reset Password
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showChallengeModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold text-white mb-2">Grant Free Challenge</h2>
+            <p className="text-gray-400 text-sm mb-4">User: {challengeUserEmail}</p>
+            
+            <div className="mb-4 space-y-3">
+              {CHALLENGES.map((challenge) => (
+                <label
+                  key={challenge.type}
+                  className={`flex items-center justify-between p-4 rounded-lg border cursor-pointer transition-colors ${
+                    selectedChallenge === challenge.type
+                      ? 'border-green-500 bg-green-500/10'
+                      : 'border-gray-700 bg-gray-800 hover:border-gray-600'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="radio"
+                      name="challenge"
+                      value={challenge.type}
+                      checked={selectedChallenge === challenge.type}
+                      onChange={(e) => setSelectedChallenge(e.target.value)}
+                      className="hidden"
+                    />
+                    <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+                      selectedChallenge === challenge.type
+                        ? 'border-green-500'
+                        : 'border-gray-600'
+                    }`}>
+                      {selectedChallenge === challenge.type && (
+                        <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-white font-medium">{challenge.name}</p>
+                      <p className="text-gray-400 text-sm">{challenge.balance} balance</p>
+                    </div>
+                  </div>
+                  <span className="text-gray-500 text-sm line-through">{challenge.price}</span>
+                </label>
+              ))}
+            </div>
+
+            {challengeMessage && (
+              <div className={`mb-4 p-3 rounded-lg text-sm ${
+                challengeMessage.includes('success')
+                  ? 'bg-green-500/10 text-green-400 border border-green-500/30'
+                  : 'bg-red-500/10 text-red-400 border border-red-500/30'
+              }`}>
+                {challengeMessage}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowChallengeModal(false)}
+                className="flex-1 px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors"
+                disabled={grantingChallenge}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleGrantChallenge}
+                disabled={grantingChallenge || !selectedChallenge}
+                className="flex-1 px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 text-white rounded-lg transition-colors"
+              >
+                {grantingChallenge ? 'Granting...' : 'Grant Challenge'}
               </button>
             </div>
           </div>
