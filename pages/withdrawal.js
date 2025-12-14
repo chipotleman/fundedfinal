@@ -72,6 +72,20 @@ const withdrawalMethods = [
   },
 ];
 
+const statusColors = {
+  under_review: 'text-yellow-400 bg-yellow-400/10',
+  awaiting_processing: 'text-blue-400 bg-blue-400/10',
+  finalized: 'text-green-400 bg-green-400/10',
+  denied: 'text-red-400 bg-red-400/10',
+};
+
+const statusLabels = {
+  under_review: 'Under Review',
+  awaiting_processing: 'Processing',
+  finalized: 'Completed',
+  denied: 'Denied',
+};
+
 export default function WithdrawalPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -79,6 +93,31 @@ export default function WithdrawalPage() {
   const [selectedMethod, setSelectedMethod] = useState(null);
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [savedMethods, setSavedMethods] = useState([]);
+  const [selectedSavedMethod, setSelectedSavedMethod] = useState(null);
+  const [withdrawals, setWithdrawals] = useState([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [showNewMethodForm, setShowNewMethodForm] = useState(false);
+  const [saveMethod, setSaveMethod] = useState(false);
+  const [methodNickname, setMethodNickname] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  
+  const [formData, setFormData] = useState({
+    bankName: '',
+    accountNumber: '',
+    routingNumber: '',
+    accountType: 'checking',
+    cardNumber: '',
+    cardExpiry: '',
+    cardCvv: '',
+    venmoUsername: '',
+    swiftCode: '',
+    street: '',
+    city: '',
+    state: '',
+    zip: '',
+  });
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -88,21 +127,34 @@ export default function WithdrawalPage() {
       return;
     }
 
-    const fetchProfile = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(`/api/profiles/${session.user.id}`);
-        if (response.ok) {
-          const profile = await response.json();
+        const [profileRes, methodsRes, withdrawalsRes] = await Promise.all([
+          fetch(`/api/profiles/${session.user.id}`),
+          fetch(`/api/payment-methods?userId=${session.user.id}`),
+          fetch(`/api/withdrawals?userId=${session.user.id}`),
+        ]);
+
+        if (profileRes.ok) {
+          const profile = await profileRes.json();
           setUserProfile(profile);
         }
+        if (methodsRes.ok) {
+          const methods = await methodsRes.json();
+          setSavedMethods(methods);
+        }
+        if (withdrawalsRes.ok) {
+          const wds = await withdrawalsRes.json();
+          setWithdrawals(wds);
+        }
       } catch (error) {
-        console.error('Error fetching profile:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProfile();
+    fetchData();
   }, [session, status, router]);
 
   const challengeData = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('purchased_challenge') || '{}') : {};
@@ -112,8 +164,500 @@ export default function WithdrawalPage() {
   const userSplit = challengeData?.userSplit || 80;
   const availableToWithdraw = Math.floor(profit * (userSplit / 100));
 
-  const handleWithdraw = () => {
-    alert('Withdrawal request submitted! This feature is coming soon.');
+  const handleFormChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const getPaymentDetails = () => {
+    switch (selectedMethod) {
+      case 'bank_transfer':
+        return {
+          bankName: formData.bankName,
+          accountNumberLast4: formData.accountNumber.slice(-4),
+          routingNumber: formData.routingNumber,
+          accountType: formData.accountType,
+        };
+      case 'instant_transfer':
+        return {
+          cardLast4: formData.cardNumber.slice(-4),
+          cardBrand: detectCardBrand(formData.cardNumber),
+          cardExpiry: formData.cardExpiry,
+        };
+      case 'venmo':
+        return { venmoUsername: formData.venmoUsername };
+      case 'wire':
+        return {
+          bankName: formData.bankName,
+          accountNumberLast4: formData.accountNumber.slice(-4),
+          routingNumber: formData.routingNumber,
+          swiftCode: formData.swiftCode,
+        };
+      case 'check':
+        return {
+          mailingAddress: {
+            street: formData.street,
+            city: formData.city,
+            state: formData.state,
+            zip: formData.zip,
+          },
+        };
+      default:
+        return {};
+    }
+  };
+
+  const detectCardBrand = (number) => {
+    const n = number.replace(/\s/g, '');
+    if (n.startsWith('4')) return 'Visa';
+    if (/^5[1-5]/.test(n)) return 'Mastercard';
+    if (/^3[47]/.test(n)) return 'Amex';
+    if (/^6(?:011|5)/.test(n)) return 'Discover';
+    return 'Card';
+  };
+
+  const handleWithdraw = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    setSuccessMessage('');
+
+    try {
+      const paymentDetails = selectedSavedMethod 
+        ? savedMethods.find(m => m.id === selectedSavedMethod)
+        : getPaymentDetails();
+
+      if (saveMethod && !selectedSavedMethod) {
+        const methodData = {
+          userId: session.user.id,
+          methodType: selectedMethod,
+          nickname: methodNickname || `My ${withdrawalMethods.find(m => m.id === selectedMethod)?.name}`,
+          isDefault: savedMethods.length === 0,
+          ...getPaymentMethodFields(),
+        };
+
+        await fetch('/api/payment-methods', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(methodData),
+        });
+      }
+
+      const res = await fetch('/api/withdrawals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: session.user.id,
+          paymentMethodId: selectedSavedMethod,
+          methodType: selectedMethod,
+          amount: parseFloat(amount),
+          paymentDetails,
+        }),
+      });
+
+      if (res.ok) {
+        const newWithdrawal = await res.json();
+        setWithdrawals(prev => [newWithdrawal, ...prev]);
+        setSuccessMessage('Withdrawal request submitted successfully! Your request is now under review.');
+        setAmount('');
+        setSelectedMethod(null);
+        setSelectedSavedMethod(null);
+        setShowNewMethodForm(false);
+        setFormData({
+          bankName: '',
+          accountNumber: '',
+          routingNumber: '',
+          accountType: 'checking',
+          cardNumber: '',
+          cardExpiry: '',
+          cardCvv: '',
+          venmoUsername: '',
+          swiftCode: '',
+          street: '',
+          city: '',
+          state: '',
+          zip: '',
+        });
+      } else {
+        const error = await res.json();
+        alert(error.message || 'Failed to submit withdrawal request');
+      }
+    } catch (error) {
+      console.error('Error submitting withdrawal:', error);
+      alert('An error occurred. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const getPaymentMethodFields = () => {
+    switch (selectedMethod) {
+      case 'bank_transfer':
+        return {
+          bankName: formData.bankName,
+          accountNumber: formData.accountNumber.slice(-4),
+          routingNumber: formData.routingNumber,
+          accountType: formData.accountType,
+        };
+      case 'instant_transfer':
+        return {
+          cardLast4: formData.cardNumber.slice(-4),
+          cardBrand: detectCardBrand(formData.cardNumber),
+          cardExpiry: formData.cardExpiry,
+        };
+      case 'venmo':
+        return { venmoUsername: formData.venmoUsername };
+      case 'wire':
+        return {
+          bankName: formData.bankName,
+          accountNumber: formData.accountNumber.slice(-4),
+          routingNumber: formData.routingNumber,
+          swiftCode: formData.swiftCode,
+        };
+      case 'check':
+        return {
+          mailingAddress: {
+            street: formData.street,
+            city: formData.city,
+            state: formData.state,
+            zip: formData.zip,
+          },
+        };
+      default:
+        return {};
+    }
+  };
+
+  const renderPaymentForm = () => {
+    if (!selectedMethod) return null;
+
+    const savedForMethod = savedMethods.filter(m => m.methodType === selectedMethod);
+
+    return (
+      <div className="bg-[#111111] rounded-2xl p-6 border border-gray-800/50 mb-6">
+        <h3 className="text-white font-semibold mb-4">Payment Details</h3>
+        
+        {savedForMethod.length > 0 && !showNewMethodForm && (
+          <>
+            <div className="space-y-2 mb-4">
+              {savedForMethod.map((method) => (
+                <button
+                  key={method.id}
+                  onClick={() => setSelectedSavedMethod(method.id)}
+                  className={`w-full p-3 rounded-lg border text-left transition-all ${
+                    selectedSavedMethod === method.id
+                      ? 'bg-green-500/10 border-green-500/50'
+                      : 'bg-[#0a0a0a] border-gray-800 hover:border-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-white font-medium">{method.nickname || 'Saved Method'}</div>
+                      <div className="text-gray-500 text-sm">
+                        {method.methodType === 'bank_transfer' && `Bank: ****${method.accountNumber}`}
+                        {method.methodType === 'instant_transfer' && `${method.cardBrand} ****${method.cardLast4}`}
+                        {method.methodType === 'venmo' && `@${method.venmoUsername}`}
+                        {method.methodType === 'wire' && `Bank: ****${method.accountNumber}`}
+                        {method.methodType === 'check' && method.mailingAddress?.city}
+                      </div>
+                    </div>
+                    {selectedSavedMethod === method.id && (
+                      <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => { setShowNewMethodForm(true); setSelectedSavedMethod(null); }}
+              className="text-green-400 hover:text-green-300 text-sm flex items-center gap-1"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add new payment method
+            </button>
+          </>
+        )}
+
+        {(savedForMethod.length === 0 || showNewMethodForm) && (
+          <>
+            {savedForMethod.length > 0 && (
+              <button
+                onClick={() => setShowNewMethodForm(false)}
+                className="text-gray-400 hover:text-white text-sm mb-4 flex items-center gap-1"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                Back to saved methods
+              </button>
+            )}
+            
+            {selectedMethod === 'bank_transfer' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-1">Bank Name</label>
+                  <input
+                    type="text"
+                    name="bankName"
+                    value={formData.bankName}
+                    onChange={handleFormChange}
+                    className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                    placeholder="Enter bank name"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-1">Routing Number</label>
+                    <input
+                      type="text"
+                      name="routingNumber"
+                      value={formData.routingNumber}
+                      onChange={handleFormChange}
+                      maxLength={9}
+                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                      placeholder="9 digits"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-1">Account Number</label>
+                    <input
+                      type="text"
+                      name="accountNumber"
+                      value={formData.accountNumber}
+                      onChange={handleFormChange}
+                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                      placeholder="Account number"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-1">Account Type</label>
+                  <select
+                    name="accountType"
+                    value={formData.accountType}
+                    onChange={handleFormChange}
+                    className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                  >
+                    <option value="checking">Checking</option>
+                    <option value="savings">Savings</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {selectedMethod === 'instant_transfer' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-1">Debit Card Number</label>
+                  <input
+                    type="text"
+                    name="cardNumber"
+                    value={formData.cardNumber}
+                    onChange={handleFormChange}
+                    maxLength={19}
+                    className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                    placeholder="1234 5678 9012 3456"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-1">Expiry Date</label>
+                    <input
+                      type="text"
+                      name="cardExpiry"
+                      value={formData.cardExpiry}
+                      onChange={handleFormChange}
+                      maxLength={5}
+                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                      placeholder="MM/YY"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-1">CVV</label>
+                    <input
+                      type="text"
+                      name="cardCvv"
+                      value={formData.cardCvv}
+                      onChange={handleFormChange}
+                      maxLength={4}
+                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                      placeholder="123"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {selectedMethod === 'venmo' && (
+              <div>
+                <label className="block text-gray-400 text-sm mb-1">Venmo Username</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">@</span>
+                  <input
+                    type="text"
+                    name="venmoUsername"
+                    value={formData.venmoUsername}
+                    onChange={handleFormChange}
+                    className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 pl-8 pr-4 text-white focus:outline-none focus:border-green-500"
+                    placeholder="username"
+                  />
+                </div>
+              </div>
+            )}
+
+            {selectedMethod === 'wire' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-1">Bank Name</label>
+                  <input
+                    type="text"
+                    name="bankName"
+                    value={formData.bankName}
+                    onChange={handleFormChange}
+                    className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                    placeholder="Enter bank name"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-1">Routing Number</label>
+                    <input
+                      type="text"
+                      name="routingNumber"
+                      value={formData.routingNumber}
+                      onChange={handleFormChange}
+                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                      placeholder="Routing number"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-1">Account Number</label>
+                    <input
+                      type="text"
+                      name="accountNumber"
+                      value={formData.accountNumber}
+                      onChange={handleFormChange}
+                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                      placeholder="Account number"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-gray-400 text-sm mb-1">SWIFT/BIC Code</label>
+                  <input
+                    type="text"
+                    name="swiftCode"
+                    value={formData.swiftCode}
+                    onChange={handleFormChange}
+                    className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                    placeholder="SWIFT code"
+                  />
+                </div>
+              </div>
+            )}
+
+            {selectedMethod === 'check' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-gray-400 text-sm mb-1">Street Address</label>
+                  <input
+                    type="text"
+                    name="street"
+                    value={formData.street}
+                    onChange={handleFormChange}
+                    className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                    placeholder="123 Main Street"
+                  />
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-1">City</label>
+                    <input
+                      type="text"
+                      name="city"
+                      value={formData.city}
+                      onChange={handleFormChange}
+                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                      placeholder="City"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-1">State</label>
+                    <input
+                      type="text"
+                      name="state"
+                      value={formData.state}
+                      onChange={handleFormChange}
+                      maxLength={2}
+                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                      placeholder="CA"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-gray-400 text-sm mb-1">ZIP Code</label>
+                    <input
+                      type="text"
+                      name="zip"
+                      value={formData.zip}
+                      onChange={handleFormChange}
+                      maxLength={10}
+                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                      placeholder="12345"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="mt-4 pt-4 border-t border-gray-800">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={saveMethod}
+                  onChange={(e) => setSaveMethod(e.target.checked)}
+                  className="w-5 h-5 rounded bg-[#0a0a0a] border-gray-700 text-green-500 focus:ring-green-500"
+                />
+                <span className="text-gray-300">Save this payment method for future use</span>
+              </label>
+              {saveMethod && (
+                <input
+                  type="text"
+                  value={methodNickname}
+                  onChange={(e) => setMethodNickname(e.target.value)}
+                  className="mt-3 w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-2 px-4 text-white text-sm focus:outline-none focus:border-green-500"
+                  placeholder="Nickname (e.g., My Chase Account)"
+                />
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
+
+  const isFormValid = () => {
+    if (!selectedMethod || !amount || parseFloat(amount) <= 0) return false;
+    if (selectedSavedMethod) return true;
+    
+    switch (selectedMethod) {
+      case 'bank_transfer':
+        return formData.bankName && formData.accountNumber && formData.routingNumber;
+      case 'instant_transfer':
+        return formData.cardNumber && formData.cardExpiry && formData.cardCvv;
+      case 'venmo':
+        return formData.venmoUsername;
+      case 'wire':
+        return formData.bankName && formData.accountNumber && formData.routingNumber && formData.swiftCode;
+      case 'check':
+        return formData.street && formData.city && formData.state && formData.zip;
+      default:
+        return false;
+    }
   };
 
   if (loading) {
@@ -143,8 +687,68 @@ export default function WithdrawalPage() {
             Back
           </button>
 
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Withdraw Funds</h1>
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">Withdraw Funds</h1>
+            {withdrawals.length > 0 && (
+              <button
+                onClick={() => setShowHistory(!showHistory)}
+                className="text-green-400 hover:text-green-300 text-sm flex items-center gap-1"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                History
+              </button>
+            )}
+          </div>
           <p className="text-gray-400 mb-8">Transfer your earnings to your preferred account</p>
+
+          {successMessage && (
+            <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
+                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-green-400">{successMessage}</p>
+              </div>
+            </div>
+          )}
+
+          {showHistory && withdrawals.length > 0 && (
+            <div className="bg-[#111111] rounded-2xl p-6 border border-gray-800/50 mb-8">
+              <h2 className="text-lg font-bold text-white mb-4">Withdrawal History</h2>
+              <div className="space-y-3">
+                {withdrawals.map((w) => (
+                  <div key={w.id} className="bg-[#0a0a0a] rounded-lg p-4 border border-gray-800">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-white font-semibold">${parseFloat(w.amount).toLocaleString()}</span>
+                        <span className={`px-2 py-0.5 rounded-full text-xs ${statusColors[w.status]}`}>
+                          {statusLabels[w.status]}
+                        </span>
+                      </div>
+                      <span className="text-gray-500 text-sm">
+                        {new Date(w.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="text-gray-400 text-sm">
+                      {withdrawalMethods.find(m => m.id === w.methodType)?.name || w.methodType}
+                      {w.fee && parseFloat(w.fee) > 0 && (
+                        <span className="text-gray-500"> (Fee: ${parseFloat(w.fee).toFixed(2)})</span>
+                      )}
+                    </div>
+                    {w.status === 'denied' && w.denialReason && (
+                      <div className="mt-2 text-red-400 text-sm">
+                        Reason: {w.denialReason}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="bg-[#111111] rounded-2xl p-6 border border-gray-800/50 mb-8">
             <div className="grid grid-cols-2 gap-6">
@@ -190,7 +794,7 @@ export default function WithdrawalPage() {
                 {withdrawalMethods.map((method) => (
                   <button
                     key={method.id}
-                    onClick={() => setSelectedMethod(method.id)}
+                    onClick={() => { setSelectedMethod(method.id); setSelectedSavedMethod(null); setShowNewMethodForm(false); }}
                     className={`w-full p-4 rounded-xl border transition-all text-left ${
                       selectedMethod === method.id
                         ? 'bg-green-500/10 border-green-500/50'
@@ -205,6 +809,11 @@ export default function WithdrawalPage() {
                         <div className="flex items-center justify-between">
                           <h3 className="text-white font-semibold">{method.name}</h3>
                           <div className="flex items-center gap-2">
+                            {savedMethods.filter(m => m.methodType === method.id).length > 0 && (
+                              <span className="text-xs text-green-400 bg-green-400/10 px-2 py-0.5 rounded">
+                                {savedMethods.filter(m => m.methodType === method.id).length} saved
+                              </span>
+                            )}
                             {selectedMethod === method.id && (
                               <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
                                 <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -225,6 +834,8 @@ export default function WithdrawalPage() {
                   </button>
                 ))}
               </div>
+
+              {renderPaymentForm()}
 
               {selectedMethod && (
                 <div className="bg-[#111111] rounded-2xl p-6 border border-gray-800/50 mb-6">
@@ -254,14 +865,24 @@ export default function WithdrawalPage() {
 
               <button
                 onClick={handleWithdraw}
-                disabled={!selectedMethod || !amount || parseFloat(amount) <= 0}
+                disabled={!isFormValid() || submitting}
                 className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${
-                  selectedMethod && amount && parseFloat(amount) > 0
+                  isFormValid() && !submitting
                     ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white'
                     : 'bg-gray-800 text-gray-500 cursor-not-allowed'
                 }`}
               >
-                Request Withdrawal
+                {submitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Processing...
+                  </span>
+                ) : (
+                  'Request Withdrawal'
+                )}
               </button>
               
               <p className="text-center text-gray-500 text-sm mt-4">
