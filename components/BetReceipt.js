@@ -60,7 +60,7 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
     if (isWon) return 'green';
     if (isLost) return 'red';
     if (isCashedOut) return 'orange';
-    return 'blue';
+    return 'white';
   };
   
   const statusColor = getStatusColor();
@@ -73,12 +73,12 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
       text: 'text-green-400',
       payout: 'text-green-400'
     },
-    blue: {
-      border: 'border-blue-500',
-      badge: 'bg-blue-500/20 border-blue-500/50',
-      dot: 'bg-blue-400',
-      text: 'text-blue-400',
-      payout: 'text-blue-400'
+    white: {
+      border: 'border-white/50',
+      badge: 'bg-white/10 border-white/30',
+      dot: 'bg-white',
+      text: 'text-white',
+      payout: 'text-white'
     },
     red: {
       border: 'border-red-500',
