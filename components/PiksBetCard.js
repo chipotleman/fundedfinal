@@ -6,7 +6,8 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
   
   const pikId = useMemo(() => {
     if (bet.pikId) return bet.pikId;
-    return `${Date.now().toString().slice(-10)}${Math.floor(Math.random() * 100).toString().padStart(2, '0')}`;
+    const seed = bet.id ? bet.id.toString().split('').reduce((a, c) => a + c.charCodeAt(0), 0) : Date.now();
+    return `${seed}${Math.floor(Math.random() * 10000).toString().padStart(5, '0')}`;
   }, [bet.id, bet.pikId]);
 
   useEffect(() => {
@@ -20,6 +21,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
       return () => document.removeEventListener('click', handleClickOutside);
     }
   }, [confirmingCashOut]);
+
   const formatOdds = (odds) => {
     return odds > 0 ? `+${odds}` : odds.toString();
   };
@@ -51,9 +53,13 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
   const isLost = bet.status === 'lost';
   const isCashedOut = bet.status === 'cashed_out';
 
-  // Memoize scores - will use real data from bet object when API is connected
+  const isOverUnder = bet.betType?.toLowerCase().includes('total') || 
+                      bet.betType?.toLowerCase().includes('over') || 
+                      bet.betType?.toLowerCase().includes('under') ||
+                      bet.selection?.toLowerCase().includes('over') ||
+                      bet.selection?.toLowerCase().includes('under');
+
   const scores = useMemo(() => {
-    // If bet has real score data, use it
     if (bet.homeScore !== undefined && bet.awayScore !== undefined) {
       return {
         homeScore: bet.homeScore,
@@ -62,9 +68,8 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         awayQuarters: bet.awayQuarters || []
       };
     }
-    // Generate placeholder scores for finished games (won/lost)
-    if (isWon || isLost) {
-      const seed = bet.id ? bet.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) : 12345;
+    if (isWon || isLost || isCashedOut) {
+      const seed = bet.id ? (typeof bet.id === 'string' ? bet.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) : bet.id) : 12345;
       const pseudoRandom = (n) => ((seed * (n + 1) * 9301 + 49297) % 233280) / 233280;
       return {
         homeScore: Math.floor(pseudoRandom(1) * 15 + 24),
@@ -83,131 +88,196 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         ]
       };
     }
+    if (isOpen && bet.currentHomeScore !== undefined) {
+      return {
+        homeScore: bet.currentHomeScore,
+        awayScore: bet.currentAwayScore,
+        homeQuarters: [],
+        awayQuarters: []
+      };
+    }
     return { homeScore: null, awayScore: null, homeQuarters: [], awayQuarters: [] };
-  }, [bet.id, bet.homeScore, bet.awayScore, bet.homeQuarters, bet.awayQuarters, isWon, isLost]);
+  }, [bet.id, bet.homeScore, bet.awayScore, bet.homeQuarters, bet.awayQuarters, bet.currentHomeScore, bet.currentAwayScore, isWon, isLost, isCashedOut, isOpen]);
+
+  const getCardBackground = () => {
+    if (isWon) {
+      return 'bg-gradient-to-br from-green-900/90 via-green-800/70 to-emerald-900/80 border-green-500/50';
+    }
+    if (isLost) {
+      return 'bg-gradient-to-br from-red-950/90 via-rose-900/50 to-red-950/80 border-red-800/50';
+    }
+    if (isCashedOut) {
+      return 'bg-gradient-to-br from-orange-950/90 via-amber-900/50 to-orange-950/80 border-orange-700/50';
+    }
+    return 'bg-gradient-to-br from-blue-950/90 via-slate-900/80 to-indigo-950/80 border-blue-700/50';
+  };
+
+  const getProgressBarData = () => {
+    if (!isOpen || !isOverUnder) return null;
+    
+    const hasLiveScores = typeof bet.currentHomeScore === 'number' && typeof bet.currentAwayScore === 'number';
+    
+    if (!hasLiveScores) return null;
+    
+    const targetMatch = bet.selection?.match(/(\d+\.?\d*)/);
+    const target = targetMatch ? parseFloat(targetMatch[1]) : 200;
+    
+    const currentTotal = bet.currentHomeScore + bet.currentAwayScore;
+    const progress = Math.min((currentTotal / target) * 100, 100);
+    
+    return { currentTotal, target, progress };
+  };
+
+  const progressData = getProgressBarData();
+
+  const parseTeams = () => {
+    if (!bet.matchup) return { homeTeam: 'Home Team', awayTeam: 'Away Team' };
+    
+    if (bet.matchup.includes(' @ ')) {
+      const [away, home] = bet.matchup.split(' @ ');
+      return { homeTeam: home, awayTeam: away };
+    }
+    if (bet.matchup.includes(' vs ')) {
+      const [home, away] = bet.matchup.split(' vs ');
+      return { homeTeam: home, awayTeam: away };
+    }
+    return { homeTeam: bet.matchup, awayTeam: '' };
+  };
+
+  const { homeTeam, awayTeam } = parseTeams();
 
   return (
-    <div 
-      className="relative bg-black rounded-lg overflow-hidden mx-2 sm:mx-0 border border-gray-800 outline-none focus:outline-none focus:ring-0"
-    >
-            
-      <div className="px-4 pt-2 pb-3">
-        <div className="flex items-center justify-between -mt-1">
-          <div className="flex items-center">
-            <img src="/funderlogo/Piks.png" alt="Piks" className="h-20 object-contain -ml-[30px]" />
-          </div>
+    <div className={`relative rounded-2xl overflow-hidden mx-2 sm:mx-0 border ${getCardBackground()}`}>
+      <div className="px-4 pt-3 pb-4">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-white font-black text-xl tracking-tight">piks</span>
           
-          <div className={`flex items-center space-x-1 px-2 py-0.5 rounded-full text-[10px] ${
-            isWon ? 'bg-green-500/20 border border-green-500/50' :
-            isOpen ? 'bg-blue-500/20 border border-blue-500/50' :
-            isCashedOut ? 'bg-orange-500/20 border border-orange-500/50' :
-            'bg-red-500/20 border border-red-500/50'
+          <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
+            isWon ? 'bg-green-500/30 border border-green-400/60 text-green-300' :
+            isOpen ? 'bg-blue-500/30 border border-blue-400/60 text-blue-300' :
+            isCashedOut ? 'bg-orange-500/30 border border-orange-400/60 text-orange-300' :
+            'bg-red-500/30 border border-red-400/60 text-red-300'
           }`}>
-            <div className={`w-1.5 h-1.5 rounded-full ${
+            <div className={`w-2 h-2 rounded-full ${
               isWon ? 'bg-green-400' : isOpen ? 'bg-blue-400 animate-pulse' : isCashedOut ? 'bg-orange-400' : 'bg-red-400'
             }`}></div>
-            <span className={`font-bold ${
-              isWon ? 'text-green-400' : isOpen ? 'text-blue-400' : isCashedOut ? 'text-orange-400' : 'text-red-400'
-            }`}>
-              {isWon ? 'WON' : isOpen ? 'OPEN' : isCashedOut ? 'CASHED OUT' : 'LOST'}
-            </span>
+            <span>{isWon ? 'WON' : isOpen ? 'OPEN' : isCashedOut ? 'CASHED OUT' : 'LOST'}</span>
           </div>
         </div>
 
-        <div className="pt-1 mt-1">
-          <div className="flex justify-between items-start">
-            <div className="flex-1">
-              <div className="text-white font-bold text-sm">{bet.selection}</div>
-              <div className="text-gray-400 text-xs uppercase">{bet.betType}</div>
-            </div>
-            <div className={`font-bold text-lg ${isOpen ? 'text-blue-400' : 'text-white'}`}>
-              {formatOdds(bet.odds)}
-            </div>
+        <div className="flex justify-between items-start mb-2">
+          <div className="flex-1">
+            <div className="text-white font-bold text-base">{bet.selection}</div>
+            <div className="text-gray-400 text-xs uppercase tracking-wide">{bet.betType}</div>
           </div>
-
-          {(isWon || isLost) && (
-            <div className="mt-1 space-y-0.5">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-white">{bet.matchup?.split(' @ ')[1] || bet.matchup?.split(' vs ')[0] || 'Home Team'}</span>
-                <div className="flex items-center space-x-2">
-                  {scores.homeQuarters.length > 0 && (
-                    <div className="flex space-x-1 text-gray-400">
-                      {scores.homeQuarters.map((q, i) => <span key={i}>{q}</span>)}
-                    </div>
-                  )}
-                  <span className="text-white font-bold">{scores.homeScore}</span>
-                </div>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-white">{bet.matchup?.split(' @ ')[0] || bet.matchup?.split(' vs ')[1] || 'Away Team'}</span>
-                <div className="flex items-center space-x-2">
-                  {scores.awayQuarters.length > 0 && (
-                    <div className="flex space-x-1 text-gray-400">
-                      {scores.awayQuarters.map((q, i) => <span key={i}>{q}</span>)}
-                    </div>
-                  )}
-                  <span className="text-white font-bold">{scores.awayScore}</span>
-                </div>
-              </div>
-              <div className="text-right">
-                <span className="text-gray-400 text-[10px]">Finished</span>
-              </div>
-            </div>
-          )}
-
-          {isOpen && (
-            <div className="mt-1 bg-slate-800/50 rounded p-1.5">
-              <div className="text-gray-400 text-[10px] uppercase">Game</div>
-              <div className="text-white text-xs font-medium">{bet.matchup}</div>
-              <div className="text-blue-400 text-[10px]">
-                {bet.gameStart ? new Date(bet.gameStart).toLocaleString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  hour: 'numeric',
-                  minute: '2-digit',
-                  hour12: true
-                }) : 'Upcoming'}
-              </div>
-            </div>
-          )}
+          <div className={`font-bold text-xl ${
+            isWon ? 'text-green-300' : isOpen ? 'text-blue-300' : isCashedOut ? 'text-orange-300' : 'text-gray-300'
+          }`}>
+            {formatOdds(bet.odds)}
+          </div>
         </div>
 
-        <div className="border-t border-white/30 mt-1 pt-1">
+        {(isWon || isLost || isCashedOut) && (
+          <div className="mb-3 space-y-1">
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-white/90">{homeTeam}</span>
+              <div className="flex items-center space-x-2">
+                {scores.homeQuarters.length > 0 && (
+                  <div className="flex space-x-1.5 text-gray-400 text-xs">
+                    {scores.homeQuarters.map((q, i) => <span key={i}>{q}</span>)}
+                  </div>
+                )}
+                <span className="text-white font-bold ml-2">{scores.homeScore}</span>
+              </div>
+            </div>
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-white/90">{awayTeam}</span>
+              <div className="flex items-center space-x-2">
+                {scores.awayQuarters.length > 0 && (
+                  <div className="flex space-x-1.5 text-gray-400 text-xs">
+                    {scores.awayQuarters.map((q, i) => <span key={i}>{q}</span>)}
+                  </div>
+                )}
+                <span className="text-white font-bold ml-2">{scores.awayScore}</span>
+              </div>
+            </div>
+            <div className="text-right pt-1">
+              <span className="text-gray-400 text-xs">Finished</span>
+            </div>
+          </div>
+        )}
+
+        {isOpen && (
+          <div className="mb-3">
+            <div className="text-gray-400 text-xs uppercase mb-1">Game</div>
+            <div className="text-white text-sm font-medium">{bet.matchup}</div>
+            <div className="text-blue-300 text-xs mt-0.5">
+              {bet.gameStart ? new Date(bet.gameStart).toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+              }) : 'Upcoming'}
+            </div>
+          </div>
+        )}
+
+        {progressData && (
+          <div className="mb-3">
+            <div className="flex justify-between text-xs text-gray-400 mb-1">
+              <span>Current: {progressData.currentTotal}</span>
+              <span>Target: {progressData.target}</span>
+            </div>
+            <div className="h-2 bg-black/40 rounded-full overflow-hidden">
+              <div 
+                className={`h-full rounded-full transition-all duration-500 ${
+                  bet.selection?.toLowerCase().includes('over') 
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-400'
+                    : 'bg-gradient-to-r from-blue-500 to-cyan-400'
+                }`}
+                style={{ width: `${progressData.progress}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="border-t border-white/20 pt-3 mt-2">
           <div className="flex justify-between items-end">
             <div>
-              <div className="text-white font-bold text-lg">${formatMoney(bet.stake || 0)}</div>
-              <div className="text-gray-400 text-[10px] uppercase">Total Pikked</div>
+              <div className="text-white font-bold text-xl">${formatMoney(bet.stake || 0)}</div>
+              <div className="text-gray-400 text-xs uppercase">Total Pikked</div>
             </div>
             {isWon && (
               <div className="text-right">
-                <div className="text-green-400 font-bold text-lg">${formatMoney(payout)}</div>
-                <div className="text-green-400 text-[10px] uppercase">Won on Piks</div>
+                <div className="text-green-400 font-bold text-xl">${formatMoney(payout)}</div>
+                <div className="text-green-400/80 text-xs uppercase">Won on Piks</div>
               </div>
             )}
             {isOpen && (
               <div className="text-right">
-                <div className="text-blue-400 font-bold text-lg">${formatMoney(payout)}</div>
-                <div className="text-gray-400 text-[10px] uppercase">Potential Payout</div>
+                <div className="text-blue-400 font-bold text-xl">${formatMoney(payout)}</div>
+                <div className="text-gray-400 text-xs uppercase">Potential Payout</div>
               </div>
             )}
             {isLost && (
               <div className="text-right">
-                <div className="text-red-400 font-bold text-lg">$0.00</div>
-                <div className="text-gray-400 text-[10px] uppercase">Payout</div>
+                <div className="text-gray-400 font-bold text-xl">$0.00</div>
+                <div className="text-gray-500 text-xs uppercase">Payout</div>
               </div>
             )}
             {isCashedOut && (
               <div className="text-right">
-                <div className="text-orange-400 font-bold text-lg">${formatMoney(bet.stake * 0.8)}</div>
-                <div className="text-gray-400 text-[10px] uppercase">Cashed Out</div>
+                <div className="text-orange-400 font-bold text-xl">${formatMoney(bet.stake * 0.8)}</div>
+                <div className="text-orange-400/80 text-xs uppercase">Cashed Out</div>
               </div>
             )}
           </div>
         </div>
 
-        <div className="border-t border-white/30 mt-1 pt-1 flex justify-between items-center">
-          <div className="text-gray-500 text-[10px] font-mono">PIK ID: {pikId}</div>
-          <div className="text-gray-500 text-[10px]">PLACED: {formatPlacedDate()}</div>
+        <div className="flex justify-between items-center mt-3 text-[10px] text-gray-500">
+          <div className="font-mono">PIK ID: {pikId}</div>
+          <div>PLACED: {formatPlacedDate()}</div>
         </div>
 
         {isOpen && onCashOut && (
@@ -221,10 +291,10 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                 setConfirmingCashOut(true);
               }
             }}
-            className={`w-full mt-1 text-white font-bold py-2 px-3 rounded-lg text-sm transition-all ${
+            className={`w-full mt-3 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all ${
               confirmingCashOut 
-                ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700' 
-                : 'bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600'
+                ? 'bg-red-600 hover:bg-red-700' 
+                : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'
             }`}
           >
             {confirmingCashOut ? `Confirm Cash Out ($${formatMoney(bet.stake * 0.8)})` : `Cash Out ($${formatMoney(bet.stake * 0.8)})`}
@@ -234,7 +304,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         {isWon && onShare && (
           <button
             onClick={() => onShare(bet)}
-            className="w-full mt-1 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-2 px-3 rounded-lg text-sm transition-all flex items-center justify-center space-x-1"
+            className="w-full mt-3 bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semibold py-2.5 px-4 rounded-xl text-sm transition-all flex items-center justify-center space-x-2"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
