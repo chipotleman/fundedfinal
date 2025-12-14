@@ -52,7 +52,8 @@ export default function SessionSummaryPopup({ isOpen, onClose, sessionData }) {
     pending = 0,
     profitLoss = 0,
     challengePhase = null,
-    challengeTier = null
+    challengeTier = null,
+    isDemo = false
   } = sessionData;
 
   const winRate = betsPlaced > 0 ? Math.round((wins / (wins + losses)) * 100) || 0 : 0;
@@ -81,6 +82,11 @@ export default function SessionSummaryPopup({ isOpen, onClose, sessionData }) {
             <div className="mb-4">
               <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-16 mx-auto" />
             </div>
+            {isDemo && (
+              <span className="inline-block px-3 py-1 mb-2 rounded-full text-xs font-bold uppercase tracking-wide bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                Demo Session
+              </span>
+            )}
             <h3 className="text-xl font-bold text-white mb-2">Session Summary</h3>
             <p className="text-gray-400 text-sm">Here's what you accomplished</p>
           </div>
