@@ -316,9 +316,16 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
     </div>
   );
 
+  const getCardBorder = () => {
+    if (isWon) return 'border-2 border-yellow-500/70';
+    if (isOpen) return 'border-2 border-white/50';
+    if (isCashedOut) return 'border-2 border-blue-500/70';
+    return 'border-2 border-red-700/70';
+  };
+
   return (
-    <div className={`relative rounded-2xl overflow-hidden mx-2 sm:mx-0 bg-[#0a0a0a] ${isWon ? 'border-2 border-yellow-500/70' : `border ${getBorderColor()}`}`}>
-      <div className={`px-4 py-3 ${isWon ? 'bg-transparent' : getHeaderBackground()}`}>
+    <div className={`relative rounded-2xl overflow-hidden mx-2 sm:mx-0 bg-[#0a0a0a] ${getCardBorder()}`}>
+      <div className="px-4 py-3 bg-transparent">
         <div className="flex items-center justify-between">
           <span className="text-white font-black text-2xl tracking-tight">piks</span>
           
@@ -331,9 +338,13 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
               />
             </div>
           ) : (
-            <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-black/30 border border-white/20 text-white">
+            <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${
+              isOpen ? 'bg-white/10 border-white/30 text-white' : 
+              isCashedOut ? 'bg-blue-500/20 border-blue-400/50 text-blue-300' : 
+              'bg-red-500/20 border-red-400/50 text-red-300'
+            }`}>
               <div className={`w-2 h-2 rounded-full ${
-                isOpen ? 'bg-white animate-pulse' : isCashedOut ? 'bg-orange-300' : 'bg-red-300'
+                isOpen ? 'bg-white animate-pulse' : isCashedOut ? 'bg-blue-400' : 'bg-red-400'
               }`}></div>
               <span>{isOpen ? 'OPEN' : isCashedOut ? 'CASHED OUT' : 'LOST'}</span>
             </div>
