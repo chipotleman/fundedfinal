@@ -59,6 +59,9 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                       bet.selection?.toLowerCase().includes('over') ||
                       bet.selection?.toLowerCase().includes('under');
 
+  const isParlay = bet.betType?.toLowerCase().includes('parlay') || 
+                   (bet.legs && bet.legs.length > 1);
+
   const scores = useMemo(() => {
     if (bet.homeScore !== undefined && bet.awayScore !== undefined) {
       return {
@@ -180,7 +183,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
           </div>
         </div>
 
-        {(isWon || isLost || isCashedOut) && (
+        {(isWon || isLost || isCashedOut) && !isParlay && (
           <div className="mb-3 space-y-1">
             <div className="flex justify-between items-center text-sm">
               <span className="text-white/90">{homeTeam}</span>
