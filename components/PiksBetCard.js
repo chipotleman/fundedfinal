@@ -586,8 +586,8 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
             )}
             {isCashedOut && (
               <div className="text-right">
-                <div className="text-orange-400 font-bold text-xl">${formatMoney(bet.stake * 0.8)}</div>
-                <div className="text-orange-400/80 text-xs uppercase">Cashed Out</div>
+                <div className="text-blue-300 font-bold text-xl">${formatMoney(bet.stake * 0.8)}</div>
+                <div className="text-blue-300/80 text-xs uppercase">Cashed Out</div>
               </div>
             )}
           </div>
