@@ -5,16 +5,15 @@ import ProfileModal from '../components/ProfileModal';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserProfiles } from '../contexts/UserProfilesContext';
 import { useAuth } from '../contexts/AuthContext';
-import BetSlip from '../components/BetSlip'; // Assuming BetSlip component is imported
+import BetSlip from '../components/BetSlip';
 
 const Leaderboard = () => {
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const { selectedProfile, showProfileModal, setShowProfileModal, openProfile } = useUserProfiles();
-  const { user, login, logout } = useAuth(); // Assuming user object indicates login status
+  const { user, login, logout } = useAuth();
   const [timeframe, setTimeframe] = useState('monthly');
   const [category, setCategory] = useState('all');
 
-  // Mock leaderboard data - replace with real data from your backend
   const allLeaderboardData = [
     { rank: 1, username: "BetMaster2024", profit: 15420, roi: 154.2, wins: 89, totalBets: 127, tier: "Elite", badge: "🏆" },
     { rank: 2, username: "SharpShooter", profit: 12890, roi: 128.9, wins: 76, totalBets: 115, tier: "Pro", badge: "🥈" },
@@ -28,35 +27,25 @@ const Leaderboard = () => {
     { rank: 10, username: "WinStreaker", profit: 5875, roi: 58.8, wins: 47, totalBets: 76, tier: "Starter", badge: "⭐" }
   ];
 
-  // Filter data based on selected filters
   const getFilteredData = () => {
     let filteredData = [...allLeaderboardData];
 
-    // Filter by tier/category
     if (category !== 'all') {
       filteredData = filteredData.filter(user => user.tier.toLowerCase() === category);
     }
 
-    // Simulate different data for different timeframes
     if (timeframe === 'weekly') {
-      // Simulate weekly data with slightly different profits
       filteredData = filteredData.map(user => ({
         ...user,
         profit: Math.floor(user.profit * 0.3),
         roi: user.roi * 0.3
       }));
     } else if (timeframe === 'monthly') {
-      // Use current data as monthly
       filteredData = filteredData.map(user => ({
         ...user,
         profit: Math.floor(user.profit * 0.7),
         roi: user.roi * 0.7
       }));
-    } else if (timeframe === 'alltime') {
-       // For 'alltime', we can use the base data or a specific calculation if needed.
-       // For now, let's just use the base data without modification for 'alltime'.
-       // If you want to adjust 'alltime' data, you can add logic here.
-       filteredData = [...allLeaderboardData]; // Reset to original if 'alltime' needs specific handling
     }
 
     return filteredData;
@@ -66,10 +55,10 @@ const Leaderboard = () => {
 
   const getTierColor = (tier) => {
     switch(tier) {
-      case 'Elite': return 'text-purple-400 bg-purple-400/10';
-      case 'Pro': return 'text-blue-400 bg-blue-400/10';
-      case 'Starter': return 'text-green-400 bg-green-400/10';
-      default: return 'text-gray-400 bg-gray-400/10';
+      case 'Elite': return 'text-yellow-400 bg-yellow-400/10 border-yellow-400/30';
+      case 'Pro': return 'text-blue-400 bg-blue-400/10 border-blue-400/30';
+      case 'Starter': return 'text-green-400 bg-green-400/10 border-green-400/30';
+      default: return 'text-gray-400 bg-gray-400/10 border-gray-400/30';
     }
   };
 
@@ -78,14 +67,17 @@ const Leaderboard = () => {
       case 1: return "🏆";
       case 2: return "🥈";
       case 3: return "🥉";
-      default: return "⭐";
+      default: return null;
     }
   };
 
-  // Determine if the user has an open challenge (mock implementation)
-  const hasOpenChallenge = (username) => {
-    // Replace with actual logic to check for open challenges
-    return false; 
+  const getRankStyle = (rank) => {
+    switch(rank) {
+      case 1: return 'from-yellow-500/20 to-yellow-600/10 border-yellow-500/40';
+      case 2: return 'from-gray-400/20 to-gray-500/10 border-gray-400/40';
+      case 3: return 'from-orange-600/20 to-orange-700/10 border-orange-600/40';
+      default: return 'from-transparent to-transparent border-gray-800/50';
+    }
   };
 
   return (
@@ -97,109 +89,160 @@ const Leaderboard = () => {
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
 
-      <div className="pt-2 pb-16">
-        {/* Filters */}
-        <div className="max-w-7xl mx-auto px-6 mb-8">
-          <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-800">
-            <div className="flex flex-col sm:flex-row gap-4 justify-between items-center">
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setTimeframe('weekly')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    timeframe === 'weekly' 
-                      ? 'bg-purple-500 text-white' 
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                  }`}
-                >
-                  Weekly
-                </button>
-                <button
-                  onClick={() => setTimeframe('monthly')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    timeframe === 'monthly' 
-                      ? 'bg-purple-500 text-white' 
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                  }`}
-                >
-                  Monthly
-                </button>
-                <button
-                  onClick={() => setTimeframe('alltime')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    timeframe === 'alltime' 
-                      ? 'bg-purple-500 text-white' 
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                  }`}
-                >
-                  All Time
-                </button>
-              </div>
+      <div className="pt-4 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Leaderboard</h1>
+          <p className="text-gray-400 text-sm sm:text-base">Top performers across all challenges</p>
+        </div>
 
-              <div className="flex gap-2">
+        <div className="bg-[#111111] rounded-xl p-4 border border-gray-800/50 mb-6">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between">
+            <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
+              {['weekly', 'monthly', 'alltime'].map((tf) => (
                 <button
-                  onClick={() => setCategory('all')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    category === 'all' 
-                      ? 'bg-blue-500 text-white' 
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  key={tf}
+                  onClick={() => setTimeframe(tf)}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
+                    timeframe === tf 
+                      ? 'bg-green-600 text-white' 
+                      : 'bg-[#1a1a1a] text-gray-400 border border-gray-700 hover:border-gray-600'
                   }`}
                 >
-                  All Tiers
+                  {tf === 'weekly' ? 'Weekly' : tf === 'monthly' ? 'Monthly' : 'All Time'}
                 </button>
+              ))}
+            </div>
+
+            <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
+              {['all', 'elite', 'pro', 'starter'].map((cat) => (
                 <button
-                  onClick={() => setCategory('elite')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    category === 'elite' 
-                      ? 'bg-blue-500 text-white' 
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  key={cat}
+                  onClick={() => setCategory(cat)}
+                  className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
+                    category === cat 
+                      ? 'bg-blue-600 text-white' 
+                      : 'bg-[#1a1a1a] text-gray-400 border border-gray-700 hover:border-gray-600'
                   }`}
                 >
-                  Elite
+                  {cat === 'all' ? 'All Tiers' : cat.charAt(0).toUpperCase() + cat.slice(1)}
                 </button>
-                <button
-                  onClick={() => setCategory('pro')}
-                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                    category === 'pro' 
-                      ? 'bg-blue-500 text-white' 
-                      : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                  }`}
-                >
-                  Pro
-                </button>
-              </div>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Top 3 Podium */}
-        <div className="max-w-7xl mx-auto px-6 mb-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {leaderboardData.slice(0, 3).map((user, index) => (
-              <div key={user.rank} className={`relative ${index === 0 ? 'md:order-2' : index === 1 ? 'md:order-1' : 'md:order-3'}`}>
-                <div 
-                  onClick={() => openProfile(user.username)}
-                  className={`bg-gradient-to-br ${
-                    user.rank === 1 
-                      ? 'from-yellow-500/20 to-orange-500/20 border-yellow-500/30' 
-                      : user.rank === 2 
-                      ? 'from-gray-400/20 to-gray-600/20 border-gray-400/30'
-                      : 'from-orange-600/20 to-orange-800/20 border-orange-600/30'
-                  } backdrop-blur-lg rounded-2xl p-8 border text-center ${index === 0 ? 'transform scale-105' : ''} cursor-pointer hover:scale-110 transition-transform duration-300`}
-                >
-                  <div className="text-6xl mb-4">{getRankIcon(user.rank)}</div>
-                  <div className="text-2xl font-bold text-white mb-2 hover:text-blue-400 transition-colors">
-                    {user.username}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+          {leaderboardData.slice(0, 3).map((leader, index) => (
+            <div 
+              key={leader.rank} 
+              onClick={() => openProfile(leader.username)}
+              className={`relative bg-gradient-to-b ${getRankStyle(leader.rank)} bg-[#111111] rounded-xl p-6 border cursor-pointer hover:scale-[1.02] transition-transform duration-200 ${index === 0 ? 'sm:order-2 sm:scale-105' : index === 1 ? 'sm:order-1' : 'sm:order-3'}`}
+            >
+              <div className="text-center">
+                <div className="text-4xl sm:text-5xl mb-3">{getRankIcon(leader.rank)}</div>
+                <div className="text-lg sm:text-xl font-bold text-white mb-2">{leader.username}</div>
+                <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium mb-4 border ${getTierColor(leader.tier)}`}>
+                  {leader.tier}
+                </div>
+                <div className="space-y-2">
+                  <div className="text-2xl sm:text-3xl font-black text-green-400">${leader.profit.toLocaleString()}</div>
+                  <div className="text-gray-500 text-xs uppercase">Profit</div>
+                  <div className="text-lg font-bold text-blue-400">{leader.roi.toFixed(1)}%</div>
+                  <div className="text-gray-500 text-xs uppercase">ROI</div>
+                  <div className="text-white font-medium">{((leader.wins/leader.totalBets) * 100).toFixed(0)}%</div>
+                  <div className="text-gray-500 text-xs uppercase">Win Rate</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="bg-[#111111] rounded-xl border border-gray-800/50 overflow-hidden">
+          <div className="p-4 sm:p-6 border-b border-gray-800/50">
+            <h2 className="text-lg sm:text-xl font-bold text-white">Full Rankings</h2>
+          </div>
+
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-[#0a0a0a]">
+                <tr>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase">Rank</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase">Bettor</th>
+                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase">Tier</th>
+                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-400 uppercase">Profit</th>
+                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-400 uppercase">ROI</th>
+                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-400 uppercase">Win Rate</th>
+                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-400 uppercase">Bets</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-800/50">
+                {leaderboardData.map((leader) => (
+                  <tr 
+                    key={leader.rank} 
+                    className="hover:bg-[#1a1a1a] transition-colors cursor-pointer"
+                    onClick={() => openProfile(leader.username)}
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        {getRankIcon(leader.rank) && <span className="text-xl mr-2">{getRankIcon(leader.rank)}</span>}
+                        <span className="text-lg font-bold text-white">#{leader.rank}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-white font-medium hover:text-green-400 transition-colors">{leader.username}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium border ${getTierColor(leader.tier)}`}>
+                        {leader.tier}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <span className="text-green-400 font-bold">${leader.profit.toLocaleString()}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <span className="text-blue-400 font-medium">{leader.roi.toFixed(1)}%</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <span className="text-white">{((leader.wins/leader.totalBets) * 100).toFixed(0)}%</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <span className="text-gray-400">{leader.totalBets}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="sm:hidden divide-y divide-gray-800/50">
+            {leaderboardData.map((leader) => (
+              <div 
+                key={leader.rank}
+                onClick={() => openProfile(leader.username)}
+                className="p-4 hover:bg-[#1a1a1a] transition-colors cursor-pointer"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    {getRankIcon(leader.rank) && <span className="text-xl">{getRankIcon(leader.rank)}</span>}
+                    <span className="text-lg font-bold text-white">#{leader.rank}</span>
+                    <span className="text-white font-medium ml-2">{leader.username}</span>
                   </div>
-                  <div className={`inline-block px-3 py-1 rounded-full text-sm font-medium mb-4 ${getTierColor(user.tier)}`}>
-                    {user.tier}
+                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getTierColor(leader.tier)}`}>
+                    {leader.tier}
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div>
+                    <div className="text-green-400 font-bold">${leader.profit.toLocaleString()}</div>
+                    <div className="text-gray-500 text-xs">Profit</div>
                   </div>
-                  <div className="space-y-2">
-                    <div className="text-3xl font-black text-green-400">${user.profit.toLocaleString()}</div>
-                    <div className="text-gray-300">Profit</div>
-                    <div className="text-xl font-bold text-blue-400">{user.roi.toFixed(2)}%</div>
-                    <div className="text-gray-300">ROI</div>
-                    <div className="text-lg text-white">{user.wins}/{user.totalBets}</div>
-                    <div className="text-gray-300">Win Rate: {((user.wins/user.totalBets) * 100).toFixed(2)}%</div>
+                  <div>
+                    <div className="text-blue-400 font-medium">{leader.roi.toFixed(1)}%</div>
+                    <div className="text-gray-500 text-xs">ROI</div>
+                  </div>
+                  <div>
+                    <div className="text-white">{((leader.wins/leader.totalBets) * 100).toFixed(0)}%</div>
+                    <div className="text-gray-500 text-xs">Win Rate</div>
                   </div>
                 </div>
               </div>
@@ -207,110 +250,35 @@ const Leaderboard = () => {
           </div>
         </div>
 
-        {/* Full Leaderboard Table */}
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="bg-black/90 backdrop-blur-lg rounded-2xl border border-gray-800 overflow-hidden">
-            <div className="p-6 border-b border-gray-800">
-              <h2 className="text-2xl font-bold text-white">Full Rankings</h2>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-800/90">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Rank</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Bettor</th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Tier</th>
-                    <th className="px-6 py-4 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Profit</th>
-                    <th className="px-6 py-4 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">ROI</th>
-                    <th className="px-6 py-4 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Win Rate</th>
-                    <th className="px-6 py-4 text-right text-xs font-medium text-gray-300 uppercase tracking-wider">Bets</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-800">
-                  {leaderboardData.map((user, index) => (
-                    <tr 
-                      key={user.rank} 
-                      className="hover:bg-gray-800/50 transition-colors cursor-pointer"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('Clicked user:', user.username, 'Rank:', user.rank);
-                        openProfile(user.username);
-                      }}
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <span className="text-2xl mr-2">{getRankIcon(user.rank)}</span>
-                          <span className="text-lg font-bold text-white">#{user.rank}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-lg font-semibold text-white hover:text-blue-400 transition-colors">
-                          {user.username}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getTierColor(user.tier)}`}>
-                          {user.tier}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <span className="text-lg font-bold text-green-400">${user.profit.toLocaleString()}</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <span className="text-lg font-semibold text-blue-400">{user.roi.toFixed(2)}%</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <span className="text-white font-medium">{((user.wins/user.totalBets) * 100).toFixed(2)}%</span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <span className="text-gray-300">{user.totalBets}</span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
+          <div className="bg-[#111111] rounded-xl p-4 sm:p-6 border border-gray-800/50 text-center">
+            <div className="text-2xl sm:text-3xl font-black text-green-400 mb-1">2,847</div>
+            <div className="text-gray-400 text-xs sm:text-sm">Active Bettors</div>
+          </div>
+          <div className="bg-[#111111] rounded-xl p-4 sm:p-6 border border-gray-800/50 text-center">
+            <div className="text-2xl sm:text-3xl font-black text-green-400 mb-1">$1.2M</div>
+            <div className="text-gray-400 text-xs sm:text-sm">Total Profits</div>
+          </div>
+          <div className="bg-[#111111] rounded-xl p-4 sm:p-6 border border-gray-800/50 text-center">
+            <div className="text-2xl sm:text-3xl font-black text-blue-400 mb-1">68.4%</div>
+            <div className="text-gray-400 text-xs sm:text-sm">Avg Win Rate</div>
+          </div>
+          <div className="bg-[#111111] rounded-xl p-4 sm:p-6 border border-gray-800/50 text-center">
+            <div className="text-2xl sm:text-3xl font-black text-yellow-400 mb-1">24/7</div>
+            <div className="text-gray-400 text-xs sm:text-sm">Live Updates</div>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        <div className="max-w-7xl mx-auto px-6 py-16">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-800 text-center">
-              <div className="text-3xl font-black text-purple-400 mb-2">2,847</div>
-              <div className="text-gray-300">Active Bettors</div>
-            </div>
-            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-800 text-center">
-              <div className="text-3xl font-black text-green-400 mb-2">$1.2M</div>
-              <div className="text-gray-300">Total Profits</div>
-            </div>
-            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-800 text-center">
-              <div className="text-3xl font-black text-blue-400 mb-2">{(68.4).toFixed(1)}%</div>
-              <div className="text-gray-300">Avg Win Rate</div>
-            </div>
-            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-800 text-center">
-              <div className="text-3xl font-black text-orange-400 mb-2">24/7</div>
-              <div className="text-gray-300">Live Updates</div>
-            </div>
-          </div>
-        </div>
-
-        {/* CTA Section */}
-        <div className="max-w-4xl mx-auto px-6 py-16 text-center">
-          <div className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-lg rounded-2xl p-12 border border-purple-500/30">
-            <h2 className="text-3xl font-bold text-white mb-4">Ready to Climb the Rankings?</h2>
-            <p className="text-gray-300 mb-8 text-lg">Join the competition and prove you belong among the elite bettors.</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/auth" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg hover:scale-105 transform">
+        <div className="mt-8">
+          <div className="bg-[#111111] rounded-xl p-6 sm:p-8 border border-gray-800/50 text-center">
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">Ready to Climb the Rankings?</h2>
+            <p className="text-gray-400 mb-6 text-sm sm:text-base">Join the competition and prove you belong among the elite bettors.</p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href="/auth" className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition-all text-sm sm:text-base">
                 Start Your Journey
               </Link>
-              <Link href="/dashboard" className="bg-gray-800 hover:bg-gray-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-gray-600 hover:border-gray-500">
+              <Link href="/dashboard" className="bg-[#1a1a1a] hover:bg-[#222] text-white font-bold py-3 px-6 rounded-xl transition-all text-sm sm:text-base border border-gray-700">
                 View Dashboard
-              </Link>
-              <Link href="/how-it-works" className="bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg">
-                How It Works
               </Link>
             </div>
           </div>
@@ -320,6 +288,7 @@ const Leaderboard = () => {
       {showBetSlip && (
         <BetSlip
           bankroll={10000}
+          isOpen={showBetSlip}
           onClose={() => setShowBetSlip(false)}
         />
       )}
@@ -331,6 +300,16 @@ const Leaderboard = () => {
           onClose={() => setShowProfileModal(false)}
         />
       )}
+
+      <style jsx>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import ShareableBetSlip from './ShareableBetSlip';
 import BetReceipt from './BetReceipt';
 import CoinRain from './CoinRain';
 
-export default function BetSlip({ bankroll, onClose, isOpen }) {
+export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
   const { betSlip: bets, removeBet, updateStake, clearBetSlip } = useBetSlip();
   const [isPlacing, setIsPlacing] = useState(false);
   const [betType, setBetType] = useState('single');
@@ -127,45 +127,73 @@ export default function BetSlip({ bankroll, onClose, isOpen }) {
     if (totalStake === 0 || totalStake > bankroll) return;
     setIsPlacing(true);
 
-    if (bets.length > 0) {
-      if (betType === 'parlay' && parlayStake > 0) {
-        const parlayDecimal = bets.reduce((acc, bet) => {
-          const oddsValue = typeof bet.odds === 'object' ? bet.odds.odds || bet.odds.value || 0 : bet.odds;
-          const decimal = oddsValue > 0 ? (oddsValue/100 + 1) : (100/Math.abs(oddsValue) + 1);
-          return acc * decimal;
-        }, 1);
-        const americanOdds = parlayDecimal >= 2 ? Math.round((parlayDecimal - 1) * 100) : Math.round(-100 / (parlayDecimal - 1));
-        
-        setCurrentReceipt({
-          matchup: `${bets.length}-Leg Parlay`,
-          team: bets.map(b => b.selection).join(', '),
-          betType: 'parlay',
-          odds: americanOdds,
-          stake: parlayStake
-        });
-      } else if (bets[0].stake > 0) {
-        const firstBet = bets[0];
-        setCurrentReceipt({
-          matchup: firstBet.matchup,
-          team: firstBet.selection,
-          betType: firstBet.betType,
-          odds: typeof firstBet.odds === 'object' ? firstBet.odds.odds || firstBet.odds.value : firstBet.odds,
-          stake: firstBet.stake
-        });
-      }
-      setShowReceipt(true);
-    }
+    try {
+      const response = await fetch('/api/bets/place', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          bets,
+          betType,
+          parlayStake: betType === 'parlay' ? parlayStake : 0
+        })
+      });
 
-    setShowCoinRain(true);
+      const data = await response.json();
 
-    setTimeout(() => {
-      const winningBet = bets[0];
-      if (winningBet && winningBet.stake > 0) {
-        setSelectedWinningBet(winningBet);
+      if (!response.ok) {
+        console.error('Failed to place bets:', data.error);
+        setIsPlacing(false);
+        return;
       }
-      clearBetSlip();
+
+      if (onBetPlaced && data.newBankroll !== undefined) {
+        onBetPlaced(data.newBankroll);
+      }
+
+      if (bets.length > 0) {
+        if (betType === 'parlay' && parlayStake > 0) {
+          const parlayDecimal = bets.reduce((acc, bet) => {
+            const oddsValue = typeof bet.odds === 'object' ? bet.odds.odds || bet.odds.value || 0 : bet.odds;
+            const decimal = oddsValue > 0 ? (oddsValue/100 + 1) : (100/Math.abs(oddsValue) + 1);
+            return acc * decimal;
+          }, 1);
+          const americanOdds = parlayDecimal >= 2 ? Math.round((parlayDecimal - 1) * 100) : Math.round(-100 / (parlayDecimal - 1));
+          
+          setCurrentReceipt({
+            matchup: `${bets.length}-Leg Parlay`,
+            team: bets.map(b => b.selection).join(', '),
+            betType: 'parlay',
+            odds: americanOdds,
+            stake: parlayStake
+          });
+        } else if (bets[0].stake > 0) {
+          const firstBet = bets[0];
+          setCurrentReceipt({
+            matchup: firstBet.matchup,
+            team: firstBet.selection,
+            betType: firstBet.betType,
+            odds: typeof firstBet.odds === 'object' ? firstBet.odds.odds || firstBet.odds.value : firstBet.odds,
+            stake: firstBet.stake
+          });
+        }
+        setShowReceipt(true);
+      }
+
+      setShowCoinRain(true);
+
+      setTimeout(() => {
+        const winningBet = bets[0];
+        if (winningBet && winningBet.stake > 0) {
+          setSelectedWinningBet(winningBet);
+        }
+        clearBetSlip();
+        setIsPlacing(false);
+      }, 500);
+    } catch (error) {
+      console.error('Error placing bets:', error);
       setIsPlacing(false);
-    }, 500);
+    }
   };
 
   const formatOdds = (odds) => {

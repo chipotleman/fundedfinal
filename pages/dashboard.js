@@ -129,6 +129,32 @@ export default function Dashboard() {
   const [pnl, setPnl] = useState(0);
   const [expandedGames, setExpandedGames] = useState({});
 
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user?.id) {
+        try {
+          const response = await fetch(`/api/profiles/${user.id}`);
+          if (response.ok) {
+            const profile = await response.json();
+            if (profile?.bankroll) {
+              setBankroll(parseFloat(profile.bankroll));
+            }
+            if (profile?.pnl) {
+              setPnl(parseFloat(profile.pnl));
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+        }
+      }
+    };
+    fetchUserProfile();
+  }, [user]);
+
+  const handleBetPlaced = (newBankroll) => {
+    setBankroll(newBankroll);
+  };
+
   const toggleGameExpanded = (gameId) => {
     setExpandedGames(prev => ({ ...prev, [gameId]: !prev[gameId] }));
   };
@@ -481,6 +507,7 @@ export default function Dashboard() {
         bankroll={bankroll}
         isOpen={showBetSlip}
         onClose={() => setShowBetSlip(false)}
+        onBetPlaced={handleBetPlaced}
       />
 
       <style jsx>{`
