@@ -60,6 +60,7 @@ export default function AdminLayout({ children, title = 'Admin Panel' }) {
     { href: '/admin-panel', label: 'Dashboard', icon: '📊' },
     { href: '/admin-panel/users', label: 'Users', icon: '👥' },
     { href: '/admin-panel/bets', label: 'Bets', icon: '🎲' },
+    { href: '/admin-panel/withdrawals', label: 'Withdrawals', icon: '💸' },
     { href: '/admin-panel/staff', label: 'Staff', icon: '🔐' },
     { href: '/admin-panel/analytics', label: 'Analytics', icon: '📈' },
   ];
