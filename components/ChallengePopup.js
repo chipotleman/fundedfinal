@@ -285,9 +285,9 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
 
   const adjustedPrice = Math.round(currentChallenge.price * priceMultiplier);
   
-  // Calculate color based on split (50% = blue, 100% = green)
-  const splitColorProgress = (userSplit - 50) / 50; // 0 at 50%, 1 at 100%
-  const splitBarColor = `rgb(${Math.round(59 + (34 - 59) * splitColorProgress)}, ${Math.round(130 + (197 - 130) * splitColorProgress)}, ${Math.round(246 + (94 - 246) * splitColorProgress)})`; // Blue to Green
+  // Calculate color based on split (50% = orange, 90% = yellow)
+  const splitColorProgress = (userSplit - 50) / 40; // 0 at 50%, 1 at 90%
+  const splitBarColor = `rgb(${Math.round(249 + (250 - 249) * splitColorProgress)}, ${Math.round(115 + (204 - 115) * splitColorProgress)}, ${Math.round(22 + (21 - 22) * splitColorProgress)})`; // Orange to Yellow
 
   // Theme colors based on challenge badge
   const getThemeColors = () => {
@@ -711,7 +711,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                       const handleMouseMove = (e) => {
                         const deltaX = e.clientX - startX;
                         const deltaPercent = (deltaX / rect.width) * 100;
-                        const newSplit = Math.max(50, Math.min(100, startSplit + deltaPercent));
+                        const newSplit = Math.max(50, Math.min(90, startSplit + deltaPercent));
                         setUserSplit(Math.round(newSplit));
                       };
 
@@ -731,7 +731,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                       const handleTouchMove = (e) => {
                         const deltaX = e.touches[0].clientX - startX;
                         const deltaPercent = (deltaX / rect.width) * 100;
-                        const newSplit = Math.max(50, Math.min(100, startSplit + deltaPercent));
+                        const newSplit = Math.max(50, Math.min(90, startSplit + deltaPercent));
                         setUserSplit(Math.round(newSplit));
                       };
 
@@ -763,9 +763,10 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   
                   {/* Split scale labels */}
                   <div className="flex justify-between text-xs mt-2 px-1">
-                    <span className="text-blue-400">50%</span>
-                    <span className="text-gray-500">70%</span>
-                    <span className="text-green-400">100%</span>
+                    <span className="text-gray-600">0%</span>
+                    <span className="text-orange-400">50%</span>
+                    <span className="text-yellow-400">90%</span>
+                    <span className="text-gray-600">100%</span>
                   </div>
                 </div>
               )}
