@@ -81,6 +81,11 @@ None documented yet.
 
 ## Recent Changes
 - **December 14, 2025**:
+  - ✅ **FEATURE: My Challenge Navigation** - Navigation now shows "My Challenge" instead of "Free Trial" when user has an active challenge
+  - ✅ **FEATURE: MyChallengePopup** - New popup (components/MyChallengePopup.js) shows challenge progress, stats, rules, and navigation buttons
+  - ✅ **FEATURE: Withdrawal Page** - New page (pages/withdrawal.js) with 5 payment methods (Bank Transfer, Instant Transfer, Venmo, Wire, Check)
+  - ✅ **CHANGE: Balance Click** - Clicking balance now navigates to withdrawal page instead of opening balance modal
+  - ✅ **Global Popups**: MyChallengePopup registered in _app.js with 'openMyChallengePopup' event
   - ✅ **BUG FIX: Admin Panel Logo** - Updated to use `/pikslogotransparent.png` with doubled sizes (login: h-28, sidebar: h-16)
   - ✅ **BUG FIX: Admin API Auth** - Fixed token decoding in staff.js, analytics.js, and reset-password.js APIs (was using raw token instead of decoding base64)
   - ✅ **BUG FIX: Staff Login** - Updated auth.js to check both admin_users AND admin_staff tables for login/verify
