@@ -318,9 +318,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
 
   const getCardBorder = () => {
     if (isWon) return 'border-2 border-yellow-500/70';
-    if (isOpen) return 'border-2 border-white/50';
-    if (isCashedOut) return 'border-2 border-white/50';
-    return 'border-2 border-red-700/70';
+    return 'border-2 border-white/50';
   };
 
   return (
