@@ -66,7 +66,8 @@ export default function BetHistory() {
   const filteredBets = allBets
     .filter(bet => {
       if (selectedFilter === 'all') return true;
-      if (selectedFilter === 'won') return bet.status === 'won' || bet.status === 'cashed_out';
+      if (selectedFilter === 'won') return bet.status === 'won';
+      if (selectedFilter === 'cashed_out') return bet.status === 'cashed_out';
       return bet.status === selectedFilter;
     })
     .sort((a, b) => {
@@ -244,7 +245,7 @@ export default function BetHistory() {
           {/* Filter Tabs */}
           <div className="flex justify-center mb-8">
             <div className="bg-[#111111] rounded-xl p-1 border border-gray-800/50 flex gap-1">
-              {['all', 'open', 'won', 'lost'].map(filter => (
+              {['all', 'open', 'won', 'cashed_out', 'lost'].map(filter => (
                 <button
                   key={filter}
                   onClick={() => setSelectedFilter(filter)}
@@ -254,7 +255,7 @@ export default function BetHistory() {
                       : 'text-gray-500 hover:text-white hover:bg-[#1a1a1a]'
                   }`}
                 >
-                  {filter.charAt(0).toUpperCase() + filter.slice(1)}
+                  {filter === 'cashed_out' ? 'Cashed Out' : filter.charAt(0).toUpperCase() + filter.slice(1)}
                 </button>
               ))}
             </div>

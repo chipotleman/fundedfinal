@@ -59,7 +59,7 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
     if (isDemo) return 'orange';
     if (isWon) return 'green';
     if (isLost) return 'red';
-    if (isCashedOut) return 'pink';
+    if (isCashedOut) return 'cashedout';
     return 'white';
   };
   
@@ -80,8 +80,8 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
       text: 'text-white',
       payout: 'text-white'
     },
-    pink: {
-      border: 'border-[#E9762B]/70',
+    cashedout: {
+      border: 'border-white/50',
       badge: 'bg-[#E9762B]/20 border-[#E9762B]/50',
       dot: 'bg-[#E9762B]',
       text: 'text-[#E9762B]',
