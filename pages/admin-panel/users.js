@@ -23,6 +23,11 @@ export default function AdminUsers() {
   const [selectedChallenge, setSelectedChallenge] = useState('');
   const [challengeMessage, setChallengeMessage] = useState('');
   const [grantingChallenge, setGrantingChallenge] = useState(false);
+  const [showActivityModal, setShowActivityModal] = useState(false);
+  const [activityData, setActivityData] = useState(null);
+  const [activityLoading, setActivityLoading] = useState(false);
+  const [activityUserEmail, setActivityUserEmail] = useState('');
+  const [activityTab, setActivityTab] = useState('timeline');
 
   useEffect(() => {
     fetchUsers();
@@ -185,6 +190,69 @@ export default function AdminUsers() {
     }
   };
 
+  const [activityError, setActivityError] = useState('');
+
+  const openActivityModal = async (userId, email, e) => {
+    e.stopPropagation();
+    const token = localStorage.getItem('admin_token');
+    if (!token) {
+      return;
+    }
+    
+    setActivityUserEmail(email);
+    setActivityTab('timeline');
+    setShowActivityModal(true);
+    setActivityLoading(true);
+    setActivityData(null);
+    setActivityError('');
+
+    try {
+      const res = await fetch(`/api/admin-panel/user-activity?userId=${userId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setActivityData(data);
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        setActivityError(errData.error || 'Failed to fetch user activity');
+      }
+    } catch (error) {
+      setActivityError('Network error. Please try again.');
+    } finally {
+      setActivityLoading(false);
+    }
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '-';
+    return new Date(dateStr).toLocaleString();
+  };
+
+  const getTimelineIcon = (type) => {
+    switch (type) {
+      case 'bet': return '🎯';
+      case 'event': return '📍';
+      case 'pageView': return '👁️';
+      default: return '•';
+    }
+  };
+
+  const getEventTypeLabel = (eventType) => {
+    const labels = {
+      'bet_added': 'Added bet to slip',
+      'bet_removed': 'Removed bet from slip',
+      'bet_removed_toggle': 'Toggled bet off',
+      'stake_updated': 'Updated stake amount',
+      'click': 'Clicked element',
+      'page_view': 'Viewed page',
+    };
+    return labels[eventType] || eventType;
+  };
+
   return (
     <AdminLayout title="Users">
       <div className="mb-8">
@@ -281,6 +349,12 @@ export default function AdminUsers() {
                       </td>
                       <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
                         <div className="flex gap-3">
+                          <button
+                            onClick={(e) => openActivityModal(user.id, user.email, e)}
+                            className="text-blue-400 hover:text-blue-300 text-sm"
+                          >
+                            Activity
+                          </button>
                           <button
                             onClick={(e) => openChallengeModal(user.id, user.email, e)}
                             className="text-green-400 hover:text-green-300 text-sm"
@@ -475,6 +549,257 @@ export default function AdminUsers() {
               >
                 {grantingChallenge ? 'Granting...' : 'Grant Challenge'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showActivityModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-gray-800">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-white">User Activity</h2>
+                  <p className="text-gray-400 text-sm">{activityUserEmail}</p>
+                </div>
+                <button
+                  onClick={() => setShowActivityModal(false)}
+                  className="text-gray-400 hover:text-white text-2xl"
+                >
+                  &times;
+                </button>
+              </div>
+
+              {activityData && !activityLoading && (
+                <div className="grid grid-cols-4 gap-4 mt-4">
+                  <div className="bg-gray-800 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-white">{activityData.stats?.totalBets || 0}</p>
+                    <p className="text-xs text-gray-400">Total Bets</p>
+                  </div>
+                  <div className="bg-gray-800 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-green-400">{activityData.stats?.wonBets || 0}</p>
+                    <p className="text-xs text-gray-400">Won</p>
+                  </div>
+                  <div className="bg-gray-800 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-red-400">{activityData.stats?.lostBets || 0}</p>
+                    <p className="text-xs text-gray-400">Lost</p>
+                  </div>
+                  <div className="bg-gray-800 rounded-lg p-3 text-center">
+                    <p className="text-2xl font-bold text-yellow-400">{activityData.stats?.pendingBets || 0}</p>
+                    <p className="text-xs text-gray-400">Pending</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2 mt-4">
+                {['timeline', 'bets', 'events', 'sessions'].map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActivityTab(tab)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      activityTab === tab
+                        ? 'bg-green-600 text-white'
+                        : 'bg-gray-800 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              {activityLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+                </div>
+              ) : activityError ? (
+                <div className="text-center py-12">
+                  <p className="text-red-400 mb-4">{activityError}</p>
+                  <button
+                    onClick={() => setShowActivityModal(false)}
+                    className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg"
+                  >
+                    Close
+                  </button>
+                </div>
+              ) : !activityData ? (
+                <p className="text-center text-gray-400 py-12">No data available</p>
+              ) : (
+                <>
+                  {activityTab === 'timeline' && (
+                    <div className="space-y-3">
+                      {activityData.timeline?.length === 0 ? (
+                        <p className="text-gray-400 text-center py-8">No activity found</p>
+                      ) : (
+                        activityData.timeline?.map((item, idx) => (
+                          <div key={idx} className="flex gap-3 p-3 bg-gray-800/50 rounded-lg">
+                            <span className="text-xl">{getTimelineIcon(item.type)}</span>
+                            <div className="flex-1 min-w-0">
+                              {item.type === 'bet' && (
+                                <>
+                                  <p className="text-white font-medium truncate">
+                                    {item.data.selection} @ {item.data.odds}
+                                  </p>
+                                  <p className="text-gray-400 text-sm truncate">{item.data.matchupName}</p>
+                                  <div className="flex gap-4 mt-1 text-xs">
+                                    <span className="text-gray-500">Stake: ${item.data.stake != null ? item.data.stake : '-'}</span>
+                                    {item.data.balanceBefore != null && item.data.balanceAfter != null && (
+                                      <span className="text-gray-500">
+                                        Balance: ${parseFloat(item.data.balanceBefore).toLocaleString()} → ${parseFloat(item.data.balanceAfter).toLocaleString()}
+                                      </span>
+                                    )}
+                                    <span className={`px-1.5 py-0.5 rounded ${
+                                      item.data.status === 'won' ? 'bg-green-600/20 text-green-400' :
+                                      item.data.status === 'lost' ? 'bg-red-600/20 text-red-400' :
+                                      'bg-yellow-600/20 text-yellow-400'
+                                    }`}>{item.data.status || 'pending'}</span>
+                                  </div>
+                                </>
+                              )}
+                              {item.type === 'event' && (
+                                <>
+                                  <p className="text-white font-medium">{getEventTypeLabel(item.data.eventType)}</p>
+                                  <p className="text-gray-400 text-sm truncate">{item.data.pageUrl}</p>
+                                  {item.data.eventData && (
+                                    <p className="text-gray-500 text-xs mt-1 truncate">
+                                      {typeof item.data.eventData === 'string' 
+                                        ? item.data.eventData 
+                                        : JSON.stringify(item.data.eventData).slice(0, 100)}
+                                    </p>
+                                  )}
+                                </>
+                              )}
+                              {item.type === 'pageView' && (
+                                <>
+                                  <p className="text-white font-medium">{item.data.pageTitle || 'Page View'}</p>
+                                  <p className="text-gray-400 text-sm truncate">{item.data.pageUrl}</p>
+                                </>
+                              )}
+                            </div>
+                            <span className="text-gray-500 text-xs whitespace-nowrap">
+                              {formatDate(item.timestamp)}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {activityTab === 'bets' && (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-800">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400">Selection</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400">Odds</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400">Stake</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400">Balance Before</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400">Balance After</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400">Status</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400">Date</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-800">
+                          {activityData.bets?.length === 0 ? (
+                            <tr>
+                              <td colSpan={7} className="px-4 py-8 text-center text-gray-400">No bets found</td>
+                            </tr>
+                          ) : (
+                            activityData.bets?.map((bet) => (
+                              <tr key={bet.id} className="hover:bg-gray-800/30">
+                                <td className="px-4 py-3">
+                                  <div>
+                                    <p className="text-white text-sm">{bet.selection}</p>
+                                    <p className="text-gray-500 text-xs truncate max-w-[200px]">{bet.matchupName}</p>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3 text-white text-sm">{bet.odds || '-'}</td>
+                                <td className="px-4 py-3 text-white text-sm">{bet.stake != null ? `$${bet.stake}` : '-'}</td>
+                                <td className="px-4 py-3 text-gray-400 text-sm">
+                                  {bet.balanceBefore ? `$${parseFloat(bet.balanceBefore).toLocaleString()}` : '-'}
+                                </td>
+                                <td className="px-4 py-3 text-gray-400 text-sm">
+                                  {bet.balanceAfter ? `$${parseFloat(bet.balanceAfter).toLocaleString()}` : '-'}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span className={`px-2 py-1 rounded text-xs ${
+                                    bet.status === 'won' ? 'bg-green-600/20 text-green-400' :
+                                    bet.status === 'lost' ? 'bg-red-600/20 text-red-400' :
+                                    'bg-yellow-600/20 text-yellow-400'
+                                  }`}>{bet.status}</span>
+                                </td>
+                                <td className="px-4 py-3 text-gray-400 text-xs">{formatDate(bet.createdAt)}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {activityTab === 'events' && (
+                    <div className="space-y-2">
+                      {activityData.events?.length === 0 ? (
+                        <p className="text-gray-400 text-center py-8">No events found</p>
+                      ) : (
+                        activityData.events?.map((event) => (
+                          <div key={event.id} className="flex justify-between items-start p-3 bg-gray-800/50 rounded-lg">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-white font-medium">{getEventTypeLabel(event.eventType)}</p>
+                              <p className="text-gray-400 text-sm truncate">{event.pageUrl}</p>
+                              {event.eventData && (
+                                <p className="text-gray-500 text-xs mt-1 truncate">
+                                  {typeof event.eventData === 'string' 
+                                    ? event.eventData 
+                                    : JSON.stringify(event.eventData).slice(0, 150)}
+                                </p>
+                              )}
+                            </div>
+                            <span className="text-gray-500 text-xs whitespace-nowrap ml-4">
+                              {formatDate(event.createdAt)}
+                            </span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+
+                  {activityTab === 'sessions' && (
+                    <div className="space-y-3">
+                      {activityData.sessions?.length === 0 ? (
+                        <p className="text-gray-400 text-center py-8">No sessions found</p>
+                      ) : (
+                        activityData.sessions?.map((session) => (
+                          <div key={session.id} className="p-4 bg-gray-800/50 rounded-lg">
+                            <div className="flex justify-between items-start mb-2">
+                              <p className="text-white font-medium">Session</p>
+                              <span className="text-gray-500 text-xs">{formatDate(session.startedAt)}</span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <span className="text-gray-400">Duration:</span>
+                                <span className="text-white ml-2">
+                                  {session.duration ? `${Math.round(session.duration / 60)}m` : '-'}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="text-gray-400">Pages:</span>
+                                <span className="text-white ml-2">{session.pagesViewed || 0}</span>
+                              </div>
+                              <div>
+                                <span className="text-gray-400">Events:</span>
+                                <span className="text-white ml-2">{session.eventsCount || 0}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
