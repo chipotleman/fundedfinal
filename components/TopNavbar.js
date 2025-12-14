@@ -58,8 +58,31 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
     if (session?.user) {
       const existingStart = localStorage.getItem('session_start_time');
       if (!existingStart) {
+        // Only set the timestamp on first login
         localStorage.setItem('session_start_time', Date.now().toString());
-        
+      }
+      
+      // Check if we need to update session_start_stats with user profile data
+      // This happens when userProfile loads (may be after initial session start)
+      const existingStats = localStorage.getItem('session_start_stats');
+      let statsNeedUpdate = false;
+      
+      if (existingStats) {
+        try {
+          const stats = JSON.parse(existingStats);
+          // If we have userProfile now but startingBalance is null, we need to update
+          if (userProfile && stats.startingBalance === null) {
+            statsNeedUpdate = true;
+          }
+        } catch (e) {
+          statsNeedUpdate = true;
+        }
+      } else {
+        // No existing stats, need to create them
+        statsNeedUpdate = true;
+      }
+      
+      if (statsNeedUpdate) {
         // Store initial bet counts for session tracking
         const demoState = localStorage.getItem('demo_state');
         const demoBetHistory = localStorage.getItem('demo_bet_history');
@@ -81,9 +104,8 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
           } catch (e) {}
         }
         
-        // Get challenge info and starting balance
+        // Get challenge info
         let challengeName = null;
-        let startingBalance = null;
         if (storedChallenge) {
           try {
             const challenge = JSON.parse(storedChallenge);
@@ -91,8 +113,10 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
           } catch (e) {}
         }
         
-        // Use current bankroll as session starting balance
-        startingBalance = userProfile?.bankroll ? parseFloat(userProfile.bankroll) : null;
+        // Use current bankroll as session starting balance (only if userProfile is loaded, nullish check for 0 balance)
+        const startingBalance = userProfile?.bankroll !== undefined && userProfile?.bankroll !== null 
+          ? parseFloat(userProfile.bankroll) 
+          : null;
         
         localStorage.setItem('session_start_stats', JSON.stringify({
           demoBets: initialDemoBets,
@@ -234,9 +258,11 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
         sessionPending = sessionBetsPlaced - sessionWins - sessionLosses;
         if (sessionPending < 0) sessionPending = 0;
         
-        // Balance tracking
+        // Balance tracking (use nullish check so 0 balance is valid)
         startingBalance = sessionStartStats.startingBalance;
-        endingBalance = userProfile?.bankroll ? parseFloat(userProfile.bankroll) : startingBalance;
+        endingBalance = userProfile?.bankroll !== undefined && userProfile?.bankroll !== null 
+          ? parseFloat(userProfile.bankroll) 
+          : startingBalance;
         
         // Get challenge info
         challengePhase = userProfile.phase || null;
