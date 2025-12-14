@@ -45,6 +45,7 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
   const [authError, setAuthError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [existingTrial, setExistingTrial] = useState(null);
   const router = useRouter();
   const { data: session, update: updateSession } = useSession();
 
@@ -147,7 +148,16 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
       }
 
       await updateSession();
-      startDemo();
+      
+      // Check if user has an existing demo trial
+      const existingChallenge = localStorage.getItem('demo_challenge');
+      const existingState = localStorage.getItem('demo_state');
+      if (existingChallenge && existingState) {
+        setExistingTrial(JSON.parse(existingChallenge));
+        setStep('existing_trial');
+      } else {
+        startDemo();
+      }
     } catch (error) {
       setAuthError(error.message);
     } finally {
@@ -248,7 +258,64 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
           </button>
         )}
 
-        {step === 'auth' ? (
+        {step === 'existing_trial' && existingTrial ? (
+          <div className="p-6 pt-12">
+            <div className="text-center mb-6">
+              <div className="mb-4">
+                <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-16 mx-auto" />
+              </div>
+              <div className="inline-flex items-center bg-green-500/20 text-green-400 px-3 py-1.5 rounded-full text-xs font-bold border border-green-500/30 mb-3">
+                <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                EXISTING TRIAL FOUND
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Continue Your Trial?</h3>
+              <p className="text-gray-400 text-sm">
+                You have an active demo trial in progress
+              </p>
+            </div>
+
+            <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4 mb-6">
+              <div className="flex items-center justify-between text-sm mb-2">
+                <span className="text-gray-400">Challenge:</span>
+                <span className="text-white font-medium">{existingTrial.name}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm mb-2">
+                <span className="text-gray-400">Starting Balance:</span>
+                <span className="text-green-400 font-medium">${existingTrial.startingBalance?.toLocaleString()}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-400">Your Split:</span>
+                <span className="text-blue-400 font-medium">{existingTrial.userSplit}%</span>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  onClose();
+                  router.push('/demo-dashboard');
+                }}
+                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300"
+              >
+                Continue Trial
+              </button>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('demo_challenge');
+                  localStorage.removeItem('demo_state');
+                  localStorage.removeItem('demo_bet_history');
+                  setExistingTrial(null);
+                  setStep('selection');
+                }}
+                className="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
+              >
+                Start New Trial
+              </button>
+            </div>
+          </div>
+        ) : step === 'auth' ? (
           <div className="p-6 pt-12">
             <div className="text-center mb-6">
               <div className="mb-4">

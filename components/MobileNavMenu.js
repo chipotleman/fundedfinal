@@ -116,7 +116,13 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
               <button
                 onClick={() => {
                   onClose();
-                  window.dispatchEvent(new CustomEvent('openDemoPopup'));
+                  const existingChallenge = localStorage.getItem('demo_challenge');
+                  const existingState = localStorage.getItem('demo_state');
+                  if (existingChallenge && existingState) {
+                    window.location.href = '/demo-dashboard';
+                  } else {
+                    window.dispatchEvent(new CustomEvent('openDemoPopup'));
+                  }
                 }}
                 className="block w-full text-left text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
@@ -182,7 +188,13 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
               <button
                 onClick={() => {
                   onClose();
-                  window.dispatchEvent(new CustomEvent('openDemoPopup'));
+                  const existingChallenge = localStorage.getItem('demo_challenge');
+                  const existingState = localStorage.getItem('demo_state');
+                  if (existingChallenge && existingState) {
+                    window.location.href = '/demo-dashboard';
+                  } else {
+                    window.dispatchEvent(new CustomEvent('openDemoPopup'));
+                  }
                 }}
                 className="block w-full text-left text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
