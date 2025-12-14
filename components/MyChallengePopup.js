@@ -75,6 +75,29 @@ export default function MyChallengePopup({ isOpen, onClose }) {
   const badgeFromProfile = challengeNameStr.includes('Starter') ? 'BEGINNER' : 
                           challengeNameStr.includes('Elite') ? 'ADVANCED' : 'POPULAR';
 
+  const badge = challengeData?.badge || badgeFromProfile;
+  const tierColors = {
+    BEGINNER: {
+      statusBg: 'bg-blue-500/10 border border-blue-500/30',
+      dot: 'bg-blue-500',
+      text: 'text-blue-400',
+      progressGradient: 'bg-gradient-to-r from-blue-500 to-cyan-400'
+    },
+    POPULAR: {
+      statusBg: 'bg-green-500/10 border border-green-500/30',
+      dot: 'bg-green-500',
+      text: 'text-green-400',
+      progressGradient: 'bg-gradient-to-r from-green-500 to-emerald-400'
+    },
+    ADVANCED: {
+      statusBg: 'bg-purple-500/10 border border-purple-500/30',
+      dot: 'bg-purple-500',
+      text: 'text-purple-400',
+      progressGradient: 'bg-gradient-to-r from-purple-500 to-violet-400'
+    }
+  };
+  const currentTier = tierColors[badge] || tierColors.POPULAR;
+
   const handleGoToLab = () => {
     onClose();
     router.push('/dashboard');
@@ -94,19 +117,10 @@ export default function MyChallengePopup({ isOpen, onClose }) {
         className="relative bg-[#0a0a0a] rounded-2xl border border-gray-800/50 w-full max-w-2xl mx-4 mb-10 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-8 h-8 bg-[#1a1a1a] hover:bg-[#252525] rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-
         <div className="p-6">
-          <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-3 mb-6">
             <img src="/funderlogo/Piks.png" alt="Piks" className="h-10" />
-            <div className={`flex-1 flex items-center gap-2 px-4 py-2 rounded-xl ${isFunded ? 'bg-green-500/10 border border-green-500/30' : 'bg-[#111111] border border-gray-800/50'}`}>
+            <div className={`flex-1 flex items-center gap-2 px-4 py-2 rounded-xl ${isFunded ? 'bg-green-500/10 border border-green-500/30' : currentTier.statusBg}`}>
               {isFunded ? (
                 <>
                   <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
@@ -114,11 +128,19 @@ export default function MyChallengePopup({ isOpen, onClose }) {
                 </>
               ) : (
                 <>
-                  <div className="w-2.5 h-2.5 bg-orange-500 rounded-full animate-pulse"></div>
-                  <span className="text-orange-400 font-bold text-sm">EVALUATION PHASE</span>
+                  <div className={`w-2.5 h-2.5 ${currentTier.dot} rounded-full animate-pulse`}></div>
+                  <span className={`${currentTier.text} font-bold text-sm`}>EVALUATION PHASE</span>
                 </>
               )}
             </div>
+            <button
+              onClick={onClose}
+              className="flex-shrink-0 w-10 h-10 bg-[#1a1a1a] hover:bg-[#252525] rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
 
           <div className="bg-[#111111] rounded-xl p-5 border border-gray-800/50 mb-6">
@@ -157,7 +179,7 @@ export default function MyChallengePopup({ isOpen, onClose }) {
               </div>
               <div className="w-full bg-[#1a1a1a] rounded-full h-3">
                 <div
-                  className={`h-3 rounded-full transition-all duration-500 ${isFunded ? 'bg-gradient-to-r from-green-500 to-emerald-400' : 'bg-gradient-to-r from-orange-500 to-yellow-400'}`}
+                  className={`h-3 rounded-full transition-all duration-500 ${isFunded ? 'bg-gradient-to-r from-green-500 to-emerald-400' : currentTier.progressGradient}`}
                   style={{ width: `${Math.max(0, Math.min(actualProgress, 100))}%` }}
                 ></div>
               </div>
