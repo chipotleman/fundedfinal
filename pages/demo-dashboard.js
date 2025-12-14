@@ -496,7 +496,7 @@ export default function DemoDashboard() {
               </div>
             )}
 
-            <div className="flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto max-h-[calc(100vh-280px)] md:max-h-[calc(100vh-200px)]">
               {selectedBets.length === 0 ? (
                 <div className="p-8 text-center">
                   <svg className="w-16 h-16 mx-auto text-gray-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
