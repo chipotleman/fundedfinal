@@ -81,11 +81,11 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
       payout: 'text-white'
     },
     pink: {
-      border: 'border-[#AA2EE6]/70',
-      badge: 'bg-[#AA2EE6]/20 border-[#AA2EE6]/50',
-      dot: 'bg-[#AA2EE6]',
-      text: 'text-[#AA2EE6]',
-      payout: 'text-[#AA2EE6]'
+      border: 'border-[#E9762B]/70',
+      badge: 'bg-[#E9762B]/20 border-[#E9762B]/50',
+      dot: 'bg-[#E9762B]',
+      text: 'text-[#E9762B]',
+      payout: 'text-[#E9762B]'
     },
     red: {
       border: 'border-red-500',
@@ -203,7 +203,7 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                   )}
                   {isCashedOut && (
                     <>
-                      <div className="text-[#AA2EE6] font-bold text-lg">${(bet.profit || bet.stake * 0.8).toFixed(2)}</div>
+                      <div className="text-[#E9762B] font-bold text-lg">${(bet.profit || bet.stake * 0.8).toFixed(2)}</div>
                       <div className="text-gray-400 text-[10px] uppercase">Cashed Out</div>
                     </>
                   )}
