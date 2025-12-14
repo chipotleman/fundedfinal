@@ -70,8 +70,9 @@ export default function MyChallengePopup({ isOpen, onClose }) {
   const losses = userProfile?.losses || 0;
   const winRate = totalBets > 0 ? Math.round((wins / totalBets) * 100) : 0;
   
-  const badgeFromProfile = userProfile?.challenge?.includes('Starter') ? 'BEGINNER' : 
-                          userProfile?.challenge?.includes('Elite') ? 'ADVANCED' : 'POPULAR';
+  const challengeStr = typeof userProfile?.challenge === 'string' ? userProfile.challenge : '';
+  const badgeFromProfile = challengeStr.includes('Starter') ? 'BEGINNER' : 
+                          challengeStr.includes('Elite') ? 'ADVANCED' : 'POPULAR';
 
   const handleGoToLab = () => {
     onClose();
