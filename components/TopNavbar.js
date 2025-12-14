@@ -178,7 +178,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
         }
       } catch (e) {}
       
-      // Get betting stats from demo state and bet history
+      // Get betting stats - prioritize real user data over demo data
       let totalBetsPlaced = 0;
       let wins = 0;
       let losses = 0;
@@ -188,82 +188,11 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
       let challengeTier = null;
       let isDemo = false;
       
-      // Check demo state first (from demo-dashboard)
-      const demoState = localStorage.getItem('demo_state');
-      const demoBetHistory = localStorage.getItem('demo_bet_history');
-      const demoChallenge = localStorage.getItem('demo_challenge');
-      
-      if (demoState) {
-        try {
-          const state = JSON.parse(demoState);
-          const currentDemoBets = state.totalBets || 0;
-          totalBetsPlaced = currentDemoBets - (sessionStartStats.demoBets || 0);
-          if (totalBetsPlaced < 0) totalBetsPlaced = currentDemoBets;
-          
-          wins = state.wins || 0;
-          losses = state.losses || 0;
-          profitLoss = state.pnl || 0;
-          isDemo = true;
-        } catch (e) {}
-      }
-      
-      // Also check demo bet history for more accurate tracking
-      if (demoBetHistory) {
-        try {
-          const bets = JSON.parse(demoBetHistory);
-          const sessionBetsFromHistory = bets.length - (sessionStartStats.demoBetHistoryCount || 0);
-          
-          // Use the higher count between state and history
-          if (sessionBetsFromHistory > totalBetsPlaced) {
-            totalBetsPlaced = sessionBetsFromHistory;
-          }
-          
-          // Calculate wins/losses/pending from bet history
-          let historyWins = 0;
-          let historyLosses = 0;
-          let historyPending = 0;
-          let historyPnl = 0;
-          
-          bets.forEach(bet => {
-            if (bet.status === 'won') {
-              historyWins++;
-              historyPnl += parseFloat(bet.payout || 0) - parseFloat(bet.wager || 0);
-            } else if (bet.status === 'lost') {
-              historyLosses++;
-              historyPnl -= parseFloat(bet.wager || 0);
-            } else {
-              historyPending++;
-            }
-          });
-          
-          // Use history stats if they're more complete
-          if (bets.length > 0) {
-            wins = historyWins;
-            losses = historyLosses;
-            pending = historyPending;
-            if (historyPnl !== 0) profitLoss = historyPnl;
-          }
-          
-          isDemo = true;
-        } catch (e) {}
-      }
-      
-      // Get demo challenge info
-      if (demoChallenge) {
-        try {
-          const challenge = JSON.parse(demoChallenge);
-          challengeTier = 'DEMO';
-          challengePhase = challenge.name || 'Demo Trial';
-        } catch (e) {}
-      }
-      
-      // Also check real user profile stats
-      if (userProfile && !isDemo) {
+      // Check real user profile stats FIRST (prioritize real data)
+      if (userProfile && (userProfile.total_bets > 0 || userProfile.wins > 0 || userProfile.losses > 0)) {
         const currentProfileBets = userProfile.total_bets || 0;
         const sessionProfileBets = currentProfileBets - (sessionStartStats.profileBets || 0);
-        if (sessionProfileBets > totalBetsPlaced) {
-          totalBetsPlaced = sessionProfileBets;
-        }
+        totalBetsPlaced = sessionProfileBets > 0 ? sessionProfileBets : currentProfileBets;
         
         wins = userProfile.wins || 0;
         losses = userProfile.losses || 0;
@@ -271,12 +200,82 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
         if (pending < 0) pending = 0;
         profitLoss = parseFloat(userProfile.total_pnl) || 0;
         challengePhase = userProfile.phase || null;
+        isDemo = false;
         
         const storedChallenge = localStorage.getItem('purchased_challenge');
         if (storedChallenge) {
           try {
             const challenge = JSON.parse(storedChallenge);
             challengeTier = challenge.badge || null;
+          } catch (e) {}
+        }
+      } else {
+        // Only use demo data if no real user data exists
+        const demoState = localStorage.getItem('demo_state');
+        const demoBetHistory = localStorage.getItem('demo_bet_history');
+        const demoChallenge = localStorage.getItem('demo_challenge');
+        
+        if (demoState) {
+          try {
+            const state = JSON.parse(demoState);
+            const currentDemoBets = state.totalBets || 0;
+            totalBetsPlaced = currentDemoBets - (sessionStartStats.demoBets || 0);
+            if (totalBetsPlaced < 0) totalBetsPlaced = currentDemoBets;
+            
+            wins = state.wins || 0;
+            losses = state.losses || 0;
+            profitLoss = state.pnl || 0;
+            isDemo = true;
+          } catch (e) {}
+        }
+        
+        // Also check demo bet history for more accurate tracking
+        if (demoBetHistory) {
+          try {
+            const bets = JSON.parse(demoBetHistory);
+            const sessionBetsFromHistory = bets.length - (sessionStartStats.demoBetHistoryCount || 0);
+            
+            // Use the higher count between state and history
+            if (sessionBetsFromHistory > totalBetsPlaced) {
+              totalBetsPlaced = sessionBetsFromHistory;
+            }
+            
+            // Calculate wins/losses/pending from bet history
+            let historyWins = 0;
+            let historyLosses = 0;
+            let historyPending = 0;
+            let historyPnl = 0;
+            
+            bets.forEach(bet => {
+              if (bet.status === 'won') {
+                historyWins++;
+                historyPnl += parseFloat(bet.payout || 0) - parseFloat(bet.wager || 0);
+              } else if (bet.status === 'lost') {
+                historyLosses++;
+                historyPnl -= parseFloat(bet.wager || 0);
+              } else {
+                historyPending++;
+              }
+            });
+            
+            // Use history stats if they're more complete
+            if (bets.length > 0) {
+              wins = historyWins;
+              losses = historyLosses;
+              pending = historyPending;
+              if (historyPnl !== 0) profitLoss = historyPnl;
+            }
+            
+            isDemo = true;
+          } catch (e) {}
+        }
+        
+        // Get demo challenge info
+        if (demoChallenge) {
+          try {
+            const challenge = JSON.parse(demoChallenge);
+            challengeTier = 'DEMO';
+            challengePhase = challenge.name || 'Demo Trial';
           } catch (e) {}
         }
       }
