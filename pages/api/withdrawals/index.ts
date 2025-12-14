@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { getServerSession } from "next-auth/next";
-import authOptions from "../auth/[...nextauth]";
+import { authOptions } from "../../../lib/auth";
 import { db } from "../../../lib/db";
 import { withdrawals, profiles, paymentMethods } from "../../../shared/schema";
 import { eq, desc, and } from "drizzle-orm";
