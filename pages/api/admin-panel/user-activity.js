@@ -56,6 +56,7 @@ export default async function handler(req, res) {
       userEvents,
       pageViews,
       sessionMetrics,
+      userWithdrawals,
     ] = await Promise.all([
       sql`SELECT * FROM profiles WHERE id = ${userId} LIMIT 1`,
       sql`
@@ -94,6 +95,14 @@ export default async function handler(req, res) {
         WHERE user_id = ${userId} 
         ORDER BY created_at DESC 
         LIMIT 20
+      `,
+      sql`
+        SELECT id, method_type, amount, fee, net_amount, status, 
+               payment_details, status_history, denial_reason, created_at, updated_at
+        FROM withdrawals 
+        WHERE user_id = ${userId} 
+        ORDER BY created_at DESC 
+        LIMIT 50
       `,
     ]);
 
@@ -149,6 +158,20 @@ export default async function handler(req, res) {
       eventsCount: s.events_count,
     }));
 
+    const withdrawals = userWithdrawals.map(w => ({
+      id: w.id,
+      methodType: w.method_type,
+      amount: w.amount,
+      fee: w.fee,
+      netAmount: w.net_amount,
+      status: w.status,
+      paymentDetails: w.payment_details,
+      statusHistory: w.status_history,
+      denialReason: w.denial_reason,
+      createdAt: w.created_at,
+      updatedAt: w.updated_at,
+    }));
+
     const timeline = [
       ...bets.map(b => ({ type: 'bet', data: b, timestamp: b.createdAt })),
       ...events.map(e => ({ type: 'event', data: e, timestamp: e.createdAt })),
@@ -162,6 +185,7 @@ export default async function handler(req, res) {
       events,
       pageViews: pages,
       sessions,
+      withdrawals,
       timeline,
       stats: {
         totalBets: bets.length,
@@ -169,9 +193,11 @@ export default async function handler(req, res) {
         totalEvents: events.length,
         totalPageViews: pages.length,
         totalSessions: sessions.length,
+        totalWithdrawals: withdrawals.length,
         pendingBets: bets.filter(b => b.status === 'pending').length,
         wonBets: bets.filter(b => b.status === 'won').length,
         lostBets: bets.filter(b => b.status === 'lost').length,
+        pendingWithdrawals: withdrawals.filter(w => w.status === 'under_review' || w.status === 'awaiting_processing').length,
       },
     });
   } catch (error) {

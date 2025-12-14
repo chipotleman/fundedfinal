@@ -620,7 +620,7 @@ export default function AdminUsers() {
               )}
 
               <div className="flex gap-2 mt-4 flex-wrap">
-                {['timeline', 'bets', 'demoBets', 'events', 'sessions'].map((tab) => (
+                {['timeline', 'bets', 'demoBets', 'withdrawals', 'events', 'sessions'].map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActivityTab(tab)}
@@ -630,7 +630,7 @@ export default function AdminUsers() {
                         : 'bg-gray-800 text-gray-400 hover:text-white'
                     }`}
                   >
-                    {tab === 'bets' ? 'Real Bets' : tab === 'demoBets' ? 'Demo Bets' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    {tab === 'bets' ? 'Real Bets' : tab === 'demoBets' ? 'Demo Bets' : tab === 'withdrawals' ? 'Withdrawals' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                   </button>
                 ))}
               </div>
@@ -841,6 +841,54 @@ export default function AdminUsers() {
                           </div>
                         ))
                       )}
+                    </div>
+                  )}
+
+                  {activityTab === 'withdrawals' && (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead className="bg-gray-800">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400">Amount</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400">Method</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400">Fee</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400">Net</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400">Status</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400">Date</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-800">
+                          {activityData.withdrawals?.length === 0 ? (
+                            <tr>
+                              <td colSpan={6} className="px-4 py-8 text-center text-gray-400">No withdrawals found</td>
+                            </tr>
+                          ) : (
+                            activityData.withdrawals?.map((w) => (
+                              <tr key={w.id} className="hover:bg-gray-800/30">
+                                <td className="px-4 py-3 text-white text-sm font-medium">${parseFloat(w.amount || 0).toLocaleString()}</td>
+                                <td className="px-4 py-3 text-gray-400 text-sm capitalize">{w.methodType?.replace('_', ' ') || '-'}</td>
+                                <td className="px-4 py-3 text-gray-400 text-sm">{w.fee ? `$${parseFloat(w.fee).toFixed(2)}` : 'Free'}</td>
+                                <td className="px-4 py-3 text-green-400 text-sm">${parseFloat(w.netAmount || 0).toLocaleString()}</td>
+                                <td className="px-4 py-3">
+                                  <span className={`px-2 py-1 rounded text-xs ${
+                                    w.status === 'finalized' ? 'bg-green-600/20 text-green-400' :
+                                    w.status === 'denied' ? 'bg-red-600/20 text-red-400' :
+                                    w.status === 'cancelled' ? 'bg-gray-600/20 text-gray-400' :
+                                    w.status === 'awaiting_processing' ? 'bg-blue-600/20 text-blue-400' :
+                                    'bg-yellow-600/20 text-yellow-400'
+                                  }`}>
+                                    {w.status === 'under_review' ? 'Under Review' :
+                                     w.status === 'awaiting_processing' ? 'Processing' :
+                                     w.status === 'finalized' ? 'Completed' :
+                                     w.status?.charAt(0).toUpperCase() + w.status?.slice(1) || '-'}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3 text-gray-500 text-sm">{formatDate(w.createdAt)}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
                     </div>
                   )}
 
