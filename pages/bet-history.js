@@ -95,6 +95,8 @@ export default function BetHistory() {
             : bet
         ));
         setBankroll(result.newBankroll);
+        // Emit global event so TopNavbar can update
+        window.dispatchEvent(new CustomEvent('bankrollUpdated', { detail: { bankroll: result.newBankroll } }));
       } else {
         const error = await response.json();
         console.error('Cash out failed:', error.error);

@@ -151,6 +151,8 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
         const bankrollValue = Number(data.newBankroll);
         if (!isNaN(bankrollValue)) {
           onBetPlaced(bankrollValue);
+          // Emit global event so TopNavbar can update
+          window.dispatchEvent(new CustomEvent('bankrollUpdated', { detail: { bankroll: bankrollValue } }));
         }
       }
 

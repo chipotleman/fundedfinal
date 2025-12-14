@@ -89,6 +89,18 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
     }
   }, [session, userProfile]);
 
+  // Listen for bankroll updates from bet placement/cashout
+  useEffect(() => {
+    const handleBankrollUpdate = (event) => {
+      if (event.detail?.bankroll !== undefined) {
+        setUserProfile(prev => prev ? { ...prev, bankroll: event.detail.bankroll } : prev);
+      }
+    };
+    
+    window.addEventListener('bankrollUpdated', handleBankrollUpdate);
+    return () => window.removeEventListener('bankrollUpdated', handleBankrollUpdate);
+  }, []);
+
   useEffect(() => {
     const fetchUser = async () => {
       // Check NextAuth session first
