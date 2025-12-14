@@ -75,7 +75,7 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const { userId, challengeType } = req.body;
+  const { userId, challengeType, userSplit: customUserSplit } = req.body;
 
   if (!userId || !challengeType) {
     return res.status(400).json({ error: 'User ID and challenge type are required' });
@@ -86,6 +86,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid challenge type. Must be starter, pro, or elite' });
   }
 
+  const userSplit = customUserSplit && [80, 85, 90].includes(customUserSplit) ? customUserSplit : config.userSplit;
+
   try {
     const [newChallenge] = await db
       .insert(userChallenges)
@@ -95,7 +97,7 @@ export default async function handler(req, res) {
         challengeName: config.name,
         startingBalance: config.balance.toString(),
         currentBalance: config.balance.toString(),
-        userSplit: config.userSplit,
+        userSplit: userSplit,
         pricePaid: '0',
         phase: 1,
         status: 'active',
@@ -113,7 +115,7 @@ export default async function handler(req, res) {
           type: config.type,
           name: config.name,
           startingBalance: config.balance,
-          userSplit: config.userSplit,
+          userSplit: userSplit,
         },
         challengeStartDate: new Date(),
         challengePhase: 1,

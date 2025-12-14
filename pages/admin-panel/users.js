@@ -7,6 +7,8 @@ const CHALLENGES = [
   { type: 'elite', name: 'Elite Challenge', balance: '$25,000', price: '$399' },
 ];
 
+const SPLIT_OPTIONS = [80, 85, 90];
+
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,6 +30,7 @@ export default function AdminUsers() {
   const [activityLoading, setActivityLoading] = useState(false);
   const [activityUserEmail, setActivityUserEmail] = useState('');
   const [activityTab, setActivityTab] = useState('timeline');
+  const [selectedSplit, setSelectedSplit] = useState(90);
 
   useEffect(() => {
     fetchUsers();
@@ -117,6 +120,7 @@ export default function AdminUsers() {
     setChallengeUserId(userId);
     setChallengeUserEmail(email);
     setSelectedChallenge('');
+    setSelectedSplit(90);
     setChallengeMessage('');
     setShowChallengeModal(true);
   };
@@ -140,7 +144,8 @@ export default function AdminUsers() {
         },
         body: JSON.stringify({ 
           userId: challengeUserId, 
-          challengeType: selectedChallenge 
+          challengeType: selectedChallenge,
+          userSplit: selectedSplit
         }),
       });
 
@@ -524,6 +529,28 @@ export default function AdminUsers() {
               ))}
             </div>
 
+            <div className="mb-4">
+              <label className="block text-sm text-gray-400 mb-2">Profit Split (User's Share)</label>
+              <div className="flex gap-2">
+                {SPLIT_OPTIONS.map((split) => (
+                  <button
+                    key={split}
+                    onClick={() => setSelectedSplit(split)}
+                    className={`flex-1 py-3 rounded-lg border font-medium transition-colors ${
+                      selectedSplit === split
+                        ? 'border-green-500 bg-green-500/10 text-green-400'
+                        : 'border-gray-700 bg-gray-800 text-gray-400 hover:border-gray-600'
+                    }`}
+                  >
+                    {split}%
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                User receives {selectedSplit}% of profits, Piks keeps {100 - selectedSplit}%
+              </p>
+            </div>
+
             {challengeMessage && (
               <div className={`mb-4 p-3 rounded-lg text-sm ${
                 challengeMessage.includes('success')
@@ -592,8 +619,8 @@ export default function AdminUsers() {
                 </div>
               )}
 
-              <div className="flex gap-2 mt-4">
-                {['timeline', 'bets', 'events', 'sessions'].map((tab) => (
+              <div className="flex gap-2 mt-4 flex-wrap">
+                {['timeline', 'bets', 'demoBets', 'events', 'sessions'].map((tab) => (
                   <button
                     key={tab}
                     onClick={() => setActivityTab(tab)}
@@ -603,7 +630,7 @@ export default function AdminUsers() {
                         : 'bg-gray-800 text-gray-400 hover:text-white'
                     }`}
                   >
-                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    {tab === 'bets' ? 'Real Bets' : tab === 'demoBets' ? 'Demo Bets' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                   </button>
                 ))}
               </div>
@@ -704,7 +731,7 @@ export default function AdminUsers() {
                         <tbody className="divide-y divide-gray-800">
                           {activityData.bets?.length === 0 ? (
                             <tr>
-                              <td colSpan={7} className="px-4 py-8 text-center text-gray-400">No bets found</td>
+                              <td colSpan={7} className="px-4 py-8 text-center text-gray-400">No real bets found</td>
                             </tr>
                           ) : (
                             activityData.bets?.map((bet) => (
@@ -722,6 +749,57 @@ export default function AdminUsers() {
                                 </td>
                                 <td className="px-4 py-3 text-gray-400 text-sm">
                                   {bet.balanceAfter ? `$${parseFloat(bet.balanceAfter).toLocaleString()}` : '-'}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <span className={`px-2 py-1 rounded text-xs ${
+                                    bet.status === 'won' ? 'bg-green-600/20 text-green-400' :
+                                    bet.status === 'lost' ? 'bg-red-600/20 text-red-400' :
+                                    'bg-yellow-600/20 text-yellow-400'
+                                  }`}>{bet.status}</span>
+                                </td>
+                                <td className="px-4 py-3 text-gray-400 text-xs">{formatDate(bet.createdAt)}</td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+
+                  {activityTab === 'demoBets' && (
+                    <div className="overflow-x-auto">
+                      <div className="mb-3 px-2">
+                        <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">Demo Mode - Practice Bets</span>
+                      </div>
+                      <table className="w-full">
+                        <thead className="bg-gray-800">
+                          <tr>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400">Selection</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400">Odds</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400">Stake</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400">Potential Payout</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400">Status</th>
+                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-400">Date</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-800">
+                          {activityData.demoBets?.length === 0 ? (
+                            <tr>
+                              <td colSpan={6} className="px-4 py-8 text-center text-gray-400">No demo bets found</td>
+                            </tr>
+                          ) : (
+                            activityData.demoBets?.map((bet) => (
+                              <tr key={bet.id} className="hover:bg-gray-800/30">
+                                <td className="px-4 py-3">
+                                  <div>
+                                    <p className="text-white text-sm">{bet.selection}</p>
+                                    <p className="text-gray-500 text-xs truncate max-w-[200px]">{bet.matchupName}</p>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3 text-white text-sm">{bet.odds || '-'}</td>
+                                <td className="px-4 py-3 text-white text-sm">{bet.stake != null ? `$${bet.stake}` : '-'}</td>
+                                <td className="px-4 py-3 text-gray-400 text-sm">
+                                  {bet.potentialPayout != null ? `$${parseFloat(bet.potentialPayout).toLocaleString()}` : '-'}
                                 </td>
                                 <td className="px-4 py-3">
                                   <span className={`px-2 py-1 rounded text-xs ${

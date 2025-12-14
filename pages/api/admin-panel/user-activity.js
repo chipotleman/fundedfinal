@@ -52,6 +52,7 @@ export default async function handler(req, res) {
     const [
       userProfile,
       userBets,
+      demoBets,
       userEvents,
       pageViews,
       sessionMetrics,
@@ -61,6 +62,14 @@ export default async function handler(req, res) {
         SELECT id, matchup_name, market_type, selection, odds, stake, 
                potential_payout, status, balance_before, balance_after, created_at
         FROM user_bets 
+        WHERE user_id = ${userId} 
+        ORDER BY created_at DESC 
+        LIMIT 100
+      `,
+      sql`
+        SELECT id, matchup_name, market_type, selection, odds, stake, 
+               potential_payout, status, created_at
+        FROM demo_bets 
         WHERE user_id = ${userId} 
         ORDER BY created_at DESC 
         LIMIT 100
@@ -104,6 +113,18 @@ export default async function handler(req, res) {
       createdAt: bet.created_at,
     }));
 
+    const demoBetsList = demoBets.map(bet => ({
+      id: bet.id,
+      matchupName: bet.matchup_name,
+      marketType: bet.market_type,
+      selection: bet.selection,
+      odds: bet.odds,
+      stake: bet.stake,
+      potentialPayout: bet.potential_payout,
+      status: bet.status,
+      createdAt: bet.created_at,
+    }));
+
     const events = userEvents.map(event => ({
       id: event.id,
       eventType: event.event_type,
@@ -137,12 +158,14 @@ export default async function handler(req, res) {
     return res.status(200).json({
       profile,
       bets,
+      demoBets: demoBetsList,
       events,
       pageViews: pages,
       sessions,
       timeline,
       stats: {
         totalBets: bets.length,
+        totalDemoBets: demoBetsList.length,
         totalEvents: events.length,
         totalPageViews: pages.length,
         totalSessions: sessions.length,

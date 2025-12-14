@@ -157,11 +157,12 @@ export default function WithdrawalPage() {
     fetchData();
   }, [session, status, router]);
 
-  const challengeData = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('purchased_challenge') || '{}') : {};
+  const challengeData = userProfile?.challenge || (typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('purchased_challenge') || '{}') : {});
   const startingBalance = challengeData?.startingBalance || 10000;
   const currentBalance = userProfile?.bankroll ? parseFloat(userProfile.bankroll) : startingBalance;
   const profit = Math.max(0, currentBalance - startingBalance);
-  const userSplit = challengeData?.userSplit || 80;
+  const userSplit = challengeData?.userSplit || challengeData?.split || 80;
+  const platformSplit = 100 - userSplit;
   const availableToWithdraw = Math.floor(profit * (userSplit / 100));
 
   const handleFormChange = (e) => {
@@ -749,6 +750,18 @@ export default function WithdrawalPage() {
           )}
 
           <div className="bg-[#111111] rounded-2xl p-6 border border-gray-800/50 mb-8">
+            <div className="mb-4 pb-4 border-b border-gray-800">
+              <div className="flex items-center justify-between">
+                <div className="text-gray-400 text-sm">Your Profit Split</div>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl font-bold text-green-400">{userSplit}%</span>
+                  <span className="text-gray-500">You</span>
+                  <span className="text-gray-600 mx-2">/</span>
+                  <span className="text-gray-500">{platformSplit}%</span>
+                  <span className="text-gray-500">Piks</span>
+                </div>
+              </div>
+            </div>
             <div className="grid grid-cols-2 gap-6">
               <div>
                 <div className="text-gray-500 text-sm mb-1">Total Profit</div>
@@ -761,7 +774,7 @@ export default function WithdrawalPage() {
                 <div className="text-2xl font-bold text-white">
                   ${availableToWithdraw.toLocaleString()}
                 </div>
-                <div className="text-xs text-gray-500">({userSplit}% of profits)</div>
+                <div className="text-xs text-gray-500">({userSplit}% of ${profit.toLocaleString()} profit)</div>
               </div>
             </div>
           </div>
