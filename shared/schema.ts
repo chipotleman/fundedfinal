@@ -119,6 +119,16 @@ export const userChallenges = pgTable("user_challenges", {
   transactionIdIdx: index("user_challenges_transaction_id_idx").on(table.transactionId),
 }));
 
+// Admin users table for separate admin authentication
+export const adminUsers = pgTable("admin_users", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  password: varchar("password", { length: 255 }).notNull(),
+  name: varchar("name", { length: 255 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  lastLogin: timestamp("last_login"),
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -128,3 +138,5 @@ export type UserBet = typeof userBets.$inferSelect;
 export type InsertUserBet = typeof userBets.$inferInsert;
 export type UserChallenge = typeof userChallenges.$inferSelect;
 export type InsertUserChallenge = typeof userChallenges.$inferInsert;
+export type AdminUser = typeof adminUsers.$inferSelect;
+export type InsertAdminUser = typeof adminUsers.$inferInsert;

@@ -13,6 +13,16 @@ const nextConfig = {
     'https://*.replit.app',
     'https://*.janeway.replit.dev'
   ],
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.watchOptions = {
+        aggregateTimeout: 300,
+        poll: 1000,
+        ignored: ['**/node_modules/**', '**/.git/**', '**/.next/**']
+      };
+    }
+    return config;
+  },
 }
 
 module.exports = withPWA(nextConfig)
