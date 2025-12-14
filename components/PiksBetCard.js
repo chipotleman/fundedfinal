@@ -219,8 +219,8 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
             }}
             className={`w-full mt-1 text-white font-bold py-2 px-3 rounded-lg text-sm transition-all ${
               confirmingCashOut 
-                ? 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800' 
-                : 'bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600'
+                ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700' 
+                : 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600'
             }`}
           >
             {confirmingCashOut ? `Confirm Cash Out ($${(bet.stake * 0.8).toFixed(2)})` : `Cash Out ($${(bet.stake * 0.8).toFixed(2)})`}

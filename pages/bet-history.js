@@ -279,16 +279,16 @@ export default function BetHistory() {
         <div className="max-w-6xl mx-auto">
           
           {/* Filter Tabs */}
-          <div className="flex justify-center space-x-2 mb-12">
-            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl p-2 border border-slate-700/50">
+          <div className="flex justify-center mb-8">
+            <div className="bg-[#111111] rounded-xl p-1 border border-gray-800/50 flex gap-1">
               {['all', 'open', 'won', 'lost'].map(filter => (
                 <button
                   key={filter}
                   onClick={() => setSelectedFilter(filter)}
-                  className={`px-8 py-3 rounded-xl font-bold transition-all duration-300 ${
+                  className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all ${
                     selectedFilter === filter
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg shadow-blue-500/25'
-                      : 'text-gray-400 hover:text-white hover:bg-slate-700/50'
+                      ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white'
+                      : 'text-gray-500 hover:text-white hover:bg-[#1a1a1a]'
                   }`}
                 >
                   {filter.charAt(0).toUpperCase() + filter.slice(1)}
