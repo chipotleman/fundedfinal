@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { db } from "../../../lib/db";
-import { profiles } from "../../../shared/schema";
+import { profiles, userBets } from "../../../shared/schema";
 import { eq } from "drizzle-orm";
 
 export default async function handler(
@@ -24,7 +24,21 @@ export default async function handler(
         return res.status(404).json({ message: "Profile not found" });
       }
 
-      return res.status(200).json(profile);
+      const bets = await db
+        .select()
+        .from(userBets)
+        .where(eq(userBets.userId, id));
+
+      const totalBets = bets.length;
+      const wins = bets.filter(b => b.status === 'won').length;
+      const losses = bets.filter(b => b.status === 'lost').length;
+
+      return res.status(200).json({
+        ...profile,
+        total_bets: totalBets,
+        wins,
+        losses
+      });
     } catch (error) {
       console.error("Error fetching profile:", error);
       return res.status(500).json({ message: "Failed to fetch profile" });
