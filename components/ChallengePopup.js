@@ -285,9 +285,27 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
 
   const adjustedPrice = Math.round(currentChallenge.price * priceMultiplier);
   
-  // Calculate color based on split (50% = orange, 90% = yellow)
-  const splitColorProgress = (userSplit - 50) / 40; // 0 at 50%, 1 at 90%
-  const splitBarColor = `rgb(${Math.round(249 + (250 - 249) * splitColorProgress)}, ${Math.round(115 + (204 - 115) * splitColorProgress)}, ${Math.round(22 + (21 - 22) * splitColorProgress)})`; // Orange to Yellow
+  // Calculate lightness based on split (50% = lighter, 90% = darker)
+  // Progress: 0 at 50%, 1 at 90%
+  const splitColorProgress = (userSplit - 50) / 40;
+  
+  // Get theme-based color with lightness adjustment
+  const getThemeBarColor = () => {
+    // Lightness: 70% at 50 split, 45% at 90 split (darker as split increases)
+    const lightness = 70 - (splitColorProgress * 25);
+    
+    if (currentChallenge.badge === 'BEGINNER') {
+      // Blue theme
+      return `hsl(217, 91%, ${lightness}%)`;
+    } else if (currentChallenge.badge === 'POPULAR') {
+      // Green theme
+      return `hsl(142, 71%, ${lightness}%)`;
+    } else {
+      // Purple theme
+      return `hsl(270, 70%, ${lightness}%)`;
+    }
+  };
+  const splitBarColor = getThemeBarColor();
 
   // Theme colors based on challenge badge
   const getThemeColors = () => {
@@ -761,12 +779,12 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                     </div>
                   </div>
                   
-                  {/* Split scale labels */}
-                  <div className="flex justify-between text-xs mt-2 px-1">
-                    <span className="text-gray-600">0%</span>
-                    <span className="text-orange-400">50%</span>
-                    <span className="text-yellow-400">90%</span>
-                    <span className="text-gray-600">100%</span>
+                  {/* Split scale labels - positioned to match bar */}
+                  <div className="relative h-4 mt-2">
+                    <span className="absolute left-0 text-xs text-gray-600">0%</span>
+                    <span className="absolute text-xs text-gray-400" style={{ left: '50%', transform: 'translateX(-50%)' }}>50%</span>
+                    <span className="absolute text-xs text-gray-400" style={{ left: '90%', transform: 'translateX(-50%)' }}>90%</span>
+                    <span className="absolute right-0 text-xs text-gray-600">100%</span>
                   </div>
                 </div>
               )}
