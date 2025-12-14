@@ -626,7 +626,7 @@ export default function DemoDashboard() {
             </div>
 
             {selectedBets.length > 0 && (
-              <div className="p-4 border-t border-gray-800/50 bg-black">
+              <div className="sticky bottom-0 left-0 right-0 p-4 border-t border-gray-800/50 bg-black safe-area-bottom">
                 {/* Parlay Stake Input */}
                 {betMode === 'parlay' && selectedBets.length >= 2 && (
                   <div className="mb-4">
@@ -674,7 +674,7 @@ export default function DemoDashboard() {
                   disabled={betMode === 'parlay' ? !parlayStake || parseFloat(parlayStake) <= 0 : getTotalStake() === 0}
                   className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-4 rounded-xl transition-all disabled:cursor-not-allowed text-lg"
                 >
-                  {betMode === 'parlay' ? `Place ${selectedBets.length}-Leg Parlay` : `Place ${selectedBets.length} Pik${selectedBets.length > 1 ? 's' : ''}`}
+                  {betMode === 'parlay' ? `Place ${selectedBets.length}-Leg Parlay` : `Place ${selectedBets.length} Demo Pik${selectedBets.length > 1 ? 's' : ''}`}
                 </button>
               </div>
             )}

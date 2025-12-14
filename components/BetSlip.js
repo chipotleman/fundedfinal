@@ -368,7 +368,7 @@ export default function BetSlip({ bankroll, onClose, isOpen }) {
             </div>
 
             {bets.length > 0 && (
-              <div className="p-4 border-t border-gray-800/50 bg-black">
+              <div className="sticky bottom-0 left-0 right-0 p-4 border-t border-gray-800/50 bg-black safe-area-bottom">
                 {/* Parlay Stake Input */}
                 {betType === 'parlay' && bets.length >= 2 && (
                   <div className="mb-4">
