@@ -779,13 +779,6 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                     </div>
                   </div>
                   
-                  {/* Split scale labels - positioned to match bar */}
-                  <div className="relative h-4 mt-2">
-                    <span className="absolute left-0 text-xs text-gray-600">0%</span>
-                    <span className="absolute text-xs text-gray-400" style={{ left: '50%', transform: 'translateX(-50%)' }}>50%</span>
-                    <span className="absolute text-xs text-gray-400" style={{ left: '90%', transform: 'translateX(-50%)' }}>90%</span>
-                    <span className="absolute right-0 text-xs text-gray-600">100%</span>
-                  </div>
                 </div>
               )}
 
@@ -796,24 +789,24 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                     <div className="text-xl font-bold text-white">${adjustedPrice}</div>
                     {adjustedPrice > currentChallenge.price && (
                       <div className="text-xs">
-                        <span className="text-orange-400">(+${adjustedPrice - currentChallenge.price})</span>
+                        <span className={theme.text}>(+${adjustedPrice - currentChallenge.price})</span>
                       </div>
                     )}
                     {adjustedPrice < currentChallenge.price && (
                       <div className="text-xs">
-                        <span className="text-green-400">(-${currentChallenge.price - adjustedPrice})</span>
+                        <span className="text-red-400">(-${currentChallenge.price - adjustedPrice})</span>
                       </div>
                     )}
                   </div>
                   <div className="text-gray-400 text-xs">
                     Challenge fee
                     {adjustedPrice > currentChallenge.price && (
-                      <span className="ml-1 text-orange-400">
+                      <span className={`ml-1 ${theme.text}`}>
                         (split premium)
                       </span>
                     )}
                     {adjustedPrice < currentChallenge.price && (
-                      <span className="ml-1 text-green-400">
+                      <span className="ml-1 text-red-400">
                         (discount applied)
                       </span>
                     )}
