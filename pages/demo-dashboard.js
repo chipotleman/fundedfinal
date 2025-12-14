@@ -320,7 +320,6 @@ export default function DemoDashboard() {
         const filtered = prev.filter(bet => !bet.key.startsWith(conflictKey));
         return [...filtered, newBet];
       });
-      setShowBetSlip(true);
     }
   };
 
