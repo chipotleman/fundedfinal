@@ -53,6 +53,16 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
     };
   }, []);
 
+  // Track session start time when user logs in
+  useEffect(() => {
+    if (session?.user) {
+      const existingStart = localStorage.getItem('session_start_time');
+      if (!existingStart) {
+        localStorage.setItem('session_start_time', Date.now().toString());
+      }
+    }
+  }, [session]);
+
   useEffect(() => {
     const fetchUser = async () => {
       // Check NextAuth session first
@@ -116,19 +126,61 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
   }, []);
 
   const handleSignOut = async () => {
-    // Clear any stored user data
+    // Gather session data for summary popup BEFORE signing out
     if (typeof window !== 'undefined') {
+      const sessionStartTime = localStorage.getItem('session_start_time');
+      const duration = sessionStartTime ? Date.now() - parseInt(sessionStartTime) : 0;
+      
+      // Get betting stats from profile or localStorage
+      let betsPlaced = 0;
+      let wins = 0;
+      let losses = 0;
+      let pending = 0;
+      let profitLoss = 0;
+      let challengePhase = null;
+      let challengeTier = null;
+      
+      if (userProfile) {
+        betsPlaced = userProfile.total_bets || 0;
+        wins = userProfile.wins || 0;
+        losses = userProfile.losses || 0;
+        pending = betsPlaced - wins - losses;
+        profitLoss = parseFloat(userProfile.total_pnl) || 0;
+        challengePhase = userProfile.phase || null;
+        
+        const storedChallenge = localStorage.getItem('purchased_challenge');
+        if (storedChallenge) {
+          try {
+            const challenge = JSON.parse(storedChallenge);
+            challengeTier = challenge.badge || null;
+          } catch (e) {}
+        }
+      }
+      
+      const sessionData = {
+        duration,
+        betsPlaced,
+        wins,
+        losses,
+        pending,
+        profitLoss,
+        challengePhase,
+        challengeTier
+      };
+      
+      // Clear local session data first
       localStorage.removeItem('demo_user');
       localStorage.removeItem('user_session');
       localStorage.removeItem('current_user');
+      localStorage.removeItem('session_start_time');
       sessionStorage.clear();
+      
+      // Dispatch event to show summary popup first
+      window.dispatchEvent(new CustomEvent('openSessionSummary', { detail: sessionData }));
+      
+      // Sign out from NextAuth without triggering redirect
+      signOut({ redirect: false, callbackUrl: '/' });
     }
-
-    // Sign out from NextAuth
-    await signOut({ redirect: false });
-
-    // Redirect to auth page
-    router.push('/auth');
   };
 
   const closeMobileMenu = () => {

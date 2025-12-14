@@ -8,6 +8,7 @@ import ChallengePopup from '../components/ChallengePopup';
 import HowItWorksPopup from '../components/HowItWorksPopup';
 import DemoPopup from '../components/DemoPopup';
 import AuthPopup from '../components/AuthPopup';
+import SessionSummaryPopup from '../components/SessionSummaryPopup';
 import MobileNavMenu from '../components/MobileNavMenu';
 import BetaLanding from '../components/BetaLanding';
 
@@ -18,6 +19,8 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
   const [showDemoPopup, setShowDemoPopup] = useState(false);
   const [showAuthPopup, setShowAuthPopup] = useState(false);
   const [authPopupMode, setAuthPopupMode] = useState('signin');
+  const [showSessionSummary, setShowSessionSummary] = useState(false);
+  const [sessionSummaryData, setSessionSummaryData] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -104,12 +107,20 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
       setShowAuthPopup(true);
     };
 
+    const handleOpenSessionSummary = (e) => {
+      if (e.detail) {
+        setSessionSummaryData(e.detail);
+        setShowSessionSummary(true);
+      }
+    };
+
     if (typeof window !== 'undefined') {
       window.addEventListener('openChallengePopup', handleOpenChallengePopup);
       window.addEventListener('openHowItWorks', handleOpenHowItWorks);
       window.addEventListener('mobileMenuToggle', handleMobileMenuToggle);
       window.addEventListener('openDemoPopup', handleOpenDemoPopup);
       window.addEventListener('openAuthPopup', handleOpenAuthPopup);
+      window.addEventListener('openSessionSummary', handleOpenSessionSummary);
     }
 
     return () => {
@@ -119,6 +130,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
         window.removeEventListener('mobileMenuToggle', handleMobileMenuToggle);
         window.removeEventListener('openDemoPopup', handleOpenDemoPopup);
         window.removeEventListener('openAuthPopup', handleOpenAuthPopup);
+        window.removeEventListener('openSessionSummary', handleOpenSessionSummary);
       }
     };
   }, []);
@@ -202,6 +214,15 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
             isOpen={showAuthPopup} 
             onClose={() => setShowAuthPopup(false)}
             initialMode={authPopupMode}
+          />
+
+          <SessionSummaryPopup
+            isOpen={showSessionSummary}
+            onClose={() => {
+              setShowSessionSummary(false);
+              setSessionSummaryData(null);
+            }}
+            sessionData={sessionSummaryData}
           />
 
           {/* Mobile Menu - Rendered outside page wrapper via portal */}
