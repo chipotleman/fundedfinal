@@ -59,6 +59,7 @@ None documented yet.
 - **Features**:
   - Dashboard with platform stats (users, bets, challenges)
   - User management with search, clickable rows, multi-select, CSV export, and password reset
+  - **User Activity Modal**: View detailed user activity timeline with bets, events, page views, and sessions
   - Bet management with edit/settle functionality
   - Staff management with roles (admin, manager, staff) and granular permissions
   - Analytics dashboard showing events, sessions, page views, demo bets, and unplaced bets
@@ -81,6 +82,10 @@ None documented yet.
 
 ## Recent Changes
 - **December 14, 2025**:
+  - ✅ **FEATURE: User Activity Modal** - Admin can view detailed user activity from User Management page with tabs for timeline, bets, events, and sessions. Shows balance snapshots (before/after) for each bet.
+  - ✅ **FEATURE: BetSlip Event Tracking** - BetSlip now tracks bet_added, bet_removed, stake_updated events with user/session context
+  - ✅ **FEATURE: Balance Snapshots** - Bet placement API records balanceBefore and balanceAfter for each bet
+  - ✅ **API: User Activity Endpoint** - `/api/admin-panel/user-activity?userId=xxx` returns complete user activity data
   - ✅ **BUG FIX: UI Balance Refresh** - Fixed bankroll not updating in UI after bet placement by handling numeric string coercion in BetSlip.js and dashboard.js
   - ✅ **FEATURE: Analytics Integration** - Integrated useEventTracking hook globally in _app.js via AnalyticsTracker component for automatic page view and click tracking
   - ✅ **BUG FIX: Session Analytics API** - Fixed ON CONFLICT issue in session.js by checking for existing session before insert
