@@ -319,7 +319,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
   const getCardBorder = () => {
     if (isWon) return 'border-2 border-yellow-500/70';
     if (isOpen) return 'border-2 border-white/50';
-    if (isCashedOut) return 'border-2 border-blue-500/70';
+    if (isCashedOut) return 'border-2 border-pink-500/70';
     return 'border-2 border-red-700/70';
   };
 
@@ -340,11 +340,11 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
           ) : (
             <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${
               isOpen ? 'bg-white/10 border-white/30 text-white' : 
-              isCashedOut ? 'bg-blue-500/20 border-blue-400/50 text-blue-300' : 
+              isCashedOut ? 'bg-pink-500/20 border-pink-400/50 text-pink-300' : 
               'bg-red-500/20 border-red-400/50 text-red-300'
             }`}>
               <div className={`w-2 h-2 rounded-full ${
-                isOpen ? 'bg-white animate-pulse' : isCashedOut ? 'bg-blue-400' : 'bg-red-400'
+                isOpen ? 'bg-white animate-pulse' : isCashedOut ? 'bg-pink-400' : 'bg-red-400'
               }`}></div>
               <span>{isOpen ? 'OPEN' : isCashedOut ? 'CASHED OUT' : 'LOST'}</span>
             </div>
@@ -586,8 +586,8 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
             )}
             {isCashedOut && (
               <div className="text-right">
-                <div className="text-blue-300 font-bold text-xl">${formatMoney(bet.stake * 0.8)}</div>
-                <div className="text-blue-300/80 text-xs uppercase">Cashed Out</div>
+                <div className="text-pink-400 font-bold text-xl">${formatMoney(bet.stake * 0.8)}</div>
+                <div className="text-pink-400/80 text-xs uppercase">Cashed Out</div>
               </div>
             )}
           </div>
