@@ -262,36 +262,6 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
               </p>
             </div>
 
-            <div className="bg-slate-800/50 rounded-xl p-4 mb-6 border border-slate-700/50">
-              <div className="text-center mb-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
-                  currentChallenge.badge === 'BEGINNER' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
-                  currentChallenge.badge === 'POPULAR' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
-                  'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                }`}>
-                  {currentChallenge.badge} - DEMO
-                </span>
-              </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Account Type</span>
-                  <span className="text-white font-medium">{currentChallenge.name}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Starting Balance</span>
-                  <span className={`${theme.text} font-bold`}>${currentChallenge.startingBalance.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Your Split</span>
-                  <span className="text-white font-medium">{userSplit}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Profit Target</span>
-                  <span className="text-green-400 font-medium">20%</span>
-                </div>
-              </div>
-            </div>
-
             {authError && (
               <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20">
                 <p className="text-red-400 text-sm text-center">{authError}</p>
@@ -306,7 +276,8 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
                     type="email"
                     value={authEmail}
                     onChange={(e) => setAuthEmail(e.target.value)}
-                    className="w-full px-4 py-3 pr-12 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-all"
+                    className="w-full px-4 py-3 pr-12 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all auth-input"
+                    style={{ '--focus-color': theme.borderColor }}
                     placeholder="Enter your email"
                     required
                   />
@@ -327,64 +298,106 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
                     type={showPassword ? 'text' : 'password'}
                     value={authPassword}
                     onChange={(e) => setAuthPassword(e.target.value)}
-                    className="w-full px-4 py-3 pr-12 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-all"
+                    className="w-full px-4 py-3 pr-20 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all auth-input"
+                    style={{ '--focus-color': theme.borderColor }}
                     placeholder="Enter your password"
+                    minLength="6"
                     required
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
-                  >
-                    {showPassword ? (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                      </svg>
-                    ) : (
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  <div className="absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+                    {authPassword.length >= 6 && (
+                      <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                     )}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-gray-400 hover:text-gray-300"
+                    >
+                      {showPassword ? (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
 
               {isSignUp && (
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">Confirm Password</label>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-all"
-                    placeholder="Confirm your password"
-                    required
-                  />
+                  <div className="relative">
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full px-4 py-3 pr-12 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all auth-input"
+                      style={{ '--focus-color': theme.borderColor }}
+                      placeholder="Confirm your password"
+                      minLength="6"
+                      required
+                    />
+                    {confirmPassword.length >= 6 && confirmPassword === authPassword && (
+                      <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+                        <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} text-white font-bold py-3 px-6 rounded-xl shadow-2xl transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed`}
+                className={`w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 disabled:cursor-not-allowed`}
               >
-                {loading ? 'Please wait...' : isSignUp ? 'Create Account & Start Demo' : 'Sign In & Start Demo'}
+                {loading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>{isSignUp ? 'Creating Account...' : 'Signing In...'}</span>
+                  </div>
+                ) : (
+                  isSignUp ? 'Create Account & Continue' : 'Sign In & Continue'
+                )}
               </button>
             </form>
 
-            <div className="mt-4 text-center">
+            <div className="mt-6 text-center">
               <button
-                type="button"
                 onClick={() => {
                   setIsSignUp(!isSignUp);
                   setAuthError('');
+                  setAuthPassword('');
                   setConfirmPassword('');
                 }}
                 className="text-gray-400 hover:text-white text-sm transition-colors"
               >
                 {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
               </button>
+            </div>
+
+            <div className="mt-4 p-3 bg-slate-800/30 rounded-xl border border-slate-700/50">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-400">Selected:</span>
+                <span className={`${theme.text} font-medium`}>{currentChallenge.name}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm mt-1">
+                <span className="text-gray-400">Your Split:</span>
+                <span className="text-green-400 font-medium">{userSplit}%</span>
+              </div>
+              <div className="flex items-center justify-between text-sm mt-1">
+                <span className="text-gray-400">Price:</span>
+                <span className="text-amber-400 font-bold">FREE</span>
+              </div>
             </div>
           </div>
         ) : (
