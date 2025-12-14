@@ -10,31 +10,30 @@ import { useAuth } from '../contexts/AuthContext';
 function ThunderCardModule() {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [trackingStep, setTrackingStep] = useState(0);
   const [truckPosition, setTruckPosition] = useState(0);
+  const [savedEmail, setSavedEmail] = useState('');
 
   const trackingSteps = [
-    { label: 'PRODUCTION', icon: '🎉' },
-    { label: 'CARD BEING BUILT', icon: '🔨' },
+    { label: 'PLANNING', icon: '📋' },
+    { label: 'PRODUCTION', icon: '🔨' },
     { label: 'SHIPPED', icon: '📦' },
     { label: 'ARRIVED', icon: '🏠' }
   ];
 
   useEffect(() => {
-    if (isSubmitted) {
-      const stepInterval = setInterval(() => {
-        setTrackingStep(prev => {
-          if (prev < trackingSteps.length - 1) {
-            return prev + 1;
-          }
-          clearInterval(stepInterval);
-          return prev;
-        });
-      }, 1200);
+    const storedEmail = localStorage.getItem('piksCardWaitlistEmail');
+    if (storedEmail) {
+      setSavedEmail(storedEmail);
+      setIsSubmitted(true);
+      setTruckPosition(2);
+    }
+  }, []);
 
+  useEffect(() => {
+    if (isSubmitted && truckPosition < 2) {
       const truckInterval = setInterval(() => {
         setTruckPosition(prev => {
-          if (prev < 25) {
+          if (prev < 2) {
             return prev + 1;
           }
           clearInterval(truckInterval);
@@ -43,7 +42,6 @@ function ThunderCardModule() {
       }, 80);
 
       return () => {
-        clearInterval(stepInterval);
         clearInterval(truckInterval);
       };
     }
@@ -53,8 +51,9 @@ function ThunderCardModule() {
     e.preventDefault();
     if (email) {
       console.log('Piks Card waitlist signup:', email);
+      localStorage.setItem('piksCardWaitlistEmail', email);
+      setSavedEmail(email);
       setIsSubmitted(true);
-      setTrackingStep(0);
       setTruckPosition(0);
     }
   };
@@ -113,30 +112,23 @@ function ThunderCardModule() {
             ) : (
               <div className="text-center">
                 <h3 className="text-xl font-bold text-white mb-2">You're on the Waitlist!</h3>
-                <p className="text-gray-400 text-sm mb-4">
-                  We'll notify you when production begins
+                <p className="text-gray-400 text-sm mb-6">
+                  {savedEmail && <span className="text-white">{savedEmail}</span>}
+                  {savedEmail ? ' - ' : ''}We'll notify you when production begins
                 </p>
 
-                {/* Mail Truck Animation */}
-                <div className="relative h-14 mb-6 overflow-hidden">
-                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gray-700 rounded-full"></div>
-                  <div 
-                    className="absolute bottom-1 transition-all duration-100 ease-linear"
-                    style={{ left: `${truckPosition}%` }}
-                  >
-                    <div className="text-3xl transform -scale-x-100">🚚</div>
-                  </div>
-                  <div className="absolute bottom-1 right-2 text-xl opacity-30">🏠</div>
-                </div>
-
-                {/* Tracking Steps */}
+                {/* Tracking Steps with Truck */}
                 <div className="relative mb-6">
+                  {/* Truck positioned above PLANNING bubble */}
+                  <div 
+                    className="absolute -top-10 transition-all duration-100 ease-linear z-20"
+                    style={{ left: 'calc(12.5% - 20px)' }}
+                  >
+                    <div className="text-5xl transform -scale-x-100">🚚</div>
+                  </div>
+
                   {/* Progress Line */}
                   <div className="absolute top-4 left-0 right-0 h-1 bg-gray-700 rounded-full mx-6"></div>
-                  <div 
-                    className="absolute top-4 left-0 h-1 bg-white rounded-full mx-6 transition-all duration-500"
-                    style={{ width: `calc(${(trackingStep / (trackingSteps.length - 1)) * 100}% - 48px)` }}
-                  ></div>
 
                   {/* Steps */}
                   <div className="flex justify-between relative">
@@ -144,19 +136,19 @@ function ThunderCardModule() {
                       <div key={index} className="flex flex-col items-center z-10">
                         <div 
                           className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-all duration-500 ${
-                            index <= trackingStep 
+                            index === 0 
                               ? 'bg-white scale-110' 
                               : 'bg-gray-700'
                           }`}
                         >
-                          {index <= trackingStep ? (
+                          {index === 0 ? (
                             <span>{step.icon}</span>
                           ) : (
                             <span className="text-gray-500 text-xs">{index + 1}</span>
                           )}
                         </div>
                         <span className={`mt-1 text-[10px] font-medium transition-colors duration-300 ${
-                          index <= trackingStep ? 'text-white' : 'text-gray-500'
+                          index === 0 ? 'text-white' : 'text-gray-500'
                         }`}>
                           {step.label}
                         </span>
@@ -166,16 +158,12 @@ function ThunderCardModule() {
                 </div>
 
                 {/* Status Message */}
-                <p className="text-white font-medium text-sm mb-4">
-                  You'll be notified when cards enter production
+                <p className="text-white font-medium text-sm">
+                  Your card is in the planning stage
                 </p>
-
-                <button
-                  onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
-                  className="bg-white hover:bg-gray-100 text-black font-bold py-2.5 px-6 rounded-lg transition-all duration-300 text-sm shadow-lg"
-                >
-                  Start Your Challenge Now
-                </button>
+                <p className="text-gray-500 text-xs mt-1">
+                  Expected launch: Q1 2026
+                </p>
               </div>
             )}
           </div>
