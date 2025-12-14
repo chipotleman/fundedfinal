@@ -53,8 +53,24 @@ None documented yet.
   - `/api/profiles/[id]` - User profile CRUD operations
   - `/api/auth/signup` - User registration endpoint
 
+## Admin Panel
+- **Access**: `/admin-panel/login`
+- **Credentials**: `admin@piks.com` / `AdminPiks2024!`
+- **Features**:
+  - Dashboard with platform stats (users, bets, challenges)
+  - User management with search and profile details
+  - Bet management with edit/settle functionality
+- **API Routes**: `/api/admin-panel/*` (auth, stats, users, bets)
+- **Database**: Uses separate `admin_users` table for admin authentication
+
 ## Recent Changes
 - **December 14, 2025**:
+  - ✅ Built complete admin panel at `/admin-panel/*`
+  - ✅ Added admin authentication system (separate from user auth)
+  - ✅ Created user management page with search and details
+  - ✅ Created bet management page with edit/settle functionality
+  - ✅ Added admin dashboard with platform statistics
+  - ✅ Seeded admin account (admin@piks.com)
   - ✅ Added Session Summary Popup that displays on sign out with session stats
   - ✅ Tracks session duration from login to logout
   - ✅ Shows bets placed, wins/losses, pending bets, profit/loss, and challenge info
