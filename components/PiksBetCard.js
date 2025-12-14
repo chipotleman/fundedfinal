@@ -323,7 +323,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
           <span className="text-white font-black text-xl tracking-tight">piks</span>
           
           {isWon ? (
-            <div className="flex items-center">
+            <div className="flex-1 flex justify-end pr-4">
               <img 
                 src="/trophy-winner.png" 
                 alt="Winner" 
@@ -557,8 +557,8 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
             </div>
             {isWon && (
               <div className="text-right">
-                <div className="text-yellow-400 font-bold text-xl">${formatMoney(payout)}</div>
-                <div className="text-yellow-400/80 text-xs uppercase">Won on Piks</div>
+                <div className="text-green-400 font-bold text-xl">${formatMoney(payout)}</div>
+                <div className="text-green-400/80 text-xs uppercase">Won on Piks</div>
               </div>
             )}
             {isOpen && (
