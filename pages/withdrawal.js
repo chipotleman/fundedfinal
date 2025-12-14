@@ -77,6 +77,7 @@ const statusColors = {
   awaiting_processing: 'text-blue-400 bg-blue-400/10',
   finalized: 'text-green-400 bg-green-400/10',
   denied: 'text-red-400 bg-red-400/10',
+  cancelled: 'text-gray-400 bg-gray-400/10',
 };
 
 const statusLabels = {
@@ -84,6 +85,7 @@ const statusLabels = {
   awaiting_processing: 'Processing',
   finalized: 'Completed',
   denied: 'Denied',
+  cancelled: 'Cancelled',
 };
 
 export default function WithdrawalPage() {
@@ -102,6 +104,8 @@ export default function WithdrawalPage() {
   const [saveMethod, setSaveMethod] = useState(false);
   const [methodNickname, setMethodNickname] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [successDetails, setSuccessDetails] = useState(null);
+  const [cancelling, setCancelling] = useState(null);
   
   const [formData, setFormData] = useState({
     bankName: '',
@@ -254,9 +258,20 @@ export default function WithdrawalPage() {
       });
 
       if (res.ok) {
-        const newWithdrawal = await res.json();
-        setWithdrawals(prev => [newWithdrawal, ...prev]);
-        setSuccessMessage('Withdrawal request submitted successfully! Your request is now under review.');
+        const data = await res.json();
+        setWithdrawals(prev => [data.withdrawal, ...prev]);
+        const methodInfo = withdrawalMethods.find(m => m.id === selectedMethod);
+        setSuccessDetails({
+          type: 'submitted',
+          amount: parseFloat(amount),
+          methodName: methodInfo?.name || selectedMethod,
+          estimatedTime: methodInfo?.time || 'Processing',
+          fee: methodInfo?.fee || 'Free',
+        });
+        setSuccessMessage('submitted');
+        if (data.newBankroll) {
+          setUserProfile(prev => prev ? { ...prev, bankroll: data.newBankroll } : prev);
+        }
         setAmount('');
         setSelectedMethod(null);
         setSelectedSavedMethod(null);
@@ -285,6 +300,44 @@ export default function WithdrawalPage() {
       alert('An error occurred. Please try again.');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleCancelWithdrawal = async (withdrawalId) => {
+    if (cancelling) return;
+    if (!confirm('Are you sure you want to cancel this withdrawal? The funds will be returned to your balance.')) return;
+    
+    setCancelling(withdrawalId);
+    try {
+      const res = await fetch(`/api/withdrawals/${withdrawalId}`, {
+        method: 'DELETE',
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setWithdrawals(prev => prev.map(w => 
+          w.id === withdrawalId ? data.withdrawal : w
+        ));
+        if (data.newBankroll) {
+          setUserProfile(prev => prev ? { ...prev, bankroll: data.newBankroll } : prev);
+        }
+        const cancelledMethod = withdrawals.find(w => w.id === withdrawalId);
+        const methodInfo = cancelledMethod ? withdrawalMethods.find(m => m.id === cancelledMethod.methodType) : null;
+        setSuccessDetails({
+          type: 'cancelled',
+          amount: data.refundedAmount,
+          methodName: methodInfo?.name || 'Unknown',
+        });
+        setSuccessMessage('cancelled');
+      } else {
+        const error = await res.json();
+        alert(error.message || 'Failed to cancel withdrawal');
+      }
+    } catch (error) {
+      console.error('Error cancelling withdrawal:', error);
+      alert('An error occurred. Please try again.');
+    } finally {
+      setCancelling(null);
     }
   };
 
@@ -702,15 +755,69 @@ export default function WithdrawalPage() {
           </div>
           <p className="text-gray-400 mb-8">Transfer your earnings to your preferred account</p>
 
-          {successMessage && (
-            <div className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-green-500/20 rounded-full flex items-center justify-center">
-                  <svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
+          {successMessage && successDetails && (
+            <div className="relative bg-gradient-to-br from-[#111111] to-[#0a0a0a] rounded-2xl p-6 border border-green-500/30 mb-8 overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+              <div className="absolute bottom-0 left-0 w-24 h-24 bg-green-500/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
+              
+              <div className="relative">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-green-500/20 rounded-full flex items-center justify-center">
+                      <svg className="w-6 h-6 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">
+                        {successMessage === 'cancelled' ? 'Withdrawal Cancelled' : 'Withdrawal Submitted'}
+                      </h3>
+                      <p className="text-gray-400 text-sm">
+                        {successMessage === 'cancelled' 
+                          ? 'Funds have been returned to your balance' 
+                          : 'Your request is now under review'}
+                      </p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={() => { setSuccessMessage(''); setSuccessDetails(null); }}
+                    className="text-gray-500 hover:text-white transition-colors"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
                 </div>
-                <p className="text-green-400">{successMessage}</p>
+                
+                <div className="bg-black/30 rounded-xl p-4 backdrop-blur-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-gray-400">Amount</span>
+                    <span className="text-2xl font-bold text-green-400">${successDetails.amount?.toLocaleString()}</span>
+                  </div>
+                  
+                  {successMessage !== 'cancelled' && (
+                    <>
+                      <div className="flex items-center justify-between py-2 border-t border-gray-800">
+                        <span className="text-gray-400">Method</span>
+                        <span className="text-white">{successDetails.methodName}</span>
+                      </div>
+                      <div className="flex items-center justify-between py-2 border-t border-gray-800">
+                        <span className="text-gray-400">Fee</span>
+                        <span className="text-white">{successDetails.fee}</span>
+                      </div>
+                      <div className="flex items-center justify-between py-2 border-t border-gray-800">
+                        <span className="text-gray-400">Estimated Time</span>
+                        <span className="text-white">{successDetails.estimatedTime}</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+                
+                {successMessage !== 'cancelled' && (
+                  <p className="text-center text-gray-500 text-sm mt-4">
+                    You'll receive an email confirmation once your withdrawal is processed.
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -724,13 +831,32 @@ export default function WithdrawalPage() {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <span className="text-white font-semibold">${parseFloat(w.amount).toLocaleString()}</span>
-                        <span className={`px-2 py-0.5 rounded-full text-xs ${statusColors[w.status]}`}>
-                          {statusLabels[w.status]}
+                        <span className={`px-2 py-0.5 rounded-full text-xs ${statusColors[w.status] || 'text-gray-400 bg-gray-400/10'}`}>
+                          {statusLabels[w.status] || w.status}
                         </span>
                       </div>
-                      <span className="text-gray-500 text-sm">
-                        {new Date(w.createdAt).toLocaleDateString()}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {w.status === 'under_review' && (
+                          <button
+                            onClick={() => handleCancelWithdrawal(w.id)}
+                            disabled={cancelling === w.id}
+                            className="text-red-400 hover:text-red-300 text-xs px-2 py-1 rounded border border-red-400/30 hover:border-red-400/50 transition-all disabled:opacity-50"
+                          >
+                            {cancelling === w.id ? (
+                              <span className="flex items-center gap-1">
+                                <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Cancelling
+                              </span>
+                            ) : 'Cancel'}
+                          </button>
+                        )}
+                        <span className="text-gray-500 text-sm">
+                          {new Date(w.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
                     </div>
                     <div className="text-gray-400 text-sm">
                       {withdrawalMethods.find(m => m.id === w.methodType)?.name || w.methodType}

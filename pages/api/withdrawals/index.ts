@@ -138,7 +138,17 @@ export default async function handler(
         })
         .returning();
 
-      return res.status(201).json(newWithdrawal);
+      // Deduct amount from user's bankroll
+      const newBankroll = (currentBalance - amountNum).toFixed(2);
+      await db
+        .update(profiles)
+        .set({ bankroll: newBankroll })
+        .where(eq(profiles.id, userId));
+
+      return res.status(201).json({ 
+        withdrawal: newWithdrawal, 
+        newBankroll 
+      });
     } catch (error) {
       console.error("Error creating withdrawal:", error);
       return res.status(500).json({ message: "Failed to create withdrawal" });
