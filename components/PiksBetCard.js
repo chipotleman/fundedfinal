@@ -324,13 +324,11 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
           
           {isWon ? (
             <div className="flex items-center">
-              <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M6 4H4C3 4 2 5 2 6C2 8.5 4 10 6 10V4Z" fill="#FFD700"/>
-                <path d="M18 4H20C21 4 22 5 22 6C22 8.5 20 10 18 10V4Z" fill="#FFD700"/>
-                <path d="M6 4H18V12C18 15.3 15.3 18 12 18C8.7 18 6 15.3 6 12V4Z" fill="#FFD700"/>
-                <path d="M9 18H15V20H9V18Z" fill="#FFD700"/>
-                <path d="M8 20H16V22H8V20Z" fill="#FFD700"/>
-              </svg>
+              <img 
+                src="/trophy-winner.png" 
+                alt="Winner" 
+                className="h-10 w-auto"
+              />
             </div>
           ) : (
             <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-black/30 border border-white/20 text-white">
