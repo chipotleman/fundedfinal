@@ -83,6 +83,30 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
     return { legs: [], hasRealData: false };
   }, [bet.legs, bet.selection, isParlay]);
 
+  const formatParlayTitle = useMemo(() => {
+    if (!isParlay) return bet.selection;
+    
+    return parlayLegs.legs.map(leg => {
+      const selection = leg.selection || '';
+      const betType = leg.betType?.toLowerCase() || '';
+      
+      const spreadMatch = selection.match(/([+-]\d+\.?\d*)/);
+      if (spreadMatch) {
+        return selection;
+      }
+      
+      if (betType.includes('spread')) {
+        return selection;
+      }
+      
+      if (betType.includes('over') || betType.includes('under') || betType.includes('total')) {
+        return selection;
+      }
+      
+      return `${selection} ML`;
+    }).join(', ');
+  }, [isParlay, parlayLegs.legs, bet.selection]);
+
   const generateScoresForLeg = (leg, index) => {
     const seed = bet.id ? (typeof bet.id === 'string' ? bet.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) : bet.id) : 12345;
     const pseudoRandom = (n) => ((seed * (n + 1 + index * 10) * 9301 + 49297) % 233280) / 233280;
@@ -315,7 +339,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         >
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <div className="text-white font-bold text-base">{bet.selection}</div>
+              <div className="text-white font-bold text-base">{isParlay ? formatParlayTitle : bet.selection}</div>
               {isParlay && isSettled && (
                 <svg 
                   className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
@@ -358,7 +382,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className={`text-sm ${winHighlight.home ? 'text-green-400 font-semibold' : 'text-white/90'}`}>{legTeams.homeTeam}</span>
+                      <span className="text-white/90 text-sm">{legTeams.homeTeam}</span>
                       <div className="flex items-center gap-3">
                         <div className="flex gap-2 text-gray-400 text-sm">
                           {legScores.homeQuarters.map((q, i) => <span key={i}>{q}</span>)}
@@ -367,7 +391,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className={`text-sm ${winHighlight.away ? 'text-green-400 font-semibold' : 'text-white/90'}`}>{legTeams.awayTeam}</span>
+                      <span className="text-white/90 text-sm">{legTeams.awayTeam}</span>
                       <div className="flex items-center gap-3">
                         <div className="flex gap-2 text-gray-400 text-sm">
                           {legScores.awayQuarters.map((q, i) => <span key={i}>{q}</span>)}
