@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
 import ProfileModal from '../components/ProfileModal';
@@ -13,6 +13,26 @@ const Leaderboard = () => {
   const { user, login, logout } = useAuth();
   const [timeframe, setTimeframe] = useState('monthly');
   const [category, setCategory] = useState('all');
+  const [bankroll, setBankroll] = useState(10000);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user?.id) {
+        try {
+          const response = await fetch(`/api/user/profile?userId=${user.id}`);
+          if (response.ok) {
+            const profile = await response.json();
+            if (profile?.bankroll) {
+              setBankroll(profile.bankroll);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+        }
+      }
+    };
+    fetchUserProfile();
+  }, [user]);
 
   const allLeaderboardData = [
     { rank: 1, username: "BetMaster2024", profit: 15420, roi: 154.2, wins: 89, totalBets: 127, tier: "Elite", badge: "🏆" },
@@ -83,7 +103,7 @@ const Leaderboard = () => {
   return (
     <div className="min-h-screen bg-black">
       <TopNavbar 
-        bankroll={user ? 10000 : null}
+        bankroll={user ? bankroll : null}
         pnl={0}
         betSlipCount={betSlip.length}
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
@@ -287,7 +307,7 @@ const Leaderboard = () => {
 
       {showBetSlip && (
         <BetSlip
-          bankroll={10000}
+          bankroll={bankroll}
           isOpen={showBetSlip}
           onClose={() => setShowBetSlip(false)}
         />

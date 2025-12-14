@@ -4,11 +4,33 @@ import { useState, useEffect } from 'react';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function Packages() {
   const [billingType, setBillingType] = useState('monthly'); // 'monthly' or 'annual'
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
+  const { user } = useAuth();
   const router = useRouter();
+  const [bankroll, setBankroll] = useState(10000);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (user?.id) {
+        try {
+          const response = await fetch(`/api/user/profile?userId=${user.id}`);
+          if (response.ok) {
+            const profile = await response.json();
+            if (profile?.bankroll) {
+              setBankroll(profile.bankroll);
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+        }
+      }
+    };
+    fetchUserProfile();
+  }, [user]);
 
   const monthlyPackages = [
     {
@@ -385,7 +407,8 @@ export default function Packages() {
       {/* Bet Slip */}
       {showBetSlip && (
         <BetSlip
-          bankroll={10000}
+          bankroll={bankroll}
+          isOpen={showBetSlip}
           onClose={() => setShowBetSlip(false)}
         />
       )}
