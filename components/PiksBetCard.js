@@ -99,17 +99,24 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
     return { homeScore: null, awayScore: null, homeQuarters: [], awayQuarters: [] };
   }, [bet.id, bet.homeScore, bet.awayScore, bet.homeQuarters, bet.awayQuarters, bet.currentHomeScore, bet.currentAwayScore, isWon, isLost, isCashedOut, isOpen]);
 
-  const getCardBackground = () => {
+  const getHeaderBackground = () => {
     if (isWon) {
-      return 'bg-gradient-to-br from-green-900/90 via-green-800/70 to-emerald-900/80 border-green-500/50';
+      return 'bg-gradient-to-r from-green-600 via-green-500 to-emerald-500';
     }
     if (isLost) {
-      return 'bg-gradient-to-br from-red-950/90 via-rose-900/50 to-red-950/80 border-red-800/50';
+      return 'bg-gradient-to-r from-red-800 via-red-700 to-rose-700';
     }
     if (isCashedOut) {
-      return 'bg-gradient-to-br from-orange-950/90 via-amber-900/50 to-orange-950/80 border-orange-700/50';
+      return 'bg-gradient-to-r from-orange-700 via-orange-600 to-amber-600';
     }
-    return 'bg-gradient-to-br from-blue-950/90 via-slate-900/80 to-indigo-950/80 border-blue-700/50';
+    return 'bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600';
+  };
+
+  const getBorderColor = () => {
+    if (isWon) return 'border-green-500/50';
+    if (isLost) return 'border-red-700/50';
+    if (isCashedOut) return 'border-orange-600/50';
+    return 'border-blue-600/50';
   };
 
   const getProgressBarData = () => {
@@ -147,23 +154,21 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
   const { homeTeam, awayTeam } = parseTeams();
 
   return (
-    <div className={`relative rounded-2xl overflow-hidden mx-2 sm:mx-0 border ${getCardBackground()}`}>
-      <div className="px-4 pt-3 pb-4">
-        <div className="flex items-center justify-between mb-3">
+    <div className={`relative rounded-2xl overflow-hidden mx-2 sm:mx-0 border bg-[#0a0a0a] ${getBorderColor()}`}>
+      <div className={`px-4 py-3 ${getHeaderBackground()}`}>
+        <div className="flex items-center justify-between">
           <span className="text-white font-black text-xl tracking-tight">piks</span>
           
-          <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-bold ${
-            isWon ? 'bg-green-500/30 border border-green-400/60 text-green-300' :
-            isOpen ? 'bg-blue-500/30 border border-blue-400/60 text-blue-300' :
-            isCashedOut ? 'bg-orange-500/30 border border-orange-400/60 text-orange-300' :
-            'bg-red-500/30 border border-red-400/60 text-red-300'
-          }`}>
+          <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-black/30 border border-white/20 text-white">
             <div className={`w-2 h-2 rounded-full ${
-              isWon ? 'bg-green-400' : isOpen ? 'bg-blue-400 animate-pulse' : isCashedOut ? 'bg-orange-400' : 'bg-red-400'
+              isWon ? 'bg-green-300' : isOpen ? 'bg-white animate-pulse' : isCashedOut ? 'bg-orange-300' : 'bg-red-300'
             }`}></div>
             <span>{isWon ? 'WON' : isOpen ? 'OPEN' : isCashedOut ? 'CASHED OUT' : 'LOST'}</span>
           </div>
         </div>
+      </div>
+
+      <div className="px-4 pt-3 pb-4">
 
         <div className="flex justify-between items-start mb-2">
           <div className="flex-1">
