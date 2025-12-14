@@ -68,7 +68,7 @@ export default async function handler(req, res) {
       `,
       sql`
         SELECT id, matchup_name, market_type, selection, odds, stake, 
-               potential_payout, status, created_at
+               potential_payout, result, created_at
         FROM demo_bets 
         WHERE user_id = ${userId} 
         ORDER BY created_at DESC 
@@ -121,7 +121,7 @@ export default async function handler(req, res) {
       odds: bet.odds,
       stake: bet.stake,
       potentialPayout: bet.potential_payout,
-      status: bet.status,
+      status: bet.result || 'pending',
       createdAt: bet.created_at,
     }));
 
