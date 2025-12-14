@@ -345,12 +345,10 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                 <div key={index} className="pb-3 border-b border-white/10 last:border-b-0 last:pb-0">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
-                      <div className="text-white font-bold text-base">
-                        {leg.selection} {leg.betType ? '' : 'Moneyline'}
+                      <div className="text-white font-bold text-base">{leg.selection}</div>
+                      <div className="text-gray-400 text-xs uppercase tracking-wide">
+                        {leg.betType || 'Moneyline'}
                       </div>
-                      {parlayLegs.hasRealData && leg.betType && (
-                        <div className="text-gray-500 text-xs">{leg.betType}</div>
-                      )}
                     </div>
                     {parlayLegs.hasRealData && leg.odds && (
                       <div className="text-white font-bold text-lg">
@@ -444,12 +442,10 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                     <div key={index} className="pb-3 border-b border-white/10 last:border-b-0 last:pb-0">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex-1">
-                          <div className="text-white font-bold text-base">
-                            {leg.selection} {leg.betType ? '' : 'Moneyline'}
+                          <div className="text-white font-bold text-base">{leg.selection}</div>
+                          <div className="text-gray-400 text-xs uppercase tracking-wide">
+                            {leg.betType || 'Moneyline'}
                           </div>
-                          {parlayLegs.hasRealData && leg.betType && (
-                            <div className="text-gray-500 text-xs">{leg.betType}</div>
-                          )}
                         </div>
                         {parlayLegs.hasRealData && leg.odds && (
                           <div className="text-blue-400 font-bold text-lg">
