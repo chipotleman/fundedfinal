@@ -82,6 +82,9 @@ None documented yet.
 
 ## Recent Changes
 - **December 14, 2025**:
+  - ✅ **FEATURE: Balance Deduction on Withdrawal** - Withdrawal amount is now deducted from user's balance when request is placed
+  - ✅ **FEATURE: Cancel Withdrawal** - Users can cancel withdrawals that are "Under Review" and get funds refunded to balance
+  - ✅ **FEATURE: Themed Success Cards** - Withdrawal submission/cancellation now shows professional glass-morphism styled confirmation cards
   - ✅ **FEATURE: Withdrawal Split Display** - Shows user's profit split percentage prominently on withdrawal page, reads from profile.challenge
   - ✅ **FEATURE: Admin Split Selection** - Admin can now select 80%, 85%, or 90% profit split when granting challenges
   - ✅ **FEATURE: Demo/Real Bets Tabs** - Admin user activity modal now has separate tabs for "Real Bets" and "Demo Bets"
