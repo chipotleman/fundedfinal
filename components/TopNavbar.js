@@ -63,6 +63,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
         // Store initial bet counts for session tracking
         const demoState = localStorage.getItem('demo_state');
         const demoBetHistory = localStorage.getItem('demo_bet_history');
+        const storedChallenge = localStorage.getItem('purchased_challenge');
         
         let initialDemoBets = 0;
         if (demoState) {
@@ -80,10 +81,27 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
           } catch (e) {}
         }
         
+        // Get challenge info and starting balance
+        let challengeName = null;
+        let startingBalance = null;
+        if (storedChallenge) {
+          try {
+            const challenge = JSON.parse(storedChallenge);
+            challengeName = challenge.name || null;
+          } catch (e) {}
+        }
+        
+        // Use current bankroll as session starting balance
+        startingBalance = userProfile?.bankroll ? parseFloat(userProfile.bankroll) : null;
+        
         localStorage.setItem('session_start_stats', JSON.stringify({
           demoBets: initialDemoBets,
           demoBetHistoryCount: initialDemoBetHistoryCount,
-          profileBets: userProfile?.total_bets || 0
+          profileBets: userProfile?.total_bets || 0,
+          profileWins: userProfile?.wins || 0,
+          profileLosses: userProfile?.losses || 0,
+          startingBalance: startingBalance,
+          challengeName: challengeName
         }));
       }
     }
@@ -170,7 +188,15 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
       const duration = sessionStartTime ? Date.now() - parseInt(sessionStartTime) : 0;
       
       // Get session start stats for calculating bets placed THIS session
-      let sessionStartStats = { demoBets: 0, demoBetHistoryCount: 0, profileBets: 0 };
+      let sessionStartStats = { 
+        demoBets: 0, 
+        demoBetHistoryCount: 0, 
+        profileBets: 0,
+        profileWins: 0,
+        profileLosses: 0,
+        startingBalance: null,
+        challengeName: null
+      };
       try {
         const startStats = localStorage.getItem('session_start_stats');
         if (startStats) {
@@ -179,35 +205,53 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
       } catch (e) {}
       
       // Get betting stats - prioritize real user data over demo data
-      let totalBetsPlaced = 0;
-      let wins = 0;
-      let losses = 0;
-      let pending = 0;
-      let profitLoss = 0;
+      let sessionBetsPlaced = 0;
+      let sessionWins = 0;
+      let sessionLosses = 0;
+      let sessionPending = 0;
+      let startingBalance = null;
+      let endingBalance = null;
+      let challengeName = null;
       let challengePhase = null;
-      let challengeTier = null;
       let isDemo = false;
       
       // Check real user profile stats FIRST (prioritize real data)
-      if (userProfile && (userProfile.total_bets > 0 || userProfile.wins > 0 || userProfile.losses > 0)) {
-        const currentProfileBets = userProfile.total_bets || 0;
-        const sessionProfileBets = currentProfileBets - (sessionStartStats.profileBets || 0);
-        totalBetsPlaced = sessionProfileBets > 0 ? sessionProfileBets : currentProfileBets;
+      if (userProfile && (userProfile.total_bets > 0 || userProfile.wins > 0 || userProfile.losses > 0 || sessionStartStats.startingBalance)) {
+        // Calculate SESSION-specific bet counts
+        const currentTotalBets = userProfile.total_bets || 0;
+        const currentWins = userProfile.wins || 0;
+        const currentLosses = userProfile.losses || 0;
         
-        wins = userProfile.wins || 0;
-        losses = userProfile.losses || 0;
-        pending = totalBetsPlaced - wins - losses;
-        if (pending < 0) pending = 0;
-        profitLoss = parseFloat(userProfile.total_pnl) || 0;
+        sessionBetsPlaced = currentTotalBets - (sessionStartStats.profileBets || 0);
+        if (sessionBetsPlaced < 0) sessionBetsPlaced = 0;
+        
+        sessionWins = currentWins - (sessionStartStats.profileWins || 0);
+        if (sessionWins < 0) sessionWins = 0;
+        
+        sessionLosses = currentLosses - (sessionStartStats.profileLosses || 0);
+        if (sessionLosses < 0) sessionLosses = 0;
+        
+        sessionPending = sessionBetsPlaced - sessionWins - sessionLosses;
+        if (sessionPending < 0) sessionPending = 0;
+        
+        // Balance tracking
+        startingBalance = sessionStartStats.startingBalance;
+        endingBalance = userProfile?.bankroll ? parseFloat(userProfile.bankroll) : startingBalance;
+        
+        // Get challenge info
         challengePhase = userProfile.phase || null;
+        challengeName = sessionStartStats.challengeName;
         isDemo = false;
         
-        const storedChallenge = localStorage.getItem('purchased_challenge');
-        if (storedChallenge) {
-          try {
-            const challenge = JSON.parse(storedChallenge);
-            challengeTier = challenge.badge || null;
-          } catch (e) {}
+        // If challengeName wasn't stored at session start, get it now
+        if (!challengeName) {
+          const storedChallenge = localStorage.getItem('purchased_challenge');
+          if (storedChallenge) {
+            try {
+              const challenge = JSON.parse(storedChallenge);
+              challengeName = challenge.name || null;
+            } catch (e) {}
+          }
         }
       } else {
         // Only use demo data if no real user data exists
@@ -219,12 +263,11 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
           try {
             const state = JSON.parse(demoState);
             const currentDemoBets = state.totalBets || 0;
-            totalBetsPlaced = currentDemoBets - (sessionStartStats.demoBets || 0);
-            if (totalBetsPlaced < 0) totalBetsPlaced = currentDemoBets;
+            sessionBetsPlaced = currentDemoBets - (sessionStartStats.demoBets || 0);
+            if (sessionBetsPlaced < 0) sessionBetsPlaced = currentDemoBets;
             
-            wins = state.wins || 0;
-            losses = state.losses || 0;
-            profitLoss = state.pnl || 0;
+            sessionWins = state.wins || 0;
+            sessionLosses = state.losses || 0;
             isDemo = true;
           } catch (e) {}
         }
@@ -236,23 +279,20 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
             const sessionBetsFromHistory = bets.length - (sessionStartStats.demoBetHistoryCount || 0);
             
             // Use the higher count between state and history
-            if (sessionBetsFromHistory > totalBetsPlaced) {
-              totalBetsPlaced = sessionBetsFromHistory;
+            if (sessionBetsFromHistory > sessionBetsPlaced) {
+              sessionBetsPlaced = sessionBetsFromHistory;
             }
             
             // Calculate wins/losses/pending from bet history
             let historyWins = 0;
             let historyLosses = 0;
             let historyPending = 0;
-            let historyPnl = 0;
             
             bets.forEach(bet => {
               if (bet.status === 'won') {
                 historyWins++;
-                historyPnl += parseFloat(bet.payout || 0) - parseFloat(bet.wager || 0);
               } else if (bet.status === 'lost') {
                 historyLosses++;
-                historyPnl -= parseFloat(bet.wager || 0);
               } else {
                 historyPending++;
               }
@@ -260,10 +300,9 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
             
             // Use history stats if they're more complete
             if (bets.length > 0) {
-              wins = historyWins;
-              losses = historyLosses;
-              pending = historyPending;
-              if (historyPnl !== 0) profitLoss = historyPnl;
+              sessionWins = historyWins;
+              sessionLosses = historyLosses;
+              sessionPending = historyPending;
             }
             
             isDemo = true;
@@ -274,21 +313,22 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
         if (demoChallenge) {
           try {
             const challenge = JSON.parse(demoChallenge);
-            challengeTier = 'DEMO';
-            challengePhase = challenge.name || 'Demo Trial';
+            challengeName = 'Demo Trial';
+            challengePhase = challenge.name || 'Demo';
           } catch (e) {}
         }
       }
       
       const sessionData = {
         duration,
-        betsPlaced: totalBetsPlaced,
-        wins,
-        losses,
-        pending,
-        profitLoss,
+        betsPlaced: sessionBetsPlaced,
+        wins: sessionWins,
+        losses: sessionLosses,
+        pending: sessionPending,
+        startingBalance,
+        endingBalance,
+        challengeName,
         challengePhase,
-        challengeTier,
         isDemo
       };
       
