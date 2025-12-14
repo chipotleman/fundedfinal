@@ -44,17 +44,21 @@ export default async function handler(req, res) {
 
   const { range = '7d' } = req.query;
   
-  let dateFilter;
+  let daysAgo;
   switch (range) {
     case '1d':
-      dateFilter = "NOW() - INTERVAL '1 day'";
+      daysAgo = 1;
       break;
     case '30d':
-      dateFilter = "NOW() - INTERVAL '30 days'";
+      daysAgo = 30;
       break;
     default:
-      dateFilter = "NOW() - INTERVAL '7 days'";
+      daysAgo = 7;
   }
+
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - daysAgo);
+  const startDateStr = startDate.toISOString();
 
   try {
     const [
@@ -67,15 +71,15 @@ export default async function handler(req, res) {
       topPages,
       recentEvents,
     ] = await Promise.all([
-      sql`SELECT COUNT(*) as count FROM user_events WHERE created_at > ${dateFilter}::timestamp`.catch(() => [{ count: 0 }]),
-      sql`SELECT COUNT(DISTINCT session_id) as count FROM session_metrics WHERE created_at > ${dateFilter}::timestamp`.catch(() => [{ count: 0 }]),
-      sql`SELECT COUNT(*) as count FROM page_views WHERE created_at > ${dateFilter}::timestamp`.catch(() => [{ count: 0 }]),
-      sql`SELECT COUNT(*) as count FROM demo_bets WHERE created_at > ${dateFilter}::timestamp`.catch(() => [{ count: 0 }]),
-      sql`SELECT COUNT(*) as count FROM unplaced_bets WHERE added_at > ${dateFilter}::timestamp`.catch(() => [{ count: 0 }]),
+      sql`SELECT COUNT(*) as count FROM user_events WHERE created_at > ${startDateStr}`.catch(() => [{ count: 0 }]),
+      sql`SELECT COUNT(DISTINCT session_id) as count FROM session_metrics WHERE created_at > ${startDateStr}`.catch(() => [{ count: 0 }]),
+      sql`SELECT COUNT(*) as count FROM page_views WHERE created_at > ${startDateStr}`.catch(() => [{ count: 0 }]),
+      sql`SELECT COUNT(*) as count FROM demo_bets WHERE created_at > ${startDateStr}`.catch(() => [{ count: 0 }]),
+      sql`SELECT COUNT(*) as count FROM unplaced_bets WHERE added_at > ${startDateStr}`.catch(() => [{ count: 0 }]),
       sql`
         SELECT event_type as type, COUNT(*) as count 
         FROM user_events 
-        WHERE created_at > ${dateFilter}::timestamp
+        WHERE created_at > ${startDateStr}
         GROUP BY event_type 
         ORDER BY count DESC 
         LIMIT 10
@@ -83,13 +87,13 @@ export default async function handler(req, res) {
       sql`
         SELECT page_url as url, COUNT(*) as views 
         FROM page_views 
-        WHERE created_at > ${dateFilter}::timestamp
+        WHERE created_at > ${startDateStr}
         GROUP BY page_url 
         ORDER BY views DESC 
         LIMIT 10
       `.catch(() => []),
       sql`
-        SELECT id, user_id, visitor_id, session_id, event_type, page_url, created_at 
+        SELECT id, user_id, visitor_id, session_id, event_type, event_data, page_url, created_at 
         FROM user_events 
         ORDER BY created_at DESC 
         LIMIT 20

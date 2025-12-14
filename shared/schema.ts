@@ -58,8 +58,11 @@ export const userBets = pgTable("user_bets", {
   potentialPayout: decimal("potential_payout", { precision: 10, scale: 2 }),
   status: varchar("status", { length: 50 }).default('pending'),
   pnl: decimal("pnl", { precision: 10, scale: 2 }),
+  balanceBefore: decimal("balance_before", { precision: 10, scale: 2 }),
+  balanceAfter: decimal("balance_after", { precision: 10, scale: 2 }),
   placedAt: timestamp("placed_at").defaultNow().notNull(),
   settledAt: timestamp("settled_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 // NextAuth.js required tables

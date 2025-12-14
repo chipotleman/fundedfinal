@@ -1,5 +1,6 @@
 
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
 
 const BetSlipContext = createContext();
 
@@ -11,9 +12,54 @@ export const useBetSlip = () => {
   return context;
 };
 
+const generateVisitorId = () => {
+  if (typeof window === 'undefined') return null;
+  let visitorId = localStorage.getItem('piks_visitor_id');
+  if (!visitorId) {
+    visitorId = 'v_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+    localStorage.setItem('piks_visitor_id', visitorId);
+  }
+  return visitorId;
+};
+
+const generateSessionId = () => {
+  if (typeof window === 'undefined') return null;
+  let sessionId = sessionStorage.getItem('piks_session_id');
+  if (!sessionId) {
+    sessionId = 's_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
+    sessionStorage.setItem('piks_session_id', sessionId);
+  }
+  return sessionId;
+};
+
 export const BetSlipProvider = ({ children }) => {
+  const { data: session } = useSession();
   const [betSlip, setBetSlip] = useState([]);
   const [showBetSlip, setShowBetSlip] = useState(false);
+
+  const userId = session?.user?.id || null;
+
+  const trackBetSlipEvent = useCallback(async (eventType, betData) => {
+    if (typeof window === 'undefined') return;
+    try {
+      await fetch('/api/analytics/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          events: [{
+            type: eventType,
+            userId,
+            visitorId: generateVisitorId(),
+            sessionId: generateSessionId(),
+            data: betData,
+            pageUrl: window.location.pathname,
+          }]
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to track bet slip event:', error);
+    }
+  }, [userId]);
 
   // Load bet slip from localStorage on mount
   useEffect(() => {
@@ -44,35 +90,74 @@ export const BetSlipProvider = ({ children }) => {
   const addToBetSlip = (game, betType, odds, selection) => {
     const betId = `${game.id}-${betType}-${selection}`;
     const existingBetIndex = betSlip.findIndex(bet => bet.id === betId);
+    const oddsValue = typeof odds === 'object' ? odds.odds || odds.value || 0 : odds;
     
     if (existingBetIndex >= 0) {
-      // Remove bet if it already exists (toggle off)
+      const removedBet = betSlip[existingBetIndex];
       setBetSlip(betSlip.filter(bet => bet.id !== betId));
+      trackBetSlipEvent('bet_removed_toggle', {
+        betId,
+        matchup: removedBet.matchup,
+        selection: removedBet.selection,
+        odds: removedBet.odds,
+        betType: removedBet.betType,
+      });
     } else {
-      // Add new bet
       const newBet = {
         id: betId,
         gameId: game.id,
         matchup: `${game.awayTeam} @ ${game.homeTeam}`,
         betType,
         selection,
-        odds: typeof odds === 'object' ? odds.odds || odds.value || 0 : odds,
+        odds: oddsValue,
         stake: 0
       };
       
       setBetSlip([...betSlip, newBet]);
-      // Don't automatically open bet slip - only open when user clicks the button
+      trackBetSlipEvent('bet_added', {
+        betId,
+        matchup: newBet.matchup,
+        selection,
+        odds: oddsValue,
+        betType,
+        gameId: game.id,
+        awayTeam: game.awayTeam,
+        homeTeam: game.homeTeam,
+      });
     }
   };
 
   const removeBet = (betId) => {
+    const removedBet = betSlip.find(bet => bet.id === betId);
     setBetSlip(betSlip.filter(bet => bet.id !== betId));
+    if (removedBet) {
+      trackBetSlipEvent('bet_removed', {
+        betId,
+        matchup: removedBet.matchup,
+        selection: removedBet.selection,
+        odds: removedBet.odds,
+        betType: removedBet.betType,
+        stake: removedBet.stake,
+      });
+    }
   };
 
   const updateStake = (betId, stake) => {
-    setBetSlip(betSlip.map(bet => 
-      bet.id === betId ? { ...bet, stake: parseFloat(stake) || 0 } : bet
+    const bet = betSlip.find(b => b.id === betId);
+    const newStake = parseFloat(stake) || 0;
+    setBetSlip(betSlip.map(b => 
+      b.id === betId ? { ...b, stake: newStake } : b
     ));
+    if (bet && newStake > 0) {
+      trackBetSlipEvent('stake_updated', {
+        betId,
+        matchup: bet.matchup,
+        selection: bet.selection,
+        oldStake: bet.stake,
+        newStake,
+        odds: bet.odds,
+      });
+    }
   };
 
   const clearBetSlip = () => {

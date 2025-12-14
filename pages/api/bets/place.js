@@ -75,6 +75,8 @@ export default async function handler(req, res) {
         stake: parlayStake.toString(),
         potentialPayout: potentialPayout.toFixed(2),
         status: 'pending',
+        balanceBefore: currentBankroll.toFixed(2),
+        balanceAfter: (currentBankroll - parlayStake).toFixed(2),
       };
 
       await db.insert(userBets).values(parlayBet);
@@ -95,6 +97,8 @@ export default async function handler(req, res) {
           stake: bet.stake.toString(),
           potentialPayout: potentialPayout.toFixed(2),
           status: 'pending',
+          balanceBefore: currentBankroll.toFixed(2),
+          balanceAfter: (currentBankroll - bet.stake).toFixed(2),
         };
 
         await db.insert(userBets).values(newBet);
