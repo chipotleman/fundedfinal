@@ -496,7 +496,7 @@ export default function DemoDashboard() {
               </div>
             )}
 
-            <div className="flex-1 overflow-y-auto max-h-[calc(100vh-280px)] md:max-h-[calc(100vh-200px)]">
+            <div className="flex-1 overflow-y-auto min-h-0">
               {selectedBets.length === 0 ? (
                 <div className="p-8 text-center">
                   <svg className="w-16 h-16 mx-auto text-gray-700 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -626,7 +626,7 @@ export default function DemoDashboard() {
             </div>
 
             {selectedBets.length > 0 && (
-              <div className="sticky bottom-0 left-0 right-0 p-4 border-t border-gray-800/50 bg-black safe-area-bottom">
+              <div className="flex-shrink-0 p-4 border-t border-gray-800/50 bg-black">
                 {/* Parlay Stake Input */}
                 {betMode === 'parlay' && selectedBets.length >= 2 && (
                   <div className="mb-4">
