@@ -318,7 +318,10 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
 
   return (
     <div className={`relative rounded-2xl overflow-hidden mx-2 sm:mx-0 border bg-[#0a0a0a] ${getBorderColor()}`}>
-      <div className={`px-4 py-3 ${getHeaderBackground()}`}>
+      {isWon && (
+        <div className="h-1 bg-gradient-to-r from-yellow-500 via-yellow-400 to-amber-500"></div>
+      )}
+      <div className={`px-4 py-3 ${isWon ? 'bg-transparent' : getHeaderBackground()}`}>
         <div className="flex items-center justify-between">
           <span className="text-white font-black text-xl tracking-tight">piks</span>
           
