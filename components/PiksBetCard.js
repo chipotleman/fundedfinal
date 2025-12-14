@@ -53,6 +53,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
   const isOpen = bet.status === 'open';
   const isLost = bet.status === 'lost';
   const isCashedOut = bet.status === 'cashed_out';
+  const isSettled = isWon || isLost || isCashedOut;
 
   const isOverUnder = bet.betType?.toLowerCase().includes('total') || 
                       bet.betType?.toLowerCase().includes('over') || 
@@ -63,6 +64,41 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
   const isParlay = bet.betType?.toLowerCase().includes('parlay') || 
                    (bet.legs && bet.legs.length > 1);
 
+  const generateScoresForLeg = (leg, index) => {
+    const seed = bet.id ? (typeof bet.id === 'string' ? bet.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) : bet.id) : 12345;
+    const pseudoRandom = (n) => ((seed * (n + 1 + index * 10) * 9301 + 49297) % 233280) / 233280;
+    return {
+      homeScore: Math.floor(pseudoRandom(1) * 15 + 24),
+      awayScore: Math.floor(pseudoRandom(2) * 15 + 17),
+      homeQuarters: [
+        Math.floor(pseudoRandom(3) * 10),
+        Math.floor(pseudoRandom(4) * 12),
+        Math.floor(pseudoRandom(5) * 8),
+        Math.floor(pseudoRandom(6) * 10)
+      ],
+      awayQuarters: [
+        Math.floor(pseudoRandom(7) * 8),
+        Math.floor(pseudoRandom(8) * 10),
+        Math.floor(pseudoRandom(9) * 6),
+        Math.floor(pseudoRandom(10) * 8)
+      ]
+    };
+  };
+
+  const parseTeamsFromMatchup = (matchup) => {
+    if (!matchup) return { homeTeam: 'Home Team', awayTeam: 'Away Team' };
+    
+    if (matchup.includes(' @ ')) {
+      const [away, home] = matchup.split(' @ ');
+      return { homeTeam: home, awayTeam: away };
+    }
+    if (matchup.includes(' vs ')) {
+      const [home, away] = matchup.split(' vs ');
+      return { homeTeam: home, awayTeam: away };
+    }
+    return { homeTeam: matchup, awayTeam: '' };
+  };
+
   const scores = useMemo(() => {
     if (bet.homeScore !== undefined && bet.awayScore !== undefined) {
       return {
@@ -72,7 +108,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         awayQuarters: bet.awayQuarters || []
       };
     }
-    if (isWon || isLost || isCashedOut) {
+    if (isSettled) {
       const seed = bet.id ? (typeof bet.id === 'string' ? bet.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0) : bet.id) : 12345;
       const pseudoRandom = (n) => ((seed * (n + 1) * 9301 + 49297) % 233280) / 233280;
       return {
@@ -101,7 +137,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
       };
     }
     return { homeScore: null, awayScore: null, homeQuarters: [], awayQuarters: [] };
-  }, [bet.id, bet.homeScore, bet.awayScore, bet.homeQuarters, bet.awayQuarters, bet.currentHomeScore, bet.currentAwayScore, isWon, isLost, isCashedOut, isOpen]);
+  }, [bet.id, bet.homeScore, bet.awayScore, bet.homeQuarters, bet.awayQuarters, bet.currentHomeScore, bet.currentAwayScore, isSettled, isOpen]);
 
   const getHeaderBackground = () => {
     if (isWon) {
@@ -141,21 +177,34 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
 
   const progressData = getProgressBarData();
 
-  const parseTeams = () => {
-    if (!bet.matchup) return { homeTeam: 'Home Team', awayTeam: 'Away Team' };
-    
-    if (bet.matchup.includes(' @ ')) {
-      const [away, home] = bet.matchup.split(' @ ');
-      return { homeTeam: home, awayTeam: away };
-    }
-    if (bet.matchup.includes(' vs ')) {
-      const [home, away] = bet.matchup.split(' vs ');
-      return { homeTeam: home, awayTeam: away };
-    }
-    return { homeTeam: bet.matchup, awayTeam: '' };
-  };
+  const { homeTeam, awayTeam } = parseTeamsFromMatchup(bet.matchup);
 
-  const { homeTeam, awayTeam } = parseTeams();
+  const ScoreSection = ({ homeTeam, awayTeam, homeScore, awayScore, homeQuarters, awayQuarters }) => (
+    <div className="space-y-1">
+      <div className="flex justify-between items-center text-sm">
+        <span className="text-white/90">{homeTeam}</span>
+        <div className="flex items-center space-x-2">
+          {homeQuarters && homeQuarters.length > 0 && (
+            <div className="flex space-x-1.5 text-gray-400 text-xs">
+              {homeQuarters.map((q, i) => <span key={i}>{q}</span>)}
+            </div>
+          )}
+          <span className="text-white font-bold ml-2">{homeScore}</span>
+        </div>
+      </div>
+      <div className="flex justify-between items-center text-sm">
+        <span className="text-white/90">{awayTeam}</span>
+        <div className="flex items-center space-x-2">
+          {awayQuarters && awayQuarters.length > 0 && (
+            <div className="flex space-x-1.5 text-gray-400 text-xs">
+              {awayQuarters.map((q, i) => <span key={i}>{q}</span>)}
+            </div>
+          )}
+          <span className="text-white font-bold ml-2">{awayScore}</span>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className={`relative rounded-2xl overflow-hidden mx-2 sm:mx-0 border bg-[#0a0a0a] ${getBorderColor()}`}>
@@ -174,9 +223,24 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
 
       <div className="px-4 pt-3 pb-4">
 
-        <div className="flex justify-between items-start mb-2">
+        <div 
+          className={`flex justify-between items-start mb-2 ${isParlay && isSettled ? 'cursor-pointer' : ''}`}
+          onClick={() => isParlay && isSettled && setIsExpanded(!isExpanded)}
+        >
           <div className="flex-1">
-            <div className="text-white font-bold text-base">{bet.selection}</div>
+            <div className="flex items-center gap-2">
+              <div className="text-white font-bold text-base">{bet.selection}</div>
+              {isParlay && isSettled && (
+                <svg 
+                  className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              )}
+            </div>
             <div className="text-gray-400 text-xs uppercase tracking-wide">{bet.betType}</div>
           </div>
           <div className="font-bold text-xl text-white">
@@ -184,75 +248,57 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
           </div>
         </div>
 
-        {isParlay && bet.legs && bet.legs.length > 0 && (
-          <div className="mb-3">
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="w-full flex items-center justify-between py-2 px-3 bg-slate-800/50 hover:bg-slate-700/50 rounded-lg transition-all"
-            >
-              <span className="text-gray-300 text-sm font-medium">{bet.legs.length} Legs</span>
-              <svg 
-                className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-            
-            {isExpanded && (
-              <div className="mt-2 space-y-2">
-                {bet.legs.map((leg, index) => (
-                  <div key={index} className="bg-slate-800/30 border border-slate-700/50 rounded-lg p-3">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="text-white text-sm font-medium">{leg.selection}</div>
-                        <div className="text-gray-500 text-xs mt-0.5">{leg.matchup}</div>
-                        <div className="text-gray-500 text-xs">{leg.betType}</div>
-                      </div>
-                      <div className="text-blue-400 font-bold text-sm">
-                        {leg.odds > 0 ? `+${leg.odds}` : leg.odds}
-                      </div>
+        {isParlay && isSettled && isExpanded && bet.legs && bet.legs.length > 0 && (
+          <div className="mb-3 space-y-3 border-t border-white/10 pt-3">
+            {bet.legs.map((leg, index) => {
+              const legTeams = parseTeamsFromMatchup(leg.matchup);
+              const legScores = generateScoresForLeg(leg, index);
+              
+              return (
+                <div key={index} className="pb-3 border-b border-white/10 last:border-b-0 last:pb-0">
+                  <div className="flex justify-between items-start mb-2">
+                    <div className="flex-1">
+                      <div className="text-white text-sm font-medium">{leg.selection}</div>
+                      <div className="text-gray-500 text-xs">{leg.betType}</div>
+                    </div>
+                    <div className="text-white font-bold text-sm">
+                      {leg.odds > 0 ? `+${leg.odds}` : leg.odds}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
+                  <ScoreSection 
+                    homeTeam={legTeams.homeTeam}
+                    awayTeam={legTeams.awayTeam}
+                    homeScore={legScores.homeScore}
+                    awayScore={legScores.awayScore}
+                    homeQuarters={legScores.homeQuarters}
+                    awayQuarters={legScores.awayQuarters}
+                  />
+                </div>
+              );
+            })}
+            <div className="text-right">
+              <span className="text-gray-400 text-xs">All Games Finished</span>
+            </div>
           </div>
         )}
 
-        {(isWon || isLost || isCashedOut) && !isParlay && (
-          <div className="mb-3 space-y-1">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-white/90">{homeTeam}</span>
-              <div className="flex items-center space-x-2">
-                {scores.homeQuarters.length > 0 && (
-                  <div className="flex space-x-1.5 text-gray-400 text-xs">
-                    {scores.homeQuarters.map((q, i) => <span key={i}>{q}</span>)}
-                  </div>
-                )}
-                <span className="text-white font-bold ml-2">{scores.homeScore}</span>
-              </div>
-            </div>
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-white/90">{awayTeam}</span>
-              <div className="flex items-center space-x-2">
-                {scores.awayQuarters.length > 0 && (
-                  <div className="flex space-x-1.5 text-gray-400 text-xs">
-                    {scores.awayQuarters.map((q, i) => <span key={i}>{q}</span>)}
-                  </div>
-                )}
-                <span className="text-white font-bold ml-2">{scores.awayScore}</span>
-              </div>
-            </div>
+        {isSettled && !isParlay && (
+          <div className="mb-3">
+            <ScoreSection 
+              homeTeam={homeTeam}
+              awayTeam={awayTeam}
+              homeScore={scores.homeScore}
+              awayScore={scores.awayScore}
+              homeQuarters={scores.homeQuarters}
+              awayQuarters={scores.awayQuarters}
+            />
             <div className="text-right pt-1">
               <span className="text-gray-400 text-xs">Finished</span>
             </div>
           </div>
         )}
 
-        {isOpen && (
+        {isOpen && !isParlay && (
           <div className="mb-3">
             <div className="text-gray-400 text-xs uppercase mb-1">Game</div>
             <div className="text-white text-sm font-medium">{bet.matchup}</div>
@@ -265,6 +311,40 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                 hour12: true
               }) : 'Upcoming'}
             </div>
+          </div>
+        )}
+
+        {isOpen && isParlay && bet.legs && bet.legs.length > 0 && (
+          <div className="mb-3">
+            <div 
+              className="flex items-center justify-between cursor-pointer"
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              <div className="text-gray-400 text-xs uppercase">
+                {bet.legs.length} Games
+              </div>
+              <svg 
+                className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+            {isExpanded && (
+              <div className="mt-2 space-y-2">
+                {bet.legs.map((leg, index) => (
+                  <div key={index} className="border-b border-white/10 pb-2 last:border-b-0">
+                    <div className="text-white text-sm font-medium">{leg.selection}</div>
+                    <div className="text-gray-500 text-xs">{leg.matchup}</div>
+                    <div className="text-blue-400 text-xs font-bold">
+                      {leg.odds > 0 ? `+${leg.odds}` : leg.odds}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
