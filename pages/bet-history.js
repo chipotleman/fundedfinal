@@ -120,10 +120,18 @@ export default function BetHistory() {
     return odds > 0 ? `+${odds}` : odds.toString();
   };
 
-  const filteredBets = allBets.filter(bet => {
-    if (selectedFilter === 'all') return true;
-    return bet.status === selectedFilter;
-  });
+  const filteredBets = allBets
+    .filter(bet => {
+      if (selectedFilter === 'all') return true;
+      return bet.status === selectedFilter;
+    })
+    .sort((a, b) => {
+      if (a.status === 'open' && b.status !== 'open') return -1;
+      if (a.status !== 'open' && b.status === 'open') return 1;
+      const dateA = new Date(a.placedAt || a.settledAt || 0);
+      const dateB = new Date(b.placedAt || b.settledAt || 0);
+      return dateB - dateA;
+    });
 
   const totalProfit = allBets.reduce((sum, bet) => sum + bet.profit, 0);
 
@@ -289,8 +297,8 @@ export default function BetHistory() {
             </div>
           </div>
 
-          {/* Bets Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Bets List */}
+          <div className="grid grid-cols-1 gap-4 max-w-2xl mx-auto">
             {filteredBets.map(bet => (
               <PiksBetCard 
                 key={bet.id}
