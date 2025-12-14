@@ -99,13 +99,20 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser, isLoggedIn
         <div className="flex-1 overflow-hidden px-6 py-4 mt-16">
           {isLoggedIn ? (
             <div className="space-y-4">
-              <Link
-                href="/dashboard"
-                onClick={onClose}
-                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
+              <button
+                onClick={() => {
+                  onClose();
+                  const hasChallenge = localStorage.getItem('purchased_challenge');
+                  if (hasChallenge) {
+                    window.location.href = '/dashboard';
+                  } else {
+                    window.dispatchEvent(new CustomEvent('openChallengePopup'));
+                  }
+                }}
+                className="block w-full text-left text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
-                Dashboard
-              </Link>
+                The Lab
+              </button>
               <Link
                 href="/bet-history"
                 onClick={onClose}
