@@ -135,8 +135,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
               <button
                 onClick={() => {
                   onClose();
-                  const hasChallenge = localStorage.getItem('purchased_challenge');
-                  if (hasChallenge) {
+                  if (hasActiveChallenge) {
                     window.location.href = '/dashboard';
                   } else {
                     window.dispatchEvent(new CustomEvent('openChallengePopup'));
