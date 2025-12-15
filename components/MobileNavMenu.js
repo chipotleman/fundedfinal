@@ -9,6 +9,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
   const [touchEnd, setTouchEnd] = useState(null);
   const [mounted, setMounted] = useState(false);
   const [hasActiveChallenge, setHasActiveChallenge] = useState(false);
+  const [userBalance, setUserBalance] = useState(null);
   const router = useRouter();
   const { data: session, status } = useSession();
   
@@ -30,6 +31,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
             const profile = await response.json();
             const isActive = profile.status !== 'inactive' && parseFloat(profile.bankroll) > 0;
             setHasActiveChallenge(isActive);
+            setUserBalance(parseFloat(profile.bankroll) || 0);
             return;
           }
         } catch (error) {
@@ -38,6 +40,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
       }
       const storedChallenge = localStorage.getItem('purchased_challenge');
       setHasActiveChallenge(!!storedChallenge);
+      setUserBalance(null);
     };
     checkChallenge();
     window.addEventListener('storage', checkChallenge);
@@ -200,6 +203,26 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
               >
                 Leaderboard
               </Link>
+
+              {hasActiveChallenge && userBalance !== null && (
+                <div className="border-t border-gray-700 pt-4 mt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-gray-400 mb-1">Balance</p>
+                      <p className="text-white font-semibold text-xl">
+                        ${userBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <Link
+                      href="/withdrawal"
+                      onClick={onClose}
+                      className="px-4 py-2 bg-[#E9762B] text-white text-sm font-medium rounded-lg hover:bg-[#d66a25] transition-colors"
+                    >
+                      Withdraw
+                    </Link>
+                  </div>
+                </div>
+              )}
 
               <div className="border-t border-gray-700 pt-4 mt-6">
                 <div className="mb-4">
