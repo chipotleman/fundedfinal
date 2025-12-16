@@ -652,7 +652,13 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 </div>
 
                 {/* Challenge Rules */}
-                <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4 mb-4" style={{ WebkitTapHighlightColor: 'transparent' }}>
+                <div 
+                  className="bg-slate-800/50 rounded-xl border p-4 mb-4" 
+                  style={{ 
+                    WebkitTapHighlightColor: 'transparent',
+                    borderColor: theme.borderColor
+                  }}
+                >
                   <div 
                     className="flex items-center justify-between cursor-pointer"
                     onClick={() => setShowRules(!showRules)}
@@ -660,16 +666,6 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   >
                     <h4 className="text-white font-semibold text-sm">Challenge Rules</h4>
                     <div className="flex items-center space-x-2">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowTargetExplainer(true);
-                        }}
-                        className={`w-4 h-4 ${theme.bg.replace('/20', '')} hover:opacity-80 rounded-full flex items-center justify-center transition-colors border ${theme.splitBorder}`}
-                        style={{ WebkitTapHighlightColor: 'transparent' }}
-                      >
-                        <span className="text-white text-xs font-bold">?</span>
-                      </button>
                       <svg 
                         className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${showRules ? 'rotate-180' : ''}`} 
                         fill="none" 
@@ -683,6 +679,23 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   
                   {showRules && (
                     <div className="space-y-1 text-xs mt-2 pb-1">
+                      {/* Question mark button - only visible when expanded */}
+                      <div className="flex justify-end mb-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowTargetExplainer(true);
+                          }}
+                          className="w-5 h-5 hover:opacity-80 rounded-full flex items-center justify-center transition-colors border"
+                          style={{ 
+                            WebkitTapHighlightColor: 'transparent',
+                            backgroundColor: `${theme.borderColor}30`,
+                            borderColor: theme.borderColor
+                          }}
+                        >
+                          <span className="text-white text-xs font-bold">?</span>
+                        </button>
+                      </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-400">Pick Minimum</span>
                         <span className="text-white font-medium">20 picks</span>
