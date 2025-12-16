@@ -430,7 +430,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
             <div className="flex-none -mt-[7.75px] sm:-mt-[5.75px] -ml-[310px] sm:ml-0">
               <Link href="/" className="flex items-center">
                 <img
-                  src="/funderlogo/Piks.png?v=5"
+                  src="/pikslogotransparent.png"
                   alt="Piks"
                   className="h-[90px] sm:h-[115px] w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
                   style={{

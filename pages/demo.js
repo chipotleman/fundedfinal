@@ -145,7 +145,7 @@ export default function DemoPage() {
           <div className="p-6 pt-8">
             <div className="text-center mb-4">
               <div className="mb-4">
-                <img src="/funderlogo/Piks.png" alt="Piks Logo" className="h-16 mx-auto" />
+                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-16 mx-auto" />
               </div>
             </div>
 

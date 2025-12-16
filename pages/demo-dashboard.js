@@ -452,7 +452,7 @@ export default function DemoDashboard() {
             {/* Header with Piks branding */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800/50">
               <div className="flex items-center">
-                <img src="/funderlogo/Piks.png" alt="Piks" className="h-14 object-contain -ml-4" />
+                <img src="/pikslogotransparent.png" alt="Piks" className="h-14 object-contain -ml-4" />
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1.5 bg-orange-500/20 border border-orange-500/50 px-2.5 py-1 rounded-full">

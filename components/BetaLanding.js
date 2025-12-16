@@ -67,7 +67,7 @@ export default function BetaLanding({ onAuthenticated }) {
             <div className="flex-none -mt-[7.75px] sm:-mt-[5.75px] -ml-[310px] sm:ml-0">
               <div className="flex items-center">
                 <img
-                  src="/funderlogo/Piks.png?v=5"
+                  src="/pikslogotransparent.png"
                   alt="Piks"
                   className="h-[90px] sm:h-[115px] w-auto brightness-100 transition-all duration-300"
                   style={{
