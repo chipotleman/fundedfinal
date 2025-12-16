@@ -63,16 +63,10 @@ html.light .text-white:not(.keep-white) {
 }
 
 /* Preserve white text on colored buttons in light mode */
-html.light button.bg-green-500,
-html.light button[style*="background-color: rgb(34, 197, 94)"],
-html.light button[style*="backgroundColor"],
-html.light .force-white-text {
+html.light .force-white-text,
+html.light .force-white-text:hover {
   color: #ffffff !important;
-}
-
-html.light button.bg-green-500:hover,
-html.light button[style*="background-color"]:hover {
-  background-color: inherit !important;
+  background-color: #22c55e !important;
 }
 
 html.light .text-gray-300 {
