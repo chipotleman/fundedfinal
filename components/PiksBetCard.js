@@ -294,7 +294,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
   const ScoreSection = ({ homeTeam, awayTeam, homeScore, awayScore, homeQuarters, awayQuarters }) => (
     <div className="space-y-1">
       <div className="flex justify-between items-center text-sm">
-        <span className="text-white/90">{homeTeam}</span>
+        <span style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{homeTeam}</span>
         <div className="flex items-center space-x-2">
           {homeQuarters && homeQuarters.length > 0 && (
             <div className="flex space-x-1.5 text-gray-400 text-xs">
@@ -305,7 +305,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         </div>
       </div>
       <div className="flex justify-between items-center text-sm">
-        <span className="text-white/90">{awayTeam}</span>
+        <span style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{awayTeam}</span>
         <div className="flex items-center space-x-2">
           {awayQuarters && awayQuarters.length > 0 && (
             <div className="flex space-x-1.5 text-gray-400 text-xs">
@@ -438,7 +438,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-white/90 text-sm">{legTeams.homeTeam}</span>
+                      <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{legTeams.homeTeam}</span>
                       <div className="flex items-center gap-3">
                         <div className="flex gap-2 text-gray-400 text-sm">
                           {legScores.homeQuarters.map((q, i) => <span key={i}>{q}</span>)}
@@ -447,7 +447,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-white/90 text-sm">{legTeams.awayTeam}</span>
+                      <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{legTeams.awayTeam}</span>
                       <div className="flex items-center gap-3">
                         <div className="flex gap-2 text-gray-400 text-sm">
                           {legScores.awayQuarters.map((q, i) => <span key={i}>{q}</span>)}
@@ -535,7 +535,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                       </div>
                       <div className="space-y-1">
                         <div className="flex justify-between items-center">
-                          <span className="text-white/90 text-sm">{legTeams.homeTeam}</span>
+                          <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{legTeams.homeTeam}</span>
                           {hasLiveData ? (
                             <span className="text-white font-bold">{leg.homeScore}</span>
                           ) : (
@@ -543,7 +543,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                           )}
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-white/90 text-sm">{legTeams.awayTeam}</span>
+                          <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{legTeams.awayTeam}</span>
                           {hasLiveData ? (
                             <span className="text-white font-bold">{leg.awayScore}</span>
                           ) : (
