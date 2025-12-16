@@ -628,6 +628,20 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   )}
                 </div>
 
+                {/* Challenge Fee - Small inline box */}
+                <div className="flex justify-between items-center py-2 px-4 bg-slate-800/30 rounded-xl border border-slate-600" style={{ WebkitTapHighlightColor: 'transparent' }}>
+                  <span className="text-gray-400 text-sm">Challenge fee</span>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-white font-bold">${adjustedPrice}</span>
+                    {adjustedPrice > currentChallenge.price && (
+                      <span className={`text-xs ${theme.text}`}>(+${adjustedPrice - currentChallenge.price})</span>
+                    )}
+                    {adjustedPrice < currentChallenge.price && (
+                      <span className="text-xs text-red-400">(-${currentChallenge.price - adjustedPrice})</span>
+                    )}
+                  </div>
+                </div>
+
                 {/* Challenge Rules */}
                 <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4 mb-4" style={{ WebkitTapHighlightColor: 'transparent' }}>
                   <div 
@@ -696,38 +710,6 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   )}
                 </div>
               </div>
-
-              {/* Price Display - Hidden when rules are expanded */}
-              {!showRules && (
-                <div className="text-center mb-4 p-3 bg-slate-800/30 rounded-xl border border-slate-600" style={{ WebkitTapHighlightColor: 'transparent' }}>
-                  <div className="flex items-center justify-center space-x-2">
-                    <div className="text-xl font-bold text-white">${adjustedPrice}</div>
-                    {adjustedPrice > currentChallenge.price && (
-                      <div className="text-xs">
-                        <span className={theme.text}>(+${adjustedPrice - currentChallenge.price})</span>
-                      </div>
-                    )}
-                    {adjustedPrice < currentChallenge.price && (
-                      <div className="text-xs">
-                        <span className="text-red-400">(-${currentChallenge.price - adjustedPrice})</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="text-gray-400 text-xs">
-                    Challenge fee
-                    {adjustedPrice > currentChallenge.price && (
-                      <span className={`ml-1 ${theme.text}`}>
-                        (split premium)
-                      </span>
-                    )}
-                    {adjustedPrice < currentChallenge.price && (
-                      <span className="ml-1 text-red-400">
-                        (discount applied)
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
 
               {/* Choose Your Split - Hidden when rules are expanded */}
               {!showRules && (
