@@ -715,12 +715,11 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                             e.stopPropagation();
                             setShowTargetExplainer(true);
                           }}
-                          className="px-4 py-1.5 hover:opacity-80 rounded-full flex items-center justify-center transition-colors border text-xs font-medium"
+                          className="px-4 py-1.5 hover:opacity-80 rounded-full flex items-center justify-center transition-colors border text-xs font-medium text-white"
                           style={{ 
                             WebkitTapHighlightColor: 'transparent',
                             backgroundColor: `${theme.borderColor}20`,
-                            borderColor: theme.borderColor,
-                            color: theme.borderColor
+                            borderColor: theme.borderColor
                           }}
                         >
                           Learn More
