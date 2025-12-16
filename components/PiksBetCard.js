@@ -337,8 +337,8 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
 
   return (
     <div className={`relative rounded-2xl overflow-hidden mx-2 sm:mx-0 ${getCardBorder()}`} style={getCardStyle()}>
-      <div className="px-4 py-1 bg-transparent">
-        <div className="flex items-center justify-between">
+      <div className="px-4 pt-0 pb-1 bg-transparent">
+        <div className="flex items-center justify-between -mt-2">
           <img src="/pikslogotransparent.png" alt="Piks" className="h-28 object-contain -ml-7" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
           
           {isWon ? (
