@@ -840,16 +840,20 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
               <button
                 onClick={handleNext}
                 disabled={loading}
-                className={`w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3 px-6 rounded-xl shadow-2xl mb-4 transform hover:scale-105 transition-all duration-300 disabled:transform-none disabled:cursor-not-allowed`}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
+                className={`w-full bg-gradient-to-r ${loading ? '' : theme.gradient} ${loading ? '' : theme.gradientHover} disabled:from-gray-600 disabled:to-gray-700 font-bold py-3 px-6 rounded-xl shadow-2xl mb-4 transform hover:scale-105 transition-all duration-300 disabled:transform-none disabled:cursor-not-allowed`}
+                style={{ 
+                  WebkitTapHighlightColor: 'transparent',
+                  backgroundColor: loading ? '#22c55e' : undefined,
+                  color: '#ffffff'
+                }}
               >
                 {loading ? (
                   <div className="flex items-center justify-center space-x-2">
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Loading Checkout...</span>
+                    <span style={{ color: '#ffffff' }}>Loading Checkout...</span>
                   </div>
                 ) : (
-                  'Continue'
+                  <span style={{ color: '#ffffff' }}>Continue</span>
                 )}
               </button>
               
