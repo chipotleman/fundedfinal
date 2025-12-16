@@ -162,7 +162,8 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                     <Link
                       href="/withdrawal"
                       onClick={onClose}
-                      className="relative w-full text-center px-4 py-2 text-white text-sm font-medium rounded-lg overflow-hidden bg-green-500/40 lg:hover:bg-green-500/70 lg:transition-colors"
+                      className="relative w-full text-center px-4 py-2 text-white text-sm font-medium rounded-lg overflow-hidden bg-green-500/40 lg:hover:bg-green-500/70 lg:transition-colors active:bg-green-500/40"
+                      style={{ WebkitTapHighlightColor: 'transparent' }}
                     >
                       <span className="relative z-10">Withdraw</span>
                       <div className="absolute inset-0 rounded-lg">
