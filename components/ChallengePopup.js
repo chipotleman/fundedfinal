@@ -653,11 +653,8 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
 
                 {/* Challenge Rules */}
                 <div 
-                  className="bg-slate-800/50 rounded-xl border p-4 mb-4" 
-                  style={{ 
-                    WebkitTapHighlightColor: 'transparent',
-                    borderColor: theme.borderColor
-                  }}
+                  className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4 mb-4" 
+                  style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
                   <div 
                     className="flex items-center justify-between cursor-pointer"
@@ -667,9 +664,9 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                     <h4 className="text-white font-semibold text-sm">Challenge Rules</h4>
                     <div className="flex items-center space-x-2">
                       <svg 
-                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${showRules ? 'rotate-180' : ''}`} 
+                        className={`w-5 h-5 transition-transform duration-200 ${showRules ? 'rotate-180' : ''}`} 
                         fill="none" 
-                        stroke="currentColor" 
+                        stroke={theme.borderColor}
                         viewBox="0 0 24 24"
                       >
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
