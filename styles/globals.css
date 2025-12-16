@@ -63,9 +63,13 @@ html.light .text-white:not(.keep-white) {
 }
 
 /* Preserve white text on colored buttons in light mode */
+.force-white-text,
+.force-white-text:hover {
+  color: #ffffff !important;
+}
+
 html.light .force-white-text,
 html.light .force-white-text:hover {
-  color: #ffffff !important;
   background-color: #22c55e !important;
 }
 
