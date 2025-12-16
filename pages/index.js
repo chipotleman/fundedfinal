@@ -264,7 +264,7 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-6 sm:mb-8">
                 <button 
                   onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
-                  className="w-full sm:w-auto font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl text-base sm:text-lg shadow-2xl"
+                  className="w-full sm:w-auto font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl text-base sm:text-lg shadow-2xl force-white-text"
                   style={{ 
                     backgroundColor: '#22c55e',
                     color: '#ffffff'
