@@ -138,7 +138,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
               {hasActiveChallenge && userBalance !== null && (
                 <div className="mb-4 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
                   <div className="flex flex-col gap-3">
-                    <div>
+                    <div className="text-center">
                       <p className="text-xs text-gray-400 mb-0.5">Balance</p>
                       <p className="text-white font-semibold text-xl">
                         ${userBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -147,9 +147,31 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                     <Link
                       href="/withdrawal"
                       onClick={onClose}
-                      className="w-full text-center px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/10 transition-colors"
+                      className="relative w-full text-center px-4 py-2 text-white text-sm font-medium rounded-lg bg-transparent overflow-hidden group"
                     >
-                      Withdraw
+                      <span className="relative z-10">Withdraw</span>
+                      <div className="absolute inset-0 rounded-lg">
+                        <div className="absolute inset-0 rounded-lg border border-white/20"></div>
+                        <div 
+                          className="absolute inset-[-2px] rounded-lg"
+                          style={{
+                            background: 'linear-gradient(90deg, transparent, #E9762B, #22c55e, #3b82f6, transparent)',
+                            backgroundSize: '200% 100%',
+                            animation: 'snakeGlow 2s linear infinite',
+                            mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                            maskComposite: 'exclude',
+                            WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                            WebkitMaskComposite: 'xor',
+                            padding: '2px',
+                          }}
+                        ></div>
+                      </div>
+                      <style jsx>{`
+                        @keyframes snakeGlow {
+                          0% { background-position: 200% 0; }
+                          100% { background-position: -200% 0; }
+                        }
+                      `}</style>
                     </Link>
                   </div>
                 </div>
