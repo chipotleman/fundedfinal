@@ -337,9 +337,9 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
 
   return (
     <div className={`relative rounded-2xl overflow-hidden mx-2 sm:mx-0 ${getCardBorder()}`} style={getCardStyle()}>
-      <div className="px-4 py-3 bg-transparent">
+      <div className="px-4 py-1 bg-transparent">
         <div className="flex items-center justify-between">
-          <img src="/pikslogotransparent.png" alt="Piks" className="h-32 object-contain -ml-8" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
+          <img src="/pikslogotransparent.png" alt="Piks" className="h-20 object-contain -ml-6" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
           
           {isWon ? (
             <div className="flex-1 flex justify-end mr-[-19px]">
@@ -364,7 +364,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         </div>
       </div>
 
-      <div className="px-4 pt-3 pb-4">
+      <div className="px-4 pt-1 pb-3">
 
         <div 
           className={`flex justify-between items-start mb-2 ${isParlay && isSettled ? 'cursor-pointer' : ''}`}
@@ -392,7 +392,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         </div>
 
         {isParlay && isSettled && isExpanded && parlayLegs.legs.length > 0 && (
-          <div className="mb-3 space-y-4 border-t border-white/10 pt-3">
+          <div className="mb-3 space-y-4 pt-3" style={{ borderTop: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #d1d5db' }}>
             {parlayLegs.legs.map((leg, index) => {
               const legScores = generateScoresForLeg(leg, index);
               const legTeams = getTeamNamesForLeg(leg, index);
@@ -572,7 +572,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
           </div>
         )}
 
-        <div className="border-t border-white/20 pt-3 mt-2">
+        <div className="pt-3 mt-2" style={{ borderTop: isDarkMode ? '1px solid rgba(255,255,255,0.2)' : '1px solid #9ca3af' }}>
           <div className="flex justify-between items-end">
             <div>
               <div className="font-bold text-xl" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>${formatMoney(bet.stake || 0)}</div>
