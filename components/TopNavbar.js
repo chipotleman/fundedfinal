@@ -423,7 +423,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
 
   return (
     <>
-      <nav className="sticky top-0 left-0 right-0 bg-black z-50">
+      <nav className="sticky top-0 left-0 right-0 z-50" style={{ backgroundColor: isDarkMode ? '#000000' : '#ffffff' }}>
         <div className="px-3 sm:px-6 py-1 sm:py-3">
           <div className="flex items-center justify-center sm:justify-between min-h-[56px] sm:min-h-[60px] relative">
             {/* Logo - centered on mobile, left-aligned on desktop */}
@@ -434,8 +434,8 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
                   alt="Piks"
                   className="h-[180px] sm:h-[230px] w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
                   style={{
-                    filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
-                    animation: 'logoRedYellowGlow 4s infinite ease-in-out'
+                    filter: isDarkMode ? 'hue-rotate(0deg) saturate(1.2) brightness(1.1)' : 'invert(1) hue-rotate(0deg) saturate(1.2) brightness(0.1)',
+                    animation: isDarkMode ? 'logoRedYellowGlow 4s infinite ease-in-out' : 'none'
                   }}
                   onLoad={(e) => {
                     console.log('Logo loaded successfully');

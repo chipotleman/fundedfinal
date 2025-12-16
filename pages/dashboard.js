@@ -3,6 +3,7 @@ import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import { simulateOddsMovement, updateBetSlipWithNewOdds } from '../lib/oddsSimulator';
 
 const mockGames = {
@@ -120,6 +121,7 @@ const mockGames = {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
   const [selectedSport, setSelectedSport] = useState('All Sports');
   const [games, setGames] = useState([]);
@@ -240,7 +242,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen" style={{ backgroundColor: isDarkMode ? '#000000' : '#f5f5f5' }}>
       <TopNavbar 
         bankroll={bankroll}
         pnl={pnl}
@@ -251,9 +253,9 @@ export default function Dashboard() {
       <div className="pt-2 sm:pt-6 lg:pt-8 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
         <div className="flex flex-col sm:flex-row sm:items-center justify-end mb-4 space-y-4 sm:space-y-0">
           <div className="flex items-center space-x-2 sm:space-x-4">
-            <div className="bg-[#111111] px-4 py-3 rounded-lg border border-gray-800/50">
+            <div className="px-4 py-3 rounded-lg" style={{ backgroundColor: isDarkMode ? '#111111' : '#ffffff', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(209, 213, 219, 1)' }}>
               <div className="flex items-center space-x-2">
-                <span className="text-gray-300 text-sm sm:text-base whitespace-nowrap">Live Lines</span>
+                <span className="text-sm sm:text-base whitespace-nowrap" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>Live Lines</span>
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
               </div>
             </div>
@@ -266,11 +268,13 @@ export default function Dashboard() {
               <button
                 key={sport}
                 onClick={() => handleSportClick(sport)}
-                className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium ${
-                  selectedSport === sport
-                    ? 'bg-[#1a1a1a] text-white border border-gray-600'
-                    : 'bg-transparent text-gray-400 border border-gray-800'
-                }`}
+                className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium"
+                style={{
+                  backgroundColor: selectedSport === sport ? (isDarkMode ? '#1a1a1a' : '#e5e7eb') : 'transparent',
+                  color: selectedSport === sport ? (isDarkMode ? '#ffffff' : '#111827') : (isDarkMode ? '#9ca3af' : '#6b7280'),
+                  borderWidth: 1,
+                  borderColor: selectedSport === sport ? (isDarkMode ? '#4b5563' : '#9ca3af') : (isDarkMode ? '#1f2937' : '#d1d5db')
+                }}
               >
                 <span className="text-base">{getSportIcon(sport)}</span>
                 <span>{sport === 'NFL' ? 'Football' : sport === 'NBA' ? 'Basketball' : sport === 'MLB' ? 'Baseball' : sport === 'NHL' ? 'Hockey' : sport}</span>
@@ -283,21 +287,21 @@ export default function Dashboard() {
           <div className="flex items-center justify-between px-1 mb-3">
             <div className="flex items-center gap-2">
               <span className="text-xl">📈</span>
-              <h2 className="text-white font-bold text-lg">Featured</h2>
+              <h2 className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>Featured</h2>
             </div>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
             {allGames.slice(0, 3).map((game) => (
-              <div key={game.id} className="flex-shrink-0 w-[280px] bg-[#111111] rounded-2xl border border-gray-800/50 overflow-hidden">
+              <div key={game.id} className="flex-shrink-0 w-[280px] rounded-2xl overflow-hidden" style={{ backgroundColor: isDarkMode ? '#111111' : '#ffffff', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(209, 213, 219, 1)' }}>
                 <div className="p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="bg-green-500 text-black text-[10px] font-bold px-2 py-0.5 rounded">FEATURED</span>
                     <span className="text-gray-500 text-xs">{sports.find(s => mockGames[s]?.some(g => g.id === game.id)) || 'NFL'}</span>
                   </div>
                   <div className="mb-4">
-                    <div className="text-white font-bold text-base">{game.awayTeam}</div>
+                    <div className="font-bold text-base" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayTeam}</div>
                     <div className="text-gray-500 text-xs">@</div>
-                    <div className="text-white font-bold text-base">{game.homeTeam}</div>
+                    <div className="font-bold text-base" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.homeTeam}</div>
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -337,7 +341,7 @@ export default function Dashboard() {
           <div className="flex items-center justify-between mb-4 px-1">
             <div className="flex items-center gap-2">
               <span className="text-xl">⚡</span>
-              <h2 className="text-white font-bold text-lg">Live Now</h2>
+              <h2 className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>Live Now</h2>
               <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
             </div>
           </div>
@@ -346,7 +350,7 @@ export default function Dashboard() {
             {loading ? (
               <div className="text-center py-12">
                 <div className="w-12 h-12 border-4 border-green-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-white text-lg">Loading games...</p>
+                <p className="text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>Loading games...</p>
               </div>
             ) : games.length > 0 ? (
               games.map(game => {
@@ -354,7 +358,7 @@ export default function Dashboard() {
                 const isExpanded = expandedGames[game.id];
                 
                 return (
-                  <div key={game.id} className="bg-[#111111] rounded-xl border border-gray-800/50 overflow-hidden">
+                  <div key={game.id} className="rounded-xl overflow-hidden" style={{ backgroundColor: isDarkMode ? '#111111' : '#ffffff', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(209, 213, 219, 1)' }}>
                     <div className="px-4 py-3">
                       <div 
                         className="flex items-center justify-between mb-3 cursor-pointer"
@@ -382,12 +386,12 @@ export default function Dashboard() {
                       
                       <div className="space-y-2 mb-4">
                         <div className="flex items-center justify-between">
-                          <span className="text-white font-medium">{game.awayTeam}</span>
-                          <span className="text-white font-bold text-lg">{game.awayScore || 0}</span>
+                          <span className="font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayTeam}</span>
+                          <span className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayScore || 0}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-white font-medium">{game.homeTeam}</span>
-                          <span className="text-white font-bold text-lg">{game.homeScore || 0}</span>
+                          <span className="font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.homeTeam}</span>
+                          <span className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.homeScore || 0}</span>
                         </div>
                       </div>
 
