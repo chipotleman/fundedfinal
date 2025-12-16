@@ -524,9 +524,20 @@ body {
 }
 
 /* Enhanced Button Hover Effects */
-button:hover, .btn:hover {
+button:not(.force-white-text):hover, .btn:not(.force-white-text):hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+}
+
+/* Force white text buttons maintain their styling */
+.force-white-text {
+  color: #ffffff !important;
+  background-color: #22c55e !important;
+}
+
+.force-white-text:hover {
+  color: #ffffff !important;
+  background-color: #16a34a !important;
 }
 
 /* Scroll Animation Styles */
