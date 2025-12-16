@@ -325,13 +325,14 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
 
   const getCardStyle = () => {
     const baseStyle = { backgroundColor: isDarkMode ? '#0a0a0a' : '#ffffff' };
-    if (isWon) return baseStyle;
+    const shadow = isDarkMode 
+      ? '0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3)' 
+      : '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)';
+    if (isWon) return { ...baseStyle, boxShadow: shadow };
     return {
       ...baseStyle,
       border: isDarkMode ? '1px solid #4b5563' : '1px solid #9ca3af',
-      boxShadow: isDarkMode 
-        ? '0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3)' 
-        : '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)'
+      boxShadow: shadow
     };
   };
 
@@ -350,14 +351,36 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
               />
             </div>
           ) : (
-            <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${
-              isOpen ? 'bg-white/10 border-white/30 text-white' : 
-              isCashedOut ? 'bg-[#E9762B]/20 border-[#E9762B]/50 text-[#E9762B]' : 
-              'bg-red-500/20 border-red-400/50 text-red-300'
-            }`}>
-              <div className={`w-2 h-2 rounded-full ${
-                isOpen ? 'bg-white animate-pulse' : isCashedOut ? 'bg-[#E9762B]' : 'bg-red-400'
-              }`}></div>
+            <div 
+              className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
+              style={{
+                backgroundColor: isOpen 
+                  ? (isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)') 
+                  : isCashedOut 
+                    ? 'rgba(233,118,43,0.2)' 
+                    : 'rgba(239,68,68,0.2)',
+                border: isOpen 
+                  ? (isDarkMode ? '1px solid rgba(255,255,255,0.3)' : '1px solid #374151') 
+                  : isCashedOut 
+                    ? '1px solid rgba(233,118,43,0.5)' 
+                    : '1px solid rgba(248,113,113,0.5)',
+                color: isOpen 
+                  ? (isDarkMode ? '#ffffff' : '#111827') 
+                  : isCashedOut 
+                    ? '#E9762B' 
+                    : '#fca5a5'
+              }}
+            >
+              <div 
+                className={`w-2 h-2 rounded-full ${isOpen ? 'animate-pulse' : ''}`}
+                style={{
+                  backgroundColor: isOpen 
+                    ? (isDarkMode ? '#ffffff' : '#374151') 
+                    : isCashedOut 
+                      ? '#E9762B' 
+                      : '#f87171'
+                }}
+              ></div>
               <span>{isOpen ? 'OPEN' : isCashedOut ? 'CASHED OUT' : 'LOST'}</span>
             </div>
           )}

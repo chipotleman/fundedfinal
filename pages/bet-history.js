@@ -1,16 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import PiksBetCard from '../components/PiksBetCard';
 import ShareableBetSlip from '../components/ShareableBetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function BetHistory() {
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const [allBets, setAllBets] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState('all');
+  const tabsRef = useRef(null);
+  const [indicatorStyle, setIndicatorStyle] = useState({});
   const [expandedShare, setExpandedShare] = useState({});
   const [shareModalBet, setShareModalBet] = useState(null);
   const [bankroll, setBankroll] = useState(10000);
@@ -230,7 +234,7 @@ export default function BetHistory() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen" style={{ backgroundColor: isDarkMode ? '#000000' : '#f9fafb' }}>
       <TopNavbar 
         bankroll={user ? bankroll : null}
         pnl={totalProfit}
@@ -242,20 +246,64 @@ export default function BetHistory() {
         {/* Header */}
         <div className="max-w-6xl mx-auto">
           
-          {/* Filter Tabs */}
+          {/* Sliding Filter Tabs */}
           <div className="flex justify-center mb-8">
-            <div className="bg-[#111111] rounded-xl p-1 border border-gray-800/50 flex gap-1">
-              {['all', 'open', 'won', 'cashed_out', 'lost'].map(filter => (
+            <div 
+              ref={tabsRef}
+              className="relative rounded-full p-1 flex"
+              style={{
+                backgroundColor: isDarkMode ? '#111111' : '#f3f4f6',
+                border: isDarkMode ? '1px solid rgba(55,65,81,0.5)' : '1px solid #d1d5db'
+              }}
+            >
+              <div 
+                className="absolute top-1 bottom-1 rounded-full transition-all duration-300 ease-out"
+                style={{
+                  ...indicatorStyle,
+                  backgroundColor: '#22c55e',
+                  boxShadow: '0 2px 8px rgba(34, 197, 94, 0.4)'
+                }}
+              />
+              {['all', 'open', 'won', 'cashed_out', 'lost'].map((filter, index) => (
                 <button
                   key={filter}
-                  onClick={() => setSelectedFilter(filter)}
-                  className={`px-6 py-2.5 rounded-lg font-bold text-sm transition-all ${
-                    selectedFilter === filter
-                      ? 'bg-gradient-to-r from-green-500 to-blue-500 text-white'
-                      : 'text-gray-500 hover:text-white hover:bg-[#1a1a1a]'
-                  }`}
+                  data-filter={filter}
+                  onClick={(e) => {
+                    setSelectedFilter(filter);
+                    const btn = e.currentTarget;
+                    const container = tabsRef.current;
+                    if (container) {
+                      const containerRect = container.getBoundingClientRect();
+                      const btnRect = btn.getBoundingClientRect();
+                      setIndicatorStyle({
+                        left: btnRect.left - containerRect.left,
+                        width: btnRect.width
+                      });
+                    }
+                  }}
+                  className="relative z-10 px-5 py-2 rounded-full font-semibold text-sm transition-colors duration-200"
+                  style={{
+                    color: selectedFilter === filter 
+                      ? '#ffffff' 
+                      : (isDarkMode ? '#9ca3af' : '#6b7280')
+                  }}
+                  ref={(el) => {
+                    if (el && selectedFilter === filter && !indicatorStyle.width) {
+                      const container = tabsRef.current;
+                      if (container) {
+                        const containerRect = container.getBoundingClientRect();
+                        const btnRect = el.getBoundingClientRect();
+                        setTimeout(() => {
+                          setIndicatorStyle({
+                            left: btnRect.left - containerRect.left,
+                            width: btnRect.width
+                          });
+                        }, 0);
+                      }
+                    }
+                  }}
                 >
-                  {filter === 'cashed_out' ? 'Cashed Out' : filter.charAt(0).toUpperCase() + filter.slice(1)}
+                  {filter === 'cashed_out' ? 'Cashed' : filter.charAt(0).toUpperCase() + filter.slice(1)}
                 </button>
               ))}
             </div>
