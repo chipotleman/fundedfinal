@@ -42,7 +42,7 @@ function ThunderCardModule() {
   return (
     <div className="text-center px-4 mb-8">
       <div className="max-w-3xl mx-auto">
-        <div className="rounded-2xl overflow-hidden p-4 sm:p-6" style={{ background: isDarkMode ? 'linear-gradient(to bottom right, #0f172a, #581c87, #1e3a8a)' : 'linear-gradient(to bottom right, #f8fafc, #e0e7ff, #dbeafe)', borderWidth: 1, borderColor: isDarkMode ? 'rgba(168, 85, 247, 0.3)' : '#c7d2fe' }}>
+        <div className="rounded-2xl overflow-hidden p-4 sm:p-6" style={{ background: isDarkMode ? 'linear-gradient(to bottom right, #0f172a, #581c87, #1e3a8a)' : 'linear-gradient(to bottom right, #f8fafc, #e0e7ff, #dbeafe)', borderWidth: 1, borderColor: isDarkMode ? 'rgba(168, 85, 247, 0.3)' : '#c7d2fe', boxShadow: isDarkMode ? 'none' : '0 4px 20px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.06)' }}>
           {/* Card Image - Main Focus */}
           <div className="flex justify-center mb-1">
             <div className="relative transform hover:scale-105 transition-all duration-300">
@@ -288,7 +288,13 @@ export default function Home() {
 
             {/* Compare Challenges */}
             <div className="mb-12 px-4">
-              <div className="max-w-4xl mx-auto">
+              <div 
+                className="max-w-4xl mx-auto rounded-2xl p-6"
+                style={{
+                  backgroundColor: isDarkMode ? 'transparent' : '#ffffff',
+                  boxShadow: isDarkMode ? 'none' : '0 4px 20px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.06)'
+                }}
+              >
                 <div className="text-center mb-6">
                   <h2 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
                     Compare <span style={{ color: isDarkMode ? undefined : '#111827' }} className={isDarkMode ? "bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent" : ""}>{isDarkMode ? 'Challenges' : <span style={{ color: '#111827' }}>Challenges</span>}</span>
