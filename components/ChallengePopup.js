@@ -697,6 +697,38 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 </div>
               </div>
 
+              {/* Price Display - Hidden when rules are expanded */}
+              {!showRules && (
+                <div className="text-center mb-4 p-3 bg-slate-800/30 rounded-xl border border-slate-600" style={{ WebkitTapHighlightColor: 'transparent' }}>
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="text-xl font-bold text-white">${adjustedPrice}</div>
+                    {adjustedPrice > currentChallenge.price && (
+                      <div className="text-xs">
+                        <span className={theme.text}>(+${adjustedPrice - currentChallenge.price})</span>
+                      </div>
+                    )}
+                    {adjustedPrice < currentChallenge.price && (
+                      <div className="text-xs">
+                        <span className="text-red-400">(-${currentChallenge.price - adjustedPrice})</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-gray-400 text-xs">
+                    Challenge fee
+                    {adjustedPrice > currentChallenge.price && (
+                      <span className={`ml-1 ${theme.text}`}>
+                        (split premium)
+                      </span>
+                    )}
+                    {adjustedPrice < currentChallenge.price && (
+                      <span className="ml-1 text-red-400">
+                        (discount applied)
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Choose Your Split - Hidden when rules are expanded */}
               {!showRules && (
                 <div className="p-4 bg-slate-800/50 rounded-2xl border border-slate-600/50 mb-4 relative" style={{ WebkitTapHighlightColor: 'transparent' }}>
@@ -779,38 +811,6 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                     </div>
                   </div>
                   
-                </div>
-              )}
-
-              {/* Price Display - Hidden when rules are expanded */}
-              {!showRules && (
-                <div className="text-center mb-4 p-3 bg-slate-800/30 rounded-xl border border-slate-600" style={{ WebkitTapHighlightColor: 'transparent' }}>
-                  <div className="flex items-center justify-center space-x-2">
-                    <div className="text-xl font-bold text-white">${adjustedPrice}</div>
-                    {adjustedPrice > currentChallenge.price && (
-                      <div className="text-xs">
-                        <span className={theme.text}>(+${adjustedPrice - currentChallenge.price})</span>
-                      </div>
-                    )}
-                    {adjustedPrice < currentChallenge.price && (
-                      <div className="text-xs">
-                        <span className="text-red-400">(-${currentChallenge.price - adjustedPrice})</span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="text-gray-400 text-xs">
-                    Challenge fee
-                    {adjustedPrice > currentChallenge.price && (
-                      <span className={`ml-1 ${theme.text}`}>
-                        (split premium)
-                      </span>
-                    )}
-                    {adjustedPrice < currentChallenge.price && (
-                      <span className="ml-1 text-red-400">
-                        (discount applied)
-                      </span>
-                    )}
-                  </div>
                 </div>
               )}
 
