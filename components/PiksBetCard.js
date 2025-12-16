@@ -325,7 +325,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
     <div className={`relative rounded-2xl overflow-hidden mx-2 sm:mx-0 bg-[#0a0a0a] ${getCardBorder()}`}>
       <div className="px-4 py-3 bg-transparent">
         <div className="flex items-center justify-between">
-          <span className="text-white font-black text-2xl tracking-tight">piks</span>
+          <img src="/pikslogotransparent.png" alt="Piks" className="h-16 object-contain -ml-4" />
           
           {isWon ? (
             <div className="flex-1 flex justify-end mr-[-19px]">
