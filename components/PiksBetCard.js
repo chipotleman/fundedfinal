@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function PiksBetCard({ bet, onCashOut, onShare }) {
+  const { isDarkMode } = useTheme();
   const [confirmingCashOut, setConfirmingCashOut] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const buttonRef = useRef(null);
@@ -322,10 +324,10 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
   };
 
   return (
-    <div className={`relative rounded-2xl overflow-hidden mx-2 sm:mx-0 bg-[#0a0a0a] ${getCardBorder()}`}>
+    <div className={`relative rounded-2xl overflow-hidden mx-2 sm:mx-0 ${getCardBorder()}`} style={{ backgroundColor: isDarkMode ? '#0a0a0a' : '#ffffff' }}>
       <div className="px-4 py-3 bg-transparent">
         <div className="flex items-center justify-between">
-          <img src="/pikslogotransparent.png" alt="Piks" className="h-32 object-contain -ml-8" />
+          <img src="/pikslogotransparent.png" alt="Piks" className="h-32 object-contain -ml-8" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
           
           {isWon ? (
             <div className="flex-1 flex justify-end mr-[-19px]">
@@ -358,7 +360,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         >
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <div className="text-white font-bold text-base">{isParlay ? formatParlayTitle : bet.selection}</div>
+              <div className="font-bold text-base" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{isParlay ? formatParlayTitle : bet.selection}</div>
               {isParlay && isSettled && (
                 <svg 
                   className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
@@ -370,9 +372,9 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                 </svg>
               )}
             </div>
-            <div className="text-gray-400 text-xs uppercase tracking-wide">{bet.betType}</div>
+            <div className="text-xs uppercase tracking-wide" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>{bet.betType}</div>
           </div>
-          <div className="font-bold text-xl text-white">
+          <div className="font-bold text-xl" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
             {formatOdds(bet.odds)}
           </div>
         </div>
@@ -443,9 +445,9 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
 
         {isOpen && !isParlay && (
           <div className="mb-3">
-            <div className="text-gray-400 text-xs uppercase mb-1">Game</div>
-            <div className="text-white text-sm font-medium">{bet.matchup}</div>
-            <div className="text-blue-300 text-xs mt-0.5">
+            <div className="text-xs uppercase mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>Game</div>
+            <div className="text-sm font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{bet.matchup}</div>
+            <div className="text-xs mt-0.5" style={{ color: isDarkMode ? '#93c5fd' : '#111827' }}>
               {bet.gameStart ? new Date(bet.gameStart).toLocaleString('en-US', {
                 month: 'short',
                 day: 'numeric',
@@ -491,7 +493,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                           </div>
                         </div>
                         {parlayLegs.hasRealData && leg.odds && (
-                          <div className="text-blue-400 font-bold text-lg">
+                          <div className="font-bold text-lg" style={{ color: isDarkMode ? '#60a5fa' : '#111827' }}>
                             {leg.odds > 0 ? `+${leg.odds}` : leg.odds}
                           </div>
                         )}
@@ -561,8 +563,8 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         <div className="border-t border-white/20 pt-3 mt-2">
           <div className="flex justify-between items-end">
             <div>
-              <div className="text-white font-bold text-xl">${formatMoney(bet.stake || 0)}</div>
-              <div className="text-gray-400 text-xs uppercase">Total Pikked</div>
+              <div className="font-bold text-xl" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>${formatMoney(bet.stake || 0)}</div>
+              <div className="text-xs uppercase" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>Total Pikked</div>
             </div>
             {isWon && (
               <div className="text-right">
@@ -572,7 +574,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
             )}
             {isOpen && (
               <div className="text-right">
-                <div className="text-blue-400 font-bold text-xl">${formatMoney(payout)}</div>
+                <div className="font-bold text-xl" style={{ color: isDarkMode ? '#60a5fa' : '#111827' }}>${formatMoney(payout)}</div>
                 <div className="text-gray-400 text-xs uppercase">Potential Payout</div>
               </div>
             )}
