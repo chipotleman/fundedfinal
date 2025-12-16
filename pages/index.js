@@ -263,13 +263,15 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-6 sm:mb-8">
                 <button 
                   onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
-                  className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg shadow-2xl"
+                  className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg shadow-2xl"
+                  style={{ color: '#ffffff' }}
                 >
                   Start a Challenge
                 </button>
                 <button 
                   onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))}
-                  className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg border border-slate-700"
+                  className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg border border-slate-700"
+                  style={{ color: '#ffffff' }}
                 >
                   How It Works
                 </button>

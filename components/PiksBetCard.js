@@ -628,7 +628,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
           </div>
         </div>
 
-        <div className="flex justify-between items-center mt-3 text-[10px] text-gray-500">
+        <div className="flex justify-between items-center mt-3 text-[10px] text-gray-500 pb-3" style={{ borderBottom: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #d1d5db' }}>
           <div className="font-mono">PIK ID: {pikId}</div>
           <div>PLACED: {formatPlacedDate()}</div>
         </div>
