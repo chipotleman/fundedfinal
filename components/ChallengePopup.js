@@ -676,21 +676,22 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   
                   {showRules && (
                     <div className="space-y-1 text-xs mt-2 pb-1">
-                      {/* Question mark button - only visible when expanded */}
+                      {/* Click for visual button - only visible when expanded */}
                       <div className="flex justify-end mb-2">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setShowTargetExplainer(true);
                           }}
-                          className="w-5 h-5 hover:opacity-80 rounded-full flex items-center justify-center transition-colors border"
+                          className="px-3 py-1 hover:opacity-80 rounded-full flex items-center justify-center transition-colors border text-xs font-medium"
                           style={{ 
                             WebkitTapHighlightColor: 'transparent',
-                            backgroundColor: `${theme.borderColor}30`,
-                            borderColor: theme.borderColor
+                            backgroundColor: `${theme.borderColor}20`,
+                            borderColor: theme.borderColor,
+                            color: theme.borderColor
                           }}
                         >
-                          <span className="text-white text-xs font-bold">?</span>
+                          Click for Visual
                         </button>
                       </div>
                       <div className="flex justify-between items-center">
