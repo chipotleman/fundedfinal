@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { useBetSlip } from '../contexts/BetSlipContext';
+import { useTheme } from '../contexts/ThemeContext';
 import ShareableBetSlip from './ShareableBetSlip';
 import BetReceipt from './BetReceipt';
 import CoinRain from './CoinRain';
 
 export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
+  const { isDarkMode } = useTheme();
   const { betSlip: bets, removeBet, updateStake, clearBetSlip } = useBetSlip();
   const [isPlacing, setIsPlacing] = useState(false);
   const [betType, setBetType] = useState('single');
@@ -215,15 +217,16 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
       {isOpen && (
         <>
           <div 
-            className="fixed inset-0 bg-black z-[98] hidden md:block"
+            className="fixed inset-0 z-[98] hidden md:block"
+            style={{ backgroundColor: isDarkMode ? '#000000' : 'rgba(0,0,0,0.5)' }}
             onClick={onClose}
           />
           
-          <div className="fixed inset-0 md:inset-auto md:top-0 md:right-0 md:bottom-0 md:w-[420px] bg-black z-[99] flex flex-col">
+          <div className="fixed inset-0 md:inset-auto md:top-0 md:right-0 md:bottom-0 md:w-[420px] z-[99] flex flex-col" style={{ backgroundColor: isDarkMode ? '#000000' : '#ffffff' }}>
             {/* Header with Piks branding */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800/50">
+            <div className="flex items-center justify-between px-4 py-3" style={{ borderBottomWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#e5e7eb' }}>
               <div className="flex items-center">
-                <img src="/pikslogotransparent.png" alt="Piks" className="h-28 object-contain -ml-8" />
+                <img src="/pikslogotransparent.png" alt="Piks" className="h-28 object-contain -ml-8" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1.5 bg-green-500/20 border border-green-500/50 px-2.5 py-1 rounded-full">
@@ -243,8 +246,8 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
 
             {/* Mode Toggle */}
             {bets.length >= 2 && (
-              <div className="px-4 py-3 border-b border-gray-800/50">
-                <div className="flex bg-[#1a1a1a] rounded-lg p-1">
+              <div className="px-4 py-3" style={{ borderBottomWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#000000' }}>
+                <div className="flex rounded-lg p-1" style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6' }}>
                   <button
                     onClick={() => setBetType('single')}
                     className={`flex-1 py-2 text-sm font-bold rounded-md transition-all ${
@@ -373,15 +376,16 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                             
                             {/* Stake Input - Only for straight bets */}
                             {betType === 'single' && (
-                              <div className="px-4 pb-3 border-t border-gray-800/50 pt-3">
+                              <div className="px-4 pb-3 pt-3" style={{ borderTopWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#000000' }}>
                                 <div className="flex items-center gap-3">
                                   <div className="relative flex-1">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: isDarkMode ? '#6b7280' : '#111827' }}>$</span>
                                     <input
                                       type="number"
                                       value={bet.stake || ''}
                                       onChange={(e) => updateStake(bet.id, e.target.value)}
-                                      className="w-full pl-8 pr-3 py-3 bg-[#1a1a1a] border border-gray-700 rounded-lg text-white text-base focus:outline-none focus:border-blue-500"
+                                      className="w-full pl-8 pr-3 py-3 rounded-lg text-base focus:outline-none focus:border-blue-500"
+                                      style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? '#374151' : '#000000', color: isDarkMode ? '#ffffff' : '#111827' }}
                                       placeholder={`Min $${minBetAmount}`}
                                     />
                                   </div>
@@ -404,18 +408,19 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
             </div>
 
             {bets.length > 0 && (
-              <div className="flex-shrink-0 p-4 border-t border-gray-800/50 bg-black">
+              <div className="flex-shrink-0 p-4" style={{ borderTopWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#000000', backgroundColor: isDarkMode ? '#000000' : '#ffffff' }}>
                 {/* Parlay Stake Input */}
                 {betType === 'parlay' && bets.length >= 2 && (
                   <div className="mb-4">
                     <div className="flex items-center gap-3">
                       <div className="relative flex-1">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: isDarkMode ? '#6b7280' : '#111827' }}>$</span>
                         <input
                           type="number"
                           value={parlayStake || ''}
                           onChange={(e) => setParlayStake(parseFloat(e.target.value) || 0)}
-                          className="w-full pl-8 pr-3 py-3 bg-[#1a1a1a] border border-gray-700 rounded-lg text-white text-base focus:outline-none focus:border-blue-500"
+                          className="w-full pl-8 pr-3 py-3 rounded-lg text-base focus:outline-none focus:border-blue-500"
+                          style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? '#374151' : '#000000', color: isDarkMode ? '#ffffff' : '#111827' }}
                           placeholder={`Min $${minBetAmount}`}
                         />
                       </div>
@@ -429,13 +434,13 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                   </div>
                 )}
                 
-                <div className="bg-slate-900/50 rounded-lg p-3 mb-4">
+                <div className="rounded-lg p-3 mb-4" style={{ backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.5)' : '#f3f4f6' }}>
                   <div className="flex justify-between text-sm mb-2">
-                    <span className="text-gray-400">Total Pikked</span>
-                    <span className="text-white font-bold">${totalStake.toFixed(2)}</span>
+                    <span style={{ color: isDarkMode ? '#9ca3af' : '#374151' }}>Total Pikked</span>
+                    <span className="font-bold" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>${totalStake.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-400">Potential Payout</span>
+                    <span style={{ color: isDarkMode ? '#9ca3af' : '#374151' }}>Potential Payout</span>
                     <span className="text-green-400 font-bold text-lg">${totalPayout.toFixed(2)}</span>
                   </div>
                 </div>

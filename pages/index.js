@@ -5,9 +5,11 @@ import ChallengeOverview from '../components/ChallengeOverview';
 import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Piks Card Module Component
 function ThunderCardModule() {
+  const { isDarkMode } = useTheme();
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [savedEmail, setSavedEmail] = useState('');
@@ -40,7 +42,7 @@ function ThunderCardModule() {
   return (
     <div className="text-center px-4 mb-8">
       <div className="max-w-3xl mx-auto">
-        <div className="bg-gradient-to-br from-slate-900 via-purple-900 to-blue-900 rounded-2xl border border-purple-500/30 overflow-hidden p-4 sm:p-6">
+        <div className="rounded-2xl overflow-hidden p-4 sm:p-6" style={{ background: isDarkMode ? 'linear-gradient(to bottom right, #0f172a, #581c87, #1e3a8a)' : 'linear-gradient(to bottom right, #f8fafc, #e0e7ff, #dbeafe)', borderWidth: 1, borderColor: isDarkMode ? 'rgba(168, 85, 247, 0.3)' : '#c7d2fe' }}>
           {/* Card Image - Main Focus */}
           <div className="flex justify-center mb-1">
             <div className="relative transform hover:scale-105 transition-all duration-300">
@@ -53,22 +55,22 @@ function ThunderCardModule() {
           </div>
 
           {/* Title */}
-          <h2 className="text-3xl sm:text-4xl font-black text-white mb-3">
-            Introducing the <span className="bg-gradient-to-r from-purple-400 to-blue-500 bg-clip-text text-transparent">Piks Card</span>
+          <h2 className="text-3xl sm:text-4xl font-black mb-3" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+            Introducing the <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Piks Card</span>
           </h2>
-          <p className="text-base text-gray-300 mb-4 max-w-lg mx-auto">
+          <p className="text-base mb-4 max-w-lg mx-auto" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
             The first prepaid bank card that gets funded directly from your betting profits. Use it anywhere.
           </p>
 
           {/* Sign Up Section */}
-          <div className="bg-black/30 backdrop-blur-lg rounded-xl p-5 max-w-md mx-auto border border-slate-700/50">
+          <div className="backdrop-blur-lg rounded-xl p-5 max-w-md mx-auto" style={{ backgroundColor: isDarkMode ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.8)', borderWidth: 1, borderColor: isDarkMode ? 'rgba(51, 65, 85, 0.5)' : '#d1d5db' }}>
             {!isSubmitted ? (
               <>
-                <div className="inline-flex items-center bg-purple-600/20 text-purple-300 px-4 py-1.5 rounded-full text-sm font-medium mb-3">
+                <div className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium mb-3" style={{ backgroundColor: isDarkMode ? 'rgba(147, 51, 234, 0.2)' : 'rgba(34, 197, 94, 0.2)', color: isDarkMode ? '#c4b5fd' : '#15803d' }}>
                   🚀 Coming Soon
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2">Get Early Access</h3>
-                <p className="text-gray-400 text-sm mb-4">
+                <h3 className="text-lg font-bold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>Get Early Access</h3>
+                <p className="text-sm mb-4" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>
                   Join our waitlist for early access and special perks.
                 </p>
                 <form onSubmit={handleSubmit} className="space-y-3">
@@ -77,7 +79,8 @@ function ThunderCardModule() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
-                    className="w-full px-4 py-3 bg-slate-800 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20"
+                    className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2"
+                    style={{ backgroundColor: isDarkMode ? '#1e293b' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? '#475569' : '#d1d5db', color: isDarkMode ? '#ffffff' : '#111827' }}
                     required
                   />
                   <button
