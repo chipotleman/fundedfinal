@@ -559,7 +559,21 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
         ) : step === 'selection' ? (
           <>
             {/* Challenge Selection */}
-            <div className="p-6 pt-8">
+            <div className="p-6 pt-8 relative">
+              {/* Floating Price Badge - Top Right */}
+              <div 
+                className="absolute top-4 right-4 z-10"
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+              >
+                <div className="bg-gradient-to-br from-green-500 to-emerald-600 px-4 py-2 rounded-xl shadow-lg shadow-green-500/30">
+                  <div className="text-white font-bold text-lg">${adjustedPrice}</div>
+                  {adjustedPrice !== currentChallenge.price && (
+                    <div className="text-xs text-white/80 text-center">
+                      {adjustedPrice > currentChallenge.price ? `+$${adjustedPrice - currentChallenge.price}` : `-$${currentChallenge.price - adjustedPrice}`}
+                    </div>
+                  )}
+                </div>
+              </div>
               {/* Header */}
               <div className="text-center mb-6">
                 <div className="mb-4">
@@ -626,20 +640,6 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                       ))}
                     </div>
                   )}
-                </div>
-
-                {/* Challenge Fee - Small inline box */}
-                <div className="flex justify-between items-center py-2 px-4 bg-slate-800/30 rounded-xl border border-slate-600" style={{ WebkitTapHighlightColor: 'transparent' }}>
-                  <span className="text-gray-400 text-sm">Challenge fee</span>
-                  <div className="flex items-center space-x-2">
-                    <span className="text-white font-bold">${adjustedPrice}</span>
-                    {adjustedPrice > currentChallenge.price && (
-                      <span className={`text-xs ${theme.text}`}>(+${adjustedPrice - currentChallenge.price})</span>
-                    )}
-                    {adjustedPrice < currentChallenge.price && (
-                      <span className="text-xs text-red-400">(-${currentChallenge.price - adjustedPrice})</span>
-                    )}
-                  </div>
                 </div>
 
                 {/* Challenge Rules */}
@@ -711,88 +711,107 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 </div>
               </div>
 
-              {/* Choose Your Split - Hidden when rules are expanded */}
+              {/* Modern Split Slider - Hidden when rules are expanded */}
               {!showRules && (
-                <div className="p-4 bg-slate-800/50 rounded-2xl border border-slate-600/50 mb-4 relative" style={{ WebkitTapHighlightColor: 'transparent' }}>
-                  {/* Reset Button */}
-                  <button
-                    onClick={() => setUserSplit(70)}
-                    className="absolute top-2 right-2 w-6 h-6 bg-slate-700/80 hover:bg-slate-600 rounded-full flex items-center justify-center transition-colors"
-                    title="Reset to 70%"
-                    style={{ WebkitTapHighlightColor: 'transparent' }}
-                  >
-                    <svg className="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                  </button>
-
-                  <div className="text-center mb-3">
-                    <div className="text-sm font-medium text-gray-300">Choose Your Split</div>
-                    <div className="text-xs text-gray-400">Drag to adjust your profit share</div>
+                <div className="mb-6" style={{ WebkitTapHighlightColor: 'transparent' }}>
+                  {/* Header with labels */}
+                  <div className="flex justify-between items-center mb-3">
+                    <div className="text-sm text-gray-400">Your Profit Split</div>
+                    <button
+                      onClick={() => setUserSplit(70)}
+                      className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                      style={{ WebkitTapHighlightColor: 'transparent' }}
+                    >
+                      Reset
+                    </button>
                   </div>
 
-                  {/* Draggable Split Visual */}
-                  <div
-                    className="flex h-10 rounded-xl overflow-hidden border border-slate-600 cursor-grab active:cursor-grabbing relative"
-                    style={{ WebkitTapHighlightColor: 'transparent' }}
-                    onMouseDown={(e) => {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      const startX = e.clientX;
-                      const startSplit = userSplit;
+                  {/* Value Display */}
+                  <div className="flex justify-center mb-4">
+                    <div 
+                      className="px-6 py-2 rounded-full font-bold text-2xl text-white"
+                      style={{ backgroundColor: splitBarColor }}
+                    >
+                      {userSplit}%
+                    </div>
+                  </div>
 
-                      const handleMouseMove = (e) => {
-                        const deltaX = e.clientX - startX;
-                        const deltaPercent = (deltaX / rect.width) * 100;
-                        const newSplit = Math.max(50, Math.min(90, startSplit + deltaPercent));
-                        setUserSplit(Math.round(newSplit));
-                      };
+                  {/* Modern Slider Track */}
+                  <div className="relative px-2">
+                    {/* Track Background */}
+                    <div 
+                      className="h-2 rounded-full bg-slate-700 relative cursor-pointer"
+                      style={{ WebkitTapHighlightColor: 'transparent' }}
+                      onMouseDown={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const clickX = e.clientX - rect.left;
+                        const percentage = (clickX / rect.width) * 40 + 50;
+                        setUserSplit(Math.round(Math.max(50, Math.min(90, percentage))));
+                        
+                        const handleMouseMove = (e) => {
+                          const moveX = e.clientX - rect.left;
+                          const newPercentage = (moveX / rect.width) * 40 + 50;
+                          setUserSplit(Math.round(Math.max(50, Math.min(90, newPercentage))));
+                        };
 
-                      const handleMouseUp = () => {
-                        document.removeEventListener('mousemove', handleMouseMove);
-                        document.removeEventListener('mouseup', handleMouseUp);
-                      };
+                        const handleMouseUp = () => {
+                          document.removeEventListener('mousemove', handleMouseMove);
+                          document.removeEventListener('mouseup', handleMouseUp);
+                        };
 
-                      document.addEventListener('mousemove', handleMouseMove);
-                      document.addEventListener('mouseup', handleMouseUp);
-                    }}
-                    onTouchStart={(e) => {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      const startX = e.touches[0].clientX;
-                      const startSplit = userSplit;
+                        document.addEventListener('mousemove', handleMouseMove);
+                        document.addEventListener('mouseup', handleMouseUp);
+                      }}
+                      onTouchStart={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const touchX = e.touches[0].clientX - rect.left;
+                        const percentage = (touchX / rect.width) * 40 + 50;
+                        setUserSplit(Math.round(Math.max(50, Math.min(90, percentage))));
+                        
+                        const handleTouchMove = (e) => {
+                          const moveX = e.touches[0].clientX - rect.left;
+                          const newPercentage = (moveX / rect.width) * 40 + 50;
+                          setUserSplit(Math.round(Math.max(50, Math.min(90, newPercentage))));
+                        };
 
-                      const handleTouchMove = (e) => {
-                        const deltaX = e.touches[0].clientX - startX;
-                        const deltaPercent = (deltaX / rect.width) * 100;
-                        const newSplit = Math.max(50, Math.min(90, startSplit + deltaPercent));
-                        setUserSplit(Math.round(newSplit));
-                      };
+                        const handleTouchEnd = () => {
+                          document.removeEventListener('touchmove', handleTouchMove);
+                          document.removeEventListener('touchend', handleTouchEnd);
+                        };
 
-                      const handleTouchEnd = () => {
-                        document.removeEventListener('touchmove', handleTouchMove);
-                        document.removeEventListener('touchend', handleTouchEnd);
-                      };
-
-                      document.addEventListener('touchmove', handleTouchMove);
-                      document.addEventListener('touchend', handleTouchEnd);
-                    }}
-                  >
-                    <div
-                      className="flex items-center justify-center text-white text-xs font-bold transition-all duration-150"
-                      style={{ 
-                        width: `${userSplit}%`,
-                        backgroundColor: splitBarColor
+                        document.addEventListener('touchmove', handleTouchMove);
+                        document.addEventListener('touchend', handleTouchEnd);
                       }}
                     >
-                      You {userSplit}%
+                      {/* Filled Track */}
+                      <div 
+                        className="absolute top-0 left-0 h-full rounded-full transition-all duration-100"
+                        style={{ 
+                          width: `${((userSplit - 50) / 40) * 100}%`,
+                          backgroundColor: splitBarColor
+                        }}
+                      />
+                      {/* Thumb */}
+                      <div 
+                        className="absolute top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white shadow-lg transition-all duration-100"
+                        style={{ 
+                          left: `calc(${((userSplit - 50) / 40) * 100}% - 12px)`,
+                          boxShadow: `0 0 12px ${splitBarColor}`
+                        }}
+                      />
                     </div>
-                    <div
-                      className="bg-gradient-to-r from-slate-600 to-slate-700 flex items-center justify-center text-white text-xs font-bold transition-all duration-150"
-                      style={{ width: `${100 - userSplit}%` }}
-                    >
-                      Us {100 - userSplit}%
+
+                    {/* Min/Max Labels */}
+                    <div className="flex justify-between mt-2 text-xs text-gray-500">
+                      <span>50%</span>
+                      <span>90%</span>
                     </div>
                   </div>
-                  
+
+                  {/* Split Explanation */}
+                  <div className="text-center mt-3 text-xs text-gray-500">
+                    You keep <span className="text-white font-medium">{userSplit}%</span> of profits • We keep <span className="text-white font-medium">{100 - userSplit}%</span>
+                  </div>
                 </div>
               )}
 
