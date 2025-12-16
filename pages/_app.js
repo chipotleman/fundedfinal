@@ -4,6 +4,7 @@ import { SessionProvider } from 'next-auth/react';
 import { AuthProvider } from '../contexts/AuthContext';
 import { BetSlipProvider } from '../contexts/BetSlipContext';
 import { UserProfilesProvider } from '../contexts/UserProfilesContext';
+import { ThemeProvider } from '../contexts/ThemeContext';
 import ChallengePopup from '../components/ChallengePopup';
 import HowItWorksPopup from '../components/HowItWorksPopup';
 import DemoPopup from '../components/DemoPopup';
@@ -216,10 +217,11 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
 
   return (
     <SessionProvider session={session}>
-      <AuthProvider>
-        <BetSlipProvider>
-          <UserProfilesProvider>
-          <AnalyticsTracker />
+      <ThemeProvider>
+        <AuthProvider>
+          <BetSlipProvider>
+            <UserProfilesProvider>
+            <AnalyticsTracker />
           {/* Solid Black Background */}
           <div
             style={{
@@ -300,9 +302,10 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
             currentUser={currentUser}
             isLoggedIn={isLoggedIn}
           />
-          </UserProfilesProvider>
-        </BetSlipProvider>
-      </AuthProvider>
+            </UserProfilesProvider>
+          </BetSlipProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </SessionProvider>
   );
 }
