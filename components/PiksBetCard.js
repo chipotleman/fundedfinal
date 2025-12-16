@@ -644,11 +644,11 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                 setConfirmingCashOut(true);
               }
             }}
-            className={`w-full mt-3 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all ${
-              confirmingCashOut 
-                ? 'bg-red-600 hover:bg-red-700' 
-                : 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700'
-            }`}
+            className="w-full mt-3 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all"
+            style={{
+              backgroundColor: confirmingCashOut ? '#dc2626' : '#22c55e',
+              color: '#ffffff'
+            }}
           >
             {confirmingCashOut ? `Confirm Cash Out ($${formatMoney(bet.stake * 0.8)})` : `Cash Out ($${formatMoney(bet.stake * 0.8)})`}
           </button>
@@ -657,7 +657,12 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         {isWon && onShare && (
           <button
             onClick={() => onShare(bet)}
-            className="w-full mt-3 bg-white/10 hover:bg-white/20 border border-white/30 text-white font-semibold py-2.5 px-4 rounded-xl text-sm transition-all flex items-center justify-center space-x-2"
+            className="w-full mt-3 font-semibold py-2.5 px-4 rounded-xl text-sm transition-all flex items-center justify-center space-x-2"
+            style={{
+              backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#22c55e',
+              border: isDarkMode ? '1px solid rgba(255,255,255,0.3)' : 'none',
+              color: '#ffffff'
+            }}
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
