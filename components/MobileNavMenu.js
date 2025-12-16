@@ -162,32 +162,10 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                     <Link
                       href="/withdrawal"
                       onClick={onClose}
-                      className="relative w-full text-center px-4 py-2 text-white text-sm font-medium rounded-lg overflow-hidden bg-green-500/40 lg:hover:bg-green-500/70 lg:transition-colors active:bg-green-500/40"
-                      style={{ WebkitTapHighlightColor: 'transparent' }}
+                      className="block w-full text-center px-4 py-2 text-white text-sm font-medium rounded-lg bg-green-500/40 border border-green-500/50 lg:hover:bg-green-500/60 focus:bg-green-500/40 active:bg-green-500/40 focus:outline-none"
+                      style={{ WebkitTapHighlightColor: 'transparent', outline: 'none' }}
                     >
-                      <span className="relative z-10">Withdraw</span>
-                      <div className="absolute inset-0 rounded-lg">
-                        <div className="absolute inset-0 rounded-lg border border-white/20"></div>
-                        <div 
-                          className="absolute inset-[-2px] rounded-lg"
-                          style={{
-                            background: `linear-gradient(90deg, transparent, ${getThemeColor()}, ${getThemeColor()}80, transparent)`,
-                            backgroundSize: '200% 100%',
-                            animation: 'snakeGlow 2s linear infinite',
-                            mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                            maskComposite: 'exclude',
-                            WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-                            WebkitMaskComposite: 'xor',
-                            padding: '2px',
-                          }}
-                        ></div>
-                      </div>
-                      <style jsx>{`
-                        @keyframes snakeGlow {
-                          0% { background-position: 200% 0; }
-                          100% { background-position: -200% 0; }
-                        }
-                      `}</style>
+                      Withdraw
                     </Link>
                   </div>
                 </div>
