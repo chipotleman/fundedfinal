@@ -186,6 +186,7 @@ function CustomVideoPlayer() {
 
 export default function Home() {
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const [bankroll, setBankroll] = useState(10000);
 
