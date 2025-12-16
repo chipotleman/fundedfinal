@@ -216,7 +216,7 @@ export default function Home() {
   }, [user]);
 
   return (
-    <div className="min-h-screen bg-black w-full overflow-x-hidden" style={{scrollBehavior: 'smooth'}}>
+    <div className="min-h-screen w-full overflow-x-hidden" style={{scrollBehavior: 'smooth', backgroundColor: isDarkMode ? '#000000' : '#f9fafb'}}>
       <TopNavbar 
         bankroll={user ? bankroll : null}
         pnl={user ? 0 : null}
@@ -228,7 +228,7 @@ export default function Home() {
         {/* Main Video Section - No scrolling needed */}
         <div className="relative flex items-center justify-center pt-2 pb-8 sm:min-h-screen">
           {/* Background Pattern */}
-          <div className="absolute inset-0 bg-black"></div>
+          <div className="absolute inset-0" style={{ backgroundColor: isDarkMode ? '#000000' : '#f9fafb' }}></div>
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22m36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
 
           <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
@@ -236,11 +236,11 @@ export default function Home() {
             <div className="text-center mb-6 sm:mb-16 pt-2 sm:pt-0">
 
 
-              <h1 className="text-4xl lg:text-5xl font-bold text-white mb-6 sm:mb-8 leading-tight px-2">
-                Get <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent inline-block" style={{ transform: 'translateY(0.42px)' }}>Funded</span> to Bet
+              <h1 className="text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 leading-tight px-2" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+                Get <span style={{ color: isDarkMode ? undefined : '#111827' }} className={isDarkMode ? "bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent inline-block" : "font-bold inline-block"}>{isDarkMode ? 'Funded' : <span style={{ color: '#111827' }}>Funded</span>}</span> to Bet
               </h1>
-              <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed mb-4 sm:mb-6 px-4">
-                Watch how you can get funded up to <button onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))} className="text-green-400 font-bold hover:text-green-300 transition-colors cursor-pointer">$100,000</button> to bet with and keep 90% of your profits
+              <p className="text-base sm:text-lg md:text-xl max-w-3xl mx-auto leading-relaxed mb-4 sm:mb-6 px-4" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+                Watch how you can get funded up to <button onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))} className="font-bold transition-colors cursor-pointer" style={{ color: isDarkMode ? '#4ade80' : '#111827', textDecoration: isDarkMode ? 'none' : 'underline' }}>$100,000</button> to bet with and keep 90% of your profits
               </p>
             </div>
 
@@ -263,13 +263,23 @@ export default function Home() {
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-6 sm:mb-8">
                 <button 
                   onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
-                  className="w-full sm:w-auto bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg shadow-2xl"
+                  className="w-full sm:w-auto font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg shadow-2xl"
+                  style={{ 
+                    backgroundColor: isDarkMode ? undefined : '#22c55e',
+                    backgroundImage: isDarkMode ? 'linear-gradient(to right, #22c55e, #3b82f6)' : 'none',
+                    color: '#ffffff'
+                  }}
                 >
                   Start a Challenge
                 </button>
                 <button 
                   onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))}
-                  className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg border border-slate-700"
+                  className="w-full sm:w-auto font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg"
+                  style={{
+                    backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
+                    color: isDarkMode ? '#ffffff' : '#111827',
+                    border: isDarkMode ? '1px solid #334155' : '1px solid #d1d5db'
+                  }}
                 >
                   How It Works
                 </button>
@@ -280,10 +290,10 @@ export default function Home() {
             <div className="mb-12 px-4">
               <div className="max-w-4xl mx-auto">
                 <div className="text-center mb-6">
-                  <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                    Compare <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Challenges</span>
+                  <h2 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+                    Compare <span style={{ color: isDarkMode ? undefined : '#111827' }} className={isDarkMode ? "bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent" : ""}>{isDarkMode ? 'Challenges' : <span style={{ color: '#111827' }}>Challenges</span>}</span>
                   </h2>
-                  <p className="text-gray-400 text-sm">
+                  <p className="text-sm" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>
                     See what's included at each level
                   </p>
                 </div>
