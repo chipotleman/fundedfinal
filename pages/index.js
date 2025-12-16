@@ -238,10 +238,10 @@ export default function Home() {
 
 
               <h1 className="text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 leading-tight px-2" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
-                Get <span style={{ color: isDarkMode ? undefined : '#111827' }} className={isDarkMode ? "bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent inline-block" : "font-bold inline-block"}>{isDarkMode ? 'Funded' : <span style={{ color: '#111827' }}>Funded</span>}</span> to Bet
+                Get <span style={{ color: isDarkMode ? undefined : '#22c55e' }} className={isDarkMode ? "bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent inline-block" : "font-bold inline-block"}>Funded</span> to Bet
               </h1>
               <p className="text-base sm:text-lg md:text-xl max-w-3xl mx-auto leading-relaxed mb-4 sm:mb-6 px-4" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
-                Watch how you can get funded up to <button onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))} className="font-bold transition-colors cursor-pointer" style={{ color: isDarkMode ? '#4ade80' : '#111827', textDecoration: isDarkMode ? 'none' : 'underline' }}>$100,000</button> to bet with and keep 90% of your profits
+                Watch how you can get funded up to <button onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))} className="font-bold transition-colors cursor-pointer" style={{ color: '#22c55e', textDecoration: 'none' }}>$100,000</button> to bet with and keep 90% of your profits
               </p>
             </div>
 
@@ -253,7 +253,7 @@ export default function Home() {
                 <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 p-[2px] animate-pulse"></div>
 
                 {/* Video container - more rectangular */}
-                <div className="relative bg-slate-900 rounded-2xl overflow-hidden">
+                <div className="relative bg-slate-900 rounded-2xl overflow-hidden" style={{ boxShadow: isDarkMode ? 'none' : '0 4px 20px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.06)' }}>
                   <CustomVideoPlayer />
                 </div>
               </div>
