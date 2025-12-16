@@ -467,11 +467,11 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
                       } else {
                         window.dispatchEvent(new CustomEvent('openChallengePopup'));
                       }
-                    }} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                    }} className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                     The Lab
                   </button>
                   {hasActiveChallenge ? (
-                    <button onClick={() => window.dispatchEvent(new CustomEvent('openMyChallengePopup'))} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                    <button onClick={() => window.dispatchEvent(new CustomEvent('openMyChallengePopup'))} className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                       My Challenge
                     </button>
                   ) : (
@@ -483,29 +483,29 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
                         } else {
                           window.dispatchEvent(new CustomEvent('openDemoPopup'));
                         }
-                      }} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                      }} className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                       Free Trial
                     </button>
                   )}
-                  <Link href="/waitlist" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                  <Link href="/waitlist" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                     Piks Card
                   </Link>
-                  <Link href="/leaderboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                  <Link href="/leaderboard" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                     Leaderboard
                   </Link>
                 </>
               ) : (
                 <>
-                  <button onClick={() => window.dispatchEvent(new CustomEvent('openDemoPopup'))} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('openDemoPopup'))} className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                     Free Trial
                   </button>
-                  <button onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))} className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                  <button onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))} className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                     How It Works
                   </button>
-                  <Link href="/waitlist" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                  <Link href="/waitlist" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                     Piks Card
                   </Link>
-                  <Link href="/leaderboard" className="text-gray-300 hover:text-blue-400 font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+                  <Link href="/leaderboard" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                     Leaderboard
                   </Link>
                 </>
@@ -518,25 +518,26 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
               {isLoggedIn && (
                 <div className="hidden sm:flex items-center space-x-4">
                   {hasActiveChallenge && userProfile ? (
-                    <div className="bg-[#111111] hover:bg-[#1a1a1a] rounded-lg px-3 py-2 border border-gray-800/50 hover:border-gray-700 transition-colors">
+                    <div className="rounded-lg px-3 py-2 transition-colors" style={{ backgroundColor: isDarkMode ? '#111111' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#d1d5db' }}>
                       <button
                         onClick={() => router.push('/withdrawal')}
                         className="flex items-center space-x-2"
                       >
-                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-4 h-4" style={{ color: isDarkMode ? '#ffffff' : '#111827' }} fill="currentColor" viewBox="0 0 20 20">
                           <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
                         </svg>
-                        <span className="text-white font-bold text-sm">${parseFloat(userProfile.bankroll).toLocaleString()}</span>
+                        <span className="font-bold text-sm" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>${parseFloat(userProfile.bankroll).toLocaleString()}</span>
                       </button>
                     </div>
                   ) : (
                     <div className="snake-border-container relative">
                       <button
                         onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
-                        className="relative bg-black text-white font-bold px-3 py-2 rounded-lg text-sm z-10 flex items-center space-x-2"
+                        className="relative font-bold px-3 py-2 rounded-lg text-sm z-10 flex items-center space-x-2"
+                        style={{ backgroundColor: isDarkMode ? '#000000' : '#f3f4f6', color: isDarkMode ? '#ffffff' : '#111827' }}
                       >
-                        <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-4 h-4" style={{ color: isDarkMode ? '#ffffff' : '#111827' }} fill="currentColor" viewBox="0 0 20 20">
                           <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
                         </svg>

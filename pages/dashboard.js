@@ -306,27 +306,29 @@ export default function Dashboard() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeam)}
-                      className={`flex-1 rounded-lg py-3 px-3 ${
-                        isBetInSlip(game, 'moneyline', game.homeTeam) 
-                          ? 'bg-green-600 border border-green-500' 
-                          : 'bg-[#1a1a1a] border border-gray-700 active:bg-green-600'
-                      }`}
+                      className="flex-1 rounded-lg py-3 px-3"
+                      style={{
+                        backgroundColor: isBetInSlip(game, 'moneyline', game.homeTeam) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
+                        borderWidth: 1,
+                        borderColor: isBetInSlip(game, 'moneyline', game.homeTeam) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
+                      }}
                     >
-                      <div className="text-gray-400 text-xs mb-0.5">{game.homeTeam.split(' ').pop()}</div>
-                      <div className={`font-bold ${isBetInSlip(game, 'moneyline', game.homeTeam) ? 'text-white' : 'text-green-400'}`}>
+                      <div className="text-xs mb-0.5" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{game.homeTeam.split(' ').pop()}</div>
+                      <div className="font-bold" style={{ color: isBetInSlip(game, 'moneyline', game.homeTeam) ? '#ffffff' : '#22c55e' }}>
                         {formatOdds(game.lines.moneyline.home)}
                       </div>
                     </button>
                     <button
                       onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeam)}
-                      className={`flex-1 rounded-lg py-3 px-3 ${
-                        isBetInSlip(game, 'moneyline', game.awayTeam) 
-                          ? 'bg-green-600 border border-green-500' 
-                          : 'bg-[#1a1a1a] border border-gray-700 active:bg-green-600'
-                      }`}
+                      className="flex-1 rounded-lg py-3 px-3"
+                      style={{
+                        backgroundColor: isBetInSlip(game, 'moneyline', game.awayTeam) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
+                        borderWidth: 1,
+                        borderColor: isBetInSlip(game, 'moneyline', game.awayTeam) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
+                      }}
                     >
-                      <div className="text-gray-400 text-xs mb-0.5">{game.awayTeam.split(' ').pop()}</div>
-                      <div className={`font-bold ${isBetInSlip(game, 'moneyline', game.awayTeam) ? 'text-white' : 'text-green-400'}`}>
+                      <div className="text-xs mb-0.5" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{game.awayTeam.split(' ').pop()}</div>
+                      <div className="font-bold" style={{ color: isBetInSlip(game, 'moneyline', game.awayTeam) ? '#ffffff' : '#22c55e' }}>
                         {formatOdds(game.lines.moneyline.away)}
                       </div>
                     </button>
@@ -398,60 +400,64 @@ export default function Dashboard() {
                       <div className="flex gap-3">
                         <button
                           onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeam)}
-                          className={`flex-1 rounded-xl py-3 px-4 ${
-                            isBetInSlip(game, 'moneyline', game.awayTeam) 
-                              ? 'bg-green-600 border border-green-500' 
-                              : 'bg-[#1a1a1a] border border-gray-700 active:bg-green-600'
-                          }`}
+                          className="flex-1 rounded-xl py-3 px-4"
+                          style={{
+                            backgroundColor: isBetInSlip(game, 'moneyline', game.awayTeam) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
+                            borderWidth: 1,
+                            borderColor: isBetInSlip(game, 'moneyline', game.awayTeam) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
+                          }}
                         >
-                          <div className="text-gray-400 text-xs mb-1">{game.awayTeam.split(' ').pop()}</div>
-                          <div className={`font-bold text-lg ${isBetInSlip(game, 'moneyline', game.awayTeam) ? 'text-white' : 'text-white'}`}>
+                          <div className="text-xs mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{game.awayTeam.split(' ').pop()}</div>
+                          <div className="font-bold text-lg" style={{ color: isBetInSlip(game, 'moneyline', game.awayTeam) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>
                             {formatOdds(game.lines.moneyline.away)}
                           </div>
                         </button>
                         <button
                           onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeam)}
-                          className={`flex-1 rounded-xl py-3 px-4 ${
-                            isBetInSlip(game, 'moneyline', game.homeTeam) 
-                              ? 'bg-green-600 border border-green-500' 
-                              : 'bg-[#1a1a1a] border border-gray-700 active:bg-green-600'
-                          }`}
+                          className="flex-1 rounded-xl py-3 px-4"
+                          style={{
+                            backgroundColor: isBetInSlip(game, 'moneyline', game.homeTeam) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
+                            borderWidth: 1,
+                            borderColor: isBetInSlip(game, 'moneyline', game.homeTeam) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
+                          }}
                         >
-                          <div className="text-gray-400 text-xs mb-1">{game.homeTeam.split(' ').pop()}</div>
-                          <div className={`font-bold text-lg ${isBetInSlip(game, 'moneyline', game.homeTeam) ? 'text-white' : 'text-white'}`}>
+                          <div className="text-xs mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{game.homeTeam.split(' ').pop()}</div>
+                          <div className="font-bold text-lg" style={{ color: isBetInSlip(game, 'moneyline', game.homeTeam) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>
                             {formatOdds(game.lines.moneyline.home)}
                           </div>
                         </button>
                       </div>
 
                       {isExpanded && (
-                        <div className="mt-4 pt-4 border-t border-gray-800/50 space-y-3">
+                        <div className="mt-4 pt-4 space-y-3" style={{ borderTopWidth: 1, borderTopColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(209, 213, 219, 1)' }}>
                           <div>
-                            <div className="text-gray-500 text-xs font-medium mb-2 uppercase">Spread</div>
+                            <div className="text-xs font-medium mb-2 uppercase" style={{ color: isDarkMode ? '#6b7280' : '#6b7280' }}>Spread</div>
                             <div className="flex gap-3">
                               <button
                                 onClick={() => addToBetSlip(game, 'spread', game.lines.spread.away, `${game.awayTeam} ${game.lines.spread.away.point}`)}
-                                className={`flex-1 rounded-xl py-3 px-4 ${
-                                  isBetInSlip(game, 'spread', `${game.awayTeam} ${game.lines.spread.away.point}`) 
-                                    ? 'bg-green-600 border border-green-500' 
-                                    : 'bg-[#1a1a1a] border border-gray-700 active:bg-green-600'
-                                }`}
+                                className="flex-1 rounded-xl py-3 px-4"
+                                style={{
+                                  backgroundColor: isBetInSlip(game, 'spread', `${game.awayTeam} ${game.lines.spread.away.point}`) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
+                                  borderWidth: 1,
+                                  borderColor: isBetInSlip(game, 'spread', `${game.awayTeam} ${game.lines.spread.away.point}`) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
+                                }}
                               >
-                                <div className="text-gray-400 text-xs mb-1">{game.awayTeam.split(' ').pop()} {game.lines.spread.away.point}</div>
-                                <div className={`font-bold ${isBetInSlip(game, 'spread', `${game.awayTeam} ${game.lines.spread.away.point}`) ? 'text-white' : 'text-green-400'}`}>
+                                <div className="text-xs mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{game.awayTeam.split(' ').pop()} {game.lines.spread.away.point}</div>
+                                <div className="font-bold" style={{ color: isBetInSlip(game, 'spread', `${game.awayTeam} ${game.lines.spread.away.point}`) ? '#ffffff' : '#22c55e' }}>
                                   {formatOdds(game.lines.spread.away.odds)}
                                 </div>
                               </button>
                               <button
                                 onClick={() => addToBetSlip(game, 'spread', game.lines.spread.home, `${game.homeTeam} ${game.lines.spread.home.point}`)}
-                                className={`flex-1 rounded-xl py-3 px-4 ${
-                                  isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`) 
-                                    ? 'bg-green-600 border border-green-500' 
-                                    : 'bg-[#1a1a1a] border border-gray-700 active:bg-green-600'
-                                }`}
+                                className="flex-1 rounded-xl py-3 px-4"
+                                style={{
+                                  backgroundColor: isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
+                                  borderWidth: 1,
+                                  borderColor: isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
+                                }}
                               >
-                                <div className="text-gray-400 text-xs mb-1">{game.homeTeam.split(' ').pop()} {game.lines.spread.home.point}</div>
-                                <div className={`font-bold ${isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`) ? 'text-white' : 'text-green-400'}`}>
+                                <div className="text-xs mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{game.homeTeam.split(' ').pop()} {game.lines.spread.home.point}</div>
+                                <div className="font-bold" style={{ color: isBetInSlip(game, 'spread', `${game.homeTeam} ${game.lines.spread.home.point}`) ? '#ffffff' : '#22c55e' }}>
                                   {formatOdds(game.lines.spread.home.odds)}
                                 </div>
                               </button>
@@ -459,31 +465,33 @@ export default function Dashboard() {
                           </div>
                           
                           <div>
-                            <div className="text-gray-500 text-xs font-medium mb-2 uppercase">Total</div>
+                            <div className="text-xs font-medium mb-2 uppercase" style={{ color: isDarkMode ? '#6b7280' : '#6b7280' }}>Total</div>
                             <div className="flex gap-3">
                               <button
                                 onClick={() => addToBetSlip(game, 'total', game.lines.total.over, `Over ${game.lines.total.over.point}`)}
-                                className={`flex-1 rounded-xl py-3 px-4 ${
-                                  isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) 
-                                    ? 'bg-green-600 border border-green-500' 
-                                    : 'bg-[#1a1a1a] border border-gray-700 active:bg-green-600'
-                                }`}
+                                className="flex-1 rounded-xl py-3 px-4"
+                                style={{
+                                  backgroundColor: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
+                                  borderWidth: 1,
+                                  borderColor: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
+                                }}
                               >
-                                <div className="text-gray-400 text-xs mb-1">{game.lines.total.over.point}</div>
-                                <div className={`font-bold ${isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? 'text-white' : 'text-green-400'}`}>
+                                <div className="text-xs mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{game.lines.total.over.point}</div>
+                                <div className="font-bold" style={{ color: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#ffffff' : '#22c55e' }}>
                                   {formatOdds(game.lines.total.over.odds)}
                                 </div>
                               </button>
                               <button
                                 onClick={() => addToBetSlip(game, 'total', game.lines.total.under, `Under ${game.lines.total.under.point}`)}
-                                className={`flex-1 rounded-xl py-3 px-4 ${
-                                  isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) 
-                                    ? 'bg-green-600 border border-green-500' 
-                                    : 'bg-[#1a1a1a] border border-gray-700 active:bg-green-600'
-                                }`}
+                                className="flex-1 rounded-xl py-3 px-4"
+                                style={{
+                                  backgroundColor: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
+                                  borderWidth: 1,
+                                  borderColor: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
+                                }}
                               >
-                                <div className="text-gray-400 text-xs mb-1">{game.lines.total.under.point}</div>
-                                <div className={`font-bold ${isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? 'text-white' : 'text-green-400'}`}>
+                                <div className="text-xs mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{game.lines.total.under.point}</div>
+                                <div className="font-bold" style={{ color: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#ffffff' : '#22c55e' }}>
                                   {formatOdds(game.lines.total.under.odds)}
                                 </div>
                               </button>
@@ -497,12 +505,12 @@ export default function Dashboard() {
               })
             ) : (
               <div className="text-center py-12">
-                <div className="bg-[#111111] rounded-2xl p-8 max-w-md mx-auto border border-gray-800/50">
-                  <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="currentColor" viewBox="0 0 20 20">
+                <div className="rounded-2xl p-8 max-w-md mx-auto" style={{ backgroundColor: isDarkMode ? '#111111' : '#ffffff', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(209, 213, 219, 1)' }}>
+                  <svg className="w-16 h-16 mx-auto mb-4" style={{ color: '#9ca3af' }} fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
                   </svg>
-                  <h3 className="text-xl font-bold text-white mb-2">No Games Available</h3>
-                  <p className="text-gray-400">Check back later for {selectedSport} games and betting lines.</p>
+                  <h3 className="text-xl font-bold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>No Games Available</h3>
+                  <p style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>Check back later for {selectedSport} games and betting lines.</p>
                 </div>
               </div>
             )}
