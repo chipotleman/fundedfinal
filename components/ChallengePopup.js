@@ -565,7 +565,13 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 className="absolute top-20 right-4 z-10"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >
-                <div className="bg-gradient-to-br from-green-500 to-emerald-600 px-4 py-2 rounded-xl shadow-lg shadow-green-500/30">
+                <div 
+                  className="px-4 py-2 rounded-xl shadow-lg"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${theme.borderColor}, ${theme.borderColor}dd)`,
+                    boxShadow: `0 4px 15px ${theme.borderColor}40`
+                  }}
+                >
                   <div className="text-white font-bold text-lg">${adjustedPrice}</div>
                   {adjustedPrice !== currentChallenge.price && (
                     <div className="text-xs text-white/80 text-center">
