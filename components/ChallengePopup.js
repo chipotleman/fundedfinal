@@ -633,9 +633,12 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                           key={challenge.id}
                           onClick={() => handleChallengeSelect(index)}
                           className={`flex justify-between items-center py-3 px-4 cursor-pointer hover:bg-slate-700/50 transition-all duration-200 ${
-                            index === currentIndex ? `${theme.bg} border-l-4 ${theme.border}` : ''
+                            index === currentIndex ? `${theme.bg} border-l-4` : ''
                           } ${index === 0 ? 'rounded-t-xl' : ''} ${index === challenges.length - 1 ? 'rounded-b-xl' : ''}`}
-                          style={{ WebkitTapHighlightColor: 'transparent' }}
+                          style={{ 
+                            WebkitTapHighlightColor: 'transparent',
+                            borderLeftColor: index === currentIndex ? theme.borderColor : 'transparent'
+                          }}
                         >
                           <div>
                             <span className="text-white font-medium text-sm">{challenge.name}</span>
