@@ -181,7 +181,8 @@ export default function ChallengeOverview() {
                   <td key={challenge.id} className="p-4 text-center">
                     <button
                       onClick={() => handleStartChallenge(challenge.id - 1)}
-                      className={`bg-gradient-to-r ${getColorClass(challenge.color, 'button')} text-white font-bold py-2.5 px-6 rounded-xl transition-all text-sm`}
+                      className={`bg-gradient-to-r ${getColorClass(challenge.color, 'button')} font-bold py-2.5 px-6 rounded-xl transition-all text-sm`}
+                      style={{ color: '#ffffff' }}
                     >
                       Start Challenge
                     </button>
