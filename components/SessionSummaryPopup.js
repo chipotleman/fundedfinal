@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function SessionSummaryPopup({ isOpen, onClose, sessionData }) {
   const router = useRouter();
+  const { isDarkMode } = useTheme();
   
   useEffect(() => {
     if (isOpen) {
@@ -84,7 +86,7 @@ export default function SessionSummaryPopup({ isOpen, onClose, sessionData }) {
         <div className="p-6 pt-8">
           <div className="text-center mb-6">
             <div className="mb-4">
-              <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" />
+              <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
             </div>
             {isDemo && (
               <span className="inline-block px-3 py-1 mb-2 rounded-full text-xs font-bold uppercase tracking-wide bg-orange-500/20 text-orange-400 border border-orange-500/30">

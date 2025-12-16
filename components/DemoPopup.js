@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useSession, signIn } from 'next-auth/react';
+import { useTheme } from '../contexts/ThemeContext';
 
 const challenges = [
   {
@@ -48,6 +49,7 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
   const [existingTrial, setExistingTrial] = useState(null);
   const router = useRouter();
   const { data: session, update: updateSession } = useSession();
+  const { isDarkMode } = useTheme();
 
   useEffect(() => {
     if (isOpen) {
@@ -262,7 +264,7 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
           <div className="p-6 pt-12">
             <div className="text-center mb-6">
               <div className="mb-4">
-                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" />
+                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
               </div>
               <div className="inline-flex items-center bg-green-500/20 text-green-400 px-3 py-1.5 rounded-full text-xs font-bold border border-green-500/30 mb-3">
                 <svg className="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
@@ -319,7 +321,7 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
           <div className="p-6 pt-12">
             <div className="text-center mb-6">
               <div className="mb-4">
-                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" />
+                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">
                 {isSignUp ? 'Create Account' : 'Sign In'}
@@ -471,7 +473,7 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
           <div className="p-6 pt-8">
             <div className="text-center mb-4">
               <div className="mb-4">
-                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" />
+                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
               </div>
             </div>
 

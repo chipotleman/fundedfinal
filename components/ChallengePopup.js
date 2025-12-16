@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useSession, signIn } from 'next-auth/react';
+import { useTheme } from '../contexts/ThemeContext';
 
 const challenges = [
   {
@@ -65,6 +66,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const { data: session, status, update: updateSession } = useSession();
+  const { isDarkMode } = useTheme();
 
   useEffect(() => {
     if (isOpen) {
@@ -402,7 +404,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
           <div className="p-6 pt-12">
             <div className="text-center mb-6">
               <div className="mb-4">
-                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" />
+                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">
                 {isSignUp ? 'Create Account' : 'Sign In'}
@@ -583,7 +585,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
               {/* Header */}
               <div className="text-center mb-6">
                 <div className="mb-4">
-                  <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" />
+                  <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
                 </div>
               </div>
 
@@ -876,7 +878,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
           <div className="p-6 pt-12" style={{ WebkitTapHighlightColor: 'transparent' }}>
             <div className="text-center mb-6">
               <div className="mb-4">
-                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" />
+                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
               </div>
               <h2 className="text-xl font-bold text-white mb-2">Complete Your Purchase</h2>
               <p className={`${theme.text} text-sm font-medium mb-1`}>
@@ -923,7 +925,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
             {/* Header */}
             <div className="text-center mb-6">
               <div className="mb-4">
-                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-16 mx-auto" />
+                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-16 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
               </div>
               <div className={`w-16 h-16 bg-gradient-to-r ${theme.gradient} rounded-full flex items-center justify-center mb-4 mx-auto`}>
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1077,7 +1079,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
             {/* Header */}
             <div className="text-center mb-6">
               <div className="mb-4">
-                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-40 mx-auto" />
+                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-40 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">How Do I Get My Account?</h3>
             </div>
@@ -1294,7 +1296,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
             {/* Header */}
             <div className="text-center mb-6">
               <div className="mb-4">
-                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" />
+                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Challenge Phases</h3>
               <p className="text-gray-400 text-sm">You must complete 2 phases to get funded</p>

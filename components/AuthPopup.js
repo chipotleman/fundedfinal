@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
   const [isSignUp, setIsSignUp] = useState(initialMode === 'signup');
@@ -13,6 +14,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
   const [error, setError] = useState('');
   const router = useRouter();
   const { login, signUp: signUpUser } = useAuth();
+  const { isDarkMode } = useTheme();
 
   const isPasswordStrong = password.length >= 6;
   const passwordsMatch = isSignUp && confirmPassword.length > 0 && password === confirmPassword;
@@ -126,7 +128,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
 
         <div className="p-6 pt-8">
           <div className="text-center mb-6">
-            <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-28 mx-auto" />
+            <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-28 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
           </div>
 
           {error && (
