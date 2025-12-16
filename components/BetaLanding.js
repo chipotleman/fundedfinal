@@ -69,7 +69,7 @@ export default function BetaLanding({ onAuthenticated }) {
                 <img
                   src="/pikslogotransparent.png"
                   alt="Piks"
-                  className="h-[90px] sm:h-[115px] w-auto brightness-100 transition-all duration-300"
+                  className="h-[180px] sm:h-[230px] w-auto brightness-100 transition-all duration-300"
                   style={{
                     filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
                     animation: 'logoRedYellowGlow 4s infinite ease-in-out'

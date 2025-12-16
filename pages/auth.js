@@ -417,7 +417,7 @@ export default function AuthPage() {
           <div className="bg-black rounded-3xl p-6 sm:p-8 border-2 border-green-500">
             {/* Logo */}
             <div className="text-center mb-6">
-              <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-14 mx-auto mb-4" />
+              <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-28 mx-auto mb-4" />
             </div>
 
             {/* Toggle Tabs */}

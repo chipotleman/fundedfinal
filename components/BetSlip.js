@@ -223,7 +223,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
             {/* Header with Piks branding */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800/50">
               <div className="flex items-center">
-                <img src="/pikslogotransparent.png" alt="Piks" className="h-14 object-contain -ml-4" />
+                <img src="/pikslogotransparent.png" alt="Piks" className="h-28 object-contain -ml-8" />
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1.5 bg-green-500/20 border border-green-500/50 px-2.5 py-1 rounded-full">

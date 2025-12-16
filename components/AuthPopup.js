@@ -126,7 +126,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
 
         <div className="p-6 pt-8">
           <div className="text-center mb-6">
-            <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-14 mx-auto" />
+            <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-28 mx-auto" />
           </div>
 
           {error && (

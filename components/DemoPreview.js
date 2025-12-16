@@ -185,7 +185,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
             <div className="flex-shrink-0 p-4 lg:p-4 border-b border-gray-800/50">
               <div className="flex items-center justify-between">
                 <h3 className="text-white font-bold text-lg flex items-center">
-                  <img src="/pikslogotransparent.png" alt="Piks" className="h-5 mr-2" />
+                  <img src="/pikslogotransparent.png" alt="Piks" className="h-10 mr-2" />
                   Demo Bet Slip
                 </h3>
                 <button

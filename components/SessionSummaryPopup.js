@@ -84,7 +84,7 @@ export default function SessionSummaryPopup({ isOpen, onClose, sessionData }) {
         <div className="p-6 pt-8">
           <div className="text-center mb-6">
             <div className="mb-4">
-              <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-16 mx-auto" />
+              <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" />
             </div>
             {isDemo && (
               <span className="inline-block px-3 py-1 mb-2 rounded-full text-xs font-bold uppercase tracking-wide bg-orange-500/20 text-orange-400 border border-orange-500/30">

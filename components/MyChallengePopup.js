@@ -119,7 +119,7 @@ export default function MyChallengePopup({ isOpen, onClose }) {
       >
         <div className="p-6">
           <div className="flex items-center gap-3 mb-6">
-            <img src="/pikslogotransparent.png" alt="Piks" className="h-20" />
+            <img src="/pikslogotransparent.png" alt="Piks" className="h-40" />
             <div className={`flex-1 flex items-center gap-2 px-4 py-2 rounded-xl ${isFunded ? 'bg-green-500/10 border border-green-500/30' : currentTier.statusBg}`}>
               {isFunded ? (
                 <>
