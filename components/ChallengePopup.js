@@ -1277,7 +1277,10 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
       {/* Target Explainer Modal */}
       {showTargetExplainer && (
         <div className="absolute inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className={`bg-black border-2 ${theme.border} rounded-2xl max-w-md w-full p-6 pt-8`}>
+          <div 
+            className="bg-black rounded-2xl max-w-md w-full p-6 pt-8"
+            style={{ border: 'none' }}
+          >
             {/* Close Button */}
             <button
               onClick={() => setShowTargetExplainer(false)}
