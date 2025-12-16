@@ -135,6 +135,26 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
         <div className="flex-1 overflow-hidden px-6 py-4 mt-16">
           {isLoggedIn ? (
             <div className="space-y-4">
+              {hasActiveChallenge && userBalance !== null && (
+                <div className="mb-4 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-xs text-gray-400 mb-0.5">Balance</p>
+                      <p className="text-white font-semibold text-lg">
+                        ${userBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <Link
+                      href="/withdrawal"
+                      onClick={onClose}
+                      className="flex-shrink-0 px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/10 transition-colors"
+                    >
+                      Withdraw
+                    </Link>
+                  </div>
+                </div>
+              )}
+
               <button
                 onClick={() => {
                   onClose();
@@ -204,30 +224,10 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 Leaderboard
               </Link>
 
-              {hasActiveChallenge && userBalance !== null && (
-                <div className="border-t border-gray-700 pt-4 mt-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-gray-400 mb-1">Balance</p>
-                      <p className="text-white font-semibold text-xl">
-                        ${userBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </p>
-                    </div>
-                    <Link
-                      href="/withdrawal"
-                      onClick={onClose}
-                      className="px-4 py-2 bg-[#E9762B] text-white text-sm font-medium rounded-lg hover:bg-[#d66a25] transition-colors"
-                    >
-                      Withdraw
-                    </Link>
-                  </div>
-                </div>
-              )}
-
               <div className="border-t border-gray-700 pt-4 mt-6">
                 <div className="mb-4">
                   <p className="text-sm text-gray-400 mb-1">Signed in as</p>
-                  <p className="text-white font-semibold">
+                  <p className="text-white font-semibold text-sm truncate max-w-full" title={currentUser?.email || currentUser?.phone || 'User'}>
                     {currentUser?.email || currentUser?.phone || 'User'}
                   </p>
                 </div>
