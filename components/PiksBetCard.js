@@ -644,13 +644,13 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                 setConfirmingCashOut(true);
               }
             }}
-            className="w-full mt-3 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-all"
+            className="w-full mt-3 font-bold py-2.5 px-4 rounded-xl text-sm transition-all force-white-text"
             style={{
               backgroundColor: confirmingCashOut ? '#dc2626' : '#22c55e',
               color: '#ffffff'
             }}
           >
-            {confirmingCashOut ? `Confirm Cash Out ($${formatMoney(bet.stake * 0.8)})` : `Cash Out ($${formatMoney(bet.stake * 0.8)})`}
+            <span style={{ color: '#ffffff' }}>{confirmingCashOut ? `Confirm Cash Out ($${formatMoney(bet.stake * 0.8)})` : `Cash Out ($${formatMoney(bet.stake * 0.8)})`}</span>
           </button>
         )}
 
