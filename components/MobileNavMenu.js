@@ -10,12 +10,25 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
   const [mounted, setMounted] = useState(false);
   const [hasActiveChallenge, setHasActiveChallenge] = useState(false);
   const [userBalance, setUserBalance] = useState(null);
+  const [challengeTier, setChallengeTier] = useState(null);
   const router = useRouter();
   const { data: session, status } = useSession();
   
   // Use session directly for login state - more reliable than prop
   const isLoggedIn = status === 'authenticated' && !!session?.user;
   const currentUser = session?.user || propCurrentUser;
+
+  // Get theme colors based on challenge tier
+  const getThemeColor = () => {
+    if (challengeTier === 'starter' || challengeTier === 'BEGINNER') {
+      return '#3b82f6'; // Blue
+    } else if (challengeTier === 'pro' || challengeTier === 'POPULAR') {
+      return '#22c55e'; // Green
+    } else if (challengeTier === 'elite' || challengeTier === 'ADVANCED') {
+      return '#a855f7'; // Purple
+    }
+    return '#E9762B'; // Default orange
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -32,6 +45,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
             const isActive = profile.status !== 'inactive' && parseFloat(profile.bankroll) > 0;
             setHasActiveChallenge(isActive);
             setUserBalance(parseFloat(profile.bankroll) || 0);
+            setChallengeTier(profile.challenge_type || profile.challengeType || null);
             return;
           }
         } catch (error) {
@@ -41,6 +55,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
       const storedChallenge = localStorage.getItem('purchased_challenge');
       setHasActiveChallenge(!!storedChallenge);
       setUserBalance(null);
+      setChallengeTier(null);
     };
     checkChallenge();
     window.addEventListener('storage', checkChallenge);
@@ -155,7 +170,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                         <div 
                           className="absolute inset-[-2px] rounded-lg"
                           style={{
-                            background: 'linear-gradient(90deg, transparent, #E9762B, #22c55e, #3b82f6, transparent)',
+                            background: `linear-gradient(90deg, transparent, ${getThemeColor()}, ${getThemeColor()}80, transparent)`,
                             backgroundSize: '200% 100%',
                             animation: 'snakeGlow 2s linear infinite',
                             mask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
