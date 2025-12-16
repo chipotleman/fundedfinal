@@ -888,7 +888,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
               <p className={`text-sm font-medium mb-1 ${isDarkMode ? theme.text : ''}`} style={{ color: isDarkMode ? undefined : '#111827' }}>
                 {currentChallenge.name} • ${adjustedPrice}
               </p>
-              <p className="text-green-400 text-xs font-medium">
+              <p className="text-xs font-medium" style={{ color: isDarkMode ? '#4ade80' : '#111827' }}>
                 {userSplit}% profit split
               </p>
             </div>
@@ -899,9 +899,10 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   href={checkoutUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`block w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} text-white font-bold py-4 px-6 rounded-xl text-center text-lg shadow-lg transition-all duration-300`}
+                  className={`block w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} font-bold py-4 px-6 rounded-xl text-center text-lg shadow-lg transition-all duration-300`}
+                  style={{ color: '#ffffff' }}
                 >
-                  Continue to Checkout →
+                  <span style={{ color: '#ffffff' }}>Continue to Checkout →</span>
                 </a>
                 <p className="text-gray-500 text-xs text-center">
                   Opens secure payment page in a new tab
