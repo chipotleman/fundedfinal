@@ -320,11 +320,23 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
 
   const getCardBorder = () => {
     if (isWon) return 'border-2 border-yellow-500/70';
-    return 'border-2 border-white/50';
+    return '';
+  };
+
+  const getCardStyle = () => {
+    const baseStyle = { backgroundColor: isDarkMode ? '#0a0a0a' : '#ffffff' };
+    if (isWon) return baseStyle;
+    return {
+      ...baseStyle,
+      border: isDarkMode ? '1px solid #4b5563' : '1px solid #9ca3af',
+      boxShadow: isDarkMode 
+        ? '0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3)' 
+        : '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)'
+    };
   };
 
   return (
-    <div className={`relative rounded-2xl overflow-hidden mx-2 sm:mx-0 ${getCardBorder()}`} style={{ backgroundColor: isDarkMode ? '#0a0a0a' : '#ffffff' }}>
+    <div className={`relative rounded-2xl overflow-hidden mx-2 sm:mx-0 ${getCardBorder()}`} style={getCardStyle()}>
       <div className="px-4 py-3 bg-transparent">
         <div className="flex items-center justify-between">
           <img src="/pikslogotransparent.png" alt="Piks" className="h-32 object-contain -ml-8" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
