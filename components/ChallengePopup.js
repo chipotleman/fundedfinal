@@ -676,24 +676,6 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   
                   {showRules && (
                     <div className="space-y-1 text-xs mt-2 pb-1">
-                      {/* Click for visual button - only visible when expanded */}
-                      <div className="flex justify-end mb-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowTargetExplainer(true);
-                          }}
-                          className="px-3 py-1 hover:opacity-80 rounded-full flex items-center justify-center transition-colors border text-xs font-medium"
-                          style={{ 
-                            WebkitTapHighlightColor: 'transparent',
-                            backgroundColor: `${theme.borderColor}20`,
-                            borderColor: theme.borderColor,
-                            color: theme.borderColor
-                          }}
-                        >
-                          Click for Visual
-                        </button>
-                      </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-400">Pick Minimum</span>
                         <span className="text-white font-medium">20 picks</span>
@@ -725,6 +707,24 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                       <div className="flex justify-between items-center">
                         <span className="text-gray-400">Same Game Parlays</span>
                         <span className="text-green-400 font-medium">YES</span>
+                      </div>
+                      {/* Learn More button - at the end of rules */}
+                      <div className="flex justify-center mt-3 pt-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowTargetExplainer(true);
+                          }}
+                          className="px-4 py-1.5 hover:opacity-80 rounded-full flex items-center justify-center transition-colors border text-xs font-medium"
+                          style={{ 
+                            WebkitTapHighlightColor: 'transparent',
+                            backgroundColor: `${theme.borderColor}20`,
+                            borderColor: theme.borderColor,
+                            color: theme.borderColor
+                          }}
+                        >
+                          Learn More
+                        </button>
                       </div>
                     </div>
                   )}
