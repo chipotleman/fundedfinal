@@ -137,17 +137,17 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
             <div className="space-y-4">
               {hasActiveChallenge && userBalance !== null && (
                 <div className="mb-4 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0">
+                  <div className="flex flex-col gap-3">
+                    <div>
                       <p className="text-xs text-gray-400 mb-0.5">Balance</p>
-                      <p className="text-white font-semibold text-lg">
+                      <p className="text-white font-semibold text-xl">
                         ${userBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </p>
                     </div>
                     <Link
                       href="/withdrawal"
                       onClick={onClose}
-                      className="flex-shrink-0 px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/10 transition-colors"
+                      className="w-full text-center px-4 py-2 border border-white/20 text-white text-sm font-medium rounded-lg hover:bg-white/10 transition-colors"
                     >
                       Withdraw
                     </Link>
