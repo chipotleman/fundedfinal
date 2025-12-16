@@ -719,7 +719,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-400">Reward Split (After Phase 2)</span>
-                        <span className="text-blue-400 font-medium">90%</span>
+                        <span className={`font-medium`} style={{ color: theme.borderColor }}>{userSplit}%</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-gray-400">Same Game Parlays</span>
@@ -847,7 +847,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                     <span>Loading Checkout...</span>
                   </div>
                 ) : (
-                  `Continue With ${userSplit}% Split ($${adjustedPrice})`
+                  'Continue'
                 )}
               </button>
               
