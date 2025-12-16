@@ -884,11 +884,11 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
               <div className="mb-4">
                 <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
               </div>
-              <h2 className="text-xl font-bold mb-2" style={{ color: '#ffffff' }}>Complete Your Purchase</h2>
-              <p className="text-sm font-medium mb-1" style={{ color: '#ffffff' }}>
+              <h2 className="text-xl font-bold text-white mb-2">Complete Your Purchase</h2>
+              <p className={`${theme.text} text-sm font-medium mb-1`}>
                 {currentChallenge.name} • ${adjustedPrice}
               </p>
-              <p className="text-xs font-medium" style={{ color: '#ffffff' }}>
+              <p className="text-green-400 text-xs font-medium">
                 {userSplit}% profit split
               </p>
             </div>
@@ -899,8 +899,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   href={checkoutUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`block w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} font-bold py-4 px-6 rounded-xl text-center text-lg shadow-lg transition-all duration-300`}
-                  style={{ color: '#ffffff' }}
+                  className={`block w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} text-white font-bold py-4 px-6 rounded-xl text-center text-lg shadow-lg transition-all duration-300`}
                 >
                   Continue to Checkout →
                 </a>
