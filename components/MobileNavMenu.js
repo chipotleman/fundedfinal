@@ -162,7 +162,8 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                     <Link
                       href="/withdrawal"
                       onClick={onClose}
-                      className="relative w-full text-center px-4 py-2 text-white text-sm font-medium rounded-lg bg-transparent overflow-hidden group"
+                      className="relative w-full text-center px-4 py-2 text-white text-sm font-medium rounded-lg overflow-hidden group"
+                      style={{ backgroundColor: `${getThemeColor()}30` }}
                     >
                       <span className="relative z-10">Withdraw</span>
                       <div className="absolute inset-0 rounded-lg">
