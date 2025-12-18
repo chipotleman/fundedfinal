@@ -46,3 +46,8 @@ None documented yet.
 - **Authentication**: NextAuth.js v4
 - **Database**: Replit PostgreSQL (Neon-backed) via Drizzle ORM
 - **Payment Processing**: Stripe (for environment variables)
+- **Sports Data**: MySportsFeeds API for live NBA games and odds
+  - API service: `lib/mysportsfeeds.js`
+  - Games endpoint: `/api/games/nba`
+  - Server-side caching with 5-minute refresh interval
+  - Secrets: MYSPORTSFEEDS_API_KEY, MYSPORTSFEEDS_PASSWORD
