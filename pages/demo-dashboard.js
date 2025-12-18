@@ -736,13 +736,12 @@ export default function DemoDashboard() {
           </div>
         </div>
 
-        {/* Live Now Section */}
+        {/* NBA Games Section */}
         <div className="px-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <span className="text-xl">⚡</span>
-              <h2 className="text-white font-bold text-lg">Live Now</h2>
-              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+              <span className="text-xl">🏀</span>
+              <h2 className="text-white font-bold text-lg">NBA Games</h2>
             </div>
             <button className="text-gray-400 text-sm flex items-center gap-1 hover:text-white">
               See all
@@ -763,10 +762,14 @@ export default function DemoDashboard() {
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <span className="text-gray-500 text-xs font-medium">{sport}</span>
-                        <div className="flex items-center gap-1">
-                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
-                          <span className="text-red-500 text-xs font-medium">LIVE</span>
-                        </div>
+                        {game.isLive ? (
+                          <div className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                            <span className="text-red-500 text-xs font-medium">LIVE</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-xs">{game.time}</span>
+                        )}
                       </div>
                       <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

@@ -264,9 +264,8 @@ export default function Dashboard() {
         <div>
           <div className="flex items-center justify-between mb-4 px-1">
             <div className="flex items-center gap-2">
-              <span className="text-xl">⚡</span>
-              <h2 className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>Live Now</h2>
-              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+              <span className="text-xl">🏀</span>
+              <h2 className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>NBA Games</h2>
             </div>
           </div>
 
@@ -290,12 +289,18 @@ export default function Dashboard() {
                       >
                         <div className="flex items-center gap-2">
                           <span className="text-gray-500 text-xs font-medium">{sport}</span>
-                          <div className="flex items-center gap-1">
-                            <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
-                            <span className="text-red-500 text-xs font-medium">LIVE</span>
-                          </div>
-                          {game.quarter && (
-                            <span className="text-gray-400 text-xs">• {game.quarter}</span>
+                          {game.isLive ? (
+                            <>
+                              <div className="flex items-center gap-1">
+                                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                                <span className="text-red-500 text-xs font-medium">LIVE</span>
+                              </div>
+                              {game.quarter && (
+                                <span className="text-gray-400 text-xs">• {game.quarter}</span>
+                              )}
+                            </>
+                          ) : (
+                            <span className="text-gray-400 text-xs">{game.time}</span>
                           )}
                         </div>
                         <svg 
