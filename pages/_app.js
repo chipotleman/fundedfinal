@@ -50,7 +50,7 @@ function AnalyticsTracker() {
   return null;
 }
 
-function MyApp({ Component, pageProps: { session, ...pageProps } }) {
+function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
   const [showChallengePopup, setShowChallengePopup] = useState(false);
   const [selectedChallengeIndex, setSelectedChallengeIndex] = useState(1);
   const [showHowItWorksPopup, setShowHowItWorksPopup] = useState(false);
@@ -195,7 +195,10 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }) {
     };
   }, [session]);
 
-  if (!betaAuthenticated) {
+  const isDebugPage = router?.pathname?.startsWith('/debug');
+  const isAdminPage = router?.pathname?.startsWith('/admin');
+  
+  if (!betaAuthenticated && !isDebugPage && !isAdminPage) {
     return (
       <>
         {/* Solid Black Background */}
