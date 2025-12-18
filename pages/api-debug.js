@@ -59,10 +59,18 @@ export default function APIDebug() {
 
           {results && (
             <div className="mb-6 p-4 bg-gray-900 rounded-lg border border-gray-700">
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                 <div>
                   <span className="text-gray-400">API Key:</span>
                   <span className="ml-2 font-mono">{results.apiKeyPrefix}</span>
+                </div>
+                <div>
+                  <span className="text-gray-400">Key Length:</span>
+                  <span className="ml-2 font-mono">{results.apiKeyLength} chars</span>
+                </div>
+                <div>
+                  <span className="text-gray-400">Password:</span>
+                  <span className="ml-2 font-mono text-xs">{results.passwordUsed}</span>
                 </div>
                 <div>
                   <span className="text-gray-400">Tested:</span>
@@ -153,6 +161,13 @@ export default function APIDebug() {
                         <td className="p-3 border-b border-gray-800">
                           {result.dataPreview ? (
                             <span className="text-gray-300 text-sm">{result.dataPreview}</span>
+                          ) : result.errorBody ? (
+                            <details className="cursor-pointer">
+                              <summary className="text-red-400 text-xs">View Error</summary>
+                              <pre className="mt-2 p-2 bg-black rounded text-xs text-red-300 overflow-auto max-h-32 whitespace-pre-wrap">
+                                {result.errorBody.substring(0, 500)}
+                              </pre>
+                            </details>
                           ) : (
                             <span className="text-gray-500">-</span>
                           )}
@@ -161,6 +176,32 @@ export default function APIDebug() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Detailed Error View */}
+              <div className="mt-6">
+                <h3 className="font-bold mb-3">Detailed Error Responses:</h3>
+                <div className="space-y-3">
+                  {results.results.filter(r => r.errorBody).slice(0, 3).map((result, idx) => (
+                    <div key={idx} className="bg-gray-900 rounded-lg border border-gray-700 p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="font-medium text-white">{result.name}</span>
+                        <span className={`px-2 py-1 rounded text-xs ${
+                          result.status === 401 ? 'bg-yellow-900/50 text-yellow-400' :
+                          result.status === 403 ? 'bg-red-900/50 text-red-400' :
+                          result.status === 429 ? 'bg-orange-900/50 text-orange-400' :
+                          'bg-gray-700 text-gray-400'
+                        }`}>
+                          {result.status} {result.statusText}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-500 mb-2 font-mono">{result.fullUrl}</div>
+                      <pre className="p-3 bg-black rounded text-xs text-gray-300 overflow-auto max-h-48 whitespace-pre-wrap">
+                        {result.errorBody}
+                      </pre>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               <div className="mt-8 p-4 bg-gray-900 rounded-lg border border-gray-700">

@@ -4,12 +4,13 @@ export default async function handler(req, res) {
   }
 
   const apiKey = process.env.MYSPORTSFEEDS_API_KEY;
+  const password = process.env.MYSPORTSFEEDS_PASSWORD || 'MYSPORTSFEEDS';
   
   if (!apiKey) {
     return res.status(500).json({ error: 'API key not configured' });
   }
 
-  const authString = Buffer.from(`${apiKey}:MYSPORTSFEEDS`).toString('base64');
+  const authString = Buffer.from(`${apiKey}:${password}`).toString('base64');
   const baseUrl = 'https://api.mysportsfeeds.com/v2.1/pull';
   
   const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
@@ -40,6 +41,13 @@ export default async function handler(req, res) {
 
       let dataPreview = null;
       let recordCount = null;
+      let errorBody = null;
+      let responseHeaders = {};
+
+      // Capture response headers
+      response.headers.forEach((value, key) => {
+        responseHeaders[key] = value;
+      });
 
       if (response.ok) {
         const data = await response.json();
@@ -69,28 +77,41 @@ export default async function handler(req, res) {
         } else if (data.standings) {
           recordCount = data.standings.length;
         }
+      } else {
+        // Capture full error response
+        try {
+          errorBody = await response.text();
+        } catch (e) {
+          errorBody = 'Could not read error body';
+        }
       }
 
       results.push({
         name: endpoint.name,
         league: endpoint.league,
         endpoint: endpoint.url,
+        fullUrl: `${baseUrl}${endpoint.url}`,
         status: response.status,
-        statusText: response.status === 200 ? 'OK' : response.status === 401 ? 'Unauthorized' : response.status === 403 ? 'Forbidden' : response.statusText,
+        statusText: response.status === 200 ? 'OK' : response.status === 401 ? 'Unauthorized' : response.status === 403 ? 'Forbidden' : response.status === 429 ? 'Too Many Requests' : response.status === 404 ? 'Not Found' : response.statusText,
         accessible: response.ok,
         recordCount,
-        dataPreview
+        dataPreview,
+        errorBody,
+        headers: responseHeaders
       });
     } catch (error) {
       results.push({
         name: endpoint.name,
         league: endpoint.league,
         endpoint: endpoint.url,
+        fullUrl: `${baseUrl}${endpoint.url}`,
         status: 'Error',
         statusText: error.message,
         accessible: false,
         recordCount: null,
-        dataPreview: null
+        dataPreview: null,
+        errorBody: error.stack,
+        headers: null
       });
     }
   }
@@ -98,6 +119,9 @@ export default async function handler(req, res) {
   return res.status(200).json({
     apiKeyConfigured: true,
     apiKeyPrefix: apiKey.substring(0, 4) + '...',
+    apiKeyLength: apiKey.length,
+    passwordConfigured: !!process.env.MYSPORTSFEEDS_PASSWORD,
+    passwordUsed: password === 'MYSPORTSFEEDS' ? 'MYSPORTSFEEDS (default)' : 'Custom password from env',
     testedAt: new Date().toISOString(),
     results
   });
