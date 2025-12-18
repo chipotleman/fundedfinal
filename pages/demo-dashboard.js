@@ -7,117 +7,12 @@ import BetReceipt from '../components/BetReceipt';
 import CoinRain from '../components/CoinRain';
 import { simulateOddsMovement, updateBetSlipWithNewOdds } from '../lib/oddsSimulator';
 
-const mockGames = {
-  'NFL': [
-    {
-      id: 1,
-      awayTeam: 'LA Chargers',
-      homeTeam: 'Detroit Lions',
-      time: '1:00 PM ET',
-      awayScore: 14,
-      homeScore: 21,
-      quarter: '3rd',
-      lines: {
-        spread: {
-          away: { point: '+10.5', odds: -115 },
-          home: { point: '-10.5', odds: -115 }
-        },
-        total: {
-          over: { point: 'O 37.5', odds: -115 },
-          under: { point: 'U 37.5', odds: -115 }
-        },
-        moneyline: { away: +520, home: -850 }
-      }
-    }
-  ],
-  'NBA': [
-    {
-      id: 2,
-      awayTeam: 'Lakers',
-      homeTeam: 'Warriors',
-      time: '10:00 PM ET',
-      awayScore: 87,
-      homeScore: 92,
-      quarter: '3rd',
-      lines: {
-        spread: {
-          away: { point: '+3.5', odds: -110 },
-          home: { point: '-3.5', odds: -110 }
-        },
-        total: {
-          over: { point: 'O 225.5', odds: -110 },
-          under: { point: 'U 225.5', odds: -110 }
-        },
-        moneyline: { away: +140, home: -160 }
-      }
-    }
-  ],
-  'MLB': [
-    {
-      id: 3,
-      awayTeam: 'Yankees',
-      homeTeam: 'Red Sox',
-      time: '7:30 PM ET',
-      awayScore: 4,
-      homeScore: 3,
-      quarter: '7th',
-      lines: {
-        spread: {
-          away: { point: '+1.5', odds: -140 },
-          home: { point: '-1.5', odds: +120 }
-        },
-        total: {
-          over: { point: 'O 9.5', odds: -105 },
-          under: { point: 'U 9.5', odds: -115 }
-        },
-        moneyline: { away: +130, home: -150 }
-      }
-    }
-  ],
-  'NHL': [
-    {
-      id: 4,
-      awayTeam: 'Rangers',
-      homeTeam: 'Bruins',
-      time: '8:00 PM ET',
-      awayScore: 2,
-      homeScore: 3,
-      quarter: '2nd',
-      lines: {
-        spread: {
-          away: { point: '+1.5', odds: -180 },
-          home: { point: '-1.5', odds: +150 }
-        },
-        total: {
-          over: { point: 'O 6.5', odds: +110 },
-          under: { point: 'U 6.5', odds: -130 }
-        },
-        moneyline: { away: +120, home: -140 }
-      }
-    }
-  ],
-  'Soccer': [
-    {
-      id: 6,
-      awayTeam: 'Manchester United',
-      homeTeam: 'Liverpool',
-      time: '12:30 PM ET',
-      awayScore: 1,
-      homeScore: 2,
-      quarter: "65'",
-      lines: {
-        spread: {
-          away: { point: '+0.5', odds: -110 },
-          home: { point: '-0.5', odds: -110 }
-        },
-        total: {
-          over: { point: 'O 2.5', odds: -120 },
-          under: { point: 'U 2.5', odds: +100 }
-        },
-        moneyline: { away: +250, home: -150 }
-      }
-    }
-  ]
+const mockGamesOtherSports = {
+  'NFL': [],
+  'NBA': [],
+  'MLB': [],
+  'NHL': [],
+  'Soccer': []
 };
 
 export default function DemoDashboard() {
@@ -209,17 +104,37 @@ export default function DemoDashboard() {
   }, [bankroll, pnl, totalBets, wins, losses, demoChallenge]);
 
   const baseGamesRef = useRef({});
+  const [nbaGames, setNbaGames] = useState([]);
 
   useEffect(() => {
+    const fetchNBAGames = async () => {
+      try {
+        const response = await fetch('/api/games/nba?upcoming=true');
+        if (response.ok) {
+          const data = await response.json();
+          setNbaGames(data.games || []);
+        }
+      } catch (error) {
+        console.error('Error fetching NBA games:', error);
+      }
+    };
+    
+    fetchNBAGames();
+    const interval = setInterval(fetchNBAGames, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const currentGames = { ...mockGamesOtherSports, 'NBA': nbaGames };
     if (selectedSport === 'All Sports') {
-      const allGames = Object.values(mockGames).flat();
+      const allGames = Object.values(currentGames).flat();
       baseGamesRef.current = { 'All Sports': allGames };
       setGames(allGames);
     } else {
-      baseGamesRef.current = { [selectedSport]: mockGames[selectedSport] || [] };
-      setGames(mockGames[selectedSport] || []);
+      baseGamesRef.current = { [selectedSport]: currentGames[selectedSport] || [] };
+      setGames(currentGames[selectedSport] || []);
     }
-  }, [selectedSport]);
+  }, [selectedSport, nbaGames]);
 
   // Odds simulation - runs every 3 seconds
   useEffect(() => {
@@ -780,7 +695,7 @@ export default function DemoDashboard() {
                 <div className="p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="bg-green-500 text-black text-[10px] font-bold px-2 py-0.5 rounded">FEATURED</span>
-                    <span className="text-gray-500 text-xs">{sports.find(s => mockGames[s]?.some(g => g.id === game.id)) || 'NFL'}</span>
+                    <span className="text-gray-500 text-xs">{nbaGames.some(g => g.id === game.id) ? 'NBA' : 'NBA'}</span>
                   </div>
                   <div className="mb-4">
                     <div className="text-white font-bold text-base">{game.awayTeam}</div>
@@ -839,7 +754,7 @@ export default function DemoDashboard() {
 
           <div className="space-y-3">
             {games.map(game => {
-              const sport = sports.find(s => mockGames[s]?.some(g => g.id === game.id)) || 'NFL';
+              const sport = nbaGames.some(g => g.id === game.id) ? 'NBA' : 'NBA';
               
               return (
                 <div key={game.id} className="bg-[#111111] rounded-xl border border-gray-800/50 overflow-hidden">
