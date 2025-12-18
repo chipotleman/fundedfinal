@@ -132,6 +132,7 @@ export default function Dashboard() {
   }, [setBetSlip]);
 
   const formatOdds = (odds) => {
+    if (odds === null || odds === undefined) return 'N/A';
     return odds > 0 ? `+${odds}` : odds.toString();
   };
 
