@@ -8,18 +8,95 @@ export default function APIDebug() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [rawData, setRawData] = useState(null);
   const [showRaw, setShowRaw] = useState(false);
+  const [apiStatus, setApiStatus] = useState({
+    endpoint: { status: 'pending', message: 'Checking...' },
+    games: { status: 'pending', message: 'Checking...' },
+    spreads: { status: 'pending', message: 'Checking...' },
+    moneylines: { status: 'pending', message: 'Checking...' },
+    totals: { status: 'pending', message: 'Checking...' },
+    teamNames: { status: 'pending', message: 'Checking...' },
+    gameTimes: { status: 'pending', message: 'Checking...' },
+  });
+
+  const analyzeData = (games, responseOk) => {
+    const newStatus = {};
+    
+    newStatus.endpoint = responseOk 
+      ? { status: 'success', message: 'API responding (200 OK)' }
+      : { status: 'error', message: 'API request failed' };
+    
+    newStatus.games = games.length > 0
+      ? { status: 'success', message: `${games.length} games loaded` }
+      : { status: 'warning', message: 'No games returned' };
+    
+    const gamesWithSpreads = games.filter(g => 
+      g.lines?.spread?.away?.point && g.lines?.spread?.away?.point !== '+0'
+    );
+    newStatus.spreads = gamesWithSpreads.length > 0
+      ? { status: 'success', message: `${gamesWithSpreads.length}/${games.length} games have spread data` }
+      : { status: 'warning', message: 'No spread data available (using defaults)' };
+    
+    const gamesWithML = games.filter(g => 
+      g.lines?.moneyline?.away && g.lines?.moneyline?.away !== 150
+    );
+    newStatus.moneylines = gamesWithML.length > 0
+      ? { status: 'success', message: `${gamesWithML.length}/${games.length} games have moneyline data` }
+      : { status: 'warning', message: 'No moneyline data available (using defaults)' };
+    
+    const gamesWithTotals = games.filter(g => 
+      g.lines?.total?.over?.point && g.lines?.total?.over?.point !== 'O 220.5'
+    );
+    newStatus.totals = gamesWithTotals.length > 0
+      ? { status: 'success', message: `${gamesWithTotals.length}/${games.length} games have totals data` }
+      : { status: 'warning', message: 'No totals data available (using defaults)' };
+    
+    const gamesWithTeamNames = games.filter(g => 
+      g.awayTeamFull && g.awayTeamFull !== 'Away Team'
+    );
+    newStatus.teamNames = gamesWithTeamNames.length > 0
+      ? { status: 'success', message: `${gamesWithTeamNames.length}/${games.length} games have full team names` }
+      : { status: 'warning', message: 'Full team names not available' };
+    
+    const gamesWithTimes = games.filter(g => g.time && g.time !== '');
+    newStatus.gameTimes = gamesWithTimes.length > 0
+      ? { status: 'success', message: `${gamesWithTimes.length}/${games.length} games have scheduled times` }
+      : { status: 'warning', message: 'Game times not available' };
+    
+    setApiStatus(newStatus);
+  };
 
   const fetchData = async () => {
     setLoading(true);
+    setApiStatus({
+      endpoint: { status: 'pending', message: 'Checking...' },
+      games: { status: 'pending', message: 'Checking...' },
+      spreads: { status: 'pending', message: 'Checking...' },
+      moneylines: { status: 'pending', message: 'Checking...' },
+      totals: { status: 'pending', message: 'Checking...' },
+      teamNames: { status: 'pending', message: 'Checking...' },
+      gameTimes: { status: 'pending', message: 'Checking...' },
+    });
+    
     try {
       const response = await fetch('/api/games/nba?upcoming=true');
       const data = await response.json();
-      setNbaGames(data.games || []);
+      const games = data.games || [];
+      setNbaGames(games);
       setRawData(data);
       setLastUpdated(new Date().toLocaleString());
       setError(null);
+      analyzeData(games, response.ok);
     } catch (err) {
       setError(err.message);
+      setApiStatus({
+        endpoint: { status: 'error', message: `Failed: ${err.message}` },
+        games: { status: 'error', message: 'Could not fetch' },
+        spreads: { status: 'error', message: 'Could not fetch' },
+        moneylines: { status: 'error', message: 'Could not fetch' },
+        totals: { status: 'error', message: 'Could not fetch' },
+        teamNames: { status: 'error', message: 'Could not fetch' },
+        gameTimes: { status: 'error', message: 'Could not fetch' },
+      });
     }
     setLoading(false);
   };
@@ -27,6 +104,26 @@ export default function APIDebug() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const StatusBadge = ({ status }) => {
+    const colors = {
+      success: 'bg-green-600 text-white',
+      warning: 'bg-yellow-600 text-black',
+      error: 'bg-red-600 text-white',
+      pending: 'bg-gray-600 text-white animate-pulse',
+    };
+    const icons = {
+      success: '✓',
+      warning: '⚠',
+      error: '✗',
+      pending: '...',
+    };
+    return (
+      <span className={`px-2 py-1 rounded text-xs font-bold ${colors[status]}`}>
+        {icons[status]}
+      </span>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-6">
@@ -41,9 +138,10 @@ export default function APIDebug() {
             <span className="text-gray-400 text-sm">Last updated: {lastUpdated}</span>
             <button
               onClick={fetchData}
-              className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg text-sm font-medium"
+              disabled={loading}
+              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 px-4 py-2 rounded-lg text-sm font-medium"
             >
-              Refresh Data
+              {loading ? 'Loading...' : 'Refresh Data'}
             </button>
           </div>
         </div>
@@ -54,11 +152,28 @@ export default function APIDebug() {
           </div>
         )}
 
+        <div className="bg-gray-800 rounded-lg p-4 mb-6">
+          <h2 className="text-lg font-semibold mb-4">API Status Overview</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            {Object.entries(apiStatus).map(([key, value]) => (
+              <div key={key} className="bg-gray-700/50 rounded-lg p-3 flex items-center gap-3">
+                <StatusBadge status={value.status} />
+                <div>
+                  <div className="text-sm font-medium capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}</div>
+                  <div className="text-xs text-gray-400">{value.message}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-4">NBA Games ({nbaGames.length} games)</h2>
           
           {loading ? (
             <div className="text-gray-400">Loading...</div>
+          ) : nbaGames.length === 0 ? (
+            <div className="text-gray-400">No games available</div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full border-collapse">
@@ -138,7 +253,7 @@ export default function APIDebug() {
           </button>
           
           {showRaw && rawData && (
-            <pre className="bg-gray-800 p-4 rounded-lg overflow-x-auto text-xs text-gray-300">
+            <pre className="bg-gray-800 p-4 rounded-lg overflow-x-auto text-xs text-gray-300 max-h-96 overflow-y-auto">
               {JSON.stringify(rawData, null, 2)}
             </pre>
           )}
