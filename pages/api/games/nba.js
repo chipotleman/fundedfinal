@@ -1,6 +1,7 @@
 import { fetchNBAGames, fetchUpcomingNBAGames } from '../../../lib/mysportsfeeds';
 
 let cachedGames = null;
+let cachedDebugInfo = null;
 let cacheTimestamp = null;
 const CACHE_DURATION = 5 * 60 * 1000;
 
@@ -10,32 +11,47 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { upcoming } = req.query;
+    const { upcoming, debug } = req.query;
     const now = Date.now();
 
     if (cachedGames && cacheTimestamp && (now - cacheTimestamp) < CACHE_DURATION) {
-      return res.status(200).json({ 
+      const response = { 
         games: cachedGames, 
         cached: true,
         cacheAge: Math.floor((now - cacheTimestamp) / 1000)
-      });
+      };
+      if (debug === 'true' && cachedDebugInfo) {
+        response.debugInfo = cachedDebugInfo;
+      }
+      return res.status(200).json(response);
     }
 
     let games;
+    let debugInfo = null;
+    
     if (upcoming === 'true') {
-      games = await fetchUpcomingNBAGames(3);
+      const result = await fetchUpcomingNBAGames(3);
+      games = result.games;
+      debugInfo = result.debugInfo;
     } else {
       games = await fetchNBAGames();
     }
 
     cachedGames = games;
+    cachedDebugInfo = debugInfo;
     cacheTimestamp = now;
 
-    return res.status(200).json({ 
+    const response = { 
       games, 
       cached: false,
       count: games.length 
-    });
+    };
+    
+    if (debug === 'true' && debugInfo) {
+      response.debugInfo = debugInfo;
+    }
+
+    return res.status(200).json(response);
   } catch (error) {
     console.error('Error in NBA games API:', error);
     

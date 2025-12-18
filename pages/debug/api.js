@@ -11,44 +11,61 @@ export default function APIDebug() {
   const [apiStatus, setApiStatus] = useState({
     endpoint: { status: 'pending', message: 'Checking...' },
     games: { status: 'pending', message: 'Checking...' },
+    oddsEndpoint: { status: 'pending', message: 'Checking...' },
     spreads: { status: 'pending', message: 'Checking...' },
     moneylines: { status: 'pending', message: 'Checking...' },
     totals: { status: 'pending', message: 'Checking...' },
     teamNames: { status: 'pending', message: 'Checking...' },
     gameTimes: { status: 'pending', message: 'Checking...' },
   });
+  const [apiTier, setApiTier] = useState(null);
 
-  const analyzeData = (games, responseOk) => {
+  const analyzeData = (games, responseOk, debugInfo) => {
     const newStatus = {};
     
     newStatus.endpoint = responseOk 
-      ? { status: 'success', message: 'API responding (200 OK)' }
-      : { status: 'error', message: 'API request failed' };
+      ? { status: 'success', message: 'Games API responding (200 OK)' }
+      : { status: 'error', message: 'Games API request failed' };
     
     newStatus.games = games.length > 0
       ? { status: 'success', message: `${games.length} games loaded` }
       : { status: 'warning', message: 'No games returned' };
+    
+    const oddsStatus = debugInfo?.oddsStatus;
+    if (oddsStatus?.code === 200) {
+      newStatus.oddsEndpoint = { status: 'success', message: 'Odds API responding (200 OK)' };
+    } else if (oddsStatus?.code === 403) {
+      newStatus.oddsEndpoint = { status: 'error', message: '403 Forbidden - CORE tier. Upgrade to PRO required.' };
+    } else if (oddsStatus?.code) {
+      newStatus.oddsEndpoint = { status: 'error', message: `HTTP ${oddsStatus.code}: ${oddsStatus.message}` };
+    } else {
+      newStatus.oddsEndpoint = { status: 'warning', message: 'Odds endpoint not checked' };
+    }
+    
+    if (debugInfo?.apiTier) {
+      setApiTier(debugInfo.apiTier);
+    }
     
     const gamesWithSpreads = games.filter(g => 
       g.lines?.spread?.away?.point && g.lines?.spread?.away?.point !== '+0'
     );
     newStatus.spreads = gamesWithSpreads.length > 0
       ? { status: 'success', message: `${gamesWithSpreads.length}/${games.length} games have spread data` }
-      : { status: 'warning', message: 'No spread data available (using defaults)' };
+      : { status: 'warning', message: 'No spread data (using defaults)' };
     
     const gamesWithML = games.filter(g => 
       g.lines?.moneyline?.away && g.lines?.moneyline?.away !== 150
     );
     newStatus.moneylines = gamesWithML.length > 0
       ? { status: 'success', message: `${gamesWithML.length}/${games.length} games have moneyline data` }
-      : { status: 'warning', message: 'No moneyline data available (using defaults)' };
+      : { status: 'warning', message: 'No moneyline data (using defaults)' };
     
     const gamesWithTotals = games.filter(g => 
       g.lines?.total?.over?.point && g.lines?.total?.over?.point !== 'O 220.5'
     );
     newStatus.totals = gamesWithTotals.length > 0
       ? { status: 'success', message: `${gamesWithTotals.length}/${games.length} games have totals data` }
-      : { status: 'warning', message: 'No totals data available (using defaults)' };
+      : { status: 'warning', message: 'No totals data (using defaults)' };
     
     const gamesWithTeamNames = games.filter(g => 
       g.awayTeamFull && g.awayTeamFull !== 'Away Team'
@@ -67,9 +84,11 @@ export default function APIDebug() {
 
   const fetchData = async () => {
     setLoading(true);
+    setApiTier(null);
     setApiStatus({
       endpoint: { status: 'pending', message: 'Checking...' },
       games: { status: 'pending', message: 'Checking...' },
+      oddsEndpoint: { status: 'pending', message: 'Checking...' },
       spreads: { status: 'pending', message: 'Checking...' },
       moneylines: { status: 'pending', message: 'Checking...' },
       totals: { status: 'pending', message: 'Checking...' },
@@ -78,19 +97,20 @@ export default function APIDebug() {
     });
     
     try {
-      const response = await fetch('/api/games/nba?upcoming=true');
+      const response = await fetch('/api/games/nba?upcoming=true&debug=true');
       const data = await response.json();
       const games = data.games || [];
       setNbaGames(games);
       setRawData(data);
       setLastUpdated(new Date().toLocaleString());
       setError(null);
-      analyzeData(games, response.ok);
+      analyzeData(games, response.ok, data.debugInfo);
     } catch (err) {
       setError(err.message);
       setApiStatus({
         endpoint: { status: 'error', message: `Failed: ${err.message}` },
         games: { status: 'error', message: 'Could not fetch' },
+        oddsEndpoint: { status: 'error', message: 'Could not fetch' },
         spreads: { status: 'error', message: 'Could not fetch' },
         moneylines: { status: 'error', message: 'Could not fetch' },
         totals: { status: 'error', message: 'Could not fetch' },
@@ -149,6 +169,24 @@ export default function APIDebug() {
         {error && (
           <div className="bg-red-900/50 border border-red-500 rounded-lg p-4 mb-6">
             <p className="text-red-400">Error: {error}</p>
+          </div>
+        )}
+
+        {apiTier && (
+          <div className={`rounded-lg p-4 mb-6 border ${
+            apiTier.includes('PRO') ? 'bg-green-900/30 border-green-500' : 'bg-yellow-900/30 border-yellow-500'
+          }`}>
+            <div className="flex items-center gap-3">
+              <span className={`text-2xl ${apiTier.includes('PRO') ? 'text-green-400' : 'text-yellow-400'}`}>
+                {apiTier.includes('PRO') ? '✓' : '⚠'}
+              </span>
+              <div>
+                <div className="font-semibold">MySportsFeeds API Tier</div>
+                <div className={`text-sm ${apiTier.includes('PRO') ? 'text-green-300' : 'text-yellow-300'}`}>
+                  {apiTier}
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
