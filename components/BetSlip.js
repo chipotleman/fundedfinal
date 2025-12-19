@@ -207,7 +207,22 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
             team: bets.map(b => b.selection).join(', '),
             betType: 'parlay',
             odds: americanOdds,
-            stake: parlayStake
+            stake: parlayStake,
+            legs: bets.map(bet => ({
+              selection: bet.selection,
+              betType: bet.betType,
+              odds: typeof bet.odds === 'object' ? bet.odds.odds || bet.odds.value : bet.odds,
+              matchup: bet.matchup,
+              isLive: bet.isLive === true,
+              homeTeam: bet.homeTeam,
+              awayTeam: bet.awayTeam,
+              homeTeamFull: bet.homeTeamFull,
+              awayTeamFull: bet.awayTeamFull,
+              homeScore: bet.homeScore,
+              awayScore: bet.awayScore,
+              gameStart: bet.gameStart,
+              gameTime: bet.gameTime
+            }))
           });
         } else if (bets[0].stake > 0) {
           const firstBet = bets[0];
