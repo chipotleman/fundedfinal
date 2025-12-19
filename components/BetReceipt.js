@@ -168,11 +168,29 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                 </div>
               </div>
 
-              <div className="mt-1 bg-slate-800/50 rounded p-1.5">
-                <div className="text-gray-400 text-[10px] uppercase">Game</div>
-                <div className="text-white text-xs font-medium">{bet.matchup}</div>
-                <div className={`text-[10px] ${colors.text}`}>
-                  {isWon || isLost || isCashedOut ? 'Finished' : 'Upcoming'}
+              <div className="mt-1 bg-slate-800/50 rounded p-2">
+                <div className="text-gray-400 text-[10px] uppercase mb-1">Game</div>
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center">
+                    <span className="text-white text-xs font-medium">{bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0]}</span>
+                    {bet.isLive && <span className="text-white font-bold text-sm">{bet.awayScore || 0}</span>}
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-white text-xs font-medium">{bet.homeTeamFull || bet.homeTeam || bet.matchup?.split(' @ ')[1]}</span>
+                    {bet.isLive && <span className="text-white font-bold text-sm">{bet.homeScore || 0}</span>}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  {bet.isLive ? (
+                    <>
+                      <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                      <span className="text-red-500 text-[10px] font-medium">LIVE</span>
+                    </>
+                  ) : (
+                    <span className={`text-[10px] ${colors.text}`}>
+                      {isWon || isLost || isCashedOut ? 'Finished' : (bet.gameTime || 'Upcoming')}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

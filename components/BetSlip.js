@@ -19,6 +19,35 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
   const [showCoinRain, setShowCoinRain] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [expandedBets, setExpandedBets] = useState({});
+  const [liveScores, setLiveScores] = useState({});
+
+  useEffect(() => {
+    const fetchLiveScores = async () => {
+      if (bets.length === 0) return;
+      try {
+        const response = await fetch('/api/games');
+        if (response.ok) {
+          const data = await response.json();
+          const scoresMap = {};
+          data.games?.forEach(game => {
+            scoresMap[game.id] = {
+              isLive: game.isLive || game.status === 'IN_PROGRESS',
+              awayScore: game.awayScore || 0,
+              homeScore: game.homeScore || 0,
+              time: game.time || ''
+            };
+          });
+          setLiveScores(scoresMap);
+        }
+      } catch (error) {
+        console.error('Error fetching live scores:', error);
+      }
+    };
+
+    fetchLiveScores();
+    const interval = setInterval(fetchLiveScores, 30000);
+    return () => clearInterval(interval);
+  }, [bets.length]);
 
   const toggleBetExpanded = (id) => {
     setExpandedBets(prev => ({ ...prev, [id]: !prev[id] }));
@@ -181,7 +210,15 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
             team: firstBet.selection,
             betType: firstBet.betType,
             odds: typeof firstBet.odds === 'object' ? firstBet.odds.odds || firstBet.odds.value : firstBet.odds,
-            stake: firstBet.stake
+            stake: firstBet.stake,
+            isLive: firstBet.isLive,
+            awayTeam: firstBet.awayTeam,
+            homeTeam: firstBet.homeTeam,
+            awayTeamFull: firstBet.awayTeamFull,
+            homeTeamFull: firstBet.homeTeamFull,
+            awayScore: firstBet.awayScore,
+            homeScore: firstBet.homeScore,
+            gameTime: firstBet.gameTime
           });
         }
         setShowReceipt(true);
@@ -362,16 +399,42 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                               </div>
                               
                               {/* Live Game Info */}
-                              <div className="bg-slate-800/50 rounded-lg p-3 mt-2">
-                                <div className="text-gray-500 text-[10px] uppercase mb-1">Game</div>
-                                <div className="text-white text-sm font-medium">{bet.matchup}</div>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
-                                  <span className="text-green-400 text-xs">Live</span>
-                                  <span className="text-gray-500 text-xs">|</span>
-                                  <span className="text-gray-400 text-xs">Odds updating</span>
-                                </div>
-                              </div>
+                              {(() => {
+                                const live = liveScores[bet.gameId] || {};
+                                const isLive = live.isLive || bet.isLive;
+                                const awayScore = live.awayScore ?? bet.awayScore ?? 0;
+                                const homeScore = live.homeScore ?? bet.homeScore ?? 0;
+                                const gameTime = live.time || bet.gameTime || 'Upcoming';
+                                
+                                return (
+                                  <div className="bg-slate-800/50 rounded-lg p-3 mt-2">
+                                    <div className="text-gray-500 text-[10px] uppercase mb-1">Game</div>
+                                    <div className="space-y-1">
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-white text-sm font-medium">{bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0]}</span>
+                                        {isLive && <span className="text-white font-bold">{awayScore}</span>}
+                                      </div>
+                                      <div className="flex justify-between items-center">
+                                        <span className="text-white text-sm font-medium">{bet.homeTeamFull || bet.homeTeam || bet.matchup?.split(' @ ')[1]}</span>
+                                        {isLive && <span className="text-white font-bold">{homeScore}</span>}
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 mt-2">
+                                      {isLive ? (
+                                        <>
+                                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                                          <span className="text-red-500 text-xs font-medium">LIVE</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                                          <span className="text-gray-400 text-xs">{gameTime}</span>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
                             </div>
                             
                             {/* Stake Input - Only for straight bets */}

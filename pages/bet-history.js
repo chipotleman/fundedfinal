@@ -20,6 +20,7 @@ export default function BetHistory() {
   const [bankroll, setBankroll] = useState(10000);
 
   const [loading, setLoading] = useState(true);
+  const [liveGames, setLiveGames] = useState({});
 
   useEffect(() => {
     const fetchBetHistory = async () => {
@@ -43,6 +44,31 @@ export default function BetHistory() {
     
     fetchBetHistory();
   }, [user]);
+
+  useEffect(() => {
+    const fetchLiveScores = async () => {
+      const openBets = allBets.filter(b => b.status === 'open');
+      if (openBets.length === 0) return;
+
+      try {
+        const response = await fetch('/api/games');
+        if (response.ok) {
+          const data = await response.json();
+          const gamesMap = {};
+          data.games?.forEach(game => {
+            gamesMap[game.id] = game;
+          });
+          setLiveGames(gamesMap);
+        }
+      } catch (error) {
+        console.error('Error fetching live scores:', error);
+      }
+    };
+
+    fetchLiveScores();
+    const interval = setInterval(fetchLiveScores, 60000);
+    return () => clearInterval(interval);
+  }, [allBets]);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -311,14 +337,26 @@ export default function BetHistory() {
 
           {/* Bets List */}
           <div className="grid grid-cols-1 gap-4 max-w-2xl mx-auto">
-            {filteredBets.map(bet => (
-              <PiksBetCard 
-                key={bet.id}
-                bet={bet}
-                onCashOut={cashOutBet}
-                onShare={(bet) => setShareModalBet(bet)}
-              />
-            ))}
+            {filteredBets.map(bet => {
+              const liveGame = liveGames[bet.gameId];
+              const enrichedBet = liveGame ? {
+                ...bet,
+                isLive: liveGame.isLive || liveGame.status === 'IN_PROGRESS',
+                currentHomeScore: liveGame.homeScore,
+                currentAwayScore: liveGame.awayScore,
+                homeTeamFull: liveGame.homeTeamFull || liveGame.homeTeam,
+                awayTeamFull: liveGame.awayTeamFull || liveGame.awayTeam
+              } : bet;
+              
+              return (
+                <PiksBetCard 
+                  key={bet.id}
+                  bet={enrichedBet}
+                  onCashOut={cashOutBet}
+                  onShare={(bet) => setShareModalBet(bet)}
+                />
+              );
+            })}
 
             {filteredBets.length === 0 && (
               <div className="col-span-full">

@@ -125,7 +125,16 @@ export const BetSlipProvider = ({ children }) => {
         betType,
         selection,
         odds: oddsValue,
-        stake: 0
+        stake: 0,
+        isLive: game.isLive || game.status === 'IN_PROGRESS',
+        awayTeam: game.awayTeam,
+        homeTeam: game.homeTeam,
+        awayTeamFull: game.awayTeamFull || game.awayTeam,
+        homeTeamFull: game.homeTeamFull || game.homeTeam,
+        awayScore: game.awayScore || 0,
+        homeScore: game.homeScore || 0,
+        gameTime: game.time || '',
+        sportName: game.sportName || ''
       };
       
       setBetSlip([...filteredSlip, newBet]);
