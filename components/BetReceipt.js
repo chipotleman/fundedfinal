@@ -113,9 +113,10 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 pointer-events-none">
+    <div className={`fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 transition-all duration-300 ${isVisible ? 'backdrop-blur-sm bg-black/50' : ''}`} onClick={handleClose}>
       <div 
-        className={`pointer-events-auto w-full max-w-md transform transition-all duration-300 ${isVisible ? 'translate-y-0 opacity-100' : '-translate-y-10 opacity-0'}`}
+        className={`w-full max-w-md transform transition-all duration-300 ${isVisible ? 'translate-y-0 opacity-100' : '-translate-y-10 opacity-0'}`}
+        onClick={(e) => e.stopPropagation()}
       >
         <div 
           className={`relative bg-black rounded-lg overflow-hidden border ${colors.border}`}
@@ -131,7 +132,7 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
           <div className="px-4 pt-2 pb-3 relative">
             <div className="flex items-center justify-between -mt-1">
               <div className="flex items-center">
-                <img src="/pikslogotransparent.png" alt="Piks" className="h-40 object-contain -ml-[60px]" />
+                <img src="/pikslogotransparent.png" alt="Piks" className="h-12 object-contain" />
               </div>
               
               <div className="flex items-center gap-2">
