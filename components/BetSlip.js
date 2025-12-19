@@ -250,6 +250,13 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
           });
         }
         setShowReceipt(true);
+        
+        // Auto-dismiss receipt after 4 seconds
+        setTimeout(() => {
+          setShowReceipt(false);
+          setCurrentReceipt(null);
+          onClose();
+        }, 4000);
       }
 
       setShowCoinRain(true);
