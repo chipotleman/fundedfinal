@@ -170,17 +170,6 @@ export default function Dashboard() {
       />
 
       <div className="pt-14 sm:pt-6 lg:pt-8 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-end mb-4 space-y-4 sm:space-y-0">
-          <div className="flex items-center space-x-2 sm:space-x-4">
-            <div className="px-4 py-3 rounded-lg" style={{ backgroundColor: isDarkMode ? '#111111' : '#ffffff', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(209, 213, 219, 1)' }}>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm sm:text-base whitespace-nowrap" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>Live Lines</span>
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div className="mb-4">
           <div className="flex items-center gap-4 mb-4">
             <button
