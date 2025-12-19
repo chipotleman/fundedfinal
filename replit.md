@@ -54,7 +54,8 @@ None documented yet.
     - Pay-as-you-go pricing model
   - **Supported Sports**: NBA, NFL, NCAAB, NCAAF, MLB, NHL
   - **Credit Budget**: 50 credits/day (testing phase), alerts at 70%/90%
-  - **Date Filter**: Only fetches TODAY's games to minimize credit usage (6 credits per full refresh)
+  - **Date Filter**: Fetches games for TODAY + TOMORROW (48-hour window) to handle timezone differences
+  - **Game Display Tabs**: Live vs Upcoming tabs on all game pages - shows upcoming games by default, live games when available
   - **Caching**: 10-minute server-side cache per sport
   - **Odds Strategy**: Priority-based selection - FanDuel first, then DraftKings, then Bovada, etc. for user familiarity
   - **Admin Odds View**: Full bookmaker comparison spreadsheet available in admin panel at /admin-panel/games
