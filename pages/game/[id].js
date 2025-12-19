@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import { useBetSlip } from '../contexts/BetSlipContext';
+import { useBetSlip } from '../../contexts/BetSlipContext';
 
 export default function GameDetail() {
   const router = useRouter();
