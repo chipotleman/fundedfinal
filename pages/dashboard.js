@@ -6,14 +6,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { simulateOddsMovement, updateBetSlipWithNewOdds } from '../lib/oddsSimulator';
 
-const mockGamesOtherSports = {
-  'NFL': [],
-  'NBA': [],
-  'MLB': [],
-  'NHL': [],
-  'Soccer': []
-};
-
 export default function Dashboard() {
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
@@ -63,7 +55,7 @@ export default function Dashboard() {
     setShowBetSlip(!showBetSlip);
   };
 
-  const sports = ['NFL', 'NBA', 'MLB', 'NHL', 'Soccer'];
+  const sports = ['NBA', 'NFL', 'NCAAB', 'NCAAF', 'MLB', 'NHL'];
 
   const baseGamesRef = useRef({});
   const betSlipRef = useRef(betSlip);
@@ -72,46 +64,45 @@ export default function Dashboard() {
     betSlipRef.current = betSlip;
   }, [betSlip]);
 
-  const [nbaGames, setNbaGames] = useState([]);
+  const [apiGames, setApiGames] = useState([]);
   const [gamesError, setGamesError] = useState(null);
 
   useEffect(() => {
-    const fetchNBAGames = async () => {
+    const fetchAllGames = async () => {
       try {
-        const response = await fetch('/api/games/nba?upcoming=true');
+        const response = await fetch('/api/games');
         if (response.ok) {
           const data = await response.json();
-          setNbaGames(data.games || []);
+          setApiGames(data.games || []);
           setGamesError(null);
         } else {
-          console.error('Failed to fetch NBA games');
+          console.error('Failed to fetch games');
           setGamesError('Failed to load games');
         }
       } catch (error) {
-        console.error('Error fetching NBA games:', error);
+        console.error('Error fetching games:', error);
         setGamesError('Failed to load games');
       }
     };
     
-    fetchNBAGames();
-    const interval = setInterval(fetchNBAGames, 5 * 60 * 1000);
+    fetchAllGames();
+    const interval = setInterval(fetchAllGames, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    const currentGames = { ...mockGamesOtherSports, 'NBA': nbaGames };
-    const allGamesList = Object.values(currentGames).flat();
-    setAllGames(allGamesList);
+    setAllGames(apiGames);
     
     if (selectedSport === 'All Sports') {
-      baseGamesRef.current = { 'All Sports': allGamesList };
-      setGames(allGamesList);
+      baseGamesRef.current = { 'All Sports': apiGames };
+      setGames(apiGames);
     } else {
-      baseGamesRef.current = { [selectedSport]: currentGames[selectedSport] || [] };
-      setGames(currentGames[selectedSport] || []);
+      const filteredGames = apiGames.filter(g => g.sportName === selectedSport);
+      baseGamesRef.current = { [selectedSport]: filteredGames };
+      setGames(filteredGames);
     }
     setLoading(false);
-  }, [selectedSport, nbaGames]);
+  }, [selectedSport, apiGames]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -147,12 +138,26 @@ export default function Dashboard() {
   const getSportIcon = (sport) => {
     const icons = {
       'NFL': '🏈',
+      'NCAAF': '🏈',
       'NBA': '🏀', 
+      'NCAAB': '🏀',
       'MLB': '⚾',
       'NHL': '🏒',
       'Soccer': '⚽'
     };
     return icons[sport] || '🏆';
+  };
+
+  const getSportLabel = (sport) => {
+    const labels = {
+      'NFL': 'Football',
+      'NCAAF': 'College Football',
+      'NBA': 'Basketball',
+      'NCAAB': 'College Basketball',
+      'MLB': 'Baseball',
+      'NHL': 'Hockey'
+    };
+    return labels[sport] || sport;
   };
 
   const handleSportClick = (sport) => {
@@ -199,7 +204,7 @@ export default function Dashboard() {
                 }}
               >
                 <span className="text-base">{getSportIcon(sport)}</span>
-                <span>{sport === 'NFL' ? 'Football' : sport === 'NBA' ? 'Basketball' : sport === 'MLB' ? 'Baseball' : sport === 'NHL' ? 'Hockey' : sport}</span>
+                <span>{getSportLabel(sport)}</span>
               </button>
             ))}
           </div>
@@ -218,7 +223,7 @@ export default function Dashboard() {
                 <div className="p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <span className="bg-green-500 text-black text-[10px] font-bold px-2 py-0.5 rounded">FEATURED</span>
-                    <span className="text-gray-500 text-xs">{nbaGames.some(g => g.id === game.id) ? 'NBA' : 'NBA'}</span>
+                    <span className="text-gray-500 text-xs">{game.sportName}</span>
                   </div>
                   <div className="mb-4">
                     <div className="font-bold text-base" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayTeam}</div>

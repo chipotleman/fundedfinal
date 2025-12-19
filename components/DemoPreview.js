@@ -13,44 +13,48 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
   const [showDetailedStats, setShowDetailedStats] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [currentReceipt, setCurrentReceipt] = useState(null);
+  const [games, setGames] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch real games from API
+  useEffect(() => {
+    const fetchGames = async () => {
+      try {
+        const response = await fetch('/api/games');
+        if (response.ok) {
+          const data = await response.json();
+          // Transform API games to match expected format
+          const transformedGames = (data.games || []).slice(0, 6).map(game => ({
+            id: game.id,
+            sport: game.sportName,
+            homeTeam: game.homeTeamFull || game.homeTeam,
+            awayTeam: game.awayTeamFull || game.awayTeam,
+            homeTeamShort: game.homeTeam,
+            awayTeamShort: game.awayTeam,
+            spread: parseFloat(game.lines?.spread?.home?.point) || 0,
+            total: parseFloat(game.lines?.total?.over?.point?.replace('O ', '')) || 220,
+            moneylineHome: game.lines?.moneyline?.home || -150,
+            moneylineAway: game.lines?.moneyline?.away || +130,
+            time: game.time
+          }));
+          setGames(transformedGames);
+        }
+      } catch (error) {
+        console.error('Error fetching games:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchGames();
+    const interval = setInterval(fetchGames, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Sync bet count with parent component
   useEffect(() => {
     setDemoBetSlipCount?.(selectedBets.length);
   }, [selectedBets.length, setDemoBetSlipCount]);
-
-  const mockGames = [
-    {
-      id: 1,
-      sport: 'NFL',
-      homeTeam: 'Kansas City Chiefs',
-      awayTeam: 'Buffalo Bills',
-      spread: -3.5,
-      total: 47.5,
-      moneylineHome: -180,
-      moneylineAway: +150
-    },
-    {
-      id: 2,
-      sport: 'NBA',
-      homeTeam: 'Los Angeles Lakers',
-      awayTeam: 'Boston Celtics',
-      spread: +2.5,
-      total: 218.5,
-      moneylineHome: +110,
-      moneylineAway: -130
-    },
-    {
-      id: 3,
-      sport: 'NHL',
-      homeTeam: 'Toronto Maple Leafs',
-      awayTeam: 'Montreal Canadiens',
-      spread: -1.5,
-      total: 6.5,
-      moneylineHome: -140,
-      moneylineAway: +120
-    }
-  ];
 
   const isOpposingBet = (newBet, existingBets) => {
     return existingBets.some(bet => {
@@ -551,7 +555,18 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                   Live Games
                 </h3>
                 <div className="space-y-3 sm:space-y-4">
-                  {mockGames.map((game) => (
+                  {loading && (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto"></div>
+                      <p className="text-gray-400 mt-2">Loading live games...</p>
+                    </div>
+                  )}
+                  {!loading && games.length === 0 && (
+                    <div className="text-center py-8">
+                      <p className="text-gray-400">No games available right now. Check back soon!</p>
+                    </div>
+                  )}
+                  {games.map((game) => (
                     <div key={game.id} className="bg-[#111111] rounded-2xl border border-gray-800/50 overflow-hidden">
                       {/* Card Header */}
                       <div className="px-4 sm:px-5 py-3 sm:py-4">

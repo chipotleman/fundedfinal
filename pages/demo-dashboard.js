@@ -7,14 +7,6 @@ import BetReceipt from '../components/BetReceipt';
 import CoinRain from '../components/CoinRain';
 import { simulateOddsMovement, updateBetSlipWithNewOdds } from '../lib/oddsSimulator';
 
-const mockGamesOtherSports = {
-  'NFL': [],
-  'NBA': [],
-  'MLB': [],
-  'NHL': [],
-  'Soccer': []
-};
-
 export default function DemoDashboard() {
   const router = useRouter();
   const [demoChallenge, setDemoChallenge] = useState(null);
@@ -35,7 +27,7 @@ export default function DemoDashboard() {
   const [parlayStake, setParlayStake] = useState('');
   const [mounted, setMounted] = useState(false);
 
-  const sports = ['NFL', 'NBA', 'MLB', 'NHL', 'Soccer'];
+  const sports = ['NBA', 'NFL', 'NCAAB', 'NCAAF', 'MLB', 'NHL'];
 
   useEffect(() => {
     setMounted(true);
@@ -104,37 +96,36 @@ export default function DemoDashboard() {
   }, [bankroll, pnl, totalBets, wins, losses, demoChallenge]);
 
   const baseGamesRef = useRef({});
-  const [nbaGames, setNbaGames] = useState([]);
+  const [apiGames, setApiGames] = useState([]);
 
   useEffect(() => {
-    const fetchNBAGames = async () => {
+    const fetchAllGames = async () => {
       try {
-        const response = await fetch('/api/games/nba?upcoming=true');
+        const response = await fetch('/api/games');
         if (response.ok) {
           const data = await response.json();
-          setNbaGames(data.games || []);
+          setApiGames(data.games || []);
         }
       } catch (error) {
-        console.error('Error fetching NBA games:', error);
+        console.error('Error fetching games:', error);
       }
     };
     
-    fetchNBAGames();
-    const interval = setInterval(fetchNBAGames, 5 * 60 * 1000);
+    fetchAllGames();
+    const interval = setInterval(fetchAllGames, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
-    const currentGames = { ...mockGamesOtherSports, 'NBA': nbaGames };
     if (selectedSport === 'All Sports') {
-      const allGames = Object.values(currentGames).flat();
-      baseGamesRef.current = { 'All Sports': allGames };
-      setGames(allGames);
+      baseGamesRef.current = { 'All Sports': apiGames };
+      setGames(apiGames);
     } else {
-      baseGamesRef.current = { [selectedSport]: currentGames[selectedSport] || [] };
-      setGames(currentGames[selectedSport] || []);
+      const filteredGames = apiGames.filter(g => g.sportName === selectedSport);
+      baseGamesRef.current = { [selectedSport]: filteredGames };
+      setGames(filteredGames);
     }
-  }, [selectedSport, nbaGames]);
+  }, [selectedSport, apiGames]);
 
   // Odds simulation - runs every 3 seconds
   useEffect(() => {
@@ -208,8 +199,20 @@ export default function DemoDashboard() {
   };
 
   const getSportIcon = (sport) => {
-    const icons = { 'NFL': '🏈', 'NBA': '🏀', 'MLB': '⚾', 'NHL': '🏒', 'Soccer': '⚽' };
+    const icons = { 'NFL': '🏈', 'NCAAF': '🏈', 'NBA': '🏀', 'NCAAB': '🏀', 'MLB': '⚾', 'NHL': '🏒', 'Soccer': '⚽' };
     return icons[sport] || '🏆';
+  };
+
+  const getSportLabel = (sport) => {
+    const labels = {
+      'NFL': 'Football',
+      'NCAAF': 'College Football',
+      'NBA': 'Basketball',
+      'NCAAB': 'College Basketball',
+      'MLB': 'Baseball',
+      'NHL': 'Hockey'
+    };
+    return labels[sport] || sport;
   };
 
   const handleSportClick = (sport) => {
@@ -675,7 +678,7 @@ export default function DemoDashboard() {
                 }`}
               >
                 <span className="text-base">{getSportIcon(sport)}</span>
-                <span>{sport === 'NFL' ? 'Football' : sport === 'NBA' ? 'Basketball' : sport === 'MLB' ? 'Baseball' : sport === 'NHL' ? 'Hockey' : sport}</span>
+                <span>{getSportLabel(sport)}</span>
               </button>
             ))}
           </div>
