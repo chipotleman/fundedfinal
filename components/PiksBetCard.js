@@ -66,6 +66,19 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
   const isParlay = bet.betType?.toLowerCase().includes('parlay') || 
                    (bet.legs && bet.legs.length > 1);
 
+  // Get full selection name for straight bets
+  const getFullSelectionName = () => {
+    if (bet.selectionFull) return bet.selectionFull;
+    const sel = (bet.selection || '').toUpperCase();
+    const matchupParts = bet.matchup?.split(' @ ') || [];
+    const awayAbbr = matchupParts[0]?.toUpperCase() || '';
+    const homeAbbr = matchupParts[1]?.trim().toUpperCase() || '';
+    
+    if (bet.awayTeamFull && sel === awayAbbr) return bet.awayTeamFull;
+    if (bet.homeTeamFull && sel === homeAbbr) return bet.homeTeamFull;
+    return bet.selection;
+  };
+
   const parlayLegs = useMemo(() => {
     if (bet.legs && bet.legs.length > 0) {
       return { legs: bet.legs, hasRealData: true };
@@ -410,7 +423,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         >
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <div className="font-bold text-base" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{isParlay ? formatParlayTitle : bet.selection}</div>
+              <div className="font-bold text-base" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{isParlay ? formatParlayTitle : getFullSelectionName()}</div>
               {isParlay && isSettled && (
                 <svg 
                   className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
@@ -560,11 +573,35 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                   const legTeams = getTeamNamesForLeg(leg, index);
                   const isLegLive = leg.isLive === true;
                   
+                  const isLegCompleted = leg.isCompleted === true;
+                  const legWon = leg.won === true;
+                  const hasScores = typeof leg.homeScore === 'number' && typeof leg.awayScore === 'number';
+                  
+                  // Get full selection name
+                  const getFullSelection = () => {
+                    if (leg.selectionFull) return leg.selectionFull;
+                    const sel = leg.selection || '';
+                    if (leg.awayTeamFull && sel.toUpperCase() === (leg.matchup?.split(' @ ')[0] || '').toUpperCase()) {
+                      return leg.awayTeamFull;
+                    }
+                    if (leg.homeTeamFull && sel.toUpperCase() === (leg.matchup?.split(' @ ')[1] || '').trim().toUpperCase()) {
+                      return leg.homeTeamFull;
+                    }
+                    return sel;
+                  };
+                  
                   return (
                     <div key={index} className="pb-3 border-b border-white/10 last:border-b-0 last:pb-0">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex-1">
-                          <div className="text-white font-bold text-base">{leg.selection}</div>
+                          <div className="flex items-center gap-2">
+                            <div className="text-white font-bold text-base">{getFullSelection()}</div>
+                            {isLegCompleted && (
+                              <span className={`text-xs font-bold px-2 py-0.5 rounded ${legWon ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
+                                {legWon ? 'WON' : 'LOST'}
+                              </span>
+                            )}
+                          </div>
                           <div className="text-gray-400 text-xs uppercase tracking-wide">
                             {leg.betType || 'Moneyline'}
                           </div>
@@ -578,7 +615,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                       <div className="space-y-1">
                         <div className="flex justify-between items-center">
                           <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{leg.homeTeamFull || legTeams.homeTeam}</span>
-                          {isLegLive ? (
+                          {(isLegLive || hasScores) ? (
                             <span className="text-white font-bold">{leg.homeScore}</span>
                           ) : (
                             <span className="text-gray-500 text-xs">-</span>
@@ -586,14 +623,17 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{leg.awayTeamFull || legTeams.awayTeam}</span>
-                          {isLegLive ? (
+                          {(isLegLive || hasScores) ? (
                             <span className="text-white font-bold">{leg.awayScore}</span>
                           ) : (
                             <span className="text-gray-500 text-xs">-</span>
                           )}
                         </div>
                       </div>
-                      {!isLegLive && leg.gameStart && (
+                      {isLegCompleted && (
+                        <div className="text-gray-400 text-xs mt-1.5">FINAL</div>
+                      )}
+                      {!isLegLive && !isLegCompleted && leg.gameStart && (
                         <div className="text-blue-300 text-xs mt-1.5">
                           {new Date(leg.gameStart).toLocaleString('en-US', {
                             month: 'short',

@@ -44,7 +44,9 @@ export default async function handler(req, res) {
       potentialPayout: parseFloat(bet.potentialPayout) || 0,
       legs: bet.legs || null,
       homeScore: bet.homeScore,
-      awayScore: bet.awayScore
+      awayScore: bet.awayScore,
+      homeTeamFull: bet.homeTeamFull,
+      awayTeamFull: bet.awayTeamFull
     }));
 
     formattedBets.sort((a, b) => {

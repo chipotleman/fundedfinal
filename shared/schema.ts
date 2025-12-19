@@ -63,6 +63,8 @@ export const userBets = pgTable("user_bets", {
   legs: jsonb("legs"), // Store parlay leg details
   homeScore: integer("home_score"),
   awayScore: integer("away_score"),
+  homeTeamFull: varchar("home_team_full", { length: 255 }),
+  awayTeamFull: varchar("away_team_full", { length: 255 }),
   placedAt: timestamp("placed_at").defaultNow().notNull(),
   settledAt: timestamp("settled_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
