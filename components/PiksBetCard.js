@@ -92,20 +92,35 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
       const selection = leg.selection || '';
       const betType = leg.betType?.toLowerCase() || '';
       
+      // Extract just the last word (team nickname) from selection
+      const words = selection.trim().split(' ');
+      const lastWord = words[words.length - 1] || selection;
+      
       const spreadMatch = selection.match(/([+-]\d+\.?\d*)/);
       if (spreadMatch) {
-        return selection;
+        // For spreads, show "TeamName +5.5"
+        return `${lastWord} ${spreadMatch[1]}`;
       }
       
       if (betType.includes('spread')) {
+        return `${lastWord} ${spreadMatch ? spreadMatch[1] : ''}`.trim();
+      }
+      
+      if (betType.includes('over') || selection.toLowerCase().includes('over')) {
+        const pointMatch = selection.match(/(\d+\.?\d*)/);
+        return pointMatch ? `Over ${pointMatch[1]}` : 'Over';
+      }
+      
+      if (betType.includes('under') || selection.toLowerCase().includes('under')) {
+        const pointMatch = selection.match(/(\d+\.?\d*)/);
+        return pointMatch ? `Under ${pointMatch[1]}` : 'Under';
+      }
+      
+      if (betType.includes('total')) {
         return selection;
       }
       
-      if (betType.includes('over') || betType.includes('under') || betType.includes('total')) {
-        return selection;
-      }
-      
-      return `${selection} ML`;
+      return `${lastWord} ML`;
     }).join(', ');
   }, [isParlay, parlayLegs.legs, bet.selection]);
 

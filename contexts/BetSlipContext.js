@@ -134,6 +134,7 @@ export const BetSlipProvider = ({ children }) => {
         awayScore: game.awayScore || 0,
         homeScore: game.homeScore || 0,
         gameTime: game.time || '',
+        gameStart: game.startTime || null,
         sportName: game.sportName || ''
       };
       
