@@ -371,11 +371,11 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
           <img src="/pikslogotransparent.png" alt="Piks" className="h-32 object-contain -ml-8" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
           
           {isWon ? (
-            <div className="flex-1 flex justify-end mr-[-15px]">
+            <div className="flex-1 flex justify-end mr-[-20px]">
               <img 
                 src="/trophy-winner.png" 
                 alt="Winner" 
-                className="h-[48px] w-auto"
+                className="h-[72px] w-auto"
               />
             </div>
           ) : (
@@ -415,7 +415,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         </div>
       </div>
 
-      <div className="px-4 pt-0 pb-3">
+      <div className="px-4 pt-0 pb-3 -mt-6">
 
         <div 
           className={`flex justify-between items-start mb-2 ${isParlay && isSettled ? 'cursor-pointer' : ''}`}
