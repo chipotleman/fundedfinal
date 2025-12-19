@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import ReactDOM from 'react-dom';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
@@ -6,11 +6,13 @@ import TopNavbar from '../components/TopNavbar';
 import BetReceipt from '../components/BetReceipt';
 import CoinRain from '../components/CoinRain';
 import { simulateOddsMovement, updateBetSlipWithNewOdds } from '../lib/oddsSimulator';
+import { categorizeGames, filterGamesBySport } from '../lib/gamesUtils';
 
 export default function DemoDashboard() {
   const router = useRouter();
   const [demoChallenge, setDemoChallenge] = useState(null);
   const [selectedSport, setSelectedSport] = useState('All Sports');
+  const [selectedTab, setSelectedTab] = useState('upcoming');
   const [games, setGames] = useState([]);
   const [selectedBets, setSelectedBets] = useState([]);
   const [showBetSlip, setShowBetSlip] = useState(false);
@@ -116,16 +118,22 @@ export default function DemoDashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  const categorizedGames = useMemo(() => categorizeGames(apiGames), [apiGames]);
+
   useEffect(() => {
+    const activeGames = selectedTab === 'live' 
+      ? categorizedGames.liveGames 
+      : categorizedGames.upcomingGames;
+    
     if (selectedSport === 'All Sports') {
-      baseGamesRef.current = { 'All Sports': apiGames };
-      setGames(apiGames);
+      baseGamesRef.current = { 'All Sports': activeGames };
+      setGames(activeGames);
     } else {
-      const filteredGames = apiGames.filter(g => g.sportName === selectedSport);
+      const filteredGames = activeGames.filter(g => g.sportName === selectedSport);
       baseGamesRef.current = { [selectedSport]: filteredGames };
       setGames(filteredGames);
     }
-  }, [selectedSport, apiGames]);
+  }, [selectedSport, selectedTab, apiGames, categorizedGames]);
 
   // Odds simulation - runs every 3 seconds
   useEffect(() => {
@@ -664,6 +672,33 @@ export default function DemoDashboard() {
 
       {/* Main Content */}
       <div className="pt-4 pb-24">
+        {/* Live/Upcoming Tabs */}
+        <div className="px-4 mb-4">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setSelectedTab('upcoming')}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                selectedTab === 'upcoming'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-[#1a1a1a] text-gray-400 hover:text-white'
+              }`}
+            >
+              Upcoming {categorizedGames.upcomingGames.length > 0 && `(${categorizedGames.upcomingGames.length})`}
+            </button>
+            <button
+              onClick={() => setSelectedTab('live')}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
+                selectedTab === 'live'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-[#1a1a1a] text-gray-400 hover:text-white'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${categorizedGames.liveGames.length > 0 ? 'bg-red-500 animate-pulse' : 'bg-gray-500'}`}></span>
+              Live {categorizedGames.liveGames.length > 0 && `(${categorizedGames.liveGames.length})`}
+            </button>
+          </div>
+        </div>
+        
         {/* Sports Filter Pills */}
         <div className="px-4 mb-6">
           <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">

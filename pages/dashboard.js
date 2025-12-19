@@ -1,16 +1,18 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { simulateOddsMovement, updateBetSlipWithNewOdds } from '../lib/oddsSimulator';
+import { categorizeGames, filterGamesBySport } from '../lib/gamesUtils';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
   const [selectedSport, setSelectedSport] = useState('All Sports');
+  const [selectedTab, setSelectedTab] = useState('upcoming');
   const [games, setGames] = useState([]);
   const [allGames, setAllGames] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -90,19 +92,25 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  const categorizedGames = useMemo(() => categorizeGames(apiGames), [apiGames]);
+
   useEffect(() => {
     setAllGames(apiGames);
     
+    const activeGames = selectedTab === 'live' 
+      ? categorizedGames.liveGames 
+      : categorizedGames.upcomingGames;
+    
     if (selectedSport === 'All Sports') {
-      baseGamesRef.current = { 'All Sports': apiGames };
-      setGames(apiGames);
+      baseGamesRef.current = { 'All Sports': activeGames };
+      setGames(activeGames);
     } else {
-      const filteredGames = apiGames.filter(g => g.sportName === selectedSport);
+      const filteredGames = activeGames.filter(g => g.sportName === selectedSport);
       baseGamesRef.current = { [selectedSport]: filteredGames };
       setGames(filteredGames);
     }
     setLoading(false);
-  }, [selectedSport, apiGames]);
+  }, [selectedSport, selectedTab, apiGames, categorizedGames]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -190,6 +198,29 @@ export default function Dashboard() {
         </div>
 
         <div className="mb-4">
+          <div className="flex items-center gap-4 mb-4">
+            <button
+              onClick={() => setSelectedTab('upcoming')}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                selectedTab === 'upcoming'
+                  ? 'bg-green-600 text-white'
+                  : isDarkMode ? 'bg-[#1a1a1a] text-gray-400 hover:text-white' : 'bg-gray-200 text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Upcoming {categorizedGames.upcomingGames.length > 0 && `(${categorizedGames.upcomingGames.length})`}
+            </button>
+            <button
+              onClick={() => setSelectedTab('live')}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
+                selectedTab === 'live'
+                  ? 'bg-red-600 text-white'
+                  : isDarkMode ? 'bg-[#1a1a1a] text-gray-400 hover:text-white' : 'bg-gray-200 text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${categorizedGames.liveGames.length > 0 ? 'bg-red-500 animate-pulse' : 'bg-gray-500'}`}></span>
+              Live {categorizedGames.liveGames.length > 0 && `(${categorizedGames.liveGames.length})`}
+            </button>
+          </div>
           <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
             {sports.map((sport) => (
               <button

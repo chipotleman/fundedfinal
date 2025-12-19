@@ -1,8 +1,9 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import BetReceipt from './BetReceipt';
 import LiveCommunityStats from './LiveCommunityStats';
+import { categorizeGames } from '../lib/gamesUtils';
 
 export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, showDemoBetSlip, setShowDemoBetSlip }) {
   const [selectedBets, setSelectedBets] = useState([]);
@@ -13,8 +14,10 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
   const [showDetailedStats, setShowDetailedStats] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
   const [currentReceipt, setCurrentReceipt] = useState(null);
+  const [allGames, setAllGames] = useState([]);
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedTab, setSelectedTab] = useState('upcoming');
 
   // Fetch real games from API
   useEffect(() => {
@@ -23,21 +26,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
         const response = await fetch('/api/games');
         if (response.ok) {
           const data = await response.json();
-          // Transform API games to match expected format
-          const transformedGames = (data.games || []).slice(0, 6).map(game => ({
-            id: game.id,
-            sport: game.sportName,
-            homeTeam: game.homeTeamFull || game.homeTeam,
-            awayTeam: game.awayTeamFull || game.awayTeam,
-            homeTeamShort: game.homeTeam,
-            awayTeamShort: game.awayTeam,
-            spread: parseFloat(game.lines?.spread?.home?.point) || 0,
-            total: parseFloat(game.lines?.total?.over?.point?.replace('O ', '')) || 220,
-            moneylineHome: game.lines?.moneyline?.home || -150,
-            moneylineAway: game.lines?.moneyline?.away || +130,
-            time: game.time
-          }));
-          setGames(transformedGames);
+          setAllGames(data.games || []);
         }
       } catch (error) {
         console.error('Error fetching games:', error);
@@ -50,6 +39,29 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
     const interval = setInterval(fetchGames, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
+
+  const categorizedGames = useMemo(() => categorizeGames(allGames), [allGames]);
+
+  useEffect(() => {
+    const activeGames = selectedTab === 'live' 
+      ? categorizedGames.liveGames 
+      : categorizedGames.upcomingGames;
+    
+    const transformedGames = activeGames.slice(0, 6).map(game => ({
+      id: game.id,
+      sport: game.sportName,
+      homeTeam: game.homeTeamFull || game.homeTeam,
+      awayTeam: game.awayTeamFull || game.awayTeam,
+      homeTeamShort: game.homeTeam,
+      awayTeamShort: game.awayTeam,
+      spread: parseFloat(game.lines?.spread?.home?.point) || 0,
+      total: parseFloat(game.lines?.total?.over?.point?.replace('O ', '')) || 220,
+      moneylineHome: game.lines?.moneyline?.home || -150,
+      moneylineAway: game.lines?.moneyline?.away || +130,
+      time: game.time
+    }));
+    setGames(transformedGames);
+  }, [selectedTab, categorizedGames]);
 
   // Sync bet count with parent component
   useEffect(() => {
@@ -550,20 +562,49 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
             {/* Games List */}
             <div className="lg:col-span-2">
               <div className="bg-[#0a0a0a] backdrop-blur-lg rounded-xl sm:rounded-2xl border border-gray-800/50 p-3 sm:p-6">
-                <h3 className="text-lg sm:text-xl font-bold text-white mb-4 sm:mb-6 flex items-center">
-                  <span className="w-3 h-3 bg-green-400 rounded-full mr-3 animate-pulse"></span>
-                  Live Games
-                </h3>
+                <div className="flex items-center justify-between mb-4 sm:mb-6">
+                  <h3 className="text-lg sm:text-xl font-bold text-white flex items-center">
+                    <span className={`w-3 h-3 rounded-full mr-3 ${selectedTab === 'live' ? 'bg-red-400 animate-pulse' : 'bg-green-400 animate-pulse'}`}></span>
+                    {selectedTab === 'live' ? 'Live Games' : 'Upcoming Games'}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setSelectedTab('upcoming')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                        selectedTab === 'upcoming'
+                          ? 'bg-green-600 text-white'
+                          : 'bg-[#1a1a1a] text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      Upcoming {categorizedGames.upcomingGames.length > 0 && `(${categorizedGames.upcomingGames.length})`}
+                    </button>
+                    <button
+                      onClick={() => setSelectedTab('live')}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1 ${
+                        selectedTab === 'live'
+                          ? 'bg-red-600 text-white'
+                          : 'bg-[#1a1a1a] text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${categorizedGames.liveGames.length > 0 ? 'bg-red-500 animate-pulse' : 'bg-gray-500'}`}></span>
+                      Live {categorizedGames.liveGames.length > 0 && `(${categorizedGames.liveGames.length})`}
+                    </button>
+                  </div>
+                </div>
                 <div className="space-y-3 sm:space-y-4">
                   {loading && (
                     <div className="text-center py-8">
                       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mx-auto"></div>
-                      <p className="text-gray-400 mt-2">Loading live games...</p>
+                      <p className="text-gray-400 mt-2">Loading games...</p>
                     </div>
                   )}
                   {!loading && games.length === 0 && (
                     <div className="text-center py-8">
-                      <p className="text-gray-400">No games available right now. Check back soon!</p>
+                      <p className="text-gray-400">
+                        {selectedTab === 'live' 
+                          ? 'No live games right now. Check the Upcoming tab!' 
+                          : 'No upcoming games available. Check back soon!'}
+                      </p>
                     </div>
                   )}
                   {games.map((game) => (
@@ -576,7 +617,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                             <span className="text-green-400 text-xs font-semibold uppercase">Demo</span>
                           </div>
                         </div>
-                        <p className="text-gray-500 text-xs">{game.sport} • Live</p>
+                        <p className="text-gray-500 text-xs">{game.sport} • {game.time || (selectedTab === 'live' ? 'Live' : 'Upcoming')}</p>
                       </div>
 
                       {/* Betting Options */}
