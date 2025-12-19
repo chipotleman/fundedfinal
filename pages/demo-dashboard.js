@@ -241,7 +241,7 @@ export default function DemoDashboard() {
       const newBet = {
         key: betKey,
         gameId: game.id,
-        matchup: `${game.awayTeam} @ ${game.homeTeam}`,
+        matchup: `${game.awayTeamFull || game.awayTeam} @ ${game.homeTeamFull || game.homeTeam}`,
         betType,
         odds: typeof odds === 'object' ? odds.odds : odds,
         selection: team,
@@ -736,9 +736,9 @@ export default function DemoDashboard() {
                     <span className="text-gray-500 text-xs">{game.sportName || 'NBA'}</span>
                   </div>
                   <div className="mb-4">
-                    <div className="text-white font-bold text-base">{game.awayTeam}</div>
+                    <div className="text-white font-bold text-base">{game.awayTeamFull || game.awayTeam}</div>
                     <div className="text-gray-500 text-xs">@</div>
-                    <div className="text-white font-bold text-base">{game.homeTeam}</div>
+                    <div className="text-white font-bold text-base">{game.homeTeamFull || game.homeTeam}</div>
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -814,11 +814,11 @@ export default function DemoDashboard() {
                     {/* Teams with Scores */}
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-white font-medium">{game.awayTeam}</span>
+                        <span className="text-white font-medium">{game.awayTeamFull || game.awayTeam}</span>
                         <span className="text-white font-bold text-lg">{game.awayScore || 0}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-white font-medium">{game.homeTeam}</span>
+                        <span className="text-white font-medium">{game.homeTeamFull || game.homeTeam}</span>
                         <span className="text-white font-bold text-lg">{game.homeScore || 0}</span>
                       </div>
                     </div>

@@ -257,9 +257,9 @@ export default function Dashboard() {
                     <span className="text-gray-500 text-xs">{game.sportName}</span>
                   </div>
                   <div className="mb-4">
-                    <div className="font-bold text-base" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayTeam}</div>
+                    <div className="font-bold text-base" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayTeamFull || game.awayTeam}</div>
                     <div className="text-gray-500 text-xs">@</div>
-                    <div className="font-bold text-base" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.homeTeam}</div>
+                    <div className="font-bold text-base" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.homeTeamFull || game.homeTeam}</div>
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -346,11 +346,11 @@ export default function Dashboard() {
                       
                       <div className="space-y-2 mb-4">
                         <div className="flex items-center justify-between">
-                          <span className="font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayTeam}</span>
+                          <span className="font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayTeamFull || game.awayTeam}</span>
                           <span className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayScore || 0}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.homeTeam}</span>
+                          <span className="font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.homeTeamFull || game.homeTeam}</span>
                           <span className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.homeScore || 0}</span>
                         </div>
                       </div>
