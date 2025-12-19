@@ -46,8 +46,16 @@ None documented yet.
 - **Authentication**: NextAuth.js v4
 - **Database**: Replit PostgreSQL (Neon-backed) via Drizzle ORM
 - **Payment Processing**: Stripe (for environment variables)
-- **Sports Data**: MySportsFeeds API for live NBA games and odds
-  - API service: `lib/mysportsfeeds.js`
+- **Sports Data**: Multi-source NBA game data
+  - **Primary: Sportsradar NBA API v8** (active)
+    - API service: `lib/sportsradar.js`
+    - Provides: Games, schedules, scores, full team names, venues, broadcasts
+    - Secret: SPORTSRADAR_API_KEY
+  - **Fallback: MySportsFeeds API** (odds pending activation)
+    - API service: `lib/mysportsfeeds.js`
+    - Secrets: MYSPORTSFEEDS_API_KEY, MYSPORTSFEEDS_PASSWORD
+    - Status: Games work, odds returning 403 (awaiting support response)
   - Games endpoint: `/api/games/nba`
+  - Debug endpoint: `/debug/api` (bypasses beta access)
   - Server-side caching with 5-minute refresh interval
-  - Secrets: MYSPORTSFEEDS_API_KEY, MYSPORTSFEEDS_PASSWORD
+  - Odds: Currently using defaults until MySportsFeeds or Sportsradar Odds API activates

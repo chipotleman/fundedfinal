@@ -1,9 +1,12 @@
-import { fetchNBAGames, fetchUpcomingNBAGames } from '../../../lib/mysportsfeeds';
+import { fetchNBAGames as fetchSportsradarGames, fetchUpcomingNBAGames as fetchSportsradarUpcoming } from '../../../lib/sportsradar';
+import { fetchNBAGames as fetchMSFGames, fetchUpcomingNBAGames as fetchMSFUpcoming } from '../../../lib/mysportsfeeds';
 
 let cachedGames = null;
 let cachedDebugInfo = null;
 let cacheTimestamp = null;
 const CACHE_DURATION = 5 * 60 * 1000;
+
+const USE_SPORTSRADAR = process.env.SPORTSRADAR_API_KEY ? true : false;
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -11,14 +14,18 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { upcoming, debug } = req.query;
+    const { upcoming, debug, source } = req.query;
     const now = Date.now();
 
-    if (cachedGames && cacheTimestamp && (now - cacheTimestamp) < CACHE_DURATION) {
+    const forceSource = source === 'mysportsfeeds' ? 'msf' : source === 'sportsradar' ? 'sr' : null;
+    const useSource = forceSource || (USE_SPORTSRADAR ? 'sr' : 'msf');
+
+    if (cachedGames && cacheTimestamp && (now - cacheTimestamp) < CACHE_DURATION && !forceSource) {
       const response = { 
         games: cachedGames, 
         cached: true,
-        cacheAge: Math.floor((now - cacheTimestamp) / 1000)
+        cacheAge: Math.floor((now - cacheTimestamp) / 1000),
+        source: cachedDebugInfo?.source || 'unknown'
       };
       if (debug === 'true' && cachedDebugInfo) {
         response.debugInfo = cachedDebugInfo;
@@ -29,12 +36,26 @@ export default async function handler(req, res) {
     let games;
     let debugInfo = null;
     
-    if (upcoming === 'true') {
-      const result = await fetchUpcomingNBAGames(3);
-      games = result.games;
-      debugInfo = result.debugInfo;
+    if (useSource === 'sr') {
+      console.log('Using Sportsradar NBA API');
+      if (upcoming === 'true') {
+        const result = await fetchSportsradarUpcoming(3);
+        games = result.games;
+        debugInfo = result.debugInfo;
+      } else {
+        games = await fetchSportsradarGames();
+        debugInfo = { source: 'sportsradar' };
+      }
     } else {
-      games = await fetchNBAGames();
+      console.log('Using MySportsFeeds NBA API');
+      if (upcoming === 'true') {
+        const result = await fetchMSFUpcoming(3);
+        games = result.games;
+        debugInfo = result.debugInfo;
+      } else {
+        games = await fetchMSFGames();
+        debugInfo = { source: 'mysportsfeeds' };
+      }
     }
 
     cachedGames = games;
@@ -44,7 +65,8 @@ export default async function handler(req, res) {
     const response = { 
       games, 
       cached: false,
-      count: games.length 
+      count: games.length,
+      source: debugInfo?.source || useSource
     };
     
     if (debug === 'true' && debugInfo) {
