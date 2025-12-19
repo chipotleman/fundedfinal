@@ -607,7 +607,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                           </div>
                         </div>
                         {parlayLegs.hasRealData && leg.odds && (
-                          <div className="font-bold text-lg" style={{ color: isDarkMode ? '#60a5fa' : '#111827' }}>
+                          <div className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
                             {leg.odds > 0 ? `+${leg.odds}` : leg.odds}
                           </div>
                         )}
@@ -691,7 +691,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
             )}
             {isOpen && (
               <div className="text-right">
-                <div className="font-bold text-xl" style={{ color: isDarkMode ? '#60a5fa' : '#111827' }}>${formatMoney(payout)}</div>
+                <div className="font-bold text-xl" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>${formatMoney(payout)}</div>
                 <div className="text-gray-400 text-xs uppercase">Potential Payout</div>
               </div>
             )}
