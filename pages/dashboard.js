@@ -323,9 +323,9 @@ export default function Dashboard() {
                 return (
                   <div 
                     key={game.id} 
-                    className="rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition-opacity" 
+                    className="rounded-xl overflow-hidden cursor-pointer" 
                     style={{ backgroundColor: isDarkMode ? '#111111' : '#ffffff', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(209, 213, 219, 1)' }}
-                    onClick={() => !isFinal && router.push(`/game/${game.id}`)}
+                    onClick={() => !isFinal && !linesLocked && toggleGameExpanded(game.id)}
                   >
                     <div className="px-4 py-3">
                       <div className="flex items-center justify-between mb-3">
@@ -344,12 +344,13 @@ export default function Dashboard() {
                           )}
                         </div>
                         <svg 
-                          className={`w-4 h-4 text-gray-600 transition-transform ${isExpanded ? 'rotate-90' : ''}`} 
+                          className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                          style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}
                           fill="none" 
                           stroke="currentColor" 
                           viewBox="0 0 24 24"
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </div>
                       
