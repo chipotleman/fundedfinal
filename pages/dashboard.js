@@ -187,10 +187,10 @@ export default function Dashboard() {
               className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
                 selectedTab === 'live'
                   ? 'bg-red-600 text-white'
-                  : isDarkMode ? 'bg-[#1a1a1a] text-gray-400 hover:text-white' : 'bg-gray-200 text-gray-600 hover:text-gray-900'
+                  : isDarkMode ? 'bg-[#1a1a1a] text-gray-400 hover:text-white' : 'bg-red-600 text-white hover:bg-red-700'
               }`}
             >
-              <span className={`w-2 h-2 rounded-full ${categorizedGames.liveGames.length > 0 ? 'bg-red-500 animate-pulse' : 'bg-gray-500'}`}></span>
+              <span className={`w-2 h-2 rounded-full ${categorizedGames.liveGames.length > 0 ? (isDarkMode ? 'bg-red-500 animate-pulse' : 'bg-white animate-pulse') : (isDarkMode ? 'bg-gray-500' : 'bg-white/60')}`}></span>
               Live {categorizedGames.liveGames.length > 0 && `(${categorizedGames.liveGames.length})`}
             </button>
           </div>
