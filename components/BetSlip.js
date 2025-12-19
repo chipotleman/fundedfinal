@@ -16,6 +16,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
   const [selectedWinningBet, setSelectedWinningBet] = useState(null);
   const [showReceipt, setShowReceipt] = useState(false);
   const [currentReceipt, setCurrentReceipt] = useState(null);
+  const [showPikPlacedBadge, setShowPikPlacedBadge] = useState(false);
   const [showCoinRain, setShowCoinRain] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [expandedBets, setExpandedBets] = useState({});
@@ -250,13 +251,12 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
           });
         }
         setShowReceipt(true);
+        setShowPikPlacedBadge(true);
         
-        // Auto-dismiss receipt after 4 seconds
+        // Hide "Pik Placed!" badge after 3 seconds
         setTimeout(() => {
-          setShowReceipt(false);
-          setCurrentReceipt(null);
-          onClose();
-        }, 4000);
+          setShowPikPlacedBadge(false);
+        }, 3000);
       }
 
       setShowCoinRain(true);
@@ -593,24 +593,47 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
           onClick={() => {
             setShowReceipt(false);
             setCurrentReceipt(null);
+            setShowPikPlacedBadge(false);
             onClose();
           }}
         >
           <div 
-            className="w-full max-w-md animate-slide-up"
+            className="w-full max-w-md animate-slide-up max-h-[85vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="mb-4 text-center">
-              <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-400 px-4 py-2 rounded-full">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="font-bold">Pik Placed!</span>
+            {showPikPlacedBadge && (
+              <div className="mb-4 text-center animate-badge-fade">
+                <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-400 px-4 py-2 rounded-full">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="font-bold">Pik Placed!</span>
+                </div>
               </div>
-            </div>
+            )}
             <PiksBetCard 
               bet={currentReceipt}
-              onCashOut={() => {}}
+              onCashOut={async (bet) => {
+                try {
+                  const response = await fetch('/api/bets/cashout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ betId: bet.id })
+                  });
+                  if (response.ok) {
+                    const data = await response.json();
+                    if (data.newBankroll && onBetPlaced) {
+                      onBetPlaced(data.newBankroll);
+                      window.dispatchEvent(new CustomEvent('bankrollUpdated', { detail: { bankroll: data.newBankroll } }));
+                    }
+                    setShowReceipt(false);
+                    setCurrentReceipt(null);
+                    onClose();
+                  }
+                } catch (error) {
+                  console.error('Cashout failed:', error);
+                }
+              }}
               onShare={() => {}}
             />
           </div>
@@ -623,11 +646,19 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
               from { opacity: 0; transform: translateY(20px); }
               to { opacity: 1; transform: translateY(0); }
             }
+            @keyframes badge-fade {
+              0% { opacity: 1; }
+              70% { opacity: 1; }
+              100% { opacity: 0; }
+            }
             .animate-fade-in {
               animation: fade-in 0.3s ease-out forwards;
             }
             .animate-slide-up {
               animation: slide-up 0.4s ease-out forwards;
+            }
+            .animate-badge-fade {
+              animation: badge-fade 3s ease-out forwards;
             }
           `}</style>
         </div>
