@@ -343,14 +343,34 @@ export default function BetHistory() {
           <div className="grid grid-cols-1 gap-4 max-w-2xl mx-auto">
             {filteredBets.map(bet => {
               const liveGame = liveGames[bet.gameId] || liveGames[bet.matchup];
-              const enrichedBet = liveGame ? {
+              
+              let enrichedLegs = bet.legs;
+              if (bet.legs && Array.isArray(bet.legs)) {
+                enrichedLegs = bet.legs.map(leg => {
+                  const legGame = liveGames[leg.gameId] || liveGames[leg.matchup];
+                  if (legGame) {
+                    return {
+                      ...leg,
+                      isLive: legGame.isLive || legGame.status === 'IN_PROGRESS',
+                      homeScore: legGame.homeScore,
+                      awayScore: legGame.awayScore,
+                      homeTeamFull: legGame.homeTeamFull || legGame.homeTeam,
+                      awayTeamFull: legGame.awayTeamFull || legGame.awayTeam
+                    };
+                  }
+                  return leg;
+                });
+              }
+              
+              const enrichedBet = {
                 ...bet,
-                isLive: liveGame.isLive || liveGame.status === 'IN_PROGRESS',
-                currentHomeScore: liveGame.homeScore,
-                currentAwayScore: liveGame.awayScore,
-                homeTeamFull: liveGame.homeTeamFull || liveGame.homeTeam,
-                awayTeamFull: liveGame.awayTeamFull || liveGame.awayTeam
-              } : bet;
+                legs: enrichedLegs,
+                isLive: liveGame?.isLive || liveGame?.status === 'IN_PROGRESS' || enrichedLegs?.some(leg => leg.isLive),
+                currentHomeScore: liveGame?.homeScore,
+                currentAwayScore: liveGame?.awayScore,
+                homeTeamFull: liveGame?.homeTeamFull || liveGame?.homeTeam,
+                awayTeamFull: liveGame?.awayTeamFull || liveGame?.awayTeam
+              };
               
               return (
                 <PiksBetCard 

@@ -519,8 +519,16 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
               className="flex items-center justify-between cursor-pointer"
               onClick={() => setIsExpanded(!isExpanded)}
             >
-              <div className="text-gray-400 text-xs uppercase">
-                {parlayLegs.legs.length} Games
+              <div className="flex items-center gap-2">
+                <span className="text-gray-400 text-xs uppercase">
+                  {parlayLegs.legs.length} Games
+                </span>
+                {parlayLegs.legs.some(leg => leg.isLive) && (
+                  <div className="flex items-center gap-1">
+                    <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                    <span className="text-red-500 text-xs font-medium">LIVE</span>
+                  </div>
+                )}
               </div>
               <svg 
                 className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
@@ -535,7 +543,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
               <div className="mt-3 space-y-4">
                 {parlayLegs.legs.map((leg, index) => {
                   const legTeams = getTeamNamesForLeg(leg, index);
-                  const hasLiveData = leg.homeScore !== undefined && leg.awayScore !== undefined;
+                  const isLegLive = leg.isLive || (typeof leg.homeScore === 'number' && typeof leg.awayScore === 'number');
                   
                   return (
                     <div key={index} className="pb-3 border-b border-white/10 last:border-b-0 last:pb-0">
@@ -554,23 +562,23 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                       </div>
                       <div className="space-y-1">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{legTeams.homeTeam}</span>
-                          {hasLiveData ? (
+                          <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{leg.homeTeamFull || legTeams.homeTeam}</span>
+                          {isLegLive ? (
                             <span className="text-white font-bold">{leg.homeScore}</span>
                           ) : (
-                            <span className="text-blue-400 text-xs">-</span>
+                            <span className="text-gray-500 text-xs">-</span>
                           )}
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{legTeams.awayTeam}</span>
-                          {hasLiveData ? (
+                          <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{leg.awayTeamFull || legTeams.awayTeam}</span>
+                          {isLegLive ? (
                             <span className="text-white font-bold">{leg.awayScore}</span>
                           ) : (
-                            <span className="text-blue-400 text-xs">-</span>
+                            <span className="text-gray-500 text-xs">-</span>
                           )}
                         </div>
                       </div>
-                      {leg.gameStart && (
+                      {!isLegLive && leg.gameStart && (
                         <div className="text-blue-300 text-xs mt-1.5">
                           {new Date(leg.gameStart).toLocaleString('en-US', {
                             month: 'short',
@@ -581,10 +589,10 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                           })}
                         </div>
                       )}
-                      {hasLiveData && (
+                      {isLegLive && (
                         <div className="flex items-center gap-1 mt-1">
-                          <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                          <span className="text-green-400 text-xs font-medium">LIVE</span>
+                          <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
+                          <span className="text-red-500 text-xs font-medium">LIVE</span>
                         </div>
                       )}
                     </div>
