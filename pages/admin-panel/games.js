@@ -7,9 +7,14 @@ export default function AdminGames() {
   const [selectedGame, setSelectedGame] = useState(null);
   const [sportFilter, setSportFilter] = useState('all');
   const [creditStatus, setCreditStatus] = useState(null);
+  const [historicalPulls, setHistoricalPulls] = useState([]);
+  const [selectedPullId, setSelectedPullId] = useState('');
+  const [savingPull, setSavingPull] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     fetchGames();
+    fetchHistoricalPulls();
   }, []);
 
   const fetchGames = async () => {
@@ -24,6 +29,67 @@ export default function AdminGames() {
       console.error('Failed to fetch games:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchHistoricalPulls = async () => {
+    try {
+      const res = await fetch('/api/admin-panel/odds-history?action=list');
+      if (res.ok) {
+        const data = await res.json();
+        setHistoricalPulls(data.pulls || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch historical pulls:', error);
+    }
+  };
+
+  const saveCurrentPull = async () => {
+    if (games.length === 0) return;
+    setSavingPull(true);
+    try {
+      const res = await fetch('/api/admin-panel/odds-history', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'save',
+          games: games,
+          creditUsed: creditStatus?.used || 0,
+        }),
+      });
+      if (res.ok) {
+        fetchHistoricalPulls();
+        alert('Current odds saved successfully!');
+      }
+    } catch (error) {
+      console.error('Failed to save pull:', error);
+      alert('Failed to save odds data');
+    } finally {
+      setSavingPull(false);
+    }
+  };
+
+  const downloadPull = async () => {
+    if (!selectedPullId) return;
+    setDownloading(true);
+    try {
+      const res = await fetch(`/api/admin-panel/odds-history?action=download&pullId=${selectedPullId}`);
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `odds_pull_${selectedPullId}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+      }
+    } catch (error) {
+      console.error('Failed to download:', error);
+      alert('Failed to download Excel file');
+    } finally {
+      setDownloading(false);
     }
   };
 
@@ -49,6 +115,18 @@ export default function AdminGames() {
     return Object.keys(game.allBookmakerOdds).sort();
   };
 
+  const formatPullDate = (dateStr) => {
+    const date = new Date(dateStr);
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
   return (
     <AdminLayout title="Games & Odds">
       <div className="mb-8">
@@ -67,6 +145,56 @@ export default function AdminGames() {
               />
             </div>
           </div>
+        )}
+      </div>
+
+      <div className="mb-6 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+        <h3 className="text-lg font-semibold text-white mb-3">Historical Odds Downloads</h3>
+        <div className="flex flex-wrap gap-4 items-end">
+          <div className="flex-1 min-w-[250px]">
+            <label className="block text-sm text-gray-400 mb-1">Select Historical Pull</label>
+            <select
+              value={selectedPullId}
+              onChange={(e) => setSelectedPullId(e.target.value)}
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-green-500"
+            >
+              <option value="">-- Select a pull to download --</option>
+              {historicalPulls.map(pull => (
+                <option key={pull.id} value={pull.id}>
+                  {formatPullDate(pull.pulledAt)} - {pull.gamesCount} games
+                </option>
+              ))}
+            </select>
+          </div>
+          <button
+            onClick={downloadPull}
+            disabled={!selectedPullId || downloading}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition flex items-center gap-2"
+          >
+            {downloading ? (
+              <>
+                <span className="animate-spin">⏳</span> Downloading...
+              </>
+            ) : (
+              <>📥 Download Excel</>
+            )}
+          </button>
+          <button
+            onClick={saveCurrentPull}
+            disabled={games.length === 0 || savingPull}
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition flex items-center gap-2"
+          >
+            {savingPull ? (
+              <>
+                <span className="animate-spin">⏳</span> Saving...
+              </>
+            ) : (
+              <>💾 Save Current Pull</>
+            )}
+          </button>
+        </div>
+        {historicalPulls.length === 0 && (
+          <p className="text-gray-500 text-sm mt-2">No historical pulls saved yet. Click "Save Current Pull" to save the current odds data.</p>
         )}
       </div>
 

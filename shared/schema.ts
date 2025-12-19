@@ -295,6 +295,18 @@ export const withdrawals = pgTable("withdrawals", {
   createdAtIdx: index("withdrawals_created_at_idx").on(table.createdAt),
 }));
 
+// Odds history pulls for admin download
+export const oddsHistoryPulls = pgTable("odds_history_pulls", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  pulledAt: timestamp("pulled_at").defaultNow().notNull(),
+  gamesCount: integer("games_count").default(0),
+  sportsData: jsonb("sports_data").notNull(), // All games with all bookmaker odds
+  creditUsed: integer("credit_used").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  pulledAtIdx: index("odds_history_pulls_pulled_at_idx").on(table.pulledAt),
+}));
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -322,3 +334,5 @@ export type PaymentMethod = typeof paymentMethods.$inferSelect;
 export type InsertPaymentMethod = typeof paymentMethods.$inferInsert;
 export type Withdrawal = typeof withdrawals.$inferSelect;
 export type InsertWithdrawal = typeof withdrawals.$inferInsert;
+export type OddsHistoryPull = typeof oddsHistoryPulls.$inferSelect;
+export type InsertOddsHistoryPull = typeof oddsHistoryPulls.$inferInsert;
