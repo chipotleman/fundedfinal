@@ -695,49 +695,70 @@ export default function DemoDashboard() {
             </div>
           </div>
           <div className="flex gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide">
-            {games.slice(0, 3).map((game, idx) => (
-              <div key={game.id} className="flex-shrink-0 w-[280px] bg-[#111111] rounded-2xl border border-gray-800/50 overflow-hidden">
-                <div className="p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="bg-green-500 text-black text-[10px] font-bold px-2 py-0.5 rounded">FEATURED</span>
-                    <span className="text-gray-500 text-xs">{game.sportName || 'NBA'}</span>
-                  </div>
-                  <div className="mb-4">
-                    <div className="text-white font-bold text-base">{game.awayTeamFull || game.awayTeam}</div>
-                    <div className="text-gray-500 text-xs">@</div>
-                    <div className="text-white font-bold text-base">{game.homeTeamFull || game.homeTeam}</div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeam)}
-                      className={`flex-1 rounded-lg py-3 px-3 ${
-                        isBetInSlip(game, 'moneyline', game.homeTeam) 
-                          ? 'bg-green-600 border border-green-500' 
-                          : 'bg-[#1a1a1a] border border-gray-700 active:bg-green-600'
-                      }`}
-                    >
-                      <div className="text-gray-400 text-xs mb-0.5">{game.homeTeam.split(' ').pop()}</div>
-                      <div className={`font-bold ${isBetInSlip(game, 'moneyline', game.homeTeam) ? 'text-white' : 'text-green-400'}`}>
-                        {formatOdds(game.lines.moneyline.home)}
+            {games.slice(0, 3).map((game, idx) => {
+              const isLive = game.isLive || game.status === 'IN_PROGRESS';
+              return (
+                <div 
+                  key={game.id} 
+                  className="flex-shrink-0 w-[280px] bg-[#111111] rounded-2xl border border-gray-800/50 overflow-hidden cursor-pointer hover:border-gray-600 transition-colors"
+                  onClick={() => router.push(`/game/${game.id}?demo=true`)}
+                >
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="bg-green-500 text-black text-[10px] font-bold px-2 py-0.5 rounded">FEATURED</span>
+                      <span className="text-gray-500 text-xs">{game.sportName || 'NBA'}</span>
+                      {isLive ? (
+                        <div className="flex items-center gap-1 ml-auto">
+                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                          <span className="text-red-500 text-xs font-medium">LIVE</span>
+                        </div>
+                      ) : (
+                        <span className="text-gray-400 text-xs ml-auto">{game.time || 'TBD'}</span>
+                      )}
+                    </div>
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-white font-bold text-base">{game.awayTeamFull || game.awayTeam}</span>
+                        {isLive && <span className="text-white font-bold">{game.awayScore || 0}</span>}
                       </div>
-                    </button>
-                    <button
-                      onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeam)}
-                      className={`flex-1 rounded-lg py-3 px-3 ${
-                        isBetInSlip(game, 'moneyline', game.awayTeam) 
-                          ? 'bg-green-600 border border-green-500' 
-                          : 'bg-[#1a1a1a] border border-gray-700 active:bg-green-600'
-                      }`}
-                    >
-                      <div className="text-gray-400 text-xs mb-0.5">{game.awayTeam.split(' ').pop()}</div>
-                      <div className={`font-bold ${isBetInSlip(game, 'moneyline', game.awayTeam) ? 'text-white' : 'text-green-400'}`}>
-                        {formatOdds(game.lines.moneyline.away)}
+                      <div className="text-gray-500 text-xs">@</div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-white font-bold text-base">{game.homeTeamFull || game.homeTeam}</span>
+                        {isLive && <span className="text-white font-bold">{game.homeScore || 0}</span>}
                       </div>
-                    </button>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeam); }}
+                        className={`flex-1 rounded-lg py-3 px-3 ${
+                          isBetInSlip(game, 'moneyline', game.homeTeam) 
+                            ? 'bg-green-600 border border-green-500' 
+                            : 'bg-[#1a1a1a] border border-gray-700 active:bg-green-600'
+                        }`}
+                      >
+                        <div className="text-gray-400 text-xs mb-0.5">{game.homeTeam.split(' ').pop()}</div>
+                        <div className={`font-bold ${isBetInSlip(game, 'moneyline', game.homeTeam) ? 'text-white' : 'text-green-400'}`}>
+                          {formatOdds(game.lines.moneyline.home)}
+                        </div>
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeam); }}
+                        className={`flex-1 rounded-lg py-3 px-3 ${
+                          isBetInSlip(game, 'moneyline', game.awayTeam) 
+                            ? 'bg-green-600 border border-green-500' 
+                            : 'bg-[#1a1a1a] border border-gray-700 active:bg-green-600'
+                        }`}
+                      >
+                        <div className="text-gray-400 text-xs mb-0.5">{game.awayTeam.split(' ').pop()}</div>
+                        <div className={`font-bold ${isBetInSlip(game, 'moneyline', game.awayTeam) ? 'text-white' : 'text-green-400'}`}>
+                          {formatOdds(game.lines.moneyline.away)}
+                        </div>
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -757,7 +778,11 @@ export default function DemoDashboard() {
               const isLive = game.isLive || game.status === 'IN_PROGRESS';
               
               return (
-                <div key={game.id} className="bg-[#111111] rounded-xl border border-gray-800/50 overflow-hidden">
+                <div 
+                  key={game.id} 
+                  className="bg-[#111111] rounded-xl border border-gray-800/50 overflow-hidden cursor-pointer hover:border-gray-600 transition-colors"
+                  onClick={() => router.push(`/game/${game.id}?demo=true`)}
+                >
                   {/* Game Header */}
                   <div className="px-4 py-3">
                     <div className="flex items-center justify-between mb-3">
@@ -801,7 +826,7 @@ export default function DemoDashboard() {
                     {/* Moneyline Buttons */}
                     <div className="flex gap-3">
                       <button
-                        onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeam)}
+                        onClick={(e) => { e.stopPropagation(); addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeam); }}
                         className={`flex-1 rounded-xl py-3 px-4 ${
                           isBetInSlip(game, 'moneyline', game.awayTeam) 
                             ? 'bg-green-600 border border-green-500' 
@@ -814,7 +839,7 @@ export default function DemoDashboard() {
                         </div>
                       </button>
                       <button
-                        onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeam)}
+                        onClick={(e) => { e.stopPropagation(); addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeam); }}
                         className={`flex-1 rounded-xl py-3 px-4 ${
                           isBetInSlip(game, 'moneyline', game.homeTeam) 
                             ? 'bg-green-600 border border-green-500' 
