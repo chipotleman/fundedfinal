@@ -30,6 +30,9 @@ export default function BetHistory() {
       }
       
       try {
+        // First trigger auto-grading of completed games
+        await fetch('/api/bets/grade', { method: 'POST' });
+        
         const response = await fetch('/api/bets/history');
         if (response.ok) {
           const bets = await response.json();

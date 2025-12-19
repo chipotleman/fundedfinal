@@ -91,7 +91,9 @@ export default async function handler(req, res) {
           status,
           pnl,
           userId: bet.userId,
-          stake: bet.stake
+          stake: bet.stake,
+          homeScore: null,
+          awayScore: null
         });
         gradedCount++;
       } else {
@@ -126,20 +128,26 @@ export default async function handler(req, res) {
           status,
           pnl,
           userId: bet.userId,
-          stake: bet.stake
+          stake: bet.stake,
+          homeScore: parseInt(game.homeScore) || 0,
+          awayScore: parseInt(game.awayScore) || 0
         });
         gradedCount++;
       }
     }
 
     for (const update of updates) {
+      const updateData = {
+        status: update.status,
+        pnl: update.pnl,
+        settledAt: new Date()
+      };
+      if (update.homeScore !== null) updateData.homeScore = update.homeScore;
+      if (update.awayScore !== null) updateData.awayScore = update.awayScore;
+      
       await db
         .update(userBets)
-        .set({
-          status: update.status,
-          pnl: update.pnl,
-          settledAt: new Date()
-        })
+        .set(updateData)
         .where(eq(userBets.id, update.betId));
 
       if (update.status === 'won' || update.status === 'push') {
