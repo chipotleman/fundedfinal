@@ -39,7 +39,7 @@ None documented yet.
 
 ### System Design Choices
 - **Authentication Flow**: Beta access -> NextAuth.js -> JWT session -> User profile creation -> Challenge selection & purchase -> Challenge data persistence.
-- **Database Schema**: Includes `users`, `profiles`, `user_bets`, `accounts`, `sessions`, `verification_tokens`, `admin_users`, `admin_staff`, `payment_methods`, `withdrawals`, `user_events`, `session_metrics`, `page_views`, `demo_bets`, `unplaced_bets`.
+- **Database Schema**: Includes `users`, `profiles`, `user_bets`, `accounts`, `sessions`, `verification_tokens`, `admin_users`, `admin_staff`, `payment_methods`, `withdrawals`, `user_events`, `session_metrics`, `page_views`, `demo_bets`, `unplaced_bets`, `odds_history_pulls`.
 - **API Architecture**: RESTful API routes in `/pages/api/*` for authentication, user profiles, admin functions, analytics, payment methods, and withdrawals.
 
 ## External Dependencies
@@ -58,6 +58,7 @@ None documented yet.
   - **Caching**: 10-minute server-side cache per sport
   - **Odds Strategy**: Priority-based selection - FanDuel first, then DraftKings, then Bovada, etc. for user familiarity
   - **Admin Odds View**: Full bookmaker comparison spreadsheet available in admin panel at /admin-panel/games
+  - **Historical Odds Downloads**: Save current odds pulls to database and download any historical pull as Excel spreadsheet via `/api/admin-panel/odds-history`
   - Games endpoints:
     - `/api/games` - All sports combined
     - `/api/games?sport=basketball_nba` - Specific sport
