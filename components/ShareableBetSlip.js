@@ -7,14 +7,47 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [message, setMessage] = useState('');
   const cardContainerRef = useRef(null);
+  const scrollPositionRef = useRef(0);
   const { isDarkMode } = useTheme();
 
   useEffect(() => {
-    if (isVisible) {
-      document.body.style.overflow = 'hidden';
-    }
+    if (!isVisible) return;
+
+    // Store current scroll position
+    scrollPositionRef.current = window.scrollY;
+
+    // Lock body scroll
+    const scrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    // Prevent touch scroll on mobile
+    const preventScroll = (e) => {
+      e.preventDefault();
+    };
+    
+    document.addEventListener('touchmove', preventScroll, { passive: false });
+    document.addEventListener('wheel', preventScroll, { passive: false });
+
     return () => {
+      // Restore scroll
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.width = '';
       document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      
+      document.removeEventListener('touchmove', preventScroll);
+      document.removeEventListener('wheel', preventScroll);
+      
+      window.scrollTo(0, scrollPositionRef.current);
     };
   }, [isVisible]);
 
@@ -55,7 +88,10 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
 
   const downloadImage = async () => {
     const canvas = await generateImage();
-    if (!canvas) return;
+    if (!canvas) {
+      showMessage('Failed to generate image');
+      return;
+    }
     
     const imageDataUrl = canvas.toDataURL('image/png');
     const link = document.createElement('a');
@@ -66,31 +102,41 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
   };
 
   const shareToInstagram = async () => {
+    // Check if Web Share API with files is supported
+    const testBlob = new Blob(['test'], { type: 'image/png' });
+    const testFile = new File([testBlob], 'test.png', { type: 'image/png' });
+    const canShareFiles = navigator.share && navigator.canShare && navigator.canShare({ files: [testFile] });
+
+    if (!canShareFiles) {
+      // Fallback: download image with instructions
+      await downloadImage();
+      showMessage('Image saved! Upload to Instagram from your gallery.');
+      return;
+    }
+
     const canvas = await generateImage();
-    if (!canvas) return;
+    if (!canvas) {
+      showMessage('Failed to generate image');
+      return;
+    }
     
     try {
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
       const file = new File([blob], 'piks-win.png', { type: 'image/png' });
       
-      if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: 'My Piks Win!'
-        });
-        showMessage('Shared successfully!');
-      } else {
-        const imageDataUrl = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.download = `piks-win-${Date.now()}.png`;
-        link.href = imageDataUrl;
-        link.click();
-        showMessage('Image saved! Add to Instagram from your gallery.');
-      }
+      await navigator.share({
+        files: [file],
+        title: 'My Piks Win!'
+      });
+      showMessage('Shared!');
     } catch (error) {
-      if (error.name !== 'AbortError') {
-        await downloadImage();
+      if (error.name === 'AbortError') {
+        // User cancelled - do nothing
+        return;
       }
+      // Any other error: fall back to download
+      await downloadImage();
+      showMessage('Image saved! Upload to Instagram from your gallery.');
     }
   };
 
@@ -123,7 +169,8 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        touchAction: 'none'
       }}
     >
       {message && (
@@ -137,7 +184,8 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
           padding: '6px 14px',
           borderRadius: 8,
           fontSize: 13,
-          fontWeight: 500
+          fontWeight: 500,
+          zIndex: 100000
         }}>
           {message}
         </div>
@@ -165,7 +213,6 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
         Share Your Win!
       </div>
 
-      {/* Card container - scaled to fit */}
       <div 
         ref={cardContainerRef}
         onClick={(e) => e.stopPropagation()}
@@ -182,7 +229,6 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
         <PiksBetCard bet={bet} onCashOut={null} onShare={null} />
       </div>
 
-      {/* Buttons */}
       <div 
         onClick={(e) => e.stopPropagation()}
         style={{ width: '85vw', maxWidth: 340, marginTop: 10 }}
