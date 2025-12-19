@@ -184,17 +184,18 @@ export default function Dashboard() {
             </button>
             <button
               onClick={() => setSelectedTab('live')}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 ${
-                selectedTab === 'live'
-                  ? 'bg-red-600 text-white'
-                  : isDarkMode ? 'bg-[#1a1a1a] text-gray-400' : 'bg-gray-200 text-gray-600'
-              }`}
+              className="px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
+              style={{
+                backgroundColor: selectedTab === 'live' ? '#dc2626' : (isDarkMode ? '#1a1a1a' : '#e5e7eb'),
+                color: selectedTab === 'live' ? '#ffffff' : (isDarkMode ? '#9ca3af' : '#4b5563')
+              }}
             >
-              <span className={`w-2 h-2 rounded-full ${
-                selectedTab === 'live'
-                  ? 'bg-white'
-                  : categorizedGames.liveGames.length > 0 ? 'bg-red-500' : 'bg-gray-500'
-              }`}></span>
+              <span 
+                className="w-2 h-2 rounded-full"
+                style={{
+                  backgroundColor: selectedTab === 'live' ? '#ffffff' : (categorizedGames.liveGames.length > 0 ? '#ef4444' : '#6b7280')
+                }}
+              ></span>
               Live {categorizedGames.liveGames.length > 0 && `(${categorizedGames.liveGames.length})`}
             </button>
           </div>
