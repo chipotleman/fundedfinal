@@ -715,26 +715,44 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
           <div>PLACED: {formatPlacedDate()}</div>
         </div>
 
-        {isOpen && onCashOut && (
-          <button
-            ref={buttonRef}
-            onClick={() => {
-              if (confirmingCashOut) {
-                onCashOut(bet.id);
-                setConfirmingCashOut(false);
-              } else {
-                setConfirmingCashOut(true);
-              }
-            }}
-            className="w-full mt-3 font-bold py-2.5 px-4 rounded-xl text-sm transition-all force-white-text"
-            style={{
-              backgroundColor: confirmingCashOut ? '#dc2626' : '#22c55e',
-              color: '#ffffff'
-            }}
-          >
-            <span style={{ color: '#ffffff' }}>{confirmingCashOut ? `Confirm Cash Out ($${formatMoney(bet.stake * 0.8)})` : `Cash Out ($${formatMoney(bet.stake * 0.8)})`}</span>
-          </button>
-        )}
+        {isOpen && onCashOut && (() => {
+          // Only allow cashout if NO game has started (not live, not completed)
+          const now = new Date();
+          let anyGameStarted = false;
+          
+          if (isParlay && bet.legs && bet.legs.length > 0) {
+            anyGameStarted = bet.legs.some(leg => 
+              leg.isLive || leg.isCompleted || 
+              (leg.gameStart && new Date(leg.gameStart) <= now)
+            );
+          } else {
+            anyGameStarted = bet.isLive || 
+              (bet.gameStart && new Date(bet.gameStart) <= now);
+          }
+          
+          if (anyGameStarted) return null;
+          
+          return (
+            <button
+              ref={buttonRef}
+              onClick={() => {
+                if (confirmingCashOut) {
+                  onCashOut(bet.id);
+                  setConfirmingCashOut(false);
+                } else {
+                  setConfirmingCashOut(true);
+                }
+              }}
+              className="w-full mt-3 font-bold py-2.5 px-4 rounded-xl text-sm transition-all force-white-text"
+              style={{
+                backgroundColor: confirmingCashOut ? '#dc2626' : '#22c55e',
+                color: '#ffffff'
+              }}
+            >
+              <span style={{ color: '#ffffff' }}>{confirmingCashOut ? `Confirm Cash Out ($${formatMoney(bet.stake * 0.8)})` : `Cash Out ($${formatMoney(bet.stake * 0.8)})`}</span>
+            </button>
+          );
+        })()}
 
         {isWon && onShare && (
           <button
