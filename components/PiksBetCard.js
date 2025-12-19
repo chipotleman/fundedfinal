@@ -543,7 +543,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
               <div className="mt-3 space-y-4">
                 {parlayLegs.legs.map((leg, index) => {
                   const legTeams = getTeamNamesForLeg(leg, index);
-                  const isLegLive = leg.isLive || (typeof leg.homeScore === 'number' && typeof leg.awayScore === 'number');
+                  const isLegLive = leg.isLive === true;
                   
                   return (
                     <div key={index} className="pb-3 border-b border-white/10 last:border-b-0 last:pb-0">
