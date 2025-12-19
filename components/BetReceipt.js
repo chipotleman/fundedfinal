@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 
 export default function BetReceipt({ bet, isDemo = false, onClose }) {
   const [isVisible, setIsVisible] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   const pikId = useMemo(() => {
     return `${Date.now().toString().slice(-10)}${Math.floor(Math.random() * 100).toString().padStart(2, '0')}`;
@@ -37,6 +38,18 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
     return `${month} ${day}, ${year} ${time}`;
   };
 
+  const formatGameTime = (gameStart) => {
+    if (!gameStart) return null;
+    const date = new Date(gameStart);
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
   const calculatePayout = (odds, stake) => {
     if (odds > 0) {
       return (stake * odds / 100) + stake;
@@ -54,6 +67,9 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
   const isOpen = status === 'open';
   const isLost = status === 'lost';
   const isCashedOut = status === 'cashed_out';
+
+  const isParlay = bet.legs && Array.isArray(bet.legs) && bet.legs.length > 1;
+  const hasAnyLiveLeg = isParlay ? bet.legs.some(leg => leg.isLive === true) : (bet.isLive === true);
 
   const getStatusColor = () => {
     if (isDemo) return 'orange';
@@ -157,45 +173,133 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
               </div>
             </div>
 
-            <div className="pt-1 mt-1">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="text-white font-bold text-sm">{bet.team || bet.selection}</div>
-                  <div className="text-gray-400 text-xs uppercase">{bet.betType}</div>
+            {isParlay ? (
+              <div className="pt-1 mt-1">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="flex-1">
+                    <div className="text-white font-bold text-sm">{bet.legs.length} Leg Parlay</div>
+                    <div className="text-gray-400 text-xs uppercase">Parlay</div>
+                  </div>
+                  <div className={`font-bold text-lg ${isOpen ? colors.text : 'text-white'}`}>
+                    {formatOdds(bet.odds)}
+                  </div>
                 </div>
-                <div className={`font-bold text-lg ${isOpen ? colors.text : 'text-white'}`}>
-                  {formatOdds(bet.odds)}
-                </div>
-              </div>
 
-              <div className="mt-1 bg-slate-800/50 rounded p-2">
-                <div className="text-gray-400 text-[10px] uppercase mb-1">Game</div>
-                <div className="space-y-1">
-                  <div className="flex justify-between items-center">
-                    <span className="text-white text-xs font-medium">{bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0]}</span>
-                    {bet.isLive && <span className="text-white font-bold text-sm">{bet.awayScore || 0}</span>}
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-white text-xs font-medium">{bet.homeTeamFull || bet.homeTeam || bet.matchup?.split(' @ ')[1]}</span>
-                    {bet.isLive && <span className="text-white font-bold text-sm">{bet.homeScore || 0}</span>}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  {bet.isLive ? (
-                    <>
-                      <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
-                      <span className="text-red-500 text-[10px] font-medium">LIVE</span>
-                    </>
-                  ) : (
-                    <span className={`text-[10px] ${colors.text}`}>
-                      {isWon || isLost || isCashedOut ? 'Finished' : (bet.gameTime || 'Upcoming')}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-400 text-xs uppercase">
+                      {bet.legs.length} Games
                     </span>
-                  )}
+                    {hasAnyLiveLeg && (
+                      <div className="flex items-center gap-1">
+                        <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                        <span className="text-red-500 text-xs font-medium">LIVE</span>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
+                    className="text-gray-400"
+                  >
+                    <svg 
+                      className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+
+                {isExpanded && (
+                  <div className="space-y-3">
+                    {bet.legs.map((leg, index) => {
+                      const isLegLive = leg.isLive === true;
+                      const gameTime = formatGameTime(leg.gameStart);
+                      
+                      return (
+                        <div key={index} className="bg-slate-800/50 rounded p-2">
+                          <div className="flex justify-between items-start mb-1">
+                            <div className="flex-1">
+                              <div className="text-white font-bold text-xs">{leg.selection}</div>
+                              <div className="text-gray-400 text-[10px] uppercase">{leg.betType || 'Moneyline'}</div>
+                            </div>
+                            {leg.odds && (
+                              <div className="font-bold text-sm text-blue-400">
+                                {leg.odds > 0 ? `+${leg.odds}` : leg.odds}
+                              </div>
+                            )}
+                          </div>
+                          <div className="space-y-0.5">
+                            <div className="flex justify-between items-center">
+                              <span className="text-white text-xs">{leg.homeTeamFull || leg.homeTeam || leg.matchup?.split(' @ ')[1]}</span>
+                              {isLegLive && <span className="text-white font-bold text-xs">{leg.homeScore || 0}</span>}
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-white text-xs">{leg.awayTeamFull || leg.awayTeam || leg.matchup?.split(' @ ')[0]}</span>
+                              {isLegLive && <span className="text-white font-bold text-xs">{leg.awayScore || 0}</span>}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1 mt-1">
+                            {isLegLive ? (
+                              <>
+                                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                                <span className="text-red-500 text-[10px] font-medium">LIVE</span>
+                              </>
+                            ) : gameTime ? (
+                              <span className="text-blue-300 text-[10px]">{gameTime}</span>
+                            ) : (
+                              <span className="text-gray-400 text-[10px]">Upcoming</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="pt-1 mt-1">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="text-white font-bold text-sm">{bet.team || bet.selection}</div>
+                    <div className="text-gray-400 text-xs uppercase">{bet.betType}</div>
+                  </div>
+                  <div className={`font-bold text-lg ${isOpen ? colors.text : 'text-white'}`}>
+                    {formatOdds(bet.odds)}
+                  </div>
+                </div>
+
+                <div className="mt-1 bg-slate-800/50 rounded p-2">
+                  <div className="text-gray-400 text-[10px] uppercase mb-1">Game</div>
+                  <div className="space-y-1">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white text-xs font-medium">{bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0]}</span>
+                      {bet.isLive === true && <span className="text-white font-bold text-sm">{bet.awayScore || 0}</span>}
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-white text-xs font-medium">{bet.homeTeamFull || bet.homeTeam || bet.matchup?.split(' @ ')[1]}</span>
+                      {bet.isLive === true && <span className="text-white font-bold text-sm">{bet.homeScore || 0}</span>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 mt-1">
+                    {bet.isLive === true ? (
+                      <>
+                        <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                        <span className="text-red-500 text-[10px] font-medium">LIVE</span>
+                      </>
+                    ) : (
+                      <span className={`text-[10px] ${colors.text}`}>
+                        {isWon || isLost || isCashedOut ? 'Finished' : (formatGameTime(bet.gameStart) || bet.gameTime || 'Upcoming')}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            <div className="border-t border-white/30 mt-1 pt-1">
+            <div className="border-t border-white/30 mt-2 pt-2">
               <div className="flex justify-between items-end">
                 <div>
                   <div className="text-white font-bold text-lg">${bet.stake?.toFixed(2)}</div>
