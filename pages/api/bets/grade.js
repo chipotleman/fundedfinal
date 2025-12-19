@@ -1,5 +1,5 @@
 import { db } from '../../../lib/db';
-import { userBets, profiles } from '../../../lib/schema';
+import { userBets, profiles } from '../../../shared/schema';
 import { eq, and, inArray } from 'drizzle-orm';
 
 export default async function handler(req, res) {
