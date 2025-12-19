@@ -423,16 +423,16 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
 
   return (
     <>
-      <nav className="sticky top-0 left-0 right-0 z-50 overflow-hidden" style={{ backgroundColor: isDarkMode ? '#000000' : '#ffffff', height: '52px' }}>
-        <div className="px-3 sm:px-6 py-0 sm:py-1 -mb-14 sm:-mb-6">
-          <div className="flex items-center justify-center sm:justify-between min-h-[20px] sm:min-h-[48px] relative">
-            {/* Logo - centered on mobile, left-aligned on desktop */}
-            <div className="flex-none -mt-[8px] sm:-mt-[5.75px] -ml-[310px] sm:ml-0">
+      <nav className="sticky top-0 left-0 right-0 z-50" style={{ backgroundColor: isDarkMode ? '#000000' : '#ffffff' }}>
+        <div className="px-3 sm:px-6 h-[56px] sm:h-auto sm:py-1 sm:-mb-6 flex items-center">
+          <div className="flex items-center justify-between w-full sm:justify-between min-h-[56px] sm:min-h-[48px] relative">
+            {/* Logo - absolutely positioned on mobile to not affect bar height */}
+            <div className="absolute left-0 top-1/2 -translate-y-1/2 sm:relative sm:top-auto sm:translate-y-0 sm:-mt-[5.75px]">
               <Link href="/" className="flex items-center">
                 <img
                   src="/pikslogotransparent.png"
                   alt="Piks"
-                  className="h-[140px] sm:h-[230px] w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
+                  className="h-[100px] sm:h-[230px] w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
                   style={{
                     filter: isDarkMode ? 'hue-rotate(0deg) saturate(1.2) brightness(1.1)' : 'invert(1) hue-rotate(0deg) saturate(1.2) brightness(0.1)',
                     animation: isDarkMode ? 'logoRedYellowGlow 4s infinite ease-in-out' : 'none'
