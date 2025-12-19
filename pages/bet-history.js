@@ -348,17 +348,18 @@ export default function BetHistory() {
               if (bet.legs && Array.isArray(bet.legs)) {
                 enrichedLegs = bet.legs.map(leg => {
                   const legGame = liveGames[leg.gameId] || liveGames[leg.matchup];
+                  const legIsLive = !!(legGame && (legGame.isLive || legGame.status === 'IN_PROGRESS'));
                   if (legGame) {
                     return {
                       ...leg,
-                      isLive: legGame.isLive || legGame.status === 'IN_PROGRESS',
+                      isLive: legIsLive,
                       homeScore: legGame.homeScore,
                       awayScore: legGame.awayScore,
                       homeTeamFull: legGame.homeTeamFull || legGame.homeTeam,
                       awayTeamFull: legGame.awayTeamFull || legGame.awayTeam
                     };
                   }
-                  return leg;
+                  return { ...leg, isLive: false };
                 });
               }
               
