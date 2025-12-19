@@ -500,9 +500,6 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
               homeQuarters={scores.homeQuarters}
               awayQuarters={scores.awayQuarters}
             />
-            <div className="text-right pt-1">
-              <span className="text-gray-400 text-xs">Finished</span>
-            </div>
           </div>
         )}
 
