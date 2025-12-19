@@ -8,11 +8,7 @@ const withPWA = require('next-pwa')({
 
 const nextConfig = {
   reactStrictMode: true,
-  allowedDevOrigins: [
-    'https://*.replit.dev',
-    'https://*.replit.app',
-    'https://*.janeway.replit.dev'
-  ],
+  allowedDevOrigins: ['*'],
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.watchOptions = {
