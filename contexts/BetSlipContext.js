@@ -103,6 +103,21 @@ export const BetSlipProvider = ({ children }) => {
         betType: removedBet.betType,
       });
     } else {
+      const filteredSlip = betSlip.filter(bet => {
+        const isSameGameAndType = bet.gameId === game.id && bet.betType === betType;
+        if (isSameGameAndType) {
+          trackBetSlipEvent('bet_removed_conflict', {
+            betId: bet.id,
+            matchup: bet.matchup,
+            selection: bet.selection,
+            odds: bet.odds,
+            betType: bet.betType,
+            replacedBy: selection,
+          });
+        }
+        return !isSameGameAndType;
+      });
+      
       const newBet = {
         id: betId,
         gameId: game.id,
@@ -113,7 +128,7 @@ export const BetSlipProvider = ({ children }) => {
         stake: 0
       };
       
-      setBetSlip([...betSlip, newBet]);
+      setBetSlip([...filteredSlip, newBet]);
       trackBetSlipEvent('bet_added', {
         betId,
         matchup: newBet.matchup,
