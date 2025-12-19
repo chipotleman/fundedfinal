@@ -22,23 +22,32 @@ export default async function handler(req, res) {
 
     const gameIds = completedGames.map(g => g.id);
     const gameMatchups = completedGames.map(g => `${g.awayTeamFull} @ ${g.homeTeamFull}`);
+    const gameMatchupsShort = completedGames.map(g => `${g.awayTeam} @ ${g.homeTeam}`);
     
     const openBets = await db
       .select()
       .from(userBets)
-      .where(eq(userBets.status, 'open'));
+      .where(eq(userBets.status, 'pending'));
+
+    console.log(`[GRADING] Found ${completedGames.length} completed games, ${openBets.length} pending bets`);
+    console.log(`[GRADING] Completed games:`, completedGames.map(g => `${g.awayTeam} @ ${g.homeTeam} (${g.awayScore}-${g.homeScore})`));
 
     const betsToGrade = openBets.filter(bet => {
       if (gameIds.includes(bet.gameId)) return true;
-      if (gameMatchups.includes(bet.matchup)) return true;
+      if (gameMatchups.includes(bet.matchupName)) return true;
+      if (gameMatchupsShort.includes(bet.matchupName)) return true;
       
       if (bet.legs && Array.isArray(bet.legs)) {
         return bet.legs.some(leg => 
-          gameIds.includes(leg.gameId) || gameMatchups.includes(leg.matchup)
+          gameIds.includes(leg.gameId) || 
+          gameMatchups.includes(leg.matchup) ||
+          gameMatchupsShort.includes(leg.matchup)
         );
       }
       return false;
     });
+    
+    console.log(`[GRADING] Bets to grade: ${betsToGrade.length}`, betsToGrade.map(b => b.matchupName));
 
     if (betsToGrade.length === 0) {
       return res.status(200).json({ message: 'No bets to grade for completed games', graded: 0 });
