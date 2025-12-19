@@ -56,7 +56,8 @@ None documented yet.
   - **Credit Budget**: 50 credits/day (testing phase), alerts at 70%/90%
   - **Date Filter**: Only fetches TODAY's games to minimize credit usage (6 credits per full refresh)
   - **Caching**: 10-minute server-side cache per sport
-  - **Odds Strategy**: "Worst juice" - selects least favorable odds from all bookmakers to maximize platform profitability
+  - **Odds Strategy**: Priority-based selection - FanDuel first, then DraftKings, then Bovada, etc. for user familiarity
+  - **Admin Odds View**: Full bookmaker comparison spreadsheet available in admin panel at /admin-panel/games
   - Games endpoints:
     - `/api/games` - All sports combined
     - `/api/games?sport=basketball_nba` - Specific sport

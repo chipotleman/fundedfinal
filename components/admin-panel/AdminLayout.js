@@ -59,6 +59,7 @@ export default function AdminLayout({ children, title = 'Admin Panel' }) {
   const navItems = [
     { href: '/admin-panel', label: 'Dashboard', icon: '📊' },
     { href: '/admin-panel/users', label: 'Users', icon: '👥' },
+    { href: '/admin-panel/games', label: 'Games & Odds', icon: '🏈' },
     { href: '/admin-panel/bets', label: 'Bets', icon: '🎲' },
     { href: '/admin-panel/withdrawals', label: 'Withdrawals', icon: '💸' },
     { href: '/admin-panel/staff', label: 'Staff', icon: '🔐' },
