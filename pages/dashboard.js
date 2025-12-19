@@ -99,7 +99,7 @@ export default function Dashboard() {
     setAllGames(apiGames);
     
     const activeGames = selectedTab === 'live' 
-      ? categorizedGames.liveGames 
+      ? [...categorizedGames.liveGames, ...(categorizedGames.recentlyCompletedGames || [])]
       : categorizedGames.upcomingGames;
     
     if (selectedSport === 'All Sports') {
@@ -323,19 +323,23 @@ export default function Dashboard() {
                 const sport = game.sportName || 'NBA';
                 const isExpanded = expandedGames[game.id];
                 const isLive = game.isLive || game.status === 'IN_PROGRESS';
+                const isFinal = game.isCompleted || game.status === 'FINAL';
+                const linesLocked = game.linesLocked || isFinal;
                 
                 return (
                   <div 
                     key={game.id} 
                     className="rounded-xl overflow-hidden cursor-pointer hover:opacity-90 transition-opacity" 
                     style={{ backgroundColor: isDarkMode ? '#111111' : '#ffffff', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(209, 213, 219, 1)' }}
-                    onClick={() => router.push(`/game/${game.id}`)}
+                    onClick={() => !isFinal && router.push(`/game/${game.id}`)}
                   >
                     <div className="px-4 py-3">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <span className="text-gray-500 text-xs font-medium">{sport}</span>
-                          {isLive ? (
+                          {isFinal ? (
+                            <span className="text-gray-400 text-xs font-bold">FINAL</span>
+                          ) : isLive ? (
                             <div className="flex items-center gap-1">
                               <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
                               <span className="text-red-500 text-xs font-medium">LIVE</span>
@@ -358,7 +362,7 @@ export default function Dashboard() {
                       <div className="space-y-2 mb-4">
                         <div className="flex items-center justify-between">
                           <span className="font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayTeamFull || game.awayTeam}</span>
-                          {isLive ? (
+                          {(isLive || isFinal) ? (
                             <span className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayScore || 0}</span>
                           ) : (
                             <span style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>-</span>
@@ -366,7 +370,7 @@ export default function Dashboard() {
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.homeTeamFull || game.homeTeam}</span>
-                          {isLive ? (
+                          {(isLive || isFinal) ? (
                             <span className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.homeScore || 0}</span>
                           ) : (
                             <span style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>-</span>
@@ -374,38 +378,51 @@ export default function Dashboard() {
                         </div>
                       </div>
 
-                      <div className="flex gap-3">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeamFull || game.awayTeam); }}
-                          className="flex-1 rounded-xl py-3 px-4"
-                          style={{
-                            backgroundColor: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
-                            borderWidth: 1,
-                            borderColor: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
-                          }}
-                        >
-                          <div className="text-xs mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{(game.awayTeamFull || game.awayTeam).split(' ').pop()}</div>
-                          <div className="font-bold text-lg" style={{ color: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>
-                            {formatOdds(game.lines.moneyline.away)}
+                      {linesLocked ? (
+                        <div className="flex gap-3">
+                          <div className="flex-1 rounded-xl py-3 px-4 text-center opacity-50" style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? '#374151' : '#d1d5db' }}>
+                            <div className="text-xs mb-1" style={{ color: '#6b7280' }}>Lines</div>
+                            <div className="font-bold text-gray-500">LOCKED</div>
                           </div>
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeamFull || game.homeTeam); }}
-                          className="flex-1 rounded-xl py-3 px-4"
-                          style={{
-                            backgroundColor: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
-                            borderWidth: 1,
-                            borderColor: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
-                          }}
-                        >
-                          <div className="text-xs mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{(game.homeTeamFull || game.homeTeam).split(' ').pop()}</div>
-                          <div className="font-bold text-lg" style={{ color: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>
-                            {formatOdds(game.lines.moneyline.home)}
+                          <div className="flex-1 rounded-xl py-3 px-4 text-center opacity-50" style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? '#374151' : '#d1d5db' }}>
+                            <div className="text-xs mb-1" style={{ color: '#6b7280' }}>Lines</div>
+                            <div className="font-bold text-gray-500">LOCKED</div>
                           </div>
-                        </button>
-                      </div>
+                        </div>
+                      ) : (
+                        <div className="flex gap-3">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeamFull || game.awayTeam); }}
+                            className="flex-1 rounded-xl py-3 px-4"
+                            style={{
+                              backgroundColor: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
+                              borderWidth: 1,
+                              borderColor: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
+                            }}
+                          >
+                            <div className="text-xs mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{(game.awayTeamFull || game.awayTeam).split(' ').pop()}</div>
+                            <div className="font-bold text-lg" style={{ color: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>
+                              {formatOdds(game.lines.moneyline.away)}
+                            </div>
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeamFull || game.homeTeam); }}
+                            className="flex-1 rounded-xl py-3 px-4"
+                            style={{
+                              backgroundColor: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
+                              borderWidth: 1,
+                              borderColor: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
+                            }}
+                          >
+                            <div className="text-xs mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{(game.homeTeamFull || game.homeTeam).split(' ').pop()}</div>
+                            <div className="font-bold text-lg" style={{ color: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>
+                              {formatOdds(game.lines.moneyline.home)}
+                            </div>
+                          </button>
+                        </div>
+                      )}
 
-                      {isExpanded && (
+                      {isExpanded && !linesLocked && (
                         <div className="mt-4 pt-4 space-y-3" style={{ borderTopWidth: 1, borderTopColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(209, 213, 219, 1)' }}>
                           <div>
                             <div className="text-xs font-medium mb-2 uppercase" style={{ color: isDarkMode ? '#6b7280' : '#6b7280' }}>Spread</div>
