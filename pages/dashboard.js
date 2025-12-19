@@ -323,9 +323,8 @@ export default function Dashboard() {
                 return (
                   <div 
                     key={game.id} 
-                    className="rounded-xl overflow-hidden cursor-pointer" 
+                    className="rounded-xl overflow-hidden" 
                     style={{ backgroundColor: isDarkMode ? '#111111' : '#ffffff', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(209, 213, 219, 1)' }}
-                    onClick={() => !isFinal && !linesLocked && toggleGameExpanded(game.id)}
                   >
                     <div className="px-4 py-3">
                       <div className="flex items-center justify-between mb-3">
@@ -343,15 +342,6 @@ export default function Dashboard() {
                             <span className="text-gray-400 text-xs font-medium">{game.time || 'TBD'}</span>
                           )}
                         </div>
-                        <svg 
-                          className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
-                          style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
                       </div>
                       
                       <div className="space-y-2 mb-4">
@@ -374,118 +364,151 @@ export default function Dashboard() {
                       </div>
 
                       {linesLocked ? (
-                        <div className="flex gap-3">
-                          <div className="flex-1 rounded-xl py-3 px-4 text-center opacity-50" style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? '#374151' : '#d1d5db' }}>
-                            <div className="text-xs mb-1" style={{ color: '#6b7280' }}>Lines</div>
-                            <div className="font-bold text-gray-500">LOCKED</div>
+                        <div className="flex gap-2">
+                          <div className="flex-1 rounded-lg py-2 px-2 text-center opacity-50" style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? '#374151' : '#d1d5db' }}>
+                            <div className="text-[10px] mb-0.5" style={{ color: '#6b7280' }}>Lines</div>
+                            <div className="font-bold text-sm text-gray-500">LOCKED</div>
                           </div>
-                          <div className="flex-1 rounded-xl py-3 px-4 text-center opacity-50" style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? '#374151' : '#d1d5db' }}>
-                            <div className="text-xs mb-1" style={{ color: '#6b7280' }}>Lines</div>
-                            <div className="font-bold text-gray-500">LOCKED</div>
+                          <div className="flex-1 rounded-lg py-2 px-2 text-center opacity-50" style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? '#374151' : '#d1d5db' }}>
+                            <div className="text-[10px] mb-0.5" style={{ color: '#6b7280' }}>Lines</div>
+                            <div className="font-bold text-sm text-gray-500">LOCKED</div>
                           </div>
                         </div>
-                      ) : (
-                        <div className="flex gap-3">
+                      ) : !isExpanded ? (
+                        <div className="flex gap-2 items-center">
                           <button
                             onClick={(e) => { e.stopPropagation(); addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeamFull || game.awayTeam); }}
-                            className="flex-1 rounded-xl py-3 px-4"
+                            className="flex-1 rounded-lg py-2 px-2"
                             style={{
                               backgroundColor: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
                               borderWidth: 1,
                               borderColor: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
                             }}
                           >
-                            <div className="text-xs mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{(game.awayTeamFull || game.awayTeam).split(' ').pop()}</div>
-                            <div className="font-bold text-lg" style={{ color: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>
+                            <div className="text-[10px] mb-0.5" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{(game.awayTeamFull || game.awayTeam).split(' ').pop()} ML</div>
+                            <div className="font-bold text-sm" style={{ color: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>
                               {formatOdds(game.lines.moneyline.away)}
                             </div>
                           </button>
                           <button
                             onClick={(e) => { e.stopPropagation(); addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeamFull || game.homeTeam); }}
-                            className="flex-1 rounded-xl py-3 px-4"
+                            className="flex-1 rounded-lg py-2 px-2"
                             style={{
                               backgroundColor: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
                               borderWidth: 1,
                               borderColor: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
                             }}
                           >
-                            <div className="text-xs mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{(game.homeTeamFull || game.homeTeam).split(' ').pop()}</div>
-                            <div className="font-bold text-lg" style={{ color: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>
+                            <div className="text-[10px] mb-0.5" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{(game.homeTeamFull || game.homeTeam).split(' ').pop()} ML</div>
+                            <div className="font-bold text-sm" style={{ color: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>
                               {formatOdds(game.lines.moneyline.home)}
                             </div>
                           </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); toggleGameExpanded(game.id); }}
+                            className="flex-shrink-0 w-8 h-12 rounded-lg flex items-center justify-center"
+                            style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? '#374151' : '#d1d5db' }}
+                          >
+                            <svg className="w-4 h-4" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
                         </div>
-                      )}
-
-                      {isExpanded && !linesLocked && (
-                        <div className="mt-4 pt-4 space-y-3" style={{ borderTopWidth: 1, borderTopColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(209, 213, 219, 1)' }}>
-                          <div>
-                            <div className="text-xs font-medium mb-2 uppercase" style={{ color: isDarkMode ? '#6b7280' : '#6b7280' }}>Spread</div>
-                            <div className="flex gap-3">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); addToBetSlip(game, 'spread', game.lines.spread.away, `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`); }}
-                                className="flex-1 rounded-xl py-3 px-4"
-                                style={{
-                                  backgroundColor: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
-                                  borderWidth: 1,
-                                  borderColor: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
-                                }}
-                              >
-                                <div className="text-xs mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{(game.awayTeamFull || game.awayTeam).split(' ').pop()} {game.lines.spread.away.point}</div>
-                                <div className="font-bold" style={{ color: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#ffffff' : '#22c55e' }}>
-                                  {formatOdds(game.lines.spread.away.odds)}
-                                </div>
-                              </button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); addToBetSlip(game, 'spread', game.lines.spread.home, `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`); }}
-                                className="flex-1 rounded-xl py-3 px-4"
-                                style={{
-                                  backgroundColor: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
-                                  borderWidth: 1,
-                                  borderColor: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
-                                }}
-                              >
-                                <div className="text-xs mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{(game.homeTeamFull || game.homeTeam).split(' ').pop()} {game.lines.spread.home.point}</div>
-                                <div className="font-bold" style={{ color: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#ffffff' : '#22c55e' }}>
-                                  {formatOdds(game.lines.spread.home.odds)}
-                                </div>
-                              </button>
+                      ) : (
+                        <div className="flex gap-1.5 items-center">
+                          <button
+                            onClick={(e) => { e.stopPropagation(); toggleGameExpanded(game.id); }}
+                            className="flex-shrink-0 w-6 h-10 rounded-lg flex items-center justify-center"
+                            style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? '#374151' : '#d1d5db' }}
+                          >
+                            <svg className="w-3 h-3" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); addToBetSlip(game, 'spread', game.lines.spread.away, `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`); }}
+                            className="flex-1 rounded-lg py-1.5 px-1"
+                            style={{
+                              backgroundColor: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
+                              borderWidth: 1,
+                              borderColor: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
+                            }}
+                          >
+                            <div className="text-[9px] truncate" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{game.lines.spread.away.point}</div>
+                            <div className="font-bold text-xs" style={{ color: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#ffffff' : '#22c55e' }}>
+                              {formatOdds(game.lines.spread.away.odds)}
                             </div>
-                          </div>
-                          
-                          <div>
-                            <div className="text-xs font-medium mb-2 uppercase" style={{ color: isDarkMode ? '#6b7280' : '#6b7280' }}>Total</div>
-                            <div className="flex gap-3">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); addToBetSlip(game, 'total', game.lines.total.over, `Over ${game.lines.total.over.point}`); }}
-                                className="flex-1 rounded-xl py-3 px-4"
-                                style={{
-                                  backgroundColor: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
-                                  borderWidth: 1,
-                                  borderColor: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
-                                }}
-                              >
-                                <div className="text-xs mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{game.lines.total.over.point}</div>
-                                <div className="font-bold" style={{ color: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#ffffff' : '#22c55e' }}>
-                                  {formatOdds(game.lines.total.over.odds)}
-                                </div>
-                              </button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); addToBetSlip(game, 'total', game.lines.total.under, `Under ${game.lines.total.under.point}`); }}
-                                className="flex-1 rounded-xl py-3 px-4"
-                                style={{
-                                  backgroundColor: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
-                                  borderWidth: 1,
-                                  borderColor: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
-                                }}
-                              >
-                                <div className="text-xs mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{game.lines.total.under.point}</div>
-                                <div className="font-bold" style={{ color: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#ffffff' : '#22c55e' }}>
-                                  {formatOdds(game.lines.total.under.odds)}
-                                </div>
-                              </button>
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); addToBetSlip(game, 'spread', game.lines.spread.home, `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`); }}
+                            className="flex-1 rounded-lg py-1.5 px-1"
+                            style={{
+                              backgroundColor: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
+                              borderWidth: 1,
+                              borderColor: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
+                            }}
+                          >
+                            <div className="text-[9px] truncate" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{game.lines.spread.home.point}</div>
+                            <div className="font-bold text-xs" style={{ color: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#ffffff' : '#22c55e' }}>
+                              {formatOdds(game.lines.spread.home.odds)}
                             </div>
-                          </div>
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeamFull || game.awayTeam); }}
+                            className="flex-1 rounded-lg py-1.5 px-1"
+                            style={{
+                              backgroundColor: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
+                              borderWidth: 1,
+                              borderColor: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
+                            }}
+                          >
+                            <div className="text-[9px]" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>ML</div>
+                            <div className="font-bold text-xs" style={{ color: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>
+                              {formatOdds(game.lines.moneyline.away)}
+                            </div>
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeamFull || game.homeTeam); }}
+                            className="flex-1 rounded-lg py-1.5 px-1"
+                            style={{
+                              backgroundColor: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
+                              borderWidth: 1,
+                              borderColor: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
+                            }}
+                          >
+                            <div className="text-[9px]" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>ML</div>
+                            <div className="font-bold text-xs" style={{ color: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>
+                              {formatOdds(game.lines.moneyline.home)}
+                            </div>
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); addToBetSlip(game, 'total', game.lines.total.over, `Over ${game.lines.total.over.point}`); }}
+                            className="flex-1 rounded-lg py-1.5 px-1"
+                            style={{
+                              backgroundColor: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
+                              borderWidth: 1,
+                              borderColor: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
+                            }}
+                          >
+                            <div className="text-[9px]" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>O {game.lines.total.over.point}</div>
+                            <div className="font-bold text-xs" style={{ color: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#ffffff' : '#22c55e' }}>
+                              {formatOdds(game.lines.total.over.odds)}
+                            </div>
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); addToBetSlip(game, 'total', game.lines.total.under, `Under ${game.lines.total.under.point}`); }}
+                            className="flex-1 rounded-lg py-1.5 px-1"
+                            style={{
+                              backgroundColor: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#16a34a' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
+                              borderWidth: 1,
+                              borderColor: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#22c55e' : (isDarkMode ? '#374151' : '#d1d5db')
+                            }}
+                          >
+                            <div className="text-[9px]" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>U {game.lines.total.under.point}</div>
+                            <div className="font-bold text-xs" style={{ color: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#ffffff' : '#22c55e' }}>
+                              {formatOdds(game.lines.total.under.odds)}
+                            </div>
+                          </button>
                         </div>
                       )}
                     </div>
