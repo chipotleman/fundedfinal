@@ -57,6 +57,10 @@ export default function BetHistory() {
           const gamesMap = {};
           data.games?.forEach(game => {
             gamesMap[game.id] = game;
+            const matchup = `${game.awayTeam} @ ${game.homeTeam}`;
+            gamesMap[matchup] = game;
+            const fullMatchup = `${game.awayTeamFull} @ ${game.homeTeamFull}`;
+            gamesMap[fullMatchup] = game;
           });
           setLiveGames(gamesMap);
         }
@@ -338,7 +342,7 @@ export default function BetHistory() {
           {/* Bets List */}
           <div className="grid grid-cols-1 gap-4 max-w-2xl mx-auto">
             {filteredBets.map(bet => {
-              const liveGame = liveGames[bet.gameId];
+              const liveGame = liveGames[bet.gameId] || liveGames[bet.matchup];
               const enrichedBet = liveGame ? {
                 ...bet,
                 isLive: liveGame.isLive || liveGame.status === 'IN_PROGRESS',
