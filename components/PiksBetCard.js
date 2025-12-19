@@ -371,7 +371,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
           <img src="/pikslogotransparent.png" alt="Piks" className="h-32 object-contain -ml-8" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
           
           {isWon ? (
-            <div className="flex-1 flex justify-end mr-[-22px] -mt-2">
+            <div className="flex-1 flex justify-end" style={{ marginRight: -27, marginTop: -13 }}>
               <img 
                 src="/trophy-winner.png" 
                 alt="Winner" 
