@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useTheme } from '../contexts/ThemeContext';
 import ShareableBetSlip from './ShareableBetSlip';
-import BetReceipt from './BetReceipt';
+import PiksBetCard from './PiksBetCard';
 import CoinRain from './CoinRain';
 
 export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
@@ -203,16 +203,19 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
           const americanOdds = parlayDecimal >= 2 ? Math.round((parlayDecimal - 1) * 100) : Math.round(-100 / (parlayDecimal - 1));
           
           setCurrentReceipt({
+            id: `receipt-${Date.now()}`,
             matchup: `${bets.length}-Leg Parlay`,
-            team: bets.map(b => b.selection).join(', '),
+            selection: bets.map(b => b.selection).join(', '),
             betType: 'parlay',
             odds: americanOdds,
             stake: parlayStake,
+            status: 'open',
             legs: bets.map(bet => ({
               selection: bet.selection,
               betType: bet.betType,
               odds: typeof bet.odds === 'object' ? bet.odds.odds || bet.odds.value : bet.odds,
               matchup: bet.matchup,
+              gameId: bet.gameId,
               isLive: bet.isLive === true,
               homeTeam: bet.homeTeam,
               awayTeam: bet.awayTeam,
@@ -227,11 +230,14 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
         } else if (bets[0].stake > 0) {
           const firstBet = bets[0];
           setCurrentReceipt({
+            id: `receipt-${Date.now()}`,
+            gameId: firstBet.gameId,
             matchup: firstBet.matchup,
-            team: firstBet.selection,
+            selection: firstBet.selection,
             betType: firstBet.betType,
             odds: typeof firstBet.odds === 'object' ? firstBet.odds.odds || firstBet.odds.value : firstBet.odds,
             stake: firstBet.stake,
+            status: 'open',
             isLive: firstBet.isLive,
             awayTeam: firstBet.awayTeam,
             homeTeam: firstBet.homeTeam,
@@ -239,6 +245,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
             homeTeamFull: firstBet.homeTeamFull,
             awayScore: firstBet.awayScore,
             homeScore: firstBet.homeScore,
+            gameStart: firstBet.gameStart,
             gameTime: firstBet.gameTime
           });
         }
@@ -573,15 +580,50 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
       />
 
       {showReceipt && currentReceipt && (
-        <BetReceipt 
-          bet={currentReceipt} 
-          isDemo={false}
-          onClose={() => {
+        <div 
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-fade-in"
+          style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}
+          onClick={() => {
             setShowReceipt(false);
             setCurrentReceipt(null);
             onClose();
           }}
-        />
+        >
+          <div 
+            className="w-full max-w-md animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mb-4 text-center">
+              <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-400 px-4 py-2 rounded-full">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="font-bold">Pik Placed!</span>
+              </div>
+            </div>
+            <PiksBetCard 
+              bet={currentReceipt}
+              onCashOut={() => {}}
+              onShare={() => {}}
+            />
+          </div>
+          <style jsx>{`
+            @keyframes fade-in {
+              from { opacity: 0; }
+              to { opacity: 1; }
+            }
+            @keyframes slide-up {
+              from { opacity: 0; transform: translateY(20px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+            .animate-fade-in {
+              animation: fade-in 0.3s ease-out forwards;
+            }
+            .animate-slide-up {
+              animation: slide-up 0.4s ease-out forwards;
+            }
+          `}</style>
+        </div>
       )}
     </>
   );
