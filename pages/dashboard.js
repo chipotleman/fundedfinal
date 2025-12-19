@@ -314,7 +314,7 @@ export default function Dashboard() {
               </div>
             ) : games.length > 0 ? (
               games.map(game => {
-                const sport = nbaGames.some(g => g.id === game.id) ? 'NBA' : 'NBA';
+                const sport = game.sportName || 'NBA';
                 const isExpanded = expandedGames[game.id];
                 
                 return (

@@ -792,7 +792,7 @@ export default function DemoDashboard() {
 
           <div className="space-y-3">
             {games.map(game => {
-              const sport = nbaGames.some(g => g.id === game.id) ? 'NBA' : 'NBA';
+              const sport = game.sportName || 'NBA';
               
               return (
                 <div key={game.id} className="bg-[#111111] rounded-xl border border-gray-800/50 overflow-hidden">
