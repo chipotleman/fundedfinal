@@ -49,6 +49,12 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
     return () => clearInterval(interval);
   }, [bets.length]);
 
+  useEffect(() => {
+    if (bets.length < 2 && betType === 'parlay') {
+      setBetType('single');
+    }
+  }, [bets.length, betType]);
+
   const toggleBetExpanded = (id) => {
     setExpandedBets(prev => ({ ...prev, [id]: !prev[id] }));
   };

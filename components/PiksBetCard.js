@@ -481,16 +481,35 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         {isOpen && !isParlay && (
           <div className="mb-3">
             <div className="text-xs uppercase mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>Game</div>
-            <div className="text-sm font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{bet.matchup}</div>
-            <div className="text-xs mt-0.5" style={{ color: isDarkMode ? '#93c5fd' : '#111827' }}>
-              {bet.gameStart ? new Date(bet.gameStart).toLocaleString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-              }) : 'Upcoming'}
-            </div>
+            {bet.isLive && typeof bet.currentHomeScore === 'number' ? (
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{bet.awayTeamFull || bet.matchup?.split(' @ ')[0]}</span>
+                  <span className="text-white font-bold">{bet.currentAwayScore}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{bet.homeTeamFull || bet.matchup?.split(' @ ')[1]}</span>
+                  <span className="text-white font-bold">{bet.currentHomeScore}</span>
+                </div>
+                <div className="flex items-center gap-2 mt-1">
+                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                  <span className="text-red-500 text-xs font-medium">LIVE</span>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="text-sm font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{bet.matchup}</div>
+                <div className="text-xs mt-0.5" style={{ color: isDarkMode ? '#93c5fd' : '#111827' }}>
+                  {bet.gameStart ? new Date(bet.gameStart).toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    hour12: true
+                  }) : 'Upcoming'}
+                </div>
+              </>
+            )}
           </div>
         )}
 
