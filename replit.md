@@ -46,20 +46,18 @@ None documented yet.
 - **Authentication**: NextAuth.js v4
 - **Database**: Replit PostgreSQL (Neon-backed) via Drizzle ORM
 - **Payment Processing**: Stripe (for environment variables)
-- **Sports Data**: Multi-source NBA game data with fallback support
-  - **Primary: The Odds API** (active)
+- **Sports Data**: Multi-source sports data via The Odds API
+  - **The Odds API** (primary and only active source)
     - API service: `lib/theoddsapi.js`
     - Provides: Games, spreads, totals, moneylines from multiple bookmakers
     - Secret: THE_ODDS_API_KEY
     - Pay-as-you-go pricing model
-  - **Fallback: Sportsradar NBA API v8**
-    - API service: `lib/sportsradar.js`
-    - Provides: Games, schedules, scores, full team names, venues, broadcasts
-    - Secret: SPORTSRADAR_API_KEY
-  - **Fallback: MySportsFeeds API**
-    - API service: `lib/mysportsfeeds.js`
-    - Secrets: MYSPORTSFEEDS_API_KEY, MYSPORTSFEEDS_PASSWORD
-  - Games endpoint: `/api/games/nba`
-  - Source override: `/api/games/nba?source=theodds|sportsradar|mysportsfeeds`
-  - Debug endpoint: `/debug/api` (bypasses beta access)
-  - Server-side caching with 5-minute refresh interval
+  - **Supported Sports**: NBA, NFL, NCAAB, NCAAF, MLB, NHL
+  - **Credit Budget**: 50 credits/day (testing phase), alerts at 70%/90%
+  - **Caching**: 10-minute server-side cache per sport
+  - **Odds Strategy**: "Worst juice" - selects least favorable odds from all bookmakers to maximize platform profitability
+  - Games endpoints:
+    - `/api/games` - All sports combined
+    - `/api/games?sport=basketball_nba` - Specific sport
+    - `/api/games/nba` - NBA only (legacy)
+  - Debug endpoint: `/debug/api` (bypasses beta access, shows credit usage)
