@@ -13,10 +13,8 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
   useEffect(() => {
     if (!isVisible) return;
 
-    // Store current scroll position
     scrollPositionRef.current = window.scrollY;
 
-    // Lock body scroll
     const scrollY = window.scrollY;
     document.body.style.position = 'fixed';
     document.body.style.top = `-${scrollY}px`;
@@ -26,7 +24,6 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
     document.body.style.overflow = 'hidden';
     document.documentElement.style.overflow = 'hidden';
 
-    // Prevent touch scroll on mobile
     const preventScroll = (e) => {
       e.preventDefault();
     };
@@ -35,7 +32,6 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
     document.addEventListener('wheel', preventScroll, { passive: false });
 
     return () => {
-      // Restore scroll
       document.body.style.position = '';
       document.body.style.top = '';
       document.body.style.left = '';
@@ -101,42 +97,28 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
     showMessage('Image downloaded!');
   };
 
-  const shareToInstagram = async () => {
-    // Check if Web Share API with files is supported
-    const testBlob = new Blob(['test'], { type: 'image/png' });
-    const testFile = new File([testBlob], 'test.png', { type: 'image/png' });
-    const canShareFiles = navigator.share && navigator.canShare && navigator.canShare({ files: [testFile] });
+  const shareLink = async () => {
+    const payout = calculatePayout(bet.odds, bet.stake);
+    const text = `Just won $${payout.toFixed(2)} on Piks!`;
+    const url = 'https://fundedpiks.com';
 
-    if (!canShareFiles) {
-      // Fallback: download image with instructions
-      await downloadImage();
-      showMessage('Image saved! Upload to Instagram from your gallery.');
-      return;
-    }
-
-    const canvas = await generateImage();
-    if (!canvas) {
-      showMessage('Failed to generate image');
-      return;
-    }
-    
-    try {
-      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-      const file = new File([blob], 'piks-win.png', { type: 'image/png' });
-      
-      await navigator.share({
-        files: [file],
-        title: 'My Piks Win!'
-      });
-      showMessage('Shared!');
-    } catch (error) {
-      if (error.name === 'AbortError') {
-        // User cancelled - do nothing
-        return;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'My Piks Win!',
+          text: text,
+          url: url
+        });
+        showMessage('Shared!');
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          await navigator.clipboard.writeText(`${text} ${url}`);
+          showMessage('Link copied!');
+        }
       }
-      // Any other error: fall back to download
-      await downloadImage();
-      showMessage('Image saved! Upload to Instagram from your gallery.');
+    } else {
+      await navigator.clipboard.writeText(`${text} ${url}`);
+      showMessage('Link copied!');
     }
   };
 
@@ -209,7 +191,7 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
         </svg>
       </button>
 
-      <div style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>
+      <div style={{ color: 'white', fontSize: 18, fontWeight: 'bold', marginBottom: 12 }}>
         Share Your Win!
       </div>
 
@@ -217,12 +199,12 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
         ref={cardContainerRef}
         onClick={(e) => e.stopPropagation()}
         style={{
-          width: '85vw',
-          maxWidth: 340,
-          padding: 10,
+          width: '92vw',
+          maxWidth: 400,
+          padding: 12,
           backgroundColor: isDarkMode ? '#000' : '#f3f4f6',
-          borderRadius: 10,
-          transform: 'scale(0.85)',
+          borderRadius: 12,
+          transform: 'scale(0.75)',
           transformOrigin: 'center center'
         }}
       >
@@ -231,21 +213,19 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
 
       <div 
         onClick={(e) => e.stopPropagation()}
-        style={{ width: '85vw', maxWidth: 340, marginTop: 10 }}
+        style={{ width: '75vw', maxWidth: 320, marginTop: 8 }}
       >
         <button
-          onClick={shareToInstagram}
-          disabled={isGenerating}
+          onClick={shareLink}
           style={{
             width: '100%',
-            background: 'linear-gradient(to right, #9333ea, #ec4899, #f97316)',
+            background: 'linear-gradient(to right, #3b82f6, #8b5cf6)',
             color: 'white',
             fontWeight: 'bold',
             padding: 10,
             borderRadius: 10,
             border: 'none',
-            cursor: isGenerating ? 'wait' : 'pointer',
-            opacity: isGenerating ? 0.6 : 1,
+            cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -254,14 +234,10 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
             marginBottom: 8
           }}
         >
-          {isGenerating ? 'Preparing...' : (
-            <>
-              <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073z"/>
-              </svg>
-              Share to Instagram
-            </>
-          )}
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+          </svg>
+          Share a Link
         </button>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
