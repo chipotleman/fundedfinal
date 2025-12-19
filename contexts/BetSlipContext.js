@@ -121,7 +121,7 @@ export const BetSlipProvider = ({ children }) => {
       const newBet = {
         id: betId,
         gameId: game.id,
-        matchup: `${game.awayTeam} @ ${game.homeTeam}`,
+        matchup: `${game.awayTeamFull || game.awayTeam} @ ${game.homeTeamFull || game.homeTeam}`,
         betType,
         selection,
         odds: oddsValue,
