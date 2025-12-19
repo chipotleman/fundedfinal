@@ -5,7 +5,6 @@ import Head from 'next/head';
 import TopNavbar from '../components/TopNavbar';
 import BetReceipt from '../components/BetReceipt';
 import CoinRain from '../components/CoinRain';
-import { simulateOddsMovement, updateBetSlipWithNewOdds } from '../lib/oddsSimulator';
 import { categorizeGames, filterGamesBySport } from '../lib/gamesUtils';
 
 export default function DemoDashboard() {
@@ -135,38 +134,6 @@ export default function DemoDashboard() {
     }
   }, [selectedSport, selectedTab, apiGames, categorizedGames]);
 
-  // Odds simulation - runs every 3 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Update games with new simulated odds
-      setGames(prevGames => {
-        const updatedGames = simulateOddsMovement(prevGames);
-        
-        // Also update selected bets to sync with new game odds
-        setSelectedBets(prevBets => {
-          if (prevBets.length === 0) return prevBets;
-          return updateBetSlipWithNewOdds(prevBets, updatedGames);
-        });
-        
-        return updatedGames;
-      });
-      
-      // Clear the flash indicators after 1.5 seconds
-      setTimeout(() => {
-        setSelectedBets(prevBets => 
-          prevBets.map(bet => ({ 
-            ...bet, 
-            oddsMoved: null, 
-            oddsChanged: false, 
-            lineMoved: null, 
-            lineChanged: false 
-          }))
-        );
-      }, 1500);
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   // Lock body scroll when bet slip is open
   useEffect(() => {
@@ -774,25 +741,20 @@ export default function DemoDashboard() {
           </div>
         </div>
 
-        {/* Live Now Section */}
+        {/* Games Section */}
         <div className="px-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <span className="text-xl">⚡</span>
-              <h2 className="text-white font-bold text-lg">Live Now</h2>
-              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+              <span className="text-xl">{selectedTab === 'live' ? '⚡' : '📅'}</span>
+              <h2 className="text-white font-bold text-lg">{selectedTab === 'live' ? 'Live Now' : 'Upcoming Games'}</h2>
+              {selectedTab === 'live' && <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>}
             </div>
-            <button className="text-gray-400 text-sm flex items-center gap-1 hover:text-white">
-              See all
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
           </div>
 
           <div className="space-y-3">
             {games.map(game => {
               const sport = game.sportName || 'NBA';
+              const isLive = game.isLive || game.status === 'IN_PROGRESS';
               
               return (
                 <div key={game.id} className="bg-[#111111] rounded-xl border border-gray-800/50 overflow-hidden">
@@ -801,10 +763,15 @@ export default function DemoDashboard() {
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
                         <span className="text-gray-500 text-xs font-medium">{sport}</span>
-                        <div className="flex items-center gap-1">
-                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
-                          <span className="text-red-500 text-xs font-medium">LIVE</span>
-                        </div>
+                        {isLive ? (
+                          <div className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                            <span className="text-red-500 text-xs font-medium">LIVE</span>
+                            {game.quarter && <span className="text-gray-400 text-xs">• {game.quarter}</span>}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-xs font-medium">{game.time || 'TBD'}</span>
+                        )}
                       </div>
                       <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -815,11 +782,19 @@ export default function DemoDashboard() {
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center justify-between">
                         <span className="text-white font-medium">{game.awayTeamFull || game.awayTeam}</span>
-                        <span className="text-white font-bold text-lg">{game.awayScore || 0}</span>
+                        {isLive ? (
+                          <span className="text-white font-bold text-lg">{game.awayScore || 0}</span>
+                        ) : (
+                          <span className="text-gray-500 text-sm">-</span>
+                        )}
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-white font-medium">{game.homeTeamFull || game.homeTeam}</span>
-                        <span className="text-white font-bold text-lg">{game.homeScore || 0}</span>
+                        {isLive ? (
+                          <span className="text-white font-bold text-lg">{game.homeScore || 0}</span>
+                        ) : (
+                          <span className="text-gray-500 text-sm">-</span>
+                        )}
                       </div>
                     </div>
 

@@ -4,7 +4,6 @@ import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
-import { simulateOddsMovement, updateBetSlipWithNewOdds } from '../lib/oddsSimulator';
 import { categorizeGames, filterGamesBySport } from '../lib/gamesUtils';
 
 export default function Dashboard() {
@@ -112,23 +111,6 @@ export default function Dashboard() {
     setLoading(false);
   }, [selectedSport, selectedTab, apiGames, categorizedGames]);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setGames(prevGames => simulateOddsMovement(prevGames));
-      
-      setAllGames(prevAll => {
-        const updatedAll = simulateOddsMovement(prevAll);
-        
-        if (setBetSlip && betSlipRef.current.length > 0) {
-          setBetSlip(prevBets => updateBetSlipWithNewOdds(prevBets, updatedAll));
-        }
-        
-        return updatedAll;
-      });
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, [setBetSlip]);
 
   const formatOdds = (odds) => {
     return odds > 0 ? `+${odds}` : odds.toString();
@@ -300,9 +282,9 @@ export default function Dashboard() {
         <div>
           <div className="flex items-center justify-between mb-4 px-1">
             <div className="flex items-center gap-2">
-              <span className="text-xl">⚡</span>
-              <h2 className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>Live Now</h2>
-              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
+              <span className="text-xl">{selectedTab === 'live' ? '⚡' : '📅'}</span>
+              <h2 className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{selectedTab === 'live' ? 'Live Now' : 'Upcoming Games'}</h2>
+              {selectedTab === 'live' && <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>}
             </div>
           </div>
 
@@ -316,6 +298,7 @@ export default function Dashboard() {
               games.map(game => {
                 const sport = game.sportName || 'NBA';
                 const isExpanded = expandedGames[game.id];
+                const isLive = game.isLive || game.status === 'IN_PROGRESS';
                 
                 return (
                   <div key={game.id} className="rounded-xl overflow-hidden" style={{ backgroundColor: isDarkMode ? '#111111' : '#ffffff', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(209, 213, 219, 1)' }}>
@@ -326,12 +309,14 @@ export default function Dashboard() {
                       >
                         <div className="flex items-center gap-2">
                           <span className="text-gray-500 text-xs font-medium">{sport}</span>
-                          <div className="flex items-center gap-1">
-                            <div className="w-1.5 h-1.5 bg-red-500 rounded-full"></div>
-                            <span className="text-red-500 text-xs font-medium">LIVE</span>
-                          </div>
-                          {game.quarter && (
-                            <span className="text-gray-400 text-xs">• {game.quarter}</span>
+                          {isLive ? (
+                            <div className="flex items-center gap-1">
+                              <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                              <span className="text-red-500 text-xs font-medium">LIVE</span>
+                              {game.quarter && <span className="text-gray-400 text-xs">• {game.quarter}</span>}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 text-xs font-medium">{game.time || 'TBD'}</span>
                           )}
                         </div>
                         <svg 
@@ -347,11 +332,19 @@ export default function Dashboard() {
                       <div className="space-y-2 mb-4">
                         <div className="flex items-center justify-between">
                           <span className="font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayTeamFull || game.awayTeam}</span>
-                          <span className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayScore || 0}</span>
+                          {isLive ? (
+                            <span className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayScore || 0}</span>
+                          ) : (
+                            <span style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>-</span>
+                          )}
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.homeTeamFull || game.homeTeam}</span>
-                          <span className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.homeScore || 0}</span>
+                          {isLive ? (
+                            <span className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.homeScore || 0}</span>
+                          ) : (
+                            <span style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>-</span>
+                          )}
                         </div>
                       </div>
 
