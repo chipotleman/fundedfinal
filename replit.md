@@ -54,6 +54,7 @@ None documented yet.
     - Pay-as-you-go pricing model
   - **Supported Sports**: NBA, NFL, NCAAB, NCAAF, MLB, NHL
   - **Credit Budget**: 50 credits/day (testing phase), alerts at 70%/90%
+  - **Date Filter**: Only fetches TODAY's games to minimize credit usage (6 credits per full refresh)
   - **Caching**: 10-minute server-side cache per sport
   - **Odds Strategy**: "Worst juice" - selects least favorable odds from all bookmakers to maximize platform profitability
   - Games endpoints:
