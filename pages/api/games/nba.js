@@ -6,7 +6,7 @@ let cachedDebugInfo = null;
 let cacheTimestamp = null;
 const CACHE_DURATION = 5 * 60 * 1000;
 
-const USE_SPORTSRADAR = process.env.SPORTSRADAR_API_KEY ? true : false;
+const USE_MYSPORTSFEEDS_FIRST = true;
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     const now = Date.now();
 
     const forceSource = source === 'mysportsfeeds' ? 'msf' : source === 'sportsradar' ? 'sr' : null;
-    const useSource = forceSource || (USE_SPORTSRADAR ? 'sr' : 'msf');
+    const useSource = forceSource || (USE_MYSPORTSFEEDS_FIRST ? 'msf' : 'sr');
 
     if (cachedGames && cacheTimestamp && (now - cacheTimestamp) < CACHE_DURATION && !forceSource) {
       const response = { 
@@ -33,28 +33,77 @@ export default async function handler(req, res) {
       return res.status(200).json(response);
     }
 
-    let games;
+    let games = [];
     let debugInfo = null;
+    let actualSource = useSource;
     
-    if (useSource === 'sr') {
-      console.log('Using Sportsradar NBA API');
-      if (upcoming === 'true') {
-        const result = await fetchSportsradarUpcoming(3);
-        games = result.games;
-        debugInfo = result.debugInfo;
-      } else {
-        games = await fetchSportsradarGames();
-        debugInfo = { source: 'sportsradar' };
-      }
-    } else {
-      console.log('Using MySportsFeeds NBA API');
+    async function tryMySportsFeeds() {
+      console.log('Trying MySportsFeeds NBA API...');
       if (upcoming === 'true') {
         const result = await fetchMSFUpcoming(3);
+        return { games: result.games, debugInfo: { ...result.debugInfo, source: 'mysportsfeeds' } };
+      } else {
+        const g = await fetchMSFGames();
+        return { games: g, debugInfo: { source: 'mysportsfeeds' } };
+      }
+    }
+    
+    async function trySportsradar() {
+      console.log('Trying Sportsradar NBA API...');
+      if (upcoming === 'true') {
+        const result = await fetchSportsradarUpcoming(1);
+        return { games: result.games, debugInfo: { ...result.debugInfo, source: 'sportsradar' } };
+      } else {
+        const g = await fetchSportsradarGames();
+        return { games: g, debugInfo: { source: 'sportsradar' } };
+      }
+    }
+    
+    if (useSource === 'msf') {
+      try {
+        const result = await tryMySportsFeeds();
         games = result.games;
         debugInfo = result.debugInfo;
-      } else {
-        games = await fetchMSFGames();
-        debugInfo = { source: 'mysportsfeeds' };
+        if (games.length === 0 && !forceSource) {
+          console.log('MySportsFeeds returned 0 games, trying Sportsradar...');
+          const srResult = await trySportsradar();
+          if (srResult.games.length > 0) {
+            games = srResult.games;
+            debugInfo = srResult.debugInfo;
+            actualSource = 'sr';
+          }
+        }
+      } catch (msfError) {
+        console.log('MySportsFeeds failed:', msfError.message, '- trying Sportsradar...');
+        if (!forceSource) {
+          const srResult = await trySportsradar();
+          games = srResult.games;
+          debugInfo = srResult.debugInfo;
+          actualSource = 'sr';
+        }
+      }
+    } else {
+      try {
+        const result = await trySportsradar();
+        games = result.games;
+        debugInfo = result.debugInfo;
+        if (games.length === 0 && !forceSource) {
+          console.log('Sportsradar returned 0 games, trying MySportsFeeds...');
+          const msfResult = await tryMySportsFeeds();
+          if (msfResult.games.length > 0) {
+            games = msfResult.games;
+            debugInfo = msfResult.debugInfo;
+            actualSource = 'msf';
+          }
+        }
+      } catch (srError) {
+        console.log('Sportsradar failed:', srError.message, '- trying MySportsFeeds...');
+        if (!forceSource) {
+          const msfResult = await tryMySportsFeeds();
+          games = msfResult.games;
+          debugInfo = msfResult.debugInfo;
+          actualSource = 'msf';
+        }
       }
     }
 
@@ -66,7 +115,7 @@ export default async function handler(req, res) {
       games, 
       cached: false,
       count: games.length,
-      source: debugInfo?.source || useSource
+      source: debugInfo?.source || (actualSource === 'msf' ? 'mysportsfeeds' : 'sportsradar')
     };
     
     if (debug === 'true' && debugInfo) {
