@@ -1,9 +1,12 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import html2canvas from 'html2canvas';
+import PiksBetCard from './PiksBetCard';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function ShareableBetSlip({ bet, isVisible, onClose }) {
   const [isGenerating, setIsGenerating] = useState(false);
-  const betSlipRef = useRef(null);
+  const cardContainerRef = useRef(null);
+  const { isDarkMode } = useTheme();
 
   useEffect(() => {
     if (isVisible) {
@@ -17,11 +20,6 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
     };
   }, [isVisible]);
 
-  const formatOdds = (odds) => {
-    const oddsValue = typeof odds === 'object' ? odds.odds || odds.value || 0 : odds;
-    return oddsValue > 0 ? `+${oddsValue}` : oddsValue.toString();
-  };
-
   const calculatePayout = (odds, stake) => {
     const oddsValue = typeof odds === 'object' ? odds.odds || odds.value || 0 : odds;
     if (oddsValue > 0) {
@@ -31,34 +29,13 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
     }
   };
 
-  const formatMoney = (amount) => {
-    return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  };
-
-  const pikId = useMemo(() => {
-    if (bet?.pikId) return bet.pikId;
-    const seed = bet?.id ? bet.id.toString().split('').reduce((a, c) => a + c.charCodeAt(0), 0) : Date.now();
-    return `${seed}${Math.floor(Math.random() * 10000).toString().padStart(5, '0')}`;
-  }, [bet?.id, bet?.pikId]);
-
-  const formatPlacedDate = () => {
-    const date = bet.placedAt ? new Date(bet.placedAt) : new Date();
-    const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
-    const day = date.getDate().toString().padStart(2, '0');
-    const year = date.getFullYear();
-    const time = date.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-    return `${month} ${day}, ${year} ${time}`;
-  };
-
-  const isParlay = bet?.betType?.toLowerCase().includes('parlay') || (bet?.legs && bet?.legs.length > 1);
-
   const generateImage = async () => {
-    if (!betSlipRef.current) return;
+    if (!cardContainerRef.current) return;
     
     setIsGenerating(true);
     try {
-      const canvas = await html2canvas(betSlipRef.current, {
-        backgroundColor: '#000000',
+      const canvas = await html2canvas(cardContainerRef.current, {
+        backgroundColor: isDarkMode ? '#000000' : '#f3f4f6',
         scale: 2,
         useCORS: true
       });
@@ -77,12 +54,12 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
   };
 
   const shareToInstagramStories = async () => {
-    if (!betSlipRef.current) return;
+    if (!cardContainerRef.current) return;
     
     setIsGenerating(true);
     try {
-      const canvas = await html2canvas(betSlipRef.current, {
-        backgroundColor: '#000000',
+      const canvas = await html2canvas(cardContainerRef.current, {
+        backgroundColor: isDarkMode ? '#000000' : '#f3f4f6',
         scale: 3,
         useCORS: true
       });
@@ -94,7 +71,7 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
         await navigator.share({
           files: [file],
           title: 'My Piks Win!',
-          text: 'Check out my winning bet on Piks! 💰'
+          text: 'Check out my winning bet on Piks!'
         });
       } else {
         const imageDataUrl = canvas.toDataURL('image/png');
@@ -113,7 +90,7 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
 
   const shareToSocial = async (platform) => {
     const payout = calculatePayout(bet.odds, bet.stake);
-    const text = `Just won $${payout.toFixed(2)} on Piks! 💰 #Piks #BettingWin`;
+    const text = `Just won $${payout.toFixed(2)} on Piks!`;
     const url = 'https://fundedpiks.com';
     
     switch (platform) {
@@ -132,38 +109,16 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
 
   if (!isVisible || !bet) return null;
 
-  const payout = calculatePayout(bet.odds, bet.stake);
-
-  // Get scores for display
-  const homeScore = bet.homeScore ?? Math.floor(Math.random() * 20 + 20);
-  const awayScore = bet.awayScore ?? Math.floor(Math.random() * 18 + 15);
-  
-  // Get team names
-  const matchupParts = bet.matchup?.split(' @ ') || [];
-  const awayTeam = bet.awayTeamFull || matchupParts[0] || 'Away Team';
-  const homeTeam = bet.homeTeamFull || matchupParts[1] || 'Home Team';
-
-  // Get full selection name
-  const getFullSelectionName = () => {
-    if (bet.selectionFull) return bet.selectionFull;
-    const sel = (bet.selection || '').toUpperCase();
-    const awayAbbr = matchupParts[0]?.toUpperCase() || '';
-    const homeAbbr = matchupParts[1]?.trim().toUpperCase() || '';
-    
-    if (bet.awayTeamFull && sel === awayAbbr) return bet.awayTeamFull;
-    if (bet.homeTeamFull && sel === homeAbbr) return bet.homeTeamFull;
-    return bet.selection;
-  };
-
   return (
     <div 
-      className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center"
+      className="fixed inset-0 z-50 flex flex-col items-center justify-center"
+      style={{ backgroundColor: isDarkMode ? 'rgba(0,0,0,0.95)' : 'rgba(0,0,0,0.85)' }}
       onClick={onClose}
     >
       {/* Close button */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors z-10"
+        className="absolute top-4 right-4 text-white hover:text-gray-300 transition-colors z-10"
       >
         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -173,88 +128,23 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
       {/* Title */}
       <h2 className="text-2xl font-bold text-white mb-6">Share Your Win!</h2>
 
-      {/* Bet Card - Exact replica of PiksBetCard */}
+      {/* Actual PiksBetCard - exact replica */}
       <div 
-        ref={betSlipRef}
+        ref={cardContainerRef}
         onClick={(e) => e.stopPropagation()}
-        className="w-[340px] rounded-2xl overflow-hidden border-2 border-yellow-500/70"
-        style={{ backgroundColor: '#111827' }}
+        className="max-w-md w-full mx-4 p-4"
+        style={{ backgroundColor: isDarkMode ? '#000000' : '#f3f4f6' }}
       >
-        {/* Header */}
-        <div className="bg-gradient-to-r from-green-600 via-green-500 to-emerald-500 px-4 py-3">
-          <div className="flex items-center justify-between">
-            <img src="/pikslogotransparent.png" alt="Piks" className="h-6 object-contain" />
-            <div 
-              className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full"
-              style={{
-                backgroundColor: 'rgba(255,255,255,0.2)',
-                border: '1px solid rgba(255,255,255,0.3)',
-                color: '#ffffff'
-              }}
-            >
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-              </svg>
-              <span>WON</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="px-4 pt-1 pb-3">
-          {/* Selection and odds */}
-          <div className="flex justify-between items-start mb-2">
-            <div className="flex-1">
-              <div className="font-bold text-base text-white">
-                {isParlay ? `${bet.legs?.length || 2}-Leg Parlay` : getFullSelectionName()}
-              </div>
-              <div className="text-xs uppercase tracking-wide text-gray-400">{bet.betType}</div>
-            </div>
-            <div className="font-bold text-xl text-white">{formatOdds(bet.odds)}</div>
-          </div>
-
-          {/* Score section */}
-          <div className="mb-3">
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-white/90">{homeTeam}</span>
-                <span className="font-bold text-lg text-green-400">{homeScore}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-white/90">{awayTeam}</span>
-                <span className="font-bold text-lg text-white">{awayScore}</span>
-              </div>
-            </div>
-            <div className="text-right pt-1">
-              <span className="text-gray-400 text-xs">Finished</span>
-            </div>
-          </div>
-
-          {/* Stake and Payout */}
-          <div className="border-t border-white/10 pt-3">
-            <div className="flex justify-between items-end">
-              <div>
-                <div className="text-white font-bold text-xl">${formatMoney(bet.stake)}</div>
-                <div className="text-gray-400 text-xs uppercase">Total Pikked</div>
-              </div>
-              <div className="text-right">
-                <div className="text-green-400 font-bold text-xl">${formatMoney(payout)}</div>
-                <div className="text-green-400/80 text-xs uppercase">Won on Piks</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="flex justify-between items-center mt-3 text-[10px] text-gray-500">
-            <div className="font-mono">PIK ID: {pikId}</div>
-            <div>PLACED: {formatPlacedDate()}</div>
-          </div>
-        </div>
+        <PiksBetCard 
+          bet={bet} 
+          onCashOut={null}
+          onShare={null}
+        />
       </div>
 
       {/* Share buttons */}
       <div 
-        className="mt-6 w-[340px] space-y-3"
+        className="mt-6 max-w-md w-full mx-4 space-y-3"
         onClick={(e) => e.stopPropagation()}
       >
         <button
