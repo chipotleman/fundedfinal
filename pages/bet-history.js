@@ -356,7 +356,8 @@ export default function BetHistory() {
                       homeScore: legGame.homeScore,
                       awayScore: legGame.awayScore,
                       homeTeamFull: legGame.homeTeamFull || legGame.homeTeam,
-                      awayTeamFull: legGame.awayTeamFull || legGame.awayTeam
+                      awayTeamFull: legGame.awayTeamFull || legGame.awayTeam,
+                      gameStart: legGame.startTime
                     };
                   }
                   return { ...leg, isLive: false };
