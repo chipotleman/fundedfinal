@@ -169,7 +169,7 @@ export default function Dashboard() {
         onBetSlipClick={handleBetSlipClick}
       />
 
-      <div className="pt-14 sm:pt-6 lg:pt-8 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
+      <div className="pt-8 sm:pt-6 lg:pt-8 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
         <div className="mb-4">
           <div className="flex items-center gap-4 mb-4">
             <button

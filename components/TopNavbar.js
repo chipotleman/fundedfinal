@@ -424,10 +424,10 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
   return (
     <>
       <nav className="sticky top-0 left-0 right-0 z-50" style={{ backgroundColor: isDarkMode ? '#000000' : '#ffffff' }}>
-        <div className="px-3 sm:px-6 py-0 sm:py-1 -mb-8 sm:-mb-6">
-          <div className="flex items-center justify-center sm:justify-between min-h-[36px] sm:min-h-[48px] relative">
+        <div className="px-3 sm:px-6 py-0 sm:py-1 -mb-14 sm:-mb-6">
+          <div className="flex items-center justify-center sm:justify-between min-h-[20px] sm:min-h-[48px] relative">
             {/* Logo - centered on mobile, left-aligned on desktop */}
-            <div className="flex-none -mt-[5px] sm:-mt-[5.75px] -ml-[310px] sm:ml-0">
+            <div className="flex-none -mt-[12px] sm:-mt-[5.75px] -ml-[310px] sm:ml-0">
               <Link href="/" className="flex items-center">
                 <img
                   src="/pikslogotransparent.png"
