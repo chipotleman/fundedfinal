@@ -579,37 +579,22 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                   </div>
                 )}
 
-                <div
-                  role="button"
-                  tabIndex={(!validation.isValid || totalStake > bankroll || isPlacing || totalStake === 0) ? -1 : 0}
-                  onTouchStart={(e) => {
-                    if (!validation.isValid || totalStake > bankroll || isPlacing || totalStake === 0) return;
-                    e.preventDefault();
-                    placeBets();
-                  }}
-                  onMouseDown={(e) => {
-                    if (!validation.isValid || totalStake > bankroll || isPlacing || totalStake === 0) return;
-                    e.preventDefault();
-                    placeBets();
-                  }}
-                  onFocus={(e) => e.target.blur()}
+                <button
+                  onClick={placeBets}
+                  disabled={!validation.isValid || totalStake > bankroll || isPlacing || totalStake === 0}
+                  className="w-full font-bold py-4 rounded-xl text-lg text-center"
                   style={{
-                    background: (!validation.isValid || totalStake > bankroll || isPlacing || totalStake === 0) 
-                      ? 'linear-gradient(to right, #4b5563, #374151)' 
-                      : 'linear-gradient(to right, #22c55e, #3b82f6)',
+                    backgroundColor: (!validation.isValid || totalStake > bankroll || isPlacing || totalStake === 0) 
+                      ? '#4b5563' 
+                      : '#2563eb',
                     color: '#ffffff',
                     cursor: (!validation.isValid || totalStake > bankroll || isPlacing || totalStake === 0) ? 'not-allowed' : 'pointer',
-                    userSelect: 'none',
-                    WebkitUserSelect: 'none',
-                    WebkitTapHighlightColor: 'transparent',
-                    WebkitTouchCallout: 'none',
-                    touchAction: 'manipulation',
-                    outline: 'none',
                     border: 'none',
-                    boxShadow: 'none',
-                    transition: 'none'
+                    outline: 'none',
+                    WebkitTapHighlightColor: 'transparent',
+                    WebkitAppearance: 'none',
+                    appearance: 'none'
                   }}
-                  className="w-full font-bold py-4 rounded-xl text-lg text-center"
                 >
                   {isPlacing ? (
                     <div className="flex items-center justify-center gap-2">
@@ -621,7 +606,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                   ) : (
                     `Place ${bets.length} Pik${bets.length > 1 ? 's' : ''}`
                   )}
-                </div>
+                </button>
               </div>
             )}
           </div>

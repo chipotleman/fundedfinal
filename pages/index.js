@@ -265,15 +265,7 @@ export default function Home() {
                 <div 
                   role="button"
                   tabIndex={0}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    window.dispatchEvent(new CustomEvent('openChallengePopup'));
-                  }}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    window.dispatchEvent(new CustomEvent('openChallengePopup'));
-                  }}
-                  onFocus={(e) => e.target.blur()}
+                  onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
                   className="w-full sm:w-auto font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl text-base sm:text-lg shadow-2xl text-center"
                   style={{ 
                     backgroundColor: '#22c55e',
@@ -295,15 +287,7 @@ export default function Home() {
                 <div 
                   role="button"
                   tabIndex={0}
-                  onTouchStart={(e) => {
-                    e.preventDefault();
-                    window.dispatchEvent(new CustomEvent('openHowItWorks'));
-                  }}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    window.dispatchEvent(new CustomEvent('openHowItWorks'));
-                  }}
-                  onFocus={(e) => e.target.blur()}
+                  onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))}
                   className="w-full sm:w-auto font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl text-base sm:text-lg text-center"
                   style={{
                     backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
