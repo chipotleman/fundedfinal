@@ -553,7 +553,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
                 <button
                   onClick={isLoggedIn ? onBetSlipClick : onDemoBetSlipClick}
                   className="relative text-white font-bold py-2 sm:py-3 px-2 sm:px-6 rounded-lg flex items-center space-x-1 sm:space-x-2 text-sm sm:text-base"
-                  style={{ backgroundColor: '#2563eb', marginRight: '35px' }}
+                  style={{ backgroundColor: '#2563eb', marginRight: '50px' }}
                 >
                   <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
