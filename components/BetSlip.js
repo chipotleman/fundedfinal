@@ -620,9 +620,12 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                       onBetPlaced(data.newBankroll);
                       window.dispatchEvent(new CustomEvent('bankrollUpdated', { detail: { bankroll: data.newBankroll } }));
                     }
-                    setShowReceipt(false);
-                    setCurrentReceipt(null);
-                    onClose();
+                    // Update the receipt to show cashed out status instead of closing
+                    setCurrentReceipt(prev => ({
+                      ...prev,
+                      status: 'cashed_out',
+                      profit: parseFloat(prev.stake) * -0.2
+                    }));
                   }
                 } catch (error) {
                   console.error('Cashout failed:', error);
