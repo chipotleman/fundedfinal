@@ -282,7 +282,7 @@ export default function Dashboard() {
                         isActive={isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam)}
                         activeColor="#2563eb"
                         inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
-                        style={{ flex: 1, borderRadius: '8px', padding: '12px', borderWidth: '1px', borderStyle: 'solid', borderColor: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#3b82f6' : (isDarkMode ? '#374151' : '#d1d5db') }}
+                        style={{ flex: 1, borderRadius: '8px', padding: '12px', textAlign: 'center', borderWidth: '1px', borderStyle: 'solid', borderColor: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#3b82f6' : (isDarkMode ? '#374151' : '#d1d5db') }}
                       >
                         <div style={{ fontSize: '12px', marginBottom: '2px', color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{(game.homeTeamFull || game.homeTeam).split(' ').pop()}</div>
                         <div style={{ fontWeight: 'bold', color: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#ffffff' : '#3b82f6' }}>
@@ -294,7 +294,7 @@ export default function Dashboard() {
                         isActive={isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam)}
                         activeColor="#2563eb"
                         inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
-                        style={{ flex: 1, borderRadius: '8px', padding: '12px', borderWidth: '1px', borderStyle: 'solid', borderColor: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#3b82f6' : (isDarkMode ? '#374151' : '#d1d5db') }}
+                        style={{ flex: 1, borderRadius: '8px', padding: '12px', textAlign: 'center', borderWidth: '1px', borderStyle: 'solid', borderColor: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#3b82f6' : (isDarkMode ? '#374151' : '#d1d5db') }}
                       >
                         <div style={{ fontSize: '12px', marginBottom: '2px', color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{(game.awayTeamFull || game.awayTeam).split(' ').pop()}</div>
                         <div style={{ fontWeight: 'bold', color: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#ffffff' : '#3b82f6' }}>
