@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Head from 'next/head';
 import '../styles/globals.css';
 import { SessionProvider } from 'next-auth/react';
 import { AuthProvider } from '../contexts/AuthContext';
@@ -220,6 +221,9 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
 
   return (
     <SessionProvider session={session}>
+      <Head>
+        <link rel="preload" href="/pikslogotransparent.png" as="image" type="image/png" />
+      </Head>
       <ThemeProvider>
         <AuthProvider>
           <BetSlipProvider>
