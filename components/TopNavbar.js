@@ -711,7 +711,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
                 <button
                   onClick={toggleMobileMenu}
                   className="lg:hidden"
-                  style={{ WebkitTapHighlightColor: 'transparent', marginRight: '25px' }}
+                  style={{ WebkitTapHighlightColor: 'transparent', marginRight: '65px', marginTop: '5px' }}
                 >
                   <svg className="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                     <path d="M3 7h18M3 12h18M3 17h18" />
