@@ -542,14 +542,34 @@ button:not(.force-white-text):not(.no-hover-effect):hover, .btn:not(.force-white
   outline: none !important;
 }
 
-.no-hover-effect:active {
-  background-color: #2563eb !important;
-  border-color: #3b82f6 !important;
-  box-shadow: none !important;
+/* Bet button base styles - instant touch feedback */
+.bet-button {
   outline: none !important;
+  transition: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  touch-action: manipulation !important;
 }
 
-.no-hover-effect:active * {
+.bet-button:hover,
+.bet-button:focus,
+.bet-button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.bet-button[data-pressed="true"],
+.bet-button[data-pressed="true"]:hover,
+.bet-button[data-pressed="true"]:focus {
+  background-color: #2563eb !important;
+  border-color: #3b82f6 !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.bet-button[data-pressed="true"] * {
   color: #ffffff !important;
 }
 
