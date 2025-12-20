@@ -173,7 +173,7 @@ export default function Dashboard() {
         <div className="mb-4">
           <div className="flex items-center gap-4 mb-4">
             <button
-              onClick={() => setSelectedTab('upcoming')}
+              onPointerDown={(e) => { e.currentTarget.blur(); setSelectedTab('upcoming'); }}
               className={`px-4 py-2 rounded-lg text-sm font-semibold no-hover-effect ${
                 selectedTab === 'upcoming'
                   ? 'bg-blue-600 text-white'
@@ -184,7 +184,7 @@ export default function Dashboard() {
               Upcoming {categorizedGames.upcomingGames.length > 0 && `(${categorizedGames.upcomingGames.length})`}
             </button>
             <button
-              onClick={() => setSelectedTab('live')}
+              onPointerDown={(e) => { e.currentTarget.blur(); setSelectedTab('live'); }}
               className="px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 no-hover-effect"
               style={{
                 backgroundColor: selectedTab === 'live' ? '#dc2626' : (isDarkMode ? '#1a1a1a' : '#e5e7eb'),
@@ -206,7 +206,7 @@ export default function Dashboard() {
             {sports.map((sport) => (
               <button
                 key={sport}
-                onClick={() => handleSportClick(sport)}
+                onPointerDown={(e) => { e.currentTarget.blur(); handleSportClick(sport); }}
                 className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium no-hover-effect"
                 style={{
                   backgroundColor: selectedSport === sport ? (isDarkMode ? '#1a1a1a' : '#e5e7eb') : 'transparent',
@@ -421,7 +421,7 @@ export default function Dashboard() {
                           </div>
                           <div className="flex gap-2 mb-2">
                             <button
-                              onClick={() => addToBetSlip(game, 'spread', game.lines.spread.away, `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`)}
+                              onPointerDown={(e) => { e.currentTarget.blur(); addToBetSlip(game, 'spread', game.lines.spread.away, `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`); }}
                               className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
@@ -438,7 +438,7 @@ export default function Dashboard() {
                               </div>
                             </button>
                             <button
-                              onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeamFull || game.awayTeam)}
+                              onPointerDown={(e) => { e.currentTarget.blur(); addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeamFull || game.awayTeam); }}
                               className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
@@ -454,7 +454,7 @@ export default function Dashboard() {
                               </div>
                             </button>
                             <button
-                              onClick={() => addToBetSlip(game, 'total', game.lines.total.over, `Over ${game.lines.total.over.point}`)}
+                              onPointerDown={(e) => { e.currentTarget.blur(); addToBetSlip(game, 'total', game.lines.total.over, `Over ${game.lines.total.over.point}`); }}
                               className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
@@ -473,7 +473,7 @@ export default function Dashboard() {
                           </div>
                           <div className="flex gap-2">
                             <button
-                              onClick={() => addToBetSlip(game, 'spread', game.lines.spread.home, `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`)}
+                              onPointerDown={(e) => { e.currentTarget.blur(); addToBetSlip(game, 'spread', game.lines.spread.home, `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`); }}
                               className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
@@ -490,7 +490,7 @@ export default function Dashboard() {
                               </div>
                             </button>
                             <button
-                              onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeamFull || game.homeTeam)}
+                              onPointerDown={(e) => { e.currentTarget.blur(); addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeamFull || game.homeTeam); }}
                               className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
@@ -506,7 +506,7 @@ export default function Dashboard() {
                               </div>
                             </button>
                             <button
-                              onClick={() => addToBetSlip(game, 'total', game.lines.total.under, `Under ${game.lines.total.under.point}`)}
+                              onPointerDown={(e) => { e.currentTarget.blur(); addToBetSlip(game, 'total', game.lines.total.under, `Under ${game.lines.total.under.point}`); }}
                               className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
