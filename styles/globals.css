@@ -585,32 +585,27 @@ button:not(.force-white-text):hover, .btn:not(.force-white-text):hover {
 
 /* Disable ALL hover and highlight effects on mobile/touch devices */
 @media (hover: none) and (pointer: coarse) {
-  /* Remove tap highlights globally */
+  /* Remove tap highlights and transitions globally */
   * {
     -webkit-tap-highlight-color: transparent !important;
     -webkit-touch-callout: none !important;
   }
   
-  /* Disable hover effects on specific elements - exclude SVGs to preserve icons */
-  button:not(svg):hover,
-  a:not(svg):hover,
-  .btn:hover,
-  .glass-button:hover,
-  .modern-card:hover,
-  .card-hover:hover,
-  .unified-hover:hover {
+  /* Kill ALL hover states on touch devices */
+  *:hover {
     transform: none !important;
-    box-shadow: none !important;
-    background-color: inherit !important;
+    box-shadow: inherit !important;
     text-shadow: none !important;
   }
   
-  /* Preserve bet card border colors */
-  .border-green-500,
-  .border-blue-500,
-  .border-red-500,
-  .border-orange-500 {
-    border-color: unset;
+  /* Prevent background color changes on hover */
+  button:hover,
+  a:hover,
+  div:hover,
+  [class*="hover"]:hover {
+    background-color: inherit !important;
+    border-color: inherit !important;
+    color: inherit !important;
   }
   
   /* Remove active/focus highlights */
