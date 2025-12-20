@@ -148,7 +148,7 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
           <div className="px-4 pt-2 pb-3 relative">
             <div className="flex items-center justify-between -mt-1">
               <div className="flex items-center">
-                <img src="/pikslogotransparent.png" alt="Piks" className="h-[120px] object-contain -ml-[25px]" />
+                <img src="/pikslogotransparent.png" alt="Piks" className="h-[120px] object-contain -ml-[31px]" />
               </div>
               
               <div className="flex items-center gap-2">
