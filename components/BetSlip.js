@@ -290,9 +290,9 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
           
           <div className="fixed inset-0 md:inset-auto md:top-0 md:right-0 md:bottom-0 md:w-[420px] z-[99] flex flex-col" style={{ backgroundColor: isDarkMode ? '#000000' : '#ffffff' }}>
             {/* Header with Piks branding */}
-            <div className="flex items-center justify-between px-3 h-[70px]" style={{ borderBottomWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#e5e7eb' }}>
-              <div className="relative">
-                <img src="/pikslogotransparent.png" alt="Piks" className="h-[140px] w-auto object-contain absolute left-[-35px] top-1/2 -translate-y-1/2" style={{ filter: isDarkMode ? 'hue-rotate(0deg) saturate(1.2) brightness(1.1)' : 'invert(1) hue-rotate(0deg) saturate(1.2) brightness(0.1)' }} />
+            <div className="flex items-center justify-between px-3 h-[70px] relative" style={{ borderBottomWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#e5e7eb' }}>
+              <div className="absolute left-[-35px] top-1/2 -translate-y-1/2">
+                <img src="/pikslogotransparent.png" alt="Piks" className="h-[140px] w-auto object-contain" style={{ filter: isDarkMode ? 'hue-rotate(0deg) saturate(1.2) brightness(1.1)' : 'invert(1) hue-rotate(0deg) saturate(1.2) brightness(0.1)' }} />
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1.5 bg-green-500/20 border border-green-500/50 px-2.5 py-1 rounded-full">
