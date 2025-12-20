@@ -174,20 +174,23 @@ export default function Dashboard() {
           <div className="flex items-center gap-4 mb-4">
             <button
               onClick={() => setSelectedTab('upcoming')}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold ${
+              className={`px-4 py-2 rounded-lg text-sm font-semibold no-hover-effect ${
                 selectedTab === 'upcoming'
                   ? 'bg-blue-600 text-white'
                   : isDarkMode ? 'bg-[#1a1a1a] text-gray-400' : 'bg-gray-200 text-gray-600'
               }`}
+              style={{ WebkitTapHighlightColor: 'transparent', outline: 'none' }}
             >
               Upcoming {categorizedGames.upcomingGames.length > 0 && `(${categorizedGames.upcomingGames.length})`}
             </button>
             <button
               onClick={() => setSelectedTab('live')}
-              className="px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"
+              className="px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 no-hover-effect"
               style={{
                 backgroundColor: selectedTab === 'live' ? '#dc2626' : (isDarkMode ? '#1a1a1a' : '#e5e7eb'),
-                color: selectedTab === 'live' ? '#ffffff' : (isDarkMode ? '#9ca3af' : '#4b5563')
+                color: selectedTab === 'live' ? '#ffffff' : (isDarkMode ? '#9ca3af' : '#4b5563'),
+                WebkitTapHighlightColor: 'transparent',
+                outline: 'none'
               }}
             >
               <span 
@@ -204,12 +207,14 @@ export default function Dashboard() {
               <button
                 key={sport}
                 onClick={() => handleSportClick(sport)}
-                className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium"
+                className="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium no-hover-effect"
                 style={{
                   backgroundColor: selectedSport === sport ? (isDarkMode ? '#1a1a1a' : '#e5e7eb') : 'transparent',
                   color: selectedSport === sport ? (isDarkMode ? '#ffffff' : '#111827') : (isDarkMode ? '#9ca3af' : '#6b7280'),
                   borderWidth: 1,
-                  borderColor: selectedSport === sport ? (isDarkMode ? '#4b5563' : '#9ca3af') : (isDarkMode ? '#1f2937' : '#d1d5db')
+                  borderColor: selectedSport === sport ? (isDarkMode ? '#4b5563' : '#9ca3af') : (isDarkMode ? '#1f2937' : '#d1d5db'),
+                  WebkitTapHighlightColor: 'transparent',
+                  outline: 'none'
                 }}
               >
                 <span className="text-base">{getSportIcon(sport)}</span>
