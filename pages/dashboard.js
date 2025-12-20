@@ -54,6 +54,30 @@ export default function Dashboard() {
     setExpandedGames(prev => ({ ...prev, [gameId]: !prev[gameId] }));
   };
 
+  const handlePointerDown = (e) => {
+    const btn = e.currentTarget;
+    btn.style.backgroundColor = '#2563eb';
+    btn.style.borderColor = '#3b82f6';
+    const children = btn.querySelectorAll('div');
+    children.forEach(child => child.style.color = '#ffffff');
+  };
+
+  const handlePointerUp = (e, isSelected, isDark) => {
+    const btn = e.currentTarget;
+    if (!isSelected) {
+      btn.style.backgroundColor = isDark ? '#1a1a1a' : '#f3f4f6';
+      btn.style.borderColor = isDark ? '#374151' : '#d1d5db';
+      const children = btn.querySelectorAll('div');
+      children.forEach((child, i) => {
+        if (i === 0 && child.classList.contains('text-xs')) {
+          child.style.color = isDark ? '#ffffff' : '#111827';
+        } else {
+          child.style.color = '#3b82f6';
+        }
+      });
+    }
+  };
+
   const handleBetSlipClick = () => {
     setShowBetSlip(!showBetSlip);
   };
@@ -417,6 +441,9 @@ export default function Dashboard() {
                           <div className="flex gap-2 mb-2">
                             <button
                               onClick={() => addToBetSlip(game, 'spread', game.lines.spread.away, `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`)}
+                              onPointerDown={handlePointerDown}
+                              onPointerUp={(e) => handlePointerUp(e, isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`), isDarkMode)}
+                              onPointerLeave={(e) => handlePointerUp(e, isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`), isDarkMode)}
                               className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
@@ -431,6 +458,9 @@ export default function Dashboard() {
                             </button>
                             <button
                               onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeamFull || game.awayTeam)}
+                              onPointerDown={handlePointerDown}
+                              onPointerUp={(e) => handlePointerUp(e, isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam), isDarkMode)}
+                              onPointerLeave={(e) => handlePointerUp(e, isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam), isDarkMode)}
                               className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
@@ -444,6 +474,9 @@ export default function Dashboard() {
                             </button>
                             <button
                               onClick={() => addToBetSlip(game, 'total', game.lines.total.over, `Over ${game.lines.total.over.point}`)}
+                              onPointerDown={handlePointerDown}
+                              onPointerUp={(e) => handlePointerUp(e, isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`), isDarkMode)}
+                              onPointerLeave={(e) => handlePointerUp(e, isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`), isDarkMode)}
                               className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
@@ -460,6 +493,9 @@ export default function Dashboard() {
                           <div className="flex gap-2">
                             <button
                               onClick={() => addToBetSlip(game, 'spread', game.lines.spread.home, `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`)}
+                              onPointerDown={handlePointerDown}
+                              onPointerUp={(e) => handlePointerUp(e, isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`), isDarkMode)}
+                              onPointerLeave={(e) => handlePointerUp(e, isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`), isDarkMode)}
                               className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
@@ -474,6 +510,9 @@ export default function Dashboard() {
                             </button>
                             <button
                               onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeamFull || game.homeTeam)}
+                              onPointerDown={handlePointerDown}
+                              onPointerUp={(e) => handlePointerUp(e, isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam), isDarkMode)}
+                              onPointerLeave={(e) => handlePointerUp(e, isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam), isDarkMode)}
                               className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
@@ -487,6 +526,9 @@ export default function Dashboard() {
                             </button>
                             <button
                               onClick={() => addToBetSlip(game, 'total', game.lines.total.under, `Under ${game.lines.total.under.point}`)}
+                              onPointerDown={handlePointerDown}
+                              onPointerUp={(e) => handlePointerUp(e, isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`), isDarkMode)}
+                              onPointerLeave={(e) => handlePointerUp(e, isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`), isDarkMode)}
                               className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
