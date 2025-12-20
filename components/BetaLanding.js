@@ -242,17 +242,41 @@ export default function BetaLanding({ onAuthenticated }) {
                   </label>
                 </div>
 
-                <button
-                  type="submit"
-                  disabled={!isButtonEnabled}
-                  className={`w-full font-bold py-4 rounded-xl transition-all shadow-lg ${
-                    isButtonEnabled
-                      ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white transform hover:scale-105 cursor-pointer'
-                      : 'bg-gray-600 text-gray-400 cursor-not-allowed opacity-50'
-                  }`}
+                <div
+                  role="button"
+                  tabIndex={!isButtonEnabled ? -1 : 0}
+                  onTouchStart={(e) => {
+                    if (!isButtonEnabled) return;
+                    e.preventDefault();
+                    e.target.closest('form').requestSubmit();
+                  }}
+                  onMouseDown={(e) => {
+                    if (!isButtonEnabled) return;
+                    e.preventDefault();
+                    e.target.closest('form').requestSubmit();
+                  }}
+                  onFocus={(e) => e.target.blur()}
+                  style={{
+                    background: isButtonEnabled 
+                      ? 'linear-gradient(to right, #f97316, #ea580c)' 
+                      : '#4b5563',
+                    color: isButtonEnabled ? '#ffffff' : '#9ca3af',
+                    cursor: isButtonEnabled ? 'pointer' : 'not-allowed',
+                    opacity: isButtonEnabled ? 1 : 0.5,
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    WebkitTapHighlightColor: 'transparent',
+                    WebkitTouchCallout: 'none',
+                    touchAction: 'manipulation',
+                    outline: 'none',
+                    border: 'none',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                    transition: 'none'
+                  }}
+                  className="w-full font-bold py-4 rounded-xl text-center"
                 >
                   Enter Platform
-                </button>
+                </div>
               </form>
 
               <div className="mt-8 text-center">

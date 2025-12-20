@@ -262,27 +262,66 @@ export default function Home() {
             {/* Call to Action Below Video */}
             <div className="text-center px-4 mb-8">
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-6 sm:mb-8">
-                <button 
-                  onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
-                  className="w-full sm:w-auto font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl text-base sm:text-lg shadow-2xl force-white-text"
+                <div 
+                  role="button"
+                  tabIndex={0}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    window.dispatchEvent(new CustomEvent('openChallengePopup'));
+                  }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    window.dispatchEvent(new CustomEvent('openChallengePopup'));
+                  }}
+                  onFocus={(e) => e.target.blur()}
+                  className="w-full sm:w-auto font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl text-base sm:text-lg shadow-2xl text-center"
                   style={{ 
                     backgroundColor: '#22c55e',
-                    color: '#ffffff'
+                    color: '#ffffff',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    WebkitTapHighlightColor: 'transparent',
+                    WebkitTouchCallout: 'none',
+                    touchAction: 'manipulation',
+                    outline: 'none',
+                    border: 'none',
+                    boxShadow: 'none',
+                    transition: 'none'
                   }}
                 >
                   Start a Challenge
-                </button>
-                <button 
-                  onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))}
-                  className="w-full sm:w-auto font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl transition-all duration-300 text-base sm:text-lg"
+                </div>
+                <div 
+                  role="button"
+                  tabIndex={0}
+                  onTouchStart={(e) => {
+                    e.preventDefault();
+                    window.dispatchEvent(new CustomEvent('openHowItWorks'));
+                  }}
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    window.dispatchEvent(new CustomEvent('openHowItWorks'));
+                  }}
+                  onFocus={(e) => e.target.blur()}
+                  className="w-full sm:w-auto font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl text-base sm:text-lg text-center"
                   style={{
                     backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
                     color: isDarkMode ? '#ffffff' : '#111827',
-                    border: isDarkMode ? '1px solid #334155' : '1px solid #d1d5db'
+                    border: isDarkMode ? '1px solid #334155' : '1px solid #d1d5db',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    WebkitTapHighlightColor: 'transparent',
+                    WebkitTouchCallout: 'none',
+                    touchAction: 'manipulation',
+                    outline: 'none',
+                    boxShadow: 'none',
+                    transition: 'none'
                   }}
                 >
                   How It Works
-                </button>
+                </div>
               </div>
             </div>
 

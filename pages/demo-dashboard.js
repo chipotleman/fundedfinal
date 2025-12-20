@@ -569,13 +569,42 @@ export default function DemoDashboard() {
                   </div>
                 </div>
 
-                <button
-                  onClick={placeBets}
-                  disabled={betMode === 'parlay' ? !parlayStake || parseFloat(parlayStake) <= 0 : getTotalStake() === 0}
-                  className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-4 rounded-xl transition-all disabled:cursor-not-allowed text-lg"
+                <div
+                  role="button"
+                  tabIndex={(betMode === 'parlay' ? !parlayStake || parseFloat(parlayStake) <= 0 : getTotalStake() === 0) ? -1 : 0}
+                  onTouchStart={(e) => {
+                    const isDisabled = betMode === 'parlay' ? !parlayStake || parseFloat(parlayStake) <= 0 : getTotalStake() === 0;
+                    if (isDisabled) return;
+                    e.preventDefault();
+                    placeBets();
+                  }}
+                  onMouseDown={(e) => {
+                    const isDisabled = betMode === 'parlay' ? !parlayStake || parseFloat(parlayStake) <= 0 : getTotalStake() === 0;
+                    if (isDisabled) return;
+                    e.preventDefault();
+                    placeBets();
+                  }}
+                  onFocus={(e) => e.target.blur()}
+                  style={{
+                    background: (betMode === 'parlay' ? !parlayStake || parseFloat(parlayStake) <= 0 : getTotalStake() === 0)
+                      ? 'linear-gradient(to right, #4b5563, #374151)'
+                      : 'linear-gradient(to right, #22c55e, #3b82f6)',
+                    color: '#ffffff',
+                    cursor: (betMode === 'parlay' ? !parlayStake || parseFloat(parlayStake) <= 0 : getTotalStake() === 0) ? 'not-allowed' : 'pointer',
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    WebkitTapHighlightColor: 'transparent',
+                    WebkitTouchCallout: 'none',
+                    touchAction: 'manipulation',
+                    outline: 'none',
+                    border: 'none',
+                    boxShadow: 'none',
+                    transition: 'none'
+                  }}
+                  className="w-full font-bold py-4 rounded-xl text-lg text-center"
                 >
                   {betMode === 'parlay' ? `Place ${selectedBets.length}-Leg Parlay` : `Place ${selectedBets.length} Demo Pik${selectedBets.length > 1 ? 's' : ''}`}
-                </button>
+                </div>
               </div>
             )}
           </div>
