@@ -280,25 +280,15 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
     <>
       <CoinRain trigger={showCoinRain} onComplete={() => setShowCoinRain(false)} />
 
-      {/* Always render bet slip but hide when closed to prevent logo flash on open */}
-      <div 
-        className="fixed inset-0 z-[98] hidden md:block"
-        style={{ 
-          backgroundColor: isDarkMode ? '#000000' : 'rgba(0,0,0,0.5)',
-          visibility: isOpen ? 'visible' : 'hidden',
-          pointerEvents: isOpen ? 'auto' : 'none'
-        }}
-        onClick={onClose}
-      />
-      
-      <div 
-        className="fixed inset-0 md:inset-auto md:top-0 md:right-0 md:bottom-0 md:w-[420px] z-[99] flex flex-col" 
-        style={{ 
-          backgroundColor: isDarkMode ? '#000000' : '#ffffff',
-          visibility: isOpen ? 'visible' : 'hidden',
-          pointerEvents: isOpen ? 'auto' : 'none'
-        }}
-      >
+      {isOpen && (
+        <>
+          <div 
+            className="fixed inset-0 z-[98] hidden md:block"
+            style={{ backgroundColor: isDarkMode ? '#000000' : 'rgba(0,0,0,0.5)' }}
+            onClick={onClose}
+          />
+          
+          <div className="fixed inset-0 md:inset-auto md:top-0 md:right-0 md:bottom-0 md:w-[420px] z-[99] flex flex-col" style={{ backgroundColor: isDarkMode ? '#000000' : '#ffffff' }}>
             {/* Header with Piks branding - matches TopNavbar structure */}
             <div className="px-3 h-[70px] flex items-center" style={{ borderBottomWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#e5e7eb' }}>
               <div className="flex items-center justify-between w-full min-h-[70px] relative">
@@ -588,6 +578,8 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
               </div>
             )}
           </div>
+        </>
+      )}
 
       <ShareableBetSlip 
         bet={selectedWinningBet}
