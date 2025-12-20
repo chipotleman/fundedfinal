@@ -580,6 +580,24 @@ button.no-hover-effect:active {
   opacity: 1 !important;
 }
 
+/* Override browser/Tailwind focus-visible outline - higher specificity */
+button.no-hover-effect:focus,
+button.no-hover-effect:focus-visible,
+button.no-hover-effect:focus-within {
+  outline: none !important;
+  outline-width: 0 !important;
+  outline-color: transparent !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+/* Even more specific - element + class + pseudo */
+button.no-hover-effect.rounded-lg:focus,
+button.no-hover-effect.rounded-lg:focus-visible {
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+
 /* Force white text buttons maintain their styling */
 .force-white-text {
   color: #ffffff !important;
