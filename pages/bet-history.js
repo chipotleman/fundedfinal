@@ -108,10 +108,14 @@ export default function BetHistory() {
       return bet.status === selectedFilter;
     })
     .sort((a, b) => {
-      if (a.status === 'open' && b.status !== 'open') return -1;
-      if (a.status !== 'open' && b.status === 'open') return 1;
-      const dateA = new Date(a.placedAt || a.settledAt || 0);
-      const dateB = new Date(b.placedAt || b.settledAt || 0);
+      // For "All" filter, sort purely by placement date (chronological, newest first)
+      // For other filters, prioritize open bets then sort by date
+      if (selectedFilter !== 'all') {
+        if (a.status === 'open' && b.status !== 'open') return -1;
+        if (a.status !== 'open' && b.status === 'open') return 1;
+      }
+      const dateA = new Date(a.placedAt || a.createdAt || 0);
+      const dateB = new Date(b.placedAt || b.createdAt || 0);
       return dateB - dateA;
     });
 
