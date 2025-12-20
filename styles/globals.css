@@ -99,7 +99,7 @@ html.light .text-white:not(.keep-white) {
 
 html.light .force-white-text,
 html.light .force-white-text:hover {
-  background-color: #22c55e !important;
+  color: #ffffff !important;
 }
 
 html.light .text-gray-300 {
@@ -630,12 +630,10 @@ button.no-hover-effect.rounded-lg:focus-visible {
 /* Force white text buttons maintain their styling */
 .force-white-text {
   color: #ffffff !important;
-  background-color: #22c55e !important;
 }
 
 .force-white-text:hover {
   color: #ffffff !important;
-  background-color: #16a34a !important;
 }
 
 /* Scroll Animation Styles */
