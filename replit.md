@@ -39,7 +39,14 @@ None documented yet.
 
 ### System Design Choices
 - **Authentication Flow**: Beta access -> NextAuth.js -> JWT session -> User profile creation -> Challenge selection & purchase -> Challenge data persistence.
-- **Database Schema**: Includes `users`, `profiles`, `user_bets`, `accounts`, `sessions`, `verification_tokens`, `admin_users`, `admin_staff`, `payment_methods`, `withdrawals`, `user_events`, `session_metrics`, `page_views`, `demo_bets`, `unplaced_bets`, `odds_history_pulls`.
+- **Database Schema**: Includes `users`, `profiles`, `user_bets`, `accounts`, `sessions`, `verification_tokens`, `admin_users`, `admin_staff`, `payment_methods`, `withdrawals`, `user_events`, `session_metrics`, `page_views`, `demo_bets`, `unplaced_bets`, `odds_history_pulls`, `completed_games`.
+- **Bet Autograding System**:
+  - AutoGrader component in `_app.js` polls `/api/bets/grade` every 60 seconds when users are active
+  - Completed games are saved to `completed_games` table to preserve results after they disappear from the API
+  - Grading logic matches pending bets to completed games by matchup name (e.g., "Team A @ Team B")
+  - Supports single bets, spreads, totals, moneylines, and parlays
+  - Automatically updates user bankroll on win/push
+  - Grading endpoint: `/api/bets/grade` (POST)
 - **API Architecture**: RESTful API routes in `/pages/api/*` for authentication, user profiles, admin functions, analytics, payment methods, and withdrawals.
 
 ## External Dependencies

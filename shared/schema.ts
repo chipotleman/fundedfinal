@@ -311,6 +311,24 @@ export const oddsHistoryPulls = pgTable("odds_history_pulls", {
   pulledAtIdx: index("odds_history_pulls_pulled_at_idx").on(table.pulledAt),
 }));
 
+// Completed games - stores game results for bet grading
+export const completedGames = pgTable("completed_games", {
+  id: varchar("id").primaryKey(), // Use the game ID from The Odds API
+  sport: varchar("sport", { length: 100 }),
+  homeTeam: varchar("home_team", { length: 100 }),
+  awayTeam: varchar("away_team", { length: 100 }),
+  homeTeamFull: varchar("home_team_full", { length: 255 }),
+  awayTeamFull: varchar("away_team_full", { length: 255 }),
+  homeScore: integer("home_score"),
+  awayScore: integer("away_score"),
+  commenceTime: timestamp("commence_time"),
+  completedAt: timestamp("completed_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  matchupIdx: index("completed_games_matchup_idx").on(table.homeTeamFull, table.awayTeamFull),
+  completedAtIdx: index("completed_games_completed_at_idx").on(table.completedAt),
+}));
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -340,3 +358,5 @@ export type Withdrawal = typeof withdrawals.$inferSelect;
 export type InsertWithdrawal = typeof withdrawals.$inferInsert;
 export type OddsHistoryPull = typeof oddsHistoryPulls.$inferSelect;
 export type InsertOddsHistoryPull = typeof oddsHistoryPulls.$inferInsert;
+export type CompletedGame = typeof completedGames.$inferSelect;
+export type InsertCompletedGame = typeof completedGames.$inferInsert;

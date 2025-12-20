@@ -50,6 +50,33 @@ function AnalyticsTracker() {
   return null;
 }
 
+function AutoGrader() {
+  useEffect(() => {
+    const gradeBets = async () => {
+      try {
+        const response = await fetch('/api/bets/grade', { method: 'POST' });
+        if (response.ok) {
+          const data = await response.json();
+          if (data.graded > 0) {
+            console.log(`[AutoGrader] Graded ${data.graded} bets`);
+            window.dispatchEvent(new CustomEvent('betsGraded', { detail: data }));
+          }
+        }
+      } catch (error) {
+        console.error('[AutoGrader] Error:', error);
+      }
+    };
+
+    gradeBets();
+
+    const interval = setInterval(gradeBets, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return null;
+}
+
 function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
   const [showChallengePopup, setShowChallengePopup] = useState(false);
   const [selectedChallengeIndex, setSelectedChallengeIndex] = useState(1);
@@ -225,6 +252,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
           <BetSlipProvider>
             <UserProfilesProvider>
             <AnalyticsTracker />
+            <AutoGrader />
           {/* Solid Black Background */}
           <div
             style={{

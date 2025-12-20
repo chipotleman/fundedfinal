@@ -1,6 +1,6 @@
 import { db } from '../../../lib/db';
-import { userBets, profiles } from '../../../shared/schema';
-import { eq, and, inArray } from 'drizzle-orm';
+import { userBets, profiles, completedGames } from '../../../shared/schema';
+import { eq, or, gte } from 'drizzle-orm';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -8,41 +8,97 @@ export default async function handler(req, res) {
   }
 
   try {
+    const allCompletedGames = [];
+    
     const gamesResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:5000'}/api/games`);
-    if (!gamesResponse.ok) {
-      return res.status(500).json({ error: 'Failed to fetch games data' });
+    if (gamesResponse.ok) {
+      const gamesData = await gamesResponse.json();
+      const apiCompletedGames = gamesData.games?.filter(g => g.isCompleted || g.status === 'FINAL') || [];
+      
+      for (const game of apiCompletedGames) {
+        allCompletedGames.push(game);
+        
+        try {
+          const existingGame = await db
+            .select()
+            .from(completedGames)
+            .where(eq(completedGames.id, game.id))
+            .limit(1);
+          
+          if (existingGame.length === 0) {
+            await db.insert(completedGames).values({
+              id: game.id,
+              sport: game.sport || game.sportKey,
+              homeTeam: game.homeTeam,
+              awayTeam: game.awayTeam,
+              homeTeamFull: game.homeTeamFull,
+              awayTeamFull: game.awayTeamFull,
+              homeScore: parseInt(game.homeScore) || 0,
+              awayScore: parseInt(game.awayScore) || 0,
+              commenceTime: game.commenceTime ? new Date(game.commenceTime) : null,
+              completedAt: new Date(),
+            });
+            console.log(`[GRADING] Saved completed game: ${game.awayTeamFull} @ ${game.homeTeamFull} (${game.awayScore}-${game.homeScore})`);
+          }
+        } catch (saveError) {
+          console.error(`[GRADING] Error saving game ${game.id}:`, saveError.message);
+        }
+      }
     }
-    
-    const gamesData = await gamesResponse.json();
-    const completedGames = gamesData.games?.filter(g => g.isCompleted || g.status === 'FINAL') || [];
-    
-    if (completedGames.length === 0) {
+
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const storedGames = await db
+      .select()
+      .from(completedGames)
+      .where(gte(completedGames.completedAt, sevenDaysAgo));
+
+    for (const storedGame of storedGames) {
+      if (!allCompletedGames.find(g => g.id === storedGame.id)) {
+        allCompletedGames.push({
+          id: storedGame.id,
+          sport: storedGame.sport,
+          homeTeam: storedGame.homeTeam,
+          awayTeam: storedGame.awayTeam,
+          homeTeamFull: storedGame.homeTeamFull,
+          awayTeamFull: storedGame.awayTeamFull,
+          homeScore: storedGame.homeScore,
+          awayScore: storedGame.awayScore,
+          isCompleted: true,
+          status: 'FINAL'
+        });
+      }
+    }
+
+    console.log(`[GRADING] Total completed games available: ${allCompletedGames.length}`);
+
+    if (allCompletedGames.length === 0) {
       return res.status(200).json({ message: 'No completed games to grade', graded: 0 });
     }
 
-    const gameIds = completedGames.map(g => g.id);
-    const gameMatchups = completedGames.map(g => `${g.awayTeamFull} @ ${g.homeTeamFull}`);
-    const gameMatchupsShort = completedGames.map(g => `${g.awayTeam} @ ${g.homeTeam}`);
+    const gamesMap = {};
+    allCompletedGames.forEach(game => {
+      gamesMap[game.id] = game;
+      if (game.awayTeamFull && game.homeTeamFull) {
+        gamesMap[`${game.awayTeamFull} @ ${game.homeTeamFull}`] = game;
+      }
+      if (game.awayTeam && game.homeTeam) {
+        gamesMap[`${game.awayTeam} @ ${game.homeTeam}`] = game;
+      }
+    });
     
     const openBets = await db
       .select()
       .from(userBets)
       .where(eq(userBets.status, 'pending'));
 
-    console.log(`[GRADING] Found ${completedGames.length} completed games, ${openBets.length} pending bets`);
-    console.log(`[GRADING] Completed games:`, completedGames.map(g => `${g.awayTeam} @ ${g.homeTeam} (${g.awayScore}-${g.homeScore})`));
+    console.log(`[GRADING] Found ${openBets.length} pending bets`);
+    console.log(`[GRADING] Completed games:`, allCompletedGames.map(g => `${g.awayTeamFull || g.awayTeam} @ ${g.homeTeamFull || g.homeTeam} (${g.awayScore}-${g.homeScore})`));
 
     const betsToGrade = openBets.filter(bet => {
-      if (gameIds.includes(bet.gameId)) return true;
-      if (gameMatchups.includes(bet.matchupName)) return true;
-      if (gameMatchupsShort.includes(bet.matchupName)) return true;
+      if (gamesMap[bet.matchupName]) return true;
       
       if (bet.legs && Array.isArray(bet.legs)) {
-        return bet.legs.some(leg => 
-          gameIds.includes(leg.gameId) || 
-          gameMatchups.includes(leg.matchup) ||
-          gameMatchupsShort.includes(leg.matchup)
-        );
+        return bet.legs.some(leg => gamesMap[leg.matchup]);
       }
       return false;
     });
@@ -50,26 +106,19 @@ export default async function handler(req, res) {
     console.log(`[GRADING] Bets to grade: ${betsToGrade.length}`, betsToGrade.map(b => b.matchupName));
 
     if (betsToGrade.length === 0) {
-      return res.status(200).json({ message: 'No bets to grade for completed games', graded: 0 });
+      return res.status(200).json({ message: 'No bets to grade for completed games', graded: 0, completedGamesCount: allCompletedGames.length });
     }
-
-    const gamesMap = {};
-    completedGames.forEach(game => {
-      gamesMap[game.id] = game;
-      gamesMap[`${game.awayTeamFull} @ ${game.homeTeamFull}`] = game;
-      gamesMap[`${game.awayTeam} @ ${game.homeTeam}`] = game;
-    });
 
     let gradedCount = 0;
     const updates = [];
 
     for (const bet of betsToGrade) {
-      const isParlay = bet.betType?.toLowerCase().includes('parlay') || (bet.legs && bet.legs.length > 1);
+      const isParlay = bet.marketType?.toLowerCase().includes('parlay') || (bet.legs && bet.legs.length > 1);
       
       if (isParlay && bet.legs && bet.legs.length > 0) {
         const legResults = bet.legs.map(leg => {
-          const game = gamesMap[leg.gameId] || gamesMap[leg.matchup];
-          if (!game || !game.isCompleted) return { graded: false };
+          const game = gamesMap[leg.matchup];
+          if (!game) return { graded: false };
           return gradeLeg(leg, game);
         });
 
@@ -79,7 +128,7 @@ export default async function handler(req, res) {
         const anyLost = legResults.some(r => !r.won && !r.push);
         const allPush = legResults.every(r => r.push);
         const nonPushLegs = legResults.filter(r => !r.push);
-        const wonNonPushLegs = nonPushLegs.every(r => r.won);
+        const wonNonPushLegs = nonPushLegs.length === 0 || nonPushLegs.every(r => r.won);
 
         let status, pnl;
         if (allPush) {
@@ -106,14 +155,14 @@ export default async function handler(req, res) {
         });
         gradedCount++;
       } else {
-        const game = gamesMap[bet.gameId] || gamesMap[bet.matchup];
-        if (!game || !game.isCompleted) continue;
+        const game = gamesMap[bet.matchupName];
+        if (!game) continue;
 
         const result = gradeLeg({
           selection: bet.selection,
-          betType: bet.betType,
-          homeTeam: bet.homeTeam || game.homeTeam,
-          awayTeam: bet.awayTeam || game.awayTeam,
+          betType: bet.marketType,
+          homeTeam: bet.homeTeamFull || game.homeTeam,
+          awayTeam: bet.awayTeamFull || game.awayTeam,
           homeTeamFull: bet.homeTeamFull || game.homeTeamFull,
           awayTeamFull: bet.awayTeamFull || game.awayTeamFull
         }, game);
@@ -163,7 +212,7 @@ export default async function handler(req, res) {
         const [profile] = await db
           .select()
           .from(profiles)
-          .where(eq(profiles.userId, update.userId))
+          .where(eq(profiles.id, update.userId))
           .limit(1);
 
         if (profile) {
@@ -177,7 +226,7 @@ export default async function handler(req, res) {
           await db
             .update(profiles)
             .set({ bankroll: newBankroll })
-            .where(eq(profiles.userId, update.userId));
+            .where(eq(profiles.id, update.userId));
         }
       }
     }
@@ -185,6 +234,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       message: `Graded ${gradedCount} bets`,
       graded: gradedCount,
+      completedGamesCount: allCompletedGames.length,
       updates: updates.map(u => ({ betId: u.betId, status: u.status, pnl: u.pnl }))
     });
 
