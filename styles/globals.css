@@ -566,6 +566,18 @@ button:not(.force-white-text):not(.no-hover-effect):not(.bet-btn):hover, .btn:no
   outline: none !important;
   box-shadow: none !important;
   transform: none !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+  opacity: 1 !important;
+  background-image: none !important;
+}
+
+/* Override browser default button:active darkening */
+button.bet-btn:active,
+button.no-hover-effect:active {
+  filter: none !important;
+  -webkit-filter: none !important;
+  opacity: 1 !important;
 }
 
 /* Force white text buttons maintain their styling */
