@@ -86,26 +86,14 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
   }, []);
 
   useEffect(() => {
+    // Simple overflow lock - no position:fixed which breaks iOS Safari touch events
     if (isOpen) {
       document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-      document.body.style.top = `-${window.scrollY}px`;
     } else {
-      const scrollY = document.body.style.top;
       document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.top = '';
-      if (scrollY) {
-        window.scrollTo(0, parseInt(scrollY || '0') * -1);
-      }
     }
     return () => {
       document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.top = '';
     };
   }, [isOpen]);
 
