@@ -420,8 +420,7 @@ export default function Dashboard() {
                               className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none active:bg-transparent"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
-                                borderWidth: 1,
-                                borderColor: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#3b82f6' : (isDarkMode ? '#374151' : '#d1d5db'),
+                                border: 'none',
                                 outline: 'none',
                                 transition: 'none',
                                 WebkitTapHighlightColor: 'transparent',
@@ -438,8 +437,7 @@ export default function Dashboard() {
                               className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none active:bg-transparent"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
-                                borderWidth: 1,
-                                borderColor: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#3b82f6' : (isDarkMode ? '#374151' : '#d1d5db'),
+                                border: 'none',
                                 outline: 'none',
                                 transition: 'none',
                                 WebkitTapHighlightColor: 'transparent',
@@ -455,8 +453,7 @@ export default function Dashboard() {
                               className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none active:bg-transparent"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
-                                borderWidth: 1,
-                                borderColor: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#3b82f6' : (isDarkMode ? '#374151' : '#d1d5db'),
+                                border: 'none',
                                 outline: 'none',
                                 transition: 'none',
                                 WebkitTapHighlightColor: 'transparent',
@@ -475,8 +472,7 @@ export default function Dashboard() {
                               className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none active:bg-transparent"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
-                                borderWidth: 1,
-                                borderColor: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#3b82f6' : (isDarkMode ? '#374151' : '#d1d5db'),
+                                border: 'none',
                                 outline: 'none',
                                 transition: 'none',
                                 WebkitTapHighlightColor: 'transparent',
@@ -493,8 +489,7 @@ export default function Dashboard() {
                               className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none active:bg-transparent"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
-                                borderWidth: 1,
-                                borderColor: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#3b82f6' : (isDarkMode ? '#374151' : '#d1d5db'),
+                                border: 'none',
                                 outline: 'none',
                                 transition: 'none',
                                 WebkitTapHighlightColor: 'transparent',
@@ -510,8 +505,7 @@ export default function Dashboard() {
                               className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none active:bg-transparent"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
-                                borderWidth: 1,
-                                borderColor: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#3b82f6' : (isDarkMode ? '#374151' : '#d1d5db'),
+                                border: 'none',
                                 outline: 'none',
                                 transition: 'none',
                                 WebkitTapHighlightColor: 'transparent',
