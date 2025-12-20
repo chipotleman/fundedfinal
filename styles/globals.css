@@ -598,10 +598,10 @@ button:not(.force-white-text):not(.no-hover-effect):hover, .btn:not(.force-white
     -webkit-touch-callout: none !important;
   }
   
-  /* Disable hover effects on specific elements - exclude SVGs to preserve icons */
-  button:not(svg):hover,
-  a:not(svg):hover,
-  .btn:hover,
+  /* Disable hover effects on specific elements - exclude SVGs and no-hover-effect */
+  button:not(svg):not(.no-hover-effect):hover,
+  a:not(svg):not(.no-hover-effect):hover,
+  .btn:not(.no-hover-effect):hover,
   .glass-button:hover,
   .modern-card:hover,
   .card-hover:hover,
