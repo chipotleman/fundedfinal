@@ -529,12 +529,10 @@ button:not(.force-white-text):not(.no-hover-effect):hover, .btn:not(.force-white
   box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
 }
 
-/* Prevent any transform/hover effects */
-.no-hover-effect,
+/* Prevent any transform/hover effects - but preserve existing transforms */
 .no-hover-effect:hover,
 .no-hover-effect:active,
 .no-hover-effect:focus {
-  transform: none !important;
   box-shadow: none !important;
 }
 
