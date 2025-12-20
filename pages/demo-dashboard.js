@@ -28,7 +28,7 @@ export default function DemoDashboard() {
   const [parlayStake, setParlayStake] = useState('');
   const [mounted, setMounted] = useState(false);
 
-  const sports = ['FEATURED', 'NBA', 'NFL', 'NCAAB', 'NCAAF', 'MLB', 'NHL'];
+  const sports = ['NBA', 'NFL', 'NCAAB', 'NCAAF', 'MLB', 'NHL'];
 
   useEffect(() => {
     setMounted(true);
@@ -174,13 +174,12 @@ export default function DemoDashboard() {
   };
 
   const getSportIcon = (sport) => {
-    const icons = { 'FEATURED': '⭐', 'NFL': '🏈', 'NCAAF': '🏈', 'NBA': '🏀', 'NCAAB': '🏀', 'MLB': '⚾', 'NHL': '🏒', 'Soccer': '⚽' };
+    const icons = { 'NFL': '🏈', 'NCAAF': '🏈', 'NBA': '🏀', 'NCAAB': '🏀', 'MLB': '⚾', 'NHL': '🏒', 'Soccer': '⚽' };
     return icons[sport] || '🏆';
   };
 
   const getSportLabel = (sport) => {
     const labels = {
-      'FEATURED': 'Featured',
       'NFL': 'Football',
       'NCAAF': 'College Football',
       'NBA': 'Basketball',
@@ -692,10 +691,9 @@ export default function DemoDashboard() {
                 onClick={() => handleSportClick(sport)}
                 className={`flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium ${
                   selectedSport === sport
-                    ? (sport === 'FEATURED' ? 'bg-blue-600 text-white border border-blue-600' : 'bg-[#1a1a1a] text-white border border-gray-600')
+                    ? 'bg-[#1a1a1a] text-white border border-gray-600'
                     : 'bg-transparent text-gray-400 border border-gray-800'
                 }`}
-                style={{ color: selectedSport === sport && sport === 'FEATURED' ? '#ffffff' : undefined }}
               >
                 <span className="text-base">{getSportIcon(sport)}</span>
                 <span>{getSportLabel(sport)}</span>

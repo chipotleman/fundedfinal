@@ -59,7 +59,7 @@ export default function Dashboard() {
     setShowBetSlip(!showBetSlip);
   };
 
-  const sports = ['FEATURED', 'NBA', 'NFL', 'NCAAB', 'NCAAF', 'MLB', 'NHL'];
+  const sports = ['NBA', 'NFL', 'NCAAB', 'NCAAF', 'MLB', 'NHL'];
 
   const baseGamesRef = useRef({});
   const betSlipRef = useRef(betSlip);
@@ -130,7 +130,6 @@ export default function Dashboard() {
 
   const getSportIcon = (sport) => {
     const icons = {
-      'FEATURED': '⭐',
       'NFL': '🏈',
       'NCAAF': '🏈',
       'NBA': '🏀', 
@@ -144,7 +143,6 @@ export default function Dashboard() {
 
   const getSportLabel = (sport) => {
     const labels = {
-      'FEATURED': 'Featured',
       'NFL': 'Football',
       'NCAAF': 'College Football',
       'NBA': 'Basketball',
@@ -212,9 +210,9 @@ export default function Dashboard() {
                 key={sport}
                 onTap={() => handleSportClick(sport)}
                 isActive={selectedSport === sport}
-                activeColor={sport === 'FEATURED' ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#e5e7eb')}
+                activeColor={isDarkMode ? '#1a1a1a' : '#e5e7eb'}
                 inactiveColor="transparent"
-                activeTextColor={sport === 'FEATURED' ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827')}
+                activeTextColor={isDarkMode ? '#ffffff' : '#111827'}
                 inactiveTextColor={isDarkMode ? '#9ca3af' : '#6b7280'}
                 style={{
                   flexShrink: 0,
@@ -227,7 +225,7 @@ export default function Dashboard() {
                   fontWeight: '500',
                   borderWidth: '1px',
                   borderStyle: 'solid',
-                  borderColor: selectedSport === sport ? (sport === 'FEATURED' ? '#2563eb' : (isDarkMode ? '#4b5563' : '#9ca3af')) : (isDarkMode ? '#1f2937' : '#d1d5db')
+                  borderColor: selectedSport === sport ? (isDarkMode ? '#4b5563' : '#9ca3af') : (isDarkMode ? '#1f2937' : '#d1d5db')
                 }}
               >
                 <span style={{ fontSize: '16px' }}>{getSportIcon(sport)}</span>
