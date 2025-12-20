@@ -591,11 +591,14 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
 
               {/* Badge */}
               <div className="text-center mb-4">
-                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
-                  currentChallenge.badge === 'BEGINNER' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
-                  currentChallenge.badge === 'POPULAR' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
-                  'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                }`}>
+                <span 
+                  className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
+                    currentChallenge.badge === 'BEGINNER' ? 'bg-blue-500 border border-blue-500/30' :
+                    currentChallenge.badge === 'POPULAR' ? 'bg-green-500 border border-green-500/30' :
+                    'bg-purple-500 border border-purple-500/30'
+                  }`}
+                  style={{ color: '#ffffff' }}
+                >
                   {currentChallenge.badge}
                 </span>
               </div>
