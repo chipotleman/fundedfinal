@@ -296,7 +296,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                   <img 
                     src="/pikslogotransparent.png" 
                     alt="Piks" 
-                    className="h-[140px] w-auto brightness-100 transition-all duration-300"
+                    className="h-[140px] w-auto brightness-100"
                     style={{
                       filter: isDarkMode ? 'hue-rotate(0deg) saturate(1.2) brightness(1.1)' : 'invert(1) hue-rotate(0deg) saturate(1.2) brightness(0.1)',
                       animation: isDarkMode ? 'logoRedYellowGlow 4s infinite ease-in-out' : 'none'
