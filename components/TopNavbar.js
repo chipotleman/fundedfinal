@@ -428,7 +428,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
           <div className="flex items-center justify-between w-full sm:justify-between min-h-[70px] sm:min-h-[48px] relative">
             {/* Logo - absolutely positioned on mobile to not affect bar height */}
             <div className="absolute left-[-35px] top-1/2 -translate-y-1/2 sm:relative sm:left-0 sm:top-auto sm:translate-y-0 sm:-mt-[5.75px]">
-              <Link href="/" className="flex items-center">
+              <Link href={isLoggedIn ? "/dashboard" : "/"} className="flex items-center">
                 <img
                   src="/pikslogotransparent.png"
                   alt="Piks"
