@@ -117,6 +117,10 @@ export default async function handler(req, res) {
       
       if (isParlay && bet.legs && bet.legs.length > 0) {
         const legResults = bet.legs.map(leg => {
+          if (leg.isCompleted) {
+            return { graded: true, won: leg.won === true, push: leg.push === true };
+          }
+          
           const game = gamesMap[leg.matchup];
           if (!game) return { graded: false };
           return gradeLeg(leg, game);
