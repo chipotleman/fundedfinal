@@ -568,10 +568,10 @@ button:not(.force-white-text):not(.no-hover-effect):not(.bet-btn):hover, .btn:no
   background-image: none !important;
 }
 
-.no-hover-effect:hover,
-.no-hover-effect:focus,
-.no-hover-effect:focus-visible,
-.no-hover-effect:active {
+.no-hover-effect:not(.hamburger-btn):hover,
+.no-hover-effect:not(.hamburger-btn):focus,
+.no-hover-effect:not(.hamburger-btn):focus-visible,
+.no-hover-effect:not(.hamburger-btn):active {
   box-shadow: none !important;
   outline: none !important;
   transform: none !important;
@@ -603,16 +603,16 @@ button:not(.force-white-text):not(.no-hover-effect):not(.bet-btn):hover, .btn:no
 
 /* Override browser default button:active darkening */
 button.bet-btn:active,
-button.no-hover-effect:active {
+button.no-hover-effect:not(.hamburger-btn):active {
   filter: none !important;
   -webkit-filter: none !important;
   opacity: 1 !important;
 }
 
 /* Override browser/Tailwind focus-visible outline - higher specificity */
-button.no-hover-effect:focus,
-button.no-hover-effect:focus-visible,
-button.no-hover-effect:focus-within {
+button.no-hover-effect:not(.hamburger-btn):focus,
+button.no-hover-effect:not(.hamburger-btn):focus-visible,
+button.no-hover-effect:not(.hamburger-btn):focus-within {
   outline: none !important;
   outline-width: 0 !important;
   outline-color: transparent !important;
