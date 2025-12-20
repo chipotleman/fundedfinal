@@ -357,7 +357,7 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
               {isDemo && (
                 <button
                   onClick={() => window.location.href = '/auth'}
-                  className="flex-1 bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2 px-3 rounded-lg text-sm transition-all"
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-lg text-sm transition-all"
                 >
                   Get Funded
                 </button>
