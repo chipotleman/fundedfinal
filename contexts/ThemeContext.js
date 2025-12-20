@@ -1,23 +1,18 @@
-import { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { createContext, useContext, useState, useLayoutEffect } from 'react';
 
 const ThemeContext = createContext();
 
+function getInitialTheme() {
+  if (typeof window === 'undefined') return true;
+  const saved = window.localStorage.getItem('piks-theme');
+  return saved ? saved === 'dark' : true;
+}
+
 export function ThemeProvider({ children }) {
-  const [isDarkMode, setIsDarkMode] = useState(true);
-  const hasLoadedRef = useRef(false);
+  const [isDarkMode, setIsDarkMode] = useState(getInitialTheme);
 
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('piks-theme');
-    if (savedTheme) {
-      setIsDarkMode(savedTheme === 'dark');
-    }
-    hasLoadedRef.current = true;
-  }, []);
-
-  useEffect(() => {
-    if (hasLoadedRef.current) {
-      localStorage.setItem('piks-theme', isDarkMode ? 'dark' : 'light');
-    }
+  useLayoutEffect(() => {
+    localStorage.setItem('piks-theme', isDarkMode ? 'dark' : 'light');
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
       document.documentElement.classList.remove('light');
