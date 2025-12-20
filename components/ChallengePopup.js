@@ -840,11 +840,15 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
               <button
                 onClick={handleNext}
                 disabled={loading}
-                className={`w-full bg-gradient-to-r ${loading ? '' : theme.gradient} ${loading ? '' : theme.gradientHover} disabled:from-gray-600 disabled:to-gray-700 font-bold py-3 px-6 rounded-xl shadow-2xl mb-4 transform hover:scale-105 transition-all duration-300 disabled:transform-none disabled:cursor-not-allowed`}
+                className="w-full font-bold py-3 px-6 rounded-xl shadow-2xl mb-4"
                 style={{ 
                   WebkitTapHighlightColor: 'transparent',
-                  backgroundColor: loading ? '#22c55e' : undefined,
-                  color: '#ffffff'
+                  backgroundColor: loading ? '#4b5563' : theme.borderColor,
+                  color: '#ffffff',
+                  border: 'none',
+                  outline: 'none',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.7 : 1
                 }}
               >
                 {loading ? (

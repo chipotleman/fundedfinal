@@ -159,14 +159,30 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
           {currentIndex === steps.length - 1 ? (
             <button
               onClick={handleTryDemo}
-              className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl text-lg mb-6"
+              className="w-full font-bold py-4 px-6 rounded-xl text-lg mb-6"
+              style={{
+                backgroundColor: '#22c55e',
+                color: '#ffffff',
+                border: 'none',
+                outline: 'none',
+                cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent'
+              }}
             >
               Try a Demo
             </button>
           ) : (
             <button
               onClick={nextStep}
-              className="w-full bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl text-lg mb-6"
+              className="w-full font-bold py-4 px-6 rounded-xl text-lg mb-6"
+              style={{
+                backgroundColor: '#2563eb',
+                color: '#ffffff',
+                border: 'none',
+                outline: 'none',
+                cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent'
+              }}
             >
               Next Step
             </button>
