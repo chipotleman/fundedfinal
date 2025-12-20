@@ -3,6 +3,35 @@
 @tailwind components;
 @tailwind utilities;
 
+/* GLOBAL BUTTON RESET - Remove all tap/active highlights from every button */
+button,
+[role="button"],
+.btn,
+.no-hover-effect,
+.bet-btn {
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  -webkit-touch-callout: none !important;
+  outline: none !important;
+  background-image: none !important;
+}
+
+button:active,
+button:focus,
+button:focus-visible,
+button:focus-within,
+[role="button"]:active,
+[role="button"]:focus,
+[role="button"]:focus-visible {
+  outline: none !important;
+  outline-width: 0 !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+}
+
 /* Modern Design System inspired by playerprofit.com */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
