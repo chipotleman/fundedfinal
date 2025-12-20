@@ -70,6 +70,7 @@ export default function Dashboard() {
 
   const [apiGames, setApiGames] = useState([]);
   const [gamesError, setGamesError] = useState(null);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   useEffect(() => {
     const fetchAllGames = async () => {
@@ -78,7 +79,9 @@ export default function Dashboard() {
         if (response.ok) {
           const data = await response.json();
           setApiGames(data.games || []);
+          setLastUpdated(new Date());
           setGamesError(null);
+          console.log('[DASHBOARD] Games refreshed:', data.games?.length, 'games at', new Date().toLocaleTimeString());
         } else {
           console.error('Failed to fetch games');
           setGamesError('Failed to load games');
