@@ -417,7 +417,7 @@ export default function Dashboard() {
                           <div className="flex gap-2 mb-2">
                             <button
                               onClick={() => addToBetSlip(game, 'spread', game.lines.spread.away, `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`)}
-                              className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none active:bg-transparent"
+                              className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
                                 border: 'none',
@@ -434,7 +434,7 @@ export default function Dashboard() {
                             </button>
                             <button
                               onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeamFull || game.awayTeam)}
-                              className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none active:bg-transparent"
+                              className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
                                 border: 'none',
@@ -450,7 +450,7 @@ export default function Dashboard() {
                             </button>
                             <button
                               onClick={() => addToBetSlip(game, 'total', game.lines.total.over, `Over ${game.lines.total.over.point}`)}
-                              className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none active:bg-transparent"
+                              className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
                                 border: 'none',
@@ -469,7 +469,7 @@ export default function Dashboard() {
                           <div className="flex gap-2">
                             <button
                               onClick={() => addToBetSlip(game, 'spread', game.lines.spread.home, `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`)}
-                              className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none active:bg-transparent"
+                              className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
                                 border: 'none',
@@ -486,7 +486,7 @@ export default function Dashboard() {
                             </button>
                             <button
                               onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeamFull || game.homeTeam)}
-                              className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none active:bg-transparent"
+                              className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
                                 border: 'none',
@@ -502,7 +502,7 @@ export default function Dashboard() {
                             </button>
                             <button
                               onClick={() => addToBetSlip(game, 'total', game.lines.total.under, `Under ${game.lines.total.under.point}`)}
-                              className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none active:bg-transparent"
+                              className="flex-1 rounded-lg py-2 px-1 text-center no-hover-effect focus:outline-none"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
                                 border: 'none',
