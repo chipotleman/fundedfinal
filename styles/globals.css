@@ -543,7 +543,6 @@ button:not(.force-white-text):not(.no-hover-effect):not(.bet-btn):hover, .btn:no
   box-shadow: none !important;
   outline: none !important;
   transform: none !important;
-  border-color: inherit !important;
 }
 
 /* Bet button - no effects, just toggle */
