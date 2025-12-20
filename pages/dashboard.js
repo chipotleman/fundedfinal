@@ -206,6 +206,11 @@ export default function Dashboard() {
               ></span>
               Live {categorizedGames.liveGames.length > 0 && `(${categorizedGames.liveGames.length})`}
             </TapSurface>
+            {lastUpdated && (
+              <span className="text-xs" style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>
+                Updated: {lastUpdated.toLocaleTimeString()}
+              </span>
+            )}
           </div>
           <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
             {sports.map((sport) => (
@@ -336,7 +341,7 @@ export default function Dashboard() {
                 
                 return (
                   <div 
-                    key={game.id} 
+                    key={`${game.id}-${game.homeScore}-${game.awayScore}`} 
                     className="rounded-xl overflow-hidden" 
                     style={{ backgroundColor: isDarkMode ? '#111111' : '#ffffff', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(209, 213, 219, 1)' }}
                   >
