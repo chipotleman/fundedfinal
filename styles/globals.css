@@ -524,9 +524,18 @@ body {
 }
 
 /* Enhanced Button Hover Effects */
-button:not(.force-white-text):hover, .btn:not(.force-white-text):hover {
+button:not(.force-white-text):not(.no-hover-effect):hover, .btn:not(.force-white-text):not(.no-hover-effect):hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+}
+
+/* Prevent any transform/hover effects */
+.no-hover-effect,
+.no-hover-effect:hover,
+.no-hover-effect:active,
+.no-hover-effect:focus {
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 /* Force white text buttons maintain their styling */
