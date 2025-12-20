@@ -280,6 +280,35 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
     <>
       <CoinRain trigger={showCoinRain} onComplete={() => setShowCoinRain(false)} />
 
+      {/* Persistent logo - always in DOM, visibility controlled */}
+      <div 
+        className="fixed z-[100] pointer-events-none"
+        style={{ 
+          top: 0,
+          left: 0,
+          right: 0,
+          visibility: isOpen ? 'visible' : 'hidden'
+        }}
+      >
+        <div className="fixed inset-0 md:inset-auto md:top-0 md:right-0 md:bottom-0 md:w-[420px]">
+          <div className="px-3 h-[70px] flex items-center">
+            <div className="flex items-center justify-between w-full min-h-[70px] relative">
+              <div className="absolute left-[-35px] top-1/2 -translate-y-1/2">
+                <img 
+                  src="/pikslogotransparent.png" 
+                  alt="Piks" 
+                  className="h-[140px] w-auto brightness-100"
+                  style={{
+                    filter: isDarkMode ? 'hue-rotate(0deg) saturate(1.2) brightness(1.1)' : 'invert(1) hue-rotate(0deg) saturate(1.2) brightness(0.1)',
+                    animation: isDarkMode ? 'logoRedYellowGlow 4s infinite ease-in-out' : 'none'
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {isOpen && (
         <>
           <div 
@@ -292,17 +321,8 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
             {/* Header with Piks branding - matches TopNavbar structure */}
             <div className="px-3 h-[70px] flex items-center" style={{ borderBottomWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#e5e7eb' }}>
               <div className="flex items-center justify-between w-full min-h-[70px] relative">
-                <div className="absolute left-[-35px] top-1/2 -translate-y-1/2">
-                  <img 
-                    src="/pikslogotransparent.png" 
-                    alt="Piks" 
-                    className="h-[140px] w-auto brightness-100"
-                    style={{
-                      filter: isDarkMode ? 'hue-rotate(0deg) saturate(1.2) brightness(1.1)' : 'invert(1) hue-rotate(0deg) saturate(1.2) brightness(0.1)',
-                      animation: isDarkMode ? 'logoRedYellowGlow 4s infinite ease-in-out' : 'none'
-                    }}
-                  />
-                </div>
+                {/* Logo placeholder - actual logo is in persistent layer above */}
+                <div className="absolute left-[-35px] top-1/2 -translate-y-1/2 w-[140px] h-[140px]"></div>
                 <div className="flex items-center gap-3 ml-auto mt-[2px]">
                 <div className="flex items-center gap-1.5 bg-green-500/20 border border-green-500/50 px-2.5 py-1 rounded-full">
                   <span className="text-green-400 text-xs font-bold">${typeof bankroll === 'number' ? bankroll.toLocaleString() : parseFloat(bankroll || 0).toLocaleString()}</span>
@@ -671,14 +691,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
         </div>
       )}
       
-      {/* Preload logo image to prevent flash */}
-      <img 
-        src="/pikslogotransparent.png" 
-        alt="" 
-        className="hidden"
-        aria-hidden="true"
-      />
-    </>
+          </>
   );
 
   return ReactDOM.createPortal(content, document.body);
