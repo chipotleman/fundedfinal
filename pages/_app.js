@@ -13,9 +13,26 @@ import AuthPopup from '../components/AuthPopup';
 import SessionSummaryPopup from '../components/SessionSummaryPopup';
 import MyChallengePopup from '../components/MyChallengePopup';
 import MobileNavMenu from '../components/MobileNavMenu';
+import TopNavbar from '../components/TopNavbar';
 import BetaLanding from '../components/BetaLanding';
 import { useEventTracking } from '../hooks/useEventTracking';
+import { useBetSlip } from '../contexts/BetSlipContext';
 import { useRouter } from 'next/router';
+
+function PersistentNavbar({ pathname }) {
+  const { betSlip } = useBetSlip();
+  
+  const pagesWithoutNavbar = [
+    '/admin-panel',
+    '/debug',
+  ];
+  
+  const shouldHideNavbar = pagesWithoutNavbar.some(page => pathname.startsWith(page));
+  
+  if (shouldHideNavbar) return null;
+  
+  return <TopNavbar betSlipCount={betSlip.length} />;
+}
 
 function AnalyticsTracker() {
   const { trackPageView, trackEvent } = useEventTracking();
@@ -274,6 +291,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
             }}
             className="lg:transform-none"
           >
+            <PersistentNavbar pathname={router.pathname} />
             <Component {...pageProps} />
           </div>
           
