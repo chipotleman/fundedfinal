@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 
 export default function TapSurface({ 
   children, 
@@ -12,27 +12,30 @@ export default function TapSurface({
   style = {},
   disabled = false
 }) {
-  const handlePointerDown = useCallback((e) => {
-    if (disabled) return;
-    e.preventDefault();
-    e.stopPropagation();
-    if (onTap) onTap();
-  }, [onTap, disabled]);
+  const hasFiredRef = useRef(false);
 
   const handleTouchStart = useCallback((e) => {
     if (disabled) return;
     e.preventDefault();
-    e.stopPropagation();
+    hasFiredRef.current = true;
     if (onTap) onTap();
+  }, [onTap, disabled]);
+
+  const handleMouseDown = useCallback((e) => {
+    if (disabled) return;
+    e.preventDefault();
+    if (!hasFiredRef.current) {
+      if (onTap) onTap();
+    }
+    hasFiredRef.current = false;
   }, [onTap, disabled]);
 
   return (
     <div
       role="button"
       tabIndex={disabled ? -1 : 0}
-      onPointerDown={handlePointerDown}
       onTouchStart={handleTouchStart}
-      onMouseDown={(e) => e.preventDefault()}
+      onMouseDown={handleMouseDown}
       onFocus={(e) => e.target.blur()}
       style={{
         backgroundColor: isActive ? activeColor : inactiveColor,
