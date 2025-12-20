@@ -289,20 +289,21 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
           />
           
           <div className="fixed inset-0 md:inset-auto md:top-0 md:right-0 md:bottom-0 md:w-[420px] z-[99] flex flex-col" style={{ backgroundColor: isDarkMode ? '#000000' : '#ffffff' }}>
-            {/* Header with Piks branding */}
-            <div className="flex items-center justify-between px-3 h-[70px] relative" style={{ borderBottomWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#e5e7eb' }}>
-              <div className="absolute left-[-35px] top-1/2 -translate-y-1/2">
-                <img 
-                  src="/pikslogotransparent.png" 
-                  alt="Piks" 
-                  className="h-[140px] w-auto brightness-100 transition-all duration-300"
-                  style={{
-                    filter: isDarkMode ? 'hue-rotate(0deg) saturate(1.2) brightness(1.1)' : 'invert(1) hue-rotate(0deg) saturate(1.2) brightness(0.1)',
-                    animation: isDarkMode ? 'logoRedYellowGlow 4s infinite ease-in-out' : 'none'
-                  }}
-                />
-              </div>
-              <div className="flex items-center gap-3 ml-auto mt-[2px]">
+            {/* Header with Piks branding - matches TopNavbar structure */}
+            <div className="px-3 h-[70px] flex items-center" style={{ borderBottomWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#e5e7eb' }}>
+              <div className="flex items-center justify-between w-full min-h-[70px] relative">
+                <div className="absolute left-[-35px] top-1/2 -translate-y-1/2">
+                  <img 
+                    src="/pikslogotransparent.png" 
+                    alt="Piks" 
+                    className="h-[140px] w-auto brightness-100 transition-all duration-300"
+                    style={{
+                      filter: isDarkMode ? 'hue-rotate(0deg) saturate(1.2) brightness(1.1)' : 'invert(1) hue-rotate(0deg) saturate(1.2) brightness(0.1)',
+                      animation: isDarkMode ? 'logoRedYellowGlow 4s infinite ease-in-out' : 'none'
+                    }}
+                  />
+                </div>
+                <div className="flex items-center gap-3 ml-auto mt-[2px]">
                 <div className="flex items-center gap-1.5 bg-green-500/20 border border-green-500/50 px-2.5 py-1 rounded-full">
                   <span className="text-green-400 text-xs font-bold">${typeof bankroll === 'number' ? bankroll.toLocaleString() : parseFloat(bankroll || 0).toLocaleString()}</span>
                 </div>
@@ -315,6 +316,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
+                </div>
               </div>
             </div>
 
