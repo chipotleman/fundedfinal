@@ -87,8 +87,8 @@ export default async function handler(req, res) {
         legs: legsData,
       };
 
-      await db.insert(userBets).values(parlayBet);
-      insertedBets.push(parlayBet);
+      const [insertedParlay] = await db.insert(userBets).values(parlayBet).returning();
+      insertedBets.push(insertedParlay);
     } else {
       for (const bet of bets) {
         if (!bet.stake || bet.stake <= 0) continue;
@@ -109,8 +109,8 @@ export default async function handler(req, res) {
           balanceAfter: (currentBankroll - bet.stake).toFixed(2),
         };
 
-        await db.insert(userBets).values(newBet);
-        insertedBets.push(newBet);
+        const [insertedBet] = await db.insert(userBets).values(newBet).returning();
+        insertedBets.push(insertedBet);
       }
     }
 
@@ -128,7 +128,8 @@ export default async function handler(req, res) {
     return res.status(200).json({ 
       success: true, 
       newBankroll,
-      betsPlaced: insertedBets.length
+      betsPlaced: insertedBets.length,
+      bets: insertedBets
     });
   } catch (error) {
     console.error('Error placing bets:', error);

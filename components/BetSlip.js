@@ -194,22 +194,16 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
         }
       }
 
-      if (bets.length > 0) {
+      if (data.bets && data.bets.length > 0) {
+        const placedBet = data.bets[0];
         if (betType === 'parlay' && parlayStake > 0) {
-          const parlayDecimal = bets.reduce((acc, bet) => {
-            const oddsValue = typeof bet.odds === 'object' ? bet.odds.odds || bet.odds.value || 0 : bet.odds;
-            const decimal = oddsValue > 0 ? (oddsValue/100 + 1) : (100/Math.abs(oddsValue) + 1);
-            return acc * decimal;
-          }, 1);
-          const americanOdds = parlayDecimal >= 2 ? Math.round((parlayDecimal - 1) * 100) : Math.round(-100 / (parlayDecimal - 1));
-          
           setCurrentReceipt({
-            id: `receipt-${Date.now()}`,
-            matchup: `${bets.length}-Leg Parlay`,
-            selection: bets.map(b => b.selection).join(', '),
+            id: placedBet.id,
+            matchup: placedBet.matchupName || `${bets.length}-Leg Parlay`,
+            selection: placedBet.selection,
             betType: 'parlay',
-            odds: americanOdds,
-            stake: parlayStake,
+            odds: parseInt(placedBet.odds),
+            stake: parseFloat(placedBet.stake),
             status: 'open',
             legs: bets.map(bet => ({
               selection: bet.selection,
@@ -228,16 +222,16 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
               gameTime: bet.gameTime
             }))
           });
-        } else if (bets[0].stake > 0) {
+        } else {
           const firstBet = bets[0];
           setCurrentReceipt({
-            id: `receipt-${Date.now()}`,
+            id: placedBet.id,
             gameId: firstBet.gameId,
-            matchup: firstBet.matchup,
-            selection: firstBet.selection,
+            matchup: placedBet.matchupName || firstBet.matchup,
+            selection: placedBet.selection,
             betType: firstBet.betType,
-            odds: typeof firstBet.odds === 'object' ? firstBet.odds.odds || firstBet.odds.value : firstBet.odds,
-            stake: firstBet.stake,
+            odds: parseInt(placedBet.odds),
+            stake: parseFloat(placedBet.stake),
             status: 'open',
             isLive: firstBet.isLive,
             awayTeam: firstBet.awayTeam,
