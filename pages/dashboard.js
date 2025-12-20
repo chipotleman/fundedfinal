@@ -248,9 +248,8 @@ export default function Dashboard() {
               return (
                 <div 
                   key={game.id} 
-                  className="flex-shrink-0 w-[280px] rounded-2xl overflow-hidden cursor-pointer hover:opacity-90 transition-opacity" 
+                  className="flex-shrink-0 w-[280px] rounded-2xl overflow-hidden" 
                   style={{ backgroundColor: isDarkMode ? '#111111' : '#ffffff', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(209, 213, 219, 1)' }}
-                  onClick={() => router.push(`/game/${game.id}`)}
                 >
                   <div className="p-4">
                     <div className="flex items-center gap-2 mb-3">
@@ -267,16 +266,16 @@ export default function Dashboard() {
                     </div>
                     <div className="mb-4">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-base" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayTeamFull || game.awayTeam}</span>
+                        <span className="font-bold text-base truncate" style={{ color: isDarkMode ? '#ffffff' : '#111827', maxWidth: '180px', display: 'block' }}>{game.awayTeamFull || game.awayTeam}</span>
                         {isLive && <span className="font-bold" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayScore || 0}</span>}
                       </div>
                       <div className="text-gray-500 text-xs">@</div>
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-base" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.homeTeamFull || game.homeTeam}</span>
+                        <span className="font-bold text-base truncate" style={{ color: isDarkMode ? '#ffffff' : '#111827', maxWidth: '180px', display: 'block' }}>{game.homeTeamFull || game.homeTeam}</span>
                         {isLive && <span className="font-bold" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.homeScore || 0}</span>}
                       </div>
                     </div>
-                    <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex gap-2">
                       <TapSurface
                         onTap={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeamFull || game.homeTeam)}
                         isActive={isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam)}

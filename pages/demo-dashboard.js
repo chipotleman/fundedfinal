@@ -716,8 +716,7 @@ export default function DemoDashboard() {
               return (
                 <div 
                   key={game.id} 
-                  className="flex-shrink-0 w-[280px] bg-[#111111] rounded-2xl border border-gray-800/50 overflow-hidden cursor-pointer hover:border-gray-600 transition-colors"
-                  onClick={() => router.push(`/game/${game.id}?demo=true`)}
+                  className="flex-shrink-0 w-[280px] bg-[#111111] rounded-2xl border border-gray-800/50 overflow-hidden"
                 >
                   <div className="p-4">
                     <div className="flex items-center gap-2 mb-3">
@@ -734,12 +733,12 @@ export default function DemoDashboard() {
                     </div>
                     <div className="mb-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-white font-bold text-base">{game.awayTeamFull || game.awayTeam}</span>
+                        <span className="text-white font-bold text-base truncate" style={{ maxWidth: '180px', display: 'block' }}>{game.awayTeamFull || game.awayTeam}</span>
                         {isLive && <span className="text-white font-bold">{game.awayScore || 0}</span>}
                       </div>
                       <div className="text-gray-500 text-xs">@</div>
                       <div className="flex items-center justify-between">
-                        <span className="text-white font-bold text-base">{game.homeTeamFull || game.homeTeam}</span>
+                        <span className="text-white font-bold text-base truncate" style={{ maxWidth: '180px', display: 'block' }}>{game.homeTeamFull || game.homeTeam}</span>
                         {isLive && <span className="text-white font-bold">{game.homeScore || 0}</span>}
                       </div>
                     </div>
