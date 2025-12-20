@@ -542,8 +542,8 @@ button:not(.force-white-text):not(.no-hover-effect):hover, .btn:not(.force-white
   outline: none !important;
 }
 
-/* Bet button base styles - instant touch feedback */
-.bet-button {
+/* Bet button - no effects, just toggle */
+.bet-btn {
   outline: none !important;
   transition: none !important;
   -webkit-tap-highlight-color: transparent !important;
@@ -553,24 +553,13 @@ button:not(.force-white-text):not(.no-hover-effect):hover, .btn:not(.force-white
   touch-action: manipulation !important;
 }
 
-.bet-button:hover,
-.bet-button:focus,
-.bet-button:focus-visible {
+.bet-btn:hover,
+.bet-btn:focus,
+.bet-btn:focus-visible,
+.bet-btn:active {
   outline: none !important;
   box-shadow: none !important;
-}
-
-.bet-button[data-pressed="true"],
-.bet-button[data-pressed="true"]:hover,
-.bet-button[data-pressed="true"]:focus {
-  background-color: #2563eb !important;
-  border-color: #3b82f6 !important;
-  outline: none !important;
-  box-shadow: none !important;
-}
-
-.bet-button[data-pressed="true"] * {
-  color: #ffffff !important;
+  transform: none !important;
 }
 
 /* Force white text buttons maintain their styling */

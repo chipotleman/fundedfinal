@@ -54,14 +54,6 @@ export default function Dashboard() {
     setExpandedGames(prev => ({ ...prev, [gameId]: !prev[gameId] }));
   };
 
-  const handleTouchStart = (e) => {
-    e.currentTarget.setAttribute('data-pressed', 'true');
-  };
-
-  const handleTouchEnd = (e) => {
-    e.currentTarget.removeAttribute('data-pressed');
-  };
-
   const handleBetSlipClick = () => {
     setShowBetSlip(!showBetSlip);
   };
@@ -425,10 +417,7 @@ export default function Dashboard() {
                           <div className="flex gap-2 mb-2">
                             <button
                               onClick={() => addToBetSlip(game, 'spread', game.lines.spread.away, `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`)}
-                              onTouchStart={handleTouchStart}
-                              onTouchEnd={handleTouchEnd}
-                              onTouchCancel={handleTouchEnd}
-                              className="flex-1 rounded-lg py-2 px-1 text-center bet-button"
+                              className="flex-1 rounded-lg py-2 px-1 text-center bet-btn"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
                                 borderWidth: 1,
@@ -442,10 +431,7 @@ export default function Dashboard() {
                             </button>
                             <button
                               onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeamFull || game.awayTeam)}
-                              onTouchStart={handleTouchStart}
-                              onTouchEnd={handleTouchEnd}
-                              onTouchCancel={handleTouchEnd}
-                              className="flex-1 rounded-lg py-2 px-1 text-center bet-button"
+                              className="flex-1 rounded-lg py-2 px-1 text-center bet-btn"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
                                 borderWidth: 1,
@@ -458,10 +444,7 @@ export default function Dashboard() {
                             </button>
                             <button
                               onClick={() => addToBetSlip(game, 'total', game.lines.total.over, `Over ${game.lines.total.over.point}`)}
-                              onTouchStart={handleTouchStart}
-                              onTouchEnd={handleTouchEnd}
-                              onTouchCancel={handleTouchEnd}
-                              className="flex-1 rounded-lg py-2 px-1 text-center bet-button"
+                              className="flex-1 rounded-lg py-2 px-1 text-center bet-btn"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
                                 borderWidth: 1,
@@ -477,10 +460,7 @@ export default function Dashboard() {
                           <div className="flex gap-2">
                             <button
                               onClick={() => addToBetSlip(game, 'spread', game.lines.spread.home, `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`)}
-                              onTouchStart={handleTouchStart}
-                              onTouchEnd={handleTouchEnd}
-                              onTouchCancel={handleTouchEnd}
-                              className="flex-1 rounded-lg py-2 px-1 text-center bet-button"
+                              className="flex-1 rounded-lg py-2 px-1 text-center bet-btn"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
                                 borderWidth: 1,
@@ -494,10 +474,7 @@ export default function Dashboard() {
                             </button>
                             <button
                               onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeamFull || game.homeTeam)}
-                              onTouchStart={handleTouchStart}
-                              onTouchEnd={handleTouchEnd}
-                              onTouchCancel={handleTouchEnd}
-                              className="flex-1 rounded-lg py-2 px-1 text-center bet-button"
+                              className="flex-1 rounded-lg py-2 px-1 text-center bet-btn"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
                                 borderWidth: 1,
@@ -510,10 +487,7 @@ export default function Dashboard() {
                             </button>
                             <button
                               onClick={() => addToBetSlip(game, 'total', game.lines.total.under, `Under ${game.lines.total.under.point}`)}
-                              onTouchStart={handleTouchStart}
-                              onTouchEnd={handleTouchEnd}
-                              onTouchCancel={handleTouchEnd}
-                              className="flex-1 rounded-lg py-2 px-1 text-center bet-button"
+                              className="flex-1 rounded-lg py-2 px-1 text-center bet-btn"
                               style={{
                                 backgroundColor: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
                                 borderWidth: 1,
