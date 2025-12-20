@@ -1,6 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import TapSurface from './TapSurface';
 
 const steps = [
   {
@@ -117,14 +117,17 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
       <div className="relative bg-[#0a0a0a] border border-gray-800/50 rounded-2xl max-w-md w-full overflow-hidden">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-8 h-8 bg-[#1a1a1a] hover:bg-[#252525] rounded-full flex items-center justify-center text-gray-400 hover:text-white transition-colors"
+        <TapSurface
+          onTap={onClose}
+          isActive={false}
+          inactiveColor="#1a1a1a"
+          inactiveTextColor="#9ca3af"
+          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
-        </button>
+        </TapSurface>
 
         <div className="absolute top-4 left-4 z-10">
           <span className="bg-gradient-to-r from-green-500 to-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold">
@@ -157,35 +160,23 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
           </div>
 
           {currentIndex === steps.length - 1 ? (
-            <button
-              onClick={handleTryDemo}
-              className="w-full font-bold py-4 px-6 rounded-xl text-lg mb-6"
-              style={{
-                backgroundColor: '#22c55e',
-                color: '#ffffff',
-                border: 'none',
-                outline: 'none',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent'
-              }}
+            <TapSurface
+              onTap={handleTryDemo}
+              isActive={true}
+              activeColor="#22c55e"
+              className="w-full font-bold py-4 px-6 rounded-xl text-lg mb-6 text-center"
             >
               Try a Demo
-            </button>
+            </TapSurface>
           ) : (
-            <button
-              onClick={nextStep}
-              className="w-full font-bold py-4 px-6 rounded-xl text-lg mb-6"
-              style={{
-                backgroundColor: '#2563eb',
-                color: '#ffffff',
-                border: 'none',
-                outline: 'none',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent'
-              }}
+            <TapSurface
+              onTap={nextStep}
+              isActive={true}
+              activeColor="#2563eb"
+              className="w-full font-bold py-4 px-6 rounded-xl text-lg mb-6 text-center"
             >
               Next Step
-            </button>
+            </TapSurface>
           )}
 
           <div className="mb-4">
@@ -198,47 +189,46 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
           </div>
 
           <div className="hidden md:flex items-center justify-between mb-4">
-            <button
-              onClick={prevStep}
+            <TapSurface
+              onTap={prevStep}
               disabled={currentIndex === 0}
-              className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors ${
-                currentIndex === 0 
-                  ? 'text-gray-600 cursor-not-allowed' 
-                  : 'text-gray-400 hover:text-white hover:bg-[#1a1a1a]'
-              }`}
+              isActive={false}
+              inactiveColor="transparent"
+              inactiveTextColor={currentIndex === 0 ? '#4b5563' : '#9ca3af'}
+              className="flex items-center space-x-1 px-3 py-2 rounded-lg"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               <span>Previous</span>
-            </button>
+            </TapSurface>
             
             <div className="flex items-center space-x-2">
               {steps.map((_, index) => (
-                <button
+                <TapSurface
                   key={index}
-                  onClick={() => goToStep(index)}
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    index === currentIndex ? 'bg-green-500' : 'bg-gray-700 hover:bg-gray-600'
-                  }`}
+                  onTap={() => goToStep(index)}
+                  isActive={index === currentIndex}
+                  activeColor="#22c55e"
+                  inactiveColor="#374151"
+                  className="w-2 h-2 rounded-full"
                 />
               ))}
             </div>
             
-            <button
-              onClick={nextStep}
+            <TapSurface
+              onTap={nextStep}
               disabled={currentIndex === steps.length - 1}
-              className={`flex items-center space-x-1 px-3 py-2 rounded-lg transition-colors ${
-                currentIndex === steps.length - 1 
-                  ? 'text-gray-600 cursor-not-allowed' 
-                  : 'text-gray-400 hover:text-white hover:bg-[#1a1a1a]'
-              }`}
+              isActive={false}
+              inactiveColor="transparent"
+              inactiveTextColor={currentIndex === steps.length - 1 ? '#4b5563' : '#9ca3af'}
+              className="flex items-center space-x-1 px-3 py-2 rounded-lg"
             >
               <span>Next</span>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
-            </button>
+            </TapSurface>
           </div>
 
           {steps.length > 1 && (
