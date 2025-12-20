@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useSession, signIn } from 'next-auth/react';
 import { useTheme } from '../contexts/ThemeContext';
+import TapSurface from './TapSurface';
 
 const challenges = [
   {
@@ -673,13 +674,14 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
               </div>
             )}
 
-            <button
-              onClick={handleContinue}
-              className={`w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} text-white font-bold py-3 px-6 rounded-xl shadow-2xl mb-4 transform hover:scale-105 transition-all duration-300`}
-              style={{ WebkitTapHighlightColor: 'transparent' }}
+            <TapSurface
+              onTap={handleContinue}
+              isActive={true}
+              activeColor="#f59e0b"
+              className="w-full font-bold py-3 px-6 rounded-xl mb-4 text-center"
             >
-              Continue
-            </button>
+              Start Demo Challenge
+            </TapSurface>
 
             <div className="flex justify-center space-x-2 mb-4" style={{ WebkitTapHighlightColor: 'transparent' }}>
               {challenges.map((_, index) => (

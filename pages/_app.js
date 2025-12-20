@@ -243,6 +243,21 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
             }
           `}</style>
 
+          {/* Logo preloader - loads once, stays cached for all pages */}
+          <img 
+            src="/pikslogotransparent.png" 
+            alt="" 
+            aria-hidden="true"
+            style={{
+              position: 'fixed',
+              width: 1,
+              height: 1,
+              opacity: 0,
+              pointerEvents: 'none',
+              zIndex: -1
+            }}
+          />
+          
           {/* Page wrapper that slides left on mobile when menu opens */}
           <div 
             style={{
