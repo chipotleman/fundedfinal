@@ -224,8 +224,9 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
 
   const isDebugPage = router?.pathname?.startsWith('/debug');
   const isAdminPage = router?.pathname?.startsWith('/admin');
+  const isCheckoutDesign = router?.pathname === '/checkout-design';
   
-  if (!betaAuthenticated && !isDebugPage && !isAdminPage) {
+  if (!betaAuthenticated && !isDebugPage && !isAdminPage && !isCheckoutDesign) {
     return (
       <>
         {/* Solid Black Background */}
