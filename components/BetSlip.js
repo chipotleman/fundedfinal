@@ -588,20 +588,14 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                   </div>
                 )}
 
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onTouchEnd={(e) => {
-                    if (!validation.isValid || totalStake > bankroll || isPlacing || totalStake === 0) return;
-                    e.preventDefault();
-                    placeBets();
-                  }}
-                  onClick={(e) => {
-                    if (!validation.isValid || totalStake > bankroll || isPlacing || totalStake === 0) return;
-                    placeBets();
-                  }}
+                <button
+                  type="button"
+                  disabled={!validation.isValid || totalStake > bankroll || isPlacing || totalStake === 0}
+                  onClick={placeBets}
                   className="w-full font-bold py-4 rounded-xl text-lg text-center"
                   style={{
+                    appearance: 'none',
+                    WebkitAppearance: 'none',
                     backgroundColor: (!validation.isValid || totalStake > bankroll || isPlacing || totalStake === 0) 
                       ? '#4b5563' 
                       : '#2563eb',
@@ -625,7 +619,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                   ) : (
                     `Place ${bets.length} Pik${bets.length > 1 ? 's' : ''}`
                   )}
-                </div>
+                </button>
               </div>
             )}
           </div>
