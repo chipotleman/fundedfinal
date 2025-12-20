@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
+import TapSurface from './TapSurface';
 
 export default function PiksBetCard({ bet, onCashOut, onShare }) {
   const { isDarkMode } = useTheme();
@@ -730,24 +731,32 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
           if (anyGameStarted) return null;
           
           return (
-            <button
-              ref={buttonRef}
-              onClick={() => {
-                if (confirmingCashOut) {
-                  onCashOut(bet.id);
-                  setConfirmingCashOut(false);
-                } else {
-                  setConfirmingCashOut(true);
-                }
-              }}
-              className="w-full mt-3 font-bold py-2.5 px-4 rounded-xl text-sm transition-all force-white-text"
-              style={{
-                backgroundColor: confirmingCashOut ? '#dc2626' : '#2563eb',
-                color: '#ffffff'
-              }}
-            >
-              <span style={{ color: '#ffffff' }}>{confirmingCashOut ? `Confirm Cash Out ($${formatMoney(bet.stake * 0.8)})` : `Cash Out ($${formatMoney(bet.stake * 0.8)})`}</span>
-            </button>
+            <div ref={buttonRef}>
+              <TapSurface
+                onTap={() => {
+                  if (confirmingCashOut) {
+                    onCashOut(bet.id);
+                    setConfirmingCashOut(false);
+                  } else {
+                    setConfirmingCashOut(true);
+                  }
+                }}
+                isActive={true}
+                activeColor={confirmingCashOut ? '#dc2626' : '#2563eb'}
+                activeTextColor="#ffffff"
+                style={{
+                  width: '100%',
+                  marginTop: '0.75rem',
+                  fontWeight: 'bold',
+                  padding: '0.625rem 1rem',
+                  borderRadius: '0.75rem',
+                  fontSize: '0.875rem',
+                  textAlign: 'center'
+                }}
+              >
+                {confirmingCashOut ? `Confirm Cash Out ($${formatMoney(bet.stake * 0.8)})` : `Cash Out ($${formatMoney(bet.stake * 0.8)})`}
+              </TapSurface>
+            </div>
           );
         })()}
 
