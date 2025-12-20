@@ -36,7 +36,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
     };
     
     fetchGames();
-    const interval = setInterval(fetchGames, 5 * 60 * 1000);
+    const interval = setInterval(fetchGames, 30.5 * 1000); // 30.5s to match API update frequency
     return () => clearInterval(interval);
   }, []);
 

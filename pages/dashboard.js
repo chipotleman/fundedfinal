@@ -90,7 +90,7 @@ export default function Dashboard() {
     };
     
     fetchAllGames();
-    const interval = setInterval(fetchAllGames, 5 * 60 * 1000);
+    const interval = setInterval(fetchAllGames, 30.5 * 1000); // 30.5s to match API update frequency
     return () => clearInterval(interval);
   }, []);
 
