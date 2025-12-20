@@ -529,11 +529,28 @@ button:not(.force-white-text):not(.no-hover-effect):hover, .btn:not(.force-white
   box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
 }
 
-/* Prevent any transform/hover effects - but preserve existing transforms */
+/* Prevent any transform/hover effects - instant tap response */
+.no-hover-effect {
+  outline: none !important;
+  transition: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
 .no-hover-effect:hover,
-.no-hover-effect:active,
 .no-hover-effect:focus {
   box-shadow: none !important;
+  outline: none !important;
+}
+
+.no-hover-effect:active {
+  background-color: #2563eb !important;
+  border-color: #3b82f6 !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.no-hover-effect:active * {
+  color: #ffffff !important;
 }
 
 /* Force white text buttons maintain their styling */
