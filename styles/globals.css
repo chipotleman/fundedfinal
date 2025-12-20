@@ -689,11 +689,11 @@ button.no-hover-effect.rounded-lg:focus-visible {
     -webkit-touch-callout: none !important;
   }
   
-  /* Disable hover effects on specific elements - exclude SVGs, no-hover-effect, and bet-btn */
-  button:not(svg):not(.no-hover-effect):not(.bet-btn):hover,
-  a:not(svg):not(.no-hover-effect):not(.bet-btn):hover,
-  .btn:not(.no-hover-effect):not(.bet-btn):hover,
-  .glass-button:hover,
+  /* Disable hover effects on specific elements - exclude SVGs, no-hover-effect, bet-btn, and hamburger-btn */
+  button:not(svg):not(.no-hover-effect):not(.bet-btn):not(.hamburger-btn):hover,
+  a:not(svg):not(.no-hover-effect):not(.bet-btn):not(.hamburger-btn):hover,
+  .btn:not(.no-hover-effect):not(.bet-btn):not(.hamburger-btn):hover,
+  .glass-button:not(.hamburger-btn):hover,
   .modern-card:hover,
   .card-hover:hover,
   .unified-hover:hover {
@@ -701,6 +701,15 @@ button.no-hover-effect.rounded-lg:focus-visible {
     box-shadow: none !important;
     background-color: inherit !important;
     text-shadow: none !important;
+  }
+  
+  /* Hamburger button - preserve transform positioning */
+  .hamburger-btn,
+  .hamburger-btn:hover,
+  .hamburger-btn:focus,
+  .hamburger-btn:active {
+    outline: none !important;
+    box-shadow: none !important;
   }
   
   /* Bet buttons - absolutely no effects */

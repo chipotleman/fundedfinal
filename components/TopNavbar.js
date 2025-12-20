@@ -711,7 +711,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
               {!showMobileMenu && (
                 <button
                   onClick={toggleMobileMenu}
-                  className="lg:hidden absolute no-hover-effect"
+                  className="lg:hidden absolute no-hover-effect hamburger-btn"
                   style={{ WebkitTapHighlightColor: 'transparent', right: '-4px', top: '50%', transform: 'translateY(calc(-50% + 2px))', WebkitUserSelect: 'none', userSelect: 'none' }}
                 >
                   <svg className="w-7 h-7 text-gray-300 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
