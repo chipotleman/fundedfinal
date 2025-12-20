@@ -1,5 +1,5 @@
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 
 const challenges = [
   {
@@ -54,9 +54,6 @@ const comparisonRows = [
 ];
 
 export default function ChallengeOverview() {
-  const [activeIndex, setActiveIndex] = useState(1); // Start on Pro (middle)
-  const scrollRef = useRef(null);
-
   const handleStartChallenge = (challengeIndex) => {
     window.dispatchEvent(new CustomEvent('openChallengePopup', { detail: { challengeIndex } }));
   };
@@ -85,96 +82,65 @@ export default function ChallengeOverview() {
     return colors[color][type];
   };
 
-  const handleScroll = () => {
-    if (!scrollRef.current) return;
-    const scrollLeft = scrollRef.current.scrollLeft;
-    const cardWidth = scrollRef.current.offsetWidth * 0.85;
-    const newIndex = Math.round(scrollLeft / cardWidth);
-    setActiveIndex(Math.min(Math.max(newIndex, 0), challenges.length - 1));
-  };
-
   return (
     <div className="w-full">
-      {/* Mobile Swipable Card View */}
-      <div className="md:hidden overflow-hidden">
-        <div 
-          ref={scrollRef}
-          onScroll={handleScroll}
-          className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-3 pb-4 px-2"
-          style={{ 
-            scrollbarWidth: 'none', 
-            msOverflowStyle: 'none',
-            WebkitOverflowScrolling: 'touch'
-          }}
-        >
-          {challenges.map((challenge, idx) => (
-            <div
-              key={challenge.id}
-              className={`flex-shrink-0 snap-center bg-[#0a0a0a] rounded-xl border border-gray-800/50 overflow-hidden ${challenge.badge === 'POPULAR' ? 'ring-2 ring-green-500/50' : ''}`}
-              style={{ width: 'calc(100% - 32px)', minWidth: 'calc(100% - 32px)' }}
-            >
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase border ${getColorClass(challenge.color, 'badge')}`}>
-                      {challenge.badge}
+      {/* Mobile Card View */}
+      <div className="md:hidden space-y-4">
+        {challenges.map((challenge) => (
+          <div
+            key={challenge.id}
+            className={`bg-[#0a0a0a] rounded-xl border border-gray-800/50 overflow-hidden ${challenge.badge === 'POPULAR' ? 'ring-2 ring-green-500/50' : ''}`}
+          >
+            <div className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-0.5 rounded text-xs font-bold uppercase border ${getColorClass(challenge.color, 'badge')}`}>
+                    {challenge.badge}
+                  </span>
+                  {challenge.badge === 'POPULAR' && (
+                    <span className="bg-gradient-to-r from-green-500 to-blue-500 text-white text-xs font-bold px-2 py-0.5 rounded">
+                      TOP PICK
                     </span>
-                    {challenge.badge === 'POPULAR' && (
-                      <span className="bg-gradient-to-r from-green-500 to-blue-500 text-white text-xs font-bold px-2 py-0.5 rounded">
-                        TOP PICK
-                      </span>
-                    )}
-                  </div>
-                  <span className="text-white font-bold text-lg">${challenge.price}</span>
+                  )}
                 </div>
-
-                <h3 className="text-xl font-bold text-white mb-3">{challenge.name} Challenge</h3>
-
-                <div className="grid grid-cols-2 gap-2 mb-4">
-                  <div className="bg-[#111111] rounded-lg p-2 border border-gray-800/50">
-                    <div className="text-gray-500 text-xs">Balance</div>
-                    <div className={`font-bold ${getColorClass(challenge.color, 'text')}`}>${challenge.startingBalance.toLocaleString()}</div>
-                  </div>
-                  <div className="bg-[#111111] rounded-lg p-2 border border-gray-800/50">
-                    <div className="text-gray-500 text-xs">Target</div>
-                    <div className="text-white font-bold">${challenge.target.toLocaleString()}</div>
-                  </div>
-                  <div className="bg-[#111111] rounded-lg p-2 border border-gray-800/50">
-                    <div className="text-gray-500 text-xs">Daily Loss Limit</div>
-                    <div className="text-white font-bold">{challenge.maxDailyLoss}</div>
-                  </div>
-                  <div className="bg-[#111111] rounded-lg p-2 border border-gray-800/50">
-                    <div className="text-gray-500 text-xs">Profit Split</div>
-                    <div className="text-green-400 font-bold">{challenge.profitSplit}</div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between text-sm text-gray-400 mb-4">
-                  <span>{challenge.duration}</span>
-                  <span>{challenge.support} Support</span>
-                </div>
-
-                <button
-                  onClick={() => handleStartChallenge(challenge.id - 1)}
-                  className={`w-full bg-gradient-to-r ${getColorClass(challenge.color, 'button')} text-white font-bold py-3 rounded-xl`}
-                  style={{ WebkitTapHighlightColor: 'transparent' }}
-                >
-                  Start for ${challenge.price}
-                </button>
+                <span className="text-white font-bold text-lg">${challenge.price}</span>
               </div>
+
+              <h3 className="text-xl font-bold text-white mb-3">{challenge.name} Challenge</h3>
+
+              <div className="grid grid-cols-2 gap-2 mb-4">
+                <div className="bg-[#111111] rounded-lg p-2 border border-gray-800/50">
+                  <div className="text-gray-500 text-xs">Balance</div>
+                  <div className={`font-bold ${getColorClass(challenge.color, 'text')}`}>${challenge.startingBalance.toLocaleString()}</div>
+                </div>
+                <div className="bg-[#111111] rounded-lg p-2 border border-gray-800/50">
+                  <div className="text-gray-500 text-xs">Target</div>
+                  <div className="text-white font-bold">${challenge.target.toLocaleString()}</div>
+                </div>
+                <div className="bg-[#111111] rounded-lg p-2 border border-gray-800/50">
+                  <div className="text-gray-500 text-xs">Daily Loss Limit</div>
+                  <div className="text-white font-bold">{challenge.maxDailyLoss}</div>
+                </div>
+                <div className="bg-[#111111] rounded-lg p-2 border border-gray-800/50">
+                  <div className="text-gray-500 text-xs">Profit Split</div>
+                  <div className="text-green-400 font-bold">{challenge.profitSplit}</div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between text-sm text-gray-400 mb-4">
+                <span>{challenge.duration}</span>
+                <span>{challenge.support} Support</span>
+              </div>
+
+              <button
+                onClick={() => handleStartChallenge(challenge.id - 1)}
+                className={`w-full bg-gradient-to-r ${getColorClass(challenge.color, 'button')} text-white font-bold py-3 rounded-xl transition-all`}
+              >
+                Start for ${challenge.price}
+              </button>
             </div>
-          ))}
-        </div>
-        {/* Swipe indicators */}
-        <div className="flex justify-center gap-2 mt-2">
-          {challenges.map((_, idx) => (
-            <div 
-              key={idx}
-              className={`w-2 h-2 rounded-full transition-colors ${idx === activeIndex ? 'bg-blue-500' : 'bg-gray-600'}`}
-            />
-          ))}
-        </div>
-        <p className="text-center text-gray-500 text-xs mt-2">Swipe to compare</p>
+          </div>
+        ))}
       </div>
 
       {/* Desktop Comparison Table */}

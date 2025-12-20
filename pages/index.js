@@ -268,7 +268,7 @@ export default function Home() {
                   onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
                   className="w-full sm:w-auto font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl text-base sm:text-lg shadow-2xl text-center"
                   style={{ 
-                    backgroundColor: '#2563eb',
+                    backgroundColor: '#22c55e',
                     color: '#ffffff',
                     cursor: 'pointer',
                     userSelect: 'none',
@@ -310,9 +310,9 @@ export default function Home() {
             </div>
 
             {/* Compare Challenges */}
-            <div className="mb-12 px-4 overflow-hidden">
+            <div className="mb-12 px-4">
               <div 
-                className="max-w-4xl mx-auto rounded-2xl p-4 sm:p-6 overflow-hidden"
+                className="max-w-4xl mx-auto rounded-2xl p-6"
                 style={{
                   backgroundColor: isDarkMode ? 'transparent' : '#ffffff',
                   boxShadow: isDarkMode ? 'none' : '0 4px 20px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.06)'

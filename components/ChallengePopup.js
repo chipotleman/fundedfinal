@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useSession, signIn } from 'next-auth/react';
 import { useTheme } from '../contexts/ThemeContext';
-import TapSurface from './TapSurface';
 
 const challenges = [
   {
@@ -654,43 +653,6 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   )}
                 </div>
 
-                {/* Mobile Comparison Chart */}
-                <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-3 mb-4" style={{ WebkitTapHighlightColor: 'transparent' }}>
-                  <div className="text-xs font-semibold text-gray-400 mb-2 text-center">Compare Challenges</div>
-                  <div className="grid grid-cols-4 gap-1 text-xs">
-                    {/* Header row */}
-                    <div className="text-gray-500"></div>
-                    {challenges.map((c, idx) => (
-                      <div 
-                        key={c.id}
-                        onClick={() => handleChallengeSelect(idx)}
-                        className={`text-center py-1 px-1 rounded cursor-pointer font-medium ${idx === currentIndex ? 'text-white' : 'text-gray-400'}`}
-                        style={{ 
-                          backgroundColor: idx === currentIndex ? theme.borderColor : 'transparent',
-                          WebkitTapHighlightColor: 'transparent'
-                        }}
-                      >
-                        {c.badge === 'BEGINNER' ? 'Starter' : c.badge === 'POPULAR' ? 'Pro' : 'Elite'}
-                      </div>
-                    ))}
-                    {/* Starting row */}
-                    <div className="text-gray-500 py-1">Start</div>
-                    {challenges.map((c) => (
-                      <div key={`start-${c.id}`} className="text-center text-white py-1">${(c.startingBalance/1000).toFixed(0)}k</div>
-                    ))}
-                    {/* Target row */}
-                    <div className="text-gray-500 py-1">Target</div>
-                    {challenges.map((c) => (
-                      <div key={`target-${c.id}`} className="text-center text-green-400 py-1">${((c.startingBalance + c.target)/1000).toFixed(0)}k</div>
-                    ))}
-                    {/* Price row */}
-                    <div className="text-gray-500 py-1">Price</div>
-                    {challenges.map((c) => (
-                      <div key={`price-${c.id}`} className="text-center text-amber-400 font-medium py-1">${c.price}</div>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Challenge Rules */}
                 <div 
                   className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4 mb-4" 
@@ -875,22 +837,29 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
               )}
 
               {/* Action Button */}
-              <TapSurface
-                onTap={loading ? undefined : handleNext}
+              <button
+                onClick={handleNext}
                 disabled={loading}
-                isActive={true}
-                activeColor={loading ? '#4b5563' : '#2563eb'}
-                className="w-full font-bold py-3 px-6 rounded-xl mb-4 text-center"
+                className="w-full font-bold py-3 px-6 rounded-xl shadow-2xl mb-4"
+                style={{ 
+                  WebkitTapHighlightColor: 'transparent',
+                  backgroundColor: loading ? '#4b5563' : theme.borderColor,
+                  color: '#ffffff',
+                  border: 'none',
+                  outline: 'none',
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  opacity: loading ? 0.7 : 1
+                }}
               >
                 {loading ? (
                   <div className="flex items-center justify-center space-x-2">
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Loading Checkout...</span>
+                    <span style={{ color: '#ffffff' }}>Loading Checkout...</span>
                   </div>
                 ) : (
-                  <span>Start a Challenge</span>
+                  <span style={{ color: '#ffffff' }}>Continue</span>
                 )}
-              </TapSurface>
+              </button>
               
               {checkoutError && (
                 <div className="text-red-400 text-sm text-center mb-4">
