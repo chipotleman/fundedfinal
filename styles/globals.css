@@ -524,7 +524,7 @@ body {
 }
 
 /* Enhanced Button Hover Effects */
-button:not(.force-white-text):not(.no-hover-effect):hover, .btn:not(.force-white-text):not(.no-hover-effect):hover {
+button:not(.force-white-text):not(.no-hover-effect):not(.bet-btn):hover, .btn:not(.force-white-text):not(.no-hover-effect):not(.bet-btn):hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
 }
@@ -624,10 +624,10 @@ button:not(.force-white-text):not(.no-hover-effect):hover, .btn:not(.force-white
     -webkit-touch-callout: none !important;
   }
   
-  /* Disable hover effects on specific elements - exclude SVGs and no-hover-effect */
-  button:not(svg):not(.no-hover-effect):hover,
-  a:not(svg):not(.no-hover-effect):hover,
-  .btn:not(.no-hover-effect):hover,
+  /* Disable hover effects on specific elements - exclude SVGs, no-hover-effect, and bet-btn */
+  button:not(svg):not(.no-hover-effect):not(.bet-btn):hover,
+  a:not(svg):not(.no-hover-effect):not(.bet-btn):hover,
+  .btn:not(.no-hover-effect):not(.bet-btn):hover,
   .glass-button:hover,
   .modern-card:hover,
   .card-hover:hover,
@@ -636,6 +636,17 @@ button:not(.force-white-text):not(.no-hover-effect):hover, .btn:not(.force-white
     box-shadow: none !important;
     background-color: inherit !important;
     text-shadow: none !important;
+  }
+  
+  /* Bet buttons - absolutely no effects */
+  .bet-btn,
+  .bet-btn:hover,
+  .bet-btn:focus,
+  .bet-btn:active {
+    transform: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    border-style: solid !important;
   }
   
   /* Preserve bet card border colors */
