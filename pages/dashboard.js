@@ -423,7 +423,7 @@ export default function Dashboard() {
                         <div>
                           <div className="flex gap-2 mb-1">
                             <div className="flex-1 text-center text-[10px] font-medium uppercase" style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>Spread</div>
-                            <div className="flex-1 text-center text-[10px] font-medium uppercase" style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>Money</div>
+                            <div className="flex-1 text-center text-[10px] font-medium uppercase" style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>Moneyline</div>
                             <div className="flex-1 text-center text-[10px] font-medium uppercase" style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>Total</div>
                           </div>
                           <div className="flex gap-2 mb-2">
@@ -444,7 +444,7 @@ export default function Dashboard() {
                               isActive={isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam)}
                               activeColor="#2563eb"
                               inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
-                              style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center' }}
+                              style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
                             >
                               <div style={{ fontWeight: 'bold', fontSize: '14px', color: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#ffffff' : '#3b82f6' }}>
                                 {formatOdds(game.lines.moneyline.away)}
@@ -481,7 +481,7 @@ export default function Dashboard() {
                               isActive={isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam)}
                               activeColor="#2563eb"
                               inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
-                              style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center' }}
+                              style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
                             >
                               <div style={{ fontWeight: 'bold', fontSize: '14px', color: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#ffffff' : '#3b82f6' }}>
                                 {formatOdds(game.lines.moneyline.home)}
