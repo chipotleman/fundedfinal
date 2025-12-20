@@ -310,9 +310,9 @@ export default function Home() {
             </div>
 
             {/* Compare Challenges */}
-            <div className="mb-12 px-4">
+            <div className="mb-12 px-4 overflow-hidden">
               <div 
-                className="max-w-4xl mx-auto rounded-2xl p-6"
+                className="max-w-4xl mx-auto rounded-2xl p-4 sm:p-6 overflow-hidden"
                 style={{
                   backgroundColor: isDarkMode ? 'transparent' : '#ffffff',
                   boxShadow: isDarkMode ? 'none' : '0 4px 20px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.06)'

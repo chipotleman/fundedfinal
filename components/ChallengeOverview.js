@@ -96,11 +96,11 @@ export default function ChallengeOverview() {
   return (
     <div className="w-full">
       {/* Mobile Swipable Card View */}
-      <div className="md:hidden">
+      <div className="md:hidden overflow-hidden">
         <div 
           ref={scrollRef}
           onScroll={handleScroll}
-          className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-3 pb-4"
+          className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide gap-3 pb-4 px-2"
           style={{ 
             scrollbarWidth: 'none', 
             msOverflowStyle: 'none',
@@ -111,7 +111,7 @@ export default function ChallengeOverview() {
             <div
               key={challenge.id}
               className={`flex-shrink-0 snap-center bg-[#0a0a0a] rounded-xl border border-gray-800/50 overflow-hidden ${challenge.badge === 'POPULAR' ? 'ring-2 ring-green-500/50' : ''}`}
-              style={{ width: '85%', minWidth: '85%' }}
+              style={{ width: 'calc(100% - 32px)', minWidth: 'calc(100% - 32px)' }}
             >
               <div className="p-4">
                 <div className="flex items-center justify-between mb-3">
