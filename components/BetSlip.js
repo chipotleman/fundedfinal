@@ -588,38 +588,39 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                   </div>
                 )}
 
-                <button
-                  type="button"
-                  disabled={!validation.isValid || totalStake > bankroll || isPlacing || totalStake === 0}
-                  onClick={placeBets}
-                  className="w-full font-bold py-4 rounded-xl text-lg text-center"
-                  style={{
-                    appearance: 'none',
-                    WebkitAppearance: 'none',
-                    backgroundColor: (!validation.isValid || totalStake > bankroll || isPlacing || totalStake === 0) 
-                      ? '#4b5563' 
-                      : '#2563eb',
-                    color: '#ffffff',
-                    cursor: (!validation.isValid || totalStake > bankroll || isPlacing || totalStake === 0) ? 'not-allowed' : 'pointer',
-                    border: 'none',
-                    outline: 'none',
-                    WebkitTapHighlightColor: 'transparent',
-                    WebkitUserSelect: 'none',
-                    userSelect: 'none',
-                    touchAction: 'manipulation'
-                  }}
-                >
-                  {isPlacing ? (
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      <span>Placing...</span>
-                    </div>
-                  ) : betType === 'parlay' ? (
-                    `Place ${bets.length}-Leg Parlay`
-                  ) : (
-                    `Place ${bets.length} Pik${bets.length > 1 ? 's' : ''}`
-                  )}
-                </button>
+                {(() => {
+                  const canPlace = validation.isValid && totalStake <= bankroll && !isPlacing && totalStake > 0;
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        console.log('Place button clicked', { canPlace, validation, totalStake, bankroll, isPlacing });
+                        if (canPlace) {
+                          placeBets();
+                        }
+                      }}
+                      style={{
+                        display: 'block',
+                        width: '100%',
+                        padding: '16px 0',
+                        borderRadius: '12px',
+                        fontSize: '18px',
+                        fontWeight: 'bold',
+                        textAlign: 'center',
+                        appearance: 'none',
+                        WebkitAppearance: 'none',
+                        backgroundColor: canPlace ? '#2563eb' : '#4b5563',
+                        color: '#ffffff',
+                        cursor: canPlace ? 'pointer' : 'not-allowed',
+                        border: 'none',
+                        outline: 'none',
+                        WebkitTapHighlightColor: 'transparent'
+                      }}
+                    >
+                      {isPlacing ? 'Placing...' : betType === 'parlay' ? `Place ${bets.length}-Leg Parlay` : `Place ${bets.length} Pik${bets.length > 1 ? 's' : ''}`}
+                    </button>
+                  );
+                })()}
               </div>
             )}
           </div>
