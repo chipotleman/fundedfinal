@@ -534,6 +534,9 @@ button:not(.force-white-text):not(.no-hover-effect):not(.bet-btn):hover, .btn:no
   outline: none !important;
   transition: none !important;
   -webkit-tap-highlight-color: transparent !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  background-image: none !important;
 }
 
 .no-hover-effect:hover,
