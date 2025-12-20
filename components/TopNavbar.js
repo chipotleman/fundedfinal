@@ -710,8 +710,16 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
               {!showMobileMenu && (
                 <button
                   onClick={toggleMobileMenu}
-                  className="lg:hidden absolute"
-                  style={{ WebkitTapHighlightColor: 'transparent', right: '-4px', top: '50%', transform: 'translateY(calc(-50% + 2px))' }}
+                  className="lg:hidden absolute flex items-center justify-center"
+                  style={{ 
+                    WebkitTapHighlightColor: 'transparent', 
+                    right: '-12px', 
+                    top: '50%', 
+                    transform: 'translateY(-50%)',
+                    width: '48px',
+                    height: '48px',
+                    touchAction: 'manipulation'
+                  }}
                 >
                   <svg className="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                     <path d="M3 7h18M3 12h18M3 17h18" />
