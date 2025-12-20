@@ -342,22 +342,7 @@ export default function Dashboard() {
                             <span className="text-gray-400 text-xs font-medium">{game.time || 'TBD'}</span>
                           )}
                         </div>
-                        {!linesLocked && (
-                          <button
-                            onClick={() => toggleGameExpanded(game.id)}
-                            className="p-1"
-                          >
-                            <svg 
-                              className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
-                              style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}
-                              fill="none" 
-                              stroke="currentColor" 
-                              viewBox="0 0 24 24"
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isExpanded ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} />
-                            </svg>
-                          </button>
-                        )}
+{/* Toggle button removed - keeping expanded view as default */}
                       </div>
                       
                       <div className="space-y-2 mb-4">
@@ -390,7 +375,8 @@ export default function Dashboard() {
                             <div className="font-bold text-sm text-gray-500">LOCKED</div>
                           </div>
                         </div>
-                      ) : !isExpanded ? (
+                      ) : (
+                        /* MINIMIZED VIEW - Saved for future use
                         <div className="flex gap-2">
                           <button
                             onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeamFull || game.awayTeam)}
@@ -421,7 +407,7 @@ export default function Dashboard() {
                             </div>
                           </button>
                         </div>
-                      ) : (
+                        */
                         <div>
                           <div className="flex gap-2 mb-1">
                             <div className="flex-1 text-center text-[10px] font-medium uppercase" style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>Spread</div>
