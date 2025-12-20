@@ -78,7 +78,7 @@ export default function Dashboard() {
         const response = await fetch('/api/games');
         if (response.ok) {
           const data = await response.json();
-          setApiGames(data.games || []);
+          setApiGames([...(data.games || [])]);
           setLastUpdated(new Date());
           setGamesError(null);
           console.log('[DASHBOARD] Games refreshed:', data.games?.length, 'games at', new Date().toLocaleTimeString());
@@ -97,7 +97,7 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  const categorizedGames = useMemo(() => categorizeGames(apiGames), [apiGames]);
+  const categorizedGames = useMemo(() => categorizeGames(apiGames), [apiGames, lastUpdated]);
 
   useEffect(() => {
     setAllGames(apiGames);

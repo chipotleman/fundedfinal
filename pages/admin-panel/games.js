@@ -15,6 +15,10 @@ export default function AdminGames() {
   useEffect(() => {
     fetchGames();
     fetchHistoricalPulls();
+    
+    // Auto-refresh games every 30.5 seconds to match API update frequency
+    const interval = setInterval(fetchGames, 30.5 * 1000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchGames = async () => {
@@ -22,7 +26,7 @@ export default function AdminGames() {
       const res = await fetch('/api/games?debug=true');
       if (res.ok) {
         const data = await res.json();
-        setGames(data.games || []);
+        setGames([...(data.games || [])]);
         setCreditStatus(data.creditStatus);
       }
     } catch (error) {

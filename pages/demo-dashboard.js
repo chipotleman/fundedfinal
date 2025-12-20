@@ -98,6 +98,7 @@ export default function DemoDashboard() {
 
   const baseGamesRef = useRef({});
   const [apiGames, setApiGames] = useState([]);
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   useEffect(() => {
     const fetchAllGames = async () => {
@@ -105,7 +106,8 @@ export default function DemoDashboard() {
         const response = await fetch('/api/games');
         if (response.ok) {
           const data = await response.json();
-          setApiGames(data.games || []);
+          setApiGames([...(data.games || [])]);
+          setLastUpdated(new Date());
         }
       } catch (error) {
         console.error('Error fetching games:', error);
@@ -117,7 +119,7 @@ export default function DemoDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  const categorizedGames = useMemo(() => categorizeGames(apiGames), [apiGames]);
+  const categorizedGames = useMemo(() => categorizeGames(apiGames), [apiGames, lastUpdated]);
 
   useEffect(() => {
     const activeGames = selectedTab === 'live' 

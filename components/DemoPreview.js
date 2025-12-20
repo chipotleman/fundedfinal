@@ -18,6 +18,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState('upcoming');
+  const [lastUpdated, setLastUpdated] = useState(null);
 
   // Fetch real games from API
   useEffect(() => {
@@ -26,7 +27,8 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
         const response = await fetch('/api/games');
         if (response.ok) {
           const data = await response.json();
-          setAllGames(data.games || []);
+          setAllGames([...(data.games || [])]);
+          setLastUpdated(new Date());
         }
       } catch (error) {
         console.error('Error fetching games:', error);
@@ -40,7 +42,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
     return () => clearInterval(interval);
   }, []);
 
-  const categorizedGames = useMemo(() => categorizeGames(allGames), [allGames]);
+  const categorizedGames = useMemo(() => categorizeGames(allGames), [allGames, lastUpdated]);
 
   useEffect(() => {
     const activeGames = selectedTab === 'live' 
