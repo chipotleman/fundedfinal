@@ -68,18 +68,12 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
     };
   }, [session]);
 
-  // Lock body scroll when menu is open
+  // Lock body scroll when menu is open - use overflow only to prevent shift
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-      document.body.style.height = '100vh';
     } else {
       document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.height = '';
     }
   }, [isOpen]);
 
