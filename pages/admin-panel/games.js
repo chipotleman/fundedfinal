@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import AdminLayout from '../../components/admin-panel/AdminLayout';
 
 export default function AdminGames() {
@@ -11,14 +11,22 @@ export default function AdminGames() {
   const [selectedPullId, setSelectedPullId] = useState('');
   const [savingPull, setSavingPull] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  
+  // Adaptive polling
+  const pollingIntervalRef = useRef(null);
+  const currentIntervalRef = useRef(12000);
 
   useEffect(() => {
     fetchGames();
     fetchHistoricalPulls();
     
-    // Auto-refresh games every 30.5 seconds to match API update frequency
-    const interval = setInterval(fetchGames, 30.5 * 1000);
-    return () => clearInterval(interval);
+    // Start with 12 second polling, will adjust based on server response
+    pollingIntervalRef.current = setInterval(fetchGames, 12000);
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
   }, []);
 
   const fetchGames = async () => {
@@ -28,6 +36,17 @@ export default function AdminGames() {
         const data = await res.json();
         setGames([...(data.games || [])]);
         setCreditStatus(data.creditStatus);
+        
+        // Adaptive polling - adjust interval based on server recommendation
+        const recommendedInterval = data.polling?.recommendedInterval || 60000;
+        if (recommendedInterval !== currentIntervalRef.current) {
+          console.log(`[ADMIN] Adjusting polling: ${currentIntervalRef.current}ms -> ${recommendedInterval}ms`);
+          currentIntervalRef.current = recommendedInterval;
+          if (pollingIntervalRef.current) {
+            clearInterval(pollingIntervalRef.current);
+          }
+          pollingIntervalRef.current = setInterval(fetchGames, recommendedInterval);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch games:', error);

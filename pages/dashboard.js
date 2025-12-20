@@ -71,7 +71,13 @@ export default function Dashboard() {
   const [apiGames, setApiGames] = useState([]);
   const [gamesError, setGamesError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
-
+  
+  // Adaptive polling - use refs to avoid closure issues
+  const pollingIntervalRef = useRef(null);
+  const currentIntervalRef = useRef(12000); // Start with fast polling
+  const lastOddsUpdateRef = useRef(null);
+  const lastFetchTimeRef = useRef(null);
+  
   useEffect(() => {
     const fetchAllGames = async () => {
       try {
@@ -81,7 +87,51 @@ export default function Dashboard() {
           setApiGames([...(data.games || [])]);
           setLastUpdated(new Date());
           setGamesError(null);
-          console.log('[DASHBOARD] Games refreshed:', data.games?.length, 'games at', new Date().toLocaleTimeString());
+          
+          // Track last odds update for stale detection (using refs to avoid closure issues)
+          if (data.freshness?.lastOddsUpdate) {
+            const newLastUpdate = data.freshness.lastOddsUpdate;
+            const previousLastUpdate = lastOddsUpdateRef.current;
+            const previousFetchTime = lastFetchTimeRef.current;
+            
+            // Detect stale data - if last_update hasn't changed in 45+ seconds
+            if (previousLastUpdate && previousLastUpdate === newLastUpdate && previousFetchTime) {
+              const staleTime = Date.now() - previousFetchTime;
+              if (staleTime > 45000) {
+                console.log('[DASHBOARD] Stale data detected, forcing refresh...');
+                fetch('/api/games?refresh=true').then(r => r.json()).then(freshData => {
+                  if (freshData.games) {
+                    setApiGames([...(freshData.games || [])]);
+                    setLastUpdated(new Date());
+                    lastOddsUpdateRef.current = freshData.freshness?.lastOddsUpdate || null;
+                    lastFetchTimeRef.current = Date.now();
+                  }
+                });
+                return;
+              }
+            }
+            
+            // Update refs with new values
+            if (newLastUpdate !== previousLastUpdate) {
+              lastOddsUpdateRef.current = newLastUpdate;
+              lastFetchTimeRef.current = Date.now();
+            }
+          }
+          
+          // Adaptive polling - adjust interval based on server recommendation
+          const recommendedInterval = data.polling?.recommendedInterval || 60000;
+          if (recommendedInterval !== currentIntervalRef.current) {
+            console.log(`[DASHBOARD] Adjusting polling: ${currentIntervalRef.current}ms -> ${recommendedInterval}ms (live games: ${data.polling?.hasLiveGames})`);
+            currentIntervalRef.current = recommendedInterval;
+            // Clear and restart with new interval
+            if (pollingIntervalRef.current) {
+              clearInterval(pollingIntervalRef.current);
+            }
+            pollingIntervalRef.current = setInterval(fetchAllGames, recommendedInterval);
+          }
+          
+          console.log('[DASHBOARD] Games refreshed:', data.games?.length, 'games at', new Date().toLocaleTimeString(), 
+            `(polling: ${currentIntervalRef.current}ms, live: ${data.polling?.hasLiveGames})`);
         } else {
           console.error('Failed to fetch games');
           setGamesError('Failed to load games');
@@ -93,8 +143,13 @@ export default function Dashboard() {
     };
     
     fetchAllGames();
-    const interval = setInterval(fetchAllGames, 30.5 * 1000); // 30.5s to match API update frequency
-    return () => clearInterval(interval);
+    // Start with 12 second polling (fast), will adjust based on server response
+    pollingIntervalRef.current = setInterval(fetchAllGames, 12000);
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
   }, []);
 
   const categorizedGames = useMemo(() => categorizeGames(apiGames), [apiGames, lastUpdated]);

@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import BetReceipt from './BetReceipt';
 import LiveCommunityStats from './LiveCommunityStats';
@@ -19,6 +19,10 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState('upcoming');
   const [lastUpdated, setLastUpdated] = useState(null);
+  
+  // Adaptive polling
+  const pollingIntervalRef = useRef(null);
+  const currentIntervalRef = useRef(12000);
 
   // Fetch real games from API
   useEffect(() => {
@@ -29,6 +33,16 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
           const data = await response.json();
           setAllGames([...(data.games || [])]);
           setLastUpdated(new Date());
+          
+          // Adaptive polling
+          const recommendedInterval = data.polling?.recommendedInterval || 60000;
+          if (recommendedInterval !== currentIntervalRef.current) {
+            currentIntervalRef.current = recommendedInterval;
+            if (pollingIntervalRef.current) {
+              clearInterval(pollingIntervalRef.current);
+            }
+            pollingIntervalRef.current = setInterval(fetchGames, recommendedInterval);
+          }
         }
       } catch (error) {
         console.error('Error fetching games:', error);
@@ -38,8 +52,12 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
     };
     
     fetchGames();
-    const interval = setInterval(fetchGames, 30.5 * 1000); // 30.5s to match API update frequency
-    return () => clearInterval(interval);
+    pollingIntervalRef.current = setInterval(fetchGames, 12000);
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
   }, []);
 
   const categorizedGames = useMemo(() => categorizeGames(allGames), [allGames, lastUpdated]);

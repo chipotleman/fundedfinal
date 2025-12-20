@@ -10,7 +10,18 @@ import {
 
 let globalCache = null;
 let globalCacheTimestamp = null;
-const GLOBAL_CACHE_DURATION = 30.5 * 1000; // 30.5 seconds to match live score updates
+
+// Adaptive cache durations
+const LIVE_GAMES_CACHE_DURATION = 12 * 1000; // 12 seconds when live games are happening
+const NO_LIVE_GAMES_CACHE_DURATION = 60 * 1000; // 60 seconds when no live games
+
+function getAdaptiveCacheDuration() {
+  // If we have cached data with live games, use shorter cache
+  if (globalCache?.freshness?.hasLiveGames) {
+    return LIVE_GAMES_CACHE_DURATION;
+  }
+  return NO_LIVE_GAMES_CACHE_DURATION;
+}
 
 export default async function handler(req, res) {
   // Prevent browser caching to ensure fresh scores/odds
@@ -49,7 +60,8 @@ export default async function handler(req, res) {
       return res.status(200).json(response);
     }
 
-    if (globalCache && globalCacheTimestamp && (now - globalCacheTimestamp) < GLOBAL_CACHE_DURATION && refresh !== 'true') {
+    const cacheDuration = getAdaptiveCacheDuration();
+    if (globalCache && globalCacheTimestamp && (now - globalCacheTimestamp) < cacheDuration && refresh !== 'true') {
       // Deep clone games to ensure React detects changes
       const clonedGames = globalCache.games.map(game => ({ ...game, lines: game.lines ? { ...game.lines } : null }));
       const response = {
@@ -58,7 +70,14 @@ export default async function handler(req, res) {
         count: globalCache.games.length,
         fromCache: true,
         cacheAge: Math.floor((now - globalCacheTimestamp) / 1000),
-        creditStatus: getCreditStatus()
+        creditStatus: getCreditStatus(),
+        // Expose freshness metadata for adaptive polling
+        freshness: globalCache.freshness || null,
+        // Tell client how long to wait before next poll
+        polling: {
+          recommendedInterval: cacheDuration,
+          hasLiveGames: globalCache?.freshness?.hasLiveGames || false
+        }
       };
       
       if (debug === 'true') {
@@ -74,12 +93,23 @@ export default async function handler(req, res) {
     globalCache = result;
     globalCacheTimestamp = now;
 
+    // Determine polling interval based on fresh data
+    const hasLiveGames = result.freshness?.hasLiveGames || false;
+    const recommendedInterval = hasLiveGames ? LIVE_GAMES_CACHE_DURATION : NO_LIVE_GAMES_CACHE_DURATION;
+    
     const response = {
       games: result.games,
       bySport: result.bySport,
       count: result.games.length,
       fromCache: false,
-      creditStatus: result.creditStatus
+      creditStatus: result.creditStatus,
+      // Expose freshness metadata for adaptive polling
+      freshness: result.freshness || null,
+      // Tell client how long to wait before next poll
+      polling: {
+        recommendedInterval,
+        hasLiveGames
+      }
     };
     
     if (debug === 'true') {
@@ -100,7 +130,8 @@ export default async function handler(req, res) {
         fromCache: true,
         stale: true,
         error: 'Using cached data due to API error',
-        creditStatus: getCreditStatus()
+        creditStatus: getCreditStatus(),
+        freshness: globalCache.freshness || null
       });
     }
     

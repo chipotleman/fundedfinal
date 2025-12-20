@@ -99,6 +99,10 @@ export default function DemoDashboard() {
   const baseGamesRef = useRef({});
   const [apiGames, setApiGames] = useState([]);
   const [lastUpdated, setLastUpdated] = useState(null);
+  
+  // Adaptive polling - track interval and adjust based on live games
+  const pollingIntervalRef = useRef(null);
+  const currentIntervalRef = useRef(12000);
 
   useEffect(() => {
     const fetchAllGames = async () => {
@@ -108,6 +112,17 @@ export default function DemoDashboard() {
           const data = await response.json();
           setApiGames([...(data.games || [])]);
           setLastUpdated(new Date());
+          
+          // Adaptive polling - adjust interval based on server recommendation
+          const recommendedInterval = data.polling?.recommendedInterval || 60000;
+          if (recommendedInterval !== currentIntervalRef.current) {
+            console.log(`[DEMO] Adjusting polling: ${currentIntervalRef.current}ms -> ${recommendedInterval}ms`);
+            currentIntervalRef.current = recommendedInterval;
+            if (pollingIntervalRef.current) {
+              clearInterval(pollingIntervalRef.current);
+            }
+            pollingIntervalRef.current = setInterval(fetchAllGames, recommendedInterval);
+          }
         }
       } catch (error) {
         console.error('Error fetching games:', error);
@@ -115,8 +130,12 @@ export default function DemoDashboard() {
     };
     
     fetchAllGames();
-    const interval = setInterval(fetchAllGames, 30.5 * 1000); // 30.5s to match API update frequency
-    return () => clearInterval(interval);
+    pollingIntervalRef.current = setInterval(fetchAllGames, 12000);
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
   }, []);
 
   const categorizedGames = useMemo(() => categorizeGames(apiGames), [apiGames, lastUpdated]);
