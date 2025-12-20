@@ -36,24 +36,6 @@ export default function Document() {
         <meta name="keywords" content="sports betting, funded betting, no risk betting, profit sharing" />
       </Head>
       <body>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var savedTheme = localStorage.getItem('piks-theme');
-                  if (savedTheme === 'light') {
-                    document.documentElement.classList.add('light');
-                    document.documentElement.classList.remove('dark');
-                  } else {
-                    document.documentElement.classList.add('dark');
-                    document.documentElement.classList.remove('light');
-                  }
-                } catch (e) {}
-              })();
-            `,
-          }}
-        />
         <Main />
         <NextScript />
       </body>

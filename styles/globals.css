@@ -583,38 +583,41 @@ button:not(.force-white-text):hover, .btn:not(.force-white-text):hover {
   }
 }
 
-/* Disable ALL hover, animations, and transitions on mobile/touch devices */
+/* Disable ALL hover and highlight effects on mobile/touch devices */
 @media (hover: none) and (pointer: coarse) {
-  /* Kill ALL transitions and animations globally */
-  *, *::before, *::after {
+  /* Remove tap highlights globally */
+  * {
     -webkit-tap-highlight-color: transparent !important;
     -webkit-touch-callout: none !important;
-    transition: none !important;
-    transition-duration: 0s !important;
-    transition-delay: 0s !important;
-    animation: none !important;
-    animation-duration: 0s !important;
   }
   
-  /* Kill ALL hover states */
-  *:hover {
+  /* Disable hover effects on specific elements - exclude SVGs to preserve icons */
+  button:not(svg):hover,
+  a:not(svg):hover,
+  .btn:hover,
+  .glass-button:hover,
+  .modern-card:hover,
+  .card-hover:hover,
+  .unified-hover:hover {
     transform: none !important;
-    box-shadow: inherit !important;
+    box-shadow: none !important;
+    background-color: inherit !important;
     text-shadow: none !important;
-    filter: none !important;
-    opacity: inherit !important;
-    background-color: inherit !important;
-    border-color: inherit !important;
-    color: inherit !important;
-    scale: none !important;
   }
   
-  /* Kill active/focus visual feedback */
-  *:active, *:focus {
+  /* Preserve bet card border colors */
+  .border-green-500,
+  .border-blue-500,
+  .border-red-500,
+  .border-orange-500 {
+    border-color: unset;
+  }
+  
+  /* Remove active/focus highlights */
+  *:active,
+  *:focus {
     outline: none !important;
-    transform: none !important;
-    box-shadow: inherit !important;
-    background-color: inherit !important;
+    -webkit-tap-highlight-color: transparent !important;
   }
   
   /* Disable text selection on touch */
@@ -624,7 +627,8 @@ button:not(.force-white-text):hover, .btn:not(.force-white-text):hover {
   }
   
   /* Allow text selection only in inputs and textareas */
-  input, textarea {
+  input,
+  textarea {
     -webkit-user-select: text !important;
     user-select: text !important;
   }

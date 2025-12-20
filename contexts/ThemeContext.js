@@ -3,13 +3,14 @@ import { createContext, useContext, useState, useEffect } from 'react';
 const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('piks-theme');
-      return savedTheme !== 'light';
+  const [isDarkMode, setIsDarkMode] = useState(true);
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('piks-theme');
+    if (savedTheme) {
+      setIsDarkMode(savedTheme === 'dark');
     }
-    return true;
-  });
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('piks-theme', isDarkMode ? 'dark' : 'light');
