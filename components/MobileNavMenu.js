@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { signOut, useSession } from 'next-auth/react';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurrentUser, isLoggedIn: propIsLoggedIn }) {
   const [touchStart, setTouchStart] = useState(null);
@@ -13,6 +14,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
   const [challengeTier, setChallengeTier] = useState(null);
   const router = useRouter();
   const { data: session, status } = useSession();
+  const { isDarkMode, toggleTheme } = useTheme();
   
   // Use session directly for login state - more reliable than prop
   const isLoggedIn = status === 'authenticated' && !!session?.user;
@@ -135,8 +137,23 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
             onTouchEnd={onTouchEnd}
           >
       <div className="flex flex-col h-full">
-        {/* X button positioned at exact height of plus sign */}
-        <div className="absolute top-0 right-0 pt-[22.5px] md:pt-[29.5px] pr-4">
+        {/* Top row with theme toggle and X button */}
+        <div className="absolute top-0 right-0 pt-[22.5px] md:pt-[29.5px] pr-4 flex items-center gap-3">
+          <button
+            onClick={toggleTheme}
+            className="w-9 h-9 flex items-center justify-center rounded-full"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+          >
+            {isDarkMode ? (
+              <svg className="w-6 h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
+              </svg>
+            )}
+          </button>
           <button
             onClick={onClose}
             style={{ WebkitTapHighlightColor: 'transparent' }}

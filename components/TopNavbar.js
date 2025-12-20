@@ -564,10 +564,10 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
                 </button>
               )}
 
-              {/* Theme Toggle Button */}
+              {/* Theme Toggle Button - Hidden on mobile, shown in menu drawer instead */}
               <button
                 onClick={toggleTheme}
-                className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full hover:bg-[#1a1a1a] transition-all duration-300"
+                className="hidden lg:flex w-9 h-9 sm:w-10 sm:h-10 items-center justify-center rounded-full hover:bg-[#1a1a1a] transition-all duration-300"
                 title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
               >
                 {isDarkMode ? (
@@ -711,7 +711,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
                 <button
                   onClick={toggleMobileMenu}
                   className="lg:hidden"
-                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                  style={{ WebkitTapHighlightColor: 'transparent', marginRight: '15px' }}
                 >
                   <svg className="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                     <path d="M3 7h18M3 12h18M3 17h18" />
