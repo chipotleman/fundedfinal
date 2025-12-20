@@ -742,7 +742,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
               }}
               className="w-full mt-3 font-bold py-2.5 px-4 rounded-xl text-sm transition-all force-white-text"
               style={{
-                backgroundColor: confirmingCashOut ? '#dc2626' : '#22c55e',
+                backgroundColor: confirmingCashOut ? '#dc2626' : '#2563eb',
                 color: '#ffffff'
               }}
             >
@@ -756,7 +756,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
             onClick={() => onShare(bet)}
             className="w-full mt-3 font-semibold py-2.5 px-4 rounded-xl text-sm transition-all flex items-center justify-center space-x-2"
             style={{
-              backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#22c55e',
+              backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#2563eb',
               border: isDarkMode ? '1px solid rgba(255,255,255,0.3)' : 'none',
               color: '#ffffff'
             }}

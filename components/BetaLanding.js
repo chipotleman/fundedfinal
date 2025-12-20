@@ -117,7 +117,7 @@ export default function BetaLanding({ onAuthenticated }) {
             </div>
             <button
               onClick={() => setShowTerms(false)}
-              className="mt-6 w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 rounded-xl transition-all"
+              className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all"
             >
               Close
             </button>
@@ -162,7 +162,7 @@ export default function BetaLanding({ onAuthenticated }) {
             </div>
             <button
               onClick={() => setShowPrivacy(false)}
-              className="mt-6 w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 rounded-xl transition-all"
+              className="mt-6 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all"
             >
               Close
             </button>
@@ -175,8 +175,8 @@ export default function BetaLanding({ onAuthenticated }) {
           {!showSignup ? (
             <>
               <div className="text-center mb-6">
-                <div className="inline-block bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/20 rounded-full px-4 py-2 mb-6">
-                  <span className="text-green-400 font-bold text-sm uppercase tracking-wide">Private Beta</span>
+                <div className="inline-block bg-blue-500/10 border border-blue-500/20 rounded-full px-4 py-2 mb-6">
+                  <span className="text-blue-400 font-bold text-sm uppercase tracking-wide">Private Beta</span>
                 </div>
                 <h2 className="text-2xl font-bold text-white mb-2">Enter Access Code</h2>
                 <p className="text-gray-400 text-sm">Have a beta access code? Enter it below</p>
@@ -214,7 +214,7 @@ export default function BetaLanding({ onAuthenticated }) {
                       setAgreedToTerms(e.target.checked);
                       setError('');
                     }}
-                    className="h-4 w-4 rounded border-gray-600 bg-slate-700 text-green-500 focus:ring-2 focus:ring-green-400 focus:ring-offset-0 cursor-pointer flex-shrink-0"
+                    className="h-4 w-4 rounded border-gray-600 bg-slate-700 text-blue-500 focus:ring-2 focus:ring-blue-400 focus:ring-offset-0 cursor-pointer flex-shrink-0"
                   />
                   <label htmlFor="terms" className="text-gray-400 text-xs whitespace-nowrap cursor-pointer select-none flex items-center">
                     I agree to the{' '}
@@ -224,7 +224,7 @@ export default function BetaLanding({ onAuthenticated }) {
                         e.preventDefault();
                         setShowTerms(true);
                       }}
-                      className="text-green-400 hover:text-green-300 underline mx-1"
+                      className="text-blue-400 hover:text-blue-300 underline mx-1"
                     >
                       Terms of Service
                     </button>{' '}
@@ -235,7 +235,7 @@ export default function BetaLanding({ onAuthenticated }) {
                         e.preventDefault();
                         setShowPrivacy(true);
                       }}
-                      className="text-green-400 hover:text-green-300 underline ml-1"
+                      className="text-blue-400 hover:text-blue-300 underline ml-1"
                     >
                       Privacy Policy
                     </button>
@@ -260,7 +260,7 @@ export default function BetaLanding({ onAuthenticated }) {
                 <p className="text-gray-400 text-sm mb-3">Don't have access?</p>
                 <button
                   onClick={() => setShowSignup(true)}
-                  className="text-green-400 hover:text-green-300 font-semibold transition-colors"
+                  className="text-blue-400 hover:text-blue-300 font-semibold transition-colors"
                 >
                   Request Beta Access →
                 </button>
@@ -284,7 +284,7 @@ export default function BetaLanding({ onAuthenticated }) {
               </div>
 
               {signupSuccess && (
-                <div className="mb-6 p-4 rounded-xl border bg-green-500/10 border-green-500/20 text-green-400">
+                <div className="mb-6 p-4 rounded-xl border bg-blue-500/10 border-blue-500/20 text-blue-400">
                   <p className="text-sm font-medium">✅ Success! We'll send you an access code soon.</p>
                 </div>
               )}
@@ -307,7 +307,7 @@ export default function BetaLanding({ onAuthenticated }) {
                       setEmail(e.target.value);
                       setError('');
                     }}
-                    className="w-full px-4 py-4 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-green-400 transition-all font-medium"
+                    className="w-full px-4 py-4 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 transition-all font-medium"
                     placeholder="Enter your email"
                     required
                     disabled={signupSuccess}
@@ -318,7 +318,7 @@ export default function BetaLanding({ onAuthenticated }) {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-4 rounded-xl transition-all shadow-lg transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed"
+                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-bold py-4 rounded-xl transition-all shadow-lg transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed"
                   >
                     {loading ? (
                       <div className="flex items-center justify-center space-x-2">

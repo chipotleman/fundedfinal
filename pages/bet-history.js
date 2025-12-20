@@ -293,8 +293,8 @@ export default function BetHistory() {
                 className="absolute top-1 bottom-1 rounded-full transition-all duration-300 ease-out"
                 style={{
                   ...indicatorStyle,
-                  backgroundColor: '#22c55e',
-                  boxShadow: '0 2px 8px rgba(34, 197, 94, 0.4)'
+                  backgroundColor: '#2563eb',
+                  boxShadow: '0 2px 8px rgba(37, 99, 235, 0.4)'
                 }}
               />
               {['all', 'open', 'won', 'cashed_out', 'lost'].map((filter, index) => (
