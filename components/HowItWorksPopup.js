@@ -107,7 +107,7 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
 
   const handleTryDemo = () => {
     onClose();
-    router.push('/demo-dashboard');
+    window.dispatchEvent(new CustomEvent('openDemoPopup'));
   };
 
   if (!isOpen) return null;
