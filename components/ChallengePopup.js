@@ -565,7 +565,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
               {/* Header */}
               <div className="text-center mb-2">
                 <div className="mb-2">
-                  <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-24 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
+                  <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-36 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
                 </div>
               </div>
 
