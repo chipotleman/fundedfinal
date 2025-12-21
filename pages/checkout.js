@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-const CREATOR_ID = process.env.NEXT_PUBLIC_FANBASIS_CREATOR_ID || '802865';
+const CREATOR_ID = process.env.NEXT_PUBLIC_FANBASIS_CREATOR_ID || 'piks';
 
 const challenges = [
   {
@@ -10,21 +10,21 @@ const challenges = [
     name: 'Starter Challenge',
     startingBalance: 5000,
     price: 149,
-    productId: process.env.NEXT_PUBLIC_FANBASIS_PRODUCT_STARTER || 'starter-challenge',
+    productId: process.env.NEXT_PUBLIC_FANBASIS_PRODUCT_STARTER || 'G5KXr',
   },
   {
     id: 'pro',
     name: 'Pro Challenge',
     startingBalance: 10000,
     price: 249,
-    productId: process.env.NEXT_PUBLIC_FANBASIS_PRODUCT_PRO || 'pro-challenge',
+    productId: process.env.NEXT_PUBLIC_FANBASIS_PRODUCT_PRO || 'G5KXr',
   },
   {
     id: 'elite',
     name: 'Elite Challenge',
     startingBalance: 25000,
     price: 399,
-    productId: process.env.NEXT_PUBLIC_FANBASIS_PRODUCT_ELITE || 'elite-challenge',
+    productId: process.env.NEXT_PUBLIC_FANBASIS_PRODUCT_ELITE || 'G5KXr',
   },
 ];
 
