@@ -572,7 +572,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
               {/* Price Badge */}
               <div className="flex items-center justify-center mb-4">
                 <div 
-                  className="px-4 py-2 rounded-xl shadow-lg"
+                  className="px-4 py-2 rounded-xl shadow-lg flex items-center gap-2"
                   style={{ 
                     background: `linear-gradient(135deg, ${theme.borderColor}, ${theme.borderColor}dd)`,
                     boxShadow: `0 4px 15px ${theme.borderColor}40`
@@ -580,8 +580,8 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 >
                   <div className="text-white font-bold text-lg">${adjustedPrice}</div>
                   {adjustedPrice !== currentChallenge.price && (
-                    <div className="text-xs text-white/80 text-center">
-                      {adjustedPrice > currentChallenge.price ? `+$${adjustedPrice - currentChallenge.price}` : `-$${currentChallenge.price - adjustedPrice}`}
+                    <div className="text-xs text-white/80">
+                      ({adjustedPrice > currentChallenge.price ? `+$${adjustedPrice - currentChallenge.price}` : `-$${currentChallenge.price - adjustedPrice}`})
                     </div>
                   )}
                 </div>
