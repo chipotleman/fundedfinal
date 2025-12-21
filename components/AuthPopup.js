@@ -128,7 +128,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
 
         <div className="p-6 pt-8">
           <div className="text-center mb-6">
-            <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-28 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
+            <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-56 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
           </div>
 
           {error && (
@@ -273,7 +273,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                 setPassword('');
                 setConfirmPassword('');
               }}
-              className="text-green-400 hover:text-green-300 font-medium transition-colors text-sm"
+              className="font-medium transition-colors text-sm" style={{ color: '#2563eb' }}
             >
               {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
             </button>
