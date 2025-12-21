@@ -563,14 +563,12 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
             {/* Challenge Selection */}
             <div className="p-6 pt-0 relative">
               {/* Header */}
-              <div className="text-center mb-2">
-                <div>
-                  <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-36 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
-                </div>
+              <div className="text-center">
+                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-36 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
               </div>
 
               {/* Price Badge */}
-              <div className="flex items-center justify-center mb-4">
+              <div className="flex items-center justify-center mb-4 -mt-2">
                 <div 
                   className="px-4 py-2 rounded-xl shadow-lg flex items-center gap-2"
                   style={{ 
