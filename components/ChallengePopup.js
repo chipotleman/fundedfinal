@@ -387,10 +387,13 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
         {/* Close Button - Always visible */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 w-8 h-8 bg-blue-600/70 hover:bg-blue-500 rounded-full flex items-center justify-center"
-          style={{ WebkitTapHighlightColor: 'transparent' }}
+          className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full flex items-center justify-center"
+          style={{ 
+            WebkitTapHighlightColor: 'transparent',
+            backgroundColor: isDarkMode ? 'rgba(51, 65, 85, 0.7)' : 'rgba(226, 232, 240, 0.9)'
+          }}
         >
-          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" style={{ color: isDarkMode ? '#ffffff' : '#1f2937' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -403,10 +406,13 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 setCurrentIndex(currentIndex - 1);
               }
             }}
-            className="absolute top-4 left-4 z-20 w-8 h-8 bg-blue-600/70 hover:bg-blue-500 rounded-full flex items-center justify-center"
-            style={{ WebkitTapHighlightColor: 'transparent' }}
+            className="absolute top-4 left-4 z-20 w-8 h-8 rounded-full flex items-center justify-center"
+            style={{ 
+              WebkitTapHighlightColor: 'transparent',
+              backgroundColor: isDarkMode ? 'rgba(51, 65, 85, 0.7)' : 'rgba(226, 232, 240, 0.9)'
+            }}
           >
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" style={{ color: isDarkMode ? '#ffffff' : '#1f2937' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
@@ -452,7 +458,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                     type="email"
                     value={authEmail}
                     onChange={(e) => setAuthEmail(e.target.value)}
-                    className="w-full px-4 py-3 pr-12 bg-white border-2 border-blue-600/50 rounded-xl text-black placeholder-gray-500 focus:outline-none transition-all auth-input"
+                    className="w-full px-4 py-3 pr-12 bg-white border-2 border-gray-300 rounded-xl text-black placeholder-gray-500 focus:outline-none transition-all auth-input"
                     style={{ 
                       '--focus-color': theme.borderColor
                     }}
@@ -476,7 +482,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                     type={showPassword ? "text" : "password"}
                     value={authPassword}
                     onChange={(e) => setAuthPassword(e.target.value)}
-                    className="w-full px-4 py-3 pr-20 bg-white border-2 border-blue-600/50 rounded-xl text-black placeholder-gray-500 focus:outline-none transition-all auth-input"
+                    className="w-full px-4 py-3 pr-20 bg-white border-2 border-gray-300 rounded-xl text-black placeholder-gray-500 focus:outline-none transition-all auth-input"
                     style={{ 
                       '--focus-color': theme.borderColor
                     }}
@@ -518,7 +524,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full px-4 py-3 pr-12 bg-white border-2 border-blue-600/50 rounded-xl text-black placeholder-gray-500 focus:outline-none transition-all auth-input"
+                      className="w-full px-4 py-3 pr-12 bg-white border-2 border-gray-300 rounded-xl text-black placeholder-gray-500 focus:outline-none transition-all auth-input"
                       style={{ 
                         '--focus-color': theme.borderColor
                       }}
