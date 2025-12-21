@@ -401,11 +401,11 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
         )}
 
         {step === 'auth' ? (
-          <div className="p-6 pt-12">
-            <div className="text-center mb-6">
-              <div className="mb-4">
-                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
-              </div>
+          <div className="p-6 pt-0">
+            <div className="text-center">
+              <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-36 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
+            </div>
+            <div className="text-center mb-4 -mt-2">
               <h3 className="text-xl font-bold text-white mb-2">
                 {isSignUp ? 'Create Account' : 'Sign In'}
               </h3>
