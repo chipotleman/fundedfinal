@@ -108,10 +108,19 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
     setError(`${provider} sign-in will be available soon!`);
   };
 
-  if (!isOpen) return null;
+  // Use CSS to hide instead of unmounting, so logo stays in DOM
+  const hiddenStyle = !isOpen ? {
+    visibility: 'hidden',
+    pointerEvents: 'none',
+    position: 'fixed',
+    opacity: 0
+  } : {};
 
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-start justify-center z-50 p-4 pt-10 overflow-y-auto">
+    <div 
+      className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-start justify-center z-50 p-4 pt-10 overflow-hidden"
+      style={{ opacity: isOpen ? 1 : 0, animation: 'none', transition: 'none', ...hiddenStyle }}
+    >
       <div 
         className="popup-content relative bg-black rounded-3xl max-w-md w-full my-auto border-2 border-green-500"
         style={{ WebkitTapHighlightColor: 'transparent' }}
