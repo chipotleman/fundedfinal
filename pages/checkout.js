@@ -112,7 +112,7 @@ export default function Checkout() {
         creatorId: CREATOR_ID,
         productId: selectedChallenge.productId,
         checkoutSessionSecret: secret,
-        environment: 'production',
+        environment: 'sandbox',
         theme: {
           theme: 'dark',
           accent_color: '#2563eb',
@@ -149,7 +149,6 @@ export default function Checkout() {
       });
 
       checkout.on('checkout:success', (data) => {
-        console.log('Payment successful:', data);
         router.push(`/dashboard?checkout=success&tier=${selectedChallenge.id}`);
       });
 
@@ -179,6 +178,16 @@ export default function Checkout() {
   const handleTierChange = async (challenge) => {
     if (challenge.id === selectedChallenge.id) return;
     
+    isCreatingRef.current = false;
+    isInitializingRef.current = false;
+    if (checkoutInstanceRef.current) {
+      try {
+        checkoutInstanceRef.current.cleanup();
+      } catch (e) {}
+      checkoutInstanceRef.current = null;
+    }
+    sessionSecretRef.current = null;
+    
     setSelectedChallenge(challenge);
     setSessionSecret(null);
     setCheckoutState('idle');
@@ -186,6 +195,15 @@ export default function Checkout() {
   };
 
   const handleRetry = () => {
+    isCreatingRef.current = false;
+    isInitializingRef.current = false;
+    if (checkoutInstanceRef.current) {
+      try {
+        checkoutInstanceRef.current.cleanup();
+      } catch (e) {}
+      checkoutInstanceRef.current = null;
+    }
+    sessionSecretRef.current = null;
     setError(null);
     setCheckoutState('idle');
     setSessionSecret(null);
