@@ -92,6 +92,12 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [betaAuthenticated, setBetaAuthenticated] = useState(false);
 
+  // Preload logo image on app mount
+  useEffect(() => {
+    const img = new Image();
+    img.src = '/pikslogotransparent.png';
+  }, []);
+
   // Scroll to top when beta authentication changes to true
   useEffect(() => {
     if (betaAuthenticated) {

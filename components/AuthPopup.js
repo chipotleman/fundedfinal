@@ -12,16 +12,9 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [logoLoaded, setLogoLoaded] = useState(false);
   const router = useRouter();
   const { login, signUp: signUpUser } = useAuth();
   const { isDarkMode } = useTheme();
-
-  useEffect(() => {
-    const img = new Image();
-    img.src = '/pikslogotransparent.png';
-    img.onload = () => setLogoLoaded(true);
-  }, []);
 
   const isPasswordStrong = password.length >= 6;
   const passwordsMatch = isSignUp && confirmPassword.length > 0 && password === confirmPassword;
@@ -139,11 +132,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
               src="/pikslogotransparent.png" 
               alt="Piks Logo" 
               className="h-28 mx-auto" 
-              style={{ 
-                filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)',
-                opacity: logoLoaded ? 1 : 0,
-                transition: 'opacity 0.15s ease-in'
-              }} 
+              style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} 
             />
           </div>
 
