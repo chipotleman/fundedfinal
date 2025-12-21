@@ -546,7 +546,10 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full bg-gradient-to-r ${theme.gradient} ${theme.gradientHover} disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 disabled:cursor-not-allowed`}
+                className="w-full text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 disabled:cursor-not-allowed disabled:bg-gray-600"
+                style={{ 
+                  background: loading ? undefined : `linear-gradient(to right, ${theme.borderColor}, ${theme.borderColor}dd)`,
+                }}
               >
                 {loading ? (
                   <div className="flex items-center justify-center space-x-2">
@@ -567,7 +570,8 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   setAuthPassword('');
                   setConfirmPassword('');
                 }}
-                className={`${theme.text} hover:opacity-80 text-sm transition-colors`}
+                className="text-sm transition-colors hover:opacity-70"
+                style={{ color: isDarkMode ? '#9ca3af' : '#374151' }}
               >
                 {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
               </button>
