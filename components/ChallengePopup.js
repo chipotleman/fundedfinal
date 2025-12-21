@@ -364,6 +364,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
   return (
     <div 
       className="challenge-popup-container fixed inset-0 bg-black/90 backdrop-blur-md flex items-start justify-center z-50 p-4 pt-10 overflow-y-auto"
+      style={{ opacity: 1, animation: 'none', transition: 'none' }}
     >
       <div 
         className="popup-content relative bg-black rounded-3xl max-w-md w-full"
@@ -371,7 +372,10 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
           '--theme-border-color': theme.borderColor,
           WebkitTapHighlightColor: 'transparent',
           minHeight: '680px',
-          marginTop: '20px'
+          marginTop: '20px',
+          opacity: 1,
+          animation: 'none',
+          transition: 'none'
         }}
       >
         {/* Close Button - Always visible */}
@@ -404,7 +408,17 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
 
         {/* Persistent Logo - stays in same position across all steps */}
         <div className="text-center pt-0 px-6">
-          <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-36 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
+          <img 
+            src="/pikslogotransparent.png" 
+            alt="Piks Logo" 
+            className="h-36 mx-auto" 
+            style={{ 
+              filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)',
+              opacity: 1,
+              animation: 'none',
+              transition: 'none'
+            }} 
+          />
         </div>
 
         {step === 'auth' ? (
