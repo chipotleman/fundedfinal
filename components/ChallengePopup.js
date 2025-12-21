@@ -369,7 +369,8 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
         className="popup-content relative bg-black rounded-3xl max-w-md w-full my-auto"
         style={{ 
           '--theme-border-color': theme.borderColor,
-          WebkitTapHighlightColor: 'transparent'
+          WebkitTapHighlightColor: 'transparent',
+          minHeight: '680px'
         }}
       >
         {/* Close Button - Always visible */}
