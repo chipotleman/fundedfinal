@@ -10,18 +10,21 @@ const challenges = [
     name: 'Starter Challenge',
     startingBalance: 5000,
     price: 149,
+    productId: process.env.NEXT_PUBLIC_FANBASIS_PRODUCT_STARTER || 'starter-challenge',
   },
   {
     id: 'pro',
     name: 'Pro Challenge',
     startingBalance: 10000,
     price: 249,
+    productId: process.env.NEXT_PUBLIC_FANBASIS_PRODUCT_PRO || 'pro-challenge',
   },
   {
     id: 'elite',
     name: 'Elite Challenge',
     startingBalance: 25000,
     price: 399,
+    productId: process.env.NEXT_PUBLIC_FANBASIS_PRODUCT_ELITE || 'elite-challenge',
   },
 ];
 
@@ -40,6 +43,9 @@ export default function Checkout() {
   const { tier } = router.query;
   const checkoutContainerRef = useRef(null);
   const checkoutInstanceRef = useRef(null);
+  const sessionSecretRef = useRef(null);
+  const isCreatingRef = useRef(false);
+  const isInitializingRef = useRef(false);
   const [selectedChallenge, setSelectedChallenge] = useState(challenges[0]);
   const [checkoutState, setCheckoutState] = useState('idle');
   const [error, setError] = useState(null);
@@ -54,7 +60,9 @@ export default function Checkout() {
     }
   }, [tier]);
 
-  const createCheckoutSession = useCallback(async (challenge) => {
+  const createCheckoutSession = useCallback(async () => {
+    if (isCreatingRef.current) return null;
+    isCreatingRef.current = true;
     setCheckoutState('creating');
     setError(null);
     
@@ -62,10 +70,7 @@ export default function Checkout() {
       const response = await fetch('/api/fanbasis/create-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amount: challenge.price * 100,
-          productName: `${challenge.name} - $${challenge.startingBalance.toLocaleString()} Funded Account`,
-        }),
+        body: JSON.stringify({}),
       });
 
       if (!response.ok) {
@@ -74,9 +79,12 @@ export default function Checkout() {
       }
 
       const data = await response.json();
-      setSessionSecret(data.checkoutSessionSecret);
+      const secret = data.checkoutSessionSecret;
+      sessionSecretRef.current = secret;
+      setSessionSecret(secret);
       setCheckoutState('ready');
-      return data.checkoutSessionSecret;
+      
+      return secret;
     } catch (err) {
       console.error('Failed to create checkout session:', err);
       setError(err.message);
@@ -87,17 +95,22 @@ export default function Checkout() {
 
   const initializeCheckout = useCallback(async (secret) => {
     if (!checkoutContainerRef.current || !secret) return;
+    if (isInitializingRef.current) return;
+    isInitializingRef.current = true;
 
     try {
       if (checkoutInstanceRef.current) {
+        try {
+          checkoutInstanceRef.current.cleanup();
+        } catch (e) {}
         checkoutInstanceRef.current = null;
-        checkoutContainerRef.current.innerHTML = '';
       }
 
-      const { createEmbeddedCheckout } = await import('@fanbasis/checkout-core');
+      const { PaymentCheckout } = await import('@fanbasis/checkout-core');
       
-      const checkout = createEmbeddedCheckout(checkoutContainerRef.current, {
+      const checkout = new PaymentCheckout({
         creatorId: CREATOR_ID,
+        productId: selectedChallenge.productId,
         checkoutSessionSecret: secret,
         environment: 'production',
         theme: {
@@ -111,10 +124,11 @@ export default function Checkout() {
           product_text_color: '#ffffff',
           show_product_info: false,
           show_coupon_row: true,
+          product_layout: 'above',
         },
         containerOptions: {
           width: '100%',
-          height: 'auto',
+          height: '500px',
         },
         redirectSettings: {
           success_redirect_url: `${window.location.origin}/dashboard?checkout=success&tier=${selectedChallenge.id}`,
@@ -139,8 +153,11 @@ export default function Checkout() {
         router.push(`/dashboard?checkout=success&tier=${selectedChallenge.id}`);
       });
 
+      checkout.attachToElement(checkoutContainerRef.current);
+      await checkout.init();
+
     } catch (err) {
-      console.error('Failed to initialize checkout:', err);
+      console.error('Failed to initialize checkout:', err, err?.message, err?.code);
       setError('Failed to load checkout. Please try again.');
       setCheckoutState('error');
     }
@@ -148,15 +165,16 @@ export default function Checkout() {
 
   useEffect(() => {
     if (selectedChallenge && checkoutState === 'idle') {
-      createCheckoutSession(selectedChallenge);
+      createCheckoutSession();
     }
   }, [selectedChallenge, checkoutState, createCheckoutSession]);
 
   useEffect(() => {
-    if (sessionSecret && checkoutState === 'ready') {
-      initializeCheckout(sessionSecret);
+    const secret = sessionSecretRef.current;
+    if (secret && checkoutState === 'ready' && checkoutContainerRef.current) {
+      initializeCheckout(secret);
     }
-  }, [sessionSecret, checkoutState, initializeCheckout]);
+  }, [checkoutState, initializeCheckout]);
 
   const handleTierChange = async (challenge) => {
     if (challenge.id === selectedChallenge.id) return;

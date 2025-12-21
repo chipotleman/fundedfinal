@@ -3,14 +3,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { amount, productName, customerEmail } = req.body;
-
-  if (!amount || !productName) {
-    return res.status(400).json({ error: 'Amount and productName are required' });
-  }
-
   const FANBASIS_API_KEY = process.env.FANBASIS_API_KEY;
-  const CREATOR_ID = process.env.FANBASIS_CREATOR_ID || '802865';
 
   if (!FANBASIS_API_KEY) {
     console.error('FANBASIS_API_KEY not configured');
@@ -18,39 +11,33 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch('https://fanbasis.com/api/v1/checkout-session', {
+    const response = await fetch('https://www.fanbasis.com/public-api/checkout-sessions/embedded', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${FANBASIS_API_KEY}`,
+        'x-api-key': FANBASIS_API_KEY,
       },
-      body: JSON.stringify({
-        creatorId: CREATOR_ID,
-        amount: amount,
-        currency: 'usd',
-        productName: productName,
-        customerEmail: customerEmail || undefined,
-        metadata: {
-          source: 'piks-checkout',
-          productName: productName,
-        },
-      }),
+      body: JSON.stringify({}),
     });
 
     if (!response.ok) {
-      const errorData = await response.text();
-      console.error('Fanbasis API error:', response.status, errorData);
+      const errorText = await response.text();
+      console.error('Fanbasis API error:', response.status, errorText);
       return res.status(response.status).json({ 
         error: 'Failed to create checkout session',
-        details: errorData 
+        details: errorText 
       });
     }
 
-    const data = await response.json();
+    const responseData = await response.json();
+    const secret = responseData.data?.checkout_session_secret;
+    if (!secret) {
+      console.error('No checkout session secret in response:', responseData);
+      return res.status(500).json({ error: 'No checkout session secret received' });
+    }
     
     return res.status(200).json({
-      checkoutSessionSecret: data.checkoutSessionSecret,
-      sessionId: data.sessionId,
+      checkoutSessionSecret: secret,
     });
   } catch (error) {
     console.error('Error creating checkout session:', error);
