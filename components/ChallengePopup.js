@@ -564,7 +564,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
             <div className="p-6 pt-2 relative">
               {/* Floating Price Badge - Top Right */}
               <div 
-                className="absolute top-2 right-4 z-10"
+                className="absolute top-12 right-4 z-10"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >
                 <div 
