@@ -569,26 +569,21 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 </div>
               </div>
 
-              {/* Badge and Price Row */}
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <span 
-                  className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
-                    currentChallenge.badge === 'BEGINNER' ? 'bg-blue-500 border border-blue-500/30' :
-                    currentChallenge.badge === 'POPULAR' ? 'bg-green-500 border border-green-500/30' :
-                    'bg-purple-500 border border-purple-500/30'
-                  }`}
-                  style={{ color: '#ffffff' }}
-                >
-                  {currentChallenge.badge}
-                </span>
+              {/* Price Badge */}
+              <div className="flex items-center justify-center mb-4">
                 <div 
-                  className="px-3 py-1 rounded-full shadow-lg"
+                  className="px-4 py-2 rounded-xl shadow-lg"
                   style={{ 
                     background: `linear-gradient(135deg, ${theme.borderColor}, ${theme.borderColor}dd)`,
-                    boxShadow: `0 2px 10px ${theme.borderColor}40`
+                    boxShadow: `0 4px 15px ${theme.borderColor}40`
                   }}
                 >
-                  <span className="text-white font-bold text-sm">${adjustedPrice}</span>
+                  <div className="text-white font-bold text-lg">${adjustedPrice}</div>
+                  {adjustedPrice !== currentChallenge.price && (
+                    <div className="text-xs text-white/80 text-center">
+                      {adjustedPrice > currentChallenge.price ? `+$${adjustedPrice - currentChallenge.price}` : `-$${currentChallenge.price - adjustedPrice}`}
+                    </div>
+                  )}
                 </div>
               </div>
 
