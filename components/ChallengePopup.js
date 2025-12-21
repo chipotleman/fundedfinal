@@ -401,11 +401,13 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
           </button>
         )}
 
+        {/* Persistent Logo - stays in same position across all steps */}
+        <div className="text-center pt-0 px-6">
+          <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-36 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
+        </div>
+
         {step === 'auth' ? (
           <div className="p-6 pt-0">
-            <div className="text-center">
-              <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-36 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
-            </div>
             <div className="text-center mb-4 -mt-2">
               <h3 className="text-xl font-bold text-white mb-2">
                 {isSignUp ? 'Create Account' : 'Sign In'}
@@ -563,11 +565,6 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
           <>
             {/* Challenge Selection */}
             <div className="p-6 pt-0 relative">
-              {/* Header */}
-              <div className="text-center">
-                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-36 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
-              </div>
-
               {/* Price Badge */}
               <div className="flex items-center justify-center mb-4 -mt-2">
                 <div 
