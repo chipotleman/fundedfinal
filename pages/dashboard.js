@@ -245,11 +245,11 @@ export default function Dashboard() {
             <TapSurface
               onTap={() => setSelectedTab('live')}
               isActive={selectedTab === 'live'}
-              activeColor="#dc2626"
+              activeColor="transparent"
               inactiveColor={isDarkMode ? '#1a1a1a' : '#e5e7eb'}
-              activeTextColor="#ffffff"
+              activeTextColor="#dc2626"
               inactiveTextColor={isDarkMode ? '#9ca3af' : '#4b5563'}
-              style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}
+              style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px', borderWidth: selectedTab === 'live' ? '2px' : '0px', borderStyle: 'solid', borderColor: '#dc2626' }}
             >
               <span 
                 style={{
