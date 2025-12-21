@@ -773,8 +773,8 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
             from 0deg,
             transparent 0deg,
             transparent 60deg,
-            #22c55e 120deg,
-            #3b82f6 180deg,
+            #2563eb 120deg,
+            #60a5fa 180deg,
             transparent 240deg,
             transparent 360deg
           );
