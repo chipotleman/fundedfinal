@@ -249,8 +249,8 @@ export default function Home() {
             <div className="relative max-w-5xl mx-auto mb-8 px-4">
               {/* Video container with prominent tracing border */}
               <div className="relative">
-                {/* Prominent purple/blue tracing border */}
-                <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-purple-500 via-blue-500 to-purple-500 p-[2px] animate-pulse"></div>
+                {/* Prominent blue tracing border */}
+                <div className="absolute -inset-1 rounded-2xl p-[2px] animate-pulse" style={{ backgroundColor: '#2563eb' }}></div>
 
                 {/* Video container - more rectangular */}
                 <div className="relative bg-slate-900 rounded-2xl overflow-hidden" style={{ boxShadow: isDarkMode ? 'none' : '0 4px 20px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.06)' }}>
