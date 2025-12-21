@@ -567,26 +567,29 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   setAuthPassword('');
                   setConfirmPassword('');
                 }}
-                className="text-blue-500 hover:text-blue-400 text-sm transition-colors"
+                className={`${theme.text} hover:opacity-80 text-sm transition-colors`}
               >
                 {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
               </button>
             </div>
 
             <div 
-              className="mt-4 p-3 rounded-xl border border-blue-600/30"
-              style={{ backgroundColor: isDarkMode ? 'rgba(30, 58, 138, 0.2)' : 'rgba(219, 234, 254, 0.8)' }}
+              className="mt-4 p-3 rounded-xl"
+              style={{ 
+                backgroundColor: `${theme.borderColor}20`,
+                border: `1px solid ${theme.borderColor}40`
+              }}
             >
               <div className="flex items-center justify-between text-sm">
-                <span style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>Selected:</span>
-                <span className="font-medium" style={{ color: isDarkMode ? '#60a5fa' : '#1e40af' }}>{currentChallenge.name}</span>
+                <span style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>Selected:</span>
+                <span className="font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{currentChallenge.name}</span>
               </div>
               <div className="flex items-center justify-between text-sm mt-1">
-                <span style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>Your Split:</span>
-                <span className="font-medium" style={{ color: isDarkMode ? '#60a5fa' : '#1e40af' }}>{userSplit}%</span>
+                <span style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>Your Split:</span>
+                <span className="font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{userSplit}%</span>
               </div>
               <div className="flex items-center justify-between text-sm mt-1">
-                <span style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>Price:</span>
+                <span style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>Price:</span>
                 <span className="font-bold" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>${adjustedPrice}</span>
               </div>
             </div>
