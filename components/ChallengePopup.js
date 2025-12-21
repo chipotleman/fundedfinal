@@ -266,7 +266,13 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
     router.push('/auth');
   };
 
-  if (!isOpen) return null;
+  // Use CSS to hide instead of unmounting, so logo stays in DOM
+  const hiddenStyle = !isOpen ? {
+    visibility: 'hidden',
+    pointerEvents: 'none',
+    position: 'fixed',
+    opacity: 0
+  } : {};
 
   const currentChallenge = challenges[currentIndex];
 
@@ -364,7 +370,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
   return (
     <div 
       className="challenge-popup-container fixed inset-0 bg-black/90 backdrop-blur-md flex items-start justify-center z-50 p-4 pt-10 overflow-y-auto"
-      style={{ opacity: 1, animation: 'none', transition: 'none' }}
+      style={{ opacity: isOpen ? 1 : 0, animation: 'none', transition: 'none', ...hiddenStyle }}
     >
       <div 
         className="popup-content relative bg-black rounded-3xl max-w-md w-full"
