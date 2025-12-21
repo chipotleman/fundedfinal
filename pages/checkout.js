@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-const CREATOR_ID = process.env.NEXT_PUBLIC_FANBASIS_CREATOR_ID || 'piks';
+const CREATOR_ID = process.env.NEXT_PUBLIC_FANBASIS_CREATOR_ID || '802865';
 
 const challenges = [
   {
