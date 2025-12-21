@@ -561,10 +561,10 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
         ) : step === 'selection' ? (
           <>
             {/* Challenge Selection */}
-            <div className="p-6 pt-8 relative">
+            <div className="p-6 pt-2 relative">
               {/* Floating Price Badge - Top Right */}
               <div 
-                className="absolute top-20 right-4 z-10"
+                className="absolute top-2 right-4 z-10"
                 style={{ WebkitTapHighlightColor: 'transparent' }}
               >
                 <div 
@@ -583,9 +583,9 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 </div>
               </div>
               {/* Header */}
-              <div className="text-center mb-6">
-                <div className="mb-4">
-                  <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
+              <div className="text-center mb-2">
+                <div className="mb-2">
+                  <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-24 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
                 </div>
               </div>
 
