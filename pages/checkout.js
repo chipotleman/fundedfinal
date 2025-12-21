@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
@@ -41,15 +41,8 @@ const phaseData = [
 export default function Checkout() {
   const router = useRouter();
   const { tier } = router.query;
-  const checkoutContainerRef = useRef(null);
-  const checkoutInstanceRef = useRef(null);
-  const sessionSecretRef = useRef(null);
-  const isCreatingRef = useRef(false);
-  const isInitializingRef = useRef(false);
   const [selectedChallenge, setSelectedChallenge] = useState(challenges[0]);
-  const [checkoutState, setCheckoutState] = useState('idle');
-  const [error, setError] = useState(null);
-  const [sessionSecret, setSessionSecret] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (tier) {
@@ -60,157 +53,17 @@ export default function Checkout() {
     }
   }, [tier]);
 
-  const createCheckoutSession = useCallback(async () => {
-    if (isCreatingRef.current) return null;
-    isCreatingRef.current = true;
-    setCheckoutState('creating');
-    setError(null);
-    
-    try {
-      const response = await fetch('/api/fanbasis/create-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create checkout session');
-      }
-
-      const data = await response.json();
-      const secret = data.checkoutSessionSecret;
-      sessionSecretRef.current = secret;
-      setSessionSecret(secret);
-      setCheckoutState('ready');
-      
-      return secret;
-    } catch (err) {
-      console.error('Failed to create checkout session:', err);
-      setError(err.message);
-      setCheckoutState('error');
-      return null;
-    }
-  }, []);
-
-  const initializeCheckout = useCallback(async (secret) => {
-    if (!checkoutContainerRef.current || !secret) return;
-    if (isInitializingRef.current) return;
-    isInitializingRef.current = true;
-
-    try {
-      if (checkoutInstanceRef.current) {
-        try {
-          checkoutInstanceRef.current.cleanup();
-        } catch (e) {}
-        checkoutInstanceRef.current = null;
-      }
-
-      const { PaymentCheckout } = await import('@fanbasis/checkout-core');
-      
-      const checkout = new PaymentCheckout({
-        creatorId: CREATOR_ID,
-        productId: selectedChallenge.productId,
-        checkoutSessionSecret: secret,
-        environment: 'production',
-        theme: {
-          theme: 'dark',
-          accent_color: '#2563eb',
-          background_color: '#1a1a1a',
-          surface_color: '#111111',
-          border_color: '#333333',
-          label_color: '#888888',
-          heading_color: '#ffffff',
-          product_text_color: '#ffffff',
-          show_product_info: false,
-          show_coupon_row: true,
-          product_layout: 'above',
-        },
-        containerOptions: {
-          width: '100%',
-          height: '500px',
-        },
-        redirectSettings: {
-          success_redirect_url: `${window.location.origin}/dashboard?checkout=success&tier=${selectedChallenge.id}`,
-          failure_redirect_url: `${window.location.origin}/checkout?tier=${selectedChallenge.id}&error=payment_failed`,
-        },
-      });
-
-      checkoutInstanceRef.current = checkout;
-
-      checkout.on('checkout:loaded', () => {
-        setCheckoutState('loaded');
-      });
-
-      checkout.on('checkout:error', (err) => {
-        console.error('Checkout error:', err);
-        let errorMessage = err.message || err.errorMessage || 'Checkout error occurred';
-        if (err.errorCode === 'FORM_LOAD_ERROR' && errorMessage.includes('creator does not exist')) {
-          errorMessage = 'Payment configuration required. Please contact support to complete your Fanbasis merchant setup.';
-        }
-        setError(errorMessage);
-        setCheckoutState('error');
-      });
-
-      checkout.on('checkout:success', (data) => {
-        router.push(`/dashboard?checkout=success&tier=${selectedChallenge.id}`);
-      });
-
-      checkout.attachToElement(checkoutContainerRef.current);
-      await checkout.init();
-
-    } catch (err) {
-      console.error('Failed to initialize checkout:', err, err?.message, err?.code);
-      setError('Failed to load checkout. Please try again.');
-      setCheckoutState('error');
-    }
-  }, [selectedChallenge, router]);
-
-  useEffect(() => {
-    if (selectedChallenge && checkoutState === 'idle') {
-      createCheckoutSession();
-    }
-  }, [selectedChallenge, checkoutState, createCheckoutSession]);
-
-  useEffect(() => {
-    const secret = sessionSecretRef.current;
-    if (secret && checkoutState === 'ready' && checkoutContainerRef.current) {
-      initializeCheckout(secret);
-    }
-  }, [checkoutState, initializeCheckout]);
-
-  const handleTierChange = async (challenge) => {
+  const handleTierChange = (challenge) => {
     if (challenge.id === selectedChallenge.id) return;
-    
-    isCreatingRef.current = false;
-    isInitializingRef.current = false;
-    if (checkoutInstanceRef.current) {
-      try {
-        checkoutInstanceRef.current.cleanup();
-      } catch (e) {}
-      checkoutInstanceRef.current = null;
-    }
-    sessionSecretRef.current = null;
-    
     setSelectedChallenge(challenge);
-    setSessionSecret(null);
-    setCheckoutState('idle');
     router.push(`/checkout?tier=${challenge.id}`, undefined, { shallow: true });
   };
 
-  const handleRetry = () => {
-    isCreatingRef.current = false;
-    isInitializingRef.current = false;
-    if (checkoutInstanceRef.current) {
-      try {
-        checkoutInstanceRef.current.cleanup();
-      } catch (e) {}
-      checkoutInstanceRef.current = null;
-    }
-    sessionSecretRef.current = null;
-    setError(null);
-    setCheckoutState('idle');
-    setSessionSecret(null);
+  const handlePurchase = () => {
+    setIsLoading(true);
+    const successUrl = encodeURIComponent(`${window.location.origin}/dashboard?checkout=success&tier=${selectedChallenge.id}`);
+    const checkoutUrl = `https://www.fanbasis.com/checkout/${CREATOR_ID}/${selectedChallenge.productId}?success_redirect_url=${successUrl}`;
+    window.location.href = checkoutUrl;
   };
 
   return (
@@ -435,128 +288,44 @@ export default function Checkout() {
               </div>
             </div>
 
-            {error && (
-              <div style={{
-                background: '#1a1a1a',
-                border: '1px solid #333',
-                borderRadius: '12px',
-                padding: '24px',
-                marginBottom: '24px',
-              }}>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  marginBottom: '16px',
-                }}>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    background: '#2563eb20',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#2563eb',
-                    fontSize: '20px',
-                  }}>
-                    ⚙️
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: '600', color: '#fff', marginBottom: '4px' }}>
-                      Payment Setup in Progress
-                    </div>
-                    <div style={{ color: '#888', fontSize: '13px' }}>
-                      Our payment system is being configured
-                    </div>
-                  </div>
-                </div>
-                
-                <div style={{
-                  background: '#111',
-                  borderRadius: '8px',
-                  padding: '16px',
-                  marginBottom: '16px',
-                  color: '#9ca3af',
-                  fontSize: '14px',
-                  lineHeight: '1.6',
-                }}>
-                  We're finalizing our payment integration. In the meantime, you can contact us directly to purchase your challenge.
-                </div>
-
-                <div style={{
-                  display: 'flex',
-                  gap: '12px',
-                }}>
-                  <a
-                    href="mailto:support@piks.com?subject=Challenge Purchase&body=I would like to purchase the {selectedChallenge.name} ($${selectedChallenge.price})"
-                    style={{
-                      background: '#2563eb',
-                      border: 'none',
-                      borderRadius: '8px',
-                      padding: '12px 20px',
-                      color: '#fff',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      textDecoration: 'none',
-                      display: 'inline-block',
-                    }}
-                  >
-                    Contact Support
-                  </a>
-                  <button
-                    onClick={handleRetry}
-                    style={{
-                      background: 'transparent',
-                      border: '1px solid #333',
-                      borderRadius: '8px',
-                      padding: '12px 20px',
-                      color: '#fff',
-                      cursor: 'pointer',
-                      fontSize: '14px',
-                      fontWeight: '500',
-                    }}
-                  >
-                    Try Again
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <div 
-              ref={checkoutContainerRef}
+            <button
+              onClick={handlePurchase}
+              disabled={isLoading}
               style={{
-                minHeight: checkoutState === 'loaded' ? 'auto' : '300px',
-                background: '#111',
-                borderRadius: '12px',
-                display: checkoutState === 'loaded' ? 'block' : 'flex',
+                width: '100%',
+                padding: '16px 24px',
+                background: isLoading ? '#1e40af' : '#2563eb',
+                border: 'none',
+                borderRadius: '8px',
+                color: '#fff',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                fontSize: '16px',
+                fontWeight: '600',
+                fontFamily: 'inherit',
+                display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                overflow: 'hidden',
+                gap: '8px',
               }}
             >
-              {(checkoutState === 'idle' || checkoutState === 'creating' || checkoutState === 'ready') && (
-                <div style={{ 
-                  color: '#888', 
-                  fontSize: '14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '40px'
-                }}>
+              {isLoading ? (
+                <>
                   <div style={{
-                    width: '20px',
-                    height: '20px',
-                    border: '2px solid #333',
-                    borderTopColor: '#2563eb',
+                    width: '18px',
+                    height: '18px',
+                    border: '2px solid rgba(255,255,255,0.3)',
+                    borderTopColor: '#fff',
                     borderRadius: '50%',
                     animation: 'spin 1s linear infinite',
                   }} />
-                  Loading secure checkout...
-                </div>
+                  Redirecting to payment...
+                </>
+              ) : (
+                <>
+                  Purchase Challenge - ${selectedChallenge.price}
+                </>
               )}
-            </div>
+            </button>
 
             <style jsx>{`
               @keyframes spin {
