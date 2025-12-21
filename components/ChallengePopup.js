@@ -387,7 +387,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
         {/* Close Button - Always visible */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
+          className="absolute top-4 right-4 z-20 w-8 h-8 bg-blue-600/70 hover:bg-blue-500 rounded-full flex items-center justify-center"
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -403,7 +403,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 setCurrentIndex(currentIndex - 1);
               }
             }}
-            className="absolute top-4 left-4 z-20 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
+            className="absolute top-4 left-4 z-20 w-8 h-8 bg-blue-600/70 hover:bg-blue-500 rounded-full flex items-center justify-center"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -452,7 +452,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                     type="email"
                     value={authEmail}
                     onChange={(e) => setAuthEmail(e.target.value)}
-                    className="w-full px-4 py-3 pr-12 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all auth-input"
+                    className="w-full px-4 py-3 pr-12 bg-blue-900/30 border-2 border-blue-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all auth-input"
                     style={{ 
                       '--focus-color': theme.borderColor
                     }}
@@ -476,7 +476,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                     type={showPassword ? "text" : "password"}
                     value={authPassword}
                     onChange={(e) => setAuthPassword(e.target.value)}
-                    className="w-full px-4 py-3 pr-20 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all auth-input"
+                    className="w-full px-4 py-3 pr-20 bg-blue-900/30 border-2 border-blue-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all auth-input"
                     style={{ 
                       '--focus-color': theme.borderColor
                     }}
@@ -518,7 +518,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full px-4 py-3 pr-12 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all auth-input"
+                      className="w-full px-4 py-3 pr-12 bg-blue-900/30 border-2 border-blue-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all auth-input"
                       style={{ 
                         '--focus-color': theme.borderColor
                       }}
@@ -561,13 +561,13 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   setAuthPassword('');
                   setConfirmPassword('');
                 }}
-                className="text-gray-400 hover:text-white text-sm transition-colors"
+                className="text-blue-500 hover:text-blue-400 text-sm transition-colors"
               >
                 {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
               </button>
             </div>
 
-            <div className="mt-4 p-3 bg-slate-800/30 rounded-xl border border-slate-700/50">
+            <div className="mt-4 p-3 bg-blue-900/20 rounded-xl border border-blue-600/30">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-400">Selected:</span>
                 <span className={`${theme.text} font-medium`}>{currentChallenge.name}</span>
