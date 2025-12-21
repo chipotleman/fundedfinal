@@ -546,9 +546,10 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 disabled:cursor-not-allowed disabled:bg-gray-600"
+                className="w-full text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-300 disabled:cursor-not-allowed"
                 style={{ 
-                  background: loading ? undefined : `linear-gradient(to right, ${theme.borderColor}, ${theme.borderColor}dd)`,
+                  backgroundColor: loading ? '#4b5563' : theme.borderColor,
+                  backgroundImage: loading ? 'none' : `linear-gradient(to right, ${theme.borderColor}, ${theme.borderColor}cc)`,
                 }}
               >
                 {loading ? (
