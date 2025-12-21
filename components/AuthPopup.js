@@ -113,7 +113,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
   return (
     <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-start justify-center z-50 p-4 pt-10 overflow-y-auto">
       <div 
-        className="popup-content relative bg-black rounded-3xl max-w-md w-full my-auto border-2 border-green-500"
+        className="popup-content relative bg-black rounded-3xl max-w-md w-full my-auto border-2 border-blue-500"
         style={{ WebkitTapHighlightColor: 'transparent' }}
       >
         <button
@@ -139,7 +139,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
           {error && (
             <div className={`mb-4 p-3 rounded-xl border text-sm ${
               error.includes('successfully') || error.includes('created')
-                ? 'bg-green-500/10 border-green-500/20 text-green-400'
+                ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
                 : error.includes('soon')
                 ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
                 : 'bg-red-500/10 border-red-500/20 text-red-400'
@@ -177,7 +177,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all duration-200"
+                className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all duration-200"
                 placeholder="Email address"
                 required
               />
@@ -188,7 +188,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 pr-12 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all duration-200"
+                className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 pr-12 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all duration-200"
                 placeholder="Password"
                 minLength="6"
                 required
@@ -222,13 +222,13 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-green-500 transition-all duration-200"
+                  className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all duration-200"
                   placeholder="Confirm password"
                   minLength="6"
                   required
                 />
                 {confirmPassword.length > 0 && (
-                  <p className={`text-xs mt-2 ${passwordsMatch ? 'text-green-400' : 'text-gray-400'}`}>
+                  <p className={`text-xs mt-2 ${passwordsMatch ? 'text-blue-400' : 'text-gray-400'}`}>
                     {passwordsMatch ? '✓ Passwords match' : 'Passwords must match'}
                   </p>
                 )}
@@ -241,7 +241,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                 id="rememberMePopup"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 bg-slate-700 border border-slate-600 rounded focus:ring-2 focus:ring-green-500 text-green-500"
+                className="w-4 h-4 bg-slate-700 border border-slate-600 rounded focus:ring-2 focus:ring-blue-500 text-blue-500"
               />
               <label htmlFor="rememberMePopup" className="ml-2 text-sm text-gray-400 cursor-pointer">
                 Remember my email
@@ -278,7 +278,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                 setPassword('');
                 setConfirmPassword('');
               }}
-              className="text-green-400 hover:text-green-300 font-medium transition-colors text-sm"
+              className="text-blue-400 hover:text-blue-300 font-medium transition-colors text-sm"
             >
               {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
             </button>
