@@ -702,7 +702,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
                         className="relative font-bold px-6 rounded-lg text-sm z-10 flex items-center h-full"
                         style={{ backgroundColor: '#000000', color: '#ffffff' }}
                       >
-                        GET <span style={{ color: '#2563eb', marginLeft: '4px' }}>FUNDED</span>
+                        GET <span style={{ color: '#ffffff', marginLeft: '4px' }}>FUNDED</span>
                       </button>
                     </div>
                   </>
