@@ -1,0 +1,75 @@
+main.js:1838 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+websocket.js:39 [HMR] connected
+index-CyzVe5Mi.js:63 Version: a240732e36fab5f760fa02ef02cad7ba369d3639 with baseUrl: https://www.developmentfb.com
+index-CyzVe5Mi.js:63 QueryParamsProvider {"displayParams":{"fullTheme":{"background":"#1a1a1a","surface":"#111111","text":"#f9fafb","textSecondary":"#9ca3af","border":"#333333","inputBackground":"#1f2937","labelText":"#888888","productText":"#ffffff","productTextSecondary":"#9ca3af","headingText":"#ffffff","primary":"#2563eb","primaryHover":"#2159d4"},"theme":"dark","show_product_info":false,"show_product_page_title":false,"product_layout":"above","billing_display_fields":["first_name","last_name","email","country","address"],"billing_form_placement":"above","show_powered_by":true,"show_headings":true,"show_coupon_row":true},"behaviorParams":{"showAllAddons":false,"showSubmitButton":true,"redirectFailureUrl":"https://a01a394d-2456-4999-a4ea-cf4251dbb624-00-2sfh6gnzo798j.janeway.replit.dev/dashboard?checkout=success&tier=starter","redirectSuccessUrl":null,"currentAppSuccessUrl":"https://embedded-checkout.dev.dev-fan-basis.com/payment-success","couponCode":null,"affiliateCode":null,"initialSelectedAddonIds":[]}}
+index-CyzVe5Mi.js:63 [INFO] [Iframe Communication] Sending message: PING {type: 'PING', timestamp: 1766280193028, metadata: {…}, sessionId: 'session_1766280193013_bgzwrrvd6'}
+PaymentCheckout-DqOKOQFo.mjs:8 handleMessage PING undefined
+index-CyzVe5Mi.js:63 [INFO] [Iframe Communication] Received message: PONG {type: 'PONG', data: {…}, timestamp: 1766280193030}
+index-CyzVe5Mi.js:63 [INFO] [Iframe Communication] Received message: PONG {type: 'PONG', data: {…}, timestamp: 1766280193030}
+index-CyzVe5Mi.js:63 [INFO] [Iframe Communication] Successfully connected to parent undefined
+index-CyzVe5Mi.js:63  GET https://www.developmentfb.com/api/embedded-payments/piks/G5KXr/7f55a424-910a-4748-b1a0-1c5fda952c64 404 (Not Found)
+(anonymous) @ index-CyzVe5Mi.js:63
+getPaymentData @ index-CyzVe5Mi.js:75
+(anonymous) @ index-CyzVe5Mi.js:79
+(anonymous) @ index-CyzVe5Mi.js:79
+To @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+aa @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+aa @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+aa @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+aa @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+aa @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+aa @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+aa @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+aa @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+aa @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+aa @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+aa @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+aa @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+aa @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+aa @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+aa @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+aa @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+aa @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+aa @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+aa @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+aa @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+aa @ index-CyzVe5Mi.js:48
+n_ @ index-CyzVe5Mi.js:48
+x_ @ index-CyzVe5Mi.js:48
+(anonymous) @ index-CyzVe5Mi.js:48
+ge @ index-CyzVe5Mi.js:17
+t.exports @ checkout.min.js:2
+g.<computed> @ checkout.min.js:2
+b @ checkout.min.js:2
+z @ checkout.min.js:2
+index-CyzVe5Mi.js:63 [INFO] [Iframe Communication] Sending message: PAYMENT_ERROR {type: 'PAYMENT_ERROR', timestamp: 1766280193472, data: {…}, metadata: {…}, sessionId: 'session_1766280193013_bgzwrrvd6'}
+PaymentCheckout-DqOKOQFo.mjs:8 handleMessage PAYMENT_ERROR {errorCode: 'FORM_LOAD_ERROR', errorMessage: 'The requested creator does not exist', retryable: true}
+checkout.js:146 Checkout error: {errorCode: 'FORM_LOAD_ERROR', errorMessage: 'The requested creator does not exist', retryable: true}
+console.error @ hydration-error-info.js:63
+window.console.error @ setup-hydration-warning.js:18
+eval @ checkout.js:146
+eval @ PaymentCheckout-DqOKOQFo.mjs:8
+emit @ PaymentCheckout-DqOKOQFo.mjs:8
+handleMessage @ PaymentCheckout-DqOKOQFo.mjs:8
+[Violation] Potential permissions policy violation: payment is not allowed in this document.

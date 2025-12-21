@@ -112,7 +112,7 @@ export default function Checkout() {
         creatorId: CREATOR_ID,
         productId: selectedChallenge.productId,
         checkoutSessionSecret: secret,
-        environment: 'sandbox',
+        environment: 'production',
         theme: {
           theme: 'dark',
           accent_color: '#2563eb',
@@ -437,33 +437,90 @@ export default function Checkout() {
 
             {error && (
               <div style={{
-                background: '#7f1d1d',
-                border: '1px solid #dc2626',
-                borderRadius: '8px',
-                padding: '16px',
+                background: '#1a1a1a',
+                border: '1px solid #333',
+                borderRadius: '12px',
+                padding: '24px',
                 marginBottom: '24px',
-                color: '#fca5a5',
-                fontSize: '14px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
               }}>
-                <span>{error}</span>
-                <button
-                  onClick={handleRetry}
-                  style={{
-                    background: '#dc2626',
-                    border: 'none',
-                    borderRadius: '6px',
-                    padding: '8px 16px',
-                    color: '#fff',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                  }}
-                >
-                  Retry
-                </button>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  marginBottom: '16px',
+                }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    background: '#2563eb20',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#2563eb',
+                    fontSize: '20px',
+                  }}>
+                    ⚙️
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: '600', color: '#fff', marginBottom: '4px' }}>
+                      Payment Setup in Progress
+                    </div>
+                    <div style={{ color: '#888', fontSize: '13px' }}>
+                      Our payment system is being configured
+                    </div>
+                  </div>
+                </div>
+                
+                <div style={{
+                  background: '#111',
+                  borderRadius: '8px',
+                  padding: '16px',
+                  marginBottom: '16px',
+                  color: '#9ca3af',
+                  fontSize: '14px',
+                  lineHeight: '1.6',
+                }}>
+                  We're finalizing our payment integration. In the meantime, you can contact us directly to purchase your challenge.
+                </div>
+
+                <div style={{
+                  display: 'flex',
+                  gap: '12px',
+                }}>
+                  <a
+                    href="mailto:support@piks.com?subject=Challenge Purchase&body=I would like to purchase the {selectedChallenge.name} ($${selectedChallenge.price})"
+                    style={{
+                      background: '#2563eb',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '12px 20px',
+                      color: '#fff',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      textDecoration: 'none',
+                      display: 'inline-block',
+                    }}
+                  >
+                    Contact Support
+                  </a>
+                  <button
+                    onClick={handleRetry}
+                    style={{
+                      background: 'transparent',
+                      border: '1px solid #333',
+                      borderRadius: '8px',
+                      padding: '12px 20px',
+                      color: '#fff',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                    }}
+                  >
+                    Try Again
+                  </button>
+                </div>
               </div>
             )}
 
