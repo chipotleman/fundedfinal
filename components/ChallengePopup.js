@@ -561,10 +561,10 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
         ) : step === 'selection' ? (
           <>
             {/* Challenge Selection */}
-            <div className="p-6 pt-2 relative">
+            <div className="p-6 pt-0 relative">
               {/* Header */}
               <div className="text-center mb-2">
-                <div className="mb-2">
+                <div>
                   <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-36 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
                 </div>
               </div>
