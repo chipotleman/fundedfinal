@@ -369,15 +369,8 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
 
   return (
     <div 
-      className="challenge-popup-container fixed inset-0 bg-black backdrop-blur-md flex items-start justify-center z-50 p-4 pt-10 overflow-hidden"
-      style={{ 
-        opacity: isOpen ? 1 : 0, 
-        animation: 'none', 
-        transition: 'none',
-        touchAction: 'none',
-        overscrollBehavior: 'none',
-        ...hiddenStyle 
-      }}
+      className="challenge-popup-container fixed inset-0 bg-black/90 backdrop-blur-md flex items-start justify-center z-50 p-4 pt-10 overflow-hidden"
+      style={{ opacity: isOpen ? 1 : 0, animation: 'none', transition: 'none', ...hiddenStyle }}
     >
       <div 
         className="popup-content relative bg-black rounded-3xl max-w-md w-full"
