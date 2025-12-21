@@ -696,13 +696,15 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
                     >
                       SIGN IN
                     </button>
-                    <button
-                      onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
-                      className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm"
-                      style={{ height: '48px' }}
-                    >
-                      GET <span style={{ color: '#2563eb' }}>FUNDED</span>
-                    </button>
+                    <div className="snake-border-container relative" style={{ height: '48px' }}>
+                      <button
+                        onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
+                        className="relative font-bold px-6 rounded-lg text-sm z-10 flex items-center h-full"
+                        style={{ backgroundColor: '#000000', color: '#ffffff' }}
+                      >
+                        GET <span style={{ color: '#2563eb', marginLeft: '4px' }}>FUNDED</span>
+                      </button>
+                    </div>
                   </>
                 )}
               </div>
