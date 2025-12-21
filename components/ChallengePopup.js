@@ -562,26 +562,6 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
           <>
             {/* Challenge Selection */}
             <div className="p-6 pt-2 relative">
-              {/* Floating Price Badge - Top Right */}
-              <div 
-                className="absolute top-12 right-4 z-10"
-                style={{ WebkitTapHighlightColor: 'transparent' }}
-              >
-                <div 
-                  className="px-4 py-2 rounded-xl shadow-lg"
-                  style={{ 
-                    background: `linear-gradient(135deg, ${theme.borderColor}, ${theme.borderColor}dd)`,
-                    boxShadow: `0 4px 15px ${theme.borderColor}40`
-                  }}
-                >
-                  <div className="text-white font-bold text-lg">${adjustedPrice}</div>
-                  {adjustedPrice !== currentChallenge.price && (
-                    <div className="text-xs text-white/80 text-center">
-                      {adjustedPrice > currentChallenge.price ? `+$${adjustedPrice - currentChallenge.price}` : `-$${currentChallenge.price - adjustedPrice}`}
-                    </div>
-                  )}
-                </div>
-              </div>
               {/* Header */}
               <div className="text-center mb-2">
                 <div className="mb-2">
@@ -589,8 +569,8 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 </div>
               </div>
 
-              {/* Badge */}
-              <div className="text-center mb-4">
+              {/* Badge and Price Row */}
+              <div className="flex items-center justify-center gap-3 mb-4">
                 <span 
                   className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
                     currentChallenge.badge === 'BEGINNER' ? 'bg-blue-500 border border-blue-500/30' :
@@ -601,6 +581,15 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 >
                   {currentChallenge.badge}
                 </span>
+                <div 
+                  className="px-3 py-1 rounded-full shadow-lg"
+                  style={{ 
+                    background: `linear-gradient(135deg, ${theme.borderColor}, ${theme.borderColor}dd)`,
+                    boxShadow: `0 2px 10px ${theme.borderColor}40`
+                  }}
+                >
+                  <span className="text-white font-bold text-sm">${adjustedPrice}</span>
+                </div>
               </div>
 
               {/* Title and Description */}
