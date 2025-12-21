@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 
-const MERCHANT_ID = '802865';
+const CREATOR_ID = process.env.NEXT_PUBLIC_FANBASIS_CREATOR_ID || '802865';
 
 const challenges = [
   {
@@ -10,21 +10,18 @@ const challenges = [
     name: 'Starter Challenge',
     startingBalance: 5000,
     price: 149,
-    fanbasisProductId: '', // Add your Fanbasis product ID here
   },
   {
     id: 'pro',
     name: 'Pro Challenge',
     startingBalance: 10000,
     price: 249,
-    fanbasisProductId: '', // Add your Fanbasis product ID here
   },
   {
     id: 'elite',
     name: 'Elite Challenge',
     startingBalance: 25000,
     price: 399,
-    fanbasisProductId: '', // Add your Fanbasis product ID here
   },
 ];
 
@@ -41,8 +38,12 @@ const phaseData = [
 export default function Checkout() {
   const router = useRouter();
   const { tier } = router.query;
+  const checkoutContainerRef = useRef(null);
+  const checkoutInstanceRef = useRef(null);
   const [selectedChallenge, setSelectedChallenge] = useState(challenges[0]);
-  const [isRedirecting, setIsRedirecting] = useState(false);
+  const [checkoutState, setCheckoutState] = useState('idle');
+  const [error, setError] = useState(null);
+  const [sessionSecret, setSessionSecret] = useState(null);
 
   useEffect(() => {
     if (tier) {
@@ -53,23 +54,123 @@ export default function Checkout() {
     }
   }, [tier]);
 
-  const handleTierChange = (challenge) => {
+  const createCheckoutSession = useCallback(async (challenge) => {
+    setCheckoutState('creating');
+    setError(null);
+    
+    try {
+      const response = await fetch('/api/fanbasis/create-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: challenge.price * 100,
+          productName: `${challenge.name} - $${challenge.startingBalance.toLocaleString()} Funded Account`,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create checkout session');
+      }
+
+      const data = await response.json();
+      setSessionSecret(data.checkoutSessionSecret);
+      setCheckoutState('ready');
+      return data.checkoutSessionSecret;
+    } catch (err) {
+      console.error('Failed to create checkout session:', err);
+      setError(err.message);
+      setCheckoutState('error');
+      return null;
+    }
+  }, []);
+
+  const initializeCheckout = useCallback(async (secret) => {
+    if (!checkoutContainerRef.current || !secret) return;
+
+    try {
+      if (checkoutInstanceRef.current) {
+        checkoutInstanceRef.current = null;
+        checkoutContainerRef.current.innerHTML = '';
+      }
+
+      const { createEmbeddedCheckout } = await import('@fanbasis/checkout-core');
+      
+      const checkout = createEmbeddedCheckout(checkoutContainerRef.current, {
+        creatorId: CREATOR_ID,
+        checkoutSessionSecret: secret,
+        environment: 'production',
+        theme: {
+          theme: 'dark',
+          accent_color: '#2563eb',
+          background_color: '#1a1a1a',
+          surface_color: '#111111',
+          border_color: '#333333',
+          label_color: '#888888',
+          heading_color: '#ffffff',
+          product_text_color: '#ffffff',
+          show_product_info: false,
+          show_coupon_row: true,
+        },
+        containerOptions: {
+          width: '100%',
+          height: 'auto',
+        },
+        redirectSettings: {
+          success_redirect_url: `${window.location.origin}/dashboard?checkout=success&tier=${selectedChallenge.id}`,
+          failure_redirect_url: `${window.location.origin}/checkout?tier=${selectedChallenge.id}&error=payment_failed`,
+        },
+      });
+
+      checkoutInstanceRef.current = checkout;
+
+      checkout.on('checkout:loaded', () => {
+        setCheckoutState('loaded');
+      });
+
+      checkout.on('checkout:error', (err) => {
+        console.error('Checkout error:', err);
+        setError(err.message || 'Checkout error occurred');
+        setCheckoutState('error');
+      });
+
+      checkout.on('checkout:success', (data) => {
+        console.log('Payment successful:', data);
+        router.push(`/dashboard?checkout=success&tier=${selectedChallenge.id}`);
+      });
+
+    } catch (err) {
+      console.error('Failed to initialize checkout:', err);
+      setError('Failed to load checkout. Please try again.');
+      setCheckoutState('error');
+    }
+  }, [selectedChallenge, router]);
+
+  useEffect(() => {
+    if (selectedChallenge && checkoutState === 'idle') {
+      createCheckoutSession(selectedChallenge);
+    }
+  }, [selectedChallenge, checkoutState, createCheckoutSession]);
+
+  useEffect(() => {
+    if (sessionSecret && checkoutState === 'ready') {
+      initializeCheckout(sessionSecret);
+    }
+  }, [sessionSecret, checkoutState, initializeCheckout]);
+
+  const handleTierChange = async (challenge) => {
+    if (challenge.id === selectedChallenge.id) return;
+    
     setSelectedChallenge(challenge);
+    setSessionSecret(null);
+    setCheckoutState('idle');
     router.push(`/checkout?tier=${challenge.id}`, undefined, { shallow: true });
   };
 
-  const handleCheckout = async () => {
-    if (!selectedChallenge.fanbasisProductId) {
-      alert('Checkout not yet configured. Please contact support.');
-      return;
-    }
-
-    setIsRedirecting(true);
-    
-    const successUrl = `${window.location.origin}/dashboard?checkout=success`;
-    const cancelUrl = `${window.location.origin}/checkout?tier=${selectedChallenge.id}`;
-    
-    window.location.href = `https://fanbasis.com/challenges/checkout/${MERCHANT_ID}/${selectedChallenge.fanbasisProductId}?success_url=${encodeURIComponent(successUrl)}&cancel_url=${encodeURIComponent(cancelUrl)}`;
+  const handleRetry = () => {
+    setError(null);
+    setCheckoutState('idle');
+    setSessionSecret(null);
   };
 
   return (
@@ -294,27 +395,80 @@ export default function Checkout() {
               </div>
             </div>
 
-            <button
-              onClick={handleCheckout}
-              disabled={isRedirecting}
-              style={{
-                width: '100%',
-                padding: '18px',
-                background: isRedirecting ? '#1e40af' : '#2563eb',
-                border: 'none',
+            {error && (
+              <div style={{
+                background: '#7f1d1d',
+                border: '1px solid #dc2626',
                 borderRadius: '8px',
-                color: '#fff',
-                fontSize: '16px',
-                fontWeight: '600',
-                cursor: isRedirecting ? 'not-allowed' : 'pointer',
-                fontFamily: 'inherit',
-                marginBottom: '16px'
+                padding: '16px',
+                marginBottom: '24px',
+                color: '#fca5a5',
+                fontSize: '14px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}>
+                <span>{error}</span>
+                <button
+                  onClick={handleRetry}
+                  style={{
+                    background: '#dc2626',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '8px 16px',
+                    color: '#fff',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                  }}
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            <div 
+              ref={checkoutContainerRef}
+              style={{
+                minHeight: checkoutState === 'loaded' ? 'auto' : '300px',
+                background: '#111',
+                borderRadius: '12px',
+                display: checkoutState === 'loaded' ? 'block' : 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
               }}
             >
-              {isRedirecting ? 'Redirecting to payment...' : `Purchase for $${selectedChallenge.price}.00`}
-            </button>
+              {(checkoutState === 'idle' || checkoutState === 'creating' || checkoutState === 'ready') && (
+                <div style={{ 
+                  color: '#888', 
+                  fontSize: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '40px'
+                }}>
+                  <div style={{
+                    width: '20px',
+                    height: '20px',
+                    border: '2px solid #333',
+                    borderTopColor: '#2563eb',
+                    borderRadius: '50%',
+                    animation: 'spin 1s linear infinite',
+                  }} />
+                  Loading secure checkout...
+                </div>
+              )}
+            </div>
+
+            <style jsx>{`
+              @keyframes spin {
+                to { transform: rotate(360deg); }
+              }
+            `}</style>
 
             <div style={{
+              marginTop: '24px',
               textAlign: 'center',
               color: '#666',
               fontSize: '12px',

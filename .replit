@@ -54,3 +54,9 @@ outputType = "webview"
 
 [agent]
 expertMode = true
+
+[userenv]
+
+[userenv.shared]
+FANBASIS_CREATOR_ID = "802865"
+NEXT_PUBLIC_FANBASIS_CREATOR_ID = "802865"
