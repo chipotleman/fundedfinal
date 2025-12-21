@@ -268,7 +268,7 @@ export default function Home() {
                   onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
                   className="w-full sm:w-auto font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl text-base sm:text-lg shadow-2xl text-center"
                   style={{ 
-                    backgroundColor: '#22c55e',
+                    backgroundColor: '#2563eb',
                     color: '#ffffff',
                     cursor: 'pointer',
                     userSelect: 'none',
