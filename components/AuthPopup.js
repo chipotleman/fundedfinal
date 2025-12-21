@@ -287,7 +287,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                 setPassword('');
                 setConfirmPassword('');
               }}
-              className="text-green-400 hover:text-green-300 font-medium transition-colors text-sm"
+              className="text-blue-500 hover:text-blue-400 font-medium transition-colors text-sm"
             >
               {isSignUp ? 'Already have an account? Sign in' : "Don't have an account? Sign up"}
             </button>
