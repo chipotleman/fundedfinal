@@ -890,22 +890,19 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
           </>
         ) : step === 'checkout' ? (
           /* Fanbasis Checkout - Redirect to New Tab */
-          <div className="p-6 pt-12" style={{ WebkitTapHighlightColor: 'transparent' }}>
+          <div className="p-6 pt-0 flex flex-col items-center" style={{ WebkitTapHighlightColor: 'transparent' }}>
             <div className="text-center mb-6">
-              <div className="mb-4">
-                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
-              </div>
               <h2 className="text-xl font-bold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>Complete Your Purchase</h2>
-              <p className={`text-sm font-medium mb-1 ${isDarkMode ? theme.text : ''}`} style={{ color: isDarkMode ? undefined : '#111827' }}>
+              <p className="text-sm font-medium mb-1" style={{ color: isDarkMode ? '#60a5fa' : '#1e40af' }}>
                 {currentChallenge.name} • ${adjustedPrice}
               </p>
-              <p className="text-xs font-medium" style={{ color: isDarkMode ? '#4ade80' : '#111827' }}>
+              <p className="text-xs font-medium" style={{ color: isDarkMode ? '#60a5fa' : '#1e40af' }}>
                 {userSplit}% profit split
               </p>
             </div>
             
             {checkoutUrl ? (
-              <div className="space-y-4">
+              <div className="space-y-4 w-full">
                 <a
                   href={checkoutUrl}
                   target="_blank"
@@ -915,7 +912,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 >
                   <span style={{ color: '#ffffff' }}>Continue to Checkout →</span>
                 </a>
-                <p className="text-gray-500 text-xs text-center">
+                <p className="text-xs text-center" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>
                   Opens secure payment page in a new tab
                 </p>
               </div>
@@ -930,7 +927,11 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 setStep('selection');
                 setCheckoutUrl(null);
               }}
-              className={`w-full mt-6 py-3 px-6 bg-slate-800/50 hover:bg-slate-700/50 text-gray-300 font-medium rounded-xl border ${theme.borderLight}`}
+              className="w-full mt-6 py-3 px-6 font-medium rounded-xl border border-blue-600/30"
+              style={{ 
+                backgroundColor: isDarkMode ? 'rgba(30, 58, 138, 0.3)' : 'rgba(219, 234, 254, 0.8)',
+                color: isDarkMode ? '#d1d5db' : '#1e40af'
+              }}
             >
               Back
             </button>
