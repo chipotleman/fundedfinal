@@ -131,8 +131,8 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
             <img 
               src="/pikslogotransparent.png" 
               alt="Piks Logo" 
-              className="h-28 mx-auto" 
-              style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} 
+              className="h-56 mx-auto" 
+              style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)', marginBottom: '-3.5rem' }} 
             />
           </div>
 
