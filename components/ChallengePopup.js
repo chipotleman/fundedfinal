@@ -452,7 +452,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                     type="email"
                     value={authEmail}
                     onChange={(e) => setAuthEmail(e.target.value)}
-                    className="w-full px-4 py-3 pr-12 bg-blue-900/30 border-2 border-blue-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all auth-input"
+                    className="w-full px-4 py-3 pr-12 bg-white border-2 border-blue-600/50 rounded-xl text-black placeholder-gray-500 focus:outline-none transition-all auth-input"
                     style={{ 
                       '--focus-color': theme.borderColor
                     }}
@@ -476,7 +476,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                     type={showPassword ? "text" : "password"}
                     value={authPassword}
                     onChange={(e) => setAuthPassword(e.target.value)}
-                    className="w-full px-4 py-3 pr-20 bg-blue-900/30 border-2 border-blue-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all auth-input"
+                    className="w-full px-4 py-3 pr-20 bg-white border-2 border-blue-600/50 rounded-xl text-black placeholder-gray-500 focus:outline-none transition-all auth-input"
                     style={{ 
                       '--focus-color': theme.borderColor
                     }}
@@ -518,7 +518,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full px-4 py-3 pr-12 bg-blue-900/30 border-2 border-blue-600/50 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all auth-input"
+                      className="w-full px-4 py-3 pr-12 bg-white border-2 border-blue-600/50 rounded-xl text-black placeholder-gray-500 focus:outline-none transition-all auth-input"
                       style={{ 
                         '--focus-color': theme.borderColor
                       }}
@@ -567,18 +567,21 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
               </button>
             </div>
 
-            <div className="mt-4 p-3 bg-blue-900/20 rounded-xl border border-blue-600/30">
+            <div 
+              className="mt-4 p-3 rounded-xl border border-blue-600/30"
+              style={{ backgroundColor: isDarkMode ? 'rgba(30, 58, 138, 0.2)' : 'rgba(219, 234, 254, 0.8)' }}
+            >
               <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-400">Selected:</span>
-                <span className={`${theme.text} font-medium`}>{currentChallenge.name}</span>
+                <span style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>Selected:</span>
+                <span className="font-medium" style={{ color: isDarkMode ? '#60a5fa' : '#1e40af' }}>{currentChallenge.name}</span>
               </div>
               <div className="flex items-center justify-between text-sm mt-1">
-                <span className="text-gray-400">Your Split:</span>
-                <span className="text-green-400 font-medium">{userSplit}%</span>
+                <span style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>Your Split:</span>
+                <span className="font-medium" style={{ color: isDarkMode ? '#60a5fa' : '#1e40af' }}>{userSplit}%</span>
               </div>
               <div className="flex items-center justify-between text-sm mt-1">
-                <span className="text-gray-400">Price:</span>
-                <span className="text-white font-bold">${adjustedPrice}</span>
+                <span style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>Price:</span>
+                <span className="font-bold" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>${adjustedPrice}</span>
               </div>
             </div>
           </div>
