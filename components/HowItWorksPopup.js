@@ -153,7 +153,7 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
           <div className="space-y-3 mb-8">
             {currentStep.details.map((detail, index) => (
               <div key={index} className="flex items-center space-x-3 p-3 bg-[#111111] rounded-lg border border-gray-800/50">
-                <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: '#2563eb' }}></div>
+                <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
                 <span className="text-gray-300">{detail}</span>
               </div>
             ))}
@@ -163,7 +163,7 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
             <TapSurface
               onTap={handleTryDemo}
               isActive={true}
-              activeColor="#2563eb"
+              activeColor="#22c55e"
               className="w-full font-bold py-4 px-6 rounded-xl text-lg mb-6 text-center"
             >
               Try a Demo
@@ -182,8 +182,8 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
           <div className="mb-4">
             <div className="w-full bg-[#1a1a1a] rounded-full h-2">
               <div 
-                className="h-2 rounded-full transition-all duration-300"
-                style={{ width: `${((currentIndex + 1) / steps.length) * 100}%`, backgroundColor: '#2563eb' }}
+                className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${((currentIndex + 1) / steps.length) * 100}%` }}
               ></div>
             </div>
           </div>
@@ -209,7 +209,7 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
                   key={index}
                   onTap={() => goToStep(index)}
                   isActive={index === currentIndex}
-                  activeColor="#2563eb"
+                  activeColor="#22c55e"
                   inactiveColor="#374151"
                   className="w-2 h-2 rounded-full"
                 />
