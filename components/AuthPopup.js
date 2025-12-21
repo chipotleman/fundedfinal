@@ -246,10 +246,10 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full font-bold py-3.5 rounded-xl transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 shadow-lg"
+              className="w-full font-bold py-3.5 rounded-xl transition-all duration-300 shadow-lg"
               style={{ 
                 WebkitTapHighlightColor: 'transparent', 
-                background: loading ? '#4b5563' : 'linear-gradient(to right, #22c55e, #3b82f6)',
+                backgroundColor: loading ? '#4b5563' : '#2563eb',
                 color: '#ffffff'
               }}
             >

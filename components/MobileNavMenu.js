@@ -331,7 +331,8 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                     onClose();
                     window.dispatchEvent(new CustomEvent('openChallengePopup'));
                   }}
-                  className="w-full text-center bg-gradient-to-r from-green-500 to-blue-500 text-white font-bold py-4 px-6 rounded-xl flex items-center justify-center space-x-3 shadow-lg"
+                  className="w-full text-center font-bold py-4 px-6 rounded-xl flex items-center justify-center space-x-3 shadow-lg"
+                  style={{ backgroundColor: '#2563eb', color: '#ffffff' }}
                 >
                   <span className="text-base">GET FUNDED</span>
                 </button>
