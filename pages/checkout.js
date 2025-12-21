@@ -144,7 +144,11 @@ export default function Checkout() {
 
       checkout.on('checkout:error', (err) => {
         console.error('Checkout error:', err);
-        setError(err.message || 'Checkout error occurred');
+        let errorMessage = err.message || err.errorMessage || 'Checkout error occurred';
+        if (err.errorCode === 'FORM_LOAD_ERROR' && errorMessage.includes('creator does not exist')) {
+          errorMessage = 'Payment configuration required. Please contact support to complete your Fanbasis merchant setup.';
+        }
+        setError(errorMessage);
         setCheckoutState('error');
       });
 
