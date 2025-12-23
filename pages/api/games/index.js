@@ -1,30 +1,142 @@
 import { 
-  fetchUpcomingGames, 
-  fetchSportOdds,
+  getOdds,
+  getScores,
+  getAllGamesWithOdds,
   getSupportedSports,
-  getCreditStatus,
-  getCacheStatus,
   clearCache,
   SUPPORTED_SPORTS 
-} from '../../../lib/theoddsapi';
+} from '../../../lib/goalserve';
 
 let globalCache = null;
 let globalCacheTimestamp = null;
 
-// Adaptive cache durations
-const LIVE_GAMES_CACHE_DURATION = 12 * 1000; // 12 seconds when live games are happening
-const NO_LIVE_GAMES_CACHE_DURATION = 60 * 1000; // 60 seconds when no live games
+const LIVE_GAMES_CACHE_DURATION = 12 * 1000;
+const NO_LIVE_GAMES_CACHE_DURATION = 60 * 1000;
+
+function getGoalserveStatus() {
+  return {
+    used: 0,
+    remaining: 'unlimited',
+    budget: 'unlimited',
+    percentUsed: 0,
+    dataSource: 'Goalserve',
+    unlimited: true
+  };
+}
 
 function getAdaptiveCacheDuration() {
-  // If we have cached data with live games, use shorter cache
   if (globalCache?.freshness?.hasLiveGames) {
     return LIVE_GAMES_CACHE_DURATION;
   }
   return NO_LIVE_GAMES_CACHE_DURATION;
 }
 
+function convertGoalserveToDisplayFormat(game) {
+  const odds = game.odds || {};
+  
+  const bet365ML = odds.moneyline?.find(b => b.name === 'bet365') || odds.moneyline?.[0];
+  const bet365Spread = odds.spread?.find(b => b.name === 'bet365') || odds.spread?.[0];
+  const bet365Total = odds.total?.find(b => b.name === 'bet365') || odds.total?.[0];
+  
+  const allBookmakerOdds = {};
+  
+  if (odds.moneyline) {
+    odds.moneyline.forEach(bm => {
+      if (!allBookmakerOdds[bm.name]) allBookmakerOdds[bm.name] = {};
+      allBookmakerOdds[bm.name].moneyline = {
+        home: parseInt(bm.home_ml?.us) || null,
+        away: parseInt(bm.away_ml?.us) || null
+      };
+    });
+  }
+  
+  if (odds.spread) {
+    odds.spread.forEach(bm => {
+      if (!allBookmakerOdds[bm.name]) allBookmakerOdds[bm.name] = {};
+      allBookmakerOdds[bm.name].spreads = {
+        home: {
+          point: bm.home_spread?.point || null,
+          odds: parseInt(bm.home_spread?.us) || null
+        },
+        away: {
+          point: bm.away_spread?.point || null,
+          odds: parseInt(bm.away_spread?.us) || null
+        }
+      };
+    });
+  }
+  
+  if (odds.total) {
+    odds.total.forEach(bm => {
+      if (!allBookmakerOdds[bm.name]) allBookmakerOdds[bm.name] = {};
+      allBookmakerOdds[bm.name].totals = {
+        over: {
+          point: bm.over?.point || null,
+          odds: parseInt(bm.over?.us) || null
+        },
+        under: {
+          point: bm.under?.point || null,
+          odds: parseInt(bm.under?.us) || null
+        }
+      };
+    });
+  }
+  
+  const lines = {
+    moneyline: {
+      home: parseInt(bet365ML?.home_ml?.us) || 0,
+      away: parseInt(bet365ML?.away_ml?.us) || 0,
+      homeSource: bet365ML?.name || 'Goalserve',
+      awaySource: bet365ML?.name || 'Goalserve'
+    },
+    spread: {
+      home: {
+        point: bet365Spread?.home_spread?.point || 0,
+        odds: parseInt(bet365Spread?.home_spread?.us) || -110,
+        source: bet365Spread?.name || 'Goalserve'
+      },
+      away: {
+        point: bet365Spread?.away_spread?.point || 0,
+        odds: parseInt(bet365Spread?.away_spread?.us) || -110,
+        source: bet365Spread?.name || 'Goalserve'
+      }
+    },
+    total: {
+      over: {
+        point: bet365Total?.over?.point || 0,
+        odds: parseInt(bet365Total?.over?.us) || -110,
+        source: bet365Total?.name || 'Goalserve'
+      },
+      under: {
+        point: bet365Total?.under?.point || 0,
+        odds: parseInt(bet365Total?.under?.us) || -110,
+        source: bet365Total?.name || 'Goalserve'
+      }
+    }
+  };
+  
+  return {
+    id: game.id,
+    gameId: game.id,
+    sport: game.sport_key,
+    sportName: game.sport_title,
+    homeTeam: game.home_team_abbr,
+    awayTeam: game.away_team_abbr,
+    homeTeamFull: game.home_team,
+    awayTeamFull: game.away_team,
+    time: game.formatted_time,
+    commenceTime: game.commence_time,
+    status: game.status,
+    isLive: game.isLive,
+    isCompleted: game.isCompleted,
+    scores: game.scores,
+    lines: lines,
+    allBookmakerOdds: allBookmakerOdds,
+    dataSource: 'Goalserve'
+  };
+}
+
 export default async function handler(req, res) {
-  // Prevent browser caching to ensure fresh scores/odds
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
@@ -38,23 +150,38 @@ export default async function handler(req, res) {
     const now = Date.now();
 
     if (refresh === 'true') {
-      clearCache(sport || null);
+      clearCache();
+      globalCache = null;
+      globalCacheTimestamp = null;
     }
 
     if (sport && SUPPORTED_SPORTS[sport]) {
-      const result = await fetchSportOdds(sport);
+      const games = await getOdds(sport);
+      const formattedGames = games.map(convertGoalserveToDisplayFormat);
+      
+      const scores = await getScores(sport);
+      formattedGames.forEach(game => {
+        const liveScore = scores.find(s => s.id === game.id);
+        if (liveScore) {
+          game.isLive = liveScore.isLive;
+          game.isCompleted = liveScore.isCompleted;
+          game.status = liveScore.status;
+          game.scores = liveScore.scores;
+        }
+      });
+      
       const response = {
-        games: result.games,
+        games: formattedGames,
         sport: sport,
         sportName: SUPPORTED_SPORTS[sport].name,
-        count: result.games.length,
-        fromCache: result.fromCache,
-        creditStatus: getCreditStatus()
+        count: formattedGames.length,
+        fromCache: false,
+        dataSource: 'Goalserve',
+        creditStatus: getGoalserveStatus()
       };
       
       if (debug === 'true') {
-        response.debugInfo = result.debugInfo;
-        response.cacheStatus = getCacheStatus();
+        response.debugInfo = { raw: games.slice(0, 2) };
       }
       
       return res.status(200).json(response);
@@ -62,7 +189,6 @@ export default async function handler(req, res) {
 
     const cacheDuration = getAdaptiveCacheDuration();
     if (globalCache && globalCacheTimestamp && (now - globalCacheTimestamp) < cacheDuration && refresh !== 'true') {
-      // Deep clone games to ensure React detects changes
       const clonedGames = globalCache.games.map(game => ({ ...game, lines: game.lines ? { ...game.lines } : null }));
       const response = {
         games: clonedGames,
@@ -70,10 +196,9 @@ export default async function handler(req, res) {
         count: globalCache.games.length,
         fromCache: true,
         cacheAge: Math.floor((now - globalCacheTimestamp) / 1000),
-        creditStatus: getCreditStatus(),
-        // Expose freshness metadata for adaptive polling
+        dataSource: 'Goalserve',
+        creditStatus: getGoalserveStatus(),
         freshness: globalCache.freshness || null,
-        // Tell client how long to wait before next poll
         polling: {
           recommendedInterval: cacheDuration,
           hasLiveGames: globalCache?.freshness?.hasLiveGames || false
@@ -82,30 +207,61 @@ export default async function handler(req, res) {
       
       if (debug === 'true') {
         response.debugInfo = globalCache.debugInfo;
-        response.cacheStatus = getCacheStatus();
       }
       
       return res.status(200).json(response);
     }
 
-    const result = await fetchUpcomingGames();
+    console.log('[GAMES API] Fetching all games from Goalserve...');
     
-    globalCache = result;
+    const allGames = await getAllGamesWithOdds();
+    const formattedGames = allGames.map(convertGoalserveToDisplayFormat);
+    
+    let hasLiveGames = false;
+    for (const [sportKey] of Object.entries(SUPPORTED_SPORTS)) {
+      try {
+        const scores = await getScores(sportKey);
+        scores.forEach(score => {
+          const game = formattedGames.find(g => g.id === score.id);
+          if (game) {
+            game.isLive = score.isLive;
+            game.isCompleted = score.isCompleted;
+            game.status = score.status;
+            game.scores = score.scores;
+            if (score.isLive) hasLiveGames = true;
+          }
+        });
+      } catch (e) {
+        console.error(`[GAMES API] Error fetching scores for ${sportKey}:`, e.message);
+      }
+    }
+    
+    const bySport = {};
+    formattedGames.forEach(game => {
+      if (!bySport[game.sportName]) {
+        bySport[game.sportName] = [];
+      }
+      bySport[game.sportName].push(game);
+    });
+    
+    globalCache = {
+      games: formattedGames,
+      bySport,
+      freshness: { hasLiveGames },
+      debugInfo: { gameCount: formattedGames.length, sports: Object.keys(bySport) }
+    };
     globalCacheTimestamp = now;
 
-    // Determine polling interval based on fresh data
-    const hasLiveGames = result.freshness?.hasLiveGames || false;
     const recommendedInterval = hasLiveGames ? LIVE_GAMES_CACHE_DURATION : NO_LIVE_GAMES_CACHE_DURATION;
     
     const response = {
-      games: result.games,
-      bySport: result.bySport,
-      count: result.games.length,
+      games: formattedGames,
+      bySport,
+      count: formattedGames.length,
       fromCache: false,
-      creditStatus: result.creditStatus,
-      // Expose freshness metadata for adaptive polling
-      freshness: result.freshness || null,
-      // Tell client how long to wait before next poll
+      dataSource: 'Goalserve',
+      creditStatus: getGoalserveStatus(),
+      freshness: { hasLiveGames },
       polling: {
         recommendedInterval,
         hasLiveGames
@@ -113,11 +269,11 @@ export default async function handler(req, res) {
     };
     
     if (debug === 'true') {
-      response.debugInfo = result.debugInfo;
-      response.cacheStatus = getCacheStatus();
+      response.debugInfo = globalCache.debugInfo;
       response.supportedSports = getSupportedSports();
     }
 
+    console.log(`[GAMES API] Returning ${formattedGames.length} games from Goalserve`);
     return res.status(200).json(response);
   } catch (error) {
     console.error('Error in games API:', error);
@@ -130,7 +286,8 @@ export default async function handler(req, res) {
         fromCache: true,
         stale: true,
         error: 'Using cached data due to API error',
-        creditStatus: getCreditStatus(),
+        dataSource: 'Goalserve',
+        creditStatus: getGoalserveStatus(),
         freshness: globalCache.freshness || null
       });
     }
