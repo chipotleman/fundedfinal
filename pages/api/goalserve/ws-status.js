@@ -6,6 +6,8 @@ export default async function handler(req, res) {
   }
 
   try {
+    goalserveWs.ensureConnected();
+    
     const status = goalserveWs.getStatus();
     const allData = goalserveWs.getAllLiveData();
     

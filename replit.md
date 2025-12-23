@@ -71,6 +71,17 @@ None documented yet.
     - Supported sports: basketball_nba, americanfootball_nfl, basketball_ncaab, americanfootball_ncaaf, baseball_mlb, icehockey_nhl
     - Caching: 30-second cache for live data
     - Play-by-play includes: time, period, description, scoring info, player IDs, X/Y court coordinates
+  - **Goalserve WebSocket** (real-time feeds - added Dec 2025)
+    - Service: `lib/goalserve-ws.js`
+    - Features: Sub-second live scores, in-play odds from bet365, ball position tracking
+    - Requires: GOALSERVE_WS_URL environment variable (contact Goalserve for WebSocket access)
+    - Endpoints:
+      - `/api/goalserve/stream` - Server-Sent Events (SSE) for real-time updates
+      - `/api/goalserve/ws-status` - WebSocket connection status
+    - Client hook: `hooks/useGoalserveLive.js` - React hook for consuming live updates
+    - Component: `components/LiveGameTracker.js` - Visual game tracker with ball position
+    - Data types: scores, odds, ball positions (x/y coordinates)
+    - Auto-reconnect with exponential backoff
   - **The Odds API** (legacy/backup)
     - API service: `lib/theoddsapi.js`
     - Provides: Games, spreads, totals, moneylines from multiple bookmakers

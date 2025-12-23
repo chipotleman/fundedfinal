@@ -13,6 +13,8 @@ export default async function handler(req, res) {
 
   const { sport, gameId } = req.query;
 
+  goalserveWs.ensureConnected();
+
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache, no-transform',
