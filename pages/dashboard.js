@@ -177,6 +177,19 @@ export default function Dashboard() {
     return odds > 0 ? `+${odds}` : odds.toString();
   };
 
+  const formatSpread = (point) => {
+    if (point === null || point === undefined) return '-';
+    const num = parseFloat(point);
+    if (isNaN(num)) return point;
+    return num > 0 ? `+${num}` : num.toString();
+  };
+
+  const formatTotal = (point, type) => {
+    if (point === null || point === undefined) return '-';
+    const prefix = type === 'over' ? 'O' : 'U';
+    return `${prefix} ${point}`;
+  };
+
   const OddsDisplay = ({ odds, isSelected }) => {
     const baseClass = isSelected ? 'text-white' : 'text-green-400';
     return (
@@ -333,12 +346,12 @@ export default function Dashboard() {
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-base truncate" style={{ color: isDarkMode ? '#ffffff' : '#111827', maxWidth: '180px', display: 'block' }}>{game.awayTeamFull || game.awayTeam}</span>
-                        {isLive && <span className="font-bold" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayScore || 0}</span>}
+                        {isLive && <span className="font-bold" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.scores?.away?.total || 0}</span>}
                       </div>
                       <div className="text-gray-500 text-xs">@</div>
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-base truncate" style={{ color: isDarkMode ? '#ffffff' : '#111827', maxWidth: '180px', display: 'block' }}>{game.homeTeamFull || game.homeTeam}</span>
-                        {isLive && <span className="font-bold" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.homeScore || 0}</span>}
+                        {isLive && <span className="font-bold" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.scores?.home?.total || 0}</span>}
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -399,7 +412,7 @@ export default function Dashboard() {
                 
                 return (
                   <div 
-                    key={`${game.id}-${game.homeScore}-${game.awayScore}`} 
+                    key={`${game.id}-${game.scores?.home?.total}-${game.scores?.away?.total}`} 
                     className="rounded-xl overflow-hidden" 
                     style={{ backgroundColor: isDarkMode ? '#111111' : '#ffffff', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(209, 213, 219, 1)' }}
                   >
@@ -434,7 +447,7 @@ export default function Dashboard() {
                             </svg>
                           </div>
                           {(isLive || isFinal) ? (
-                            <span className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayScore || 0}</span>
+                            <span className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.scores?.away?.total || 0}</span>
                           ) : (
                             <span style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>-</span>
                           )}
@@ -444,7 +457,7 @@ export default function Dashboard() {
                             <span className="font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.homeTeamFull || game.homeTeam}</span>
                           </div>
                           {(isLive || isFinal) ? (
-                            <span className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.homeScore || 0}</span>
+                            <span className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.scores?.home?.total || 0}</span>
                           ) : (
                             <span style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>-</span>
                           )}
@@ -509,7 +522,7 @@ export default function Dashboard() {
                               inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
                               style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center' }}
                             >
-                              <div style={{ fontSize: '12px', color: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>{game.lines.spread.away.point}</div>
+                              <div style={{ fontSize: '12px', color: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>{formatSpread(game.lines.spread.away.point)}</div>
                               <div style={{ fontWeight: 'bold', fontSize: '14px', color: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#ffffff' : '#3b82f6' }}>
                                 {formatOdds(game.lines.spread.away.odds)}
                               </div>
@@ -532,7 +545,7 @@ export default function Dashboard() {
                               inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
                               style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center' }}
                             >
-                              <div style={{ fontSize: '12px', color: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>{game.lines.total.over.point}</div>
+                              <div style={{ fontSize: '12px', color: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>{formatTotal(game.lines.total.over.point, 'over')}</div>
                               <div style={{ fontWeight: 'bold', fontSize: '14px', color: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#ffffff' : '#3b82f6' }}>
                                 {formatOdds(game.lines.total.over.odds)}
                               </div>
@@ -546,7 +559,7 @@ export default function Dashboard() {
                               inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
                               style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center' }}
                             >
-                              <div style={{ fontSize: '12px', color: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>{game.lines.spread.home.point}</div>
+                              <div style={{ fontSize: '12px', color: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>{formatSpread(game.lines.spread.home.point)}</div>
                               <div style={{ fontWeight: 'bold', fontSize: '14px', color: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#ffffff' : '#3b82f6' }}>
                                 {formatOdds(game.lines.spread.home.odds)}
                               </div>
@@ -569,7 +582,7 @@ export default function Dashboard() {
                               inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
                               style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center' }}
                             >
-                              <div style={{ fontSize: '12px', color: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>{game.lines.total.under.point}</div>
+                              <div style={{ fontSize: '12px', color: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>{formatTotal(game.lines.total.under.point, 'under')}</div>
                               <div style={{ fontWeight: 'bold', fontSize: '14px', color: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#ffffff' : '#3b82f6' }}>
                                 {formatOdds(game.lines.total.under.odds)}
                               </div>

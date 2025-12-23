@@ -43,6 +43,19 @@ export default function GameDetail() {
     return odds > 0 ? `+${odds}` : odds.toString();
   };
 
+  const formatSpread = (point) => {
+    if (point === null || point === undefined) return '-';
+    const num = parseFloat(point);
+    if (isNaN(num)) return point;
+    return num > 0 ? `+${num}` : num.toString();
+  };
+
+  const formatTotal = (point, type) => {
+    if (point === null || point === undefined) return '-';
+    const prefix = type === 'over' ? 'O' : 'U';
+    return `${prefix} ${point}`;
+  };
+
   const handleAddToBetSlip = (betType, odds, selection) => {
     if (!game) return;
     addToBetSlip(game, betType, odds, selection);
@@ -133,10 +146,10 @@ export default function GameDetail() {
               </div>
               <div className="text-right">
                 <div className="flex items-center justify-end gap-3 mb-2">
-                  <span className="text-2xl font-bold">{isLive || isFinal ? (game.awayScore || 0) : '-'}</span>
+                  <span className="text-2xl font-bold">{isLive || isFinal ? (game.scores?.away?.total || 0) : '-'}</span>
                 </div>
                 <div className="flex items-center justify-end gap-3">
-                  <span className="text-2xl font-bold">{isLive || isFinal ? (game.homeScore || 0) : '-'}</span>
+                  <span className="text-2xl font-bold">{isLive || isFinal ? (game.scores?.home?.total || 0) : '-'}</span>
                 </div>
               </div>
               <div className="ml-4 text-right">
@@ -190,8 +203,8 @@ export default function GameDetail() {
                 initialData={{
                   home_team: game.homeTeamFull || game.homeTeam,
                   away_team: game.awayTeamFull || game.awayTeam,
-                  home_score: game.homeScore || 0,
-                  away_score: game.awayScore || 0
+                  home_score: game.scores?.home?.total || 0,
+                  away_score: game.scores?.away?.total || 0
                 }}
               />
             </div>
@@ -280,7 +293,7 @@ export default function GameDetail() {
                     }`}
                   >
                     <div className="text-sm text-gray-400 mb-1">{game.awayTeamFull || game.awayTeam}</div>
-                    <div className="text-lg font-bold text-white">{hasLines ? spread.away.point : '-'}</div>
+                    <div className="text-lg font-bold text-white">{hasLines ? formatSpread(spread.away.point) : '-'}</div>
                     <div className={`text-sm ${checkBetInSlip('spread', `${game.awayTeamFull || game.awayTeam} ${spread.away.point}`) ? 'text-white' : 'text-blue-400'}`}>
                       {hasLines ? formatOdds(spread.away.odds) : '-'}
                     </div>
@@ -296,7 +309,7 @@ export default function GameDetail() {
                     }`}
                   >
                     <div className="text-sm text-gray-400 mb-1">{game.homeTeamFull || game.homeTeam}</div>
-                    <div className="text-lg font-bold text-white">{hasLines ? spread.home.point : '-'}</div>
+                    <div className="text-lg font-bold text-white">{hasLines ? formatSpread(spread.home.point) : '-'}</div>
                     <div className={`text-sm ${checkBetInSlip('spread', `${game.homeTeamFull || game.homeTeam} ${spread.home.point}`) ? 'text-white' : 'text-blue-400'}`}>
                       {hasLines ? formatOdds(spread.home.odds) : '-'}
                     </div>
