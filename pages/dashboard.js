@@ -327,7 +327,10 @@ export default function Dashboard() {
                         <span className="text-gray-400 text-xs ml-auto">{game.time || 'TBD'}</span>
                       )}
                     </div>
-                    <div className="mb-4">
+                    <div 
+                      className="mb-4 cursor-pointer hover:bg-white/5 -mx-2 px-2 py-1 rounded-lg transition-colors"
+                      onClick={() => router.push(`/game/${game.id}`)}
+                    >
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-base truncate" style={{ color: isDarkMode ? '#ffffff' : '#111827', maxWidth: '180px', display: 'block' }}>{game.awayTeamFull || game.awayTeam}</span>
                         {isLive && <span className="font-bold" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayScore || 0}</span>}
@@ -419,9 +422,17 @@ export default function Dashboard() {
 {/* Toggle button removed - keeping expanded view as default */}
                       </div>
                       
-                      <div className="space-y-2 mb-4">
+                      <div 
+                        className="space-y-2 mb-4 cursor-pointer hover:bg-white/5 -mx-2 px-2 py-1 rounded-lg transition-colors"
+                        onClick={() => router.push(`/game/${game.id}`)}
+                      >
                         <div className="flex items-center justify-between">
-                          <span className="font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayTeamFull || game.awayTeam}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayTeamFull || game.awayTeam}</span>
+                            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
                           {(isLive || isFinal) ? (
                             <span className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.awayScore || 0}</span>
                           ) : (
@@ -429,7 +440,9 @@ export default function Dashboard() {
                           )}
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.homeTeamFull || game.homeTeam}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.homeTeamFull || game.homeTeam}</span>
+                          </div>
                           {(isLive || isFinal) ? (
                             <span className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.homeScore || 0}</span>
                           ) : (
