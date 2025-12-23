@@ -215,9 +215,11 @@ export default async function handler(req, res) {
     console.log('[GAMES API] Fetching all games from Goalserve...');
     
     const allGames = await getAllGamesWithOdds();
-    const formattedGames = allGames.map(convertGoalserveToDisplayFormat);
+    let formattedGames = allGames.map(convertGoalserveToDisplayFormat);
     
     let hasLiveGames = false;
+    const sportsWithLiveGames = new Set();
+    
     for (const [sportKey] of Object.entries(SUPPORTED_SPORTS)) {
       try {
         const scores = await getScores(sportKey);
@@ -228,11 +230,34 @@ export default async function handler(req, res) {
             game.isCompleted = score.isCompleted;
             game.status = score.status;
             game.scores = score.scores;
-            if (score.isLive) hasLiveGames = true;
+            if (score.isLive) {
+              hasLiveGames = true;
+              sportsWithLiveGames.add(sportKey);
+            }
           }
         });
       } catch (e) {
         console.error(`[GAMES API] Error fetching scores for ${sportKey}:`, e.message);
+      }
+    }
+    
+    if (sportsWithLiveGames.size > 0) {
+      console.log(`[GAMES API] Refreshing odds for live sports: ${Array.from(sportsWithLiveGames).join(', ')}`);
+      for (const sportKey of sportsWithLiveGames) {
+        try {
+          const freshOdds = await getOdds(sportKey);
+          const freshFormatted = freshOdds.map(convertGoalserveToDisplayFormat);
+          
+          freshFormatted.forEach(freshGame => {
+            const existingIdx = formattedGames.findIndex(g => g.id === freshGame.id);
+            if (existingIdx >= 0) {
+              formattedGames[existingIdx].lines = freshGame.lines;
+              formattedGames[existingIdx].allBookmakerOdds = freshGame.allBookmakerOdds;
+            }
+          });
+        } catch (e) {
+          console.error(`[GAMES API] Error refreshing odds for ${sportKey}:`, e.message);
+        }
       }
     }
     
