@@ -53,25 +53,22 @@ None documented yet.
 - **Authentication**: NextAuth.js v4
 - **Database**: Replit PostgreSQL (Neon-backed) via Drizzle ORM
 - **Payment Processing**: Stripe (for environment variables)
-- **Sports Data**: Multi-source sports data
-  - **Goalserve** (primary source - added Dec 2025)
+- **Sports Data**: Goalserve API (primary source for all data)
+  - **Goalserve REST API** (primary - powers main dashboard)
     - API service: `lib/goalserve.js`
     - Secret: GOALSERVE_API_KEY
-    - Features: Live scores, play-by-play with court position, odds from 10+ bookmakers, rosters, injuries, stats
-    - Endpoints:
-      - `/api/goalserve/games` - All games with scores
-      - `/api/goalserve/games?sport=basketball_nba` - Specific sport
-      - `/api/goalserve/games?sport=basketball_nba&withOdds=true` - With odds
+    - Main endpoint: `/api/games` - Fetches all games with bet365 odds
+    - Primary bookmaker: bet365 (with multi-bookmaker comparison in admin panel)
+    - Features: Live scores, play-by-play with court position, odds from 10+ bookmakers
+    - Additional endpoints:
+      - `/api/goalserve/games` - Direct Goalserve games endpoint
       - `/api/goalserve/odds?sport=basketball_nba` - Odds only
       - `/api/goalserve/playbyplay?sport=basketball_nba` - Live play-by-play with X/Y court positions
-      - `/api/goalserve/playbyplay?sport=basketball_nba&gameId=123` - Specific game
-      - `/api/goalserve/playbyplay?sport=basketball_nba&date=2025-12-22` - Historical play-by-play
       - `/api/goalserve/live` - All live games across sports
-      - `/api/goalserve/live?withPlayByPlay=true` - Live games with play-by-play
     - Supported sports: basketball_nba, americanfootball_nfl, basketball_ncaab, americanfootball_ncaaf, baseball_mlb, icehockey_nhl
-    - Caching: 30-second cache for live data
-    - Play-by-play includes: time, period, description, scoring info, player IDs, X/Y court coordinates
-  - **Goalserve WebSocket** (real-time feeds - added Dec 2025)
+    - Caching: 30-second cache (12s during live games)
+    - Pricing: Subscription-based (unlimited requests)
+  - **Goalserve WebSocket** (real-time feeds)
     - Service: `lib/goalserve-ws.js`
     - Features: Sub-second live scores, in-play odds from bet365, ball position tracking
     - Requires: GOALSERVE_WS_URL environment variable (contact Goalserve for WebSocket access)
@@ -80,13 +77,12 @@ None documented yet.
       - `/api/goalserve/ws-status` - WebSocket connection status
     - Client hook: `hooks/useGoalserveLive.js` - React hook for consuming live updates
     - Component: `components/LiveGameTracker.js` - Visual game tracker with ball position
-    - Data types: scores, odds, ball positions (x/y coordinates)
-    - Auto-reconnect with exponential backoff
-  - **The Odds API** (legacy/backup)
+  - **The Odds API** (backup - not currently used)
     - API service: `lib/theoddsapi.js`
-    - Provides: Games, spreads, totals, moneylines from multiple bookmakers
+    - Provides: US bookmaker odds (FanDuel, DraftKings, BetMGM)
     - Secret: THE_ODDS_API_KEY
     - Pay-as-you-go pricing model
+    - Note: Available but disabled in favor of Goalserve
   - **Supported Sports**: NBA, NFL, NCAAB, NCAAF, MLB, NHL
   - **Game Display Tabs**: Live vs Upcoming tabs on all game pages
   - **Caching**: 30-second server-side cache per sport (Goalserve), 10-minute (The Odds API)
