@@ -86,5 +86,11 @@ None documented yet.
   - **Supported Sports**: NBA, NFL, NCAAB, NCAAF, MLB, NHL
   - **Game Display Tabs**: Live vs Upcoming tabs on all game pages
   - **Caching**: 30-second server-side cache per sport (Goalserve), 10-minute (The Odds API)
+  - **Odds Parsing**: 
+    - Moneyline: Home/Away type (id:2) 
+    - Spreads: Handicap type (id:4) for basketball, Puck Line (id:23679) for NHL
+    - Totals: Total type (id:5) with Over/Under
+    - NBA handicap structure: `bm.handicap[].odd` is an array of 2 odds objects (home/away)
+    - NHL handicap structure: `bm.handicap[].odd` is a single object per line
   - **Admin Odds View**: Full bookmaker comparison spreadsheet available in admin panel at /admin-panel/games
   - **Historical Odds Downloads**: Save current odds pulls to database and download any historical pull as Excel spreadsheet via `/api/admin-panel/odds-history`
