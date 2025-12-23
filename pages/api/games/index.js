@@ -10,8 +10,8 @@ import {
 let globalCache = null;
 let globalCacheTimestamp = null;
 
-const LIVE_GAMES_CACHE_DURATION = 12 * 1000;
-const NO_LIVE_GAMES_CACHE_DURATION = 60 * 1000;
+const LIVE_GAMES_CACHE_DURATION = 5 * 1000;
+const NO_LIVE_GAMES_CACHE_DURATION = 30 * 1000;
 
 function getGoalserveStatus() {
   return {

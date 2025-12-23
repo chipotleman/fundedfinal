@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
@@ -7,6 +7,7 @@ import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { categorizeGames, filterGamesBySport } from '../lib/gamesUtils';
+import { useGoalserveLive } from '../hooks/useGoalserveLive';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -72,9 +73,11 @@ export default function Dashboard() {
   const [gamesError, setGamesError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   
+  const { liveScores, liveOdds, isConnected: liveConnected } = useGoalserveLive({ autoConnect: true });
+  
   // Adaptive polling - use refs to avoid closure issues
   const pollingIntervalRef = useRef(null);
-  const currentIntervalRef = useRef(12000); // Start with fast polling
+  const currentIntervalRef = useRef(5000); // Start with fast polling for live updates
   const lastOddsUpdateRef = useRef(null);
   const lastFetchTimeRef = useRef(null);
   
@@ -143,8 +146,7 @@ export default function Dashboard() {
     };
     
     fetchAllGames();
-    // Start with 12 second polling (fast), will adjust based on server response
-    pollingIntervalRef.current = setInterval(fetchAllGames, 12000);
+    pollingIntervalRef.current = setInterval(fetchAllGames, 5000);
     return () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
@@ -152,10 +154,56 @@ export default function Dashboard() {
     };
   }, []);
 
-  const categorizedGames = useMemo(() => categorizeGames(apiGames), [apiGames, lastUpdated]);
+  const gamesWithLiveData = useMemo(() => {
+    if (!apiGames.length) return apiGames;
+    
+    return apiGames.map(game => {
+      const liveScore = liveScores[game.id];
+      const liveOdd = liveOdds[game.id];
+      
+      if (!liveScore && !liveOdd) return game;
+      
+      const updatedGame = { ...game };
+      
+      if (liveScore) {
+        updatedGame.scores = {
+          home: { total: liveScore.homeScore || game.scores?.home?.total || 0 },
+          away: { total: liveScore.awayScore || game.scores?.away?.total || 0 }
+        };
+        if (liveScore.status) updatedGame.status = liveScore.status;
+        if (liveScore.isLive !== undefined) updatedGame.isLive = liveScore.isLive;
+        if (liveScore.quarter) updatedGame.quarter = liveScore.quarter;
+      }
+      
+      if (liveOdd && updatedGame.lines) {
+        if (liveOdd.moneyline) {
+          updatedGame.lines.moneyline = {
+            home: liveOdd.moneyline.home || updatedGame.lines.moneyline.home,
+            away: liveOdd.moneyline.away || updatedGame.lines.moneyline.away
+          };
+        }
+        if (liveOdd.spread) {
+          updatedGame.lines.spread = {
+            home: liveOdd.spread.home || updatedGame.lines.spread.home,
+            away: liveOdd.spread.away || updatedGame.lines.spread.away
+          };
+        }
+        if (liveOdd.total) {
+          updatedGame.lines.total = {
+            over: liveOdd.total.over || updatedGame.lines.total.over,
+            under: liveOdd.total.under || updatedGame.lines.total.under
+          };
+        }
+      }
+      
+      return updatedGame;
+    });
+  }, [apiGames, liveScores, liveOdds]);
+
+  const categorizedGames = useMemo(() => categorizeGames(gamesWithLiveData), [gamesWithLiveData, lastUpdated]);
 
   useEffect(() => {
-    setAllGames(apiGames);
+    setAllGames(gamesWithLiveData);
     
     const activeGames = selectedTab === 'live' 
       ? [...categorizedGames.liveGames, ...(categorizedGames.recentlyCompletedGames || [])]
@@ -170,7 +218,7 @@ export default function Dashboard() {
       setGames(filteredGames);
     }
     setLoading(false);
-  }, [selectedSport, selectedTab, apiGames, categorizedGames]);
+  }, [selectedSport, selectedTab, gamesWithLiveData, categorizedGames]);
 
 
   const formatOdds = (odds) => {
