@@ -53,22 +53,31 @@ None documented yet.
 - **Authentication**: NextAuth.js v4
 - **Database**: Replit PostgreSQL (Neon-backed) via Drizzle ORM
 - **Payment Processing**: Stripe (for environment variables)
-- **Sports Data**: Multi-source sports data via The Odds API
-  - **The Odds API** (primary and only active source)
+- **Sports Data**: Multi-source sports data
+  - **Goalserve** (primary source - added Dec 2025)
+    - API service: `lib/goalserve.js`
+    - Secret: GOALSERVE_API_KEY
+    - Features: Live scores, play-by-play with court position, odds from 10+ bookmakers, rosters, injuries, stats
+    - Endpoints:
+      - `/api/goalserve/games` - All games with scores
+      - `/api/goalserve/games?sport=basketball_nba` - Specific sport
+      - `/api/goalserve/games?sport=basketball_nba&withOdds=true` - With odds
+      - `/api/goalserve/odds?sport=basketball_nba` - Odds only
+      - `/api/goalserve/playbyplay?sport=basketball_nba` - Live play-by-play with X/Y court positions
+      - `/api/goalserve/playbyplay?sport=basketball_nba&gameId=123` - Specific game
+      - `/api/goalserve/playbyplay?sport=basketball_nba&date=2025-12-22` - Historical play-by-play
+      - `/api/goalserve/live` - All live games across sports
+      - `/api/goalserve/live?withPlayByPlay=true` - Live games with play-by-play
+    - Supported sports: basketball_nba, americanfootball_nfl, basketball_ncaab, americanfootball_ncaaf, baseball_mlb, icehockey_nhl
+    - Caching: 30-second cache for live data
+    - Play-by-play includes: time, period, description, scoring info, player IDs, X/Y court coordinates
+  - **The Odds API** (legacy/backup)
     - API service: `lib/theoddsapi.js`
     - Provides: Games, spreads, totals, moneylines from multiple bookmakers
     - Secret: THE_ODDS_API_KEY
     - Pay-as-you-go pricing model
   - **Supported Sports**: NBA, NFL, NCAAB, NCAAF, MLB, NHL
-  - **Credit Budget**: 50 credits/day (testing phase), alerts at 70%/90%
-  - **Date Filter**: Fetches games for TODAY + TOMORROW (48-hour window) to handle timezone differences
-  - **Game Display Tabs**: Live vs Upcoming tabs on all game pages - shows upcoming games by default, live games when available
-  - **Caching**: 10-minute server-side cache per sport
-  - **Odds Strategy**: Priority-based selection - FanDuel first, then DraftKings, then Bovada, etc. for user familiarity
+  - **Game Display Tabs**: Live vs Upcoming tabs on all game pages
+  - **Caching**: 30-second server-side cache per sport (Goalserve), 10-minute (The Odds API)
   - **Admin Odds View**: Full bookmaker comparison spreadsheet available in admin panel at /admin-panel/games
   - **Historical Odds Downloads**: Save current odds pulls to database and download any historical pull as Excel spreadsheet via `/api/admin-panel/odds-history`
-  - Games endpoints:
-    - `/api/games` - All sports combined
-    - `/api/games?sport=basketball_nba` - Specific sport
-    - `/api/games/nba` - NBA only (legacy)
-  - Debug endpoint: `/debug/api` (bypasses beta access, shows credit usage)
