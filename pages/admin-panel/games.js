@@ -155,10 +155,55 @@ export default function AdminGames() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white">Games & Odds Management</h1>
         <p className="text-gray-400 mt-1">View all games and compare odds across bookmakers</p>
+        
+        {/* Data Source Banner */}
+        <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* The Odds API - Currently Active */}
+          <div className="p-4 bg-purple-900/30 rounded-lg border-2 border-purple-500">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="px-2 py-1 bg-green-600 text-white font-bold rounded text-xs">ACTIVE</span>
+              <span className="text-xl font-bold text-purple-300">The Odds API</span>
+            </div>
+            <p className="text-purple-200 text-sm">
+              Dashboard odds are from <strong>the-odds-api.com</strong>. 
+              US bookmakers: FanDuel, DraftKings, BetMGM, etc.
+            </p>
+            <div className="mt-2 text-xs text-purple-400 space-y-1">
+              <div>Endpoint: api.the-odds-api.com/v4</div>
+              <div>Cache: 30 seconds</div>
+              <div>Pricing: Pay-per-request (credits)</div>
+            </div>
+          </div>
+
+          {/* Goalserve - Available */}
+          <div className="p-4 bg-gray-800/50 rounded-lg border border-gray-600">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="px-2 py-1 bg-gray-600 text-white font-bold rounded text-xs">AVAILABLE</span>
+              <span className="text-xl font-bold text-gray-400">Goalserve API</span>
+            </div>
+            <p className="text-gray-400 text-sm">
+              Live scores, play-by-play, and bet365 in-play odds. 
+              Configured but not used for main dashboard odds.
+            </p>
+            <div className="mt-2 text-xs text-gray-500 space-y-1">
+              <div>Endpoints: /api/goalserve/*</div>
+              <div>Features: Live tracker, play-by-play, WebSocket</div>
+              <div>Used for: Game detail page live tracker</div>
+            </div>
+            <a 
+              href="/api/goalserve/games?sport=basketball_nba&withOdds=true" 
+              target="_blank"
+              className="inline-block mt-2 text-xs text-blue-400 hover:text-blue-300 underline"
+            >
+              Test Goalserve NBA endpoint →
+            </a>
+          </div>
+        </div>
+
         {creditStatus && (
           <div className="mt-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
             <div className="flex items-center justify-between">
-              <span className="text-gray-300">API Credits Used Today</span>
+              <span className="text-gray-300">The Odds API Credits Used Today</span>
               <span className="text-white font-bold">{creditStatus.used} / {creditStatus.budget}</span>
             </div>
             <div className="mt-2 h-2 bg-gray-700 rounded-full overflow-hidden">
@@ -167,6 +212,9 @@ export default function AdminGames() {
                 style={{ width: `${creditStatus.percentUsed}%` }}
               />
             </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Credits are consumed per API request. Each sport query uses ~1 credit for games + odds data.
+            </p>
           </div>
         )}
       </div>
