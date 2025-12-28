@@ -8,14 +8,13 @@ const ROLES = [
 ];
 
 const PERMISSIONS = [
-  { value: 'users:read', label: 'View Users' },
-  { value: 'users:write', label: 'Edit Users' },
-  { value: 'users:delete', label: 'Delete Users' },
-  { value: 'bets:read', label: 'View Bets' },
-  { value: 'bets:write', label: 'Edit Bets' },
-  { value: 'staff:read', label: 'View Staff' },
-  { value: 'staff:write', label: 'Manage Staff' },
-  { value: 'analytics:read', label: 'View Analytics' },
+  { value: 'users', label: 'Users', description: 'Manage user accounts' },
+  { value: 'bets', label: 'Bets', description: 'View and manage bets' },
+  { value: 'withdrawals', label: 'Withdrawals', description: 'Process withdrawals' },
+  { value: 'games', label: 'Games & Odds', description: 'View games and odds' },
+  { value: 'analytics', label: 'Analytics', description: 'View platform analytics' },
+  { value: 'staff', label: 'Staff', description: 'Manage staff accounts' },
+  { value: 'all', label: 'All Access', description: 'Full access to everything' },
 ];
 
 export default function AdminStaff() {
@@ -23,244 +22,139 @@ export default function AdminStaff() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingStaff, setEditingStaff] = useState(null);
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    name: '',
-    role: 'staff',
-    permissions: [],
-  });
+  const [formData, setFormData] = useState({ email: '', password: '', name: '', role: 'staff', permissions: [] });
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  useEffect(() => {
-    fetchStaff();
-  }, []);
+  useEffect(() => { fetchStaff(); }, []);
 
   const fetchStaff = async () => {
     try {
       const token = localStorage.getItem('admin_token');
-      const res = await fetch('/api/admin-panel/staff', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setStaff(data.staff);
-      }
-    } catch (error) {
-      console.error('Failed to fetch staff:', error);
-    } finally {
-      setLoading(false);
-    }
+      const res = await fetch('/api/admin-panel/staff', { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) { const data = await res.json(); setStaff(data.staff); }
+    } catch (error) { console.error('Failed to fetch staff:', error); }
+    finally { setLoading(false); }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
-
+    setError(''); setSuccess('');
     const token = localStorage.getItem('admin_token');
     const method = editingStaff ? 'PUT' : 'POST';
-    const body = editingStaff
-      ? { id: editingStaff.id, ...formData }
-      : formData;
+    const body = editingStaff ? { id: editingStaff.id, ...formData } : formData;
 
     try {
       const res = await fetch('/api/admin-panel/staff', {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
       });
-
       const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || 'Operation failed');
-        return;
-      }
-
+      if (!res.ok) { setError(data.error || 'Operation failed'); return; }
       setSuccess(editingStaff ? 'Staff member updated' : 'Staff member added');
-      setShowModal(false);
-      resetForm();
-      fetchStaff();
-    } catch (error) {
-      setError('An error occurred');
-    }
+      setShowModal(false); resetForm(); fetchStaff();
+    } catch (error) { setError('An error occurred'); }
   };
 
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this staff member?')) return;
-
     const token = localStorage.getItem('admin_token');
     try {
       const res = await fetch('/api/admin-panel/staff', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        method: 'DELETE', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ id }),
       });
-
-      if (res.ok) {
-        setSuccess('Staff member deleted');
-        fetchStaff();
-      }
-    } catch (error) {
-      setError('Failed to delete staff member');
-    }
+      if (res.ok) { setSuccess('Staff member deleted'); fetchStaff(); }
+    } catch (error) { setError('Failed to delete staff member'); }
   };
 
   const handleToggleActive = async (staffMember) => {
     const token = localStorage.getItem('admin_token');
     try {
       await fetch('/api/admin-panel/staff', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
+        method: 'PUT', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ id: staffMember.id, isActive: !staffMember.is_active }),
       });
       fetchStaff();
-    } catch (error) {
-      setError('Failed to update staff status');
-    }
+    } catch (error) { setError('Failed to update staff status'); }
   };
 
   const openEditModal = (staffMember) => {
     setEditingStaff(staffMember);
-    setFormData({
-      email: staffMember.email,
-      password: '',
-      name: staffMember.name || '',
-      role: staffMember.role,
-      permissions: staffMember.permissions || [],
-    });
+    setFormData({ email: staffMember.email, password: '', name: staffMember.name || '', role: staffMember.role, permissions: staffMember.permissions || [] });
     setShowModal(true);
   };
 
   const resetForm = () => {
     setEditingStaff(null);
-    setFormData({
-      email: '',
-      password: '',
-      name: '',
-      role: 'staff',
-      permissions: [],
-    });
+    setFormData({ email: '', password: '', name: '', role: 'staff', permissions: [] });
     setError('');
   };
 
   const togglePermission = (permission) => {
     setFormData((prev) => ({
       ...prev,
-      permissions: prev.permissions.includes(permission)
-        ? prev.permissions.filter((p) => p !== permission)
-        : [...prev.permissions, permission],
+      permissions: prev.permissions.includes(permission) ? prev.permissions.filter((p) => p !== permission) : [...prev.permissions, permission],
     }));
   };
 
   return (
-    <AdminLayout title="Staff Management">
-      <div className="mb-8 flex justify-between items-center">
+    <AdminLayout title="Staff Management" requiredPermission="staff">
+      <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white">Staff Management</h1>
-          <p className="text-gray-400 mt-1">Manage admin staff accounts and permissions</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Staff Management</h1>
+          <p className="text-gray-400">Manage admin staff accounts and permissions</p>
         </div>
-        <button
-          onClick={() => {
-            resetForm();
-            setShowModal(true);
-          }}
-          className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-        >
-          + Add Staff
+        <button onClick={() => { resetForm(); setShowModal(true); }} className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl transition-all duration-200 flex items-center gap-2 font-medium">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+          Add Staff
         </button>
       </div>
 
-      {success && (
-        <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 text-green-400 rounded-lg">
-          {success}
-        </div>
-      )}
+      {success && <div className="mb-6 p-4 bg-green-500/10 border border-green-500/30 text-green-400 rounded-xl flex items-center gap-3"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>{success}</div>}
+      {error && <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 text-red-400 rounded-xl flex items-center gap-3"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>{error}</div>}
 
-      {error && (
-        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg">
-          {error}
-        </div>
-      )}
-
-      <div className="bg-gray-900 border border-gray-800 rounded-xl overflow-hidden">
+      <div className="glass-card overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500 mx-auto"></div>
-          </div>
+          <div className="p-12 text-center"><div className="w-12 h-12 border-4 border-transparent border-t-purple-500 border-r-blue-500 rounded-full animate-spin mx-auto"></div><p className="text-gray-400 mt-4">Loading staff...</p></div>
         ) : staff.length === 0 ? (
-          <div className="p-8 text-center text-gray-400">
-            No staff members yet. Add your first team member.
-          </div>
+          <div className="p-12 text-center"><svg className="w-16 h-16 mx-auto text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg><p className="text-gray-400">No staff members yet. Add your first team member.</p></div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-800">
+              <thead className="bg-white/5 border-b border-white/10">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Name</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Email</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Role</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Status</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Last Login</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-400">Actions</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Member</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Role</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Permissions</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Last Login</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-800">
+              <tbody className="divide-y divide-white/5">
                 {staff.map((member) => (
-                  <tr key={member.id} className="hover:bg-gray-800/50">
-                    <td className="px-6 py-4 text-white">{member.name || '-'}</td>
-                    <td className="px-6 py-4 text-white">{member.email}</td>
+                  <tr key={member.id} className="hover:bg-white/5 transition-colors">
                     <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        member.role === 'admin' ? 'bg-purple-600/20 text-purple-400' :
-                        member.role === 'manager' ? 'bg-blue-600/20 text-blue-400' :
-                        'bg-gray-600/20 text-gray-400'
-                      }`}>
-                        {member.role}
-                      </span>
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white font-medium">{(member.name || member.email)?.charAt(0).toUpperCase()}</div>
+                        <div><p className="text-white font-medium">{member.name || '-'}</p><p className="text-gray-400 text-sm">{member.email}</p></div>
+                      </div>
                     </td>
                     <td className="px-6 py-4">
-                      <button
-                        onClick={() => handleToggleActive(member)}
-                        className={`px-2 py-1 rounded text-xs font-medium ${
-                          member.is_active
-                            ? 'bg-green-600/20 text-green-400'
-                            : 'bg-red-600/20 text-red-400'
-                        }`}
-                      >
-                        {member.is_active ? 'Active' : 'Inactive'}
-                      </button>
+                      <span className={`px-3 py-1 rounded-lg text-xs font-medium ${member.role === 'admin' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : member.role === 'manager' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'}`}>{member.role}</span>
                     </td>
-                    <td className="px-6 py-4 text-gray-400">
-                      {member.last_login
-                        ? new Date(member.last_login).toLocaleString()
-                        : 'Never'}
+                    <td className="px-6 py-4">
+                      <div className="flex flex-wrap gap-1">{(member.permissions || []).slice(0, 3).map((p, i) => <span key={i} className="px-2 py-0.5 bg-white/5 rounded text-xs text-gray-400">{p}</span>)}{(member.permissions || []).length > 3 && <span className="px-2 py-0.5 bg-white/5 rounded text-xs text-gray-400">+{member.permissions.length - 3}</span>}</div>
                     </td>
+                    <td className="px-6 py-4">
+                      <button onClick={() => handleToggleActive(member)} className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${member.is_active ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500/30'}`}>{member.is_active ? 'Active' : 'Inactive'}</button>
+                    </td>
+                    <td className="px-6 py-4 text-gray-400 text-sm">{member.last_login ? new Date(member.last_login).toLocaleDateString() : 'Never'}</td>
                     <td className="px-6 py-4">
                       <div className="flex gap-2">
-                        <button
-                          onClick={() => openEditModal(member)}
-                          className="text-blue-400 hover:text-blue-300"
-                        >
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => handleDelete(member.id)}
-                          className="text-red-400 hover:text-red-300"
-                        >
-                          Delete
-                        </button>
+                        <button onClick={() => openEditModal(member)} className="px-3 py-1.5 text-xs font-medium text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-colors">Edit</button>
+                        <button onClick={() => handleDelete(member.id)} className="px-3 py-1.5 text-xs font-medium text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-lg transition-colors">Delete</button>
                       </div>
                     </td>
                   </tr>
@@ -272,107 +166,56 @@ export default function AdminStaff() {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-white">
-                {editingStaff ? 'Edit Staff Member' : 'Add Staff Member'}
-              </h2>
-              <button
-                onClick={() => {
-                  setShowModal(false);
-                  resetForm();
-                }}
-                className="text-gray-400 hover:text-white"
-              >
-                ✕
-              </button>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="glass-card p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold text-white">{editingStaff ? 'Edit Staff Member' : 'Add Staff Member'}</h2>
+              <button onClick={() => setShowModal(false)} className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"><svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-400 mb-2">Email</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-green-500"
-                  required
-                  disabled={!!editingStaff}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">
-                  {editingStaff ? 'New Password (leave blank to keep current)' : 'Password'}
-                </label>
-                <input
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-green-500"
-                  required={!editingStaff}
-                  minLength={6}
-                />
-              </div>
-
-              <div>
                 <label className="block text-sm text-gray-400 mb-2">Name</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-green-500"
-                />
+                <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500/50 transition-all" placeholder="John Doe" />
               </div>
-
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Email</label>
+                <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500/50 transition-all" placeholder="john@piks.com" required />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">{editingStaff ? 'New Password (leave blank to keep current)' : 'Password'}</label>
+                <input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-500/50 transition-all" placeholder="Enter password" required={!editingStaff} />
+              </div>
               <div>
                 <label className="block text-sm text-gray-400 mb-2">Role</label>
-                <select
-                  value={formData.role}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-green-500"
-                >
+                <div className="grid grid-cols-3 gap-2">
                   {ROLES.map((role) => (
-                    <option key={role.value} value={role.value}>
-                      {role.label} - {role.description}
-                    </option>
+                    <button key={role.value} type="button" onClick={() => setFormData({ ...formData, role: role.value })} className={`p-3 rounded-xl border text-center transition-all ${formData.role === role.value ? 'border-purple-500/50 bg-purple-500/10 text-white' : 'border-white/10 bg-white/5 text-gray-400 hover:bg-white/10'}`}>
+                      <p className="font-medium text-sm">{role.label}</p>
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
-
               <div>
                 <label className="block text-sm text-gray-400 mb-2">Permissions</label>
                 <div className="grid grid-cols-2 gap-2">
-                  {PERMISSIONS.map((permission) => (
-                    <label
-                      key={permission.value}
-                      className="flex items-center gap-2 p-2 bg-gray-800 rounded cursor-pointer hover:bg-gray-700"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={formData.permissions.includes(permission.value)}
-                        onChange={() => togglePermission(permission.value)}
-                        className="rounded"
-                      />
-                      <span className="text-sm text-white">{permission.label}</span>
-                    </label>
+                  {PERMISSIONS.map((perm) => (
+                    <button key={perm.value} type="button" onClick={() => togglePermission(perm.value)} className={`p-3 rounded-xl border text-left transition-all ${formData.permissions.includes(perm.value) ? 'border-green-500/50 bg-green-500/10' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center ${formData.permissions.includes(perm.value) ? 'border-green-500 bg-green-500' : 'border-gray-500'}`}>{formData.permissions.includes(perm.value) && <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}</div>
+                        <span className={formData.permissions.includes(perm.value) ? 'text-white' : 'text-gray-400'}>{perm.label}</span>
+                      </div>
+                    </button>
                   ))}
                 </div>
               </div>
 
-              {error && (
-                <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-400 rounded-lg text-sm">
-                  {error}
-                </div>
-              )}
+              {error && <div className="p-3 rounded-xl text-sm bg-red-500/10 text-red-400 border border-red-500/30">{error}</div>}
 
-              <button
-                type="submit"
-                className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition-colors"
-              >
-                {editingStaff ? 'Update Staff Member' : 'Add Staff Member'}
-              </button>
+              <div className="flex gap-3 pt-2">
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors border border-white/10">Cancel</button>
+                <button type="submit" className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl transition-all font-medium">{editingStaff ? 'Update' : 'Add Staff'}</button>
+              </div>
             </form>
           </div>
         </div>

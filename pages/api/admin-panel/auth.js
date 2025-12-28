@@ -76,6 +76,7 @@ export default async function handler(req, res) {
         .set({ lastLogin: new Date() })
         .where(eq(adminStaff.id, staff.id));
 
+      const staffPermissions = Array.isArray(staff.permissions) ? staff.permissions : [];
       return res.status(200).json({
         success: true,
         admin: {
@@ -84,11 +85,13 @@ export default async function handler(req, res) {
           name: staff.name,
           type: 'staff',
           role: staff.role,
+          permissions: staffPermissions,
         },
         token: Buffer.from(JSON.stringify({
           id: staff.id,
           email: staff.email,
           type: 'staff',
+          permissions: staffPermissions,
           exp: Date.now() + (7 * 24 * 60 * 60 * 1000)
         })).toString('base64'),
       });
@@ -136,6 +139,7 @@ export default async function handler(req, res) {
             .limit(1);
 
           if (staff && staff.isActive) {
+            const staffPermissions = Array.isArray(staff.permissions) ? staff.permissions : [];
             return res.status(200).json({
               valid: true,
               admin: {
@@ -144,6 +148,7 @@ export default async function handler(req, res) {
                 name: staff.name,
                 type: 'staff',
                 role: staff.role,
+                permissions: staffPermissions,
               },
             });
           }
