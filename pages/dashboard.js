@@ -596,14 +596,33 @@ export default function Dashboard() {
                       </div>
 
                       {linesLocked ? (
-                        <div className="flex gap-2">
-                          <div className="flex-1 rounded-lg py-2 px-2 text-center opacity-50" style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? '#374151' : '#d1d5db' }}>
-                            <div className="text-[10px] mb-0.5" style={{ color: '#6b7280' }}>{!hasLines ? 'Betting' : 'Lines'}</div>
-                            <div className="font-bold text-sm text-gray-500">{!hasLines ? 'UNAVAILABLE' : 'LOCKED'}</div>
+                        <div>
+                          <div className="flex gap-2 mb-1">
+                            <div className="flex-1 text-center text-[10px] font-medium uppercase" style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>Spread</div>
+                            <div className="flex-1 text-center text-[10px] font-medium uppercase" style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>Moneyline</div>
+                            <div className="flex-1 text-center text-[10px] font-medium uppercase" style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>Total</div>
                           </div>
-                          <div className="flex-1 rounded-lg py-2 px-2 text-center opacity-50" style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? '#374151' : '#d1d5db' }}>
-                            <div className="text-[10px] mb-0.5" style={{ color: '#6b7280' }}>{!hasLines ? 'Betting' : 'Lines'}</div>
-                            <div className="font-bold text-sm text-gray-500">{!hasLines ? 'UNAVAILABLE' : 'LOCKED'}</div>
+                          <div className="flex gap-2 mb-2">
+                            <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '44px', opacity: 0.5 }}>
+                              <svg className="w-4 h-4" fill="none" stroke={isDarkMode ? '#6b7280' : '#9ca3af'} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                            </div>
+                            <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '44px', opacity: 0.5 }}>
+                              <svg className="w-4 h-4" fill="none" stroke={isDarkMode ? '#6b7280' : '#9ca3af'} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                            </div>
+                            <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '44px', opacity: 0.5 }}>
+                              <svg className="w-4 h-4" fill="none" stroke={isDarkMode ? '#6b7280' : '#9ca3af'} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '44px', opacity: 0.5 }}>
+                              <svg className="w-4 h-4" fill="none" stroke={isDarkMode ? '#6b7280' : '#9ca3af'} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                            </div>
+                            <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '44px', opacity: 0.5 }}>
+                              <svg className="w-4 h-4" fill="none" stroke={isDarkMode ? '#6b7280' : '#9ca3af'} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                            </div>
+                            <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '44px', opacity: 0.5 }}>
+                              <svg className="w-4 h-4" fill="none" stroke={isDarkMode ? '#6b7280' : '#9ca3af'} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                            </div>
                           </div>
                         </div>
                       ) : (
@@ -660,8 +679,8 @@ export default function Dashboard() {
                                 </div>
                               </TapSurface>
                             ) : (
-                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '44px' }}>
-                                <div style={{ fontSize: '12px', color: isDarkMode ? '#6b7280' : '#9ca3af' }}>-</div>
+                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '44px', opacity: 0.5 }}>
+                                <svg className="w-4 h-4" fill="none" stroke={isDarkMode ? '#6b7280' : '#9ca3af'} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                               </div>
                             )}
                             <TapSurface
@@ -689,8 +708,8 @@ export default function Dashboard() {
                                 </div>
                               </TapSurface>
                             ) : (
-                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '44px' }}>
-                                <div style={{ fontSize: '12px', color: isDarkMode ? '#6b7280' : '#9ca3af' }}>-</div>
+                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '44px', opacity: 0.5 }}>
+                                <svg className="w-4 h-4" fill="none" stroke={isDarkMode ? '#6b7280' : '#9ca3af'} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                               </div>
                             )}
                           </div>
@@ -709,8 +728,8 @@ export default function Dashboard() {
                                 </div>
                               </TapSurface>
                             ) : (
-                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '44px' }}>
-                                <div style={{ fontSize: '12px', color: isDarkMode ? '#6b7280' : '#9ca3af' }}>-</div>
+                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '44px', opacity: 0.5 }}>
+                                <svg className="w-4 h-4" fill="none" stroke={isDarkMode ? '#6b7280' : '#9ca3af'} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                               </div>
                             )}
                             <TapSurface
@@ -738,8 +757,8 @@ export default function Dashboard() {
                                 </div>
                               </TapSurface>
                             ) : (
-                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '44px' }}>
-                                <div style={{ fontSize: '12px', color: isDarkMode ? '#6b7280' : '#9ca3af' }}>-</div>
+                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '44px', opacity: 0.5 }}>
+                                <svg className="w-4 h-4" fill="none" stroke={isDarkMode ? '#6b7280' : '#9ca3af'} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                               </div>
                             )}
                           </div>
