@@ -60,7 +60,7 @@ export default function Dashboard() {
     setShowBetSlip(!showBetSlip);
   };
 
-  const sports = ['NBA', 'NFL', 'NCAAB', 'NCAAF', 'MLB', 'NHL'];
+  const sports = ['NBA', 'NFL', 'NCAAB', 'NCAAF', 'MLB', 'NHL', 'Euro Basketball', "Int'l Hockey"];
 
   const baseGamesRef = useRef({});
   const betSlipRef = useRef(betSlip);
@@ -73,7 +73,7 @@ export default function Dashboard() {
   const [gamesError, setGamesError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   
-  const { liveScores, liveOdds, isConnected: liveConnected } = useGoalserveLive({ autoConnect: true });
+  const { liveScores, liveOdds, events: inplayEvents, isConnected: liveConnected } = useGoalserveLive({ autoConnect: true });
   
   // Adaptive polling - use refs to avoid closure issues
   const pollingIntervalRef = useRef(null);
@@ -155,9 +155,79 @@ export default function Dashboard() {
   }, []);
 
   const gamesWithLiveData = useMemo(() => {
-    if (!apiGames.length) return apiGames;
+    // Convert inplay events to game format
+    const inplayGames = Object.values(inplayEvents || {}).map(event => {
+      const homeTeam = event.stats?.[0]?.home || event.homeTeam || 'Home';
+      const awayTeam = event.stats?.[0]?.away || event.awayTeam || 'Away';
+      
+      // Get scores from stats (format varies by sport)
+      let homeScore = 0, awayScore = 0;
+      if (event.stats) {
+        // Basketball: stats[3] is Half or Total, stats[4-5] are quarters
+        // Hockey: stats[4] is T (total)
+        const totalStat = Object.values(event.stats).find(s => s.name === 'T' || s.name === 'Half');
+        if (totalStat) {
+          homeScore = parseInt(totalStat.home) || 0;
+          awayScore = parseInt(totalStat.away) || 0;
+        }
+        // Sum quarters for basketball if Half isn't available
+        if (event.sport === 'basketball' && !totalStat) {
+          for (const stat of Object.values(event.stats)) {
+            if (['1', '2', '3', '4'].includes(stat.name)) {
+              homeScore += parseInt(stat.home) || 0;
+              awayScore += parseInt(stat.away) || 0;
+            }
+          }
+        }
+      }
+      
+      const sportMapping = {
+        basketball: { name: 'Euro Basketball', icon: '🏀' },
+        hockey: { name: 'Int\'l Hockey', icon: '🏒' },
+        soccer: { name: 'Soccer', icon: '⚽' },
+        amfootball: { name: 'Football', icon: '🏈' },
+        baseball: { name: 'Baseball', icon: '⚾' }
+      };
+      const sportInfo = sportMapping[event.sport] || { name: event.sport, icon: '🏆' };
+      
+      return {
+        id: `inplay_${event.id}`,
+        gameId: `inplay_${event.id}`,
+        sport: event.sport,
+        sportName: sportInfo.name,
+        homeTeam: homeTeam.substring(0, 20),
+        awayTeam: awayTeam.substring(0, 20),
+        homeTeamFull: homeTeam,
+        awayTeamFull: awayTeam,
+        time: 'LIVE',
+        commenceTime: new Date().toISOString(),
+        status: 'IN_PROGRESS',
+        isLive: true,
+        isInplay: true,
+        scores: {
+          home: { total: homeScore },
+          away: { total: awayScore }
+        },
+        lines: event.odds ? {
+          moneyline: {
+            home: event.odds.moneyline?.home || 0,
+            away: event.odds.moneyline?.away || 0
+          },
+          spread: {
+            home: event.odds.spread?.home || { point: 0, odds: -110 },
+            away: event.odds.spread?.away || { point: 0, odds: -110 }
+          },
+          total: {
+            over: event.odds.total?.over || { point: 0, odds: -110 },
+            under: event.odds.total?.under || { point: 0, odds: -110 }
+          }
+        } : null,
+        dataSource: 'Goalserve Inplay'
+      };
+    });
     
-    return apiGames.map(game => {
+    // Update API games with live data
+    const updatedApiGames = apiGames.map(game => {
       const liveScore = liveScores[game.id];
       const liveOdd = liveOdds[game.id];
       
@@ -198,7 +268,10 @@ export default function Dashboard() {
       
       return updatedGame;
     });
-  }, [apiGames, liveScores, liveOdds]);
+    
+    // Merge: inplay games first (they're live), then API games
+    return [...inplayGames, ...updatedApiGames];
+  }, [apiGames, liveScores, liveOdds, inplayEvents]);
 
   const categorizedGames = useMemo(() => categorizeGames(gamesWithLiveData), [gamesWithLiveData, lastUpdated]);
 
@@ -255,7 +328,9 @@ export default function Dashboard() {
       'NCAAB': '🏀',
       'MLB': '⚾',
       'NHL': '🏒',
-      'Soccer': '⚽'
+      'Soccer': '⚽',
+      'Euro Basketball': '🏀',
+      "Int'l Hockey": '🏒'
     };
     return icons[sport] || '🏆';
   };
