@@ -652,78 +652,102 @@ export default function Dashboard() {
                             <div className="flex-1 text-center text-[10px] font-medium uppercase" style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>Total</div>
                           </div>
                           <div className="flex gap-2 mb-2">
-                            <TapSurface
-                              onTap={() => addToBetSlip(game, 'spread', game.lines.spread.away, `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`)}
-                              isActive={isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`)}
-                              activeColor="#2563eb"
-                              inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
-                              style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center' }}
-                            >
-                              <div style={{ fontSize: '12px', color: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>{formatSpread(game.lines.spread.away.point)}</div>
-                              <div style={{ fontWeight: 'bold', fontSize: '14px', color: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#ffffff' : '#3b82f6' }}>
-                                {formatOdds(game.lines.spread.away.odds)}
+                            {game.lines?.spread?.away ? (
+                              <TapSurface
+                                onTap={() => addToBetSlip(game, 'spread', game.lines.spread.away, `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`)}
+                                isActive={isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`)}
+                                activeColor="#2563eb"
+                                inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
+                                style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center' }}
+                              >
+                                <div style={{ fontSize: '12px', color: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>{formatSpread(game.lines.spread.away.point)}</div>
+                                <div style={{ fontWeight: 'bold', fontSize: '14px', color: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#ffffff' : '#3b82f6' }}>
+                                  {formatOdds(game.lines.spread.away.odds)}
+                                </div>
+                              </TapSurface>
+                            ) : (
+                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6' }}>
+                                <div style={{ fontSize: '12px', color: isDarkMode ? '#6b7280' : '#9ca3af' }}>-</div>
                               </div>
-                            </TapSurface>
+                            )}
                             <TapSurface
-                              onTap={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeamFull || game.awayTeam)}
+                              onTap={() => addToBetSlip(game, 'moneyline', game.lines?.moneyline?.away, game.awayTeamFull || game.awayTeam)}
                               isActive={isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam)}
                               activeColor="#2563eb"
                               inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
                               style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
                             >
                               <div style={{ fontWeight: 'bold', fontSize: '14px', color: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#ffffff' : '#3b82f6' }}>
-                                {formatOdds(game.lines.moneyline.away)}
+                                {formatOdds(game.lines?.moneyline?.away)}
                               </div>
                             </TapSurface>
-                            <TapSurface
-                              onTap={() => addToBetSlip(game, 'total', game.lines.total.over, `Over ${game.lines.total.over.point}`)}
-                              isActive={isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`)}
-                              activeColor="#2563eb"
-                              inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
-                              style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center' }}
-                            >
-                              <div style={{ fontSize: '12px', color: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>{formatTotal(game.lines.total.over.point, 'over')}</div>
-                              <div style={{ fontWeight: 'bold', fontSize: '14px', color: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#ffffff' : '#3b82f6' }}>
-                                {formatOdds(game.lines.total.over.odds)}
+                            {game.lines?.total?.over ? (
+                              <TapSurface
+                                onTap={() => addToBetSlip(game, 'total', game.lines.total.over, `Over ${game.lines.total.over.point}`)}
+                                isActive={isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`)}
+                                activeColor="#2563eb"
+                                inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
+                                style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center' }}
+                              >
+                                <div style={{ fontSize: '12px', color: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>{formatTotal(game.lines.total.over.point, 'over')}</div>
+                                <div style={{ fontWeight: 'bold', fontSize: '14px', color: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#ffffff' : '#3b82f6' }}>
+                                  {formatOdds(game.lines.total.over.odds)}
+                                </div>
+                              </TapSurface>
+                            ) : (
+                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6' }}>
+                                <div style={{ fontSize: '12px', color: isDarkMode ? '#6b7280' : '#9ca3af' }}>-</div>
                               </div>
-                            </TapSurface>
+                            )}
                           </div>
                           <div className="flex gap-2">
-                            <TapSurface
-                              onTap={() => addToBetSlip(game, 'spread', game.lines.spread.home, `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`)}
-                              isActive={isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`)}
-                              activeColor="#2563eb"
-                              inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
-                              style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center' }}
-                            >
-                              <div style={{ fontSize: '12px', color: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>{formatSpread(game.lines.spread.home.point)}</div>
-                              <div style={{ fontWeight: 'bold', fontSize: '14px', color: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#ffffff' : '#3b82f6' }}>
-                                {formatOdds(game.lines.spread.home.odds)}
+                            {game.lines?.spread?.home ? (
+                              <TapSurface
+                                onTap={() => addToBetSlip(game, 'spread', game.lines.spread.home, `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`)}
+                                isActive={isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`)}
+                                activeColor="#2563eb"
+                                inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
+                                style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center' }}
+                              >
+                                <div style={{ fontSize: '12px', color: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>{formatSpread(game.lines.spread.home.point)}</div>
+                                <div style={{ fontWeight: 'bold', fontSize: '14px', color: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#ffffff' : '#3b82f6' }}>
+                                  {formatOdds(game.lines.spread.home.odds)}
+                                </div>
+                              </TapSurface>
+                            ) : (
+                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6' }}>
+                                <div style={{ fontSize: '12px', color: isDarkMode ? '#6b7280' : '#9ca3af' }}>-</div>
                               </div>
-                            </TapSurface>
+                            )}
                             <TapSurface
-                              onTap={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeamFull || game.homeTeam)}
+                              onTap={() => addToBetSlip(game, 'moneyline', game.lines?.moneyline?.home, game.homeTeamFull || game.homeTeam)}
                               isActive={isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam)}
                               activeColor="#2563eb"
                               inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
                               style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
                             >
                               <div style={{ fontWeight: 'bold', fontSize: '14px', color: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#ffffff' : '#3b82f6' }}>
-                                {formatOdds(game.lines.moneyline.home)}
+                                {formatOdds(game.lines?.moneyline?.home)}
                               </div>
                             </TapSurface>
-                            <TapSurface
-                              onTap={() => addToBetSlip(game, 'total', game.lines.total.under, `Under ${game.lines.total.under.point}`)}
-                              isActive={isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`)}
-                              activeColor="#2563eb"
-                              inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
-                              style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center' }}
-                            >
-                              <div style={{ fontSize: '12px', color: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>{formatTotal(game.lines.total.under.point, 'under')}</div>
-                              <div style={{ fontWeight: 'bold', fontSize: '14px', color: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#ffffff' : '#3b82f6' }}>
-                                {formatOdds(game.lines.total.under.odds)}
+                            {game.lines?.total?.under ? (
+                              <TapSurface
+                                onTap={() => addToBetSlip(game, 'total', game.lines.total.under, `Under ${game.lines.total.under.point}`)}
+                                isActive={isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`)}
+                                activeColor="#2563eb"
+                                inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
+                                style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center' }}
+                              >
+                                <div style={{ fontSize: '12px', color: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>{formatTotal(game.lines.total.under.point, 'under')}</div>
+                                <div style={{ fontWeight: 'bold', fontSize: '14px', color: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#ffffff' : '#3b82f6' }}>
+                                  {formatOdds(game.lines.total.under.odds)}
+                                </div>
+                              </TapSurface>
+                            ) : (
+                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6' }}>
+                                <div style={{ fontSize: '12px', color: isDarkMode ? '#6b7280' : '#9ca3af' }}>-</div>
                               </div>
-                            </TapSurface>
+                            )}
                           </div>
                         </div>
                       )}

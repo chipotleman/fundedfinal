@@ -1,0 +1,33 @@
+1989-2f7cda559aec4a80.js:1 Logo loaded successfully
+dashboard-48ab9fb858269e83.js:1 [Goalserve Live] SSE connected
+dashboard:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+dashboard-48ab9fb858269e83.js:1 [Goalserve Live] Initial status: Object
+dashboard-48ab9fb858269e83.js:1 [DASHBOARD] Adjusting polling: 5000ms -> 30000ms (live games: false)
+dashboard-48ab9fb858269e83.js:1 [DASHBOARD] Games refreshed: 116 games at 12:58:57 PM (polling: 30000ms, live: false)
+dashboard-48ab9fb858269e83.js:1 [Goalserve Live] Initial events loaded: 110
+framework-79bf9954148d0de3.js:1 TypeError: Cannot read properties of null (reading 'point')
+    at dashboard-48ab9fb858269e83.js:1:27381
+    at Array.map (<anonymous>)
+    at v (dashboard-48ab9fb858269e83.js:1:20991)
+    at ak (framework-79bf9954148d0de3.js:1:60996)
+    at up (framework-79bf9954148d0de3.js:1:72878)
+    at i (framework-79bf9954148d0de3.js:1:120410)
+    at oD (framework-79bf9954148d0de3.js:1:99166)
+    at framework-79bf9954148d0de3.js:1:99033
+    at oO (framework-79bf9954148d0de3.js:1:99040)
+    at oE (framework-79bf9954148d0de3.js:1:95792)
+a9 @ framework-79bf9954148d0de3.js:1
+main-64b0053555f73f9f.js:1 TypeError: Cannot read properties of null (reading 'point')
+    at dashboard-48ab9fb858269e83.js:1:27381
+    at Array.map (<anonymous>)
+    at v (dashboard-48ab9fb858269e83.js:1:20991)
+    at ak (framework-79bf9954148d0de3.js:1:60996)
+    at up (framework-79bf9954148d0de3.js:1:72878)
+    at i (framework-79bf9954148d0de3.js:1:120410)
+    at oD (framework-79bf9954148d0de3.js:1:99166)
+    at framework-79bf9954148d0de3.js:1:99033
+    at oO (framework-79bf9954148d0de3.js:1:99040)
+    at oE (framework-79bf9954148d0de3.js:1:95792)
+ee @ main-64b0053555f73f9f.js:1
+main-64b0053555f73f9f.js:1 A client-side exception has occurred, see here for more info: https://nextjs.org/docs/messages/client-side-exception-occurred
+ee @ main-64b0053555f73f9f.js:1
