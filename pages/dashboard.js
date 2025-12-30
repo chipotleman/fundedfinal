@@ -492,7 +492,7 @@ export default function Dashboard() {
                         inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
                         style={{ flex: 1, borderRadius: '8px', padding: '12px', textAlign: 'center', borderWidth: '1px', borderStyle: 'solid', borderColor: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#3b82f6' : (isDarkMode ? '#374151' : '#d1d5db'), minHeight: '56px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
                       >
-                        <div style={{ fontSize: '12px', marginBottom: '2px', color: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#ffffff' : (isDarkMode ? '#9ca3af' : '#6b7280'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{(game.homeTeamFull || game.homeTeam).split(' ').pop()}</div>
+                        <div style={{ fontSize: '12px', marginBottom: '2px', color: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#ffffff' : (isDarkMode ? '#9ca3af' : '#6b7280'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{(() => { const name = game.homeTeamFull || game.homeTeam; const parts = name.replace(/\s*\([^)]*\)\s*$/, '').split(' '); return parts.pop() || name; })()}</div>
                         <div style={{ fontWeight: 'bold', color: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#ffffff' : '#3b82f6' }}>
                           {formatOdds(game.lines.moneyline.home)}
                         </div>
@@ -504,7 +504,7 @@ export default function Dashboard() {
                         inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
                         style={{ flex: 1, borderRadius: '8px', padding: '12px', textAlign: 'center', borderWidth: '1px', borderStyle: 'solid', borderColor: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#3b82f6' : (isDarkMode ? '#374151' : '#d1d5db'), minHeight: '56px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
                       >
-                        <div style={{ fontSize: '12px', marginBottom: '2px', color: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#ffffff' : (isDarkMode ? '#9ca3af' : '#6b7280'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{(game.awayTeamFull || game.awayTeam).split(' ').pop()}</div>
+                        <div style={{ fontSize: '12px', marginBottom: '2px', color: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#ffffff' : (isDarkMode ? '#9ca3af' : '#6b7280'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{(() => { const name = game.awayTeamFull || game.awayTeam; const parts = name.replace(/\s*\([^)]*\)\s*$/, '').split(' '); return parts.pop() || name; })()}</div>
                         <div style={{ fontWeight: 'bold', color: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#ffffff' : '#3b82f6' }}>
                           {formatOdds(game.lines.moneyline.away)}
                         </div>
