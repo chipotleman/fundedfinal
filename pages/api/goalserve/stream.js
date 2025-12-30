@@ -39,12 +39,18 @@ export default async function handler(req, res) {
 
   // If no events yet, do an immediate fetch
   let currentEvents = service.getEvents(sport);
+  console.log(`[Stream] Current events before fetch: ${currentEvents.length}`);
+  
   if (currentEvents.length === 0) {
     try {
-      await service.fetchAllFeeds();
+      console.log('[Stream] Fetching all feeds...');
+      const results = await service.fetchAllFeeds();
+      console.log('[Stream] Fetch results:', Object.keys(results).map(k => `${k}: ${results[k]?.error || 'ok'}`).join(', '));
       currentEvents = service.getEvents(sport);
+      console.log(`[Stream] Events after fetch: ${currentEvents.length}`);
     } catch (e) {
       console.error('[Stream] Initial fetch error:', e.message);
+      sendEvent({ type: 'error', message: e.message, timestamp: Date.now() });
     }
   }
   
