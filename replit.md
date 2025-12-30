@@ -77,12 +77,13 @@ None documented yet.
     - Supported sports: basketball_nba, americanfootball_nfl, basketball_ncaab, americanfootball_ncaaf, baseball_mlb, icehockey_nhl
     - Caching: 30-second cache (12s during live games)
     - Pricing: Subscription-based (unlimited requests)
-  - **Goalserve WebSocket** (real-time feeds - requires additional subscription)
+  - **Goalserve WebSocket** (real-time feeds - IP whitelisted for production only)
     - Service: `lib/goalserve-ws.js`
     - Features: Sub-second live scores, in-play odds from bet365, ball position tracking
     - Authentication: JWT token flow via `http://live.goalserve.com/api/v1/auth/gettoken`
     - WebSocket URL: `ws://live.goalserve.com/ws/{sport}?tkn={jwt_token}`
-    - **Note**: WebSocket access may require a separate Goalserve subscription tier. Contact Goalserve support to enable.
+    - **IP Whitelisting**: Goalserve whitelisted 2 static deployment IPs only (not development). WebSocket will fail locally but work in production deployment.
+    - **Development Fallback**: REST API polling (30-second cache) is used automatically in development
     - Message types: `avl` (available events list), `updt` (real-time score/odds updates)
     - Supported sports: soccer, basketball, baseball, hockey, tennis, volleyball
     - Endpoints:
