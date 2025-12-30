@@ -1,0 +1,51 @@
+1989-2f7cda559aec4a80.js:1 Logo loaded successfully
+dashboard:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+workbox-4754cb34.js:1 Uncaught (in promise) bad-precaching-response: bad-precaching-response :: [{"url":"https://thepiks.com/_next/app-build-manifest.json","status":404}]
+    at Y.S (workbox-4754cb34.js:1:16829)
+    at async Y.U (workbox-4754cb34.js:1:16381)
+    at async Y.q (workbox-4754cb34.js:1:7576)
+S @ workbox-4754cb34.js:1
+await in S
+U @ workbox-4754cb34.js:1
+await in U
+q @ workbox-4754cb34.js:1
+await in q
+handleAll @ workbox-4754cb34.js:1
+(anonymous) @ workbox-4754cb34.js:1
+$ @ workbox-4754cb34.js:1
+install @ workbox-4754cb34.js:1
+dashboard-a12f33361b871f8e.js:1 [Goalserve Live] SSE connected
+dashboard-a12f33361b871f8e.js:1 [Goalserve Live] Initial status: {isPolling: true, pollInterval: 1000, subscriberCount: 0, eventCount: 0, lastUpdate: null, …}
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Adjusting polling: 5000ms -> 30000ms (live games: false)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:02:31 PM (polling: 30000ms, live: false)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:02:53 PM (polling: 30000ms, live: false)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:02:54 PM (polling: 30000ms, live: false)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:03:01 PM (polling: 30000ms, live: false)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:03:31 PM (polling: 30000ms, live: false)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Adjusting polling: 30000ms -> 5000ms (live games: true)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:04:56 PM (polling: 5000ms, live: true)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:05:16 PM (polling: 5000ms, live: true)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:05:42 PM (polling: 5000ms, live: true)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:06:14 PM (polling: 5000ms, live: true)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:06:21 PM (polling: 5000ms, live: true)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:06:22 PM (polling: 5000ms, live: true)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:06:27 PM (polling: 5000ms, live: true)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:06:28 PM (polling: 5000ms, live: true)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:06:32 PM (polling: 5000ms, live: true)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:06:32 PM (polling: 5000ms, live: true)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:06:33 PM (polling: 5000ms, live: true)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:06:35 PM (polling: 5000ms, live: true)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:06:35 PM (polling: 5000ms, live: true)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:06:48 PM (polling: 5000ms, live: true)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:07:02 PM (polling: 5000ms, live: true)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:07:15 PM (polling: 5000ms, live: true)
+dashboard-a12f33361b871f8e.js:1 [Goalserve Live] SSE error: Event {isTrusted: true, type: 'error', target: EventSource, currentTarget: EventSource, eventPhase: 2, …}
+t.onerror @ dashboard-a12f33361b871f8e.js:1
+dashboard-a12f33361b871f8e.js:1 [Goalserve Live] Reconnecting in 1000ms...
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:07:19 PM (polling: 5000ms, live: true)
+dashboard-a12f33361b871f8e.js:1 [Goalserve Live] SSE connected
+dashboard-a12f33361b871f8e.js:1 [Goalserve Live] Initial status: {isPolling: true, pollInterval: 1000, subscriberCount: 0, eventCount: 0, lastUpdate: null, …}
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:07:21 PM (polling: 5000ms, live: true)
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:07:21 PM (polling: 5000ms, live: true)
+dashboard-a12f33361b871f8e.js:1 [Goalserve Live] Initial events loaded: 110
+dashboard-a12f33361b871f8e.js:1 [DASHBOARD] Games refreshed: 116 games at 1:07:22 PM (polling: 5000ms, live: true)
