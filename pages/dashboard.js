@@ -62,6 +62,35 @@ export default function Dashboard() {
 
   const sports = ['NBA', 'NFL', 'NCAAB', 'NCAAF', 'MLB', 'NHL', 'Euro Basketball', "Int'l Hockey"];
 
+  // Helper to get short team name for buttons, avoiding ambiguous names
+  const getShortTeamName = (teamName, otherTeamName) => {
+    // Remove trailing parenthetical suffixes like "(W)"
+    const cleanName = (teamName || '').replace(/\s*\([^)]*\)\s*$/, '').trim();
+    const cleanOther = (otherTeamName || '').replace(/\s*\([^)]*\)\s*$/, '').trim();
+    
+    const parts = cleanName.split(' ');
+    const otherParts = cleanOther.split(' ');
+    
+    // If only one word, return it
+    if (parts.length === 1) return cleanName;
+    
+    // Get last word of both teams to check for ambiguity
+    const lastWord = parts[parts.length - 1];
+    const otherLastWord = otherParts[otherParts.length - 1];
+    
+    // If both teams have the same last word (e.g., both "U23"), use last 2 words or full name
+    if (lastWord === otherLastWord) {
+      return parts.length >= 2 ? parts.slice(-2).join(' ') : cleanName;
+    }
+    
+    // For longer names, use last 2 words for clarity (e.g., "Morgan State" not just "State")
+    if (parts.length >= 2) {
+      return parts.slice(-2).join(' ');
+    }
+    
+    return cleanName;
+  };
+
   const baseGamesRef = useRef({});
   const betSlipRef = useRef(betSlip);
   
@@ -493,14 +522,14 @@ export default function Dashboard() {
                           inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
                           style={{ flex: 1, borderRadius: '8px', padding: '12px', textAlign: 'center', borderWidth: '1px', borderStyle: 'solid', borderColor: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#3b82f6' : (isDarkMode ? '#374151' : '#d1d5db'), minHeight: '56px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
                         >
-                          <div style={{ fontSize: '12px', marginBottom: '2px', color: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#ffffff' : (isDarkMode ? '#9ca3af' : '#6b7280'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{(() => { const name = game.homeTeamFull || game.homeTeam; const parts = name.replace(/\s*\([^)]*\)\s*$/, '').split(' '); return parts.pop() || name; })()}</div>
+                          <div style={{ fontSize: '12px', marginBottom: '2px', color: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#ffffff' : (isDarkMode ? '#9ca3af' : '#6b7280'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{getShortTeamName(game.homeTeamFull || game.homeTeam, game.awayTeamFull || game.awayTeam)}</div>
                           <div style={{ fontWeight: 'bold', color: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#ffffff' : '#3b82f6' }}>
                             {formatOdds(game.lines.moneyline.home)}
                           </div>
                         </TapSurface>
                       ) : (
                         <div style={{ flex: 1, borderRadius: '8px', padding: '12px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '56px', opacity: 0.5 }}>
-                          <div style={{ fontSize: '12px', marginBottom: '4px', color: isDarkMode ? '#6b7280' : '#9ca3af' }}>{(() => { const name = game.homeTeamFull || game.homeTeam; const parts = name.replace(/\s*\([^)]*\)\s*$/, '').split(' '); return parts.pop() || name; })()}</div>
+                          <div style={{ fontSize: '12px', marginBottom: '4px', color: isDarkMode ? '#6b7280' : '#9ca3af' }}>{getShortTeamName(game.homeTeamFull || game.homeTeam, game.awayTeamFull || game.awayTeam)}</div>
                           <svg className="w-5 h-5" fill="none" stroke={isDarkMode ? '#6b7280' : '#9ca3af'} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                         </div>
                       )}
@@ -512,14 +541,14 @@ export default function Dashboard() {
                           inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
                           style={{ flex: 1, borderRadius: '8px', padding: '12px', textAlign: 'center', borderWidth: '1px', borderStyle: 'solid', borderColor: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#3b82f6' : (isDarkMode ? '#374151' : '#d1d5db'), minHeight: '56px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
                         >
-                          <div style={{ fontSize: '12px', marginBottom: '2px', color: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#ffffff' : (isDarkMode ? '#9ca3af' : '#6b7280'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{(() => { const name = game.awayTeamFull || game.awayTeam; const parts = name.replace(/\s*\([^)]*\)\s*$/, '').split(' '); return parts.pop() || name; })()}</div>
+                          <div style={{ fontSize: '12px', marginBottom: '2px', color: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#ffffff' : (isDarkMode ? '#9ca3af' : '#6b7280'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>{getShortTeamName(game.awayTeamFull || game.awayTeam, game.homeTeamFull || game.homeTeam)}</div>
                           <div style={{ fontWeight: 'bold', color: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#ffffff' : '#3b82f6' }}>
                             {formatOdds(game.lines.moneyline.away)}
                           </div>
                         </TapSurface>
                       ) : (
                         <div style={{ flex: 1, borderRadius: '8px', padding: '12px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '56px', opacity: 0.5 }}>
-                          <div style={{ fontSize: '12px', marginBottom: '4px', color: isDarkMode ? '#6b7280' : '#9ca3af' }}>{(() => { const name = game.awayTeamFull || game.awayTeam; const parts = name.replace(/\s*\([^)]*\)\s*$/, '').split(' '); return parts.pop() || name; })()}</div>
+                          <div style={{ fontSize: '12px', marginBottom: '4px', color: isDarkMode ? '#6b7280' : '#9ca3af' }}>{getShortTeamName(game.awayTeamFull || game.awayTeam, game.homeTeamFull || game.homeTeam)}</div>
                           <svg className="w-5 h-5" fill="none" stroke={isDarkMode ? '#6b7280' : '#9ca3af'} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                         </div>
                       )}
