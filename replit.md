@@ -36,10 +36,19 @@ None documented yet.
 - **Admin Panel**: Accessible at `/admin-panel/login`, includes dashboard, user management (search, multi-select, CSV export, password reset, activity modal with detailed timeline, bets, and withdrawals), bet management, staff management with roles and granular permissions, and analytics.
 - **Withdrawal System**: Comprehensive withdrawal management including payment method-specific forms, history, status flows (Under Review, Awaiting Processing, Finalized/Denied), user cancellation, and admin approval/denial.
 - **User Tracking & Analytics**: Tracks all user interactions, session metrics, page views, demo bets, and unplaced bets via dedicated database tables and client-side hooks.
+- **Education Marketplace**: Verified cappers (users who passed funded challenges) can sell picks and Discord access:
+    - **Capper Registration**: Users who complete challenges become "Piks Verified" and can register as sellers
+    - **Products/Passes**: Cappers create subscription products (daily, weekly, monthly, lifetime) with custom pricing
+    - **Subscriptions**: Buyers purchase passes to access picks and Discord communities
+    - **Discord Integration**: Auto add/remove members when subscriptions start/expire
+    - **Review System**: Buyers can rate and review cappers they've subscribed to
+    - **Performance Stats**: Win rate, ROI, and record computed from graded bets
+    - **Seller Dashboard**: Revenue tracking, subscriber management, product creation
+    - **Admin Management**: Marketplace section in admin panel for managing cappers, subscriptions, and moderating reviews
 
 ### System Design Choices
 - **Authentication Flow**: Beta access -> NextAuth.js -> JWT session -> User profile creation -> Challenge selection & purchase -> Challenge data persistence.
-- **Database Schema**: Includes `users`, `profiles`, `user_bets`, `accounts`, `sessions`, `verification_tokens`, `admin_users`, `admin_staff`, `payment_methods`, `withdrawals`, `user_events`, `session_metrics`, `page_views`, `demo_bets`, `unplaced_bets`, `odds_history_pulls`, `completed_games`.
+- **Database Schema**: Includes `users`, `profiles`, `user_bets`, `accounts`, `sessions`, `verification_tokens`, `admin_users`, `admin_staff`, `payment_methods`, `withdrawals`, `user_events`, `session_metrics`, `page_views`, `demo_bets`, `unplaced_bets`, `odds_history_pulls`, `completed_games`, `cappers`, `capper_products`, `capper_subscriptions`, `capper_reviews`, `discord_links`, `capper_performance`, `discord_jobs`.
 - **Bet Autograding System**:
   - AutoGrader component in `_app.js` polls `/api/bets/grade` every 60 seconds when users are active
   - Completed games are saved to `completed_games` table to preserve results after they disappear from the API

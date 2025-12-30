@@ -329,6 +329,179 @@ export const completedGames = pgTable("completed_games", {
   completedAtIdx: index("completed_games_completed_at_idx").on(table.completedAt),
 }));
 
+// ===== MARKETPLACE TABLES =====
+
+// Verified cappers who can sell on the marketplace
+export const cappers = pgTable("cappers", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().unique(), // References users.id
+  displayName: varchar("display_name", { length: 100 }).notNull(),
+  slug: varchar("slug", { length: 100 }).notNull().unique(), // URL-friendly identifier
+  bio: text("bio"),
+  avatarUrl: text("avatar_url"),
+  bannerUrl: text("banner_url"),
+  specialties: jsonb("specialties").default([]), // ["NBA", "NFL", "MLB"]
+  discordGuildId: varchar("discord_guild_id", { length: 100 }),
+  discordRoleId: varchar("discord_role_id", { length: 100 }),
+  discordInviteLink: varchar("discord_invite_link", { length: 255 }),
+  isActive: boolean("is_active").default(true).notNull(),
+  isVerified: boolean("is_verified").default(false).notNull(), // Piks Verified badge
+  verifiedAt: timestamp("verified_at"),
+  totalSubscribers: integer("total_subscribers").default(0),
+  totalRevenue: decimal("total_revenue", { precision: 12, scale: 2 }).default('0'),
+  averageRating: decimal("average_rating", { precision: 3, scale: 2 }).default('0'),
+  totalReviews: integer("total_reviews").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  userIdIdx: index("cappers_user_id_idx").on(table.userId),
+  slugIdx: index("cappers_slug_idx").on(table.slug),
+  isActiveIdx: index("cappers_is_active_idx").on(table.isActive),
+}));
+
+// Products/passes that cappers sell
+export const capperProducts = pgTable("capper_products", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  capperId: varchar("capper_id").notNull(), // References cappers.id
+  name: varchar("name", { length: 100 }).notNull(),
+  description: text("description"),
+  type: varchar("type", { length: 50 }).default('subscription').notNull(), // subscription, one_time
+  duration: varchar("duration", { length: 50 }).notNull(), // daily, weekly, monthly, yearly, lifetime
+  durationDays: integer("duration_days").notNull(), // Actual days for the subscription
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  features: jsonb("features").default([]), // List of included features
+  includesDiscord: boolean("includes_discord").default(true),
+  isActive: boolean("is_active").default(true).notNull(),
+  sortOrder: integer("sort_order").default(0),
+  fanbasisProductId: varchar("fanbasis_product_id", { length: 255 }), // Fanbasis payment integration
+  stripeProductId: varchar("stripe_product_id", { length: 255 }), // Backup for Stripe
+  totalSales: integer("total_sales").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  capperIdIdx: index("capper_products_capper_id_idx").on(table.capperId),
+  isActiveIdx: index("capper_products_is_active_idx").on(table.isActive),
+}));
+
+// Subscriptions purchased by buyers
+export const capperSubscriptions = pgTable("capper_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  productId: varchar("product_id").notNull(), // References capperProducts.id
+  capperId: varchar("capper_id").notNull(), // References cappers.id (denormalized for queries)
+  buyerId: varchar("buyer_id").notNull(), // References users.id
+  status: varchar("status", { length: 50 }).default('active').notNull(), // active, expired, cancelled, paused
+  amountPaid: decimal("amount_paid", { precision: 10, scale: 2 }).notNull(),
+  startsAt: timestamp("starts_at").defaultNow().notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  autoRenew: boolean("auto_renew").default(false),
+  discordMemberAdded: boolean("discord_member_added").default(false),
+  discordAddedAt: timestamp("discord_added_at"),
+  discordRemovedAt: timestamp("discord_removed_at"),
+  fanbasisSubscriptionId: varchar("fanbasis_subscription_id", { length: 255 }),
+  fanbasisTransactionId: varchar("fanbasis_transaction_id", { length: 255 }),
+  cancelledAt: timestamp("cancelled_at"),
+  cancellationReason: text("cancellation_reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  productIdIdx: index("capper_subscriptions_product_id_idx").on(table.productId),
+  capperIdIdx: index("capper_subscriptions_capper_id_idx").on(table.capperId),
+  buyerIdIdx: index("capper_subscriptions_buyer_id_idx").on(table.buyerId),
+  statusIdx: index("capper_subscriptions_status_idx").on(table.status),
+  expiresAtIdx: index("capper_subscriptions_expires_at_idx").on(table.expiresAt),
+}));
+
+// Reviews left by buyers for cappers
+export const capperReviews = pgTable("capper_reviews", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  capperId: varchar("capper_id").notNull(), // References cappers.id
+  buyerId: varchar("buyer_id").notNull(), // References users.id
+  subscriptionId: varchar("subscription_id").notNull(), // References capperSubscriptions.id
+  rating: integer("rating").notNull(), // 1-5 stars
+  title: varchar("title", { length: 200 }),
+  comment: text("comment"),
+  status: varchar("status", { length: 50 }).default('pending').notNull(), // pending, approved, rejected, flagged
+  isVerifiedPurchase: boolean("is_verified_purchase").default(true).notNull(),
+  helpfulCount: integer("helpful_count").default(0),
+  capperResponse: text("capper_response"),
+  capperRespondedAt: timestamp("capper_responded_at"),
+  moderatedBy: varchar("moderated_by"),
+  moderatedAt: timestamp("moderated_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  capperIdIdx: index("capper_reviews_capper_id_idx").on(table.capperId),
+  buyerIdIdx: index("capper_reviews_buyer_id_idx").on(table.buyerId),
+  statusIdx: index("capper_reviews_status_idx").on(table.status),
+  ratingIdx: index("capper_reviews_rating_idx").on(table.rating),
+}));
+
+// Discord OAuth links for cappers
+export const discordLinks = pgTable("discord_links", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  capperId: varchar("capper_id").notNull().unique(), // References cappers.id
+  discordUserId: varchar("discord_user_id", { length: 100 }),
+  discordUsername: varchar("discord_username", { length: 100 }),
+  accessToken: text("access_token"), // Encrypted
+  refreshToken: text("refresh_token"), // Encrypted
+  tokenExpiresAt: timestamp("token_expires_at"),
+  guildId: varchar("guild_id", { length: 100 }),
+  guildName: varchar("guild_name", { length: 255 }),
+  memberRoleId: varchar("member_role_id", { length: 100 }),
+  botAdded: boolean("bot_added").default(false),
+  lastSyncedAt: timestamp("last_synced_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  capperIdIdx: index("discord_links_capper_id_idx").on(table.capperId),
+}));
+
+// Performance snapshots for cappers (computed from their bets)
+export const capperPerformance = pgTable("capper_performance", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  capperId: varchar("capper_id").notNull(), // References cappers.id
+  period: varchar("period", { length: 50 }).notNull(), // daily, weekly, monthly, all_time
+  periodStart: timestamp("period_start").notNull(),
+  periodEnd: timestamp("period_end").notNull(),
+  totalBets: integer("total_bets").default(0),
+  wins: integer("wins").default(0),
+  losses: integer("losses").default(0),
+  pushes: integer("pushes").default(0),
+  winRate: decimal("win_rate", { precision: 5, scale: 2 }).default('0'),
+  roi: decimal("roi", { precision: 8, scale: 2 }).default('0'),
+  totalWagered: decimal("total_wagered", { precision: 12, scale: 2 }).default('0'),
+  totalProfit: decimal("total_profit", { precision: 12, scale: 2 }).default('0'),
+  averageOdds: decimal("average_odds", { precision: 6, scale: 2 }).default('0'),
+  currentStreak: integer("current_streak").default(0), // Positive = wins, negative = losses
+  bestStreak: integer("best_streak").default(0),
+  sportBreakdown: jsonb("sport_breakdown").default({}), // Stats per sport
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  capperIdIdx: index("capper_performance_capper_id_idx").on(table.capperId),
+  periodIdx: index("capper_performance_period_idx").on(table.period),
+  periodStartIdx: index("capper_performance_period_start_idx").on(table.periodStart),
+}));
+
+// Discord member management job queue
+export const discordJobs = pgTable("discord_jobs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  subscriptionId: varchar("subscription_id").notNull(), // References capperSubscriptions.id
+  capperId: varchar("capper_id").notNull(),
+  buyerId: varchar("buyer_id").notNull(),
+  action: varchar("action", { length: 50 }).notNull(), // add_member, remove_member
+  status: varchar("status", { length: 50 }).default('pending').notNull(), // pending, processing, completed, failed
+  attempts: integer("attempts").default(0),
+  maxAttempts: integer("max_attempts").default(3),
+  lastError: text("last_error"),
+  processedAt: timestamp("processed_at"),
+  scheduledFor: timestamp("scheduled_for").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  statusIdx: index("discord_jobs_status_idx").on(table.status),
+  scheduledForIdx: index("discord_jobs_scheduled_for_idx").on(table.scheduledFor),
+}));
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -360,3 +533,17 @@ export type OddsHistoryPull = typeof oddsHistoryPulls.$inferSelect;
 export type InsertOddsHistoryPull = typeof oddsHistoryPulls.$inferInsert;
 export type CompletedGame = typeof completedGames.$inferSelect;
 export type InsertCompletedGame = typeof completedGames.$inferInsert;
+export type Capper = typeof cappers.$inferSelect;
+export type InsertCapper = typeof cappers.$inferInsert;
+export type CapperProduct = typeof capperProducts.$inferSelect;
+export type InsertCapperProduct = typeof capperProducts.$inferInsert;
+export type CapperSubscription = typeof capperSubscriptions.$inferSelect;
+export type InsertCapperSubscription = typeof capperSubscriptions.$inferInsert;
+export type CapperReview = typeof capperReviews.$inferSelect;
+export type InsertCapperReview = typeof capperReviews.$inferInsert;
+export type DiscordLink = typeof discordLinks.$inferSelect;
+export type InsertDiscordLink = typeof discordLinks.$inferInsert;
+export type CapperPerformanceRecord = typeof capperPerformance.$inferSelect;
+export type InsertCapperPerformance = typeof capperPerformance.$inferInsert;
+export type DiscordJob = typeof discordJobs.$inferSelect;
+export type InsertDiscordJob = typeof discordJobs.$inferInsert;
