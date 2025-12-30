@@ -81,19 +81,34 @@ export default async function handler(req, res) {
         body: JSON.stringify({ apiKey })
       });
       
-      const tokenData = await tokenResponse.json();
+      const responseText = await tokenResponse.text();
+      let tokenData = {};
+      
+      try {
+        tokenData = responseText ? JSON.parse(responseText) : {};
+      } catch (e) {
+        tokenData = { parseError: true, rawResponse: responseText.substring(0, 200) };
+      }
+      
+      const isSuccess = tokenResponse.ok && tokenData.token;
+      const errorReason = !tokenResponse.ok 
+        ? (tokenResponse.status === 401 ? 'IP not whitelisted or invalid API key' : `HTTP ${tokenResponse.status}`)
+        : (!responseText ? 'Empty response - IP likely not whitelisted' : null);
       
       results.tests.websocket_auth = {
-        status: tokenResponse.ok ? 'success' : 'failed',
+        status: isSuccess ? 'success' : 'failed',
         httpStatus: tokenResponse.status,
         responseTime: Date.now() - startTime,
         hasToken: !!tokenData.token,
-        error: tokenData.error || (tokenResponse.status === 401 ? 'IP not whitelisted or invalid API key' : null)
+        error: errorReason || tokenData.error || (tokenData.parseError ? 'Invalid JSON response' : null),
+        rawResponse: !isSuccess ? (responseText.substring(0, 100) || '(empty)') : undefined
       };
     } catch (error) {
       results.tests.websocket_auth = {
         status: 'error',
-        error: error.message
+        error: error.message === 'Unexpected end of JSON input' 
+          ? 'Empty response from Goalserve - IP not whitelisted'
+          : error.message
       };
     }
   } else {
