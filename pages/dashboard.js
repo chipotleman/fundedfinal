@@ -660,7 +660,7 @@ export default function Dashboard() {
                                 </div>
                               </TapSurface>
                             ) : (
-                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6' }}>
+                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '44px' }}>
                                 <div style={{ fontSize: '12px', color: isDarkMode ? '#6b7280' : '#9ca3af' }}>-</div>
                               </div>
                             )}
@@ -689,7 +689,7 @@ export default function Dashboard() {
                                 </div>
                               </TapSurface>
                             ) : (
-                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6' }}>
+                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '44px' }}>
                                 <div style={{ fontSize: '12px', color: isDarkMode ? '#6b7280' : '#9ca3af' }}>-</div>
                               </div>
                             )}
@@ -709,7 +709,7 @@ export default function Dashboard() {
                                 </div>
                               </TapSurface>
                             ) : (
-                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6' }}>
+                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '44px' }}>
                                 <div style={{ fontSize: '12px', color: isDarkMode ? '#6b7280' : '#9ca3af' }}>-</div>
                               </div>
                             )}
@@ -738,7 +738,7 @@ export default function Dashboard() {
                                 </div>
                               </TapSurface>
                             ) : (
-                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6' }}>
+                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: '44px' }}>
                                 <div style={{ fontSize: '12px', color: isDarkMode ? '#6b7280' : '#9ca3af' }}>-</div>
                               </div>
                             )}
