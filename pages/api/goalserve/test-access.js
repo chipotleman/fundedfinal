@@ -59,26 +59,16 @@ export default async function handler(req, res) {
         dataSize = decompressed.length;
       } else {
         const textContent = bufferData.toString('utf-8');
-        const is403 = textContent.includes('403') || textContent.includes('Forbidden');
-        
-        if (is403) {
-          results.tests[feed.name] = {
-            status: 'failed',
-            httpStatus: response.status,
-            error: 'IP not whitelisted (received HTML error page)',
-            preview: textContent.substring(0, 150)
-          };
-          continue;
-        }
         
         try {
           data = JSON.parse(textContent);
           dataSize = bufferData.length;
         } catch (e) {
+          const is403 = textContent.includes('403') || textContent.includes('Forbidden');
           results.tests[feed.name] = {
             status: 'failed',
             httpStatus: response.status,
-            error: 'Response is not valid JSON',
+            error: is403 ? 'IP not whitelisted (received HTML error page)' : 'Response is not valid JSON',
             preview: textContent.substring(0, 150)
           };
           continue;
