@@ -95,6 +95,21 @@ None documented yet.
       - `useLiveEvent(eventId)` - Hook for specific event updates
       - `useLiveSport(sport)` - Hook for sport-specific updates
     - Fallback: If WebSocket unavailable, use REST API polling via `/api/goalserve/live` (30-second cache)
+  - **Goalserve Inplay HTTP Feeds** (alternative real-time data - requires IP whitelisting)
+    - Service: `lib/goalserve-inplay.js`
+    - Features: Gzipped JSON feeds updating every second with live scores and odds
+    - Endpoints provided by Goalserve:
+      - `http://inplay.goalserve.com/inplay-basket.gz` (basketball)
+      - `http://inplay.goalserve.com/inplay-hockey.gz` (hockey)
+      - `http://inplay.goalserve.com/inplay-amfootball.gz` (football)
+      - `http://inplay.goalserve.com/inplay-baseball.gz` (baseball)
+      - `http://inplay.goalserve.com/inplay-soccer.gz` (soccer)
+    - API endpoints:
+      - `/api/goalserve/inplay?action=status` - Get polling status
+      - `/api/goalserve/inplay?action=fetch&sport=basketball` - Fetch single feed
+      - `/api/goalserve/inplay?live=true` - Get live events
+      - `/api/goalserve/test-access` - Diagnostic endpoint to verify IP whitelisting
+    - **IP Whitelisting Required**: Both production IPs must be whitelisted: 52.70.127.138 AND 54.92.239.253
   - **The Odds API** (backup - not currently used)
     - API service: `lib/theoddsapi.js`
     - Provides: US bookmaker odds (FanDuel, DraftKings, BetMGM)
