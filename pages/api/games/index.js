@@ -82,36 +82,41 @@ function convertGoalserveToDisplayFormat(game) {
     });
   }
   
+  const homeSpreadPoint = bet365Spread?.home_spread?.point;
+  const awaySpreadPoint = bet365Spread?.away_spread?.point;
+  const overPoint = bet365Total?.over?.point;
+  const underPoint = bet365Total?.under?.point;
+  
   const lines = {
     moneyline: {
-      home: parseInt(bet365ML?.home_ml?.us) || 0,
-      away: parseInt(bet365ML?.away_ml?.us) || 0,
+      home: parseInt(bet365ML?.home_ml?.us) || null,
+      away: parseInt(bet365ML?.away_ml?.us) || null,
       homeSource: bet365ML?.name || 'Goalserve',
       awaySource: bet365ML?.name || 'Goalserve'
     },
     spread: {
-      home: {
-        point: bet365Spread?.home_spread?.point || 0,
+      home: homeSpreadPoint != null ? {
+        point: homeSpreadPoint,
         odds: parseInt(bet365Spread?.home_spread?.us) || -110,
         source: bet365Spread?.name || 'Goalserve'
-      },
-      away: {
-        point: bet365Spread?.away_spread?.point || 0,
+      } : null,
+      away: awaySpreadPoint != null ? {
+        point: awaySpreadPoint,
         odds: parseInt(bet365Spread?.away_spread?.us) || -110,
         source: bet365Spread?.name || 'Goalserve'
-      }
+      } : null
     },
     total: {
-      over: {
-        point: bet365Total?.over?.point || 0,
+      over: overPoint != null ? {
+        point: overPoint,
         odds: parseInt(bet365Total?.over?.us) || -110,
         source: bet365Total?.name || 'Goalserve'
-      },
-      under: {
-        point: bet365Total?.under?.point || 0,
+      } : null,
+      under: underPoint != null ? {
+        point: underPoint,
         odds: parseInt(bet365Total?.under?.us) || -110,
         source: bet365Total?.name || 'Goalserve'
-      }
+      } : null
     }
   };
   
