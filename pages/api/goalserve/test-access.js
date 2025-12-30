@@ -6,8 +6,19 @@ const gunzip = promisify(zlib.gunzip);
 export default async function handler(req, res) {
   const results = {
     timestamp: new Date().toISOString(),
-    tests: {}
+    tests: {},
+    serverInfo: {}
   };
+
+  try {
+    const ipResponse = await fetch('https://api.ipify.org?format=json');
+    const ipData = await ipResponse.json();
+    results.serverInfo.outboundIP = ipData.ip;
+    results.serverInfo.note = 'This is the IP that Goalserve sees when we make requests. This IP must be whitelisted.';
+  } catch (e) {
+    results.serverInfo.outboundIP = 'Could not determine';
+    results.serverInfo.error = e.message;
+  }
 
   const httpFeeds = [
     { name: 'basketball', url: 'http://inplay.goalserve.com/inplay-basket.gz' },
