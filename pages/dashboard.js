@@ -216,10 +216,10 @@ export default function Dashboard() {
               : null
           },
           total: {
-            over: event.odds.total?.line ? 
+            over: (event.odds.total?.line !== undefined && event.odds.total?.line !== null) ? 
               { point: parseFloat(event.odds.total.line) || 0, odds: parseFloat(event.odds.total.over) || -110 } 
               : null,
-            under: event.odds.total?.line ? 
+            under: (event.odds.total?.line !== undefined && event.odds.total?.line !== null) ? 
               { point: parseFloat(event.odds.total.line) || 0, odds: parseFloat(event.odds.total.under) || -110 } 
               : null
           }

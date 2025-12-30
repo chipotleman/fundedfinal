@@ -1,0 +1,1960 @@
+Basketball
+curl --request GET \\
+  --url {REQUEST_URL_FROM_ADMIN}
+Response object
+{
+  "updated": "10.01.2021 05:51:19",
+  "updated_ts": 1633067479990,
+  "events": {
+    "108688394": {
+      "core": {
+        "safe": "",
+        "removed": "",
+        "stopped": "1",
+        "blocked": "1",
+        "finished": "0",
+        "updated": "01.10.2021 05:51:19",
+        "updated_ts": "1633067479975"
+      },
+      "info": {
+        "id": "108688394",
+        "mid": "0",
+        "bet365id": "108678464",
+        "name": "DAL Mavericks (Guardian) Esports vs BKN Nets (Ragnarok) Esports",
+        "sport": "Basketball",
+        "league": "Ebasketball H2H GG League - 4x5mins",
+        "start_time": null,
+        "start_date": null,
+        "start_ts": "",
+        "period": "4th Quarter",
+        "score": "74:69",
+        "ball_pos": "",
+        "state": "01084",
+        "minute": "0",
+        "seconds": "00:00"
+      },
+      "team_info": {
+        "home": {
+          "name": "DAL Mavericks (Guardian) Esports",
+          "score": "74",
+          "color": "",
+          "kit_color": "",
+          "Serve": ""
+        },
+        "away": {
+          "name": "BKN Nets (Ragnarok) Esports",
+          "score": "69",
+          "color": "",
+          "kit_color": "",
+          "Serve": ""
+        }
+      },
+      "bonus": {},
+      "stream": "",
+      "stats": {
+        "0": {
+          "name": "ITeam",
+          "home": "DAL Mavericks (Guardian) Esports",
+          "away": "BKN Nets (Ragnarok) Esports"
+        },
+        "1": {
+          "name": "1",
+          "home": "19",
+          "away": "6"
+        },
+        "2": {
+          "name": "2",
+          "home": "18",
+          "away": "12"
+        },
+        "3": {
+          "name": "Half",
+          "home": "37",
+          "away": "18"
+        },
+        "4": {
+          "name": "3",
+          "home": "15",
+          "away": "25"
+        },
+        "5": {
+          "name": "4",
+          "home": "22",
+          "away": "26"
+        },
+        "6": {
+          "name": "OT",
+          "home": null,
+          "away": null
+        },
+        "7": {
+          "name": "T",
+          "home": "74",
+          "away": "69"
+        }
+      },
+      "extra": {
+        "0": {
+          "code": "",
+          "minute": "0",
+          "value": "Score After 1st Quarter - 19-6"
+        },
+        "1": {
+          "code": "",
+          "minute": "0",
+          "value": "Score After 2nd Quarter - 37-18"
+        },
+        "2": {
+          "code": "",
+          "minute": "0",
+          "value": "Score After 3rd Quarter - 52-43"
+        }
+      },
+      "history": {},
+      "odds": {
+        "1446": {
+          "id": 1446,
+          "name": "Game Lines Spread",
+          "short_name": "Game Lines Spread",
+          "suspend": "1",
+          "order": "",
+          "participants": {
+            "10868839414460": {
+              "id": "10868839414460",
+              "name": "Home",
+              "short_name": "Home",
+              "value_eu": "0",
+              "suspend": "1",
+              "handicap": "-4.5"
+            },
+            "10868839414461": {
+              "id": "10868839414461",
+              "name": "Away",
+              "short_name": "Away",
+              "value_eu": "0",
+              "suspend": "1",
+              "handicap": "4.5"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+Request Information
+
+Category	Value
+Http Method	GET
+URL	{REQUEST_URL_FROM_ADMIN}
+Request Headers
+
+No headers required
+
+Response Headers
+
+Name	Value
+Content-Type	application/json
+Output Schema of request
+
+ NOTE:
+IF THE ROOT FIELD "updated_ts" IS NOT UPDATED FOR MORE THAN 30 SECONDS, THIS MEANS THAT ALL ODDS AND MATCHES ARE SUSPENDED AND INACTIVE DUE TO LOSS OF CONNECTION TO THE SERVER.
+
+Field	Type	Description
+updated	datetime	Last update of the feed.
+updated_ts	timestamp	Last update of the feed as Timestamp.
+events	object	Collection of sports events objects.
+events.{event_id}	numeric	Id of sport event object.
+events.{id}.core.safe		Presented for backwards compatible with old API.
+events.{id}.core.removed		Presented for backwards compatible with old API.
+events.{id}.core.stopped	numeric	Indicates whether match time is stopped or it is running, e.g. a referee stops the time while there is an injury on the pitch.
+Value 1 or 0.
+events.{id}.core.blocked	numeric	Indicates whether event blocked or not.
+events.{id}.core.finished	numeric	Indicates whether event finished or not.
+events.{id}.core.updated	datetime	Indicates when event data was updated. Format dd.MM.yyyy HH:mm:ss.
+events.{id}.core.updated_ts	timestamp	Indicates when event data was updated.
+events.{id}.info.id	numeric	Id of sport event object.
+events.{id}.info.mid	numeric	Additional Id of sport event object.
+events.{id}.info.bet365id	numeric	Bet365 Id of sport event object.
+events.{id}.info.name	string	Event name.
+events.{id}.info.sport	string	Event sport type name.
+events.{id}.info.league	string	Event league name.
+events.{id}.info.start_time	string	optional Event start time. Format HH:mm. (GMT+1)
+events.{id}.info.start_date	string	optional Event start date. Format dd.MM.yyyy. (GMT+1)
+events.{id}.info.start_ts	timestamp	optional Event start datetime. (GMT+1)
+events.{id}.info.period	string	Event current period name.
+events.{id}.info.score	string	Event current score.
+events.{id}.info.ball_pos	string	optional Ball position on field in coordinates system 'x' and 'y'.
+events.{id}.info.state	numeric	optional Event current state code.
+events.{id}.info.minute	numeric	optional Event current minute.
+events.{id}.info.seconds	string	optional Event current time. Format mm:ss.
+events.{id}.team_info.{home or away}.name	string	Team name.
+events.{id}.team_info.{home or away}.score	numeric	Team score.
+events.{id}.team_info.{home or away}.color		Presented for backwards compatible with old API.
+events.{id}.team_info.{home or away}.kit_color	string	Comma separated colors codes for upper part of the outfit (shirts).
+events.{id}.team_info.{home or away}.Serve		Presented for backwards compatible with old API.
+events.{id}.bonus		Presented for backwards compatible with old API.
+events.{id}.stream		Presented for backwards compatible with old API.
+events.{id}.stats.{idx}	numeric	idx - Statistics index in collection of statistics data.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+string
+string	ITeam - Teams info.
+Home team name.
+Away team name.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	1 - Teams 1st Quarter scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	2 - Teams 2nd Quarter scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	3 - Teams 1st Half scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	4 - Teams 3rd Quarter scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	5 - Teams 4th Quarter scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	6 - Teams Over-time scores statistic.
+optional Home team scores.
+optional Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	7 - Teams Total scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.extra.{idx}	numeric	idx - Message index in collection of event messages.
+events.{id}.extra.{idx}.code
+events.{id}.extra.{idx}.minute
+events.{id}.extra.{idx}.value	numeric
+numeric
+string	optional Message code.
+The minute at which the event occurred.
+Message text.
+events.{id}.history		Presented for backwards compatible with old API.
+events.{id}.odds.{m_id}	numeric	m_id - Odds Market id.
+events.{id}.odds.{m_id}.id	numeric	Odds Market id.
+events.{id}.odds.{m_id}.name	string	Odds Market name.
+events.{id}.odds.{m_id}.short_name	string	Odds Market short name.
+events.{id}.odds.{m_id}.suspend	numeric	Indicates whether market blocked or not.
+events.{id}.odds.{m_id}.order		Presented for backwards compatible with old API.
+events.{id}.odds.{m_id}.participants	object	Collection of Odds Market participants objects.
+events.{id}.odds.{m_id}.participants.{p_id}	numeric	p_id - Participant odd id.
+events.{id}.odds.{m_id}.participants.{p_id}.id	numeric	Participant odd id.
+events.{id}.odds.{m_id}.participants.{p_id}.name	string	Participant odd name.
+events.{id}.odds.{m_id}.participants.{p_id}.short_name	string	Participant odd short name.
+events.{id}.odds.{m_id}.participants.{p_id}.value_eu	numeric	Participant odd value.
+events.{id}.odds.{m_id}.participants.{p_id}.suspend	numeric	Indicates whether participant odd blocked or not.
+events.{id}.odds.{m_id}.participants.{p_id}.handicap	numeric	optional Additional argument for the participant odd - margin or handicap value.
+events.{id}.odds.{m_id}.participants.{p_id}.is_main	numeric	optional Indicates the main participant in current betting odds market.
+Tennis
+curl --request GET \\
+  --url {REQUEST_URL_FROM_ADMIN}
+Response object
+{
+  "updated": "10.01.2021 06:15:43",
+  "updated_ts": 1633068943885,
+  "events": {
+    "65646809": {
+      "core": {
+        "safe": "",
+        "removed": "",
+        "stopped": "1",
+        "blocked": "0",
+        "finished": "0",
+        "updated": "01.10.2021 01:00:59",
+        "updated_ts": "1633050059410"
+      },
+      "info": {
+        "id": "65646809",
+        "mid": "0",
+        "bet365id": "108693418",
+        "name": "Strong Kirchheimer vs Alexander Bernard",
+        "sport": "Tennis",
+        "league": "ITF M15 Cancun",
+        "start_time": null,
+        "start_date": null,
+        "start_ts": "",
+        "period": "Set 2",
+        "score": "7:5,3:3",
+        "ball_pos": "",
+        "state_info": "7:3~5:3#2~1#36% (4/11)~60% (3/5)#69~69#50~29",
+        "state": "9001",
+        "minute": "0",
+        "seconds": "00:00"
+      },
+      "team_info": {
+        "home": {
+          "name": "Strong Kirchheimer",
+          "score": "",
+          "color": "",
+          "kit_color": "",
+          "Serve": ""
+        },
+        "away": {
+          "name": "Alexander Bernard",
+          "score": "",
+          "color": "",
+          "kit_color": "",
+          "Serve": ""
+        }
+      },
+      "bonus": {},
+      "stream": "",
+      "stats": {
+        "0": {
+          "name": "ITeam",
+          "home": "Strong Kirchheimer",
+          "away": "Alexander Bernard"
+        },
+        "1": {
+          "name": "POINTS",
+          "home": 0,
+          "away": 0
+        },
+        "2": {
+          "name": "S1",
+          "home": 7,
+          "away": 5
+        },
+        "3": {
+          "name": "T",
+          "home": 1,
+          "away": 0
+        },
+        "4": {
+          "name": "S2",
+          "home": 3,
+          "away": 3
+        },
+        "5": {
+          "name": "TURN",
+          "home": 0,
+          "away": 1
+        }
+      },
+      "extra": {
+        "0": {
+          "code": "",
+          "minute": "0",
+          "value": "Game 18 - Strong Kirchheimer - holds to love"
+        },
+        "1": {
+          "code": "",
+          "minute": "0",
+          "value": "Game 17 - Alexander Bernard - holds to 15"
+        },
+        "2": {
+          "code": "",
+          "minute": "0",
+          "value": "Game 16 - Alexander Bernard - breaks to love"
+        }
+      },
+      "history": {},
+      "odds": {
+        "66": {
+          "id": 66,
+          "name": "Set 2 Race to",
+          "short_name": "Set 2 Race to",
+          "suspend": "0",
+          "order": "",
+          "participants": {
+            "65646809660": {
+              "id": "65646809660",
+              "name": "Home",
+              "short_name": "Home",
+              "value_eu": "2.2",
+              "suspend": "0",
+              "handicap": "4"
+            },
+            "65646809661": {
+              "id": "65646809661",
+              "name": "Away",
+              "short_name": "Away",
+              "value_eu": "1.615",
+              "suspend": "0",
+              "handicap": "4"
+            },
+            "65646809662": {
+              "id": "65646809662",
+              "name": "Home",
+              "short_name": "Home",
+              "value_eu": "1.666",
+              "suspend": "0",
+              "handicap": "5"
+            },
+            "65646809663": {
+              "id": "65646809663",
+              "name": "Away",
+              "short_name": "Away",
+              "value_eu": "2.1",
+              "suspend": "0",
+              "handicap": "5"
+            }
+          }
+        },
+        "67": {
+          "id": 67,
+          "name": "To Win",
+          "short_name": "To Win",
+          "suspend": "0",
+          "order": "",
+          "participants": {
+            "65646809670": {
+              "id": "65646809670",
+              "name": "Home",
+              "short_name": "Home",
+              "value_eu": "1.04",
+              "suspend": "0"
+            },
+            "65646809671": {
+              "id": "65646809671",
+              "name": "Away",
+              "short_name": "Away",
+              "value_eu": "9",
+              "suspend": "0"
+            }
+          }
+        },
+        "10100": {
+          "id": 10100,
+          "name": "Player 1 Over/Under by Games",
+          "short_name": "Player 1 Over/Under by Games",
+          "suspend": "0",
+          "order": "",
+          "participants": {
+            "65646809101000": {
+              "id": "65646809101000",
+              "name": "Over",
+              "short_name": "Over",
+              "value_eu": "1.833",
+              "suspend": "0",
+              "handicap": "13.5"
+            },
+            "65646809101001": {
+              "id": "65646809101001",
+              "name": "Under",
+              "short_name": "Under",
+              "value_eu": "1.833",
+              "suspend": "0",
+              "handicap": "13.5"
+            }
+          }
+        }
+      }
+    },
+    "65646826": {
+      "core": {
+        "safe": "",
+        "removed": "",
+        "stopped": "1",
+        "blocked": "0",
+        "finished": "0",
+        "updated": "01.10.2021 01:00:59",
+        "updated_ts": "1633050059408"
+      },
+      "info": {
+        "id": "65646826",
+        "mid": "0",
+        "bet365id": "108692991",
+        "name": "Rogers/Rosca vs Inoue/Monroy",
+        "sport": "Tennis",
+        "league": "ITF W15 Cancun WD",
+        "start_time": null,
+        "start_date": null,
+        "start_ts": "",
+        "period": "Set 2",
+        "score": "6:2,1:1",
+        "ball_pos": "",
+        "state_info": "6:1~2:1#0~0#60% (3/5)~20% (1/5)#68~50#60~43",
+        "state": "9001",
+        "minute": "0",
+        "seconds": "00:00"
+      },
+      "team_info": {
+        "home": {
+          "name": "Rogers/Rosca",
+          "score": "",
+          "color": "",
+          "kit_color": "",
+          "Serve": ""
+        },
+        "away": {
+          "name": "Inoue/Monroy",
+          "score": "",
+          "color": "",
+          "kit_color": "",
+          "Serve": ""
+        }
+      },
+      "bonus": {},
+      "stream": "",
+      "stats": {
+        "0": {
+          "name": "ITeam",
+          "home": "Rogers/Rosca",
+          "away": "Inoue/Monroy"
+        },
+        "1": {
+          "name": "POINTS",
+          "home": 0,
+          "away": 0
+        },
+        "2": {
+          "name": "S1",
+          "home": 6,
+          "away": 2
+        },
+        "3": {
+          "name": "T",
+          "home": 1,
+          "away": 0
+        },
+        "4": {
+          "name": "S2",
+          "home": 1,
+          "away": 1
+        },
+        "5": {
+          "name": "TURN",
+          "home": 0,
+          "away": 1
+        }
+      },
+      "extra": {
+        "0": {
+          "code": "",
+          "minute": "0",
+          "value": "Game 10 - Inoue/Monroy - breaks to 30"
+        },
+        "1": {
+          "code": "",
+          "minute": "0",
+          "value": "Game 9 - Rogers/Rosca - breaks to 30"
+        }
+      },
+      "history": {},
+      "odds": {
+        "67": {
+          "id": 67,
+          "name": "To Win",
+          "short_name": "To Win",
+          "suspend": "0",
+          "order": "",
+          "participants": {
+            "65646826670": {
+              "id": "65646826670",
+              "name": "Home",
+              "short_name": "Home",
+              "value_eu": "1.03",
+              "suspend": "0"
+            },
+            "65646826671": {
+              "id": "65646826671",
+              "name": "Away",
+              "short_name": "Away",
+              "value_eu": "11",
+              "suspend": "0"
+            }
+          }
+        },
+        "80852": {
+          "id": 80852,
+          "name": "Game Winner (2nd Set)",
+          "short_name": "Game Winner (2nd Set)",
+          "suspend": "0",
+          "order": "",
+          "participants": {
+            "65646826808520": {
+              "id": "65646826808520",
+              "name": "Away",
+              "short_name": "Away",
+              "value_eu": "1.833",
+              "suspend": "0",
+              "handicap": "3"
+            },
+            "65646826808521": {
+              "id": "65646826808521",
+              "name": "Home",
+              "short_name": "Home",
+              "value_eu": "1.833",
+              "suspend": "0",
+              "handicap": "3"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+Request Information
+
+Category	Value
+Http Method	GET
+URL	{REQUEST_URL_FROM_ADMIN}
+Request Headers
+
+No headers required
+
+Response Headers
+
+Name	Value
+Content-Type	application/json
+Output Schema of request
+
+ NOTE:
+IF THE ROOT FIELD "updated_ts" IS NOT UPDATED FOR MORE THAN 30 SECONDS, THIS MEANS THAT ALL ODDS AND MATCHES ARE SUSPENDED AND INACTIVE DUE TO LOSS OF CONNECTION TO THE SERVER.
+
+Field	Type	Description
+updated	datetime	Last update of the feed.
+updated_ts	timestamp	Last update of the feed as Timestamp.
+events	object	Collection of sports events objects.
+events.{event_id}	numeric	Id of sport event object.
+events.{id}.core.safe		Presented for backwards compatible with old API.
+events.{id}.core.removed		Presented for backwards compatible with old API.
+events.{id}.core.stopped	numeric	Indicates whether match time is stopped or it is running, e.g. a referee stops the time while there is an injury on the pitch.
+Value 1 or 0.
+events.{id}.core.blocked	numeric	Indicates whether event blocked or not.
+events.{id}.core.finished	numeric	Indicates whether event finished or not.
+events.{id}.core.updated	datetime	Indicates when event data was updated. Format dd.MM.yyyy HH:mm:ss.
+events.{id}.core.updated_ts	timestamp	Indicates when event data was updated.
+events.{id}.info.id	numeric	Id of sport event object.
+events.{id}.info.mid	numeric	Additional Id of sport event object.
+events.{id}.info.bet365id	numeric	Bet365 Id of sport event object.
+events.{id}.info.name	string	Event name.
+events.{id}.info.sport	string	Event sport type name.
+events.{id}.info.league	string	Event league name.
+events.{id}.info.start_time	string	optional Event start time. Format HH:mm. (GMT+1)
+events.{id}.info.start_date	string	optional Event start date. Format dd.MM.yyyy. (GMT+1)
+events.{id}.info.start_ts	timestamp	optional Event start datetime. (GMT+1)
+events.{id}.info.period	string	Event current period name.
+events.{id}.info.score	string	Event current score.
+events.{id}.info.ball_pos	string	optional Ball position on field in coordinates system 'x' and 'y'.
+events.{id}.info.state_info	string	optional Event current state info.
+events.{id}.info.state	numeric	optional Event current state code.
+events.{id}.info.minute	numeric	optional Event current minute.
+events.{id}.info.seconds	string	optional Event current time. Format mm:ss.
+events.{id}.team_info.{home or away}.name	string	Player(s) name.
+events.{id}.team_info.{home or away}.score	numeric	Player(s) score.
+events.{id}.team_info.{home or away}.color		Presented for backwards compatible with old API.
+events.{id}.team_info.{home or away}.kit_color	string	Comma separated colors codes for upper part of the outfit (shirts).
+events.{id}.team_info.{home or away}.Serve		Presented for backwards compatible with old API.
+events.{id}.bonus		Presented for backwards compatible with old API.
+events.{id}.stream		Presented for backwards compatible with old API.
+events.{id}.stats.{idx}	numeric	idx - Statistics index in collection of statistics data.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+string
+string	ITeam - Player(s) info.
+Home player(s) name.
+Away player(s) name.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	POINTS - Player(s) scores statistic.
+Home player(s) scores.
+Away player(s) scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	S1 - Player(s) 1st Set scores statistic.
+Home player(s) scores.
+Away player(s) scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	T - Player(s) T scores statistic.
+Home player(s) scores.
+Away player(s) scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	S2 - Player(s) 2nd Set scores statistic.
+Home player(s) scores.
+Away player(s) scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	S3 - optional Player(s) 3rd Set scores statistic.
+Home player(s) scores.
+Away player(s) scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	S4 - optional Player(s) 4th Set scores statistic.
+Home player(s) scores.
+Away player(s) scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	S5 - optional Player(s) 5th Set scores statistic.
+Home player(s) scores.
+Away player(s) scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	TURN - Player(s) Serving statistic.
+Home player(s) serving.
+Away player(s) serving.
+events.{id}.extra.{idx}	numeric	idx - Message index in collection of event messages.
+events.{id}.extra.{idx}.code
+events.{id}.extra.{idx}.minute
+events.{id}.extra.{idx}.value	numeric
+numeric
+string	optional Message code.
+optional The minute at which the event occurred.
+Message text.
+events.{id}.history		Presented for backwards compatible with old API.
+events.{id}.odds.{m_id}	numeric	m_id - Odds Market id.
+events.{id}.odds.{m_id}.id	numeric	Odds Market id.
+events.{id}.odds.{m_id}.name	string	Odds Market name.
+events.{id}.odds.{m_id}.short_name	string	Odds Market short name.
+events.{id}.odds.{m_id}.suspend	numeric	Indicates whether market blocked or not.
+events.{id}.odds.{m_id}.order		Presented for backwards compatible with old API.
+events.{id}.odds.{m_id}.participants	object	Collection of Odds Market participants objects.
+events.{id}.odds.{m_id}.participants.{p_id}	numeric	p_id - Participant odd id.
+events.{id}.odds.{m_id}.participants.{p_id}.id	numeric	Participant odd id.
+events.{id}.odds.{m_id}.participants.{p_id}.name	string	Participant odd name.
+events.{id}.odds.{m_id}.participants.{p_id}.short_name	string	Participant odd short name.
+events.{id}.odds.{m_id}.participants.{p_id}.value_eu	numeric	Participant odd value.
+events.{id}.odds.{m_id}.participants.{p_id}.suspend	numeric	Indicates whether participant odd blocked or not.
+events.{id}.odds.{m_id}.participants.{p_id}.handicap	numeric	optional Additional argument for the participant odd - margin or handicap value.
+events.{id}.odds.{m_id}.participants.{p_id}.is_main	numeric	optional Indicates the main participant in current betting odds market.
+Baseball
+curl --request GET \\
+  --url {REQUEST_URL_FROM_ADMIN}
+Response object
+{
+  "updated": "10.01.2021 06:53:01",
+  "updated_ts": 1633071181969,
+  "events": {
+    "1362": {
+      "core": {
+        "safe": "",
+        "removed": "",
+        "stopped": "1",
+        "blocked": "0",
+        "finished": "0",
+        "updated": "01.10.2021 06:52:56",
+        "updated_ts": "1633071176728"
+      },
+      "info": {
+        "id": "1362",
+        "mid": "0",
+        "bet365id": "108670885",
+        "name": "KT Wiz-Game 1 vs Lotte Giants-Game 1",
+        "sport": "Baseball",
+        "league": "Korean KBO",
+        "start_time": null,
+        "start_date": null,
+        "start_ts": "",
+        "period": "Inning 2",
+        "score": "0:3",
+        "ball_pos": "",
+        "state": "1217",
+        "minute": "0",
+        "seconds": "00:00"
+      },
+      "team_info": {
+        "home": {
+          "name": "KT Wiz-Game 1",
+          "score": "0",
+          "color": "",
+          "kit_color": "#FF8040,#FF8000,#D446BA,#00C1BA,#C40010,#0046A8,#3D4A4E",
+          "Serve": ""
+        },
+        "away": {
+          "name": "Lotte Giants-Game 1",
+          "score": "3",
+          "color": "",
+          "kit_color": "#F0F0F0,#F0F0F0,#D446BA,#00C1BA,#C40010,#0046A8,#3D4A4E",
+          "Serve": ""
+        }
+      },
+      "bonus": {},
+      "stream": "",
+      "stats": {
+        "0": {
+          "name": "ITeam",
+          "home": "KT Wiz-Game 1",
+          "away": "Lotte Giants-Game 1"
+        },
+        "1": {
+          "name": "1",
+          "home": "0",
+          "away": "0"
+        },
+        "2": {
+          "name": "2",
+          "home": "0",
+          "away": "3"
+        },
+        "3": {
+          "name": "3",
+          "home": "-1",
+          "away": "-1"
+        },
+        "4": {
+          "name": "4",
+          "home": "-1",
+          "away": "-1"
+        },
+        "5": {
+          "name": "5",
+          "home": "-1",
+          "away": "-1"
+        },
+        "6": {
+          "name": "6",
+          "home": "-1",
+          "away": "-1"
+        },
+        "7": {
+          "name": "7",
+          "home": "-1",
+          "away": "-1"
+        },
+        "8": {
+          "name": "8",
+          "home": "-1",
+          "away": "-1"
+        },
+        "9": {
+          "name": "9",
+          "home": "-1",
+          "away": "-1"
+        },
+        "10": {
+          "name": "",
+          "home": "",
+          "away": ""
+        },
+        "11": {
+          "name": "R",
+          "home": "0",
+          "away": "3"
+        },
+        "12": {
+          "name": "H",
+          "home": "1",
+          "away": "2"
+        }
+      },
+      "extra": {
+        "0": {
+          "code": "",
+          "minute": "0",
+          "value": "End of KT Wiz-Game 1 1st, 1 hit, 0 runs, Game tied 0-0"
+        },
+        "1": {
+          "code": "",
+          "minute": "0",
+          "value": "End of Lotte Giants-Game 1 1st, 0 hits, 0 runs, Game tied 0-0"
+        }
+      },
+      "history": {},
+      "odds": {
+        "211": {
+          "id": 211,
+          "name": "1x2 (3rd Inning)",
+          "short_name": "1x2 (3rd Inning)",
+          "suspend": "0",
+          "order": "",
+          "participants": {
+            "13622110": {
+              "id": "13622110",
+              "name": "Home",
+              "short_name": "Home",
+              "value_eu": "3.3",
+              "suspend": "0"
+            },
+            "13622111": {
+              "id": "13622111",
+              "name": "Away",
+              "short_name": "Away",
+              "value_eu": "4.2",
+              "suspend": "0"
+            },
+            "13622112": {
+              "id": "13622112",
+              "name": "Draw",
+              "short_name": "Draw",
+              "value_eu": "1.769",
+              "suspend": "0"
+            }
+          }
+        },
+        "937": {
+          "id": 937,
+          "name": "Asian Handicap (1st 7 Innings)",
+          "short_name": "Asian Handicap (1st 7 Innings)",
+          "suspend": "0",
+          "order": "",
+          "participants": {
+            "13629370": {
+              "id": "13629370",
+              "name": "Home",
+              "short_name": "Home",
+              "value_eu": "1.666",
+              "suspend": "0",
+              "handicap": "3.5"
+            },
+            "13629371": {
+              "id": "13629371",
+              "name": "Away",
+              "short_name": "Away",
+              "value_eu": "2.1",
+              "suspend": "0",
+              "handicap": "-3.5"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+Request Information
+
+Category	Value
+Http Method	GET
+URL	{REQUEST_URL_FROM_ADMIN}
+Request Headers
+
+No headers required
+
+Response Headers
+
+Name	Value
+Content-Type	application/json
+Output Schema of request
+
+ NOTE:
+IF THE ROOT FIELD "updated_ts" IS NOT UPDATED FOR MORE THAN 30 SECONDS, THIS MEANS THAT ALL ODDS AND MATCHES ARE SUSPENDED AND INACTIVE DUE TO LOSS OF CONNECTION TO THE SERVER.
+
+Field	Type	Description
+updated	datetime	Last update of the feed.
+updated_ts	timestamp	Last update of the feed as Timestamp.
+events	object	Collection of sports events objects.
+events.{event_id}	numeric	Id of sport event object.
+events.{id}.core.safe		Presented for backwards compatible with old API.
+events.{id}.core.removed		Presented for backwards compatible with old API.
+events.{id}.core.stopped	numeric	Indicates whether match time is stopped or it is running, e.g. a referee stops the time while there is an injury on the pitch.
+Value 1 or 0.
+events.{id}.core.blocked	numeric	Indicates whether event blocked or not.
+events.{id}.core.finished	numeric	Indicates whether event finished or not.
+events.{id}.core.updated	datetime	Indicates when event data was updated. Format dd.MM.yyyy HH:mm:ss.
+events.{id}.core.updated_ts	timestamp	Indicates when event data was updated.
+events.{id}.info.id	numeric	Id of sport event object.
+events.{id}.info.mid	numeric	Additional Id of sport event object.
+events.{id}.info.bet365id	numeric	Bet365 Id of sport event object.
+events.{id}.info.name	string	Event name.
+events.{id}.info.sport	string	Event sport type name.
+events.{id}.info.league	string	Event league name.
+events.{id}.info.start_time	string	optional Event start time. Format HH:mm. (GMT+1)
+events.{id}.info.start_date	string	optional Event start date. Format dd.MM.yyyy. (GMT+1)
+events.{id}.info.start_ts	timestamp	optional Event start datetime. (GMT+1)
+events.{id}.info.period	string	Event current period name.
+events.{id}.info.score	string	Event current score.
+events.{id}.info.ball_pos	string	optional Ball position on field in coordinates system 'x' and 'y'.
+events.{id}.info.state	numeric	optional Event current state code.
+events.{id}.info.minute	numeric	optional Event current minute.
+events.{id}.info.seconds	string	optional Event current time. Format mm:ss.
+events.{id}.team_info.{home or away}.name	string	Player(s) name.
+events.{id}.team_info.{home or away}.score	numeric	Player(s) score.
+events.{id}.team_info.{home or away}.color		Presented for backwards compatible with old API.
+events.{id}.team_info.{home or away}.kit_color	string	Comma separated colors codes for upper part of the outfit (shirts).
+events.{id}.team_info.{home or away}.Serve		Presented for backwards compatible with old API.
+events.{id}.bonus		Presented for backwards compatible with old API.
+events.{id}.stream		Presented for backwards compatible with old API.
+events.{id}.stats.{idx}	numeric	idx - Statistics index in collection of statistics data.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+string
+string	ITeam - Teams info.
+Home team name.
+Away team name.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	1 - 1st Inning teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	2 - 2nd Inning teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	3 - 3rd Inning teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	4 - 4th Inning teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	5 - 5th Inning teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	6 - 6th Inning teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	7 - 7th Inning teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	8 - 8th Inning teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	9 - 9th Inning teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	10 - 10th Inning teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	11 - 11th Inning teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	12 - 12th Inning teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	13 - 13th Inning teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	14 - 14th Inning teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	15 - 15th Inning teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+string
+string	R - Teams runs statistic.
+Home team runs.
+Away team runs.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+string
+string	H - Teams hits statistic.
+Home team hits.
+Away team hits.
+events.{id}.extra.{idx}	numeric	idx - Message index in collection of event messages.
+events.{id}.extra.{idx}.code
+events.{id}.extra.{idx}.minute
+events.{id}.extra.{idx}.value	numeric
+numeric
+string	optional Message code.
+optional The minute at which the event occurred.
+Message text.
+events.{id}.history		Presented for backwards compatible with old API.
+events.{id}.odds.{m_id}	numeric	m_id - Odds Market id.
+events.{id}.odds.{m_id}.id	numeric	Odds Market id.
+events.{id}.odds.{m_id}.name	string	Odds Market name.
+events.{id}.odds.{m_id}.short_name	string	Odds Market short name.
+events.{id}.odds.{m_id}.suspend	numeric	Indicates whether market blocked or not.
+events.{id}.odds.{m_id}.order		Presented for backwards compatible with old API.
+events.{id}.odds.{m_id}.participants	object	Collection of Odds Market participants objects.
+events.{id}.odds.{m_id}.participants.{p_id}	numeric	p_id - Participant odd id.
+events.{id}.odds.{m_id}.participants.{p_id}.id	numeric	Participant odd id.
+events.{id}.odds.{m_id}.participants.{p_id}.name	string	Participant odd name.
+events.{id}.odds.{m_id}.participants.{p_id}.short_name	string	Participant odd short name.
+events.{id}.odds.{m_id}.participants.{p_id}.value_eu	numeric	Participant odd value.
+events.{id}.odds.{m_id}.participants.{p_id}.suspend	numeric	Indicates whether participant odd blocked or not.
+events.{id}.odds.{m_id}.participants.{p_id}.handicap	numeric	optional Additional argument for the participant odd - margin or handicap value.
+events.{id}.odds.{m_id}.participants.{p_id}.is_main	numeric	optional Indicates the main participant in current betting odds market.
+Hockey
+curl --request GET \\
+  --url {REQUEST_URL_FROM_ADMIN}
+Response object
+{
+  "updated": "10.02.2021 08:48:30",
+  "updated_ts": 1633164510817,
+  "events": {
+    "528": {
+      "core": {
+        "safe": "",
+        "removed": "",
+        "stopped": "1",
+        "blocked": "0",
+        "finished": "0",
+        "updated": "02.10.2021 08:48:21",
+        "updated_ts": "1633164501086"
+      },
+      "info": {
+        "id": "528",
+        "mid": "5097246",
+        "bet365id": "108701628",
+        "name": "Amur Khabarovsk vs Dynamo Riga",
+        "sport": "Ice Hockey",
+        "league": "KHL",
+        "start_time": null,
+        "start_date": null,
+        "start_ts": "",
+        "period": "3rd Period",
+        "score": "2:1",
+        "ball_pos": "",
+        "state": "11270",
+        "minute": "17",
+        "seconds": "16:59"
+      },
+      "team_info": {
+        "home": {
+          "name": "Amur Khabarovsk",
+          "score": "2",
+          "color": "",
+          "kit_color": "#FC7E00,#FFDF1B,#D446BA,#00C1BA,#C40010,#0046A8,#3D4A4E",
+          "Serve": ""
+        },
+        "away": {
+          "name": "Dynamo Riga",
+          "score": "1",
+          "color": "",
+          "kit_color": "#F0F0F0,#FFDF1B,#D446BA,#00C1BA,#C40010,#0046A8,#3D4A4E",
+          "Serve": ""
+        }
+      },
+      "bonus": {},
+      "stream": "",
+      "stats": {
+        "0": {
+          "name": "ITeam",
+          "home": "Amur Khabarovsk",
+          "away": "Dynamo Riga"
+        },
+        "1": {
+          "name": "P1",
+          "home": 0,
+          "away": 0
+        },
+        "2": {
+          "name": "P2",
+          "home": 2,
+          "away": 1
+        },
+        "3": {
+          "name": "P3",
+          "home": 0,
+          "away": 0
+        },
+        "4": {
+          "name": "T",
+          "home": 2,
+          "away": 1
+        }
+      },
+      "extra": {},
+      "history": {},
+      "odds": {
+        "54": {
+          "id": 54,
+          "name": "Home/Away",
+          "short_name": "Home/Away",
+          "suspend": "0",
+          "order": "",
+          "participants": {
+            "528540": {
+              "id": "528540",
+              "name": "Home",
+              "short_name": "Home",
+              "value_eu": "1.18",
+              "suspend": "0"
+            },
+            "528541": {
+              "id": "528541",
+              "name": "Away",
+              "short_name": "Away",
+              "value_eu": "5",
+              "suspend": "0"
+            }
+          }
+        },
+        "59": {
+          "id": 59,
+          "name": "1x2 (3rd Period)",
+          "short_name": "1x2 (3rd Period)",
+          "suspend": "0",
+          "order": "",
+          "participants": {
+            "528590": {
+              "id": "528590",
+              "name": "Home",
+              "short_name": "Home",
+              "value_eu": "2.35",
+              "suspend": "0"
+            },
+            "528591": {
+              "id": "528591",
+              "name": "Away",
+              "short_name": "Away",
+              "value_eu": "2.95",
+              "suspend": "0"
+            },
+            "528592": {
+              "id": "528592",
+              "name": "Draw",
+              "short_name": "Draw",
+              "value_eu": "3.1",
+              "suspend": "0"
+            }
+          }
+        }
+      }
+    },
+    "1130": {
+      "core": {
+        "safe": "",
+        "removed": "",
+        "stopped": "1",
+        "blocked": "0",
+        "finished": "0",
+        "updated": "02.10.2021 08:48:13",
+        "updated_ts": "1633164493396"
+      },
+      "info": {
+        "id": "1130",
+        "mid": "5107931",
+        "bet365id": "108759863",
+        "name": "Oji Eagles vs Nikko Ice Bucks",
+        "sport": "Ice Hockey",
+        "league": "Japan Cup",
+        "start_time": null,
+        "start_date": null,
+        "start_ts": "",
+        "period": "2nd Period",
+        "score": "1:0",
+        "ball_pos": "0.00,0.00",
+        "state": "21270",
+        "minute": "1",
+        "seconds": "01:03"
+      },
+      "team_info": {
+        "home": {
+          "name": "Oji Eagles",
+          "score": "1",
+          "color": "",
+          "kit_color": "#C40010,#FFDF1B,#D446BA,#00C1BA,#C40010,#0046A8,#3D4A4E",
+          "Serve": ""
+        },
+        "away": {
+          "name": "Nikko Ice Bucks",
+          "score": "0",
+          "color": "",
+          "kit_color": "#F0F0F0,#FFDF1B,#D446BA,#00C1BA,#C40010,#0046A8,#3D4A4E",
+          "Serve": ""
+        }
+      },
+      "bonus": {},
+      "stream": "",
+      "stats": {
+        "0": {
+          "name": "ITeam",
+          "home": "Oji Eagles",
+          "away": "Nikko Ice Bucks"
+        },
+        "1": {
+          "name": "P1",
+          "home": 1,
+          "away": 0
+        },
+        "2": {
+          "name": "P2",
+          "home": 0,
+          "away": 0
+        },
+        "3": {
+          "name": "P3",
+          "home": 0,
+          "away": 0
+        },
+        "4": {
+          "name": "T",
+          "home": 1,
+          "away": 0
+        }
+      },
+      "extra": {},
+      "history": {},
+      "odds": {
+        "54": {
+          "id": 54,
+          "name": "Home/Away",
+          "short_name": "Home/Away",
+          "suspend": "0",
+          "order": "",
+          "participants": {
+            "1130540": {
+              "id": "1130540",
+              "name": "Home",
+              "short_name": "Home",
+              "value_eu": "1.09",
+              "suspend": "0"
+            },
+            "1130541": {
+              "id": "1130541",
+              "name": "Away",
+              "short_name": "Away",
+              "value_eu": "6.75",
+              "suspend": "0"
+            }
+          }
+        },
+        "58": {
+          "id": 58,
+          "name": "1x2 (2nd Period)",
+          "short_name": "1x2 (2nd Period)",
+          "suspend": "0",
+          "order": "",
+          "participants": {
+            "1130580": {
+              "id": "1130580",
+              "name": "Home",
+              "short_name": "Home",
+              "value_eu": "1.9",
+              "suspend": "0"
+            },
+            "1130581": {
+              "id": "1130581",
+              "name": "Away",
+              "short_name": "Away",
+              "value_eu": "5",
+              "suspend": "0"
+            },
+            "1130582": {
+              "id": "1130582",
+              "name": "Draw",
+              "short_name": "Draw",
+              "value_eu": "2.7",
+              "suspend": "0"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+Request Information
+
+Category	Value
+Http Method	GET
+URL	{REQUEST_URL_FROM_ADMIN}
+Request Headers
+
+No headers required
+
+Response Headers
+
+Name	Value
+Content-Type	application/json
+Output Schema of request
+
+ NOTE:
+IF THE ROOT FIELD "updated_ts" IS NOT UPDATED FOR MORE THAN 30 SECONDS, THIS MEANS THAT ALL ODDS AND MATCHES ARE SUSPENDED AND INACTIVE DUE TO LOSS OF CONNECTION TO THE SERVER.
+
+Field	Type	Description
+updated	datetime	Last update of the feed.
+updated_ts	timestamp	Last update of the feed as Timestamp.
+events	object	Collection of sports events objects.
+events.{event_id}	numeric	Id of sport event object.
+events.{id}.core.safe		Presented for backwards compatible with old API.
+events.{id}.core.removed		Presented for backwards compatible with old API.
+events.{id}.core.stopped	numeric	Indicates whether match time is stopped or it is running, e.g. a referee stops the time while there is an injury on the pitch.
+Value 1 or 0.
+events.{id}.core.blocked	numeric	Indicates whether event blocked or not.
+events.{id}.core.finished	numeric	Indicates whether event finished or not.
+events.{id}.core.updated	datetime	Indicates when event data was updated. Format dd.MM.yyyy HH:mm:ss.
+events.{id}.core.updated_ts	timestamp	Indicates when event data was updated.
+events.{id}.info.id	numeric	Id of sport event object.
+events.{id}.info.mid	numeric	Additional Id of sport event object.
+events.{id}.info.bet365id	numeric	Bet365 Id of sport event object.
+events.{id}.info.name	string	Event name.
+events.{id}.info.sport	string	Event sport type name.
+events.{id}.info.league	string	Event league name.
+events.{id}.info.start_time	string	optional Event start time. Format HH:mm. (GMT+1)
+events.{id}.info.start_date	string	optional Event start date. Format dd.MM.yyyy. (GMT+1)
+events.{id}.info.start_ts	timestamp	optional Event start datetime. (GMT+1)
+events.{id}.info.period	string	Event current period name.
+events.{id}.info.score	string	Event current score.
+events.{id}.info.ball_pos	string	optional Ball position on field in coordinates system 'x' and 'y'.
+events.{id}.info.state	numeric	optional Event current state code.
+events.{id}.info.minute	numeric	optional Event current minute.
+events.{id}.info.seconds	string	optional Event current time. Format mm:ss.
+events.{id}.team_info.{home or away}.name	string	Player(s) name.
+events.{id}.team_info.{home or away}.score	numeric	Player(s) score.
+events.{id}.team_info.{home or away}.color		Presented for backwards compatible with old API.
+events.{id}.team_info.{home or away}.kit_color	string	Comma separated colors codes for upper part of the outfit (shirts).
+events.{id}.team_info.{home or away}.Serve		Presented for backwards compatible with old API.
+events.{id}.bonus		Presented for backwards compatible with old API.
+events.{id}.stream		Presented for backwards compatible with old API.
+events.{id}.stats.{idx}	numeric	idx - Statistics index in collection of statistics data.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+string
+string	ITeam - Teams info.
+Home team name.
+Away team name.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	P1 - 1st Period teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	P2 - 2nd Period teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	P3 - 3rd Period teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	OT - Over Time teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	T - Total teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.extra.{idx}	numeric	idx - Message index in collection of event messages.
+events.{id}.extra.{idx}.code
+events.{id}.extra.{idx}.minute
+events.{id}.extra.{idx}.value	numeric
+numeric
+string	optional Message code.
+optional The minute at which the event occurred.
+Message text.
+events.{id}.history		Presented for backwards compatible with old API.
+events.{id}.odds.{m_id}	numeric	m_id - Odds Market id.
+events.{id}.odds.{m_id}.id	numeric	Odds Market id.
+events.{id}.odds.{m_id}.name	string	Odds Market name.
+events.{id}.odds.{m_id}.short_name	string	Odds Market short name.
+events.{id}.odds.{m_id}.suspend	numeric	Indicates whether market blocked or not.
+events.{id}.odds.{m_id}.order		Presented for backwards compatible with old API.
+events.{id}.odds.{m_id}.participants	object	Collection of Odds Market participants objects.
+events.{id}.odds.{m_id}.participants.{p_id}	numeric	p_id - Participant odd id.
+events.{id}.odds.{m_id}.participants.{p_id}.id	numeric	Participant odd id.
+events.{id}.odds.{m_id}.participants.{p_id}.name	string	Participant odd name.
+events.{id}.odds.{m_id}.participants.{p_id}.short_name	string	Participant odd short name.
+events.{id}.odds.{m_id}.participants.{p_id}.value_eu	numeric	Participant odd value.
+events.{id}.odds.{m_id}.participants.{p_id}.suspend	numeric	Indicates whether participant odd blocked or not.
+events.{id}.odds.{m_id}.participants.{p_id}.handicap	numeric	optional Additional argument for the participant odd - margin or handicap value.
+events.{id}.odds.{m_id}.participants.{p_id}.is_main	numeric	optional Indicates the main participant in current betting odds market.
+Volleyball
+curl --request GET \\
+  --url {REQUEST_URL_FROM_ADMIN}
+Response object
+{
+  "updated": "10.02.2021 08:59:46",
+  "updated_ts": 1633165186289,
+  "events": {
+    "108762464": {
+      "core": {
+        "safe": "",
+        "removed": "",
+        "stopped": "1",
+        "blocked": "0",
+        "finished": "0",
+        "updated": "02.10.2021 08:59:46",
+        "updated_ts": "1633165186274"
+      },
+      "info": {
+        "id": "108762464",
+        "mid": "5110566",
+        "bet365id": "108721153",
+        "name": "Supreme Chonburi Women vs Rebisco Women",
+        "sport": "Volleyball",
+        "league": "Asia Club Champs Women",
+        "start_time": null,
+        "start_date": null,
+        "start_ts": "",
+        "period": "Set 2",
+        "score": "1:0",
+        "ball_pos": "",
+        "state": "11248",
+        "minute": "0",
+        "seconds": "00:00"
+      },
+      "team_info": {
+        "home": {
+          "name": "Supreme Chonburi Women",
+          "score": null,
+          "color": "",
+          "kit_color": "#D446BA,#0A0A0A,#D446BA,#00C1BA,#C40010,#0046A8,#3D4A4E",
+          "Serve": ""
+        },
+        "away": {
+          "name": "Rebisco Women",
+          "score": null,
+          "color": "",
+          "kit_color": "#C40010,#0A0A0A,#D446BA,#00C1BA,#C40010,#0046A8,#3D4A4E",
+          "Serve": ""
+        }
+      },
+      "bonus": {},
+      "stream": "",
+      "stats": {
+        "0": {
+          "name": "ITeam",
+          "home": "Supreme Chonburi Women",
+          "away": "Rebisco Women"
+        },
+        "1": {
+          "name": "TURN",
+          "home": 0,
+          "away": 1
+        },
+        "2": {
+          "name": "S1",
+          "home": 25,
+          "away": 11
+        },
+        "3": {
+          "name": "S2",
+          "home": 1,
+          "away": 0
+        }
+      },
+      "extra": {
+        "0": {
+          "code": "",
+          "minute": "0",
+          "value": "Set 1 - Race to 5 points - Supreme Chonburi Women"
+        },
+        "1": {
+          "code": "",
+          "minute": "0",
+          "value": "Set 1 Lead After 10 Points - Supreme Chonburi Women"
+        }
+      },
+      "history": {},
+      "odds": {
+        "114": {
+          "id": 114,
+          "name": "Home/Away",
+          "short_name": "Home/Away",
+          "suspend": "0",
+          "order": "",
+          "participants": {
+            "1087624641140": {
+              "id": "1087624641140",
+              "name": "Home",
+              "short_name": "Home",
+              "value_eu": "1.002",
+              "suspend": "0"
+            },
+            "1087624641141": {
+              "id": "1087624641141",
+              "name": "Away",
+              "short_name": "Away",
+              "value_eu": "21",
+              "suspend": "0"
+            }
+          }
+        },
+        "117": {
+          "id": 117,
+          "name": "Over/Under (2nd Set)",
+          "short_name": "Over/Under (2nd Set)",
+          "suspend": "0",
+          "order": "",
+          "participants": {
+            "1087624641170": {
+              "id": "1087624641170",
+              "name": "Over",
+              "short_name": "Over",
+              "value_eu": "1.833",
+              "suspend": "0",
+              "handicap": "40.5"
+            },
+            "1087624641171": {
+              "id": "1087624641171",
+              "name": "Under",
+              "short_name": "Under",
+              "value_eu": "1.833",
+              "suspend": "0",
+              "handicap": "40.5"
+            }
+          }
+        }
+      }
+    },
+    "108787745": {
+      "core": {
+        "safe": "",
+        "removed": "",
+        "stopped": "1",
+        "blocked": "0",
+        "finished": "0",
+        "updated": "02.10.2021 08:59:32",
+        "updated_ts": "1633165172571"
+      },
+      "info": {
+        "id": "108787745",
+        "mid": "5111939",
+        "bet365id": "108786635",
+        "name": "Tatran Stresovice Women vs Skola Ceske Budejovice Women",
+        "sport": "Volleyball",
+        "league": "Czech 1 Liga Women",
+        "start_time": null,
+        "start_date": null,
+        "start_ts": "",
+        "period": "Set 3",
+        "score": "2:0",
+        "ball_pos": "",
+        "state": "11249",
+        "minute": "0",
+        "seconds": "00:00"
+      },
+      "team_info": {
+        "home": {
+          "name": "Tatran Stresovice Women",
+          "score": null,
+          "color": "",
+          "kit_color": "#D94B14,#D94B14,#FF00FF,#00FFFF,#FF0000,#0000FF,#3D4A4E",
+          "Serve": ""
+        },
+        "away": {
+          "name": "Skola Ceske Budejovice Women",
+          "score": null,
+          "color": "",
+          "kit_color": "#F0F0F0,#F0F0F0,#D446BA,#00C1BA,#C40010,#0046A8,#3D4A4E",
+          "Serve": ""
+        }
+      },
+      "bonus": {},
+      "stream": "",
+      "stats": {
+        "0": {
+          "name": "ITeam",
+          "home": "Tatran Stresovice Women",
+          "away": "Skola Ceske Budejovice Women"
+        },
+        "1": {
+          "name": "TURN",
+          "home": 1,
+          "away": 0
+        },
+        "2": {
+          "name": "S1",
+          "home": 25,
+          "away": 19
+        },
+        "3": {
+          "name": "S2",
+          "home": 25,
+          "away": 14
+        },
+        "4": {
+          "name": "S3",
+          "home": 14,
+          "away": 7
+        }
+      },
+      "extra": {
+        "0": {
+          "code": "",
+          "minute": "0",
+          "value": "Set 1 - Race to 5 points - Skola Ceske Budejovice Women"
+        },
+        "1": {
+          "code": "",
+          "minute": "0",
+          "value": "Set 1 Tie After 10"
+        },
+        "2": {
+          "code": "",
+          "minute": "0",
+          "value": "Technical Time Out"
+        }
+      },
+      "history": {},
+      "odds": {
+        "114": {
+          "id": 114,
+          "name": "Home/Away",
+          "short_name": "Home/Away",
+          "suspend": "1",
+          "order": "",
+          "participants": {
+            "1087877451140": {
+              "id": "1087877451140",
+              "name": "Home",
+              "short_name": "Home",
+              "value_eu": "1",
+              "suspend": "1"
+            },
+            "1087877451141": {
+              "id": "1087877451141",
+              "name": "Away",
+              "short_name": "Away",
+              "value_eu": "0",
+              "suspend": "1"
+            }
+          }
+        },
+        "127": {
+          "id": 127,
+          "name": "Total Points Odd/Even",
+          "short_name": "Total Points Odd/Even",
+          "suspend": "0",
+          "order": "",
+          "participants": {
+            "1087877451270": {
+              "id": "1087877451270",
+              "name": "Odd",
+              "short_name": "Odd",
+              "value_eu": "1.833",
+              "suspend": "0"
+            },
+            "1087877451271": {
+              "id": "1087877451271",
+              "name": "Even",
+              "short_name": "Even",
+              "value_eu": "1.833",
+              "suspend": "0"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+Request Information
+
+Category	Value
+Http Method	GET
+URL	{REQUEST_URL_FROM_ADMIN}
+Request Headers
+
+No headers required
+
+Response Headers
+
+Name	Value
+Content-Type	application/json
+Output Schema of request
+
+ NOTE:
+IF THE ROOT FIELD "updated_ts" IS NOT UPDATED FOR MORE THAN 30 SECONDS, THIS MEANS THAT ALL ODDS AND MATCHES ARE SUSPENDED AND INACTIVE DUE TO LOSS OF CONNECTION TO THE SERVER.
+
+Field	Type	Description
+updated	datetime	Last update of the feed.
+updated_ts	timestamp	Last update of the feed as Timestamp.
+events	object	Collection of sports events objects.
+events.{event_id}	numeric	Id of sport event object.
+events.{id}.core.safe		Presented for backwards compatible with old API.
+events.{id}.core.removed		Presented for backwards compatible with old API.
+events.{id}.core.stopped	numeric	Indicates whether match time is stopped or it is running, e.g. a referee stops the time while there is an injury on the pitch.
+Value 1 or 0.
+events.{id}.core.blocked	numeric	Indicates whether event blocked or not.
+events.{id}.core.finished	numeric	Indicates whether event finished or not.
+events.{id}.core.updated	datetime	Indicates when event data was updated. Format dd.MM.yyyy HH:mm:ss.
+events.{id}.core.updated_ts	timestamp	Indicates when event data was updated.
+events.{id}.info.id	numeric	Id of sport event object.
+events.{id}.info.mid	numeric	Additional Id of sport event object.
+events.{id}.info.bet365id	numeric	Bet365 Id of sport event object.
+events.{id}.info.name	string	Event name.
+events.{id}.info.sport	string	Event sport type name.
+events.{id}.info.league	string	Event league name.
+events.{id}.info.start_time	string	optional Event start time. Format HH:mm. (GMT+1)
+events.{id}.info.start_date	string	optional Event start date. Format dd.MM.yyyy. (GMT+1)
+events.{id}.info.start_ts	timestamp	optional Event start datetime. (GMT+1)
+events.{id}.info.period	string	Event current period name.
+events.{id}.info.score	string	Event current score.
+events.{id}.info.ball_pos	string	optional Ball position on field in coordinates system 'x' and 'y'.
+events.{id}.info.state	numeric	optional Event current state code.
+events.{id}.info.minute	numeric	optional Event current minute.
+events.{id}.info.seconds	string	optional Event current time. Format mm:ss.
+events.{id}.team_info.{home or away}.name	string	Player(s) name.
+events.{id}.team_info.{home or away}.score	numeric	Player(s) score.
+events.{id}.team_info.{home or away}.color		Presented for backwards compatible with old API.
+events.{id}.team_info.{home or away}.kit_color	string	Comma separated colors codes for upper part of the outfit (shirts).
+events.{id}.team_info.{home or away}.Serve		Presented for backwards compatible with old API.
+events.{id}.bonus		Presented for backwards compatible with old API.
+events.{id}.stream		Presented for backwards compatible with old API.
+events.{id}.stats.{idx}	numeric	idx - Statistics index in collection of statistics data.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+string
+string	ITeam - Teams info.
+Home team name.
+Away team name.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	TURN - Teams Serving statistic.
+Home team Serving.
+Away team Serving.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	S1 - 1st Set teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	S2 - 2nd Set teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	S3 - 3rd Set teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	S4 - 4th Set teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	S5 - 5th Set teams scores statistic.
+Home team scores.
+Away team scores.
+events.{id}.stats.{idx}.name
+events.{id}.stats.{idx}.home
+events.{id}.stats.{idx}.away	string
+numeric
+numeric	POINTS - Teams Points in Set statistic.
+Home team Points in Set.
+Away team Points in Set.
+events.{id}.extra.{idx}	numeric	idx - Message index in collection of event messages.
+events.{id}.extra.{idx}.code
+events.{id}.extra.{idx}.minute
+events.{id}.extra.{idx}.value	numeric
+numeric
+string	optional Message code.
+optional The minute at which the event occurred.
+Message text.
+events.{id}.history		Presented for backwards compatible with old API.
+events.{id}.odds.{m_id}	numeric	m_id - Odds Market id.
+events.{id}.odds.{m_id}.id	numeric	Odds Market id.
+events.{id}.odds.{m_id}.name	string	Odds Market name.
+events.{id}.odds.{m_id}.short_name	string	Odds Market short name.
+events.{id}.odds.{m_id}.suspend	numeric	Indicates whether market blocked or not.
+events.{id}.odds.{m_id}.order		Presented for backwards compatible with old API.
+events.{id}.odds.{m_id}.participants	object	Collection of Odds Market participants objects.
+events.{id}.odds.{m_id}.participants.{p_id}	numeric	p_id - Participant odd id.
+events.{id}.odds.{m_id}.participants.{p_id}.id	numeric	Participant odd id.
+events.{id}.odds.{m_id}.participants.{p_id}.name	string	Participant odd name.
+events.{id}.odds.{m_id}.participants.{p_id}.short_name	string	Participant odd short name.
+events.{id}.odds.{m_id}.participants.{p_id}.value_eu	numeric	Participant odd value.
+events.{id}.odds.{m_id}.participants.{p_id}.suspend	numeric	Indicates whether participant odd blocked or not.
+events.{id}.odds.{m_id}.participants.{p_id}.handicap	numeric	optional Additional argument for the participant odd - margin or handicap value.
+events.{id}.odds.{m_id}.participants.{p_id}.is_main	numeric	optional Indicates the main participant in current betting odds market.
