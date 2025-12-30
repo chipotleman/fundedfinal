@@ -116,7 +116,8 @@ None documented yet.
     - Secret: THE_ODDS_API_KEY
     - Pay-as-you-go pricing model
     - Note: Available but disabled in favor of Goalserve
-  - **Supported Sports**: NBA, NFL, NCAAB, NCAAF, MLB, NHL
+  - **Supported Sports**: NBA, NFL, NCAAB, NCAAF, MLB, NHL, Euro Basketball (via inplay), Int'l Hockey (via inplay)
+  - **International Sports Display**: Dashboard merges inplay events (Euro basketball, international hockey) with US sports. Inplay games appear in "Live" tab with real-time score updates via SSE stream.
   - **Game Display Tabs**: Live vs Upcoming tabs on all game pages
   - **Caching**: 30-second server-side cache per sport (Goalserve), 10-minute (The Odds API)
   - **Odds Parsing**: 
