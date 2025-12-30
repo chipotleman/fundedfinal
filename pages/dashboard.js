@@ -286,18 +286,20 @@ export default function Dashboard() {
   useEffect(() => {
     setAllGames(gamesWithLiveData);
     
-    const activeGames = selectedTab === 'live' 
-      ? [...categorizedGames.liveGames, ...(categorizedGames.recentlyCompletedGames || [])]
-      : categorizedGames.upcomingGames;
+    // Get both live and upcoming games - DON'T filter by tab here, show all
+    const liveGames = [...categorizedGames.liveGames, ...(categorizedGames.recentlyCompletedGames || [])];
+    const upcomingGames = categorizedGames.upcomingGames || [];
     
-    if (selectedSport === 'All Sports') {
-      baseGamesRef.current = { 'All Sports': activeGames };
-      setGames(activeGames);
-    } else {
-      const filteredGames = activeGames.filter(g => g.sportName === selectedSport);
-      baseGamesRef.current = { [selectedSport]: filteredGames };
-      setGames(filteredGames);
+    // Choose which to display based on tab, but keep both available
+    const activeGames = selectedTab === 'live' ? liveGames : upcomingGames;
+    
+    // Apply sport filter
+    let filteredGames = activeGames;
+    if (selectedSport !== 'All Sports') {
+      filteredGames = activeGames.filter(g => g.sportName === selectedSport);
     }
+    
+    setGames(filteredGames);
     setLoading(false);
   }, [selectedSport, selectedTab, gamesWithLiveData, categorizedGames]);
 
