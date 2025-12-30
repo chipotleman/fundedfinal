@@ -1,4 +1,4 @@
-import goalserveWs from '../../../lib/goalserve-ws';
+import { getInplayService } from '../../../lib/goalserve-inplay';
 
 export const config = {
   api: {
@@ -12,50 +12,7 @@ export default async function handler(req, res) {
   }
 
   const { sport, eventId } = req.query;
-  const sports = sport ? [sport] : ['basketball', 'hockey', 'baseball'];
-
-  const connected = await goalserveWs.ensureConnected(sports);
-  const status = goalserveWs.getStatus();
-  
-  // Check if WebSocket is not available and provide clear feedback
-  if (!connected) {
-    const wsStatus = status.connectionStatus;
-    
-    // For permanent failures (401), return error with fallback recommendation
-    if (wsStatus === 'ws_access_not_enabled') {
-      return res.status(503).json({
-        error: 'WebSocket access not enabled',
-        connectionStatus: wsStatus,
-        message: 'WebSocket access requires a separate Goalserve subscription. Use /api/goalserve/live for REST API polling.',
-        fallback: '/api/goalserve/live'
-      });
-    }
-    
-    // For temporary failures, still start SSE but inform client
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache, no-transform',
-      'Connection': 'keep-alive',
-      'X-Accel-Buffering': 'no',
-    });
-
-    const sendEvent = (data) => {
-      res.write(`data: ${JSON.stringify(data)}\n\n`);
-    };
-
-    // Send connection failure info so client can fall back to REST
-    sendEvent({
-      type: 'connection_failed',
-      status: status,
-      message: 'WebSocket connection failed. Use REST API polling as fallback.',
-      fallback: '/api/goalserve/live',
-      timestamp: Date.now()
-    });
-
-    // Close connection after informing client
-    res.end();
-    return;
-  }
+  const service = getInplayService();
 
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
@@ -68,18 +25,33 @@ export default async function handler(req, res) {
     res.write(`data: ${JSON.stringify(data)}\n\n`);
   };
 
+  if (!service.isPolling) {
+    const targetSports = sport ? [sport] : null;
+    service.startPolling(targetSports);
+  }
+
   sendEvent({
     type: 'connected',
-    status: status,
+    status: service.getStatus(),
     timestamp: Date.now()
   });
 
-  const unsubscribe = goalserveWs.subscribe((event) => {
-    if (eventId && event.data?.id !== eventId) {
+  const currentEvents = service.getEvents(sport);
+  if (currentEvents.length > 0) {
+    sendEvent({
+      type: 'initial',
+      events: currentEvents,
+      count: currentEvents.length,
+      timestamp: Date.now()
+    });
+  }
+
+  const unsubscribe = service.subscribe((event) => {
+    if (eventId && event.event?.id !== eventId) {
       return;
     }
     
-    if (sport && event.data?.sport !== sport) {
+    if (sport && event.sport !== sport) {
       return;
     }
     
@@ -87,7 +59,13 @@ export default async function handler(req, res) {
   });
 
   const heartbeatInterval = setInterval(() => {
-    sendEvent({ type: 'heartbeat', timestamp: Date.now() });
+    const status = service.getStatus();
+    sendEvent({ 
+      type: 'heartbeat', 
+      eventCount: status.eventCount,
+      lastUpdate: status.lastUpdate,
+      timestamp: Date.now() 
+    });
   }, 30000);
 
   req.on('close', () => {

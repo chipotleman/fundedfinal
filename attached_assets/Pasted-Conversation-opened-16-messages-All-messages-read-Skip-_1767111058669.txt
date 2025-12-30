@@ -1,0 +1,176 @@
+Conversation opened. 16 messages. All messages read.
+
+Skip to content
+Using Piks Mail with screen readers
+
+Enable desktop notifications for Piks Mail.
+   OK  No thanks
+
+1 of 109
+Re: Data Feed Request
+External
+Inbox
+AI Overview
+Mathew requested a data feed trial, inquiring about pricing differences for low latency and ball position API access.
+Mathew provided his username ("Piks") after registering, and later requested WebSocket access for real-time data.
+Mathew provided two IP addresses for whitelisting, and after following up, Timur confirmed IPs were added and extended a special offer.
+Timur confirmed the whitelisting of one IP address (52.70.127.138) in the final email.
+By Gemini; there may be mistakes. Learn more
+
+Timur Nasirov - Goalserve
+Attachments
+Dec 22, 2025, 8:39 PM (8 days ago)
+Hi Mathew, Thank you for your interest in Goalserve.com. Our US Sports ive data feed is updating every 30 seconds for NBA, NCAAM, NFL, NCAAF, MLB, NHL, MLS, PGA
+
+Mathew Baldwin
+Dec 22, 2025, 9:46 PM (8 days ago)
+I’d love to get started with a free trial and if possible one with ball position API included. Also, I see you offer low latency as well (max 1 second) , what i
+
+Timur Nasirov - Goalserve
+Dec 22, 2025, 9:56 PM (8 days ago)
+Websockets are available for live in play odds and scores from bet365 odds. Prematch props from US bookmakers are available using PULL only. Please register on
+
+Mathew Baldwin
+Dec 22, 2025, 9:58 PM (8 days ago)
+Understood and just signed up. Username is PiksEmail is mathew@fundedpiks.com . Thanks again.
+
+Timur Nasirov - Goalserve
+Attachments
+Dec 22, 2025, 10:04 PM (8 days ago)
+Please check test feeds attached
+
+Mathew Baldwin
+Dec 23, 2025, 11:08 AM (7 days ago)
+Thank you! I am ready to move on from the free trial and pay however I'm currently using your REST API but I'm interested in adding your WebSocket feeds for rea
+
+Timur Nasirov - Goalserve
+Dec 23, 2025, 11:55 AM (7 days ago)
+For live data access we need your IP address
+
+Mathew Baldwin
+Dec 23, 2025, 12:20 PM (7 days ago)
+Okay thank you very much for explaining. Could you please whitelist the following IP addresses for live data access: Production Environment (Static IPs): 52.70.
+
+Timur Nasirov - Goalserve
+Dec 23, 2025, 8:21 PM (7 days ago)
+Hi Mathew We can allow max 2 IP addresses. Please let me know which one you want to add
+
+Mathew Baldwin <mathew@fundedpiks.com>
+Dec 24, 2025, 10:19 AM (6 days ago)
+to Timur
+
+Okay thank you can you please use 
+
+52.70.127.138
+
+54.92.239.253
+
+And happy holidays!
+
+Timur Nasirov - Goalserve
+Dec 28, 2025, 9:33 PM (2 days ago)
+Hi, Hope all is well. Just wanted to check if you have any questions regarding test feeds. Also just wanted to let you know that for the upcoming 20th company a
+
+Mathew Baldwin
+Dec 28, 2025, 9:54 PM (2 days ago)
+Hello I was waiting for the IP addresses to be whitelisted to test. Did they get whitelisted?
+
+Mathew Baldwin
+12:31 AM (10 hours ago)
+Hello can I get an update on this ? It’s now been 7 days and we were offered a yearly discount but I haven’t been able to test the feed yet?
+
+Timur Nasirov
+12:58 AM (10 hours ago)
+Hello Matt Will add ips today and let you know in few hours We can extend special offer for you until the end of this week so you will have time to test Thank y
+
+Mathew Baldwin
+1:13 AM (9 hours ago)
+Thank you for much!
+
+Timur Nasirov - Goalserve
+Attachments
+2:00 AM (9 hours ago)
+to me
+
+Please check inplay feeds attached
+
+Inplay documentation - 
+
+https://documentation.goalserve.com/v1/#soccer
+
+Goalserve - 20 years online
+Email: support@goalserve.com
+Web: www.goalserve.com
+
+
+
+
+On 24 Dec 2025, at 23:19, Mathew Baldwin <mathew@fundedpiks.com> wrote:
+
+52.70.127.138
+
+ One attachment
+  •  Scanned by Gmail
+
+
+
+
+Inplay odds feeds refresh every second (zipped JSON)
+
+http://inplay.goalserve.com/inplay-soccer.gz
+http://inplay.goalserve.com/inplay-basket.gz
+http://inplay.goalserve.com/inplay-tennis.gz
+http://inplay.goalserve.com/inplay-volleyball.gz
+http://inplay.goalserve.com/inplay-amfootball.gz
+http://inplay.goalserve.com/inplay-esports.gz
+http://inplay.goalserve.com/inplay-hockey.gz
+http://inplay.goalserve.com/inplay-baseball.gz
+
+
+
+Match result by ID and month/year which used to calculate inplay odds winning
+
+Match Results url scheme -
+http://inplay.goalserve.com/results/{yyyyMM}/{MATCH_ID}.json
+
+Example:
+http://inplay.goalserve.com/results/202104/59077136.json
+
+Where 
+202104  is yyyyMM
+59077136 is match id
+
+Results are available after game end and removed from main odds feed
+
+
+Time_status
+
+0 Not Started
+1 InPlay
+2 TO BE FIXED
+3 Ended
+4 Postponed
+5 Cancelled
+6 Walkover
+7 Interrupted
+8 Abandoned
+9 Retired
+99 Removed
+
+
+Odds Markets Dictionary url scheme:
+http://inplay.goalserve.com/dictionaries/odds-markets/{SPORT_TYPE}
+
+Example:
+http://inplay.goalserve.com/dictionaries/odds-markets/soccer
+
+
+Match States Dictionary scheme:
+http://inplay.goalserve.com/dictionaries/states/{SPORT_TYPE}
+
+Example:
+http://inplay.goalserve.com/dictionaries/states/soccer
+
+
+inplay-feed-new.txt
+Displaying inplay-feed-new.txt.
