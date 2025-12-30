@@ -137,6 +137,7 @@ function convertGoalserveToDisplayFormat(game) {
     scores: game.scores,
     lines: lines,
     allBookmakerOdds: allBookmakerOdds,
+    periodOdds: odds.periods || {},
     dataSource: 'Goalserve'
   };
 }
