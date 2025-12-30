@@ -91,6 +91,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [betaAuthenticated, setBetaAuthenticated] = useState(false);
+  const [justAuthenticated, setJustAuthenticated] = useState(false);
 
   // Preload logo image on app mount
   useEffect(() => {
@@ -98,9 +99,9 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
     img.src = '/pikslogotransparent.png';
   }, []);
 
-  // Scroll to top when beta authentication changes to true
+  // Scroll to top ONLY when user just authenticated (not on page reload/return)
   useEffect(() => {
-    if (betaAuthenticated) {
+    if (justAuthenticated) {
       // Force scroll to top multiple times to ensure it works
       window.scrollTo(0, 0);
       document.documentElement.scrollTop = 0;
@@ -123,8 +124,11 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
         document.documentElement.scrollTop = 0;
         document.body.scrollTop = 0;
       }, 150);
+      
+      // Reset flag after scrolling
+      setJustAuthenticated(false);
     }
-  }, [betaAuthenticated]);
+  }, [justAuthenticated]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -247,7 +251,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
             backgroundColor: '#000000',
           }}
         />
-        <BetaLanding onAuthenticated={() => setBetaAuthenticated(true)} />
+        <BetaLanding onAuthenticated={() => { setBetaAuthenticated(true); setJustAuthenticated(true); }} />
       </>
     );
   }
