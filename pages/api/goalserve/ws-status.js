@@ -6,19 +6,27 @@ export default async function handler(req, res) {
   }
 
   try {
-    goalserveWs.ensureConnected();
+    const { connect, sport } = req.query;
+    
+    if (connect === 'true') {
+      const sports = sport ? [sport] : ['basketball', 'hockey', 'baseball'];
+      await goalserveWs.ensureConnected(sports);
+    }
     
     const status = goalserveWs.getStatus();
-    const allData = goalserveWs.getAllLiveData();
+    const liveEvents = goalserveWs.getAllLiveEvents();
+    const availableEvents = goalserveWs.getAvailableEvents();
     
     res.status(200).json({
       success: true,
       ...status,
-      liveGamesCount: Object.keys(allData.scores).length,
-      liveOddsCount: Object.keys(allData.odds).length,
-      trackedPositions: Object.keys(allData.ballPositions).length,
+      liveEventCount: Object.keys(liveEvents).length,
+      availableEventCount: Object.keys(availableEvents).length,
+      supportedSports: goalserveWs.SUPPORTED_SPORTS,
       message: status.connectionStatus === 'not_configured' 
-        ? 'WebSocket URL not configured. Contact Goalserve for WebSocket access credentials.'
+        ? 'Goalserve API key not configured. Set GOALSERVE_API_KEY environment variable.'
+        : status.connectionStatus === 'connected'
+        ? `Connected to: ${status.activeSports.join(', ')}`
         : `WebSocket ${status.connectionStatus}`
     });
   } catch (error) {
@@ -26,7 +34,8 @@ export default async function handler(req, res) {
     res.status(500).json({ 
       success: false, 
       error: 'Failed to get WebSocket status',
-      connectionStatus: 'error'
+      connectionStatus: 'error',
+      message: error.message
     });
   }
 }

@@ -11,9 +11,10 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { sport, gameId } = req.query;
+  const { sport, eventId } = req.query;
+  const sports = sport ? [sport] : ['basketball', 'hockey', 'baseball'];
 
-  goalserveWs.ensureConnected();
+  await goalserveWs.ensureConnected(sports);
 
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
@@ -33,7 +34,11 @@ export default async function handler(req, res) {
   });
 
   const unsubscribe = goalserveWs.subscribe((event) => {
-    if (gameId && event.data?.gameId !== gameId) {
+    if (eventId && event.data?.id !== eventId) {
+      return;
+    }
+    
+    if (sport && event.data?.sport !== sport) {
       return;
     }
     
