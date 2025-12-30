@@ -50,27 +50,51 @@ export default async function handler(req, res) {
       
       const isGzip = bufferData[0] === 0x1f && bufferData[1] === 0x8b;
       
-      if (!isGzip) {
-        const textContent = bufferData.toString('utf-8').substring(0, 500);
+      let data;
+      let dataSize;
+      
+      if (isGzip) {
+        const decompressed = await gunzip(bufferData);
+        data = JSON.parse(decompressed.toString('utf-8'));
+        dataSize = decompressed.length;
+      } else {
+        const textContent = bufferData.toString('utf-8');
         const is403 = textContent.includes('403') || textContent.includes('Forbidden');
-        results.tests[feed.name] = {
-          status: 'failed',
-          httpStatus: response.status,
-          error: is403 ? 'IP not whitelisted (received HTML error page instead of gzip data)' : 'Response is not gzip compressed',
-          preview: textContent.substring(0, 150)
-        };
-        continue;
+        
+        if (is403) {
+          results.tests[feed.name] = {
+            status: 'failed',
+            httpStatus: response.status,
+            error: 'IP not whitelisted (received HTML error page)',
+            preview: textContent.substring(0, 150)
+          };
+          continue;
+        }
+        
+        try {
+          data = JSON.parse(textContent);
+          dataSize = bufferData.length;
+        } catch (e) {
+          results.tests[feed.name] = {
+            status: 'failed',
+            httpStatus: response.status,
+            error: 'Response is not valid JSON',
+            preview: textContent.substring(0, 150)
+          };
+          continue;
+        }
       }
       
-      const decompressed = await gunzip(bufferData);
-      const data = JSON.parse(decompressed.toString('utf-8'));
+      const eventCount = data.events ? Object.keys(data.events).length : (typeof data === 'object' ? Object.keys(data).length : 0);
       
       results.tests[feed.name] = {
         status: 'success',
         httpStatus: response.status,
         responseTime: Date.now() - startTime,
-        dataSize: decompressed.length,
-        eventCount: typeof data === 'object' ? Object.keys(data).length : 'unknown'
+        dataSize: dataSize,
+        eventCount: eventCount,
+        bookmaker: data.bm || 'unknown',
+        lastUpdated: data.updated || null
       };
     } catch (error) {
       results.tests[feed.name] = {
