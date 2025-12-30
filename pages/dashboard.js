@@ -683,17 +683,23 @@ export default function Dashboard() {
                                 <svg className="w-4 h-4" fill="none" stroke={isDarkMode ? '#6b7280' : '#9ca3af'} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                               </div>
                             )}
-                            <TapSurface
-                              onTap={() => addToBetSlip(game, 'moneyline', game.lines?.moneyline?.away, game.awayTeamFull || game.awayTeam)}
-                              isActive={isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam)}
-                              activeColor="#2563eb"
-                              inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
-                              style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
-                            >
-                              <div style={{ fontWeight: 'bold', fontSize: '14px', color: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#ffffff' : '#3b82f6' }}>
-                                {formatOdds(game.lines?.moneyline?.away)}
+                            {game.lines?.moneyline?.away ? (
+                              <TapSurface
+                                onTap={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeamFull || game.awayTeam)}
+                                isActive={isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam)}
+                                activeColor="#2563eb"
+                                inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
+                                style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+                              >
+                                <div style={{ fontWeight: 'bold', fontSize: '14px', color: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#ffffff' : '#3b82f6' }}>
+                                  {formatOdds(game.lines.moneyline.away)}
+                                </div>
+                              </TapSurface>
+                            ) : (
+                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '44px', opacity: 0.5 }}>
+                                <svg className="w-4 h-4" fill="none" stroke={isDarkMode ? '#6b7280' : '#9ca3af'} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                               </div>
-                            </TapSurface>
+                            )}
                             {game.lines?.total?.over ? (
                               <TapSurface
                                 onTap={() => addToBetSlip(game, 'total', game.lines.total.over, `Over ${game.lines.total.over.point}`)}
@@ -732,17 +738,23 @@ export default function Dashboard() {
                                 <svg className="w-4 h-4" fill="none" stroke={isDarkMode ? '#6b7280' : '#9ca3af'} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                               </div>
                             )}
-                            <TapSurface
-                              onTap={() => addToBetSlip(game, 'moneyline', game.lines?.moneyline?.home, game.homeTeamFull || game.homeTeam)}
-                              isActive={isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam)}
-                              activeColor="#2563eb"
-                              inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
-                              style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
-                            >
-                              <div style={{ fontWeight: 'bold', fontSize: '14px', color: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#ffffff' : '#3b82f6' }}>
-                                {formatOdds(game.lines?.moneyline?.home)}
+                            {game.lines?.moneyline?.home ? (
+                              <TapSurface
+                                onTap={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeamFull || game.homeTeam)}
+                                isActive={isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam)}
+                                activeColor="#2563eb"
+                                inactiveColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
+                                style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}
+                              >
+                                <div style={{ fontWeight: 'bold', fontSize: '14px', color: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#ffffff' : '#3b82f6' }}>
+                                  {formatOdds(game.lines.moneyline.home)}
+                                </div>
+                              </TapSurface>
+                            ) : (
+                              <div style={{ flex: 1, borderRadius: '8px', padding: '8px 4px', textAlign: 'center', backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '44px', opacity: 0.5 }}>
+                                <svg className="w-4 h-4" fill="none" stroke={isDarkMode ? '#6b7280' : '#9ca3af'} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                               </div>
-                            </TapSurface>
+                            )}
                             {game.lines?.total?.under ? (
                               <TapSurface
                                 onTap={() => addToBetSlip(game, 'total', game.lines.total.under, `Under ${game.lines.total.under.point}`)}
