@@ -78,17 +78,20 @@ export default function Dashboard() {
     const lastWord = parts[parts.length - 1];
     const otherLastWord = otherParts[otherParts.length - 1];
     
-    // If both teams have the same last word (e.g., both "U23"), use last 2 words or full name
+    // If both teams have the same last word (e.g., both "U23"), must use 2 words to differentiate
     if (lastWord === otherLastWord) {
       return parts.length >= 2 ? parts.slice(-2).join(' ') : cleanName;
     }
     
-    // For longer names, use last 2 words for clarity (e.g., "Morgan State" not just "State")
-    if (parts.length >= 2) {
-      return parts.slice(-2).join(' ');
+    // For 2-word names that are short enough, use both (e.g., "Morgan State")
+    if (parts.length === 2) {
+      const twoWords = parts.join(' ');
+      // If combined is <= 12 chars, use both words
+      if (twoWords.length <= 12) return twoWords;
     }
     
-    return cleanName;
+    // Otherwise just use the last word to avoid cutoff
+    return lastWord;
   };
 
   const baseGamesRef = useRef({});
