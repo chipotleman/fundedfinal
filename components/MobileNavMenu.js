@@ -256,6 +256,13 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
               >
                 Leaderboard
               </Link>
+              <Link
+                href="/marketplace"
+                onClick={onClose}
+                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
+              >
+                Marketplace
+              </Link>
 
               <div className="border-t border-gray-700 pt-4 mt-6">
                 <div className="mb-4">
@@ -314,6 +321,13 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 Leaderboard
+              </Link>
+              <Link
+                href="/marketplace"
+                onClick={onClose}
+                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
+              >
+                Marketplace
               </Link>
 
               <div className="mt-6 space-y-3">
