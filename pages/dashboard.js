@@ -208,18 +208,26 @@ export default function Dashboard() {
           home: { total: homeScore },
           away: { total: awayScore }
         },
-        lines: event.odds ? {
+        lines: event.odds && Object.keys(event.odds).length > 0 ? {
           moneyline: {
-            home: event.odds.moneyline?.home || 0,
-            away: event.odds.moneyline?.away || 0
+            home: event.odds.moneyline?.home || null,
+            away: event.odds.moneyline?.away || null
           },
           spread: {
-            home: event.odds.spread?.home || { point: 0, odds: -110 },
-            away: event.odds.spread?.away || { point: 0, odds: -110 }
+            home: event.odds.spread?.home ? 
+              { point: parseFloat(event.odds.spread.home.line) || 0, odds: parseFloat(event.odds.spread.home.odds) || -110 } 
+              : null,
+            away: event.odds.spread?.away ? 
+              { point: parseFloat(event.odds.spread.away.line) || 0, odds: parseFloat(event.odds.spread.away.odds) || -110 } 
+              : null
           },
           total: {
-            over: event.odds.total?.over || { point: 0, odds: -110 },
-            under: event.odds.total?.under || { point: 0, odds: -110 }
+            over: event.odds.total?.line ? 
+              { point: parseFloat(event.odds.total.line) || 0, odds: parseFloat(event.odds.total.over) || -110 } 
+              : null,
+            under: event.odds.total?.line ? 
+              { point: parseFloat(event.odds.total.line) || 0, odds: parseFloat(event.odds.total.under) || -110 } 
+              : null
           }
         } : null,
         dataSource: 'Goalserve Inplay'
@@ -295,7 +303,10 @@ export default function Dashboard() {
 
 
   const formatOdds = (odds) => {
-    return odds > 0 ? `+${odds}` : odds.toString();
+    if (odds === null || odds === undefined || odds === 0) return '-';
+    const num = typeof odds === 'string' ? parseFloat(odds) : odds;
+    if (isNaN(num)) return '-';
+    return num > 0 ? `+${num}` : num.toString();
   };
 
   const formatSpread = (point) => {
@@ -442,7 +453,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {allGames.slice(0, 3).map((game) => {
+            {allGames.filter(g => g.lines && g.lines.moneyline).slice(0, 3).map((game) => {
               const isLive = game.isLive || game.status === 'IN_PROGRESS';
               return (
                 <div 
@@ -531,7 +542,8 @@ export default function Dashboard() {
                 const isExpanded = expandedGames[game.id];
                 const isLive = game.isLive || game.status === 'IN_PROGRESS';
                 const isFinal = game.isCompleted || game.status === 'FINAL';
-                const linesLocked = game.linesLocked || isFinal;
+                const hasLines = game.lines && game.lines.moneyline && game.lines.spread && game.lines.total;
+                const linesLocked = game.linesLocked || isFinal || !hasLines;
                 
                 return (
                   <div 
@@ -590,12 +602,12 @@ export default function Dashboard() {
                       {linesLocked ? (
                         <div className="flex gap-2">
                           <div className="flex-1 rounded-lg py-2 px-2 text-center opacity-50" style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? '#374151' : '#d1d5db' }}>
-                            <div className="text-[10px] mb-0.5" style={{ color: '#6b7280' }}>Lines</div>
-                            <div className="font-bold text-sm text-gray-500">LOCKED</div>
+                            <div className="text-[10px] mb-0.5" style={{ color: '#6b7280' }}>{!hasLines ? 'Betting' : 'Lines'}</div>
+                            <div className="font-bold text-sm text-gray-500">{!hasLines ? 'UNAVAILABLE' : 'LOCKED'}</div>
                           </div>
                           <div className="flex-1 rounded-lg py-2 px-2 text-center opacity-50" style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? '#374151' : '#d1d5db' }}>
-                            <div className="text-[10px] mb-0.5" style={{ color: '#6b7280' }}>Lines</div>
-                            <div className="font-bold text-sm text-gray-500">LOCKED</div>
+                            <div className="text-[10px] mb-0.5" style={{ color: '#6b7280' }}>{!hasLines ? 'Betting' : 'Lines'}</div>
+                            <div className="font-bold text-sm text-gray-500">{!hasLines ? 'UNAVAILABLE' : 'LOCKED'}</div>
                           </div>
                         </div>
                       ) : (

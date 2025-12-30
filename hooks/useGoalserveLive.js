@@ -165,13 +165,38 @@ export function useGoalserveLive(options = {}) {
               break;
             
             case 'initial':
-            case 'events':
-              // Handle batch events from inplay polling
+              // Handle initial events from inplay polling
               if (data.events && Array.isArray(data.events)) {
                 setEvents(prev => {
                   const updated = { ...prev };
                   data.events.forEach(evt => {
-                    updated[evt.id] = evt;
+                    if (evt.id) updated[evt.id] = evt;
+                  });
+                  console.log('[Goalserve Live] Initial events loaded:', data.events.length);
+                  return updated;
+                });
+              }
+              break;
+              
+            case 'events':
+              // Handle event updates from inplay polling - format: { changes: [{ type, event }] }
+              if (data.changes && Array.isArray(data.changes)) {
+                setEvents(prev => {
+                  const updated = { ...prev };
+                  data.changes.forEach(change => {
+                    if (change.event?.id) {
+                      updated[change.event.id] = change.event;
+                    }
+                  });
+                  return updated;
+                });
+              }
+              // Also support direct events array
+              if (data.events && Array.isArray(data.events)) {
+                setEvents(prev => {
+                  const updated = { ...prev };
+                  data.events.forEach(evt => {
+                    if (evt.id) updated[evt.id] = evt;
                   });
                   return updated;
                 });
