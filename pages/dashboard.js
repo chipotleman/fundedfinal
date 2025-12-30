@@ -157,27 +157,21 @@ export default function Dashboard() {
   const gamesWithLiveData = useMemo(() => {
     // Convert inplay events to game format
     const inplayGames = Object.values(inplayEvents || {}).map(event => {
-      const homeTeam = event.stats?.[0]?.home || event.homeTeam || 'Home';
-      const awayTeam = event.stats?.[0]?.away || event.awayTeam || 'Away';
+      const homeTeam = event.homeTeam || event.stats?.[0]?.home || 'Home';
+      const awayTeam = event.awayTeam || event.stats?.[0]?.away || 'Away';
       
-      // Get scores from stats (format varies by sport)
-      let homeScore = 0, awayScore = 0;
-      if (event.stats) {
-        // Basketball: stats[3] is Half or Total, stats[4-5] are quarters
-        // Hockey: stats[4] is T (total)
-        const totalStat = Object.values(event.stats).find(s => s.name === 'T' || s.name === 'Half');
+      // USE the pre-computed scores from the normalized event (from info.score or team_info)
+      // These are the REAL-TIME scores, not the halftime stats
+      let homeScore = event.homeScore ?? 0;
+      let awayScore = event.awayScore ?? 0;
+      
+      // Only fallback to stats if homeScore/awayScore are 0 and we have stats
+      if (homeScore === 0 && awayScore === 0 && event.stats) {
+        // Try stats.T first (current total), not Half (halftime only)
+        const totalStat = Object.values(event.stats).find(s => s.name === 'T');
         if (totalStat) {
           homeScore = parseInt(totalStat.home) || 0;
           awayScore = parseInt(totalStat.away) || 0;
-        }
-        // Sum quarters for basketball if Half isn't available
-        if (event.sport === 'basketball' && !totalStat) {
-          for (const stat of Object.values(event.stats)) {
-            if (['1', '2', '3', '4'].includes(stat.name)) {
-              homeScore += parseInt(stat.home) || 0;
-              awayScore += parseInt(stat.away) || 0;
-            }
-          }
         }
       }
       
