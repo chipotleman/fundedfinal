@@ -25,8 +25,9 @@ export default async function handler(req, res) {
     res.write(`data: ${JSON.stringify(data)}\n\n`);
   };
 
+  // Start polling if not already running
   if (!service.isPolling) {
-    const targetSports = sport ? [sport] : null;
+    const targetSports = sport ? [sport] : ['basketball', 'hockey', 'amfootball', 'baseball'];
     service.startPolling(targetSports);
   }
 
@@ -36,7 +37,17 @@ export default async function handler(req, res) {
     timestamp: Date.now()
   });
 
-  const currentEvents = service.getEvents(sport);
+  // If no events yet, do an immediate fetch
+  let currentEvents = service.getEvents(sport);
+  if (currentEvents.length === 0) {
+    try {
+      await service.fetchAllFeeds();
+      currentEvents = service.getEvents(sport);
+    } catch (e) {
+      console.error('[Stream] Initial fetch error:', e.message);
+    }
+  }
+  
   if (currentEvents.length > 0) {
     sendEvent({
       type: 'initial',
