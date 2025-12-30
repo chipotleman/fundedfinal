@@ -232,6 +232,26 @@ export function useGoalserveLive(options = {}) {
     return Object.values(availableEvents).filter(e => e.sport === sportType);
   }, [availableEvents]);
 
+  const liveScores = Object.fromEntries(
+    Object.entries(events).map(([id, event]) => [
+      id,
+      {
+        homeScore: event.homeScore || event.scores?.home?.total || 0,
+        awayScore: event.awayScore || event.scores?.away?.total || 0,
+        status: event.status,
+        isLive: event.status === 'live' || event.isLive,
+        quarter: event.quarter || event.period || null
+      }
+    ])
+  );
+
+  const liveOdds = Object.fromEntries(
+    Object.entries(events).map(([id, event]) => [
+      id,
+      event.odds || null
+    ])
+  );
+
   return {
     isConnected,
     events,
@@ -240,6 +260,8 @@ export function useGoalserveLive(options = {}) {
     lastUpdate,
     error,
     usingRestFallback,
+    liveScores,
+    liveOdds,
     connect,
     disconnect,
     startRestPolling,
