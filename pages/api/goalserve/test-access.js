@@ -22,30 +22,51 @@ export default async function handler(req, res) {
         headers: { 'Accept-Encoding': 'gzip' }
       });
       
-      if (response.ok) {
-        const buffer = await response.arrayBuffer();
-        const decompressed = await gunzip(Buffer.from(buffer));
-        const data = JSON.parse(decompressed.toString('utf-8'));
-        
-        results.tests[feed.name] = {
-          status: 'success',
-          httpStatus: response.status,
-          responseTime: Date.now() - startTime,
-          dataSize: decompressed.length,
-          eventCount: typeof data === 'object' ? Object.keys(data).length : 'unknown'
-        };
-      } else {
+      const buffer = await response.arrayBuffer();
+      const bufferData = Buffer.from(buffer);
+      
+      if (!response.ok) {
+        const textContent = bufferData.toString('utf-8').substring(0, 200);
         results.tests[feed.name] = {
           status: 'failed',
           httpStatus: response.status,
           statusText: response.statusText,
-          error: response.status === 403 ? 'IP not whitelisted' : 'Access denied'
+          error: response.status === 403 ? 'IP not whitelisted (403 Forbidden)' : `HTTP ${response.status}`,
+          preview: textContent.includes('403') || textContent.includes('Forbidden') ? 'Access denied - IP not whitelisted' : textContent.substring(0, 100)
         };
+        continue;
       }
+      
+      const isGzip = bufferData[0] === 0x1f && bufferData[1] === 0x8b;
+      
+      if (!isGzip) {
+        const textContent = bufferData.toString('utf-8').substring(0, 500);
+        const is403 = textContent.includes('403') || textContent.includes('Forbidden');
+        results.tests[feed.name] = {
+          status: 'failed',
+          httpStatus: response.status,
+          error: is403 ? 'IP not whitelisted (received HTML error page instead of gzip data)' : 'Response is not gzip compressed',
+          preview: textContent.substring(0, 150)
+        };
+        continue;
+      }
+      
+      const decompressed = await gunzip(bufferData);
+      const data = JSON.parse(decompressed.toString('utf-8'));
+      
+      results.tests[feed.name] = {
+        status: 'success',
+        httpStatus: response.status,
+        responseTime: Date.now() - startTime,
+        dataSize: decompressed.length,
+        eventCount: typeof data === 'object' ? Object.keys(data).length : 'unknown'
+      };
     } catch (error) {
       results.tests[feed.name] = {
         status: 'error',
-        error: error.message
+        error: error.message === 'incorrect header check' 
+          ? 'IP not whitelisted (received non-gzip response, likely HTML error page)'
+          : error.message
       };
     }
   }
