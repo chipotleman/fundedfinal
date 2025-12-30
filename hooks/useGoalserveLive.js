@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
+const REST_POLLING_INTERVAL = 30000; // 30 seconds
+
 export function useGoalserveLive(options = {}) {
-  const { sport = null, eventId = null, autoConnect = true, onUpdate = null } = options;
+  const { sport = null, eventId = null, autoConnect = true, onUpdate = null, enableRestFallback = true } = options;
   
   const [isConnected, setIsConnected] = useState(false);
   const [events, setEvents] = useState({});
@@ -9,12 +11,68 @@ export function useGoalserveLive(options = {}) {
   const [lastUpdate, setLastUpdate] = useState(null);
   const [error, setError] = useState(null);
   const [activeSports, setActiveSports] = useState([]);
+  const [usingRestFallback, setUsingRestFallback] = useState(false);
   
   const eventSourceRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
+  const pollingIntervalRef = useRef(null);
   const reconnectAttempts = useRef(0);
 
+  const fetchRestData = useCallback(async () => {
+    try {
+      const params = new URLSearchParams();
+      if (sport) params.set('sport', sport);
+      params.set('connect', 'false'); // Don't try WebSocket connection
+      
+      const response = await fetch(`/api/goalserve/live?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+      
+      const data = await response.json();
+      if (data.success && data.games) {
+        setEvents(prev => {
+          const updated = { ...prev };
+          data.games.forEach(game => {
+            updated[game.id] = game;
+          });
+          return updated;
+        });
+        setLastUpdate(Date.now());
+      }
+    } catch (err) {
+      console.error('[Goalserve Live] REST polling error:', err);
+    }
+  }, [sport]);
+
+  const startRestPolling = useCallback(() => {
+    console.log('[Goalserve Live] Starting REST API polling fallback');
+    setUsingRestFallback(true);
+    setError(null);
+    
+    // Clear any existing polling
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+    }
+    
+    // Fetch immediately
+    fetchRestData();
+    
+    // Then poll every 30 seconds
+    pollingIntervalRef.current = setInterval(fetchRestData, REST_POLLING_INTERVAL);
+  }, [fetchRestData]);
+
+  const stopRestPolling = useCallback(() => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+    setUsingRestFallback(false);
+  }, []);
+
   const connect = useCallback(() => {
+    // Stop REST polling if switching to WebSocket
+    stopRestPolling();
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
     }
@@ -44,8 +102,21 @@ export function useGoalserveLive(options = {}) {
           switch (data.type) {
             case 'connected':
               console.log('[Goalserve Live] Initial status:', data.status);
+              setUsingRestFallback(false);
               if (data.status?.activeSports) {
                 setActiveSports(data.status.activeSports);
+              }
+              break;
+            
+            case 'connection_failed':
+              console.log('[Goalserve Live] Connection failed, falling back to REST:', data.message);
+              setIsConnected(false);
+              setError(data.message);
+              eventSource.close();
+              eventSourceRef.current = null;
+              // Start REST polling fallback if enabled
+              if (enableRestFallback) {
+                startRestPolling();
               }
               break;
             
@@ -124,7 +195,7 @@ export function useGoalserveLive(options = {}) {
       console.error('[Goalserve Live] Connection error:', err);
       setError(err.message);
     }
-  }, [sport, eventId, onUpdate]);
+  }, [sport, eventId, onUpdate, enableRestFallback, startRestPolling, stopRestPolling]);
 
   const disconnect = useCallback(() => {
     if (eventSourceRef.current) {
@@ -135,8 +206,9 @@ export function useGoalserveLive(options = {}) {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
     }
+    stopRestPolling();
     setIsConnected(false);
-  }, []);
+  }, [stopRestPolling]);
 
   useEffect(() => {
     if (autoConnect) {
@@ -167,8 +239,11 @@ export function useGoalserveLive(options = {}) {
     activeSports,
     lastUpdate,
     error,
+    usingRestFallback,
     connect,
     disconnect,
+    startRestPolling,
+    stopRestPolling,
     getEvent,
     getEventsBySport,
     getAvailableEventsBySport

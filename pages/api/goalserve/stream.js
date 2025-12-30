@@ -14,7 +14,48 @@ export default async function handler(req, res) {
   const { sport, eventId } = req.query;
   const sports = sport ? [sport] : ['basketball', 'hockey', 'baseball'];
 
-  await goalserveWs.ensureConnected(sports);
+  const connected = await goalserveWs.ensureConnected(sports);
+  const status = goalserveWs.getStatus();
+  
+  // Check if WebSocket is not available and provide clear feedback
+  if (!connected) {
+    const wsStatus = status.connectionStatus;
+    
+    // For permanent failures (401), return error with fallback recommendation
+    if (wsStatus === 'ws_access_not_enabled') {
+      return res.status(503).json({
+        error: 'WebSocket access not enabled',
+        connectionStatus: wsStatus,
+        message: 'WebSocket access requires a separate Goalserve subscription. Use /api/goalserve/live for REST API polling.',
+        fallback: '/api/goalserve/live'
+      });
+    }
+    
+    // For temporary failures, still start SSE but inform client
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-transform',
+      'Connection': 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    });
+
+    const sendEvent = (data) => {
+      res.write(`data: ${JSON.stringify(data)}\n\n`);
+    };
+
+    // Send connection failure info so client can fall back to REST
+    sendEvent({
+      type: 'connection_failed',
+      status: status,
+      message: 'WebSocket connection failed. Use REST API polling as fallback.',
+      fallback: '/api/goalserve/live',
+      timestamp: Date.now()
+    });
+
+    // Close connection after informing client
+    res.end();
+    return;
+  }
 
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
@@ -29,7 +70,7 @@ export default async function handler(req, res) {
 
   sendEvent({
     type: 'connected',
-    status: goalserveWs.getStatus(),
+    status: status,
     timestamp: Date.now()
   });
 

@@ -77,15 +77,23 @@ None documented yet.
     - Supported sports: basketball_nba, americanfootball_nfl, basketball_ncaab, americanfootball_ncaaf, baseball_mlb, icehockey_nhl
     - Caching: 30-second cache (12s during live games)
     - Pricing: Subscription-based (unlimited requests)
-  - **Goalserve WebSocket** (real-time feeds)
+  - **Goalserve WebSocket** (real-time feeds - requires additional subscription)
     - Service: `lib/goalserve-ws.js`
     - Features: Sub-second live scores, in-play odds from bet365, ball position tracking
-    - Requires: GOALSERVE_WS_URL environment variable (contact Goalserve for WebSocket access)
+    - Authentication: JWT token flow via `http://live.goalserve.com/api/v1/auth/gettoken`
+    - WebSocket URL: `ws://live.goalserve.com/ws/{sport}?tkn={jwt_token}`
+    - **Note**: WebSocket access may require a separate Goalserve subscription tier. Contact Goalserve support to enable.
+    - Message types: `avl` (available events list), `updt` (real-time score/odds updates)
+    - Supported sports: soccer, basketball, baseball, hockey, tennis, volleyball
     - Endpoints:
-      - `/api/goalserve/stream` - Server-Sent Events (SSE) for real-time updates
-      - `/api/goalserve/ws-status` - WebSocket connection status
-    - Client hook: `hooks/useGoalserveLive.js` - React hook for consuming live updates
-    - Component: `components/LiveGameTracker.js` - Visual game tracker with ball position
+      - `/api/goalserve/stream` - Server-Sent Events (SSE) for real-time updates from WebSocket
+      - `/api/goalserve/ws-status` - WebSocket connection status (use `?connect=true` to attempt connection)
+      - `/api/goalserve/ws-live` - Get current live events from WebSocket data store
+    - Client hooks in `hooks/useGoalserveLive.js`:
+      - `useGoalserveLive({ sport, eventId, autoConnect })` - Main hook for live data
+      - `useLiveEvent(eventId)` - Hook for specific event updates
+      - `useLiveSport(sport)` - Hook for sport-specific updates
+    - Fallback: If WebSocket unavailable, use REST API polling via `/api/goalserve/live` (30-second cache)
   - **The Odds API** (backup - not currently used)
     - API service: `lib/theoddsapi.js`
     - Provides: US bookmaker odds (FanDuel, DraftKings, BetMGM)
