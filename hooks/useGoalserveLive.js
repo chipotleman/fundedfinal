@@ -163,6 +163,20 @@ export function useGoalserveLive(options = {}) {
             
             case 'heartbeat':
               break;
+            
+            case 'initial':
+            case 'events':
+              // Handle batch events from inplay polling
+              if (data.events && Array.isArray(data.events)) {
+                setEvents(prev => {
+                  const updated = { ...prev };
+                  data.events.forEach(evt => {
+                    updated[evt.id] = evt;
+                  });
+                  return updated;
+                });
+              }
+              break;
               
             default:
               console.log('[Goalserve Live] Unknown event type:', data.type);
