@@ -238,6 +238,7 @@ export default function Dashboard() {
         status: 'IN_PROGRESS',
         isLive: true,
         isInplay: true,
+        displayClock: event.displayClock,
         scores: {
           home: { total: homeScore },
           away: { total: awayScore }
@@ -523,6 +524,7 @@ export default function Dashboard() {
                         <div className="flex items-center gap-1 ml-auto">
                           <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
                           <span className="text-red-500 text-xs font-medium">LIVE</span>
+                          {game.displayClock && <span className="text-gray-400 text-xs">• {game.displayClock}</span>}
                         </div>
                       ) : (
                         <span className="text-gray-400 text-xs ml-auto">{game.time || 'TBD'}</span>
@@ -629,7 +631,7 @@ export default function Dashboard() {
                             <div className="flex items-center gap-1">
                               <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
                               <span className="text-red-500 text-xs font-medium">LIVE</span>
-                              {game.quarter && <span className="text-gray-400 text-xs">• {game.quarter}</span>}
+                              {(game.displayClock || game.quarter) && <span className="text-gray-400 text-xs">• {game.displayClock || game.quarter}</span>}
                             </div>
                           ) : (
                             <span className="text-gray-400 text-xs font-medium">{game.time || 'TBD'}</span>
