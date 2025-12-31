@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { inferLeague } from '../lib/leagueInference';
 
 export default function LeagueNameTest() {
   const [events, setEvents] = useState([]);
@@ -98,13 +99,16 @@ export default function LeagueNameTest() {
               <tr style={{ backgroundColor: '#222' }}>
                 <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #444' }}>ID</th>
                 <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #444' }}>League (raw)</th>
+                <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #444' }}>Inferred League</th>
                 <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #444' }}>Home Team</th>
                 <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #444' }}>Away Team</th>
                 <th style={{ padding: '10px', textAlign: 'left', borderBottom: '1px solid #444' }}>Score</th>
               </tr>
             </thead>
             <tbody>
-              {sportEvents.map(event => (
+              {sportEvents.map(event => {
+                const inferred = inferLeague(event.homeTeam, event.awayTeam, event.sport);
+                return (
                 <tr key={event.id} style={{ borderBottom: '1px solid #333' }}>
                   <td style={{ padding: '8px' }}>{event.id}</td>
                   <td style={{ padding: '8px' }}>
@@ -112,11 +116,16 @@ export default function LeagueNameTest() {
                       {event.league || '(none)'}
                     </code>
                   </td>
+                  <td style={{ padding: '8px' }}>
+                    <code style={{ backgroundColor: '#1a3a5a', padding: '2px 6px', borderRadius: '4px' }}>
+                      {inferred}
+                    </code>
+                  </td>
                   <td style={{ padding: '8px' }}>{event.homeTeam}</td>
                   <td style={{ padding: '8px' }}>{event.awayTeam}</td>
                   <td style={{ padding: '8px' }}>{event.homeScore} - {event.awayScore}</td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
         </div>
