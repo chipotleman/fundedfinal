@@ -207,24 +207,27 @@ export default function Dashboard() {
         }
       }
       
-      const sportMapping = {
-        basketball: { name: 'Euro Basketball', icon: '🏀' },
-        hockey: { name: 'Int\'l Hockey', icon: '🏒' },
-        soccer: { name: 'Soccer', icon: '⚽' },
-        amfootball: { name: 'Football', icon: '🏈' },
-        baseball: { name: 'Baseball', icon: '⚾' }
+      // Icon mapping by sport type
+      const sportIcons = {
+        basketball: '🏀',
+        hockey: '🏒',
+        soccer: '⚽',
+        amfootball: '🏈',
+        baseball: '⚾',
+        esports: '🎮'
       };
-      const sportInfo = sportMapping[event.sport] || { name: event.sport, icon: '🏆' };
+      const sportIcon = sportIcons[event.sport] || '🏆';
       
-      // Use league name if available, otherwise fall back to sport mapping
-      const leagueName = event.league || sportInfo.name;
+      // Use actual league name from Goalserve data, with fallback
+      const leagueName = event.league || event.sport || 'Live';
       
       return {
         id: `inplay_${event.id}`,
         gameId: `inplay_${event.id}`,
         sport: event.sport,
-        sportName: sportInfo.name,
+        sportName: leagueName,
         league: leagueName,
+        sportIcon: sportIcon,
         homeTeam: homeTeam.substring(0, 20),
         awayTeam: awayTeam.substring(0, 20),
         homeTeamFull: homeTeam,
@@ -586,39 +589,7 @@ export default function Dashboard() {
                 <p className="text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>Loading games...</p>
               </div>
             ) : games.length > 0 ? (
-              (() => {
-                // Group games by league when on Live tab
-                const groupedByLeague = selectedTab === 'live' 
-                  ? games.reduce((acc, game) => {
-                      const league = game.league || game.sportName || 'Other';
-                      if (!acc[league]) acc[league] = [];
-                      acc[league].push(game);
-                      return acc;
-                    }, {})
-                  : { 'all': games };
-                
-                const leagueOrder = Object.keys(groupedByLeague).sort((a, b) => {
-                  // Priority order for leagues
-                  const priority = ['NBA', 'NCAAB', 'Women\'s NCAAB', 'Euro Basketball', 'NFL', 'NCAAF', 'NHL', 'Int\'l Hockey', 'MLB', 'Soccer'];
-                  const aIdx = priority.indexOf(a);
-                  const bIdx = priority.indexOf(b);
-                  if (aIdx === -1 && bIdx === -1) return a.localeCompare(b);
-                  if (aIdx === -1) return 1;
-                  if (bIdx === -1) return -1;
-                  return aIdx - bIdx;
-                });
-                
-                return leagueOrder.map(league => (
-                  <div key={league}>
-                    {selectedTab === 'live' && (
-                      <div className="flex items-center gap-2 mb-2 mt-4 first:mt-0">
-                        <div className="h-px flex-1 bg-gray-700"></div>
-                        <span className="text-xs font-semibold uppercase px-2" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{league}</span>
-                        <div className="h-px flex-1 bg-gray-700"></div>
-                      </div>
-                    )}
-                    <div className="space-y-3">
-                      {groupedByLeague[league].map(game => {
+              games.map(game => {
                 const sport = game.sportName || 'NBA';
                 const isExpanded = expandedGames[game.id];
                 const isLive = game.isLive || game.status === 'IN_PROGRESS';
@@ -864,11 +835,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                 );
-              })}
-                    </div>
-                  </div>
-                ));
-              })()
+              })
             ) : (
               <div className="text-center py-12">
                 <div className="rounded-2xl p-8 max-w-md mx-auto" style={{ backgroundColor: isDarkMode ? '#111111' : '#ffffff', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(209, 213, 219, 1)' }}>
