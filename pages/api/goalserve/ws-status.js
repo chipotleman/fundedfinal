@@ -17,7 +17,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { connect, sport } = req.query;
+    const { connect, sport, reset } = req.query;
+    
+    // Reset connection state if requested (clears cached errors)
+    if (reset === 'true') {
+      goalserveWs.resetConnectionState();
+    }
     
     if (connect === 'true') {
       const sports = sport ? [sport] : ['basketball', 'hockey', 'baseball'];
