@@ -207,19 +207,20 @@ export default function Dashboard() {
         }
       }
       
-      // Icon mapping by sport type
-      const sportIcons = {
-        basketball: '🏀',
-        hockey: '🏒',
-        soccer: '⚽',
-        amfootball: '🏈',
-        baseball: '⚾',
-        esports: '🎮'
+      // Icon and display name mapping by sport type
+      const sportMapping = {
+        basketball: { icon: '🏀', fallbackName: 'Basketball' },
+        hockey: { icon: '🏒', fallbackName: 'Hockey' },
+        soccer: { icon: '⚽', fallbackName: 'Soccer' },
+        amfootball: { icon: '🏈', fallbackName: 'Football' },
+        baseball: { icon: '⚾', fallbackName: 'Baseball' },
+        esports: { icon: '🎮', fallbackName: 'eSports' }
       };
-      const sportIcon = sportIcons[event.sport] || '🏆';
+      const sportInfo = sportMapping[event.sport] || { icon: '🏆', fallbackName: 'Live' };
+      const sportIcon = sportInfo.icon;
       
-      // Use actual league name from Goalserve data, with fallback
-      const leagueName = event.league || event.sport || 'Live';
+      // Use actual league name from Goalserve data, with better fallback
+      const leagueName = event.league || sportInfo.fallbackName;
       
       return {
         id: `inplay_${event.id}`,
