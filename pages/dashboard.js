@@ -16,7 +16,7 @@ export default function Dashboard() {
   const { isDarkMode } = useTheme();
   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
   const [selectedSport, setSelectedSport] = useState('All Sports');
-  const [selectedTab, setSelectedTab] = useState('upcoming');
+  const [selectedTab, setSelectedTab] = useState('live');
   const [games, setGames] = useState([]);
   const [allGames, setAllGames] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -330,10 +330,25 @@ export default function Dashboard() {
     // Choose which to display based on tab, but keep both available
     const activeGames = selectedTab === 'live' ? liveGames : upcomingGames;
     
-    // Apply sport filter
+    // Apply sport filter - match both specific leagues AND base sport fallbacks
     let filteredGames = activeGames;
     if (selectedSport !== 'All Sports') {
-      filteredGames = activeGames.filter(g => g.sportName === selectedSport);
+      // Map sport buttons to base sport fallbacks for matching
+      const sportMappings = {
+        'NBA': ['NBA', 'BASKETBALL', "WOMEN'S BASKETBALL"],
+        'NCAAB': ['NCAAB', 'BASKETBALL', "WOMEN'S BASKETBALL", "WOMEN'S NCAAB"],
+        'NFL': ['NFL', 'FOOTBALL'],
+        'NCAAF': ['NCAAF', 'FOOTBALL'],
+        'MLB': ['MLB', 'BASEBALL', 'COLLEGE BASEBALL'],
+        'NHL': ['NHL', 'HOCKEY'],
+        'Euro Basketball': ['EUROLEAGUE', 'TURKEY BASKETBALL', 'ITALY BASKETBALL', 'GREECE BASKETBALL', 'SPAIN BASKETBALL', 'FRANCE BASKETBALL', 'GERMANY BASKETBALL', 'EUROPEAN BASKETBALL', 'BASKETBALL'],
+        "Int'l Hockey": ['HOCKEY', 'NHL']
+      };
+      const validSportNames = sportMappings[selectedSport] || [selectedSport];
+      filteredGames = activeGames.filter(g => {
+        const sportNameUpper = (g.sportName || '').toUpperCase();
+        return validSportNames.some(name => sportNameUpper === name.toUpperCase());
+      });
     }
     
     setGames(filteredGames);
@@ -418,17 +433,6 @@ export default function Dashboard() {
         <div className="mb-4">
           <div className="flex items-center gap-4 mb-4">
             <TapSurface
-              onTap={() => setSelectedTab('upcoming')}
-              isActive={selectedTab === 'upcoming'}
-              activeColor="#2563eb"
-              inactiveColor={isDarkMode ? '#1a1a1a' : '#e5e7eb'}
-              activeTextColor="#ffffff"
-              inactiveTextColor={isDarkMode ? '#9ca3af' : '#4b5563'}
-              style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '600' }}
-            >
-              Upcoming {categorizedGames.upcomingGames.length > 0 && `(${categorizedGames.upcomingGames.length})`}
-            </TapSurface>
-            <TapSurface
               onTap={() => setSelectedTab('live')}
               isActive={selectedTab === 'live'}
               activeColor="#dc2626"
@@ -446,6 +450,17 @@ export default function Dashboard() {
                 }}
               ></span>
               Live {categorizedGames.liveGames.length > 0 && `(${categorizedGames.liveGames.length})`}
+            </TapSurface>
+            <TapSurface
+              onTap={() => setSelectedTab('upcoming')}
+              isActive={selectedTab === 'upcoming'}
+              activeColor="#2563eb"
+              inactiveColor={isDarkMode ? '#1a1a1a' : '#e5e7eb'}
+              activeTextColor="#ffffff"
+              inactiveTextColor={isDarkMode ? '#9ca3af' : '#4b5563'}
+              style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '600' }}
+            >
+              Upcoming {categorizedGames.upcomingGames.length > 0 && `(${categorizedGames.upcomingGames.length})`}
             </TapSurface>
             {lastUpdated && (
               <span className="text-xs" style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>
