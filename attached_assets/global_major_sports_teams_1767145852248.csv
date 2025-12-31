@@ -1,0 +1,198 @@
+sport,league,level,country,team
+Hockey,NHL,Professional,USA/Canada,Anaheim Ducks
+Hockey,NHL,Professional,USA/Canada,Arizona Coyotes
+Hockey,NHL,Professional,USA/Canada,Boston Bruins
+Hockey,NHL,Professional,USA/Canada,Buffalo Sabres
+Hockey,NHL,Professional,USA/Canada,Calgary Flames
+Hockey,NHL,Professional,USA/Canada,Carolina Hurricanes
+Hockey,NHL,Professional,USA/Canada,Chicago Blackhawks
+Hockey,NHL,Professional,USA/Canada,Colorado Avalanche
+Hockey,NHL,Professional,USA/Canada,Columbus Blue Jackets
+Hockey,NHL,Professional,USA/Canada,Dallas Stars
+Hockey,NHL,Professional,USA/Canada,Detroit Red Wings
+Hockey,NHL,Professional,USA/Canada,Edmonton Oilers
+Hockey,NHL,Professional,USA/Canada,Florida Panthers
+Hockey,NHL,Professional,USA/Canada,Los Angeles Kings
+Hockey,NHL,Professional,USA/Canada,Minnesota Wild
+Hockey,NHL,Professional,USA/Canada,Montreal Canadiens
+Hockey,NHL,Professional,USA/Canada,Nashville Predators
+Hockey,NHL,Professional,USA/Canada,New Jersey Devils
+Hockey,NHL,Professional,USA/Canada,New York Islanders
+Hockey,NHL,Professional,USA/Canada,New York Rangers
+Hockey,NHL,Professional,USA/Canada,Ottawa Senators
+Hockey,NHL,Professional,USA/Canada,Philadelphia Flyers
+Hockey,NHL,Professional,USA/Canada,Pittsburgh Penguins
+Hockey,NHL,Professional,USA/Canada,San Jose Sharks
+Hockey,NHL,Professional,USA/Canada,Seattle Kraken
+Hockey,NHL,Professional,USA/Canada,St. Louis Blues
+Hockey,NHL,Professional,USA/Canada,Tampa Bay Lightning
+Hockey,NHL,Professional,USA/Canada,Toronto Maple Leafs
+Hockey,NHL,Professional,USA/Canada,Vancouver Canucks
+Hockey,NHL,Professional,USA/Canada,Vegas Golden Knights
+Hockey,NHL,Professional,USA/Canada,Washington Capitals
+Hockey,NHL,Professional,USA/Canada,Winnipeg Jets
+Basketball,NBA,Professional,USA/Canada,Atlanta Hawks
+Basketball,NBA,Professional,USA/Canada,Boston Celtics
+Basketball,NBA,Professional,USA/Canada,Brooklyn Nets
+Basketball,NBA,Professional,USA/Canada,Charlotte Hornets
+Basketball,NBA,Professional,USA/Canada,Chicago Bulls
+Basketball,NBA,Professional,USA/Canada,Cleveland Cavaliers
+Basketball,NBA,Professional,USA/Canada,Dallas Mavericks
+Basketball,NBA,Professional,USA/Canada,Denver Nuggets
+Basketball,NBA,Professional,USA/Canada,Detroit Pistons
+Basketball,NBA,Professional,USA/Canada,Golden State Warriors
+Basketball,NBA,Professional,USA/Canada,Houston Rockets
+Basketball,NBA,Professional,USA/Canada,Indiana Pacers
+Basketball,NBA,Professional,USA/Canada,LA Clippers
+Basketball,NBA,Professional,USA/Canada,Los Angeles Lakers
+Basketball,NBA,Professional,USA/Canada,Memphis Grizzlies
+Basketball,NBA,Professional,USA/Canada,Miami Heat
+Basketball,NBA,Professional,USA/Canada,Milwaukee Bucks
+Basketball,NBA,Professional,USA/Canada,Minnesota Timberwolves
+Basketball,NBA,Professional,USA/Canada,New Orleans Pelicans
+Basketball,NBA,Professional,USA/Canada,New York Knicks
+Basketball,NBA,Professional,USA/Canada,Oklahoma City Thunder
+Basketball,NBA,Professional,USA/Canada,Orlando Magic
+Basketball,NBA,Professional,USA/Canada,Philadelphia 76ers
+Basketball,NBA,Professional,USA/Canada,Phoenix Suns
+Basketball,NBA,Professional,USA/Canada,Portland Trail Blazers
+Basketball,NBA,Professional,USA/Canada,Sacramento Kings
+Basketball,NBA,Professional,USA/Canada,San Antonio Spurs
+Basketball,NBA,Professional,USA/Canada,Toronto Raptors
+Basketball,NBA,Professional,USA/Canada,Utah Jazz
+Basketball,NBA,Professional,USA/Canada,Washington Wizards
+Football,NFL,Professional,USA,Arizona Cardinals
+Football,NFL,Professional,USA,Atlanta Falcons
+Football,NFL,Professional,USA,Baltimore Ravens
+Football,NFL,Professional,USA,Buffalo Bills
+Football,NFL,Professional,USA,Carolina Panthers
+Football,NFL,Professional,USA,Chicago Bears
+Football,NFL,Professional,USA,Cincinnati Bengals
+Football,NFL,Professional,USA,Cleveland Browns
+Football,NFL,Professional,USA,Dallas Cowboys
+Football,NFL,Professional,USA,Denver Broncos
+Football,NFL,Professional,USA,Detroit Lions
+Football,NFL,Professional,USA,Green Bay Packers
+Football,NFL,Professional,USA,Houston Texans
+Football,NFL,Professional,USA,Indianapolis Colts
+Football,NFL,Professional,USA,Jacksonville Jaguars
+Football,NFL,Professional,USA,Kansas City Chiefs
+Football,NFL,Professional,USA,Las Vegas Raiders
+Football,NFL,Professional,USA,Los Angeles Chargers
+Football,NFL,Professional,USA,Los Angeles Rams
+Football,NFL,Professional,USA,Miami Dolphins
+Football,NFL,Professional,USA,Minnesota Vikings
+Football,NFL,Professional,USA,New England Patriots
+Football,NFL,Professional,USA,New Orleans Saints
+Football,NFL,Professional,USA,New York Giants
+Football,NFL,Professional,USA,New York Jets
+Football,NFL,Professional,USA,Philadelphia Eagles
+Football,NFL,Professional,USA,Pittsburgh Steelers
+Football,NFL,Professional,USA,San Francisco 49ers
+Football,NFL,Professional,USA,Seattle Seahawks
+Football,NFL,Professional,USA,Tampa Bay Buccaneers
+Football,NFL,Professional,USA,Tennessee Titans
+Football,NFL,Professional,USA,Washington Commanders
+Baseball,MLB,Professional,USA/Canada,Arizona Diamondbacks
+Baseball,MLB,Professional,USA/Canada,Atlanta Braves
+Baseball,MLB,Professional,USA/Canada,Baltimore Orioles
+Baseball,MLB,Professional,USA/Canada,Boston Red Sox
+Baseball,MLB,Professional,USA/Canada,Chicago Cubs
+Baseball,MLB,Professional,USA/Canada,Chicago White Sox
+Baseball,MLB,Professional,USA/Canada,Cincinnati Reds
+Baseball,MLB,Professional,USA/Canada,Cleveland Guardians
+Baseball,MLB,Professional,USA/Canada,Colorado Rockies
+Baseball,MLB,Professional,USA/Canada,Detroit Tigers
+Baseball,MLB,Professional,USA/Canada,Houston Astros
+Baseball,MLB,Professional,USA/Canada,Kansas City Royals
+Baseball,MLB,Professional,USA/Canada,Los Angeles Angels
+Baseball,MLB,Professional,USA/Canada,Los Angeles Dodgers
+Baseball,MLB,Professional,USA/Canada,Miami Marlins
+Baseball,MLB,Professional,USA/Canada,Milwaukee Brewers
+Baseball,MLB,Professional,USA/Canada,Minnesota Twins
+Baseball,MLB,Professional,USA/Canada,New York Mets
+Baseball,MLB,Professional,USA/Canada,New York Yankees
+Baseball,MLB,Professional,USA/Canada,Oakland Athletics
+Baseball,MLB,Professional,USA/Canada,Philadelphia Phillies
+Baseball,MLB,Professional,USA/Canada,Pittsburgh Pirates
+Baseball,MLB,Professional,USA/Canada,San Diego Padres
+Baseball,MLB,Professional,USA/Canada,San Francisco Giants
+Baseball,MLB,Professional,USA/Canada,Seattle Mariners
+Baseball,MLB,Professional,USA/Canada,St. Louis Cardinals
+Baseball,MLB,Professional,USA/Canada,Tampa Bay Rays
+Baseball,MLB,Professional,USA/Canada,Texas Rangers
+Baseball,MLB,Professional,USA/Canada,Toronto Blue Jays
+Baseball,MLB,Professional,USA/Canada,Washington Nationals
+Soccer,MLS,Professional,USA/Canada,Atlanta United
+Soccer,MLS,Professional,USA/Canada,Austin FC
+Soccer,MLS,Professional,USA/Canada,CF Montréal
+Soccer,MLS,Professional,USA/Canada,Charlotte FC
+Soccer,MLS,Professional,USA/Canada,Chicago Fire
+Soccer,MLS,Professional,USA/Canada,Colorado Rapids
+Soccer,MLS,Professional,USA/Canada,Columbus Crew
+Soccer,MLS,Professional,USA/Canada,DC United
+Soccer,MLS,Professional,USA/Canada,FC Cincinnati
+Soccer,MLS,Professional,USA/Canada,FC Dallas
+Soccer,MLS,Professional,USA/Canada,Houston Dynamo
+Soccer,MLS,Professional,USA/Canada,Inter Miami
+Soccer,MLS,Professional,USA/Canada,LA Galaxy
+Soccer,MLS,Professional,USA/Canada,Los Angeles FC
+Soccer,MLS,Professional,USA/Canada,Minnesota United
+Soccer,MLS,Professional,USA/Canada,Nashville SC
+Soccer,MLS,Professional,USA/Canada,New England Revolution
+Soccer,MLS,Professional,USA/Canada,New York City FC
+Soccer,MLS,Professional,USA/Canada,New York Red Bulls
+Soccer,MLS,Professional,USA/Canada,Orlando City
+Soccer,MLS,Professional,USA/Canada,Philadelphia Union
+Soccer,MLS,Professional,USA/Canada,Portland Timbers
+Soccer,MLS,Professional,USA/Canada,Real Salt Lake
+Soccer,MLS,Professional,USA/Canada,San Diego FC
+Soccer,MLS,Professional,USA/Canada,San Jose Earthquakes
+Soccer,MLS,Professional,USA/Canada,Seattle Sounders
+Soccer,MLS,Professional,USA/Canada,Sporting Kansas City
+Soccer,MLS,Professional,USA/Canada,St. Louis City
+Soccer,MLS,Professional,USA/Canada,Toronto FC
+Soccer,MLS,Professional,USA/Canada,Vancouver Whitecaps
+Basketball,EuroLeague,Professional,Europe,Real Madrid
+Basketball,EuroLeague,Professional,Europe,FC Barcelona
+Basketball,EuroLeague,Professional,Europe,Olympiacos
+Basketball,EuroLeague,Professional,Europe,Panathinaikos
+Basketball,EuroLeague,Professional,Europe,Anadolu Efes
+Basketball,EuroLeague,Professional,Europe,Fenerbahce
+Basketball,EuroLeague,Professional,Europe,AS Monaco
+Basketball,EuroLeague,Professional,Europe,ASVEL Villeurbanne
+Basketball,EuroLeague,Professional,Europe,Maccabi Tel Aviv
+Basketball,EuroLeague,Professional,Europe,Partizan
+Basketball,EuroLeague,Professional,Europe,Bayern Munich
+Basketball,EuroLeague,Professional,Europe,Olimpia Milano
+Basketball,Turkish BSL,Professional,Turkey,Anadolu Efes
+Basketball,Turkish BSL,Professional,Turkey,Fenerbahçe
+Basketball,Turkish BSL,Professional,Turkey,Galatasaray
+Basketball,Turkish BSL,Professional,Turkey,Beşiktaş
+Basketball,Turkish BSL,Professional,Turkey,Türk Telekom
+Basketball,Turkish BSL,Professional,Turkey,Darüşşafaka
+Basketball,Turkish BSL,Professional,Turkey,Pınar Karşıyaka
+Basketball,Turkish BSL,Professional,Turkey,Tofaş
+Basketball,Turkish BSL,Professional,Turkey,Bahçeşehir Koleji
+Basketball,Turkish BSL,Professional,Turkey,Bursaspor
+Basketball,Turkish BSL,Professional,Turkey,Manisa BŞB
+Basketball,Turkish BSL,Professional,Turkey,Samsunspor
+Basketball,Turkish BSL,Professional,Turkey,Petkim Spor
+Basketball,Turkish BSL,Professional,Turkey,Konyaspor
+Basketball,Turkish BSL,Professional,Turkey,Büyükçekmece
+Basketball,LNB Pro A,Professional,France,AS Monaco
+Basketball,LNB Pro A,Professional,France,ASVEL Villeurbanne
+Basketball,LNB Pro A,Professional,France,Paris Basketball
+Basketball,LNB Pro A,Professional,France,JL Bourg
+Basketball,LNB Pro A,Professional,France,Limoges CSP
+Basketball,LNB Pro A,Professional,France,Le Mans
+Basketball,LNB Pro A,Professional,France,Strasbourg
+Basketball,LNB Pro A,Professional,France,Nanterre 92
+Basketball,LNB Pro A,Professional,France,Cholet
+Basketball,LNB Pro A,Professional,France,JDA Dijon
+Basketball,LNB Pro A,Professional,France,Gravelines-Dunkerque
+Basketball,LNB Pro A,Professional,France,Chalon/Saône
+Basketball,LNB Pro A,Professional,France,Nancy
+Basketball,LNB Pro A,Professional,France,Roanne
+Basketball,LNB Pro A,Professional,France,Blois
+Basketball,LNB Pro A,Professional,France,Le Portel
