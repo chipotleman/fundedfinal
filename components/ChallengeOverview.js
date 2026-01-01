@@ -134,7 +134,13 @@ export default function ChallengeOverview() {
 
               <button
                 onClick={() => handleStartChallenge(challenge.id - 1)}
-                className={`w-full bg-gradient-to-r ${getColorClass(challenge.color, 'button')} text-white font-bold py-3 rounded-xl transition-all`}
+                className="w-full font-bold py-3 rounded-xl transition-all"
+                style={{
+                  background: challenge.color === 'blue' ? 'linear-gradient(to right, #3b82f6, #06b6d4)' :
+                              challenge.color === 'green' ? 'linear-gradient(to right, #22c55e, #3b82f6)' :
+                              'linear-gradient(to right, #a855f7, #ec4899)',
+                  color: '#ffffff'
+                }}
               >
                 Start for ${challenge.price}
               </button>
@@ -181,8 +187,13 @@ export default function ChallengeOverview() {
                   <td key={challenge.id} className="p-4 text-center">
                     <button
                       onClick={() => handleStartChallenge(challenge.id - 1)}
-                      className={`bg-gradient-to-r ${getColorClass(challenge.color, 'button')} font-bold py-2.5 px-6 rounded-xl transition-all text-sm`}
-                      style={{ color: '#ffffff' }}
+                      className="font-bold py-2.5 px-6 rounded-xl transition-all text-sm"
+                      style={{
+                        background: challenge.color === 'blue' ? 'linear-gradient(to right, #3b82f6, #06b6d4)' :
+                                    challenge.color === 'green' ? 'linear-gradient(to right, #22c55e, #3b82f6)' :
+                                    'linear-gradient(to right, #a855f7, #ec4899)',
+                        color: '#ffffff'
+                      }}
                     >
                       Start Challenge
                     </button>
