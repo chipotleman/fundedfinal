@@ -4,9 +4,11 @@ export default async function handler(req, res) {
   const API_KEY = process.env.GOALSERVE_API_KEY;
   const authUrl = 'http://live.goalserve.com/api/v1/auth/gettoken';
   const sport = req.query.sport || 'soccer';
+  const format = req.query.format || '1';
   
   const results = {
     sport,
+    format,
     timestamp: new Date().toISOString(),
     steps: []
   };
@@ -28,10 +30,34 @@ export default async function handler(req, res) {
     const tokenData = await tokenResponse.json();
     results.steps.push({ step: 'Got token', tokenPrefix: tokenData.token?.substring(0, 20) + '...' });
 
-    const encodedToken = encodeURIComponent(tokenData.token);
-    const useSecure = req.query.secure === 'true';
-    const wsUrl = `${useSecure ? 'wss' : 'ws'}://live.goalserve.com/ws/${sport}?tkn=${encodedToken}`;
-    results.wsUrl = wsUrl.replace(tokenData.token, '[TOKEN]');
+    const token = tokenData.token;
+    const encodedToken = encodeURIComponent(token);
+    
+    let wsUrl;
+    switch (format) {
+      case '1':
+        wsUrl = `ws://live.goalserve.com/ws/${sport}?tkn=${encodedToken}`;
+        break;
+      case '2':
+        wsUrl = `wss://live.goalserve.com/ws/${sport}?tkn=${encodedToken}`;
+        break;
+      case '3':
+        wsUrl = `ws://live.goalserve.com?token=${encodedToken}`;
+        break;
+      case '4':
+        wsUrl = `wss://live.goalserve.com?token=${encodedToken}`;
+        break;
+      case '5':
+        wsUrl = `ws://live.goalserve.com/ws/${sport}?token=${encodedToken}`;
+        break;
+      case '6':
+        wsUrl = `wss://live.goalserve.com/ws/${sport}?token=${encodedToken}`;
+        break;
+      default:
+        wsUrl = `ws://live.goalserve.com/ws/${sport}?tkn=${encodedToken}`;
+    }
+    
+    results.wsUrl = wsUrl.replace(token, '[TOKEN]').replace(encodedToken, '[TOKEN]');
     results.steps.push({ step: 'Connecting to WebSocket...', url: results.wsUrl });
 
     const wsResult = await new Promise((resolve) => {
@@ -40,28 +66,31 @@ export default async function handler(req, res) {
       }, 10000);
 
       try {
-        const ws = new WebSocket(wsUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-            'Origin': 'http://live.goalserve.com'
-          }
-        });
+        const ws = new WebSocket(wsUrl);
         
         ws.on('open', () => {
           clearTimeout(timeout);
-          resolve({ success: true, message: 'WebSocket connected!' });
-          ws.close();
+          results.steps.push({ step: 'Connection opened! Waiting for message...' });
+          ws.send(JSON.stringify({ action: 'subscribe', sport: sport }));
         });
 
         ws.on('message', (data) => {
-          const parsed = JSON.parse(data.toString());
-          resolve({ 
-            success: true, 
-            message: 'Received message!',
-            messageType: parsed.mt,
-            sport: parsed.sp,
-            eventCount: parsed.evts?.length || 0
-          });
+          clearTimeout(timeout);
+          try {
+            const parsed = JSON.parse(data.toString());
+            resolve({ 
+              success: true, 
+              message: 'Received message!',
+              messageType: parsed.mt || parsed.type || Object.keys(parsed)[0],
+              dataKeys: Object.keys(parsed).slice(0, 5)
+            });
+          } catch (e) {
+            resolve({ 
+              success: true, 
+              message: 'Received non-JSON message',
+              raw: data.toString().substring(0, 100)
+            });
+          }
           ws.close();
         });
 
@@ -75,6 +104,20 @@ export default async function handler(req, res) {
           if (code !== 1000) {
             resolve({ success: false, error: `Closed: ${code} - ${reason}` });
           }
+        });
+        
+        ws.on('unexpected-response', (request, response) => {
+          clearTimeout(timeout);
+          let body = '';
+          response.on('data', (chunk) => { body += chunk; });
+          response.on('end', () => {
+            resolve({ 
+              success: false, 
+              error: `HTTP ${response.statusCode}: ${response.statusMessage}`,
+              headers: response.headers,
+              body: body.substring(0, 200)
+            });
+          });
         });
       } catch (e) {
         clearTimeout(timeout);
