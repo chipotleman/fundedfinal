@@ -103,6 +103,24 @@ None documented yet.
       - `useLiveEvent(eventId)` - Hook for specific event updates
       - `useLiveSport(sport)` - Hook for sport-specific updates
     - Fallback: If WebSocket unavailable, use REST API polling via `/api/goalserve/live` (30-second cache)
+  - **Hybrid WebSocket Architecture** (production real-time solution)
+    - **Problem**: Goalserve only whitelists Vercel production IPs for real-time feeds
+    - **Solution**: Separate WebSocket server polls Vercel endpoint (which fetches from Goalserve)
+    - **Components**:
+      - `ws-server.js` - Standalone WebSocket server on port 3001
+      - `/api/goalserve/live-feed` - Vercel endpoint that fetches from Goalserve inplay feeds
+      - `hooks/useHybridWebSocket.js` - Client hook for WebSocket connections
+    - **Flow**: Client → WebSocket Server → Vercel API → Goalserve → back to clients
+    - **Benefits**: Real-time delivery to clients while keeping Goalserve requests from whitelisted IPs
+    - **Environment Variables**:
+      - `WS_PORT` - WebSocket server port (default: 3001)
+      - `VERCEL_API_URL` - Production Vercel URL (default: https://thepiks.com)
+      - `POLL_INTERVAL` - How often WS server polls Vercel (default: 1000ms)
+      - `WS_SERVER_API_KEY` - API key for authentication between WS server and Vercel
+      - `NEXT_PUBLIC_WS_URL` - WebSocket server URL for client connections
+    - **Endpoints**:
+      - `/health` - Health check on WS server
+      - `/status` - Connection status and stats
   - **Goalserve Inplay HTTP Feeds** (alternative real-time data - requires IP whitelisting)
     - Service: `lib/goalserve-inplay.js`
     - Features: Gzipped JSON feeds updating every second with live scores and odds
