@@ -38,7 +38,12 @@ export default async function handler(req, res) {
       }, 10000);
 
       try {
-        const ws = new WebSocket(wsUrl);
+        const ws = new WebSocket(wsUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+            'Origin': 'http://live.goalserve.com'
+          }
+        });
         
         ws.on('open', () => {
           clearTimeout(timeout);
