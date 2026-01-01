@@ -243,7 +243,7 @@ export default function Dashboard() {
           home: { total: homeScore },
           away: { total: awayScore }
         },
-        lines: event.odds && Object.keys(event.odds).length > 0 ? {
+        lines: (event.odds?.moneyline?.home || event.odds?.spread?.home || event.odds?.total?.line) ? {
           moneyline: {
             home: event.odds.moneyline?.home || null,
             away: event.odds.moneyline?.away || null
