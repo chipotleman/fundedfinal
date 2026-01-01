@@ -1,15 +1,5 @@
-let goalserveWs = null;
-let wsModuleAvailable = false;
-
-try {
-  goalserveWs = require('../../../lib/goalserve-ws');
-  wsModuleAvailable = true;
-} catch (e) {
-  console.log('[Stream] WebSocket module not available in serverless environment');
-}
-
+const goalserveWs = require('../../../lib/goalserve-ws');
 const { getInplayService } = require('../../../lib/goalserve-inplay');
-const { fetchLiveGames } = require('../../../lib/goalserve-live-serverless');
 
 export const config = {
   api: {
@@ -19,20 +9,13 @@ export const config = {
 
 const DEFAULT_SPORTS = ['basket', 'hockey', 'baseball', 'amfootball'];
 
-const isServerless = process.env.VERCEL === '1' || 
-                     process.env.AWS_LAMBDA_FUNCTION_NAME || 
-                     process.env.NETLIFY === 'true' ||
-                     !wsModuleAvailable;
-
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   const { sport, eventId, source = 'websocket' } = req.query;
-  
-  const useServerlessFallback = isServerless || source === 'serverless';
-  const useWebSocket = !useServerlessFallback && source !== 'inplay';
+  const useWebSocket = source !== 'inplay';
 
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
@@ -49,80 +32,11 @@ export default async function handler(req, res) {
     }
   };
 
-  if (useServerlessFallback) {
-    await handleServerlessStream(req, res, sendEvent, sport, eventId);
-  } else if (useWebSocket) {
+  if (useWebSocket) {
     await handleWebSocketStream(req, res, sendEvent, sport, eventId);
   } else {
     await handleInplayStream(req, res, sendEvent, sport, eventId);
   }
-}
-
-async function handleServerlessStream(req, res, sendEvent, sport, eventId) {
-  console.log('[Stream Serverless] Starting serverless-compatible stream');
-  
-  sendEvent({
-    type: 'connected',
-    source: 'serverless',
-    status: {
-      connectionStatus: 'serverless_polling',
-      activeSports: sport ? [sport] : ['basketball_nba', 'basketball_ncaab', 'americanfootball_nfl', 'icehockey_nhl', 'baseball_mlb'],
-      isServerless: true
-    },
-    timestamp: Date.now()
-  });
-
-  const fetchAndSend = async () => {
-    try {
-      const sportList = sport ? [sport] : null;
-      const results = await fetchLiveGames(sportList);
-      
-      let filteredGames = results.games;
-      if (eventId) {
-        filteredGames = results.games.filter(g => g.id === eventId || g.id?.toString() === eventId);
-      }
-      
-      sendEvent({
-        type: 'update',
-        source: 'serverless',
-        events: filteredGames,
-        count: filteredGames.length,
-        cached: results.cached,
-        isComplete: true,
-        timestamp: Date.now()
-      });
-    } catch (err) {
-      console.error('[Stream Serverless] Fetch error:', err.message);
-      sendEvent({
-        type: 'error',
-        source: 'serverless',
-        message: err.message,
-        timestamp: Date.now()
-      });
-    }
-  };
-
-  await fetchAndSend();
-
-  const pollInterval = setInterval(fetchAndSend, 5000);
-
-  const heartbeatInterval = setInterval(() => {
-    sendEvent({
-      type: 'heartbeat',
-      source: 'serverless',
-      timestamp: Date.now()
-    });
-  }, 15000);
-
-  req.on('close', () => {
-    clearInterval(pollInterval);
-    clearInterval(heartbeatInterval);
-  });
-
-  req.on('error', () => {
-    clearInterval(pollInterval);
-    clearInterval(heartbeatInterval);
-  });
 }
 
 async function handleWebSocketStream(req, res, sendEvent, sport, eventId) {
