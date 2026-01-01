@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { categorizeGames, filterGamesBySport } from '../lib/gamesUtils';
 import { useGoalserveLive } from '../hooks/useGoalserveLive';
+import { useHybridWebSocket } from '../hooks/useHybridWebSocket';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -108,6 +109,8 @@ export default function Dashboard() {
   
   const { liveScores, liveOdds, events: inplayEvents, isConnected: liveConnected } = useGoalserveLive({ autoConnect: true });
   
+  const { events: wsEvents, isConnected: wsConnected } = useHybridWebSocket({ autoConnect: true });
+  
   // Adaptive polling - use refs to avoid closure issues
   const pollingIntervalRef = useRef(null);
   const currentIntervalRef = useRef(5000); // Start with fast polling for live updates
@@ -188,8 +191,11 @@ export default function Dashboard() {
   }, []);
 
   const gamesWithLiveData = useMemo(() => {
+    // Merge WebSocket events with inplay events (WS takes priority for real-time updates)
+    const mergedInplayEvents = { ...(inplayEvents || {}), ...(wsEvents || {}) };
+    
     // Convert inplay events to game format
-    const inplayGames = Object.values(inplayEvents || {}).map(event => {
+    const inplayGames = Object.values(mergedInplayEvents || {}).map(event => {
       const homeTeam = event.homeTeam || event.stats?.[0]?.home || 'Home';
       const awayTeam = event.awayTeam || event.stats?.[0]?.away || 'Away';
       
@@ -317,7 +323,7 @@ export default function Dashboard() {
     
     // Merge: inplay games first (they're live), then API games
     return [...inplayGames, ...updatedApiGames];
-  }, [apiGames, liveScores, liveOdds, inplayEvents]);
+  }, [apiGames, liveScores, liveOdds, inplayEvents, wsEvents]);
 
   const categorizedGames = useMemo(() => categorizeGames(gamesWithLiveData), [gamesWithLiveData, lastUpdated]);
 
