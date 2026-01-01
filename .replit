@@ -15,6 +15,10 @@ localPort = 3000
 localPort = 3001
 externalPort = 3001
 
+[[ports]]
+localPort = 5000
+externalPort = 80
+
 [workflows]
 runButton = "Project"
 
@@ -36,10 +40,6 @@ author = "agent"
 task = "workflow.run"
 args = "Next.js Dev Server"
 
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "WebSocket Server"
-
 [[workflows.workflow]]
 name = "Next.js Dev Server"
 author = "agent"
@@ -52,18 +52,6 @@ waitForPort = 5000
 [workflows.workflow.metadata]
 outputType = "webview"
 
-[[workflows.workflow]]
-name = "WebSocket Server"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "node ws-server.js"
-waitForPort = 3001
-
-[workflows.workflow.metadata]
-outputType = "console"
-
 [agent]
 expertMode = true
 
@@ -75,10 +63,3 @@ NEXT_PUBLIC_FANBASIS_CREATOR_ID = "802865"
 NEXT_PUBLIC_FANBASIS_PRODUCT_STARTER = "G5KXr"
 NEXT_PUBLIC_FANBASIS_PRODUCT_PRO = "G5KXr"
 NEXT_PUBLIC_FANBASIS_PRODUCT_ELITE = "G5KXr"
-WS_SERVER_API_KEY = "3eb1ed8ffca2f6fd1a5b979753411fcf48ae7b1b9ead1120213ca21ac35698ef"
-VERCEL_API_URL = "https://thepiks.com"
-WS_PORT = "3001"
-POLL_INTERVAL = "1000"
-
-[userenv.development]
-NEXT_PUBLIC_WS_URL = "ws://localhost:3001"
