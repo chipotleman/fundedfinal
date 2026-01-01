@@ -1,0 +1,28 @@
+1989-2f7cda559aec4a80.js:1 Logo loaded successfully
+dashboard:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+workbox-4754cb34.js:1 Uncaught (in promise) bad-precaching-response: bad-precaching-response :: [{"url":"https://thepiks.com/_next/app-build-manifest.json","status":404}]
+    at Y.S (workbox-4754cb34.js:1:16829)
+    at async Y.U (workbox-4754cb34.js:1:16381)
+    at async Y.q (workbox-4754cb34.js:1:7576)
+S @ workbox-4754cb34.js:1
+await in S
+U @ workbox-4754cb34.js:1
+await in U
+q @ workbox-4754cb34.js:1
+await in q
+handleAll @ workbox-4754cb34.js:1
+(anonymous) @ workbox-4754cb34.js:1
+$ @ workbox-4754cb34.js:1
+install @ workbox-4754cb34.js:1
+dashboard-6abce791d9e32eea.js:1 [Goalserve Live] SSE connected
+dashboard-6abce791d9e32eea.js:1 [Goalserve Live] Initial status: {connectionStatus: 'disconnected', activeSports: Array(0), lastUpdate: null, liveEventCount: 0, availableEventCount: 0, …}
+dashboard-6abce791d9e32eea.js:1 [Goalserve Live] Unknown event type: fallback
+dashboard-6abce791d9e32eea.js:1 [Goalserve Live] Initial status: {isPolling: true, pollInterval: 1000, subscriberCount: 0, eventCount: 0, lastUpdate: null, …}
+dashboard-6abce791d9e32eea.js:1 [Goalserve Live] Initial events loaded: 8
+dashboard-6abce791d9e32eea.js:1 [DASHBOARD] Adjusting polling: 5000ms -> 30000ms (live games: false)
+dashboard-6abce791d9e32eea.js:1 [DASHBOARD] Games refreshed: 98 games at 11:06:58 AM (polling: 30000ms, live: false)
+dashboard-6abce791d9e32eea.js:1 [DASHBOARD] Games refreshed: 98 games at 11:07:16 AM (polling: 30000ms, live: false)
+dashboard-6abce791d9e32eea.js:1 [DASHBOARD] Games refreshed: 98 games at 11:07:39 AM (polling: 30000ms, live: false)
+dashboard-6abce791d9e32eea.js:1 [DASHBOARD] Games refreshed: 98 games at 11:07:39 AM (polling: 30000ms, live: false)
+dashboard-6abce791d9e32eea.js:1 [DASHBOARD] Games refreshed: 98 games at 11:07:56 AM (polling: 30000ms, live: false)
+dashboard-6abce791d9e32eea.js:1 [DASHBOARD] Games refreshed: 98 games at 11:07:58 AM (polling: 30000ms, live: false)
