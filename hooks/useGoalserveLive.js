@@ -142,7 +142,24 @@ export function useGoalserveLive(options = {}) {
               break;
             
             case 'update':
-              if (data.data?.id) {
+              if (data.events && Array.isArray(data.events)) {
+                if (data.isComplete && data.source === 'serverless') {
+                  const newEvents = {};
+                  data.events.forEach(evt => {
+                    if (evt.id) newEvents[evt.id] = evt;
+                  });
+                  setEvents(newEvents);
+                  console.log('[Goalserve Live] Serverless update (complete):', data.events.length, 'live games');
+                } else {
+                  setEvents(prev => {
+                    const updated = { ...prev };
+                    data.events.forEach(evt => {
+                      if (evt.id) updated[evt.id] = evt;
+                    });
+                    return updated;
+                  });
+                }
+              } else if (data.data?.id) {
                 setEvents(prev => ({
                   ...prev,
                   [data.data.id]: data.data

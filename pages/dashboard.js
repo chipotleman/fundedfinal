@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { categorizeGames, filterGamesBySport } from '../lib/gamesUtils';
 import { useGoalserveLive } from '../hooks/useGoalserveLive';
+import { useLiveGames } from '../hooks/useLiveGames';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -107,6 +108,8 @@ export default function Dashboard() {
   const [lastUpdated, setLastUpdated] = useState(null);
   
   const { liveScores, liveOdds, events: inplayEvents, isConnected: liveConnected } = useGoalserveLive({ autoConnect: true });
+  
+  const { games: serverlessLiveGames, hasLiveGames: serverlessHasLive, pollInterval: serverlessPollInterval } = useLiveGames({ autoStart: true });
   
   // Adaptive polling - use refs to avoid closure issues
   const pollingIntervalRef = useRef(null);
@@ -315,9 +318,50 @@ export default function Dashboard() {
       return updatedGame;
     });
     
-    // Merge: inplay games first (they're live), then API games
-    return [...inplayGames, ...updatedApiGames];
-  }, [apiGames, liveScores, liveOdds, inplayEvents]);
+    // Convert serverless live games to match dashboard format
+    const serverlessGamesMap = {};
+    (serverlessLiveGames || []).forEach(game => {
+      if (game.id) {
+        serverlessGamesMap[game.id] = game;
+      }
+    });
+    
+    // Update API games with serverless live data (higher priority than WebSocket in serverless env)
+    const updatedWithServerless = updatedApiGames.map(game => {
+      const serverlessGame = serverlessGamesMap[game.id];
+      if (!serverlessGame) return game;
+      
+      return {
+        ...game,
+        scores: {
+          home: { total: serverlessGame.homeScore ?? game.scores?.home?.total ?? 0 },
+          away: { total: serverlessGame.awayScore ?? game.scores?.away?.total ?? 0 }
+        },
+        isLive: serverlessGame.isLive ?? game.isLive,
+        status: serverlessGame.status || game.status,
+        displayClock: serverlessGame.displayClock || game.displayClock,
+        lines: serverlessGame.odds?.moneyline ? {
+          ...game.lines,
+          moneyline: {
+            home: serverlessGame.odds.moneyline.home || game.lines?.moneyline?.home,
+            away: serverlessGame.odds.moneyline.away || game.lines?.moneyline?.away
+          },
+          spread: serverlessGame.odds.spread ? {
+            home: serverlessGame.odds.spread.home || game.lines?.spread?.home,
+            away: serverlessGame.odds.spread.away || game.lines?.spread?.away
+          } : game.lines?.spread,
+          total: serverlessGame.odds.total ? {
+            over: { point: serverlessGame.odds.total.line, odds: serverlessGame.odds.total.over },
+            under: { point: serverlessGame.odds.total.line, odds: serverlessGame.odds.total.under }
+          } : game.lines?.total
+        } : game.lines,
+        dataSource: serverlessGame.isLive ? 'Serverless Live' : game.dataSource
+      };
+    });
+    
+    // Merge: inplay games first (they're live), then API games with serverless updates
+    return [...inplayGames, ...updatedWithServerless];
+  }, [apiGames, liveScores, liveOdds, inplayEvents, serverlessLiveGames]);
 
   const categorizedGames = useMemo(() => categorizeGames(gamesWithLiveData), [gamesWithLiveData, lastUpdated]);
 
