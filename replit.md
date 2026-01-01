@@ -85,7 +85,15 @@ None documented yet.
     - **IP Whitelisting**: Goalserve whitelisted 2 static deployment IPs only (not development). WebSocket will fail locally but work in production deployment.
     - **Development Fallback**: REST API polling (30-second cache) is used automatically in development
     - Message types: `avl` (available events list), `updt` (real-time score/odds updates)
-    - Supported sports: soccer, basketball, baseball, hockey, tennis, volleyball
+    - **WebSocket Sport Identifiers** (must use exact names):
+      - `soccer` - Soccer/Football
+      - `basket` - Basketball (NBA, NCAAB, Euro)
+      - `amfootball` - American Football (NFL, NCAAF)
+      - `hockey` - Ice Hockey (NHL)
+      - `baseball` - Baseball (MLB)
+      - `tennis` - Tennis
+      - `volleyball` - Volleyball
+    - Sport mapping in `lib/goalserve-ws.js` converts internal names to WebSocket identifiers
     - Endpoints:
       - `/api/goalserve/stream` - Server-Sent Events (SSE) for real-time updates from WebSocket
       - `/api/goalserve/ws-status` - WebSocket connection status (use `?connect=true` to attempt connection)
