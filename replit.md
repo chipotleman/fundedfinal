@@ -103,6 +103,15 @@ None documented yet.
       - `useLiveEvent(eventId)` - Hook for specific event updates
       - `useLiveSport(sport)` - Hook for sport-specific updates
     - Fallback: If WebSocket unavailable, use REST API polling via `/api/goalserve/live` (30-second cache)
+  - **Serverless-Compatible Live Data** (for Vercel/AWS Lambda/Netlify deployments)
+    - Service: `lib/goalserve-live-serverless.js`
+    - Features: HTTP-based polling that works in stateless serverless environments
+    - **Why needed**: Node.js `ws` module doesn't work in serverless functions (Vercel, AWS Lambda)
+    - API endpoint: `/api/live` - Fetches live games with 5-second cache
+    - Client hook: `hooks/useLiveGames.js` - Adaptive polling (5s with live games, 30s without)
+    - Auto-detection: Stream endpoint (`/api/goalserve/stream`) auto-detects serverless environment via `VERCEL`, `AWS_LAMBDA_FUNCTION_NAME`, or `NETLIFY` env vars
+    - Dashboard integration: Uses both WebSocket hook and serverless hook for redundancy
+    - Data normalization: Converts REST API data to match WebSocket event format
   - **Goalserve Inplay HTTP Feeds** (alternative real-time data - requires IP whitelisting)
     - Service: `lib/goalserve-inplay.js`
     - Features: Gzipped JSON feeds updating every second with live scores and odds
