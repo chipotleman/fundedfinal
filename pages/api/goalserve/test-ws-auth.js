@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
   const API_KEY = process.env.GOALSERVE_API_KEY;
-  const authUrl = 'https://live.goalserve.com/api/v1/auth/gettoken';
+  const authUrl = 'http://live.goalserve.com/api/v1/auth/gettoken';
   
   const results = {
     apiKeyPresent: !!API_KEY,
@@ -16,9 +16,9 @@ export default async function handler(req, res) {
     const response = await fetch(authUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'Content-Type': 'application/json'
       },
-      body: new URLSearchParams({ apikey: API_KEY }).toString(),
+      body: JSON.stringify({ apiKey: API_KEY }),
       signal: controller.signal
     });
 
