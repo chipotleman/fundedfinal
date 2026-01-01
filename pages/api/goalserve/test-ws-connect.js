@@ -3,7 +3,7 @@ import WebSocket from 'ws';
 export default async function handler(req, res) {
   const API_KEY = process.env.GOALSERVE_API_KEY;
   const authUrl = 'http://live.goalserve.com/api/v1/auth/gettoken';
-  const sport = req.query.sport || 'basketball';
+  const sport = req.query.sport || 'soccer';
   
   const results = {
     sport,
