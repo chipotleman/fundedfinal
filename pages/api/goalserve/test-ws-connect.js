@@ -29,7 +29,8 @@ export default async function handler(req, res) {
     results.steps.push({ step: 'Got token', tokenPrefix: tokenData.token?.substring(0, 20) + '...' });
 
     const encodedToken = encodeURIComponent(tokenData.token);
-    const wsUrl = `ws://live.goalserve.com/ws/${sport}?tkn=${encodedToken}`;
+    const useSecure = req.query.secure === 'true';
+    const wsUrl = `${useSecure ? 'wss' : 'ws'}://live.goalserve.com/ws/${sport}?tkn=${encodedToken}`;
     results.wsUrl = wsUrl.replace(tokenData.token, '[TOKEN]');
     results.steps.push({ step: 'Connecting to WebSocket...', url: results.wsUrl });
 
