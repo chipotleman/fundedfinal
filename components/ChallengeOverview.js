@@ -12,7 +12,7 @@ const challenges = [
     profitSplit: '50-90%',
     color: 'blue',
     maxDailyLoss: '$750',
-    duration: '30 days',
+    duration: '14 days',
     support: 'Standard'
   },
   {
@@ -25,7 +25,7 @@ const challenges = [
     profitSplit: '50-90%',
     color: 'green',
     maxDailyLoss: '$1,500',
-    duration: '30 days',
+    duration: '14 days',
     support: 'Priority'
   },
   {
@@ -38,7 +38,7 @@ const challenges = [
     profitSplit: '50-90%',
     color: 'purple',
     maxDailyLoss: '$3,750',
-    duration: '30 days',
+    duration: '14 days',
     support: 'VIP'
   }
 ];
