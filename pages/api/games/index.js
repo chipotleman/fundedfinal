@@ -135,6 +135,8 @@ function convertGoalserveToDisplayFormat(game) {
     isLive: game.isLive,
     isCompleted: game.isCompleted,
     scores: game.scores,
+    homeScore: game.scores?.home?.total || 0,
+    awayScore: game.scores?.away?.total || 0,
     lines: lines,
     allBookmakerOdds: allBookmakerOdds,
     periodOdds: odds.periods || {},
