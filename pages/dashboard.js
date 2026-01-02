@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import TapSurface from '../components/TapSurface';
+import LiveGameTimer from '../components/LiveGameTimer';
+import LiveActionFeed from '../components/LiveActionFeed';
 import { inferLeague } from '../lib/leagueInference';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -239,6 +241,10 @@ export default function Dashboard() {
         isLive: true,
         isInplay: true,
         displayClock: event.displayClock,
+        elapsedTime: event.elapsedTime,
+        period: event.period,
+        stateCode: event.stateCode,
+        comments: event.comments || [],
         scores: {
           home: { total: homeScore },
           away: { total: awayScore }
@@ -289,6 +295,13 @@ export default function Dashboard() {
         if (liveScore.status) updatedGame.status = liveScore.status;
         if (liveScore.isLive !== undefined) updatedGame.isLive = liveScore.isLive;
         if (liveScore.quarter) updatedGame.quarter = liveScore.quarter;
+        if (liveScore.elapsedTime) updatedGame.elapsedTime = liveScore.elapsedTime;
+        if (liveScore.period) updatedGame.period = liveScore.period;
+        if (liveScore.stateCode) updatedGame.stateCode = liveScore.stateCode;
+        if (liveScore.displayClock) updatedGame.displayClock = liveScore.displayClock;
+        if (liveScore.comments && liveScore.comments.length > 0) {
+          updatedGame.comments = liveScore.comments;
+        }
       }
       
       if (liveOdd && updatedGame.lines) {
@@ -628,16 +641,16 @@ export default function Dashboard() {
                           {isFinal ? (
                             <span className="text-gray-400 text-xs font-bold">FINAL</span>
                           ) : isLive ? (
-                            <div className="flex items-center gap-1">
-                              <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
-                              <span className="text-red-500 text-xs font-medium">LIVE</span>
-                              {(game.displayClock || game.quarter) && <span className="text-gray-400 text-xs">• {game.displayClock || game.quarter}</span>}
-                            </div>
+                            <LiveGameTimer 
+                              elapsedTime={game.elapsedTime || game.displayClock}
+                              period={game.period || game.quarter}
+                              sport={game.sport || sport}
+                              stateCode={game.stateCode}
+                            />
                           ) : (
                             <span className="text-gray-400 text-xs font-medium">{game.time || 'TBD'}</span>
                           )}
                         </div>
-{/* Toggle button removed - keeping expanded view as default */}
                       </div>
                       
                       <div 
@@ -668,6 +681,17 @@ export default function Dashboard() {
                           )}
                         </div>
                       </div>
+
+                      {isLive && game.comments && game.comments.length > 0 && (
+                        <div className="mb-4">
+                          <LiveActionFeed 
+                            comments={game.comments}
+                            maxItems={3}
+                            homeTeam={game.homeTeamFull || game.homeTeam}
+                            awayTeam={game.awayTeamFull || game.awayTeam}
+                          />
+                        </div>
+                      )}
 
                       {linesLocked ? (
                         <div>
