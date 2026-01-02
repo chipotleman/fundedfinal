@@ -25,7 +25,10 @@ function decimalToAmerican(decimal) {
 
 function mergeWebSocketLiveOdds(games) {
   const wsStatus = getWsStatus();
+  // Only merge WebSocket data if connection is healthy and active
+  // Skip merging when failed/disconnected to prevent stale data overwriting REST API
   if (wsStatus.connectionStatus !== 'connected' || wsStatus.liveEventCount === 0) {
+    console.log(`[GAMES API] Skipping WebSocket merge - status: ${wsStatus.connectionStatus}, events: ${wsStatus.liveEventCount}`);
     return { games, wsActive: false, mergedCount: 0 };
   }
 
@@ -118,7 +121,10 @@ function mergeWebSocketLiveOdds(games) {
 
 function injectWebSocketOnlyEvents(games) {
   const wsStatus = getWsStatus();
+  // Only inject WebSocket-only events (European games) when connection is healthy
+  // Prevents stale European game data from persisting when connection fails
   if (wsStatus.connectionStatus !== 'connected' || wsStatus.liveEventCount === 0) {
+    console.log(`[GAMES API] Skipping WebSocket injection - status: ${wsStatus.connectionStatus}`);
     return { games, injectedCount: 0 };
   }
 
