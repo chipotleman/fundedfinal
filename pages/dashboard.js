@@ -328,8 +328,62 @@ export default function Dashboard() {
       return updatedGame;
     });
     
-    // Merge: inplay games first (they're live), then API games
-    return [...inplayGames, ...updatedApiGames];
+    // Merge inplay games with API games - DEDUPLICATE by matching team names
+    // This prevents the same game from appearing twice (once from inplay, once from REST API)
+    const normalizeTeamName = (name) => {
+      if (!name) return '';
+      return name.toLowerCase()
+        .replace(/[^a-z0-9]/g, '') // Remove special chars
+        .replace(/state$/, 'st')   // Normalize State -> St
+        .replace(/university$/, ''); // Remove university suffix
+    };
+    
+    const matchesTeams = (game1, game2) => {
+      const home1 = normalizeTeamName(game1.homeTeamFull || game1.homeTeam);
+      const away1 = normalizeTeamName(game1.awayTeamFull || game1.awayTeam);
+      const home2 = normalizeTeamName(game2.homeTeamFull || game2.homeTeam);
+      const away2 = normalizeTeamName(game2.awayTeamFull || game2.awayTeam);
+      
+      // Check if teams match (either direction since home/away might be swapped)
+      return (home1 === home2 && away1 === away2) || 
+             (home1 === away2 && away1 === home2);
+    };
+    
+    // For each API game, try to find matching inplay event and merge
+    const mergedGames = updatedApiGames.map(apiGame => {
+      const matchingInplay = inplayGames.find(inplay => matchesTeams(apiGame, inplay));
+      
+      if (matchingInplay) {
+        // Merge inplay data into API game (preserve API game's ID, sport name, structure)
+        return {
+          ...apiGame,
+          isLive: true,
+          isInplay: true,
+          displayClock: matchingInplay.displayClock || apiGame.displayClock,
+          period: matchingInplay.period || apiGame.period,
+          stateCode: matchingInplay.stateCode || apiGame.stateCode,
+          comments: matchingInplay.comments?.length > 0 ? matchingInplay.comments : apiGame.comments,
+          // Update scores from inplay if available
+          scores: matchingInplay.scores?.home?.total > 0 || matchingInplay.scores?.away?.total > 0
+            ? matchingInplay.scores
+            : apiGame.scores,
+          // Update lines from inplay if available (live odds)
+          lines: matchingInplay.lines && (matchingInplay.lines.moneyline?.home || matchingInplay.lines.spread?.home)
+            ? matchingInplay.lines
+            : apiGame.lines,
+          dataSource: 'Goalserve Inplay (merged)'
+        };
+      }
+      
+      return apiGame;
+    });
+    
+    // Add any inplay games that don't match API games (truly new events)
+    const unmatchedInplay = inplayGames.filter(inplay => 
+      !updatedApiGames.some(apiGame => matchesTeams(apiGame, inplay))
+    );
+    
+    return [...mergedGames, ...unmatchedInplay];
   }, [apiGames, liveScores, liveOdds, inplayEvents]);
 
   const categorizedGames = useMemo(() => categorizeGames(gamesWithLiveData), [gamesWithLiveData, lastUpdated]);
