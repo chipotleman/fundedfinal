@@ -18,6 +18,11 @@ export default async function handler(req, res) {
       for (const game of apiCompletedGames) {
         allCompletedGames.push(game);
         
+        // Skip games without valid IDs (like WebSocket-injected events with ws- prefix)
+        if (!game.id || game.id.startsWith('ws-')) {
+          continue;
+        }
+        
         try {
           const existingGame = await db
             .select()
