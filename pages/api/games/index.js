@@ -175,6 +175,8 @@ export default async function handler(req, res) {
           game.isCompleted = liveScore.isCompleted;
           game.status = liveScore.status;
           game.scores = liveScore.scores;
+          game.homeScore = liveScore.scores?.home?.total ?? 0;
+          game.awayScore = liveScore.scores?.away?.total ?? 0;
         }
       });
       
@@ -238,6 +240,8 @@ export default async function handler(req, res) {
             game.isCompleted = score.isCompleted;
             game.status = score.status;
             game.scores = score.scores;
+            game.homeScore = score.scores?.home?.total ?? 0;
+            game.awayScore = score.scores?.away?.total ?? 0;
             if (score.isLive) {
               hasLiveGames = true;
               sportsWithLiveGames.add(sportKey);
