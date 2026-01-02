@@ -625,8 +625,8 @@ export default function Dashboard() {
                 const isExpanded = expandedGames[game.id];
                 const isLive = game.isLive || game.status === 'IN_PROGRESS';
                 const isFinal = game.isCompleted || game.status === 'FINAL';
-                const hasLines = game.lines && game.lines.moneyline && game.lines.spread && game.lines.total;
-                const linesLocked = game.linesLocked || isFinal || !hasLines;
+                const hasAnyLines = game.lines && (game.lines.moneyline || game.lines.spread || game.lines.total);
+                const linesLocked = game.linesLocked || isFinal || !hasAnyLines;
                 
                 return (
                   <div 
