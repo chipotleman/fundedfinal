@@ -6,11 +6,12 @@ import {
   clearCache,
   SUPPORTED_SPORTS 
 } from '../../../lib/goalserve';
-import { getAllLiveEvents, getStatus as getWsStatus, ensureConnected } from '../../../lib/goalserve-ws';
+import { getInplayService } from '../../../lib/goalserve-inplay';
 
 let globalCache = null;
 let globalCacheTimestamp = null;
 
+// HTTPS-only approach: 5-second cache for all data (REST API + inplay feeds)
 const LIVE_GAMES_CACHE_DURATION = 5 * 1000;
 const NO_LIVE_GAMES_CACHE_DURATION = 30 * 1000;
 
@@ -23,112 +24,122 @@ function decimalToAmerican(decimal) {
   }
 }
 
-function mergeWebSocketLiveOdds(games) {
-  const wsStatus = getWsStatus();
-  // Only merge WebSocket data if connection is healthy and active
-  // Skip merging when failed/disconnected to prevent stale data overwriting REST API
-  if (wsStatus.connectionStatus !== 'connected' || wsStatus.liveEventCount === 0) {
-    console.log(`[GAMES API] Skipping WebSocket merge - status: ${wsStatus.connectionStatus}, events: ${wsStatus.liveEventCount}`);
-    return { games, wsActive: false, mergedCount: 0 };
-  }
-
-  const wsEvents = getAllLiveEvents();
-  let mergedCount = 0;
-
-  games.forEach(game => {
-    if (!game.isLive) return;
+// Merge inplay feed data for live timer and real-time updates (HTTPS-only approach)
+async function mergeInplayLiveData(games) {
+  try {
+    const inplayService = getInplayService();
     
-    const homeTeamLower = (game.homeTeamFull || game.homeTeam || '').toLowerCase();
-    const awayTeamLower = (game.awayTeamFull || game.awayTeam || '').toLowerCase();
-
-    for (const [eventId, wsEvent] of Object.entries(wsEvents)) {
-      const wsHome = (wsEvent.homeTeam || '').toLowerCase();
-      const wsAway = (wsEvent.awayTeam || '').toLowerCase();
-
-      const homeMatch = homeTeamLower.includes(wsHome) || wsHome.includes(homeTeamLower) ||
-                        homeTeamLower.split(' ').some(w => wsHome.includes(w) && w.length > 3);
-      const awayMatch = awayTeamLower.includes(wsAway) || wsAway.includes(awayTeamLower) ||
-                        awayTeamLower.split(' ').some(w => wsAway.includes(w) && w.length > 3);
-
-      if (homeMatch && awayMatch && wsEvent.odds) {
-        const wsOdds = wsEvent.odds;
-
-        if (wsOdds.moneyline?.home) {
-          game.lines.moneyline.home = decimalToAmerican(wsOdds.moneyline.home) || game.lines.moneyline.home;
-          game.lines.moneyline.homeSource = 'WebSocket Live';
-        }
-        if (wsOdds.moneyline?.away) {
-          game.lines.moneyline.away = decimalToAmerican(wsOdds.moneyline.away) || game.lines.moneyline.away;
-          game.lines.moneyline.awaySource = 'WebSocket Live';
-        }
-
-        if (wsOdds.spread?.home) {
-          game.lines.spread.home = {
-            point: wsOdds.spread.home.line,
-            odds: decimalToAmerican(wsOdds.spread.home.odds) || -110,
-            source: 'WebSocket Live'
-          };
-        }
-        if (wsOdds.spread?.away) {
-          game.lines.spread.away = {
-            point: wsOdds.spread.away.line,
-            odds: decimalToAmerican(wsOdds.spread.away.odds) || -110,
-            source: 'WebSocket Live'
-          };
-        }
-
-        if (wsOdds.total?.over) {
-          game.lines.total.over = {
-            point: wsOdds.total.line,
-            odds: decimalToAmerican(wsOdds.total.over) || -110,
-            source: 'WebSocket Live'
-          };
-        }
-        if (wsOdds.total?.under) {
-          game.lines.total.under = {
-            point: wsOdds.total.line,
-            odds: decimalToAmerican(wsOdds.total.under) || -110,
-            source: 'WebSocket Live'
-          };
-        }
-
-        // Only use WebSocket scores if they're non-zero and fresher than REST API
-        // REST API scores are considered fresh (5-second cache), so only override if WS has higher scores
-        const wsTimestamp = wsEvent.timestamp || 0;
-        const isWsScoreFresh = (Date.now() - wsTimestamp) < 30000; // WS data less than 30s old
-        
-        if (isWsScoreFresh && wsEvent.homeScore !== undefined && wsEvent.awayScore !== undefined) {
-          // Only override if WS has higher or equal scores (scores only go up in a game)
-          const wsTotal = (wsEvent.homeScore || 0) + (wsEvent.awayScore || 0);
-          const restTotal = (game.homeScore || 0) + (game.awayScore || 0);
-          if (wsTotal >= restTotal) {
-            game.homeScore = wsEvent.homeScore;
-            game.awayScore = wsEvent.awayScore;
-          }
-        }
-
-        game.liveOddsSource = 'WebSocket';
-        game.liveOddsTimestamp = wsEvent.timestamp;
-        mergedCount++;
-        break;
-      }
+    // Fetch all inplay feeds (basketball, hockey, amfootball, baseball)
+    await inplayService.fetchAllFeeds();
+    const liveEvents = inplayService.getLiveEvents(); // Returns array
+    
+    if (!liveEvents || liveEvents.length === 0) {
+      console.log('[GAMES API] No inplay live events available');
+      return { games, mergedCount: 0 };
     }
-  });
-
-  console.log(`[GAMES API] Merged WebSocket live odds for ${mergedCount} games`);
-  return { games, wsActive: true, mergedCount };
+    
+    console.log(`[GAMES API] Found ${liveEvents.length} inplay live events`);
+    let mergedCount = 0;
+    
+    games.forEach(game => {
+      if (!game.isLive) return;
+      
+      const homeTeamLower = (game.homeTeamFull || game.homeTeam || '').toLowerCase();
+      const awayTeamLower = (game.awayTeamFull || game.awayTeam || '').toLowerCase();
+      
+      // Find matching inplay event by team names
+      for (const inplayEvent of liveEvents) {
+        const inplayHome = (inplayEvent.homeTeam || '').toLowerCase();
+        const inplayAway = (inplayEvent.awayTeam || '').toLowerCase();
+        
+        const homeMatch = homeTeamLower.includes(inplayHome) || inplayHome.includes(homeTeamLower) ||
+                          homeTeamLower.split(' ').some(w => inplayHome.includes(w) && w.length > 3);
+        const awayMatch = awayTeamLower.includes(inplayAway) || inplayAway.includes(awayTeamLower) ||
+                          awayTeamLower.split(' ').some(w => inplayAway.includes(w) && w.length > 3);
+        
+        if (homeMatch && awayMatch) {
+          // Update live timer/clock from inplay feed
+          if (inplayEvent.displayClock) {
+            game.timer = inplayEvent.displayClock;
+          }
+          
+          // Update scores if inplay has higher (fresher) scores
+          const inplayTotal = (inplayEvent.homeScore || 0) + (inplayEvent.awayScore || 0);
+          const gameTotal = (game.homeScore || 0) + (game.awayScore || 0);
+          if (inplayTotal >= gameTotal) {
+            game.homeScore = inplayEvent.homeScore;
+            game.awayScore = inplayEvent.awayScore;
+          }
+          
+          // Merge inplay live odds if available
+          if (inplayEvent.odds) {
+            const odds = inplayEvent.odds;
+            
+            if (odds.moneyline?.home) {
+              game.lines.moneyline.home = decimalToAmerican(odds.moneyline.home) || game.lines.moneyline.home;
+              game.lines.moneyline.homeSource = 'Inplay Live';
+            }
+            if (odds.moneyline?.away) {
+              game.lines.moneyline.away = decimalToAmerican(odds.moneyline.away) || game.lines.moneyline.away;
+              game.lines.moneyline.awaySource = 'Inplay Live';
+            }
+            
+            if (odds.spread?.home) {
+              game.lines.spread.home = {
+                point: odds.spread.home.line,
+                odds: decimalToAmerican(odds.spread.home.odds) || -110,
+                source: 'Inplay Live'
+              };
+            }
+            if (odds.spread?.away) {
+              game.lines.spread.away = {
+                point: odds.spread.away.line,
+                odds: decimalToAmerican(odds.spread.away.odds) || -110,
+                source: 'Inplay Live'
+              };
+            }
+            
+            if (odds.total?.over) {
+              game.lines.total.over = {
+                point: odds.total.line,
+                odds: decimalToAmerican(odds.total.over) || -110,
+                source: 'Inplay Live'
+              };
+            }
+            if (odds.total?.under) {
+              game.lines.total.under = {
+                point: odds.total.line,
+                odds: decimalToAmerican(odds.total.under) || -110,
+                source: 'Inplay Live'
+              };
+            }
+          }
+          
+          game.liveOddsSource = 'Inplay HTTPS';
+          game.liveDataTimestamp = Date.now();
+          mergedCount++;
+          break;
+        }
+      }
+    });
+    
+    console.log(`[GAMES API] Merged inplay live data for ${mergedCount} games`);
+    return { games, mergedCount };
+  } catch (error) {
+    console.error('[GAMES API] Error fetching inplay data:', error.message);
+    return { games, mergedCount: 0 };
+  }
 }
 
-function injectWebSocketOnlyEvents(games) {
-  const wsStatus = getWsStatus();
-  // Only inject WebSocket-only events (European games) when connection is healthy
-  // Prevents stale European game data from persisting when connection fails
-  if (wsStatus.connectionStatus !== 'connected' || wsStatus.liveEventCount === 0) {
-    console.log(`[GAMES API] Skipping WebSocket injection - status: ${wsStatus.connectionStatus}`);
+// Inject international/European games from inplay feeds (HTTPS-only)
+function injectInplayOnlyEvents(games) {
+  const inplayService = getInplayService();
+  const liveEvents = inplayService.getLiveEvents(); // Returns array
+  
+  if (!liveEvents || liveEvents.length === 0) {
     return { games, injectedCount: 0 };
   }
-
-  const wsEvents = getAllLiveEvents();
+  
   const existingMatchups = new Set(games.map(g => 
     `${(g.homeTeamFull || g.homeTeam || '').toLowerCase()}-${(g.awayTeamFull || g.awayTeam || '').toLowerCase()}`
   ));
@@ -136,71 +147,72 @@ function injectWebSocketOnlyEvents(games) {
   let injectedCount = 0;
   const sportMapping = {
     'hockey': 'HOCKEY',
-    'basket': 'BASKETBALL', 
+    'basket': 'BASKETBALL',
+    'basketball': 'BASKETBALL',
     'amfootball': 'FOOTBALL',
     'baseball': 'BASEBALL',
     'soccer': 'SOCCER'
   };
 
-  for (const [eventId, wsEvent] of Object.entries(wsEvents)) {
-    const wsHome = (wsEvent.homeTeam || '').toLowerCase();
-    const wsAway = (wsEvent.awayTeam || '').toLowerCase();
-    const matchupKey = `${wsHome}-${wsAway}`;
+  for (const inplayEvent of liveEvents) {
+    const inplayHome = (inplayEvent.homeTeam || '').toLowerCase();
+    const inplayAway = (inplayEvent.awayTeam || '').toLowerCase();
 
     const hasMatch = Array.from(existingMatchups).some(existing => {
       const [exHome, exAway] = existing.split('-');
-      const homeMatch = exHome.includes(wsHome) || wsHome.includes(exHome) ||
-                        exHome.split(' ').some(w => wsHome.includes(w) && w.length > 3);
-      const awayMatch = exAway.includes(wsAway) || wsAway.includes(exAway) ||
-                        exAway.split(' ').some(w => wsAway.includes(w) && w.length > 3);
+      const homeMatch = exHome.includes(inplayHome) || inplayHome.includes(exHome) ||
+                        exHome.split(' ').some(w => inplayHome.includes(w) && w.length > 3);
+      const awayMatch = exAway.includes(inplayAway) || inplayAway.includes(exAway) ||
+                        exAway.split(' ').some(w => inplayAway.includes(w) && w.length > 3);
       return homeMatch && awayMatch;
     });
 
-    if (!hasMatch) {
-      const sportName = sportMapping[wsEvent.sport] || (wsEvent.sport || 'OTHER').toUpperCase();
-      const league = wsEvent.league || wsEvent.competitionName || `${sportName} INTERNATIONAL`;
+    if (!hasMatch && (inplayEvent.status === 'live' || inplayEvent.status === 'paused')) {
+      const sportName = sportMapping[inplayEvent.sport] || (inplayEvent.sport || 'OTHER').toUpperCase();
+      const league = inplayEvent.league || `${sportName} INTERNATIONAL`;
       
-      const wsOdds = wsEvent.odds || {};
+      const odds = inplayEvent.odds || {};
       const newGame = {
-        id: `ws-${eventId}`,
-        homeTeam: wsEvent.homeTeam,
-        awayTeam: wsEvent.awayTeam,
-        homeTeamFull: wsEvent.homeTeam,
-        awayTeamFull: wsEvent.awayTeam,
-        homeScore: wsEvent.homeScore || 0,
-        awayScore: wsEvent.awayScore || 0,
-        sportKey: wsEvent.sport || 'international',
+        id: `inplay-${inplayEvent.id}`,
+        homeTeam: inplayEvent.homeTeam,
+        awayTeam: inplayEvent.awayTeam,
+        homeTeamFull: inplayEvent.homeTeam,
+        awayTeamFull: inplayEvent.awayTeam,
+        homeScore: inplayEvent.homeScore || 0,
+        awayScore: inplayEvent.awayScore || 0,
+        timer: inplayEvent.displayClock || null,
+        sportKey: inplayEvent.sport || 'international',
         sportName: sportName,
         league: league,
         commenceTime: new Date().toISOString(),
         isLive: true,
         isCompleted: false,
         status: 'live',
-        liveOddsSource: 'WebSocket',
-        liveOddsTimestamp: wsEvent.timestamp,
+        liveOddsSource: 'Inplay HTTPS',
+        liveDataTimestamp: Date.now(),
         lines: {
           moneyline: {
-            home: wsOdds.moneyline?.home ? decimalToAmerican(wsOdds.moneyline.home) : null,
-            away: wsOdds.moneyline?.away ? decimalToAmerican(wsOdds.moneyline.away) : null
+            home: odds.moneyline?.home ? decimalToAmerican(odds.moneyline.home) : null,
+            away: odds.moneyline?.away ? decimalToAmerican(odds.moneyline.away) : null
           },
           spread: {
-            home: wsOdds.spread?.home ? {
-              point: wsOdds.spread.home.line,
-              odds: decimalToAmerican(wsOdds.spread.home.odds) || -110
+            home: odds.spread?.home ? {
+              point: odds.spread.home.line,
+              odds: decimalToAmerican(odds.spread.home.odds) || -110
             } : null,
-            away: wsOdds.spread?.away ? {
-              point: wsOdds.spread.away.line,
-              odds: decimalToAmerican(wsOdds.spread.away.odds) || -110
+            away: odds.spread?.away ? {
+              point: odds.spread.away.line,
+              odds: decimalToAmerican(odds.spread.away.odds) || -110
             } : null
           },
           total: {
-            over: wsOdds.total?.over ? {
-              point: wsOdds.total.line,
-              odds: decimalToAmerican(wsOdds.total.over) || -110
+            over: odds.total?.over ? {
+              point: odds.total.line,
+              odds: decimalToAmerican(odds.total.over) || -110
             } : null,
-            under: wsOdds.total?.under ? {
-              point: wsOdds.total.line,
-              odds: decimalToAmerican(wsOdds.total.under) || -110
+            under: odds.total?.under ? {
+              point: odds.total.line,
+              odds: decimalToAmerican(odds.total.under) || -110
             } : null
           }
         }
@@ -211,7 +223,7 @@ function injectWebSocketOnlyEvents(games) {
     }
   }
 
-  console.log(`[GAMES API] Injected ${injectedCount} WebSocket-only live events`);
+  console.log(`[GAMES API] Injected ${injectedCount} inplay-only live events (international/European)`);
   return { games, injectedCount };
 }
 
@@ -456,37 +468,26 @@ export default async function handler(req, res) {
       }
     }
     
-    const wsStatus = getWsStatus();
-    const wsActive = wsStatus.connectionStatus === 'connected' && wsStatus.liveEventCount > 0;
-
-    if (wsActive) {
-      console.log(`[GAMES API] WebSocket connected with ${wsStatus.liveEventCount} live events - using WS for live odds`);
-      const wsMergeResult = mergeWebSocketLiveOdds(formattedGames);
-      formattedGames = wsMergeResult.games;
+    // HTTPS-only approach: Always fetch inplay feeds for timers and international games
+    console.log(`[GAMES API] Fetching inplay data...`);
+    try {
+      const inplayService = getInplayService();
+      await inplayService.fetchAllFeeds();
       
-      const injectResult = injectWebSocketOnlyEvents(formattedGames);
+      // Merge inplay data for live US games (timers, scores, odds)
+      if (hasLiveGames) {
+        const inplayMergeResult = await mergeInplayLiveData(formattedGames);
+        formattedGames = inplayMergeResult.games;
+      }
+      
+      // Always inject international/European games from inplay feeds
+      const injectResult = injectInplayOnlyEvents(formattedGames);
       formattedGames = injectResult.games;
       if (injectResult.injectedCount > 0) {
         hasLiveGames = true;
       }
-    } else if (sportsWithLiveGames.size > 0) {
-      console.log(`[GAMES API] No WebSocket - refreshing odds via REST for live sports: ${Array.from(sportsWithLiveGames).join(', ')}`);
-      for (const sportKey of sportsWithLiveGames) {
-        try {
-          const freshOdds = await getOdds(sportKey);
-          const freshFormatted = freshOdds.map(convertGoalserveToDisplayFormat);
-          
-          freshFormatted.forEach(freshGame => {
-            const existingIdx = formattedGames.findIndex(g => g.id === freshGame.id);
-            if (existingIdx >= 0) {
-              formattedGames[existingIdx].lines = freshGame.lines;
-              formattedGames[existingIdx].allBookmakerOdds = freshGame.allBookmakerOdds;
-            }
-          });
-        } catch (e) {
-          console.error(`[GAMES API] Error refreshing odds for ${sportKey}:`, e.message);
-        }
-      }
+    } catch (e) {
+      console.error(`[GAMES API] Error fetching inplay data:`, e.message);
     }
     
     const bySport = {};
@@ -512,18 +513,12 @@ export default async function handler(req, res) {
       bySport,
       count: formattedGames.length,
       fromCache: false,
-      dataSource: wsActive ? 'Goalserve WebSocket' : 'Goalserve REST',
+      dataSource: 'Goalserve HTTPS',
       creditStatus: getGoalserveStatus(),
       freshness: { hasLiveGames },
       polling: {
-        recommendedInterval: wsActive ? 1000 : recommendedInterval,
+        recommendedInterval: recommendedInterval,
         hasLiveGames
-      },
-      websocket: {
-        active: wsActive,
-        status: wsStatus.connectionStatus,
-        liveEventCount: wsStatus.liveEventCount,
-        activeSports: wsStatus.activeSports
       }
     };
     

@@ -8,7 +8,6 @@ import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { categorizeGames, filterGamesBySport } from '../lib/gamesUtils';
-import { useGoalserveLive } from '../hooks/useGoalserveLive';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -106,7 +105,8 @@ export default function Dashboard() {
   const [gamesError, setGamesError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   
-  const { liveScores, liveOdds, events: inplayEvents, isConnected: liveConnected } = useGoalserveLive({ autoConnect: true });
+  // HTTPS-only: All live data comes from REST API via polling
+  // No WebSocket/SSE hooks needed - the API merges inplay feed data server-side
   
   // Adaptive polling - use refs to avoid closure issues
   const pollingIntervalRef = useRef(null);
@@ -188,136 +188,16 @@ export default function Dashboard() {
   }, []);
 
   const gamesWithLiveData = useMemo(() => {
-    // Convert inplay events to game format
-    const inplayGames = Object.values(inplayEvents || {}).map(event => {
-      const homeTeam = event.homeTeam || event.stats?.[0]?.home || 'Home';
-      const awayTeam = event.awayTeam || event.stats?.[0]?.away || 'Away';
-      
-      // USE the pre-computed scores from the normalized event (from info.score or team_info)
-      // These are the REAL-TIME scores, not the halftime stats
-      let homeScore = event.homeScore ?? 0;
-      let awayScore = event.awayScore ?? 0;
-      
-      // Only fallback to stats if homeScore/awayScore are 0 and we have stats
-      if (homeScore === 0 && awayScore === 0 && event.stats) {
-        // Try stats.T first (current total), not Half (halftime only)
-        const totalStat = Object.values(event.stats).find(s => s.name === 'T');
-        if (totalStat) {
-          homeScore = parseInt(totalStat.home) || 0;
-          awayScore = parseInt(totalStat.away) || 0;
-        }
-      }
-      
-      // Icon mapping by sport type
-      const sportIcons = {
-        basketball: '🏀',
-        hockey: '🏒',
-        soccer: '⚽',
-        amfootball: '🏈',
-        baseball: '⚾',
-        esports: '🎮'
-      };
-      const sportIcon = sportIcons[event.sport] || '🏆';
-      
-      // Use AI inference to determine league from team names
-      const leagueName = event.league || inferLeague(homeTeam, awayTeam, event.sport);
-      
-      return {
-        id: `inplay_${event.id}`,
-        gameId: `inplay_${event.id}`,
-        sport: event.sport,
-        sportName: leagueName,
-        league: leagueName,
-        sportIcon: sportIcon,
-        homeTeam: homeTeam.substring(0, 20),
-        awayTeam: awayTeam.substring(0, 20),
-        homeTeamFull: homeTeam,
-        awayTeamFull: awayTeam,
-        time: 'LIVE',
-        commenceTime: new Date().toISOString(),
-        status: 'IN_PROGRESS',
-        isLive: true,
-        isInplay: true,
-        displayClock: event.displayClock,
-        scores: {
-          home: { total: homeScore },
-          away: { total: awayScore }
-        },
-        lines: (event.odds?.moneyline?.home || event.odds?.spread?.home || event.odds?.total?.line) ? {
-          moneyline: {
-            home: event.odds.moneyline?.home || null,
-            away: event.odds.moneyline?.away || null
-          },
-          spread: {
-            home: event.odds.spread?.home ? 
-              { point: parseFloat(event.odds.spread.home.line) || 0, odds: parseFloat(event.odds.spread.home.odds) || -110 } 
-              : null,
-            away: event.odds.spread?.away ? 
-              { point: parseFloat(event.odds.spread.away.line) || 0, odds: parseFloat(event.odds.spread.away.odds) || -110 } 
-              : null
-          },
-          total: {
-            over: (event.odds.total?.line !== undefined && event.odds.total?.line !== null) ? 
-              { point: parseFloat(event.odds.total.line) || 0, odds: parseFloat(event.odds.total.over) || -110 } 
-              : null,
-            under: (event.odds.total?.line !== undefined && event.odds.total?.line !== null) ? 
-              { point: parseFloat(event.odds.total.line) || 0, odds: parseFloat(event.odds.total.under) || -110 } 
-              : null
-          }
-        } : null,
-        dataSource: 'Goalserve Inplay'
-      };
-    });
-    
-    // Update API games with live data - also add league field
-    const updatedApiGames = apiGames.map(game => {
-      const liveScore = liveScores[game.id];
-      const liveOdd = liveOdds[game.id];
-      
-      // For API games, sportName IS the league (NBA, NCAAB, NFL, etc.)
-      const gameWithLeague = { ...game, league: game.league || game.sportName };
-      
-      if (!liveScore && !liveOdd) return gameWithLeague;
-      
-      const updatedGame = { ...gameWithLeague };
-      
-      if (liveScore) {
-        updatedGame.scores = {
-          home: { total: liveScore.homeScore || game.scores?.home?.total || 0 },
-          away: { total: liveScore.awayScore || game.scores?.away?.total || 0 }
-        };
-        if (liveScore.status) updatedGame.status = liveScore.status;
-        if (liveScore.isLive !== undefined) updatedGame.isLive = liveScore.isLive;
-        if (liveScore.quarter) updatedGame.quarter = liveScore.quarter;
-      }
-      
-      if (liveOdd && updatedGame.lines) {
-        if (liveOdd.moneyline) {
-          updatedGame.lines.moneyline = {
-            home: liveOdd.moneyline.home || updatedGame.lines.moneyline.home,
-            away: liveOdd.moneyline.away || updatedGame.lines.moneyline.away
-          };
-        }
-        if (liveOdd.spread) {
-          updatedGame.lines.spread = {
-            home: liveOdd.spread.home || updatedGame.lines.spread.home,
-            away: liveOdd.spread.away || updatedGame.lines.spread.away
-          };
-        }
-        if (liveOdd.total) {
-          updatedGame.lines.total = {
-            over: liveOdd.total.over || updatedGame.lines.total.over,
-            under: liveOdd.total.under || updatedGame.lines.total.under
-          };
-        }
-      }
-      
-      return updatedGame;
-    });
-    
-    // Merge: inplay games first (they're live), then API games
-    return [...inplayGames, ...updatedApiGames];
-  }, [apiGames, liveScores, liveOdds, inplayEvents]);
+    // HTTPS-only: All data (including timers, live scores, live odds, international games)
+    // now comes directly from the REST API at /api/games
+    // No need for WebSocket/SSE overlays - the API merges inplay feed data server-side
+    return apiGames.map(game => ({
+      ...game,
+      league: game.league || game.sportName,
+      // displayClock comes from the timer field returned by API
+      displayClock: game.timer || game.displayClock || null
+    }));
+  }, [apiGames]);
 
   const categorizedGames = useMemo(() => categorizeGames(gamesWithLiveData), [gamesWithLiveData, lastUpdated]);
 
