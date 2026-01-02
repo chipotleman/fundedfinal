@@ -1,0 +1,76 @@
+root@piks:~/fundedfinal# curl "http://localhost:3000/api/goalserve/ws-status?connect=true&reset=true" | jq
+pm2 logs piks --lines 20
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   541  100   541    0     0  51284      0 --:--:-- --:--:-- --:--:-- 54100
+{
+  "success": true,
+  "connectionStatus": "not_configured",
+  "activeSports": [],
+  "lastUpdate": null,
+  "liveEventCount": 0,
+  "availableEventCount": 0,
+  "subscriberCount": 0,
+  "tokenValid": null,
+  "reconnectAttempts": 0,
+  "lastError": null,
+  "lastErrorTime": null,
+  "supportedSports": [
+    "soccer",
+    "basket",
+    "tennis",
+    "baseball",
+    "amfootball",
+    "hockey",
+    "volleyball"
+  ],
+  "wsAvailable": false,
+  "restFallbackActive": false,
+  "message": "Goalserve API key not configured. Set GOALSERVE_API_KEY environment variable.",
+  "recommendation": "Use /api/goalserve/live for REST API polling (30-second cache)"
+}
+[TAILING] Tailing last 20 lines for [piks] process (change the value with --lines option)
+/root/.pm2/logs/piks-out.log last 20 lines:
+0|piks     |   - Local:        http://localhost:3000
+0|piks     | 
+0|piks     |  ✓ Starting...
+0|piks     |  ✓ Ready in 2s
+0|piks     | [Goalserve WS] Connection state reset
+0|piks     | 
+0|piks     | > fundedfinal@1.0.0 start
+0|piks     | > next start
+0|piks     | 
+0|piks     |   ▲ Next.js 14.2.35
+0|piks     |   - Local:        http://localhost:3000
+0|piks     | 
+0|piks     |  ✓ Starting...
+0|piks     |  ✓ Ready in 2.1s
+0|piks     | [Goalserve WS] Connection state reset
+0|piks     | [Goalserve WS Status] Attempting to connect to: [ 'basket', 'hockey', 'baseball', 'amfootball' ]
+0|piks     | [Goalserve WS Status] Connection result: false
+0|piks     | [Goalserve WS] Connection state reset
+0|piks     | [Goalserve WS Status] Attempting to connect to: [ 'basket', 'hockey', 'baseball', 'amfootball' ]
+0|piks     | [Goalserve WS Status] Connection result: false
+
+/root/.pm2/logs/piks-error.log last 20 lines:
+0|piks     |     at async handleRequest (/root/fundedfinal/node_modules/next/dist/server/lib/router-server.js:359:24)
+0|piks     | Invariant: failed to load static page {
+0|piks     |   "page": "/",
+0|piks     |   "url": "/",
+0|piks     |   "initUrl": "http://localhost:3000/",
+0|piks     |   "didRewrite": false
+0|piks     | }
+0|piks     |  ⨯ MissingStaticPage [Error]: Failed to load static file for page: / ENOENT: no such file or directory, open '/root/fundedfinal/.next/server/pages/index.html'
+0|piks     |     at /root/fundedfinal/node_modules/next/dist/server/require.js:102:19
+0|piks     |     at async loadComponentsImpl (/root/fundedfinal/node_modules/next/dist/server/load-components.js:103:26)
+0|piks     |     at async NextNodeServer.findPageComponentsImpl (/root/fundedfinal/node_modules/next/dist/server/next-server.js:714:36)
+0|piks     |     at async NextNodeServer.renderPageComponent (/root/fundedfinal/node_modules/next/dist/server/base-server.js:1910:24)
+0|piks     |     at async NextNodeServer.renderToResponseImpl (/root/fundedfinal/node_modules/next/dist/server/base-server.js:1962:32)
+0|piks     |     at async NextNodeServer.pipeImpl (/root/fundedfinal/node_modules/next/dist/server/base-server.js:922:25)
+0|piks     |     at async NextNodeServer.handleCatchallRenderRequest (/root/fundedfinal/node_modules/next/dist/server/next-server.js:272:17)
+0|piks     |     at async NextNodeServer.handleRequestImpl (/root/fundedfinal/node_modules/next/dist/server/base-server.js:818:17)
+0|piks     |     at async invokeRender (/root/fundedfinal/node_modules/next/dist/server/lib/router-server.js:179:21)
+0|piks     |     at async handleRequest (/root/fundedfinal/node_modules/next/dist/server/lib/router-server.js:359:24)
+0|piks     | [Goalserve WS] No API key configured, skipping WebSocket connection
+0|piks     | [Goalserve WS] No API key configured, skipping WebSocket connection
+
