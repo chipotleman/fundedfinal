@@ -1,0 +1,38 @@
+/root/.pm2/logs/piks-error.log last 30 lines:
+0|piks     |     at /root/fundedfinal/.next/server/chunks/736.js:1:13664
+0|piks     |     at Array.map (<anonymous>)
+0|piks     |     at m (/root/fundedfinal/.next/server/chunks/736.js:1:13633)
+0|piks     |     at i (/root/fundedfinal/.next/server/pages/api/goalserve/live.js:1:467)
+0|piks     |     at K (/root/fundedfinal/node_modules/next/dist/compiled/next-server/pages-api.runtime.prod.js:20:16887)
+0|piks     |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+0|piks     |     at async U.render (/root/fundedfinal/node_modules/next/dist/compiled/next-server/pages-api.runtime.prod.js:20:17520)
+0|piks     | [Goalserve] Error fetching scores for icehockey_nhl: Error: GOALSERVE_API_KEY not configured
+0|piks     |     at /root/fundedfinal/.next/server/chunks/736.js:1:4336
+0|piks     |     at n (/root/fundedfinal/.next/server/chunks/736.js:1:4387)
+0|piks     |     at p (/root/fundedfinal/.next/server/chunks/736.js:1:6627)
+0|piks     |     at /root/fundedfinal/.next/server/chunks/736.js:1:13664
+0|piks     |     at Array.map (<anonymous>)
+0|piks     |     at m (/root/fundedfinal/.next/server/chunks/736.js:1:13633)
+0|piks     |     at i (/root/fundedfinal/.next/server/pages/api/goalserve/live.js:1:467)
+0|piks     |     at K (/root/fundedfinal/node_modules/next/dist/compiled/next-server/pages-api.runtime.prod.js:20:16887)
+0|piks     |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+0|piks     |     at async U.render (/root/fundedfinal/node_modules/next/dist/compiled/next-server/pages-api.runtime.prod.js:20:17520)
+0|piks     | [Goalserve] Error fetching live basketball_nba: GOALSERVE_API_KEY not configured
+0|piks     | [Goalserve] Error fetching live americanfootball_nfl: GOALSERVE_API_KEY not configured
+0|piks     | [Goalserve] Error fetching live basketball_ncaab: GOALSERVE_API_KEY not configured
+0|piks     | [Goalserve] Error fetching live americanfootball_ncaaf: GOALSERVE_API_KEY not configured
+0|piks     | [Goalserve] Error fetching live baseball_mlb: GOALSERVE_API_KEY not configured
+0|piks     | [Goalserve] Error fetching live icehockey_nhl: GOALSERVE_API_KEY not configured
+0|piks     | [Goalserve Inplay] Error fetching basketball: HTTP 429: Too Many Requests
+0|piks     | [Goalserve WS] basketball connection error: Unexpected server response: 403
+0|piks     | [Goalserve WS] basketball connection error: Unexpected server response: 403
+0|piks     | [Goalserve WS] basketball connection error: Unexpected server response: 403
+0|piks     | [Goalserve WS] basketball connection error: Unexpected server response: 403
+0|piks     | [Goalserve WS] basketball connection error: Unexpected server response: 403
+
+0|piks  | [Goalserve WS] Connecting to basketball...
+0|piks  | [Goalserve WS] basketball connection error: Unexpected server response: 403
+0|piks  | [Goalserve WS] basketball connection closed: 1006 - 
+0|piks  | [Goalserve WS] Reconnecting basketball in 32000ms (attempt 5)
+0|piks  | [Goalserve WS] hockey: Received 4 available events
+0|piks  | [Goalserve WS] baseball: Received 2 available events
