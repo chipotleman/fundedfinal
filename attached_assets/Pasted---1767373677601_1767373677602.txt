@@ -1,0 +1,109 @@
+└────┴─────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+[TAILING] Tailing last 50 lines for [piks] process (change the value with --lines option)
+/root/.pm2/logs/piks-error.log last 50 lines:
+0|piks     |     at async K (/root/fundedfinal/node_modules/next/dist/compiled/next-server/pages-api.runtime.prod.js:20:16881)
+0|piks     |     at async U.render (/root/fundedfinal/node_modules/next/dist/compiled/next-server/pages-api.runtime.prod.js:20:17520)
+0|piks     |     at async NextNodeServer.runApi (/root/fundedfinal/node_modules/next/dist/server/next-server.js:603:9)
+0|piks     |     at async NextNodeServer.handleCatchallRenderRequest (/root/fundedfinal/node_modules/next/dist/server/next-server.js:269:37)
+0|piks     |     at async NextNodeServer.handleRequestImpl (/root/fundedfinal/node_modules/next/dist/server/base-server.js:818:17)
+0|piks     |     at async invokeRender (/root/fundedfinal/node_modules/next/dist/server/lib/router-server.js:179:21)
+0|piks     |     at async handleRequest (/root/fundedfinal/node_modules/next/dist/server/lib/router-server.js:359:24) {
+0|piks     |   [cause]: AggregateError [ECONNREFUSED]: 
+0|piks     |       at internalConnectMultiple (node:net:1122:18)
+0|piks     |       at afterConnectMultiple (node:net:1689:7) {
+0|piks     |     code: 'ECONNREFUSED',
+0|piks     |     [errors]: [ [Error], [Error] ]
+0|piks     |   }
+0|piks     | }
+0|piks     | Bet grading error: TypeError: fetch failed
+0|piks     |     at node:internal/deps/undici/undici:14900:13
+0|piks     |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+0|piks     |     at async d (/root/fundedfinal/.next/server/pages/api/bets/grade.js:1:978)
+0|piks     |     at async K (/root/fundedfinal/node_modules/next/dist/compiled/next-server/pages-api.runtime.prod.js:20:16881)
+0|piks     |     at async U.render (/root/fundedfinal/node_modules/next/dist/compiled/next-server/pages-api.runtime.prod.js:20:17520)
+0|piks     |     at async NextNodeServer.runApi (/root/fundedfinal/node_modules/next/dist/server/next-server.js:603:9)
+0|piks     |     at async NextNodeServer.handleCatchallRenderRequest (/root/fundedfinal/node_modules/next/dist/server/next-server.js:269:37)
+0|piks     |     at async NextNodeServer.handleRequestImpl (/root/fundedfinal/node_modules/next/dist/server/base-server.js:818:17)
+0|piks     |     at async invokeRender (/root/fundedfinal/node_modules/next/dist/server/lib/router-server.js:179:21)
+0|piks     |     at async handleRequest (/root/fundedfinal/node_modules/next/dist/server/lib/router-server.js:359:24) {
+0|piks     |   [cause]: AggregateError [ECONNREFUSED]: 
+0|piks     |       at internalConnectMultiple (node:net:1122:18)
+0|piks     |       at afterConnectMultiple (node:net:1689:7) {
+0|piks     |     code: 'ECONNREFUSED',
+0|piks     |     [errors]: [ [Error], [Error] ]
+0|piks     |   }
+0|piks     | }
+0|piks     | Bet grading error: TypeError: fetch failed
+0|piks     |     at node:internal/deps/undici/undici:14900:13
+0|piks     |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+0|piks     |     at async d (/root/fundedfinal/.next/server/pages/api/bets/grade.js:1:978)
+0|piks     |     at async K (/root/fundedfinal/node_modules/next/dist/compiled/next-server/pages-api.runtime.prod.js:20:16881)
+0|piks     |     at async U.render (/root/fundedfinal/node_modules/next/dist/compiled/next-server/pages-api.runtime.prod.js:20:17520)
+0|piks     |     at async NextNodeServer.runApi (/root/fundedfinal/node_modules/next/dist/server/next-server.js:603:9)
+0|piks     |     at async NextNodeServer.handleCatchallRenderRequest (/root/fundedfinal/node_modules/next/dist/server/next-server.js:269:37)
+0|piks     |     at async NextNodeServer.handleRequestImpl (/root/fundedfinal/node_modules/next/dist/server/base-server.js:818:17)
+0|piks     |     at async invokeRender (/root/fundedfinal/node_modules/next/dist/server/lib/router-server.js:179:21)
+0|piks     |     at async handleRequest (/root/fundedfinal/node_modules/next/dist/server/lib/router-server.js:359:24) {
+0|piks     |   [cause]: AggregateError [ECONNREFUSED]: 
+0|piks     |       at internalConnectMultiple (node:net:1122:18)
+0|piks     |       at afterConnectMultiple (node:net:1689:7) {
+0|piks     |     code: 'ECONNREFUSED',
+0|piks     |     [errors]: [ [Error], [Error] ]
+0|piks     |   }
+0|piks     | }
+
+/root/.pm2/logs/piks-out.log last 50 lines:
+0|piks     |   'New Orleans @ Texas A&M-Corpus Christi (0-0)',
+0|piks     |   'Stephen F. Austin @ Northwestern State (0-0)',
+0|piks     |   'South Dakota @ North Dakota State (0-0)',
+0|piks     |   'Elms College @ Dartmouth (0-0)',
+0|piks     |   'Samford @ VMI (0-0)',
+0|piks     |   'Oakland @ Youngstown State (0-0)',
+0|piks     |   'Stetson @ North Alabama (0-0)',
+0|piks     |   'Washington Capitals @ Ottawa Senators (0-0)',
+0|piks     |   'IU Indianapolis @ Northern Kentucky (0-0)',
+0|piks     |   'Green Bay @ Purdue Fort Wayne (0-0)',
+0|piks     |   'Jacksonville @ Lipscomb (0-0)',
+0|piks     |   'Florida Gulf Coast @ Central Arkansas (0-0)',
+0|piks     |   'Milwaukee @ Wright State (0-0)',
+0|piks     |   'Oral Roberts @ North Dakota (0-0)',
+0|piks     |   'Evansville @ Illinois State (0-0)',
+0|piks     |   'California Baptist @ UT Arlington (0-0)',
+0|piks     |   'Valparaiso @ Southern Illinois (0-0)',
+0|piks     |   'Utah Mammoth @ New York Islanders (0-0)',
+0|piks     |   'Chattanooga @ UNC Greensboro (0-0)',
+0|piks     |   'Morehead State @ Lindenwood (0-0)',
+0|piks     |   'Western Illinois @ UT Martin (0-0)',
+0|piks     |   'Southern Indiana @ SIU Edwardsville (0-0)',
+0|piks     |   'Southern Miss @ UL Monroe (0-0)',
+0|piks     |   'Houston Rockets @ Brooklyn Nets (120-96)',
+0|piks     |   'Cal State Northridge @ UC Davis (80-89)',
+0|piks     |   'UC Irvine @ Cal State Bakersfield (81-77)',
+0|piks     |   'Omaha @ South Dakota State (69-84)',
+0|piks     |   'Northern Arizona @ Montana (64-78)',
+0|piks     |   'Tennessee Tech @ Little Rock (58-77)',
+0|piks     |   'Eastern Kentucky @ Queens University (89-91)',
+0|piks     |   'Bellarmine @ West Georgia (85-87)',
+0|piks     |   'Bradley @ Belmont (78-88)',
+0|piks     |   'Miami Heat @ Detroit Pistons (118-112)',
+0|piks     |   'Winnipeg Jets @ Toronto Maple Leafs (5-6)',
+0|piks     |   'Montreal Canadiens @ Carolina Hurricanes (7-5)',
+0|piks     |   'Tampa Bay Lightning @ Los Angeles Kings (5-3)',
+0|piks     |   'Indiana State @ Northern Iowa (66-75)',
+0|piks     |   "Hawai'i @ UC Riverside (88-45)",
+0|piks     |   'Utah Tech @ Abilene Christian (79-64)',
+0|piks     |   'Philadelphia 76ers @ Dallas Mavericks (123-108)',
+0|piks     |   'Boston Celtics @ Sacramento Kings (120-106)',
+0|piks     |   'Utah Jazz @ Los Angeles Clippers (101-118)',
+0|piks     |   'Austin Peay @ North Florida (102-83)',
+0|piks     |   'Tarleton State @ Utah Valley (85-91)',
+0|piks     |   'Southeast Missouri State @ Eastern Illinois (68-59)',
+0|piks     |   'UIC @ Murray State (77-81)',
+0|piks     |   ... 7 more items
+0|piks     | ]
+0|piks     | [GRADING] Bets to grade: 0 []
+0|piks     | [GS WS] basket: 22 events
+
+0|piks  | [GS WS] amfootball: 0 events
+0|piks  | [GS WS] hockey: 17 events
+0|piks  | [GS WS] baseball: 0 events
