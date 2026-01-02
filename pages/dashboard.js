@@ -335,67 +335,121 @@ export default function Dashboard() {
       return updatedGame;
     });
     
-    // Create lookup map for inplay games by matchup key (for merging live metadata into API games)
-    const inplayByMatchup = {};
+    // STABLE MERGE STRATEGY:
+    // 1. API games are the source of truth for odds (complete bet365 data)
+    // 2. Inplay games provide live metadata (timer, comments, real-time scores)
+    // 3. Use normalized team names for matching, but don't mutate lookup
+    // 4. Only accept inplay values that are actually present (not null/undefined)
+    
+    // Helper to normalize team names for matching
+    const normalizeTeamName = (name) => {
+      if (!name) return '';
+      return name.toLowerCase()
+        .replace(/[^a-z0-9]/g, '') // Remove non-alphanumeric
+        .substring(0, 15); // First 15 chars to handle abbreviations
+    };
+    
+    // Create immutable lookup for inplay games by normalized matchup
+    const inplayLookup = new Map();
     inplayGames.forEach(g => {
-      const key = `${(g.homeTeamFull || g.homeTeam || '').toLowerCase()}_${(g.awayTeamFull || g.awayTeam || '').toLowerCase()}`;
-      inplayByMatchup[key] = g;
+      const homeNorm = normalizeTeamName(g.homeTeamFull || g.homeTeam);
+      const awayNorm = normalizeTeamName(g.awayTeamFull || g.awayTeam);
+      if (homeNorm && awayNorm) {
+        inplayLookup.set(`${homeNorm}_${awayNorm}`, g);
+        // Also try reversed order in case home/away are swapped
+        inplayLookup.set(`${awayNorm}_${homeNorm}`, { ...g, isReversed: true });
+      }
     });
     
-    // Merge live metadata from inplay games into API games
+    // Track which inplay games get matched to API games
+    const matchedInplayKeys = new Set();
+    
+    // Merge live metadata from inplay into API games (immutably)
     const mergedApiGames = updatedApiGames.map(game => {
-      const matchupKey = `${(game.homeTeamFull || game.homeTeam || '').toLowerCase()}_${(game.awayTeamFull || game.awayTeam || '').toLowerCase()}`;
-      const inplayMatch = inplayByMatchup[matchupKey];
+      const homeNorm = normalizeTeamName(game.homeTeamFull || game.homeTeam);
+      const awayNorm = normalizeTeamName(game.awayTeamFull || game.awayTeam);
+      const matchupKey = `${homeNorm}_${awayNorm}`;
       
+      const inplayMatch = inplayLookup.get(matchupKey);
       if (!inplayMatch) return game;
       
-      // Merge live metadata from inplay (timer, comments, etc.) into API game
-      // Keep API game's odds (they're complete from Goalserve)
+      // Mark as matched
+      matchedInplayKeys.add(matchupKey);
+      matchedInplayKeys.add(`${awayNorm}_${homeNorm}`);
+      
+      // Create new object (immutable)
       const merged = { ...game };
       
-      // Live timer/clock data
-      if (inplayMatch.elapsedTime) merged.elapsedTime = inplayMatch.elapsedTime;
-      if (inplayMatch.period) merged.period = inplayMatch.period;
-      if (inplayMatch.stateCode) merged.stateCode = inplayMatch.stateCode;
-      if (inplayMatch.displayClock) merged.displayClock = inplayMatch.displayClock;
+      // Merge live timer/clock data (only if present)
+      if (inplayMatch.elapsedTime != null) merged.elapsedTime = inplayMatch.elapsedTime;
+      if (inplayMatch.period != null) merged.period = inplayMatch.period;
+      if (inplayMatch.stateCode != null) merged.stateCode = inplayMatch.stateCode;
+      if (inplayMatch.displayClock != null) merged.displayClock = inplayMatch.displayClock;
       
-      // Live action feed comments
-      if (inplayMatch.comments && inplayMatch.comments.length > 0) {
+      // Merge live comments (only if they exist and have content)
+      if (inplayMatch.comments && Array.isArray(inplayMatch.comments) && inplayMatch.comments.length > 0) {
         merged.comments = inplayMatch.comments;
       }
       
-      // Update scores from inplay if available (more real-time)
-      if (inplayMatch.scores) {
-        const inplayHome = inplayMatch.scores?.home?.total;
-        const inplayAway = inplayMatch.scores?.away?.total;
-        if (inplayHome != null || inplayAway != null) {
-          merged.scores = {
-            home: { total: inplayHome ?? merged.scores?.home?.total ?? 0 },
-            away: { total: inplayAway ?? merged.scores?.away?.total ?? 0 }
-          };
-        }
+      // Update scores from inplay ONLY if they're valid numbers > 0 or the game is truly live
+      // This prevents zeroed halftime data from overwriting actual scores
+      const inplayHome = inplayMatch.scores?.home?.total;
+      const inplayAway = inplayMatch.scores?.away?.total;
+      const apiHome = game.scores?.home?.total;
+      const apiAway = game.scores?.away?.total;
+      
+      // Only use inplay scores if they look valid (at least one score > 0, or it's truly a 0-0 game)
+      const inplayHasScores = typeof inplayHome === 'number' && typeof inplayAway === 'number';
+      const inplayLooksValid = inplayHasScores && (inplayHome > 0 || inplayAway > 0 || inplayMatch.isLive);
+      
+      if (inplayLooksValid) {
+        merged.scores = {
+          home: { total: inplayHome },
+          away: { total: inplayAway }
+        };
+      } else if (apiHome != null || apiAway != null) {
+        // Keep API scores if inplay scores aren't valid
+        merged.scores = {
+          home: { total: apiHome ?? 0 },
+          away: { total: apiAway ?? 0 }
+        };
       }
       
-      // If inplay has odds and API doesn't, use inplay odds
-      if (!merged.lines || (!merged.lines.moneyline?.home && !merged.lines.spread?.home)) {
-        if (inplayMatch.lines && (inplayMatch.lines.moneyline?.home || inplayMatch.lines.spread?.home)) {
-          merged.lines = inplayMatch.lines;
+      // ODDS: Keep API odds as source of truth, only fill gaps
+      // API has complete bet365 data; inplay may have partial live odds
+      if (!merged.lines) merged.lines = {};
+      
+      // Only use inplay odds to fill gaps, never overwrite complete API odds
+      if (inplayMatch.lines) {
+        // Moneyline: use inplay only if API doesn't have it
+        if (!merged.lines.moneyline?.home && inplayMatch.lines.moneyline?.home) {
+          merged.lines.moneyline = inplayMatch.lines.moneyline;
+        }
+        // Spread: use inplay only if API doesn't have it
+        if (!merged.lines.spread?.home && inplayMatch.lines.spread?.home) {
+          merged.lines.spread = inplayMatch.lines.spread;
+        }
+        // Total: use inplay only if API doesn't have it
+        if (!merged.lines.total?.over && inplayMatch.lines.total?.over) {
+          merged.lines.total = inplayMatch.lines.total;
         }
       }
-      
-      // Mark that we've consumed this inplay game
-      inplayByMatchup[matchupKey] = null;
       
       return merged;
     });
     
-    // Get remaining inplay games that weren't matched to API games (unique international games)
+    // Get unique inplay games not matched to any API game (international games)
     const uniqueInplayGames = inplayGames.filter(g => {
-      const key = `${(g.homeTeamFull || g.homeTeam || '').toLowerCase()}_${(g.awayTeamFull || g.awayTeam || '').toLowerCase()}`;
-      return inplayByMatchup[key] !== null; // Still exists (wasn't consumed)
+      const homeNorm = normalizeTeamName(g.homeTeamFull || g.homeTeam);
+      const awayNorm = normalizeTeamName(g.awayTeamFull || g.awayTeam);
+      const matchupKey = `${homeNorm}_${awayNorm}`;
+      // Include if not matched AND has valid team names AND has some odds
+      const isMatched = matchedInplayKeys.has(matchupKey);
+      const hasValidData = homeNorm && awayNorm;
+      return !isMatched && hasValidData;
     });
     
-    // API games first (with merged live data), then unique inplay games
+    // Return API games first (complete data), then unique international games
     return [...mergedApiGames, ...uniqueInplayGames];
   }, [apiGames, liveScores, liveOdds, inplayEvents]);
 
