@@ -6,12 +6,103 @@ import {
   clearCache,
   SUPPORTED_SPORTS 
 } from '../../../lib/goalserve';
+import { getAllLiveEvents, getStatus as getWsStatus, ensureConnected } from '../../../lib/goalserve-ws';
 
 let globalCache = null;
 let globalCacheTimestamp = null;
 
 const LIVE_GAMES_CACHE_DURATION = 5 * 1000;
 const NO_LIVE_GAMES_CACHE_DURATION = 30 * 1000;
+
+function decimalToAmerican(decimal) {
+  if (!decimal || decimal <= 1) return null;
+  if (decimal >= 2) {
+    return Math.round((decimal - 1) * 100);
+  } else {
+    return -Math.round(100 / (decimal - 1));
+  }
+}
+
+function mergeWebSocketLiveOdds(games) {
+  const wsStatus = getWsStatus();
+  if (wsStatus.connectionStatus !== 'connected' || wsStatus.liveEventCount === 0) {
+    return { games, wsActive: false, mergedCount: 0 };
+  }
+
+  const wsEvents = getAllLiveEvents();
+  let mergedCount = 0;
+
+  games.forEach(game => {
+    if (!game.isLive) return;
+    
+    const homeTeamLower = (game.homeTeamFull || game.homeTeam || '').toLowerCase();
+    const awayTeamLower = (game.awayTeamFull || game.awayTeam || '').toLowerCase();
+
+    for (const [eventId, wsEvent] of Object.entries(wsEvents)) {
+      const wsHome = (wsEvent.homeTeam || '').toLowerCase();
+      const wsAway = (wsEvent.awayTeam || '').toLowerCase();
+
+      const homeMatch = homeTeamLower.includes(wsHome) || wsHome.includes(homeTeamLower) ||
+                        homeTeamLower.split(' ').some(w => wsHome.includes(w) && w.length > 3);
+      const awayMatch = awayTeamLower.includes(wsAway) || wsAway.includes(awayTeamLower) ||
+                        awayTeamLower.split(' ').some(w => wsAway.includes(w) && w.length > 3);
+
+      if (homeMatch && awayMatch && wsEvent.odds) {
+        const wsOdds = wsEvent.odds;
+
+        if (wsOdds.moneyline?.home) {
+          game.lines.moneyline.home = decimalToAmerican(wsOdds.moneyline.home) || game.lines.moneyline.home;
+          game.lines.moneyline.homeSource = 'WebSocket Live';
+        }
+        if (wsOdds.moneyline?.away) {
+          game.lines.moneyline.away = decimalToAmerican(wsOdds.moneyline.away) || game.lines.moneyline.away;
+          game.lines.moneyline.awaySource = 'WebSocket Live';
+        }
+
+        if (wsOdds.spread?.home) {
+          game.lines.spread.home = {
+            point: wsOdds.spread.home.line,
+            odds: decimalToAmerican(wsOdds.spread.home.odds) || -110,
+            source: 'WebSocket Live'
+          };
+        }
+        if (wsOdds.spread?.away) {
+          game.lines.spread.away = {
+            point: wsOdds.spread.away.line,
+            odds: decimalToAmerican(wsOdds.spread.away.odds) || -110,
+            source: 'WebSocket Live'
+          };
+        }
+
+        if (wsOdds.total?.over) {
+          game.lines.total.over = {
+            point: wsOdds.total.line,
+            odds: decimalToAmerican(wsOdds.total.over) || -110,
+            source: 'WebSocket Live'
+          };
+        }
+        if (wsOdds.total?.under) {
+          game.lines.total.under = {
+            point: wsOdds.total.line,
+            odds: decimalToAmerican(wsOdds.total.under) || -110,
+            source: 'WebSocket Live'
+          };
+        }
+
+        if (wsEvent.homeScore !== undefined) game.homeScore = wsEvent.homeScore;
+        if (wsEvent.awayScore !== undefined) game.awayScore = wsEvent.awayScore;
+
+        game.liveOddsSource = 'WebSocket';
+        game.liveOddsTimestamp = wsEvent.timestamp;
+        mergedCount++;
+        break;
+      }
+    }
+  });
+
+  console.log(`[GAMES API] Merged WebSocket live odds for ${mergedCount} games`);
+  return { games, wsActive: true, mergedCount };
+}
 
 function getGoalserveStatus() {
   return {
@@ -253,8 +344,15 @@ export default async function handler(req, res) {
       }
     }
     
-    if (sportsWithLiveGames.size > 0) {
-      console.log(`[GAMES API] Refreshing odds for live sports: ${Array.from(sportsWithLiveGames).join(', ')}`);
+    const wsStatus = getWsStatus();
+    const wsActive = wsStatus.connectionStatus === 'connected' && wsStatus.liveEventCount > 0;
+
+    if (wsActive) {
+      console.log(`[GAMES API] WebSocket connected with ${wsStatus.liveEventCount} live events - using WS for live odds`);
+      const wsMergeResult = mergeWebSocketLiveOdds(formattedGames);
+      formattedGames = wsMergeResult.games;
+    } else if (sportsWithLiveGames.size > 0) {
+      console.log(`[GAMES API] No WebSocket - refreshing odds via REST for live sports: ${Array.from(sportsWithLiveGames).join(', ')}`);
       for (const sportKey of sportsWithLiveGames) {
         try {
           const freshOdds = await getOdds(sportKey);
@@ -296,12 +394,18 @@ export default async function handler(req, res) {
       bySport,
       count: formattedGames.length,
       fromCache: false,
-      dataSource: 'Goalserve',
+      dataSource: wsActive ? 'Goalserve WebSocket' : 'Goalserve REST',
       creditStatus: getGoalserveStatus(),
       freshness: { hasLiveGames },
       polling: {
-        recommendedInterval,
+        recommendedInterval: wsActive ? 1000 : recommendedInterval,
         hasLiveGames
+      },
+      websocket: {
+        active: wsActive,
+        status: wsStatus.connectionStatus,
+        liveEventCount: wsStatus.liveEventCount,
+        activeSports: wsStatus.activeSports
       }
     };
     
