@@ -336,6 +336,7 @@ function convertGoalserveToDisplayFormat(game) {
     status: game.status,
     isLive: game.isLive,
     isCompleted: game.isCompleted,
+    timer: game.timer || null,  // Live game clock (e.g., "5:32" or "12:00")
     scores: game.scores,
     homeScore: game.scores?.home?.total || 0,
     awayScore: game.scores?.away?.total || 0,
