@@ -1,9 +1,4 @@
 node_modules
+.env
 .next
 .vercel
-
-# Environment files - never commit these (contains API keys)
-.env
-.env.local
-.env.production
-.env*.local

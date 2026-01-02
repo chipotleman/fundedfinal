@@ -9,10 +9,10 @@ const challenges = [
     startingBalance: 5000,
     target: 6000,
     price: 149,
-    profitSplit: '50-90%',
+    profitSplit: '70-90%',
     color: 'blue',
     maxDailyLoss: '$750',
-    duration: '14 days',
+    duration: '30 days',
     support: 'Standard'
   },
   {
@@ -22,10 +22,10 @@ const challenges = [
     startingBalance: 10000,
     target: 12000,
     price: 249,
-    profitSplit: '50-90%',
+    profitSplit: '70-90%',
     color: 'green',
     maxDailyLoss: '$1,500',
-    duration: '14 days',
+    duration: '30 days',
     support: 'Priority'
   },
   {
@@ -35,10 +35,10 @@ const challenges = [
     startingBalance: 25000,
     target: 30000,
     price: 399,
-    profitSplit: '50-90%',
+    profitSplit: '70-90%',
     color: 'purple',
     maxDailyLoss: '$3,750',
-    duration: '14 days',
+    duration: '30 days',
     support: 'VIP'
   }
 ];
@@ -134,13 +134,7 @@ export default function ChallengeOverview() {
 
               <button
                 onClick={() => handleStartChallenge(challenge.id - 1)}
-                className="w-full font-bold py-3 rounded-xl transition-all gradient-btn"
-                style={{
-                  '--btn-gradient': challenge.color === 'blue' ? 'linear-gradient(to right, #3b82f6, #06b6d4)' :
-                              challenge.color === 'green' ? 'linear-gradient(to right, #22c55e, #3b82f6)' :
-                              'linear-gradient(to right, #a855f7, #ec4899)',
-                  color: '#ffffff'
-                }}
+                className={`w-full bg-gradient-to-r ${getColorClass(challenge.color, 'button')} text-white font-bold py-3 rounded-xl transition-all`}
               >
                 Start for ${challenge.price}
               </button>
@@ -187,13 +181,8 @@ export default function ChallengeOverview() {
                   <td key={challenge.id} className="p-4 text-center">
                     <button
                       onClick={() => handleStartChallenge(challenge.id - 1)}
-                      className="font-bold py-2.5 px-6 rounded-xl transition-all text-sm gradient-btn"
-                      style={{
-                        '--btn-gradient': challenge.color === 'blue' ? 'linear-gradient(to right, #3b82f6, #06b6d4)' :
-                                    challenge.color === 'green' ? 'linear-gradient(to right, #22c55e, #3b82f6)' :
-                                    'linear-gradient(to right, #a855f7, #ec4899)',
-                        color: '#ffffff'
-                      }}
+                      className={`bg-gradient-to-r ${getColorClass(challenge.color, 'button')} font-bold py-2.5 px-6 rounded-xl transition-all text-sm`}
+                      style={{ color: '#ffffff' }}
                     >
                       Start Challenge
                     </button>

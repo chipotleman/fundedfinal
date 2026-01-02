@@ -25,11 +25,8 @@ export default async function handler(req, res) {
     }
     
     if (connect === 'true') {
-      // Use Goalserve WebSocket sport identifiers
-      const sports = sport ? [sport] : ['basket', 'hockey', 'baseball', 'amfootball'];
-      console.log('[Goalserve WS Status] Attempting to connect to:', sports);
-      const connected = await goalserveWs.connect(sports);
-      console.log('[Goalserve WS Status] Connection result:', connected);
+      const sports = sport ? [sport] : ['basketball', 'hockey', 'baseball'];
+      await goalserveWs.ensureConnected(sports);
     }
     
     const status = goalserveWs.getStatus();

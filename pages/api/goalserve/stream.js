@@ -44,16 +44,7 @@ async function handleWebSocketStream(req, res, sendEvent, sport, eventId) {
     ? [goalserveWs.SPORT_MAPPING[sport] || sport] 
     : DEFAULT_SPORTS;
 
-  let status = goalserveWs.getStatus();
-  
-  // Reset stuck connection states in production (serverless environment)
-  if (status.connectionStatus === 'ws_access_not_enabled' || 
-      status.connectionStatus === 'rate_limited' ||
-      status.connectionStatus === 'disconnected') {
-    console.log('[Stream WS] Resetting connection state from:', status.connectionStatus);
-    goalserveWs.resetConnectionState();
-    status = goalserveWs.getStatus();
-  }
+  const status = goalserveWs.getStatus();
   
   sendEvent({
     type: 'connected',

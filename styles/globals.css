@@ -14,11 +14,7 @@ button,
   appearance: none !important;
   -webkit-touch-callout: none !important;
   outline: none !important;
-}
-
-/* Allow gradient backgrounds on specific buttons */
-.gradient-btn {
-  background-image: var(--btn-gradient) !important;
+  background-image: none !important;
 }
 
 button:active,

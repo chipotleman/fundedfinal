@@ -6,226 +6,12 @@ import {
   clearCache,
   SUPPORTED_SPORTS 
 } from '../../../lib/goalserve';
-import { getInplayService } from '../../../lib/goalserve-inplay';
 
 let globalCache = null;
 let globalCacheTimestamp = null;
 
-// HTTPS-only approach: 5-second cache for all data (REST API + inplay feeds)
 const LIVE_GAMES_CACHE_DURATION = 5 * 1000;
 const NO_LIVE_GAMES_CACHE_DURATION = 30 * 1000;
-
-function decimalToAmerican(decimal) {
-  if (!decimal || decimal <= 1) return null;
-  if (decimal >= 2) {
-    return Math.round((decimal - 1) * 100);
-  } else {
-    return -Math.round(100 / (decimal - 1));
-  }
-}
-
-// Merge inplay feed data for live timer and real-time updates (HTTPS-only approach)
-async function mergeInplayLiveData(games) {
-  try {
-    const inplayService = getInplayService();
-    
-    // Fetch all inplay feeds (basketball, hockey, amfootball, baseball)
-    await inplayService.fetchAllFeeds();
-    const liveEvents = inplayService.getLiveEvents(); // Returns array
-    
-    if (!liveEvents || liveEvents.length === 0) {
-      console.log('[GAMES API] No inplay live events available');
-      return { games, mergedCount: 0 };
-    }
-    
-    console.log(`[GAMES API] Found ${liveEvents.length} inplay live events`);
-    let mergedCount = 0;
-    
-    games.forEach(game => {
-      if (!game.isLive) return;
-      
-      const homeTeamLower = (game.homeTeamFull || game.homeTeam || '').toLowerCase();
-      const awayTeamLower = (game.awayTeamFull || game.awayTeam || '').toLowerCase();
-      
-      // Find matching inplay event by team names
-      for (const inplayEvent of liveEvents) {
-        const inplayHome = (inplayEvent.homeTeam || '').toLowerCase();
-        const inplayAway = (inplayEvent.awayTeam || '').toLowerCase();
-        
-        const homeMatch = homeTeamLower.includes(inplayHome) || inplayHome.includes(homeTeamLower) ||
-                          homeTeamLower.split(' ').some(w => inplayHome.includes(w) && w.length > 3);
-        const awayMatch = awayTeamLower.includes(inplayAway) || inplayAway.includes(awayTeamLower) ||
-                          awayTeamLower.split(' ').some(w => inplayAway.includes(w) && w.length > 3);
-        
-        if (homeMatch && awayMatch) {
-          // Update live timer/clock from inplay feed
-          if (inplayEvent.displayClock) {
-            game.timer = inplayEvent.displayClock;
-          }
-          
-          // Update scores if inplay has higher (fresher) scores
-          const inplayTotal = (inplayEvent.homeScore || 0) + (inplayEvent.awayScore || 0);
-          const gameTotal = (game.homeScore || 0) + (game.awayScore || 0);
-          if (inplayTotal >= gameTotal) {
-            game.homeScore = inplayEvent.homeScore;
-            game.awayScore = inplayEvent.awayScore;
-          }
-          
-          // Merge inplay live odds if available
-          if (inplayEvent.odds) {
-            const odds = inplayEvent.odds;
-            
-            if (odds.moneyline?.home) {
-              game.lines.moneyline.home = decimalToAmerican(odds.moneyline.home) || game.lines.moneyline.home;
-              game.lines.moneyline.homeSource = 'Inplay Live';
-            }
-            if (odds.moneyline?.away) {
-              game.lines.moneyline.away = decimalToAmerican(odds.moneyline.away) || game.lines.moneyline.away;
-              game.lines.moneyline.awaySource = 'Inplay Live';
-            }
-            
-            if (odds.spread?.home) {
-              game.lines.spread.home = {
-                point: odds.spread.home.line,
-                odds: decimalToAmerican(odds.spread.home.odds) || -110,
-                source: 'Inplay Live'
-              };
-            }
-            if (odds.spread?.away) {
-              game.lines.spread.away = {
-                point: odds.spread.away.line,
-                odds: decimalToAmerican(odds.spread.away.odds) || -110,
-                source: 'Inplay Live'
-              };
-            }
-            
-            if (odds.total?.over) {
-              game.lines.total.over = {
-                point: odds.total.line,
-                odds: decimalToAmerican(odds.total.over) || -110,
-                source: 'Inplay Live'
-              };
-            }
-            if (odds.total?.under) {
-              game.lines.total.under = {
-                point: odds.total.line,
-                odds: decimalToAmerican(odds.total.under) || -110,
-                source: 'Inplay Live'
-              };
-            }
-          }
-          
-          game.liveOddsSource = 'Inplay HTTPS';
-          game.liveDataTimestamp = Date.now();
-          mergedCount++;
-          break;
-        }
-      }
-    });
-    
-    console.log(`[GAMES API] Merged inplay live data for ${mergedCount} games`);
-    return { games, mergedCount };
-  } catch (error) {
-    console.error('[GAMES API] Error fetching inplay data:', error.message);
-    return { games, mergedCount: 0 };
-  }
-}
-
-// Inject international/European games from inplay feeds (HTTPS-only)
-function injectInplayOnlyEvents(games) {
-  const inplayService = getInplayService();
-  const liveEvents = inplayService.getLiveEvents(); // Returns array
-  
-  if (!liveEvents || liveEvents.length === 0) {
-    return { games, injectedCount: 0 };
-  }
-  
-  const existingMatchups = new Set(games.map(g => 
-    `${(g.homeTeamFull || g.homeTeam || '').toLowerCase()}-${(g.awayTeamFull || g.awayTeam || '').toLowerCase()}`
-  ));
-
-  let injectedCount = 0;
-  const sportMapping = {
-    'hockey': 'HOCKEY',
-    'basket': 'BASKETBALL',
-    'basketball': 'BASKETBALL',
-    'amfootball': 'FOOTBALL',
-    'baseball': 'BASEBALL',
-    'soccer': 'SOCCER'
-  };
-
-  for (const inplayEvent of liveEvents) {
-    const inplayHome = (inplayEvent.homeTeam || '').toLowerCase();
-    const inplayAway = (inplayEvent.awayTeam || '').toLowerCase();
-
-    const hasMatch = Array.from(existingMatchups).some(existing => {
-      const [exHome, exAway] = existing.split('-');
-      const homeMatch = exHome.includes(inplayHome) || inplayHome.includes(exHome) ||
-                        exHome.split(' ').some(w => inplayHome.includes(w) && w.length > 3);
-      const awayMatch = exAway.includes(inplayAway) || inplayAway.includes(exAway) ||
-                        exAway.split(' ').some(w => inplayAway.includes(w) && w.length > 3);
-      return homeMatch && awayMatch;
-    });
-
-    if (!hasMatch && (inplayEvent.status === 'live' || inplayEvent.status === 'paused')) {
-      const sportName = sportMapping[inplayEvent.sport] || (inplayEvent.sport || 'OTHER').toUpperCase();
-      const league = inplayEvent.league || `${sportName} INTERNATIONAL`;
-      
-      const odds = inplayEvent.odds || {};
-      const newGame = {
-        id: `inplay-${inplayEvent.id}`,
-        homeTeam: inplayEvent.homeTeam,
-        awayTeam: inplayEvent.awayTeam,
-        homeTeamFull: inplayEvent.homeTeam,
-        awayTeamFull: inplayEvent.awayTeam,
-        homeScore: inplayEvent.homeScore || 0,
-        awayScore: inplayEvent.awayScore || 0,
-        timer: inplayEvent.displayClock || null,
-        sportKey: inplayEvent.sport || 'international',
-        sportName: sportName,
-        league: league,
-        commenceTime: new Date().toISOString(),
-        isLive: true,
-        isCompleted: false,
-        status: 'live',
-        liveOddsSource: 'Inplay HTTPS',
-        liveDataTimestamp: Date.now(),
-        lines: {
-          moneyline: {
-            home: odds.moneyline?.home ? decimalToAmerican(odds.moneyline.home) : null,
-            away: odds.moneyline?.away ? decimalToAmerican(odds.moneyline.away) : null
-          },
-          spread: {
-            home: odds.spread?.home ? {
-              point: odds.spread.home.line,
-              odds: decimalToAmerican(odds.spread.home.odds) || -110
-            } : null,
-            away: odds.spread?.away ? {
-              point: odds.spread.away.line,
-              odds: decimalToAmerican(odds.spread.away.odds) || -110
-            } : null
-          },
-          total: {
-            over: odds.total?.over ? {
-              point: odds.total.line,
-              odds: decimalToAmerican(odds.total.over) || -110
-            } : null,
-            under: odds.total?.under ? {
-              point: odds.total.line,
-              odds: decimalToAmerican(odds.total.under) || -110
-            } : null
-          }
-        }
-      };
-      
-      games.push(newGame);
-      injectedCount++;
-    }
-  }
-
-  console.log(`[GAMES API] Injected ${injectedCount} inplay-only live events (international/European)`);
-  return { games, injectedCount };
-}
 
 function getGoalserveStatus() {
   return {
@@ -348,10 +134,7 @@ function convertGoalserveToDisplayFormat(game) {
     status: game.status,
     isLive: game.isLive,
     isCompleted: game.isCompleted,
-    timer: game.timer || null,  // Live game clock (e.g., "5:32" or "12:00")
     scores: game.scores,
-    homeScore: game.scores?.home?.total || 0,
-    awayScore: game.scores?.away?.total || 0,
     lines: lines,
     allBookmakerOdds: allBookmakerOdds,
     periodOdds: odds.periods || {},
@@ -390,8 +173,6 @@ export default async function handler(req, res) {
           game.isCompleted = liveScore.isCompleted;
           game.status = liveScore.status;
           game.scores = liveScore.scores;
-          game.homeScore = liveScore.scores?.home?.total ?? 0;
-          game.awayScore = liveScore.scores?.away?.total ?? 0;
         }
       });
       
@@ -455,8 +236,6 @@ export default async function handler(req, res) {
             game.isCompleted = score.isCompleted;
             game.status = score.status;
             game.scores = score.scores;
-            game.homeScore = score.scores?.home?.total ?? 0;
-            game.awayScore = score.scores?.away?.total ?? 0;
             if (score.isLive) {
               hasLiveGames = true;
               sportsWithLiveGames.add(sportKey);
@@ -468,26 +247,24 @@ export default async function handler(req, res) {
       }
     }
     
-    // HTTPS-only approach: Always fetch inplay feeds for timers and international games
-    console.log(`[GAMES API] Fetching inplay data...`);
-    try {
-      const inplayService = getInplayService();
-      await inplayService.fetchAllFeeds();
-      
-      // Merge inplay data for live US games (timers, scores, odds)
-      if (hasLiveGames) {
-        const inplayMergeResult = await mergeInplayLiveData(formattedGames);
-        formattedGames = inplayMergeResult.games;
+    if (sportsWithLiveGames.size > 0) {
+      console.log(`[GAMES API] Refreshing odds for live sports: ${Array.from(sportsWithLiveGames).join(', ')}`);
+      for (const sportKey of sportsWithLiveGames) {
+        try {
+          const freshOdds = await getOdds(sportKey);
+          const freshFormatted = freshOdds.map(convertGoalserveToDisplayFormat);
+          
+          freshFormatted.forEach(freshGame => {
+            const existingIdx = formattedGames.findIndex(g => g.id === freshGame.id);
+            if (existingIdx >= 0) {
+              formattedGames[existingIdx].lines = freshGame.lines;
+              formattedGames[existingIdx].allBookmakerOdds = freshGame.allBookmakerOdds;
+            }
+          });
+        } catch (e) {
+          console.error(`[GAMES API] Error refreshing odds for ${sportKey}:`, e.message);
+        }
       }
-      
-      // Always inject international/European games from inplay feeds
-      const injectResult = injectInplayOnlyEvents(formattedGames);
-      formattedGames = injectResult.games;
-      if (injectResult.injectedCount > 0) {
-        hasLiveGames = true;
-      }
-    } catch (e) {
-      console.error(`[GAMES API] Error fetching inplay data:`, e.message);
     }
     
     const bySport = {};
@@ -513,11 +290,11 @@ export default async function handler(req, res) {
       bySport,
       count: formattedGames.length,
       fromCache: false,
-      dataSource: 'Goalserve HTTPS',
+      dataSource: 'Goalserve',
       creditStatus: getGoalserveStatus(),
       freshness: { hasLiveGames },
       polling: {
-        recommendedInterval: recommendedInterval,
+        recommendedInterval,
         hasLiveGames
       }
     };
