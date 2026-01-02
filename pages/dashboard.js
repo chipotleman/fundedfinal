@@ -100,9 +100,6 @@ export default function Dashboard() {
   const baseGamesRef = useRef({});
   const betSlipRef = useRef(betSlip);
   
-  // Cache for live metadata - preserves timer/comments/scores across SSE reconnects
-  const liveMetadataCacheRef = useRef({});
-  
   useEffect(() => {
     betSlipRef.current = betSlip;
   }, [betSlip]);
@@ -193,15 +190,8 @@ export default function Dashboard() {
   }, []);
 
   const gamesWithLiveData = useMemo(() => {
-    // Convert inplay events to game format - FILTER out malformed events first
-    const validInplayEvents = Object.values(inplayEvents || {}).filter(event => {
-      // Must have valid team names
-      const homeTeam = event.homeTeam || event.stats?.[0]?.home;
-      const awayTeam = event.awayTeam || event.stats?.[0]?.away;
-      return homeTeam && awayTeam && homeTeam !== 'undefined' && awayTeam !== 'undefined';
-    });
-    
-    const inplayGames = validInplayEvents.map(event => {
+    // Convert inplay events to game format
+    const inplayGames = Object.values(inplayEvents || {}).map(event => {
       const homeTeam = event.homeTeam || event.stats?.[0]?.home || 'Home';
       const awayTeam = event.awayTeam || event.stats?.[0]?.away || 'Away';
       
@@ -338,135 +328,8 @@ export default function Dashboard() {
       return updatedGame;
     });
     
-    // STABLE MERGE STRATEGY WITH CACHING:
-    // 1. API games are the source of truth for odds (complete bet365 data)
-    // 2. Inplay games provide live metadata (timer, comments, real-time scores)
-    // 3. Cache live metadata to preserve it across SSE reconnects
-    // 4. Only update cached values when new valid data arrives
-    
-    // Helper to normalize team names for matching
-    const normalizeTeamName = (name) => {
-      if (!name) return '';
-      return name.toLowerCase()
-        .replace(/[^a-z0-9]/g, '') // Remove non-alphanumeric
-        .substring(0, 15); // First 15 chars to handle abbreviations
-    };
-    
-    // Update the live metadata cache with current inplay data
-    // Only update if we have valid new data (don't clear cache when SSE is empty)
-    inplayGames.forEach(g => {
-      const homeNorm = normalizeTeamName(g.homeTeamFull || g.homeTeam);
-      const awayNorm = normalizeTeamName(g.awayTeamFull || g.awayTeam);
-      if (!homeNorm || !awayNorm) return;
-      
-      const matchupKey = `${homeNorm}_${awayNorm}`;
-      const existing = liveMetadataCacheRef.current[matchupKey] || {};
-      
-      // Only update fields that have valid new values
-      const updated = { ...existing };
-      if (g.elapsedTime != null) updated.elapsedTime = g.elapsedTime;
-      if (g.period != null) updated.period = g.period;
-      if (g.stateCode != null) updated.stateCode = g.stateCode;
-      if (g.displayClock != null) updated.displayClock = g.displayClock;
-      if (g.comments && Array.isArray(g.comments) && g.comments.length > 0) {
-        updated.comments = g.comments;
-      }
-      
-      // Update scores only if valid
-      const inplayHome = g.scores?.home?.total;
-      const inplayAway = g.scores?.away?.total;
-      const inplayHasScores = typeof inplayHome === 'number' && typeof inplayAway === 'number';
-      const inplayLooksValid = inplayHasScores && (inplayHome > 0 || inplayAway > 0 || g.isLive);
-      if (inplayLooksValid) {
-        updated.scores = { home: { total: inplayHome }, away: { total: inplayAway } };
-      }
-      
-      // Update odds only if API game doesn't have them
-      if (g.lines) {
-        updated.lines = g.lines;
-      }
-      
-      updated.lastUpdate = Date.now();
-      liveMetadataCacheRef.current[matchupKey] = updated;
-    });
-    
-    // Track which inplay games get matched to API games
-    const matchedInplayKeys = new Set();
-    
-    // Merge cached live metadata into API games
-    const mergedApiGames = updatedApiGames.map(game => {
-      const homeNorm = normalizeTeamName(game.homeTeamFull || game.homeTeam);
-      const awayNorm = normalizeTeamName(game.awayTeamFull || game.awayTeam);
-      const matchupKey = `${homeNorm}_${awayNorm}`;
-      const reversedKey = `${awayNorm}_${homeNorm}`;
-      
-      // Get cached live metadata (try both key orders)
-      const cachedData = liveMetadataCacheRef.current[matchupKey] || liveMetadataCacheRef.current[reversedKey];
-      
-      // Mark as matched if we have cached data
-      if (cachedData) {
-        matchedInplayKeys.add(matchupKey);
-        matchedInplayKeys.add(reversedKey);
-      }
-      
-      // Start with API game (has complete odds)
-      const merged = { ...game };
-      
-      // Apply cached live metadata
-      if (cachedData) {
-        if (cachedData.elapsedTime != null) merged.elapsedTime = cachedData.elapsedTime;
-        if (cachedData.period != null) merged.period = cachedData.period;
-        if (cachedData.stateCode != null) merged.stateCode = cachedData.stateCode;
-        if (cachedData.displayClock != null) merged.displayClock = cachedData.displayClock;
-        if (cachedData.comments && cachedData.comments.length > 0) {
-          merged.comments = cachedData.comments;
-        }
-        
-        // Use cached scores if they're more recent/valid than API scores
-        if (cachedData.scores) {
-          const cachedHome = cachedData.scores?.home?.total;
-          const cachedAway = cachedData.scores?.away?.total;
-          const apiHome = game.scores?.home?.total ?? 0;
-          const apiAway = game.scores?.away?.total ?? 0;
-          
-          // Use cached scores if they're higher (game has progressed)
-          if ((cachedHome + cachedAway) >= (apiHome + apiAway)) {
-            merged.scores = cachedData.scores;
-          }
-        }
-      }
-      
-      // API ODDS are always authoritative - never overwrite with cached/inplay odds
-      // Only use cached odds to FILL GAPS if API has no odds
-      if (!merged.lines) merged.lines = {};
-      
-      if (cachedData?.lines) {
-        if (!merged.lines.moneyline?.home && cachedData.lines.moneyline?.home) {
-          merged.lines.moneyline = cachedData.lines.moneyline;
-        }
-        if (!merged.lines.spread?.home && cachedData.lines.spread?.home) {
-          merged.lines.spread = cachedData.lines.spread;
-        }
-        if (!merged.lines.total?.over && cachedData.lines.total?.over) {
-          merged.lines.total = cachedData.lines.total;
-        }
-      }
-      
-      return merged;
-    });
-    
-    // Get unique inplay games not matched to any API game (international games)
-    const uniqueInplayGames = inplayGames.filter(g => {
-      const homeNorm = normalizeTeamName(g.homeTeamFull || g.homeTeam);
-      const awayNorm = normalizeTeamName(g.awayTeamFull || g.awayTeam);
-      const matchupKey = `${homeNorm}_${awayNorm}`;
-      const isMatched = matchedInplayKeys.has(matchupKey);
-      const hasValidData = homeNorm && awayNorm;
-      return !isMatched && hasValidData;
-    });
-    
-    // Return API games first (complete data), then unique international games
-    return [...mergedApiGames, ...uniqueInplayGames];
+    // Merge: inplay games first (they're live), then API games
+    return [...inplayGames, ...updatedApiGames];
   }, [apiGames, liveScores, liveOdds, inplayEvents]);
 
   const categorizedGames = useMemo(() => categorizeGames(gamesWithLiveData), [gamesWithLiveData, lastUpdated]);
@@ -826,7 +689,6 @@ export default function Dashboard() {
                             maxItems={3}
                             homeTeam={game.homeTeamFull || game.homeTeam}
                             awayTeam={game.awayTeamFull || game.awayTeam}
-                            eventId={game.id || game.eventId || ''}
                           />
                         </div>
                       )}
