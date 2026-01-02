@@ -1,0 +1,128 @@
+0|piks     | Bet grading error: TypeError: fetch failed
+0|piks     |     at node:internal/deps/undici/undici:14900:13
+0|piks     |     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+0|piks     |     at async d (/root/fundedfinal/.next/server/pages/api/bets/grade.js:1:978)
+0|piks     |     at async K (/root/fundedfinal/node_modules/next/dist/compiled/next-server/pages-api.runtime.prod.js:20:16881)
+0|piks     |     at async U.render (/root/fundedfinal/node_modules/next/dist/compiled/next-server/pages-api.runtime.prod.js:20:17520)
+0|piks     |     at async NextNodeServer.runApi (/root/fundedfinal/node_modules/next/dist/server/next-server.js:603:9)
+0|piks     |     at async NextNodeServer.handleCatchallRenderRequest (/root/fundedfinal/node_modules/next/dist/server/next-server.js:269:37)
+0|piks     |     at async NextNodeServer.handleRequestImpl (/root/fundedfinal/node_modules/next/dist/server/base-server.js:818:17)
+0|piks     |     at async invokeRender (/root/fundedfinal/node_modules/next/dist/server/lib/router-server.js:179:21)
+0|piks     |     at async handleRequest (/root/fundedfinal/node_modules/next/dist/server/lib/router-server.js:359:24) {
+0|piks     |   [cause]: AggregateError [ECONNREFUSED]: 
+0|piks     |       at internalConnectMultiple (node:net:1122:18)
+0|piks     |       at afterConnectMultiple (node:net:1689:7) {
+0|piks     |     code: 'ECONNREFUSED',
+0|piks     |     [errors]: [ [Error], [Error] ]
+0|piks     |   }
+0|piks     | }
+
+^Z
+[7]+  Stopped                 pm2 logs piks --lines 20 --err
+● nginx.service - A high performance web server and a reverse proxy server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; preset: enabled)
+     Active: active (running) since Thu 2026-01-01 19:19:07 UTC; 21h ago
+       Docs: man:nginx(8)
+    Process: 17265 ExecStartPre=/usr/sbin/nginx -t -q -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+    Process: 17268 ExecStart=/usr/sbin/nginx -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+   Main PID: 17269 (nginx)
+      Tasks: 3 (limit: 4656)
+     Memory: 4.0M (peak: 12.2M)
+        CPU: 32.669s
+     CGroup: /system.slice/nginx.service
+             ├─17269 "nginx: master process /usr/sbin/nginx -g daemon on; master_process on;"
+             ├─17270 "nginx: worker process"
+             └─17271 "nginx: worker process"
+
+Jan 01 19:19:07 piks systemd[1]: Starting nginx.service - A high performance web server and a reverse proxy server...
+Jan 01 19:19:07 piks systemd[1]: Started nginx.service - A high performance web server and a reverse proxy server.
+Use --update-env to update environment variables
+[PM2] Applying action restartProcessId on app [piks](ids: [ 0 ])
+# Check PM2 process status
+pm2 status
+
+# Check if nginx is running (handles SSL/HTTPS)
+systemctl status nginx
+
+# Check what's listening on port 3000/5000
+netstat -tlnp | grep -E '3000|5000'
+
+# Check nginx error logs
+tail -20 /var/log/nginx/error.log[PM2] [piks](0) ✓
+┌────┬─────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name    │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ piks    │ default     │ N/A     │ fork    │ 45066    │ 0s     │ 23   │ online    │ 0%       │ 19.4mb   │ root     │ disabled │
+└────┴─────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+
+[PM2] Applying action stopProcessId on app [all](ids: [ 0 ])
+[PM2] [piks](0) ✓
+┌────┬─────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name    │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ piks    │ default     │ N/A     │ fork    │ 0        │ 0      │ 23   │ stopped   │ 0%       │ 0b       │ root     │ disabled │
+└────┴─────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+[dotenv@17.2.3] injecting env (11) from .env.local -- tip: 🔐 prevent committing .env to code: https://dotenvx.com/precommit
+[PM2] Applying action restartProcessId on app [piks](ids: [ 0 ])
+[PM2] [piks](0) ✓
+┌────┬─────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name    │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ piks    │ default     │ N/A     │ fork    │ 45092    │ 0s     │ 23   │ online    │ 0%       │ 18.3mb   │ root     │ disabled │
+└────┴─────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@piks:~/fundedfinal# # Check PM2 process status
+root@piks:~/fundedfinal# pm2 status
+┌────┬─────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name    │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ piks    │ default     │ N/A     │ fork    │ 45092    │ 0s     │ 23   │ online    │ 100%     │ 57.6mb   │ root     │ disabled │
+└────┴─────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+root@piks:~/fundedfinal# 
+root@piks:~/fundedfinal# # Check if nginx is running (handles SSL/HTTPS)
+root@piks:~/fundedfinal# systemctl status nginx
+● nginx.service - A high performance web server and a reverse proxy server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; preset: enabled)
+     Active: active (running) since Thu 2026-01-01 19:19:07 UTC; 21h ago
+       Docs: man:nginx(8)
+    Process: 17265 ExecStartPre=/usr/sbin/nginx -t -q -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+    Process: 17268 ExecStart=/usr/sbin/nginx -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+   Main PID: 17269 (nginx)
+      Tasks: 3 (limit: 4656)
+     Memory: 4.0M (peak: 12.2M)
+        CPU: 32.674s
+     CGroup: /system.slice/nginx.service
+             ├─17269 "nginx: master process /usr/sbin/nginx -g daemon on; master_process on;"
+             ├─17270 "nginx: worker process"
+             └─17271 "nginx: worker process"
+
+Jan 01 19:19:07 piks systemd[1]: Starting nginx.service - A high performance web server and a reverse proxy server...
+Jan 01 19:19:07 piks systemd[1]: Started nginx.service - A high performance web server and a reverse proxy server.
+root@piks:~/fundedfinal# 
+root@piks:~/fundedfinal# # Check what's listening on port 3000/5000
+root@piks:~/fundedfinal# netstat -tlnp | grep -E '3000|5000'
+Command 'netstat' not found, but can be installed with:
+apt install net-tools
+root@piks:~/fundedfinal# 
+root@piks:~/fundedfinal# # Check nginx error logs
+root@piks:~/fundedfinal# tail -20 /var/log/nginx/error.log
+2026/01/02 17:12:00 [error] 17270#17270: *7211 upstream prematurely closed connection while reading response header from upstream, client: 96.246.38.74, server: _, request: "GET /api/games HTTP/1.1", upstream: "http://127.0.0.1:3000/api/games", host: "159.89.178.16", referrer: "http://159.89.178.16/dashboard"
+2026/01/02 17:12:00 [error] 17270#17270: *7211 no live upstreams while connecting to upstream, client: 96.246.38.74, server: _, request: "GET /api/games HTTP/1.1", upstream: "http://localhost/api/games", host: "159.89.178.16", referrer: "http://159.89.178.16/dashboard"
+2026/01/02 17:12:00 [error] 17271#17271: *7128 connect() failed (111: Connection refused) while connecting to upstream, client: 96.246.38.74, server: _, request: "GET /api/games HTTP/1.1", upstream: "http://127.0.0.1:3000/api/games", host: "159.89.178.16", referrer: "http://159.89.178.16/dashboard"
+2026/01/02 17:12:00 [error] 17271#17271: *7128 no live upstreams while connecting to upstream, client: 96.246.38.74, server: _, request: "GET /api/games HTTP/1.1", upstream: "http://localhost/api/games", host: "159.89.178.16", referrer: "http://159.89.178.16/dashboard"
+2026/01/02 17:12:00 [error] 17270#17270: *7211 no live upstreams while connecting to upstream, client: 96.246.38.74, server: _, request: "GET /api/games HTTP/1.1", upstream: "http://localhost/api/games", host: "159.89.178.16", referrer: "http://159.89.178.16/dashboard"
+2026/01/02 17:12:00 [error] 17271#17271: *7128 no live upstreams while connecting to upstream, client: 96.246.38.74, server: _, request: "GET /api/games HTTP/1.1", upstream: "http://localhost/api/games", host: "159.89.178.16", referrer: "http://159.89.178.16/dashboard"
+2026/01/02 17:12:00 [error] 17270#17270: *7211 no live upstreams while connecting to upstream, client: 96.246.38.74, server: _, request: "GET /api/games HTTP/1.1", upstream: "http://localhost/api/games", host: "159.89.178.16", referrer: "http://159.89.178.16/dashboard"
+2026/01/02 17:12:00 [error] 17271#17271: *7128 no live upstreams while connecting to upstream, client: 96.246.38.74, server: _, request: "GET /api/games HTTP/1.1", upstream: "http://localhost/api/games", host: "159.89.178.16", referrer: "http://159.89.178.16/dashboard"
+2026/01/02 17:12:00 [error] 17270#17270: *7211 no live upstreams while connecting to upstream, client: 96.246.38.74, server: _, request: "GET /api/games HTTP/1.1", upstream: "http://localhost/api/games", host: "159.89.178.16", referrer: "http://159.89.178.16/dashboard"
+2026/01/02 17:12:00 [error] 17271#17271: *7128 no live upstreams while connecting to upstream, client: 96.246.38.74, server: _, request: "GET /api/games HTTP/1.1", upstream: "http://localhost/api/games", host: "159.89.178.16", referrer: "http://159.89.178.16/dashboard"
+2026/01/02 17:12:00 [error] 17270#17270: *7211 no live upstreams while connecting to upstream, client: 96.246.38.74, server: _, request: "GET /api/games HTTP/1.1", upstream: "http://localhost/api/games", host: "159.89.178.16", referrer: "http://159.89.178.16/dashboard"
+2026/01/02 17:12:00 [error] 17271#17271: *7128 no live upstreams while connecting to upstream, client: 96.246.38.74, server: _, request: "GET /api/games HTTP/1.1", upstream: "http://localhost/api/games", host: "159.89.178.16", referrer: "http://159.89.178.16/dashboard"
+2026/01/02 17:12:00 [error] 17270#17270: *7211 no live upstreams while connecting to upstream, client: 96.246.38.74, server: _, request: "GET /api/games HTTP/1.1", upstream: "http://localhost/api/games", host: "159.89.178.16", referrer: "http://159.89.178.16/dashboard"
+2026/01/02 17:12:00 [error] 17271#17271: *7128 no live upstreams while connecting to upstream, client: 96.246.38.74, server: _, request: "GET /api/games HTTP/1.1", upstream: "http://localhost/api/games", host: "159.89.178.16", referrer: "http://159.89.178.16/dashboard"
+2026/01/02 17:12:02 [error] 17271#17271: *7128 no live upstreams while connecting to upstream, client: 96.246.38.74, server: _, request: "GET /api/goalserve/stream HTTP/1.1", upstream: "http://localhost/api/goalserve/stream", host: "159.89.178.16", referrer: "http://159.89.178.16/dashboard"
+2026/01/02 17:12:05 [error] 17271#17271: *7128 no live upstreams while connecting to upstream, client: 96.246.38.74, server: _, request: "GET /api/games HTTP/1.1", upstream: "http://localhost/api/games", host: "159.89.178.16", referrer: "http://159.89.178.16/dashboard"
+2026/01/02 17:12:05 [error] 17271#17271: *7128 no live upstreams while connecting to upstream, client: 96.246.38.74, server: _, request: "GET /api/goalserve/stream HTTP/1.1", upstream: "http://localhost/api/goalserve/stream", host: "159.89.178.16", referrer: "http://159.89.178.16/dashboard"
+2026/01/02 17:12:10 [error] 17271#17271: *7128 no live upstreams while connecting to upstream, client: 96.246.38.74, server: _, request: "GET /api/games HTTP/1.1", upstream: "http://localhost/api/games", host: "159.89.178.16", referrer: "http://159.89.178.16/dashboard"
+2026/01/02 17:12:10 [error] 17271#17271: *7128 no live upstreams while connecting to upstream, client: 96.246.38.74, server: _, request: "GET /api/goalserve/stream HTTP/1.1", upstream: "http://localhost/api/goalserve/stream", host: "159.89.178.16", referrer: "http://159.89.178.16/dashboard"
+2026/01/02 17:14:39 [error] 17271#17271: *7322 upstream prematurely closed connection while reading upstream, client: 96.246.38.74, server: _, request: "GET /api/goalserve/stream HTTP/1.1", upstream: "http://[::1]:3000/api/goalserve/stream", host: "159.89.178.16", referrer: "http://159.89.178.16/dashboard"
+root@piks:~/fundedfinal# 
