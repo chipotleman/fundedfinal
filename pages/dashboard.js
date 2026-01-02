@@ -335,24 +335,68 @@ export default function Dashboard() {
       return updatedGame;
     });
     
-    // Merge: API games take priority (they have complete odds), 
-    // only add inplay games that don't already exist in API games
-    const apiGameMatchups = new Set(updatedApiGames.map(g => 
-      `${(g.homeTeamFull || g.homeTeam || '').toLowerCase()}_${(g.awayTeamFull || g.awayTeam || '').toLowerCase()}`
-    ));
-    
-    // Only include inplay games that aren't already in the API (to avoid duplicates)
-    // Also only include inplay games that have valid odds
-    const uniqueInplayGames = inplayGames.filter(g => {
-      const matchupKey = `${(g.homeTeamFull || g.homeTeam || '').toLowerCase()}_${(g.awayTeamFull || g.awayTeam || '').toLowerCase()}`;
-      const isAlreadyInApi = apiGameMatchups.has(matchupKey);
-      const hasValidOdds = g.lines && (g.lines.moneyline?.home || g.lines.spread?.home || g.lines.total?.over);
-      // Include if NOT in API and has valid odds, OR if it's a truly unique international game
-      return !isAlreadyInApi && (hasValidOdds || g.isInplay);
+    // Create lookup map for inplay games by matchup key (for merging live metadata into API games)
+    const inplayByMatchup = {};
+    inplayGames.forEach(g => {
+      const key = `${(g.homeTeamFull || g.homeTeam || '').toLowerCase()}_${(g.awayTeamFull || g.awayTeam || '').toLowerCase()}`;
+      inplayByMatchup[key] = g;
     });
     
-    // API games first (complete data), then unique inplay games
-    return [...updatedApiGames, ...uniqueInplayGames];
+    // Merge live metadata from inplay games into API games
+    const mergedApiGames = updatedApiGames.map(game => {
+      const matchupKey = `${(game.homeTeamFull || game.homeTeam || '').toLowerCase()}_${(game.awayTeamFull || game.awayTeam || '').toLowerCase()}`;
+      const inplayMatch = inplayByMatchup[matchupKey];
+      
+      if (!inplayMatch) return game;
+      
+      // Merge live metadata from inplay (timer, comments, etc.) into API game
+      // Keep API game's odds (they're complete from Goalserve)
+      const merged = { ...game };
+      
+      // Live timer/clock data
+      if (inplayMatch.elapsedTime) merged.elapsedTime = inplayMatch.elapsedTime;
+      if (inplayMatch.period) merged.period = inplayMatch.period;
+      if (inplayMatch.stateCode) merged.stateCode = inplayMatch.stateCode;
+      if (inplayMatch.displayClock) merged.displayClock = inplayMatch.displayClock;
+      
+      // Live action feed comments
+      if (inplayMatch.comments && inplayMatch.comments.length > 0) {
+        merged.comments = inplayMatch.comments;
+      }
+      
+      // Update scores from inplay if available (more real-time)
+      if (inplayMatch.scores) {
+        const inplayHome = inplayMatch.scores?.home?.total;
+        const inplayAway = inplayMatch.scores?.away?.total;
+        if (inplayHome != null || inplayAway != null) {
+          merged.scores = {
+            home: { total: inplayHome ?? merged.scores?.home?.total ?? 0 },
+            away: { total: inplayAway ?? merged.scores?.away?.total ?? 0 }
+          };
+        }
+      }
+      
+      // If inplay has odds and API doesn't, use inplay odds
+      if (!merged.lines || (!merged.lines.moneyline?.home && !merged.lines.spread?.home)) {
+        if (inplayMatch.lines && (inplayMatch.lines.moneyline?.home || inplayMatch.lines.spread?.home)) {
+          merged.lines = inplayMatch.lines;
+        }
+      }
+      
+      // Mark that we've consumed this inplay game
+      inplayByMatchup[matchupKey] = null;
+      
+      return merged;
+    });
+    
+    // Get remaining inplay games that weren't matched to API games (unique international games)
+    const uniqueInplayGames = inplayGames.filter(g => {
+      const key = `${(g.homeTeamFull || g.homeTeam || '').toLowerCase()}_${(g.awayTeamFull || g.awayTeam || '').toLowerCase()}`;
+      return inplayByMatchup[key] !== null; // Still exists (wasn't consumed)
+    });
+    
+    // API games first (with merged live data), then unique inplay games
+    return [...mergedApiGames, ...uniqueInplayGames];
   }, [apiGames, liveScores, liveOdds, inplayEvents]);
 
   const categorizedGames = useMemo(() => categorizeGames(gamesWithLiveData), [gamesWithLiveData, lastUpdated]);
