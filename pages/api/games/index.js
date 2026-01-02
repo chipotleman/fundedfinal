@@ -104,6 +104,99 @@ function mergeWebSocketLiveOdds(games) {
   return { games, wsActive: true, mergedCount };
 }
 
+function injectWebSocketOnlyEvents(games) {
+  const wsStatus = getWsStatus();
+  if (wsStatus.connectionStatus !== 'connected' || wsStatus.liveEventCount === 0) {
+    return { games, injectedCount: 0 };
+  }
+
+  const wsEvents = getAllLiveEvents();
+  const existingMatchups = new Set(games.map(g => 
+    `${(g.homeTeamFull || g.homeTeam || '').toLowerCase()}-${(g.awayTeamFull || g.awayTeam || '').toLowerCase()}`
+  ));
+
+  let injectedCount = 0;
+  const sportMapping = {
+    'hockey': 'HOCKEY',
+    'basket': 'BASKETBALL', 
+    'amfootball': 'FOOTBALL',
+    'baseball': 'BASEBALL',
+    'soccer': 'SOCCER'
+  };
+
+  for (const [eventId, wsEvent] of Object.entries(wsEvents)) {
+    const wsHome = (wsEvent.homeTeam || '').toLowerCase();
+    const wsAway = (wsEvent.awayTeam || '').toLowerCase();
+    const matchupKey = `${wsHome}-${wsAway}`;
+
+    const hasMatch = Array.from(existingMatchups).some(existing => {
+      const [exHome, exAway] = existing.split('-');
+      const homeMatch = exHome.includes(wsHome) || wsHome.includes(exHome) ||
+                        exHome.split(' ').some(w => wsHome.includes(w) && w.length > 3);
+      const awayMatch = exAway.includes(wsAway) || wsAway.includes(exAway) ||
+                        exAway.split(' ').some(w => wsAway.includes(w) && w.length > 3);
+      return homeMatch && awayMatch;
+    });
+
+    if (!hasMatch) {
+      const sportName = sportMapping[wsEvent.sport] || (wsEvent.sport || 'OTHER').toUpperCase();
+      const league = wsEvent.league || wsEvent.competitionName || `${sportName} INTERNATIONAL`;
+      
+      const wsOdds = wsEvent.odds || {};
+      const newGame = {
+        id: `ws-${eventId}`,
+        homeTeam: wsEvent.homeTeam,
+        awayTeam: wsEvent.awayTeam,
+        homeTeamFull: wsEvent.homeTeam,
+        awayTeamFull: wsEvent.awayTeam,
+        homeScore: wsEvent.homeScore || 0,
+        awayScore: wsEvent.awayScore || 0,
+        sportKey: wsEvent.sport || 'international',
+        sportName: sportName,
+        league: league,
+        commenceTime: new Date().toISOString(),
+        isLive: true,
+        isCompleted: false,
+        status: 'live',
+        liveOddsSource: 'WebSocket',
+        liveOddsTimestamp: wsEvent.timestamp,
+        lines: {
+          moneyline: {
+            home: wsOdds.moneyline?.home ? decimalToAmerican(wsOdds.moneyline.home) : null,
+            away: wsOdds.moneyline?.away ? decimalToAmerican(wsOdds.moneyline.away) : null
+          },
+          spread: {
+            home: wsOdds.spread?.home ? {
+              point: wsOdds.spread.home.line,
+              odds: decimalToAmerican(wsOdds.spread.home.odds) || -110
+            } : null,
+            away: wsOdds.spread?.away ? {
+              point: wsOdds.spread.away.line,
+              odds: decimalToAmerican(wsOdds.spread.away.odds) || -110
+            } : null
+          },
+          total: {
+            over: wsOdds.total?.over ? {
+              point: wsOdds.total.line,
+              odds: decimalToAmerican(wsOdds.total.over) || -110
+            } : null,
+            under: wsOdds.total?.under ? {
+              point: wsOdds.total.line,
+              odds: decimalToAmerican(wsOdds.total.under) || -110
+            } : null
+          }
+        }
+      };
+      
+      games.push(newGame);
+      injectedCount++;
+    }
+  }
+
+  console.log(`[GAMES API] Injected ${injectedCount} WebSocket-only live events`);
+  return { games, injectedCount };
+}
+
 function getGoalserveStatus() {
   return {
     used: 0,
@@ -351,6 +444,12 @@ export default async function handler(req, res) {
       console.log(`[GAMES API] WebSocket connected with ${wsStatus.liveEventCount} live events - using WS for live odds`);
       const wsMergeResult = mergeWebSocketLiveOdds(formattedGames);
       formattedGames = wsMergeResult.games;
+      
+      const injectResult = injectWebSocketOnlyEvents(formattedGames);
+      formattedGames = injectResult.games;
+      if (injectResult.injectedCount > 0) {
+        hasLiveGames = true;
+      }
     } else if (sportsWithLiveGames.size > 0) {
       console.log(`[GAMES API] No WebSocket - refreshing odds via REST for live sports: ${Array.from(sportsWithLiveGames).join(', ')}`);
       for (const sportKey of sportsWithLiveGames) {
