@@ -190,8 +190,15 @@ export default function Dashboard() {
   }, []);
 
   const gamesWithLiveData = useMemo(() => {
-    // Convert inplay events to game format
-    const inplayGames = Object.values(inplayEvents || {}).map(event => {
+    // Convert inplay events to game format - FILTER out malformed events first
+    const validInplayEvents = Object.values(inplayEvents || {}).filter(event => {
+      // Must have valid team names
+      const homeTeam = event.homeTeam || event.stats?.[0]?.home;
+      const awayTeam = event.awayTeam || event.stats?.[0]?.away;
+      return homeTeam && awayTeam && homeTeam !== 'undefined' && awayTeam !== 'undefined';
+    });
+    
+    const inplayGames = validInplayEvents.map(event => {
       const homeTeam = event.homeTeam || event.stats?.[0]?.home || 'Home';
       const awayTeam = event.awayTeam || event.stats?.[0]?.away || 'Away';
       
@@ -328,8 +335,24 @@ export default function Dashboard() {
       return updatedGame;
     });
     
-    // Merge: inplay games first (they're live), then API games
-    return [...inplayGames, ...updatedApiGames];
+    // Merge: API games take priority (they have complete odds), 
+    // only add inplay games that don't already exist in API games
+    const apiGameMatchups = new Set(updatedApiGames.map(g => 
+      `${(g.homeTeamFull || g.homeTeam || '').toLowerCase()}_${(g.awayTeamFull || g.awayTeam || '').toLowerCase()}`
+    ));
+    
+    // Only include inplay games that aren't already in the API (to avoid duplicates)
+    // Also only include inplay games that have valid odds
+    const uniqueInplayGames = inplayGames.filter(g => {
+      const matchupKey = `${(g.homeTeamFull || g.homeTeam || '').toLowerCase()}_${(g.awayTeamFull || g.awayTeam || '').toLowerCase()}`;
+      const isAlreadyInApi = apiGameMatchups.has(matchupKey);
+      const hasValidOdds = g.lines && (g.lines.moneyline?.home || g.lines.spread?.home || g.lines.total?.over);
+      // Include if NOT in API and has valid odds, OR if it's a truly unique international game
+      return !isAlreadyInApi && (hasValidOdds || g.isInplay);
+    });
+    
+    // API games first (complete data), then unique inplay games
+    return [...updatedApiGames, ...uniqueInplayGames];
   }, [apiGames, liveScores, liveOdds, inplayEvents]);
 
   const categorizedGames = useMemo(() => categorizeGames(gamesWithLiveData), [gamesWithLiveData, lastUpdated]);
