@@ -89,8 +89,20 @@ function mergeWebSocketLiveOdds(games) {
           };
         }
 
-        if (wsEvent.homeScore !== undefined) game.homeScore = wsEvent.homeScore;
-        if (wsEvent.awayScore !== undefined) game.awayScore = wsEvent.awayScore;
+        // Only use WebSocket scores if they're non-zero and fresher than REST API
+        // REST API scores are considered fresh (5-second cache), so only override if WS has higher scores
+        const wsTimestamp = wsEvent.timestamp || 0;
+        const isWsScoreFresh = (Date.now() - wsTimestamp) < 30000; // WS data less than 30s old
+        
+        if (isWsScoreFresh && wsEvent.homeScore !== undefined && wsEvent.awayScore !== undefined) {
+          // Only override if WS has higher or equal scores (scores only go up in a game)
+          const wsTotal = (wsEvent.homeScore || 0) + (wsEvent.awayScore || 0);
+          const restTotal = (game.homeScore || 0) + (game.awayScore || 0);
+          if (wsTotal >= restTotal) {
+            game.homeScore = wsEvent.homeScore;
+            game.awayScore = wsEvent.awayScore;
+          }
+        }
 
         game.liveOddsSource = 'WebSocket';
         game.liveOddsTimestamp = wsEvent.timestamp;
