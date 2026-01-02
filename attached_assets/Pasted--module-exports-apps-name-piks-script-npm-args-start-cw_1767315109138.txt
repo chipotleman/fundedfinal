@@ -1,0 +1,83 @@
+
+module.exports = {
+  apps: [{
+    name: 'piks',
+    script: 'npm',
+    args: 'start',
+    cwd: '/root/fundedfinal',
+    env: {
+      NODE_ENV: 'production',
+      GOALSERVE_API_KEY: process.env.GOALSERVE_API_KEY,
+      DATABASE_URL: process.env.DATABASE_URL,
+      NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+      NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+      FANBASIS_API_KEY: process.env.FANBASIS_API_KEY
+    }
+  }]
+};
+EOF
+
+# Restart PM2
+pm2 delete piks
+pm2 start ecosystem.config.js
+sleep 5
+pm2 env 0 | grep GOALSERVE
+curl "http://localhost:3000/api/goalserve/ws-status?connect=true&reset=true" | jq
+
+added 1 package, and audited 595 packages in 3s
+
+129 packages are looking for funding
+  run `npm fund` for details
+
+8 vulnerabilities (3 low, 4 moderate, 1 high)
+
+To address all issues possible (including breaking changes), run:
+  npm audit fix --force
+
+Some issues need review, and may require choosing
+a different dependency.
+
+Run `npm audit` for details.
+[PM2] Applying action deleteProcessId on app [piks](ids: [ 0 ])
+[PM2] [piks](0) ✓
+┌────┬───────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name      │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+└────┴───────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+[dotenv@17.2.3] injecting env (0) from .env.local -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+[PM2][WARN] Applications piks not running, starting...
+[PM2] App [piks] launched (1 instances)
+┌────┬─────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name    │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ piks    │ default     │ N/A     │ fork    │ 24728    │ 0s     │ 0    │ online    │ 0%       │ 22.5mb   │ root     │ disabled │
+└────┴─────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   541  100   541    0     0   7073      0 --:--:-- --:--:-- --:--:--  7118
+{
+  "success": true,
+  "connectionStatus": "not_configured",
+  "activeSports": [],
+  "lastUpdate": null,
+  "liveEventCount": 0,
+  "availableEventCount": 0,
+  "subscriberCount": 0,
+  "tokenValid": null,
+  "reconnectAttempts": 0,
+  "lastError": null,
+  "lastErrorTime": null,
+  "supportedSports": [
+    "soccer",
+    "basket",
+    "tennis",
+    "baseball",
+    "amfootball",
+    "hockey",
+    "volleyball"
+  ],
+  "wsAvailable": false,
+  "restFallbackActive": false,
+  "message": "Goalserve API key not configured. Set GOALSERVE_API_KEY environment variable.",
+  "recommendation": "Use /api/goalserve/live for REST API polling (30-second cache)"
+}
+root@piks:~/fundedfinal# 
