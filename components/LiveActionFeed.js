@@ -78,7 +78,7 @@ const getActionColor = (type, text) => {
   return 'border-gray-600 bg-gray-800/50';
 };
 
-export default function LiveActionFeed({ comments = [], maxItems = 5, homeTeam = '', awayTeam = '' }) {
+export default function LiveActionFeed({ comments = [], maxItems = 5, homeTeam = '', awayTeam = '', eventId = '' }) {
   const feedRef = useRef(null);
   const [displayedComments, setDisplayedComments] = useState([]);
   const prevCommentsRef = useRef([]);
@@ -91,9 +91,8 @@ export default function LiveActionFeed({ comments = [], maxItems = 5, homeTeam =
       const textContent = c.text || c.n || '';
       const minute = c.minute || c.tm || 0;
       const player = c.player || c.p || '';
-      const textHash = textContent.substring(0, 30).replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
-      const playerHash = player.substring(0, 10).replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
-      const deterministicKey = c.id || `feed_${minute}_${textHash}_${playerHash}`;
+      const eventType = c.type || c.mt || '';
+      const deterministicKey = c.id || `${eventId}_${minute}_${eventType}_${player}_${textContent}`;
       
       if (!dedupeMap.has(deterministicKey)) {
         dedupeMap.set(deterministicKey, {
@@ -102,7 +101,7 @@ export default function LiveActionFeed({ comments = [], maxItems = 5, homeTeam =
           text: textContent,
           minute: minute || null,
           player: player || null,
-          type: c.type || c.mt || 'default'
+          type: eventType || 'default'
         });
       }
     });
@@ -130,7 +129,7 @@ export default function LiveActionFeed({ comments = [], maxItems = 5, homeTeam =
     if (hasNewComments && feedRef.current) {
       feedRef.current.scrollTop = 0;
     }
-  }, [comments, maxItems]);
+  }, [comments, maxItems, eventId]);
 
   if (!displayedComments || displayedComments.length === 0) {
     return (

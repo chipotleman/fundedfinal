@@ -689,6 +689,7 @@ export default function Dashboard() {
                             maxItems={3}
                             homeTeam={game.homeTeamFull || game.homeTeam}
                             awayTeam={game.awayTeamFull || game.awayTeam}
+                            eventId={game.id || game.eventId || ''}
                           />
                         </div>
                       )}
