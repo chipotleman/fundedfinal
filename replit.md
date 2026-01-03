@@ -105,7 +105,7 @@ None documented yet.
       - `useLiveSport(sport)` - Hook for sport-specific updates
     - Fallback: If WebSocket unavailable, use REST API polling via `/api/goalserve/live` (30-second cache)
   - **Goalserve Inplay HTTP Feeds** (alternative real-time data - requires IP whitelisting)
-    - **CRITICAL: Home/Away REVERSED**: Like the REST API, Goalserve's inplay feed also has `home`/`away` REVERSED. The parser in `lib/goalserve-inplay.js` swaps them so live games display correctly as "Away @ Home".
+    - **Home/Away Convention**: Unlike the REST API, the inplay feed uses CORRECT convention where `home` = home team and `away` = away team. NO swap needed in `lib/goalserve-inplay.js`.
     - Service: `lib/goalserve-inplay.js`
     - Features: Gzipped JSON feeds updating every second with live scores and odds
     - Endpoints provided by Goalserve:
