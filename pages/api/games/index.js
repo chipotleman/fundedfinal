@@ -111,11 +111,14 @@ export default async function handler(req, res) {
         }
       });
       
+      // Filter out completed games - they shouldn't be available for betting
+      const activeGames = formattedGames.filter(game => !game.isCompleted);
+      
       const response = {
-        games: formattedGames,
+        games: activeGames,
         sport: sport,
         sportName: SUPPORTED_SPORTS[sport].name,
-        count: formattedGames.length,
+        count: activeGames.length,
         fromCache: false,
         dataSource: 'Goalserve',
         creditStatus: getGoalserveStatus()
@@ -237,6 +240,9 @@ export default async function handler(req, res) {
         }
       }
     }
+    
+    // Filter out completed games - they shouldn't be available for betting
+    formattedGames = formattedGames.filter(game => !game.isCompleted);
     
     const bySport = {};
     formattedGames.forEach(game => {
