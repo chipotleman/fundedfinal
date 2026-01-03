@@ -25,6 +25,8 @@ export default function Dashboard() {
   const [bankroll, setBankroll] = useState(10000);
   const [pnl, setPnl] = useState(0);
   const [expandedGames, setExpandedGames] = useState({});
+  
+  const GAMES_CACHE_KEY = 'piks_games_cache';
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -112,9 +114,35 @@ export default function Dashboard() {
   
   // Adaptive polling - use refs to avoid closure issues
   const pollingIntervalRef = useRef(null);
-  const currentIntervalRef = useRef(5000); // Start with fast polling for live updates
+  const currentIntervalRef = useRef(5000);
   const lastOddsUpdateRef = useRef(null);
   const lastFetchTimeRef = useRef(null);
+  const hasLoadedCache = useRef(false);
+  
+  // Load cached games immediately on mount (before any fetch)
+  useEffect(() => {
+    if (hasLoadedCache.current) return;
+    hasLoadedCache.current = true;
+    
+    try {
+      const cached = localStorage.getItem(GAMES_CACHE_KEY);
+      if (cached) {
+        const { games, timestamp } = JSON.parse(cached);
+        if (games && games.length > 0) {
+          // Cache is valid for 5 minutes for instant load
+          const cacheAge = Date.now() - timestamp;
+          if (cacheAge < 5 * 60 * 1000) {
+            console.log('[DASHBOARD] Loading from cache:', games.length, 'games (age:', Math.floor(cacheAge/1000), 's)');
+            setApiGames(games);
+            setLastUpdated(new Date(timestamp));
+            setLoading(false);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('[DASHBOARD] Cache read error:', e);
+    }
+  }, []);
   
   useEffect(() => {
     const fetchAllGames = async () => {
@@ -122,17 +150,28 @@ export default function Dashboard() {
         const response = await fetch('/api/games');
         if (response.ok) {
           const data = await response.json();
-          setApiGames([...(data.games || [])]);
+          const newGames = data.games || [];
+          setApiGames([...newGames]);
           setLastUpdated(new Date());
           setGamesError(null);
+          setLoading(false);
           
-          // Track last odds update for stale detection (using refs to avoid closure issues)
+          // Save to localStorage for instant loading next time
+          try {
+            localStorage.setItem(GAMES_CACHE_KEY, JSON.stringify({
+              games: newGames,
+              timestamp: Date.now()
+            }));
+          } catch (e) {
+            console.error('[DASHBOARD] Cache write error:', e);
+          }
+          
+          // Track last odds update for stale detection
           if (data.freshness?.lastOddsUpdate) {
             const newLastUpdate = data.freshness.lastOddsUpdate;
             const previousLastUpdate = lastOddsUpdateRef.current;
             const previousFetchTime = lastFetchTimeRef.current;
             
-            // Detect stale data - if last_update hasn't changed in 45+ seconds
             if (previousLastUpdate && previousLastUpdate === newLastUpdate && previousFetchTime) {
               const staleTime = Date.now() - previousFetchTime;
               if (staleTime > 45000) {
@@ -149,34 +188,33 @@ export default function Dashboard() {
               }
             }
             
-            // Update refs with new values
             if (newLastUpdate !== previousLastUpdate) {
               lastOddsUpdateRef.current = newLastUpdate;
               lastFetchTimeRef.current = Date.now();
             }
           }
           
-          // Adaptive polling - adjust interval based on server recommendation
+          // Adaptive polling
           const recommendedInterval = data.polling?.recommendedInterval || 60000;
           if (recommendedInterval !== currentIntervalRef.current) {
-            console.log(`[DASHBOARD] Adjusting polling: ${currentIntervalRef.current}ms -> ${recommendedInterval}ms (live games: ${data.polling?.hasLiveGames})`);
+            console.log(`[DASHBOARD] Adjusting polling: ${currentIntervalRef.current}ms -> ${recommendedInterval}ms`);
             currentIntervalRef.current = recommendedInterval;
-            // Clear and restart with new interval
             if (pollingIntervalRef.current) {
               clearInterval(pollingIntervalRef.current);
             }
             pollingIntervalRef.current = setInterval(fetchAllGames, recommendedInterval);
           }
           
-          console.log('[DASHBOARD] Games refreshed:', data.games?.length, 'games at', new Date().toLocaleTimeString(), 
-            `(polling: ${currentIntervalRef.current}ms, live: ${data.polling?.hasLiveGames})`);
+          console.log('[DASHBOARD] Games refreshed:', newGames.length, 'at', new Date().toLocaleTimeString());
         } else {
           console.error('Failed to fetch games');
           setGamesError('Failed to load games');
+          setLoading(false);
         }
       } catch (error) {
         console.error('Error fetching games:', error);
         setGamesError('Failed to load games');
+        setLoading(false);
       }
     };
     
@@ -1012,3 +1050,4 @@ export default function Dashboard() {
     </div>
   );
 }
+
