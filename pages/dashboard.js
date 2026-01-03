@@ -119,72 +119,51 @@ export default function Dashboard() {
   const lastFetchTimeRef = useRef(null);
   
   useEffect(() => {
+    let isMounted = true;
     const fetchAllGames = async () => {
       try {
         const response = await fetch('/api/games');
+        if (!isMounted) return;
+        
         if (response.ok) {
           const data = await response.json();
           setApiGames([...(data.games || [])]);
           setLastUpdated(new Date());
           setGamesError(null);
-          
-          // Track last odds update for stale detection (using refs to avoid closure issues)
-          if (data.freshness?.lastOddsUpdate) {
-            const newLastUpdate = data.freshness.lastOddsUpdate;
-            const previousLastUpdate = lastOddsUpdateRef.current;
-            const previousFetchTime = lastFetchTimeRef.current;
-            
-            // Detect stale data - if last_update hasn't changed in 45+ seconds
-            if (previousLastUpdate && previousLastUpdate === newLastUpdate && previousFetchTime) {
-              const staleTime = Date.now() - previousFetchTime;
-              if (staleTime > 45000) {
-                console.log('[DASHBOARD] Stale data detected, forcing refresh...');
-                fetch('/api/games?refresh=true').then(r => r.json()).then(freshData => {
-                  if (freshData.games) {
-                    setApiGames([...(freshData.games || [])]);
-                    setLastUpdated(new Date());
-                    lastOddsUpdateRef.current = freshData.freshness?.lastOddsUpdate || null;
-                    lastFetchTimeRef.current = Date.now();
-                  }
-                });
-                return;
-              }
-            }
-            
-            // Update refs with new values
-            if (newLastUpdate !== previousLastUpdate) {
-              lastOddsUpdateRef.current = newLastUpdate;
-              lastFetchTimeRef.current = Date.now();
-            }
-          }
+          setLoading(false);
           
           // Adaptive polling - adjust interval based on server recommendation
           const recommendedInterval = data.polling?.recommendedInterval || 60000;
           if (recommendedInterval !== currentIntervalRef.current) {
-            console.log(`[DASHBOARD] Adjusting polling: ${currentIntervalRef.current}ms -> ${recommendedInterval}ms (live games: ${data.polling?.hasLiveGames})`);
+            console.log(`[DASHBOARD] Adjusting polling: ${currentIntervalRef.current}ms -> ${recommendedInterval}ms`);
             currentIntervalRef.current = recommendedInterval;
-            // Clear and restart with new interval
             if (pollingIntervalRef.current) {
               clearInterval(pollingIntervalRef.current);
             }
             pollingIntervalRef.current = setInterval(fetchAllGames, recommendedInterval);
           }
           
-          console.log('[DASHBOARD] Games refreshed:', data.games?.length, 'games at', new Date().toLocaleTimeString(), 
-            `(polling: ${currentIntervalRef.current}ms, live: ${data.polling?.hasLiveGames})`);
+          console.log('[DASHBOARD] Games refreshed:', data.games?.length, 'games');
         } else {
           console.error('Failed to fetch games');
-          setGamesError('Failed to load games');
+          if (isMounted) {
+            setGamesError('Failed to load games');
+            setLoading(false);
+          }
         }
       } catch (error) {
         console.error('Error fetching games:', error);
-        setGamesError('Failed to load games');
+        if (isMounted) {
+          setGamesError('Failed to load games');
+          setLoading(false);
+        }
       }
     };
     
     fetchAllGames();
-    pollingIntervalRef.current = setInterval(fetchAllGames, 5000);
+    pollingIntervalRef.current = setInterval(fetchAllGames, 60000);
     return () => {
+      isMounted = false;
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
       }
