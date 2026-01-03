@@ -130,7 +130,12 @@ None documented yet.
     - Pay-as-you-go pricing model
     - Note: Available but disabled in favor of Goalserve
   - **Supported Sports**: NBA, NFL, NCAAB, NCAAF, MLB, NHL, Euro Basketball (via inplay), Int'l Hockey (via inplay)
-  - **International Sports Display**: Dashboard merges inplay events (Euro basketball, international hockey) with US sports. Inplay games appear in "Live" tab with real-time score updates via SSE stream.
+  - **Dashboard Data Architecture** (SEPARATED - no merge to prevent flickering):
+    - **Live Tab**: Uses ONLY Inplay SSE data (`liveGamesFromInplay`) - fastest real-time updates, no REST API
+    - **Upcoming Tab**: Uses ONLY REST API data (`upcomingGamesFromApi`) - scheduled games, excludes live games
+    - **Featured Section**: Uses `categorizedGames.liveGames` which points directly to inplay SSE data
+    - **No Merge Logic**: Previous architecture merged inplay + REST causing score flickering from race conditions
+    - Games display in "Away @ Home" format: away team TOP, home team BOTTOM (matching bet365/sportsbook conventions)
   - **Game Display Tabs**: Live vs Upcoming tabs on all game pages
   - **Caching**: 30-second server-side cache per sport (Goalserve), 10-minute (The Odds API)
   - **Odds Parsing**: 
