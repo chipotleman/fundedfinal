@@ -112,8 +112,12 @@ export default function Dashboard() {
   
   const { liveScores, liveOdds, events: inplayEvents, isConnected: liveConnected } = useGoalserveLive({ autoConnect: true });
   
+  // Fast live scores from dedicated endpoint
+  const [fastLiveScores, setFastLiveScores] = useState({});
+  
   // Adaptive polling - use refs to avoid closure issues
   const pollingIntervalRef = useRef(null);
+  const fastScoresIntervalRef = useRef(null);
   const currentIntervalRef = useRef(5000);
   const lastOddsUpdateRef = useRef(null);
   const lastFetchTimeRef = useRef(null);
@@ -228,14 +232,42 @@ export default function Dashboard() {
     };
     
     fetchWithDebounce();
-    // Use server-recommended polling interval (adaptive based on live games)
-    // Initial: 30s, adjusts to 15s when live games detected
+    // Use slower polling for full games/odds (30s) - fast scores come from dedicated endpoint
     const initialPollingInterval = 30000;
     pollingIntervalRef.current = setInterval(fetchWithDebounce, initialPollingInterval);
     currentIntervalRef.current = initialPollingInterval;
     return () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Fast live scores polling - 1 second for subsecond latency
+  useEffect(() => {
+    const fetchLiveScores = async () => {
+      try {
+        const response = await fetch('/api/games/live-scores');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.scores) {
+            setFastLiveScores(data.scores);
+          }
+        }
+      } catch (error) {
+        console.error('[DASHBOARD] Live scores fetch error:', error);
+      }
+    };
+    
+    // Initial fetch
+    fetchLiveScores();
+    
+    // Poll every 1 second for subsecond latency
+    fastScoresIntervalRef.current = setInterval(fetchLiveScores, 1000);
+    
+    return () => {
+      if (fastScoresIntervalRef.current) {
+        clearInterval(fastScoresIntervalRef.current);
       }
     };
   }, []);
@@ -471,10 +503,31 @@ export default function Dashboard() {
       return apiGame;
     });
     
+    // Apply fast live scores updates (from dedicated 1s polling endpoint)
+    const gamesWithFastScores = mergedGames.map(game => {
+      // Match by game ID (format: sportKey_gameId)
+      const scoreKey = `${game.sport}_${game.id?.replace(/^.+_/, '')}`;
+      const fastScore = fastLiveScores[scoreKey];
+      
+      if (fastScore && fastScore.isLive) {
+        return {
+          ...game,
+          isLive: true,
+          scores: {
+            home: { total: fastScore.homeScore },
+            away: { total: fastScore.awayScore }
+          },
+          period: fastScore.period || game.period,
+          displayClock: fastScore.clock || game.displayClock
+        };
+      }
+      return game;
+    });
+    
     // Only return REST API games (merged with inplay data when available)
     // Don't add standalone inplay games - they lack proper odds/scores
-    return mergedGames;
-  }, [apiGames, liveScores, liveOdds, inplayEvents]);
+    return gamesWithFastScores;
+  }, [apiGames, liveScores, liveOdds, inplayEvents, fastLiveScores]);
 
   const categorizedGames = useMemo(() => categorizeGames(gamesWithLiveData), [gamesWithLiveData, lastUpdated]);
 
