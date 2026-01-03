@@ -193,10 +193,9 @@ export default function Dashboard() {
     // Convert inplay events to game format
     const inplayGames = Object.values(inplayEvents || {}).map(event => {
       // Trust the normalized homeTeam/awayTeam from inplay normalizer
-      // CRITICAL: If falling back to stats, those are in Goalserve's REVERSED convention
-      // So swap them: stats.home = actual away, stats.away = actual home
-      const homeTeam = event.homeTeam || event.stats?.[0]?.away || 'Home';
-      const awayTeam = event.awayTeam || event.stats?.[0]?.home || 'Away';
+      // Inplay feed already uses correct convention, no swap needed
+      const homeTeam = event.homeTeam || event.stats?.[0]?.home || 'Home';
+      const awayTeam = event.awayTeam || event.stats?.[0]?.away || 'Away';
       
       // USE the pre-computed scores from the normalized event (from info.score or team_info)
       // These are the REAL-TIME scores, not the halftime stats
@@ -204,14 +203,13 @@ export default function Dashboard() {
       let awayScore = event.awayScore ?? 0;
       
       // Only fallback to stats if homeScore/awayScore are 0 and we have stats
-      // CRITICAL: Stats are in Goalserve's REVERSED convention, so swap them
+      // Inplay feed already uses correct convention, no swap needed
       if (homeScore === 0 && awayScore === 0 && event.stats) {
         // Try stats.T first (current total), not Half (halftime only)
         const totalStat = Object.values(event.stats).find(s => s.name === 'T');
         if (totalStat) {
-          // Swap: stats.home = actual away, stats.away = actual home
-          homeScore = parseInt(totalStat.away) || 0;
-          awayScore = parseInt(totalStat.home) || 0;
+          homeScore = parseInt(totalStat.home) || 0;
+          awayScore = parseInt(totalStat.away) || 0;
         }
       }
       
@@ -352,6 +350,13 @@ export default function Dashboard() {
       // Check if teams match (either direction since home/away might be swapped)
       return (home1 === home2 && away1 === away2) || 
              (home1 === away2 && away1 === home2);
+    };
+    
+    // Check if teams are in the same order (not reversed)
+    const teamsInSameOrder = (game1, game2) => {
+      const home1 = normalizeTeamName(game1.homeTeamFull || game1.homeTeam);
+      const home2 = normalizeTeamName(game2.homeTeamFull || game2.homeTeam);
+      return home1 === home2;
     };
     
     // For each API game, try to find matching inplay event and merge
