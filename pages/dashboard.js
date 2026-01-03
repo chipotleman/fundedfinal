@@ -11,7 +11,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { categorizeGames, filterGamesBySport } from '../lib/gamesUtils';
 import { useGoalserveLive } from '../hooks/useGoalserveLive';
-import { useLiveScoreStream } from '../hooks/useLiveScoreStream';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -113,10 +112,7 @@ export default function Dashboard() {
   
   const { liveScores, liveOdds, events: inplayEvents, isConnected: liveConnected } = useGoalserveLive({ autoConnect: true });
   
-  // Real-time live scores from SSE stream (subsecond updates)
-  const { scores: streamScores, isConnected: streamConnected, lastUpdate: streamLastUpdate } = useLiveScoreStream();
-  
-  // Fast live scores from SSE stream
+  // Fast live scores from dedicated endpoint
   const [fastLiveScores, setFastLiveScores] = useState({});
   
   // Adaptive polling - use refs to avoid closure issues
@@ -247,13 +243,34 @@ export default function Dashboard() {
     };
   }, []);
 
-  // Update fastLiveScores from SSE stream (instant, no polling)
+  // Fast live scores polling - 1 second for subsecond latency
   useEffect(() => {
-    if (streamScores && Object.keys(streamScores).length > 0) {
-      setFastLiveScores(streamScores);
-      console.log('[DASHBOARD] SSE scores updated:', Object.keys(streamScores).length, 'live games');
-    }
-  }, [streamScores]);
+    const fetchLiveScores = async () => {
+      try {
+        const response = await fetch('/api/games/live-scores');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.scores) {
+            setFastLiveScores(data.scores);
+          }
+        }
+      } catch (error) {
+        console.error('[DASHBOARD] Live scores fetch error:', error);
+      }
+    };
+    
+    // Initial fetch
+    fetchLiveScores();
+    
+    // Poll every 1 second for subsecond latency
+    fastScoresIntervalRef.current = setInterval(fetchLiveScores, 1000);
+    
+    return () => {
+      if (fastScoresIntervalRef.current) {
+        clearInterval(fastScoresIntervalRef.current);
+      }
+    };
+  }, []);
 
   const gamesWithLiveData = useMemo(() => {
     // Convert inplay events to game format
