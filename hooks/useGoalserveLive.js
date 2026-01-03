@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-const REST_POLLING_INTERVAL = 200; // 200ms for subsecond latency
+const REST_POLLING_INTERVAL = 1000; // 1 second polling
 
 export function useGoalserveLive(options = {}) {
-  const { sport = null, eventId = null, autoConnect = true, onUpdate = null, enableRestFallback = true, useInplaySource = false } = options;
+  const { sport = null, eventId = null, autoConnect = true, onUpdate = null, enableRestFallback = true, useInplaySource = true } = options;
   
   const [isConnected, setIsConnected] = useState(false);
   const [events, setEvents] = useState({});
