@@ -57,6 +57,10 @@ None documented yet.
   - Automatically updates user bankroll on win/push
   - Grading endpoint: `/api/bets/grade` (POST)
 - **API Architecture**: RESTful API routes in `/pages/api/*` for authentication, user profiles, admin functions, analytics, payment methods, and withdrawals.
+- **Dashboard State Persistence**: Games data protected from transient empty API responses using API signals:
+  - `fromCache` and `freshness.hasLiveGames` distinguish legitimate empty responses from transient issues
+  - Stale cached empty responses are skipped; fresh responses or explicit "no games" signals allow state clearing
+  - Prevents data loss during popup navigation or SSE reconnections
 
 ## External Dependencies
 - **Authentication**: NextAuth.js v4
