@@ -365,6 +365,10 @@ export default function Dashboard() {
       
       if (matchingInplay) {
         // Merge inplay data into API game (preserve API game's ID, sport name, structure)
+        // ALWAYS prefer inplay scores when available - they are most real-time
+        // This prevents flickering between REST API and inplay scores
+        const inplayHasScores = matchingInplay.scores?.home?.total !== undefined && 
+                                matchingInplay.scores?.away?.total !== undefined;
         return {
           ...apiGame,
           isLive: true,
@@ -373,10 +377,9 @@ export default function Dashboard() {
           period: matchingInplay.period || apiGame.period,
           stateCode: matchingInplay.stateCode || apiGame.stateCode,
           comments: matchingInplay.comments?.length > 0 ? matchingInplay.comments : apiGame.comments,
-          // Update scores from inplay if available
-          scores: matchingInplay.scores?.home?.total > 0 || matchingInplay.scores?.away?.total > 0
-            ? matchingInplay.scores
-            : apiGame.scores,
+          // ALWAYS use inplay scores when we have a matching inplay game
+          // This prevents race conditions between REST API and inplay SSE
+          scores: inplayHasScores ? matchingInplay.scores : apiGame.scores,
           // Update lines from inplay if available (live odds)
           lines: matchingInplay.lines && (matchingInplay.lines.moneyline?.home || matchingInplay.lines.spread?.home)
             ? matchingInplay.lines
