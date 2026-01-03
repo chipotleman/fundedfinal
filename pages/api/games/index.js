@@ -11,9 +11,9 @@ let globalCache = null;
 let globalCacheTimestamp = null;
 let pendingFetch = null;
 
-const LIVE_GAMES_CACHE_DURATION = 5 * 1000;  // 5s cache for live games
+const LIVE_GAMES_CACHE_DURATION = 1000;  // 1s for live games - near-zero delay
 const NO_LIVE_GAMES_CACHE_DURATION = 30 * 1000;  // 30s cache when no live games
-const ODDS_CACHE_DURATION = 5 * 1000;  // 5s cache for odds data
+const ODDS_CACHE_DURATION = 1000;  // 1s for odds - near-zero delay
 const STALE_CACHE_MAX_AGE = 10 * 60 * 1000;  // Serve stale cache up to 10 minutes old
 
 function getGoalserveStatus() {
