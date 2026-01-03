@@ -3,8 +3,6 @@ import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import TapSurface from '../components/TapSurface';
-import LiveGameTimer from '../components/LiveGameTimer';
-import LiveActionFeed from '../components/LiveActionFeed';
 import GameDetailPopup from '../components/GameDetailPopup';
 import { inferLeague } from '../lib/leagueInference';
 import { useBetSlip } from '../contexts/BetSlipContext';
@@ -685,12 +683,9 @@ export default function Dashboard() {
                           {isFinal ? (
                             <span className="text-gray-400 text-xs font-bold">FINAL</span>
                           ) : isLive ? (
-                            <LiveGameTimer 
-                              elapsedTime={game.elapsedTime || game.displayClock}
-                              period={game.period || game.quarter}
-                              sport={game.sport || sport}
-                              stateCode={game.stateCode}
-                            />
+                            <span className="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded animate-pulse">
+                              LIVE
+                            </span>
                           ) : (
                             <span className="text-gray-400 text-xs font-medium">{game.time || 'TBD'}</span>
                           )}
@@ -726,16 +721,6 @@ export default function Dashboard() {
                         </div>
                       </div>
 
-                      {isLive && game.comments && game.comments.length > 0 && (
-                        <div className="mb-4">
-                          <LiveActionFeed 
-                            comments={game.comments}
-                            maxItems={3}
-                            homeTeam={game.homeTeamFull || game.homeTeam}
-                            awayTeam={game.awayTeamFull || game.awayTeam}
-                          />
-                        </div>
-                      )}
 
                       {linesLocked ? (
                         <div>
