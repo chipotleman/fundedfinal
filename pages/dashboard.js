@@ -218,8 +218,18 @@ export default function Dashboard() {
       }
     };
     
-    fetchAllGames();
-    pollingIntervalRef.current = setInterval(fetchAllGames, 5000);
+    // Fetch games with debouncing to prevent concurrent requests
+    let isFetching = false;
+    const fetchWithDebounce = async () => {
+      if (isFetching) return;
+      isFetching = true;
+      await fetchAllGames();
+      isFetching = false;
+    };
+    
+    fetchWithDebounce();
+    // Start with 60s polling to avoid overwhelming slow API
+    pollingIntervalRef.current = setInterval(fetchWithDebounce, 60000);
     return () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
