@@ -364,6 +364,44 @@ export default function Dashboard() {
       const matchingInplay = inplayGames.find(inplay => matchesTeams(apiGame, inplay));
       
       if (matchingInplay) {
+        // Check if teams are in the same order or reversed
+        const sameOrder = teamsInSameOrder(apiGame, matchingInplay);
+        
+        // If teams are reversed between API and inplay, swap the inplay scores
+        let mergedScores = apiGame.scores;
+        if (matchingInplay.scores?.home?.total > 0 || matchingInplay.scores?.away?.total > 0) {
+          if (sameOrder) {
+            mergedScores = matchingInplay.scores;
+          } else {
+            // Teams are reversed - swap home/away scores
+            mergedScores = {
+              home: matchingInplay.scores.away,
+              away: matchingInplay.scores.home
+            };
+          }
+        }
+        
+        // Same for lines - swap if reversed
+        let mergedLines = apiGame.lines;
+        if (matchingInplay.lines && (matchingInplay.lines.moneyline?.home || matchingInplay.lines.spread?.home)) {
+          if (sameOrder) {
+            mergedLines = matchingInplay.lines;
+          } else {
+            // Teams are reversed - swap home/away lines
+            mergedLines = {
+              moneyline: matchingInplay.lines.moneyline ? {
+                home: matchingInplay.lines.moneyline.away,
+                away: matchingInplay.lines.moneyline.home
+              } : null,
+              spread: matchingInplay.lines.spread ? {
+                home: matchingInplay.lines.spread.away,
+                away: matchingInplay.lines.spread.home
+              } : null,
+              total: matchingInplay.lines.total
+            };
+          }
+        }
+        
         // Merge inplay data into API game (preserve API game's ID, sport name, structure)
         return {
           ...apiGame,
@@ -373,14 +411,8 @@ export default function Dashboard() {
           period: matchingInplay.period || apiGame.period,
           stateCode: matchingInplay.stateCode || apiGame.stateCode,
           comments: matchingInplay.comments?.length > 0 ? matchingInplay.comments : apiGame.comments,
-          // Update scores from inplay if available
-          scores: matchingInplay.scores?.home?.total > 0 || matchingInplay.scores?.away?.total > 0
-            ? matchingInplay.scores
-            : apiGame.scores,
-          // Update lines from inplay if available (live odds)
-          lines: matchingInplay.lines && (matchingInplay.lines.moneyline?.home || matchingInplay.lines.spread?.home)
-            ? matchingInplay.lines
-            : apiGame.lines,
+          scores: mergedScores,
+          lines: mergedLines,
           dataSource: 'Goalserve Inplay (merged)'
         };
       }
