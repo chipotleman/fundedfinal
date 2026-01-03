@@ -503,11 +503,19 @@ export default function Dashboard() {
       return apiGame;
     });
     
-    // Apply fast live scores updates (from dedicated 1s polling endpoint)
+    // Apply fast live scores updates ONLY as fallback when inplay data isn't available
+    // Inplay data is already fast - don't overwrite it with slower REST data
     const gamesWithFastScores = mergedGames.map(game => {
-      // Match by game ID (format: sportKey_gameId)
-      const scoreKey = `${game.sport}_${game.id?.replace(/^.+_/, '')}`;
-      const fastScore = fastLiveScores[scoreKey];
+      // Skip if game already has real-time inplay data
+      if (game.isInplay || game.dataSource?.includes('Inplay')) {
+        return game;
+      }
+      
+      // For non-inplay games, try REST polling as fallback
+      const rawId = game.id?.toString().replace(/^.+_/, '') || game.id;
+      const scoreKey = `${game.sport}_${rawId}`;
+      const altKey = `${game.sport}_${game.id}`;
+      const fastScore = fastLiveScores[scoreKey] || fastLiveScores[altKey] || fastLiveScores[game.id];
       
       if (fastScore && fastScore.isLive) {
         return {

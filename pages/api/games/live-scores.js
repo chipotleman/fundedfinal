@@ -2,7 +2,8 @@ import { getScores, SUPPORTED_SPORTS } from '../../../lib/goalserve';
 
 let scoresCache = null;
 let scoresCacheTimestamp = null;
-const SCORES_CACHE_DURATION = 500; // 500ms cache for subsecond latency
+let liveSportsCache = ['basketball_nba', 'basketball_ncaab', 'icehockey_nhl'];
+const SCORES_CACHE_DURATION = 800;
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
@@ -10,7 +11,6 @@ export default async function handler(req, res) {
   
   const now = Date.now();
   
-  // Return cached scores if fresh (500ms)
   if (scoresCache && scoresCacheTimestamp && (now - scoresCacheTimestamp) < SCORES_CACHE_DURATION) {
     return res.status(200).json({
       scores: scoresCache,
@@ -22,12 +22,10 @@ export default async function handler(req, res) {
   
   try {
     const allScores = {};
-    
-    // REST API for live scores
-    const sportKeys = Object.keys(SUPPORTED_SPORTS);
+    const sportsToFetch = liveSportsCache.length > 0 ? liveSportsCache : Object.keys(SUPPORTED_SPORTS);
     
     await Promise.all(
-      sportKeys.map(async (sportKey) => {
+      sportsToFetch.map(async (sportKey) => {
         try {
           const scores = await getScores(sportKey);
           if (scores && scores.length > 0) {
@@ -36,6 +34,7 @@ export default async function handler(req, res) {
                 const gameId = `${sportKey}_${game.id}`;
                 allScores[gameId] = {
                   id: gameId,
+                  originalId: game.id,
                   sport: sportKey,
                   homeTeam: game.home_team,
                   awayTeam: game.away_team,
@@ -45,7 +44,6 @@ export default async function handler(req, res) {
                   clock: game.clock,
                   isLive: true,
                   status: game.status,
-                  source: 'rest',
                   timestamp: now
                 };
               }
@@ -57,6 +55,11 @@ export default async function handler(req, res) {
       })
     );
     
+    const liveNow = Object.values(allScores).map(s => s.sport);
+    if (liveNow.length > 0) {
+      liveSportsCache = [...new Set(liveNow)];
+    }
+    
     scoresCache = allScores;
     scoresCacheTimestamp = now;
     
@@ -64,7 +67,6 @@ export default async function handler(req, res) {
       scores: allScores,
       fromCache: false,
       count: Object.keys(allScores).length,
-      source: 'rest',
       timestamp: now
     });
   } catch (error) {
