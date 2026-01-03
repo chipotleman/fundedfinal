@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import TapSurface from '../components/TapSurface';
+import LiveGameTimer from '../components/LiveGameTimer';
+import LiveActionFeed from '../components/LiveActionFeed';
 import { inferLeague } from '../lib/leagueInference';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -190,6 +192,8 @@ export default function Dashboard() {
   const gamesWithLiveData = useMemo(() => {
     // Convert inplay events to game format
     const inplayGames = Object.values(inplayEvents || {}).map(event => {
+      // Trust the normalized homeTeam/awayTeam from inplay normalizer
+      // Inplay feed already uses correct convention, no swap needed
       const homeTeam = event.homeTeam || event.stats?.[0]?.home || 'Home';
       const awayTeam = event.awayTeam || event.stats?.[0]?.away || 'Away';
       
@@ -199,6 +203,7 @@ export default function Dashboard() {
       let awayScore = event.awayScore ?? 0;
       
       // Only fallback to stats if homeScore/awayScore are 0 and we have stats
+      // Inplay feed already uses correct convention, no swap needed
       if (homeScore === 0 && awayScore === 0 && event.stats) {
         // Try stats.T first (current total), not Half (halftime only)
         const totalStat = Object.values(event.stats).find(s => s.name === 'T');
@@ -239,6 +244,10 @@ export default function Dashboard() {
         isLive: true,
         isInplay: true,
         displayClock: event.displayClock,
+        elapsedTime: event.elapsedTime,
+        period: event.period,
+        stateCode: event.stateCode,
+        comments: event.comments || [],
         scores: {
           home: { total: homeScore },
           away: { total: awayScore }
@@ -289,6 +298,13 @@ export default function Dashboard() {
         if (liveScore.status) updatedGame.status = liveScore.status;
         if (liveScore.isLive !== undefined) updatedGame.isLive = liveScore.isLive;
         if (liveScore.quarter) updatedGame.quarter = liveScore.quarter;
+        if (liveScore.elapsedTime) updatedGame.elapsedTime = liveScore.elapsedTime;
+        if (liveScore.period) updatedGame.period = liveScore.period;
+        if (liveScore.stateCode) updatedGame.stateCode = liveScore.stateCode;
+        if (liveScore.displayClock) updatedGame.displayClock = liveScore.displayClock;
+        if (liveScore.comments && liveScore.comments.length > 0) {
+          updatedGame.comments = liveScore.comments;
+        }
       }
       
       if (liveOdd && updatedGame.lines) {
@@ -315,8 +331,69 @@ export default function Dashboard() {
       return updatedGame;
     });
     
-    // Merge: inplay games first (they're live), then API games
-    return [...inplayGames, ...updatedApiGames];
+    // Merge inplay games with API games - DEDUPLICATE by matching team names
+    // This prevents the same game from appearing twice (once from inplay, once from REST API)
+    const normalizeTeamName = (name) => {
+      if (!name) return '';
+      return name.toLowerCase()
+        .replace(/[^a-z0-9]/g, '') // Remove special chars
+        .replace(/state$/, 'st')   // Normalize State -> St
+        .replace(/university$/, ''); // Remove university suffix
+    };
+    
+    const matchesTeams = (game1, game2) => {
+      const home1 = normalizeTeamName(game1.homeTeamFull || game1.homeTeam);
+      const away1 = normalizeTeamName(game1.awayTeamFull || game1.awayTeam);
+      const home2 = normalizeTeamName(game2.homeTeamFull || game2.homeTeam);
+      const away2 = normalizeTeamName(game2.awayTeamFull || game2.awayTeam);
+      
+      // Check if teams match (either direction since home/away might be swapped)
+      return (home1 === home2 && away1 === away2) || 
+             (home1 === away2 && away1 === home2);
+    };
+    
+    // Check if teams are in the same order (not reversed)
+    const teamsInSameOrder = (game1, game2) => {
+      const home1 = normalizeTeamName(game1.homeTeamFull || game1.homeTeam);
+      const home2 = normalizeTeamName(game2.homeTeamFull || game2.homeTeam);
+      return home1 === home2;
+    };
+    
+    // For each API game, try to find matching inplay event and merge
+    const mergedGames = updatedApiGames.map(apiGame => {
+      const matchingInplay = inplayGames.find(inplay => matchesTeams(apiGame, inplay));
+      
+      if (matchingInplay) {
+        // Merge inplay data into API game (preserve API game's ID, sport name, structure)
+        return {
+          ...apiGame,
+          isLive: true,
+          isInplay: true,
+          displayClock: matchingInplay.displayClock || apiGame.displayClock,
+          period: matchingInplay.period || apiGame.period,
+          stateCode: matchingInplay.stateCode || apiGame.stateCode,
+          comments: matchingInplay.comments?.length > 0 ? matchingInplay.comments : apiGame.comments,
+          // Update scores from inplay if available
+          scores: matchingInplay.scores?.home?.total > 0 || matchingInplay.scores?.away?.total > 0
+            ? matchingInplay.scores
+            : apiGame.scores,
+          // Update lines from inplay if available (live odds)
+          lines: matchingInplay.lines && (matchingInplay.lines.moneyline?.home || matchingInplay.lines.spread?.home)
+            ? matchingInplay.lines
+            : apiGame.lines,
+          dataSource: 'Goalserve Inplay (merged)'
+        };
+      }
+      
+      return apiGame;
+    });
+    
+    // Add any inplay games that don't match API games (truly new events)
+    const unmatchedInplay = inplayGames.filter(inplay => 
+      !updatedApiGames.some(apiGame => matchesTeams(apiGame, inplay))
+    );
+    
+    return [...mergedGames, ...unmatchedInplay];
   }, [apiGames, liveScores, liveOdds, inplayEvents]);
 
   const categorizedGames = useMemo(() => categorizeGames(gamesWithLiveData), [gamesWithLiveData, lastUpdated]);
@@ -508,7 +585,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {allGames.filter(g => g.lines && g.lines.moneyline).slice(0, 3).map((game) => {
+            {categorizedGames.liveGames.filter(g => g.lines && g.lines.moneyline).slice(0, 3).map((game) => {
               const isLive = game.isLive || game.status === 'IN_PROGRESS';
               return (
                 <div 
@@ -518,7 +595,6 @@ export default function Dashboard() {
                 >
                   <div className="p-4">
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="bg-blue-500 text-[10px] font-bold px-2 py-0.5 rounded" style={{ color: '#ffffff' }}>FEATURED</span>
                       <span className="text-gray-500 text-xs">{game.sportName}</span>
                       {isLive ? (
                         <div className="flex items-center gap-1 ml-auto">
@@ -612,8 +688,8 @@ export default function Dashboard() {
                 const isExpanded = expandedGames[game.id];
                 const isLive = game.isLive || game.status === 'IN_PROGRESS';
                 const isFinal = game.isCompleted || game.status === 'FINAL';
-                const hasLines = game.lines && game.lines.moneyline && game.lines.spread && game.lines.total;
-                const linesLocked = game.linesLocked || isFinal || !hasLines;
+                const hasAnyLines = game.lines && (game.lines.moneyline || game.lines.spread || game.lines.total);
+                const linesLocked = game.linesLocked || isFinal || !hasAnyLines;
                 
                 return (
                   <div 
@@ -628,16 +704,16 @@ export default function Dashboard() {
                           {isFinal ? (
                             <span className="text-gray-400 text-xs font-bold">FINAL</span>
                           ) : isLive ? (
-                            <div className="flex items-center gap-1">
-                              <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
-                              <span className="text-red-500 text-xs font-medium">LIVE</span>
-                              {(game.displayClock || game.quarter) && <span className="text-gray-400 text-xs">• {game.displayClock || game.quarter}</span>}
-                            </div>
+                            <LiveGameTimer 
+                              elapsedTime={game.elapsedTime || game.displayClock}
+                              period={game.period || game.quarter}
+                              sport={game.sport || sport}
+                              stateCode={game.stateCode}
+                            />
                           ) : (
                             <span className="text-gray-400 text-xs font-medium">{game.time || 'TBD'}</span>
                           )}
                         </div>
-{/* Toggle button removed - keeping expanded view as default */}
                       </div>
                       
                       <div 
@@ -668,6 +744,17 @@ export default function Dashboard() {
                           )}
                         </div>
                       </div>
+
+                      {isLive && game.comments && game.comments.length > 0 && (
+                        <div className="mb-4">
+                          <LiveActionFeed 
+                            comments={game.comments}
+                            maxItems={3}
+                            homeTeam={game.homeTeamFull || game.homeTeam}
+                            awayTeam={game.awayTeamFull || game.awayTeam}
+                          />
+                        </div>
+                      )}
 
                       {linesLocked ? (
                         <div>

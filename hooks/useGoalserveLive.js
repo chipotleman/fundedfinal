@@ -279,7 +279,12 @@ export function useGoalserveLive(options = {}) {
         awayScore: event.awayScore || event.scores?.away?.total || 0,
         status: event.status,
         isLive: event.status === 'live' || event.isLive,
-        quarter: event.quarter || event.period || null
+        quarter: event.quarter || event.period || null,
+        elapsedTime: event.elapsedTime || null,
+        period: event.period || null,
+        stateCode: event.stateCode || null,
+        displayClock: event.displayClock || event.elapsedTime || null,
+        comments: event.comments || []
       }
     ])
   );
