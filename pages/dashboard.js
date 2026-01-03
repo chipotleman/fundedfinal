@@ -99,6 +99,8 @@ export default function Dashboard() {
 
   const baseGamesRef = useRef({});
   const betSlipRef = useRef(betSlip);
+  const lastValidGamesRef = useRef([]);
+  const lastValidApiGamesRef = useRef([]);
   
   useEffect(() => {
     betSlipRef.current = betSlip;
@@ -125,7 +127,15 @@ export default function Dashboard() {
         
         if (response.ok) {
           const data = await response.json();
-          setApiGames([...(data.games || [])]);
+          const newGames = data.games || [];
+          // Only update if we have valid data - preserve last valid data otherwise
+          if (newGames.length > 0) {
+            setApiGames([...newGames]);
+            lastValidApiGamesRef.current = [...newGames];
+          } else if (lastValidApiGamesRef.current.length > 0) {
+            // No new data, keep using the last valid data
+            setApiGames([...lastValidApiGamesRef.current]);
+          }
           setLastUpdated(new Date());
           setGamesError(null);
           setLoading(false);
@@ -378,11 +388,22 @@ export default function Dashboard() {
   const categorizedGames = useMemo(() => categorizeGames(gamesWithLiveData), [gamesWithLiveData, lastUpdated]);
 
   useEffect(() => {
-    setAllGames(gamesWithLiveData);
+    // Preserve valid games data - only update if we have data
+    if (gamesWithLiveData.length > 0) {
+      setAllGames(gamesWithLiveData);
+      lastValidGamesRef.current = gamesWithLiveData;
+    } else if (lastValidGamesRef.current.length > 0) {
+      // Keep using last valid data if current is empty
+      setAllGames(lastValidGamesRef.current);
+    }
+    
+    // Use current data or fall back to last valid
+    const sourceGames = gamesWithLiveData.length > 0 ? categorizedGames : 
+      categorizeGames(lastValidGamesRef.current);
     
     // Get both live and upcoming games - DON'T filter by tab here, show all
-    const liveGames = [...categorizedGames.liveGames, ...(categorizedGames.recentlyCompletedGames || [])];
-    const upcomingGames = categorizedGames.upcomingGames || [];
+    const liveGames = [...(sourceGames.liveGames || []), ...(sourceGames.recentlyCompletedGames || [])];
+    const upcomingGames = sourceGames.upcomingGames || [];
     
     // Choose which to display based on tab, but keep both available
     const activeGames = selectedTab === 'live' ? liveGames : upcomingGames;
@@ -408,9 +429,12 @@ export default function Dashboard() {
       });
     }
     
-    setGames(filteredGames);
+    // Only update games if we have data or are actively loading
+    if (filteredGames.length > 0 || !loading) {
+      setGames(filteredGames);
+    }
     setLoading(false);
-  }, [selectedSport, selectedTab, gamesWithLiveData, categorizedGames]);
+  }, [selectedSport, selectedTab, gamesWithLiveData, categorizedGames, loading]);
 
 
   const formatOdds = (odds) => {
@@ -683,9 +707,7 @@ export default function Dashboard() {
                           {isFinal ? (
                             <span className="text-gray-400 text-xs font-bold">FINAL</span>
                           ) : isLive ? (
-                            <span className="bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded animate-pulse">
-                              LIVE
-                            </span>
+                            <span className="text-red-500 text-xs font-bold">LIVE</span>
                           ) : (
                             <span className="text-gray-400 text-xs font-medium">{game.time || 'TBD'}</span>
                           )}
