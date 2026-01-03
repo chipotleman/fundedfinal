@@ -103,6 +103,8 @@ export default function Dashboard() {
   const [apiGames, setApiGames] = useState([]);
   const [gamesError, setGamesError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [apiStatus, setApiStatus] = useState('ok'); // 'ok', 'degraded', 'down'
+  const [apiMessage, setApiMessage] = useState(null);
   
   // Adaptive polling - use refs to avoid closure issues
   const pollingIntervalRef = useRef(null);
@@ -119,6 +121,15 @@ export default function Dashboard() {
           setApiGames([...(data.games || [])]);
           setLastUpdated(new Date());
           setGamesError(null);
+          
+          // Track API status for outage banner
+          if (data.apiStatus) {
+            setApiStatus(data.apiStatus);
+            setApiMessage(data.message || null);
+          } else {
+            setApiStatus('ok');
+            setApiMessage(null);
+          }
           
           // Track last odds update for stale detection (using refs to avoid closure issues)
           if (data.freshness?.lastOddsUpdate) {
@@ -307,6 +318,34 @@ export default function Dashboard() {
         betSlipCount={betSlip.length}
         onBetSlipClick={handleBetSlipClick}
       />
+
+      {/* API Outage Banner */}
+      {(apiStatus === 'degraded' || apiStatus === 'down') && (
+        <div 
+          className="px-4 py-3 flex items-center gap-3"
+          style={{ 
+            backgroundColor: apiStatus === 'down' ? '#7f1d1d' : '#78350f',
+            borderBottom: '1px solid rgba(255,255,255,0.1)'
+          }}
+        >
+          <div 
+            className="w-2 h-2 rounded-full animate-pulse"
+            style={{ backgroundColor: apiStatus === 'down' ? '#f87171' : '#fbbf24' }}
+          ></div>
+          <span className="text-sm text-white">
+            {apiMessage || (apiStatus === 'down' 
+              ? 'Sports data is temporarily unavailable. Please try again later.' 
+              : 'Showing cached data - live updates may be delayed.'
+            )}
+          </span>
+          <button 
+            onClick={() => fetch('/api/games?refresh=true').then(() => window.location.reload())}
+            className="ml-auto text-xs text-white/70 hover:text-white underline"
+          >
+            Retry
+          </button>
+        </div>
+      )}
 
       <div className="pt-4 sm:pt-6 lg:pt-8 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
         <div className="mb-4">

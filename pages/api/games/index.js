@@ -6,12 +6,39 @@ import {
   clearCache,
   SUPPORTED_SPORTS 
 } from '../../../lib/goalserve';
+import fs from 'fs';
+import path from 'path';
 
 let globalCache = null;
 let globalCacheTimestamp = null;
+let lastSuccessfulFetch = null;
 
 const LIVE_GAMES_CACHE_DURATION = 5 * 1000;
 const NO_LIVE_GAMES_CACHE_DURATION = 30 * 1000;
+const PERSISTENT_CACHE_FILE = '/tmp/games_cache.json';
+
+function loadPersistentCache() {
+  try {
+    if (fs.existsSync(PERSISTENT_CACHE_FILE)) {
+      const data = fs.readFileSync(PERSISTENT_CACHE_FILE, 'utf8');
+      const parsed = JSON.parse(data);
+      console.log(`[GAMES API] Loaded ${parsed.games?.length || 0} games from persistent cache`);
+      return parsed;
+    }
+  } catch (e) {
+    console.error('[GAMES API] Failed to load persistent cache:', e.message);
+  }
+  return null;
+}
+
+function savePersistentCache(cache) {
+  try {
+    fs.writeFileSync(PERSISTENT_CACHE_FILE, JSON.stringify(cache), 'utf8');
+    console.log(`[GAMES API] Saved ${cache.games?.length || 0} games to persistent cache`);
+  } catch (e) {
+    console.error('[GAMES API] Failed to save persistent cache:', e.message);
+  }
+}
 
 function getGoalserveStatus() {
   return {
@@ -223,6 +250,50 @@ export default async function handler(req, res) {
     const allGames = await getAllGamesWithOdds();
     let formattedGames = allGames.map(convertGoalserveToDisplayFormat);
     
+    // Detect if Goalserve is having issues (returned 0 games when we expect some)
+    if (formattedGames.length === 0) {
+      console.log('[GAMES API] Goalserve returned 0 games - API may be down');
+      
+      // Try memory cache first, then persistent cache
+      const fallbackCache = globalCache || loadPersistentCache();
+      if (fallbackCache && fallbackCache.games && fallbackCache.games.length > 0) {
+        console.log(`[GAMES API] Returning ${fallbackCache.games.length} games from fallback cache`);
+        const clonedGames = fallbackCache.games.map(game => ({ ...game, lines: game.lines ? { ...game.lines } : null }));
+        return res.status(200).json({
+          games: clonedGames,
+          bySport: fallbackCache.bySport,
+          count: clonedGames.length,
+          fromCache: true,
+          stale: true,
+          apiStatus: 'degraded',
+          message: 'Sports data provider is temporarily unavailable. Showing cached data.',
+          lastUpdated: fallbackCache.timestamp || globalCacheTimestamp,
+          dataSource: 'Goalserve',
+          creditStatus: getGoalserveStatus(),
+          freshness: fallbackCache.freshness || null,
+          polling: {
+            recommendedInterval: 30000,
+            hasLiveGames: false
+          }
+        });
+      }
+      
+      // No cache available at all
+      return res.status(200).json({
+        games: [],
+        bySport: {},
+        count: 0,
+        apiStatus: 'down',
+        message: 'Sports data provider is temporarily unavailable. Please try again later.',
+        dataSource: 'Goalserve',
+        creditStatus: getGoalserveStatus(),
+        polling: {
+          recommendedInterval: 60000,
+          hasLiveGames: false
+        }
+      });
+    }
+    
     let hasLiveGames = false;
     const sportsWithLiveGames = new Set();
     
@@ -279,9 +350,13 @@ export default async function handler(req, res) {
       games: formattedGames,
       bySport,
       freshness: { hasLiveGames },
-      debugInfo: { gameCount: formattedGames.length, sports: Object.keys(bySport) }
+      debugInfo: { gameCount: formattedGames.length, sports: Object.keys(bySport) },
+      timestamp: now
     };
     globalCacheTimestamp = now;
+    
+    // Save to persistent cache for recovery after restarts
+    savePersistentCache(globalCache);
 
     const recommendedInterval = hasLiveGames ? LIVE_GAMES_CACHE_DURATION : NO_LIVE_GAMES_CACHE_DURATION;
     
