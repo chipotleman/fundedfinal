@@ -185,13 +185,19 @@ export default function Dashboard() {
 
   // Simple game processing - just use REST API data, add league field
   const gamesWithLiveData = useMemo(() => {
-    return apiGames.map(game => ({
+    const processed = apiGames.map(game => ({
       ...game,
       league: game.league || game.sportName
     }));
+    console.log('[DASHBOARD] gamesWithLiveData count:', processed.length);
+    return processed;
   }, [apiGames]);
 
-  const categorizedGames = useMemo(() => categorizeGames(gamesWithLiveData), [gamesWithLiveData, lastUpdated]);
+  const categorizedGames = useMemo(() => {
+    const result = categorizeGames(gamesWithLiveData);
+    console.log('[DASHBOARD] Categorized - live:', result.liveGames?.length, 'upcoming:', result.upcomingGames?.length);
+    return result;
+  }, [gamesWithLiveData, lastUpdated]);
 
   useEffect(() => {
     setAllGames(gamesWithLiveData);
