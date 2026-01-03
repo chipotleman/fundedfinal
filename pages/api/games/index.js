@@ -242,7 +242,25 @@ export default async function handler(req, res) {
     }
     
     // Filter out completed games - they shouldn't be available for betting
-    formattedGames = formattedGames.filter(game => !game.isCompleted);
+    // Also filter games that started more than 4 hours ago (likely finished but not matched)
+    const currentTime = Date.now();
+    const FOUR_HOURS_MS = 4 * 60 * 60 * 1000;
+    
+    formattedGames = formattedGames.filter(game => {
+      // Definitely filter out completed games
+      if (game.isCompleted) return false;
+      
+      // If game is live, keep it
+      if (game.isLive) return true;
+      
+      // If game started more than 4 hours ago and is NOT live, it's probably finished
+      const gameTime = new Date(game.commenceTime).getTime();
+      if (gameTime && gameTime < (currentTime - FOUR_HOURS_MS) && !game.isLive) {
+        return false;
+      }
+      
+      return true;
+    });
     
     const bySport = {};
     formattedGames.forEach(game => {
