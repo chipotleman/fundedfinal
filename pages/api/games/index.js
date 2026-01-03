@@ -13,6 +13,7 @@ let pendingFetch = null;
 
 const LIVE_GAMES_CACHE_DURATION = 60 * 1000;  // 60s cache - live scores come from inplay/fast endpoint
 const NO_LIVE_GAMES_CACHE_DURATION = 120 * 1000;  // 2 min cache when no live games
+const STALE_CACHE_MAX_AGE = 10 * 60 * 1000;  // Serve stale cache up to 10 minutes old
 
 function getGoalserveStatus() {
   return {
@@ -153,9 +154,33 @@ export default async function handler(req, res) {
       return res.status(200).json(response);
     }
 
+    // CRITICAL: Serve stale cache immediately if available (don't make users wait 100+ seconds)
+    const hasStaleCache = globalCache && globalCacheTimestamp && (now - globalCacheTimestamp) < STALE_CACHE_MAX_AGE;
+    
+    // If there's a pending fetch, serve stale cache immediately instead of waiting
+    if (pendingFetch && hasStaleCache) {
+      console.log('[GAMES API] Serving stale cache while fetch in progress...');
+      const clonedGames = globalCache.games.map(game => ({ ...game, lines: game.lines ? { ...game.lines } : null }));
+      return res.status(200).json({
+        games: clonedGames,
+        bySport: globalCache.bySport,
+        count: globalCache.games.length,
+        fromCache: true,
+        stale: true,
+        cacheAge: Math.floor((now - globalCacheTimestamp) / 1000),
+        dataSource: 'Goalserve',
+        creditStatus: getGoalserveStatus(),
+        freshness: globalCache.freshness || null,
+        polling: {
+          recommendedInterval: 5000,  // Poll again soon since data is stale
+          hasLiveGames: globalCache?.freshness?.hasLiveGames || false
+        }
+      });
+    }
+    
     // Deduplicate concurrent requests - reuse pending fetch if one exists
     if (pendingFetch) {
-      console.log('[GAMES API] Waiting for pending fetch...');
+      console.log('[GAMES API] Waiting for pending fetch (no stale cache available)...');
       try {
         await pendingFetch;
         // After pending fetch completes, cache should be populated
@@ -183,12 +208,47 @@ export default async function handler(req, res) {
 
     console.log('[GAMES API] Fetching all games from Goalserve...');
     
+    // Add timeout to prevent indefinite blocking (30 second max)
+    const FETCH_TIMEOUT = 30000;
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Goalserve fetch timeout')), FETCH_TIMEOUT)
+    );
+    
     const fetchPromise = getAllGamesWithOdds();
     pendingFetch = fetchPromise;
     
     let allGames;
     try {
-      allGames = await fetchPromise;
+      allGames = await Promise.race([fetchPromise, timeoutPromise]);
+    } catch (timeoutError) {
+      console.error('[GAMES API] Fetch timeout or error:', timeoutError.message);
+      pendingFetch = null;
+      
+      // Return empty games on timeout rather than blocking forever
+      if (hasStaleCache) {
+        console.log('[GAMES API] Returning stale cache after timeout');
+        const clonedGames = globalCache.games.map(game => ({ ...game, lines: game.lines ? { ...game.lines } : null }));
+        return res.status(200).json({
+          games: clonedGames,
+          bySport: globalCache.bySport,
+          count: globalCache.games.length,
+          fromCache: true,
+          stale: true,
+          timeout: true,
+          dataSource: 'Goalserve',
+          creditStatus: getGoalserveStatus()
+        });
+      }
+      
+      return res.status(200).json({
+        games: [],
+        bySport: {},
+        count: 0,
+        error: 'Data fetch timed out, please refresh',
+        timeout: true,
+        dataSource: 'Goalserve',
+        creditStatus: getGoalserveStatus()
+      });
     } finally {
       pendingFetch = null;
     }
@@ -197,9 +257,23 @@ export default async function handler(req, res) {
     let hasLiveGames = false;
     const sportsWithLiveGames = new Set();
     
-    for (const [sportKey] of Object.entries(SUPPORTED_SPORTS)) {
-      try {
-        const scores = await getScores(sportKey);
+    // Fetch ALL scores in PARALLEL (not sequential!) - this is critical for speed
+    const sportKeys = Object.keys(SUPPORTED_SPORTS);
+    const scoresResults = await Promise.allSettled(
+      sportKeys.map(async (sportKey) => {
+        try {
+          return { sportKey, scores: await getScores(sportKey) };
+        } catch (e) {
+          console.error(`[GAMES API] Error fetching scores for ${sportKey}:`, e.message);
+          return { sportKey, scores: [] };
+        }
+      })
+    );
+    
+    // Process all scores
+    scoresResults.forEach(result => {
+      if (result.status === 'fulfilled' && result.value.scores) {
+        const { sportKey, scores } = result.value;
         scores.forEach(score => {
           const game = formattedGames.find(g => g.id === score.id);
           if (game) {
@@ -213,30 +287,11 @@ export default async function handler(req, res) {
             }
           }
         });
-      } catch (e) {
-        console.error(`[GAMES API] Error fetching scores for ${sportKey}:`, e.message);
       }
-    }
+    });
     
-    if (sportsWithLiveGames.size > 0) {
-      console.log(`[GAMES API] Refreshing odds for live sports: ${Array.from(sportsWithLiveGames).join(', ')}`);
-      for (const sportKey of sportsWithLiveGames) {
-        try {
-          const freshOdds = await getOdds(sportKey);
-          const freshFormatted = freshOdds.map(convertGoalserveToDisplayFormat);
-          
-          freshFormatted.forEach(freshGame => {
-            const existingIdx = formattedGames.findIndex(g => g.id === freshGame.id);
-            if (existingIdx >= 0) {
-              formattedGames[existingIdx].lines = freshGame.lines;
-              formattedGames[existingIdx].allBookmakerOdds = freshGame.allBookmakerOdds;
-            }
-          });
-        } catch (e) {
-          console.error(`[GAMES API] Error refreshing odds for ${sportKey}:`, e.message);
-        }
-      }
-    }
+    // Skip odds refresh during initial load to speed things up - live scores endpoint handles this
+    // if (sportsWithLiveGames.size > 0) { ... }
     
     const bySport = {};
     formattedGames.forEach(game => {
