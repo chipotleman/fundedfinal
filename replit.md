@@ -69,10 +69,6 @@ None documented yet.
     - Main endpoint: `/api/games` - Fetches all games with bet365 odds
     - Primary bookmaker: bet365 (with multi-bookmaker comparison in admin panel)
     - Features: Live scores, play-by-play with court position, odds from 10+ bookmakers
-    - **Home/Away Convention**: Goalserve uses standard sports convention:
-      - `hometeam` = home team (displayed second/bottom)
-      - `awayteam` = away team (displayed first/top)
-      - Display format: "Away @ Home" (away team on TOP, home team on BOTTOM)
     - Additional endpoints:
       - `/api/goalserve/games` - Direct Goalserve games endpoint
       - `/api/goalserve/odds?sport=basketball_nba` - Odds only
@@ -108,7 +104,6 @@ None documented yet.
       - `useLiveSport(sport)` - Hook for sport-specific updates
     - Fallback: If WebSocket unavailable, use REST API polling via `/api/goalserve/live` (30-second cache)
   - **Goalserve Inplay HTTP Feeds** (alternative real-time data - requires IP whitelisting)
-    - **Home/Away Convention**: Same as REST API - Goalserve inplay feed ALSO has home/away REVERSED. The parser in `lib/goalserve-inplay.js` swaps them to match the REST API convention.
     - Service: `lib/goalserve-inplay.js`
     - Features: Gzipped JSON feeds updating every second with live scores and odds
     - Endpoints provided by Goalserve:

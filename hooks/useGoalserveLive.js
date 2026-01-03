@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-const REST_POLLING_INTERVAL = 1000; // 1 second polling
+const REST_POLLING_INTERVAL = 30000; // 30 seconds
 
 export function useGoalserveLive(options = {}) {
-  const { sport = null, eventId = null, autoConnect = true, onUpdate = null, enableRestFallback = true, useInplaySource = true } = options;
+  const { sport = null, eventId = null, autoConnect = true, onUpdate = null, enableRestFallback = true } = options;
   
   const [isConnected, setIsConnected] = useState(false);
   const [events, setEvents] = useState({});
@@ -81,8 +81,6 @@ export function useGoalserveLive(options = {}) {
       const params = new URLSearchParams();
       if (sport) params.set('sport', sport);
       if (eventId) params.set('eventId', eventId);
-      // Use inplay source by default for faster polling (1s) - WebSocket needs IP whitelisting
-      if (useInplaySource) params.set('source', 'inplay');
       
       const url = `/api/goalserve/stream${params.toString() ? '?' + params.toString() : ''}`;
 
@@ -236,7 +234,7 @@ export function useGoalserveLive(options = {}) {
       console.error('[Goalserve Live] Connection error:', err);
       setError(err.message);
     }
-  }, [sport, eventId, onUpdate, enableRestFallback, startRestPolling, stopRestPolling, useInplaySource]);
+  }, [sport, eventId, onUpdate, enableRestFallback, startRestPolling, stopRestPolling]);
 
   const disconnect = useCallback(() => {
     if (eventSourceRef.current) {
@@ -281,12 +279,7 @@ export function useGoalserveLive(options = {}) {
         awayScore: event.awayScore || event.scores?.away?.total || 0,
         status: event.status,
         isLive: event.status === 'live' || event.isLive,
-        quarter: event.quarter || event.period || null,
-        elapsedTime: event.elapsedTime || null,
-        period: event.period || null,
-        stateCode: event.stateCode || null,
-        displayClock: event.displayClock || event.elapsedTime || null,
-        comments: event.comments || []
+        quarter: event.quarter || event.period || null
       }
     ])
   );

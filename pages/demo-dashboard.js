@@ -741,6 +741,7 @@ export default function DemoDashboard() {
                 >
                   <div className="p-4">
                     <div className="flex items-center gap-2 mb-3">
+                      <span className="bg-green-500 text-black text-[10px] font-bold px-2 py-0.5 rounded">FEATURED</span>
                       <span className="text-gray-500 text-xs">{game.sportName || 'NBA'}</span>
                       {isLive ? (
                         <div className="flex items-center gap-1 ml-auto">

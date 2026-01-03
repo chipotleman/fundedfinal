@@ -3,8 +3,6 @@ import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import TapSurface from '../components/TapSurface';
-import LiveGameTimer from '../components/LiveGameTimer';
-import LiveActionFeed from '../components/LiveActionFeed';
 import { inferLeague } from '../lib/leagueInference';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -25,8 +23,6 @@ export default function Dashboard() {
   const [bankroll, setBankroll] = useState(10000);
   const [pnl, setPnl] = useState(0);
   const [expandedGames, setExpandedGames] = useState({});
-  
-  const GAMES_CACHE_KEY = 'piks_games_cache';
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -112,41 +108,11 @@ export default function Dashboard() {
   
   const { liveScores, liveOdds, events: inplayEvents, isConnected: liveConnected } = useGoalserveLive({ autoConnect: true });
   
-  // Fast live scores from dedicated endpoint
-  const [fastLiveScores, setFastLiveScores] = useState({});
-  
   // Adaptive polling - use refs to avoid closure issues
   const pollingIntervalRef = useRef(null);
-  const fastScoresIntervalRef = useRef(null);
-  const currentIntervalRef = useRef(5000);
+  const currentIntervalRef = useRef(5000); // Start with fast polling for live updates
   const lastOddsUpdateRef = useRef(null);
   const lastFetchTimeRef = useRef(null);
-  const hasLoadedCache = useRef(false);
-  
-  // Load cached games immediately on mount (before any fetch)
-  useEffect(() => {
-    if (hasLoadedCache.current) return;
-    hasLoadedCache.current = true;
-    
-    try {
-      const cached = localStorage.getItem(GAMES_CACHE_KEY);
-      if (cached) {
-        const { games, timestamp } = JSON.parse(cached);
-        if (games && games.length > 0) {
-          // Cache is valid for 5 minutes for instant load
-          const cacheAge = Date.now() - timestamp;
-          if (cacheAge < 5 * 60 * 1000) {
-            console.log('[DASHBOARD] Loading from cache:', games.length, 'games (age:', Math.floor(cacheAge/1000), 's)');
-            setApiGames(games);
-            setLastUpdated(new Date(timestamp));
-            setLoading(false);
-          }
-        }
-      }
-    } catch (e) {
-      console.error('[DASHBOARD] Cache read error:', e);
-    }
-  }, []);
   
   useEffect(() => {
     const fetchAllGames = async () => {
@@ -154,28 +120,17 @@ export default function Dashboard() {
         const response = await fetch('/api/games');
         if (response.ok) {
           const data = await response.json();
-          const newGames = data.games || [];
-          setApiGames([...newGames]);
+          setApiGames([...(data.games || [])]);
           setLastUpdated(new Date());
           setGamesError(null);
-          setLoading(false);
           
-          // Save to localStorage for instant loading next time
-          try {
-            localStorage.setItem(GAMES_CACHE_KEY, JSON.stringify({
-              games: newGames,
-              timestamp: Date.now()
-            }));
-          } catch (e) {
-            console.error('[DASHBOARD] Cache write error:', e);
-          }
-          
-          // Track last odds update for stale detection
+          // Track last odds update for stale detection (using refs to avoid closure issues)
           if (data.freshness?.lastOddsUpdate) {
             const newLastUpdate = data.freshness.lastOddsUpdate;
             const previousLastUpdate = lastOddsUpdateRef.current;
             const previousFetchTime = lastFetchTimeRef.current;
             
+            // Detect stale data - if last_update hasn't changed in 45+ seconds
             if (previousLastUpdate && previousLastUpdate === newLastUpdate && previousFetchTime) {
               const staleTime = Date.now() - previousFetchTime;
               if (staleTime > 45000) {
@@ -192,50 +147,39 @@ export default function Dashboard() {
               }
             }
             
+            // Update refs with new values
             if (newLastUpdate !== previousLastUpdate) {
               lastOddsUpdateRef.current = newLastUpdate;
               lastFetchTimeRef.current = Date.now();
             }
           }
           
-          // Adaptive polling
+          // Adaptive polling - adjust interval based on server recommendation
           const recommendedInterval = data.polling?.recommendedInterval || 60000;
           if (recommendedInterval !== currentIntervalRef.current) {
-            console.log(`[DASHBOARD] Adjusting polling: ${currentIntervalRef.current}ms -> ${recommendedInterval}ms`);
+            console.log(`[DASHBOARD] Adjusting polling: ${currentIntervalRef.current}ms -> ${recommendedInterval}ms (live games: ${data.polling?.hasLiveGames})`);
             currentIntervalRef.current = recommendedInterval;
+            // Clear and restart with new interval
             if (pollingIntervalRef.current) {
               clearInterval(pollingIntervalRef.current);
             }
             pollingIntervalRef.current = setInterval(fetchAllGames, recommendedInterval);
           }
           
-          console.log('[DASHBOARD] Games refreshed:', newGames.length, 'at', new Date().toLocaleTimeString());
+          console.log('[DASHBOARD] Games refreshed:', data.games?.length, 'games at', new Date().toLocaleTimeString(), 
+            `(polling: ${currentIntervalRef.current}ms, live: ${data.polling?.hasLiveGames})`);
         } else {
           console.error('Failed to fetch games');
           setGamesError('Failed to load games');
-          setLoading(false);
         }
       } catch (error) {
         console.error('Error fetching games:', error);
         setGamesError('Failed to load games');
-        setLoading(false);
       }
     };
     
-    // Fetch games with debouncing to prevent concurrent requests
-    let isFetching = false;
-    const fetchWithDebounce = async () => {
-      if (isFetching) return;
-      isFetching = true;
-      await fetchAllGames();
-      isFetching = false;
-    };
-    
-    fetchWithDebounce();
-    // Fast polling for live games - 1 second for near-realtime updates
-    const initialPollingInterval = 1000;
-    pollingIntervalRef.current = setInterval(fetchWithDebounce, initialPollingInterval);
-    currentIntervalRef.current = initialPollingInterval;
+    fetchAllGames();
+    pollingIntervalRef.current = setInterval(fetchAllGames, 5000);
     return () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
@@ -243,40 +187,9 @@ export default function Dashboard() {
     };
   }, []);
 
-  // Fast live scores polling - 1 second for subsecond latency
-  useEffect(() => {
-    const fetchLiveScores = async () => {
-      try {
-        const response = await fetch('/api/games/live-scores');
-        if (response.ok) {
-          const data = await response.json();
-          if (data.scores) {
-            setFastLiveScores(data.scores);
-          }
-        }
-      } catch (error) {
-        console.error('[DASHBOARD] Live scores fetch error:', error);
-      }
-    };
-    
-    // Initial fetch
-    fetchLiveScores();
-    
-    // Poll every 1 second for subsecond latency
-    fastScoresIntervalRef.current = setInterval(fetchLiveScores, 1000);
-    
-    return () => {
-      if (fastScoresIntervalRef.current) {
-        clearInterval(fastScoresIntervalRef.current);
-      }
-    };
-  }, []);
-
   const gamesWithLiveData = useMemo(() => {
     // Convert inplay events to game format
     const inplayGames = Object.values(inplayEvents || {}).map(event => {
-      // Trust the normalized homeTeam/awayTeam from inplay normalizer
-      // Inplay feed already uses correct convention, no swap needed
       const homeTeam = event.homeTeam || event.stats?.[0]?.home || 'Home';
       const awayTeam = event.awayTeam || event.stats?.[0]?.away || 'Away';
       
@@ -286,7 +199,6 @@ export default function Dashboard() {
       let awayScore = event.awayScore ?? 0;
       
       // Only fallback to stats if homeScore/awayScore are 0 and we have stats
-      // Inplay feed already uses correct convention, no swap needed
       if (homeScore === 0 && awayScore === 0 && event.stats) {
         // Try stats.T first (current total), not Half (halftime only)
         const totalStat = Object.values(event.stats).find(s => s.name === 'T');
@@ -327,10 +239,6 @@ export default function Dashboard() {
         isLive: true,
         isInplay: true,
         displayClock: event.displayClock,
-        elapsedTime: event.elapsedTime,
-        period: event.period,
-        stateCode: event.stateCode,
-        comments: event.comments || [],
         scores: {
           home: { total: homeScore },
           away: { total: awayScore }
@@ -381,13 +289,6 @@ export default function Dashboard() {
         if (liveScore.status) updatedGame.status = liveScore.status;
         if (liveScore.isLive !== undefined) updatedGame.isLive = liveScore.isLive;
         if (liveScore.quarter) updatedGame.quarter = liveScore.quarter;
-        if (liveScore.elapsedTime) updatedGame.elapsedTime = liveScore.elapsedTime;
-        if (liveScore.period) updatedGame.period = liveScore.period;
-        if (liveScore.stateCode) updatedGame.stateCode = liveScore.stateCode;
-        if (liveScore.displayClock) updatedGame.displayClock = liveScore.displayClock;
-        if (liveScore.comments && liveScore.comments.length > 0) {
-          updatedGame.comments = liveScore.comments;
-        }
       }
       
       if (liveOdd && updatedGame.lines) {
@@ -414,128 +315,9 @@ export default function Dashboard() {
       return updatedGame;
     });
     
-    // Merge inplay games with API games - DEDUPLICATE by matching team names
-    // This prevents the same game from appearing twice (once from inplay, once from REST API)
-    const normalizeTeamName = (name) => {
-      if (!name) return '';
-      return name.toLowerCase()
-        .replace(/[^a-z0-9]/g, '') // Remove special chars
-        .replace(/state$/, 'st')   // Normalize State -> St
-        .replace(/university$/, ''); // Remove university suffix
-    };
-    
-    const matchesTeams = (game1, game2) => {
-      const home1 = normalizeTeamName(game1.homeTeamFull || game1.homeTeam);
-      const away1 = normalizeTeamName(game1.awayTeamFull || game1.awayTeam);
-      const home2 = normalizeTeamName(game2.homeTeamFull || game2.homeTeam);
-      const away2 = normalizeTeamName(game2.awayTeamFull || game2.awayTeam);
-      
-      // Check if teams match (either direction since home/away might be swapped)
-      return (home1 === home2 && away1 === away2) || 
-             (home1 === away2 && away1 === home2);
-    };
-    
-    // Check if teams are in the same order (not reversed)
-    const teamsInSameOrder = (game1, game2) => {
-      const home1 = normalizeTeamName(game1.homeTeamFull || game1.homeTeam);
-      const home2 = normalizeTeamName(game2.homeTeamFull || game2.homeTeam);
-      return home1 === home2;
-    };
-    
-    // For each API game, try to find matching inplay event and merge
-    const mergedGames = updatedApiGames.map(apiGame => {
-      const matchingInplay = inplayGames.find(inplay => matchesTeams(apiGame, inplay));
-      
-      if (matchingInplay) {
-        // Check if teams are in the same order or reversed
-        const sameOrder = teamsInSameOrder(apiGame, matchingInplay);
-        
-        // If teams are reversed between API and inplay, swap the inplay scores
-        let mergedScores = apiGame.scores;
-        if (matchingInplay.scores?.home?.total > 0 || matchingInplay.scores?.away?.total > 0) {
-          if (sameOrder) {
-            mergedScores = matchingInplay.scores;
-          } else {
-            // Teams are reversed - swap home/away scores
-            mergedScores = {
-              home: matchingInplay.scores.away,
-              away: matchingInplay.scores.home
-            };
-          }
-        }
-        
-        // Same for lines - swap if reversed
-        let mergedLines = apiGame.lines;
-        if (matchingInplay.lines && (matchingInplay.lines.moneyline?.home || matchingInplay.lines.spread?.home)) {
-          if (sameOrder) {
-            mergedLines = matchingInplay.lines;
-          } else {
-            // Teams are reversed - swap home/away lines
-            mergedLines = {
-              moneyline: matchingInplay.lines.moneyline ? {
-                home: matchingInplay.lines.moneyline.away,
-                away: matchingInplay.lines.moneyline.home
-              } : null,
-              spread: matchingInplay.lines.spread ? {
-                home: matchingInplay.lines.spread.away,
-                away: matchingInplay.lines.spread.home
-              } : null,
-              total: matchingInplay.lines.total
-            };
-          }
-        }
-        
-        // Merge inplay data into API game (preserve API game's ID, sport name, structure)
-        return {
-          ...apiGame,
-          isLive: true,
-          isInplay: true,
-          displayClock: matchingInplay.displayClock || apiGame.displayClock,
-          period: matchingInplay.period || apiGame.period,
-          stateCode: matchingInplay.stateCode || apiGame.stateCode,
-          comments: matchingInplay.comments?.length > 0 ? matchingInplay.comments : apiGame.comments,
-          scores: mergedScores,
-          lines: mergedLines,
-          dataSource: 'Goalserve Inplay (merged)'
-        };
-      }
-      
-      return apiGame;
-    });
-    
-    // Apply fast live scores updates ONLY as fallback when inplay data isn't available
-    // Inplay data is already fast - don't overwrite it with slower REST data
-    const gamesWithFastScores = mergedGames.map(game => {
-      // Skip if game already has real-time inplay data
-      if (game.isInplay || game.dataSource?.includes('Inplay')) {
-        return game;
-      }
-      
-      // For non-inplay games, try REST polling as fallback
-      const rawId = game.id?.toString().replace(/^.+_/, '') || game.id;
-      const scoreKey = `${game.sport}_${rawId}`;
-      const altKey = `${game.sport}_${game.id}`;
-      const fastScore = fastLiveScores[scoreKey] || fastLiveScores[altKey] || fastLiveScores[game.id];
-      
-      if (fastScore && fastScore.isLive) {
-        return {
-          ...game,
-          isLive: true,
-          scores: {
-            home: { total: fastScore.homeScore },
-            away: { total: fastScore.awayScore }
-          },
-          period: fastScore.period || game.period,
-          displayClock: fastScore.clock || game.displayClock
-        };
-      }
-      return game;
-    });
-    
-    // Only return REST API games (merged with inplay data when available)
-    // Don't add standalone inplay games - they lack proper odds/scores
-    return gamesWithFastScores;
-  }, [apiGames, liveScores, liveOdds, inplayEvents, fastLiveScores]);
+    // Merge: inplay games first (they're live), then API games
+    return [...inplayGames, ...updatedApiGames];
+  }, [apiGames, liveScores, liveOdds, inplayEvents]);
 
   const categorizedGames = useMemo(() => categorizeGames(gamesWithLiveData), [gamesWithLiveData, lastUpdated]);
 
@@ -726,7 +508,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {categorizedGames.liveGames.filter(g => g.lines && g.lines.moneyline).slice(0, 3).map((game) => {
+            {allGames.filter(g => g.lines && g.lines.moneyline).slice(0, 3).map((game) => {
               const isLive = game.isLive || game.status === 'IN_PROGRESS';
               return (
                 <div 
@@ -736,6 +518,7 @@ export default function Dashboard() {
                 >
                   <div className="p-4">
                     <div className="flex items-center gap-2 mb-3">
+                      <span className="bg-blue-500 text-[10px] font-bold px-2 py-0.5 rounded" style={{ color: '#ffffff' }}>FEATURED</span>
                       <span className="text-gray-500 text-xs">{game.sportName}</span>
                       {isLive ? (
                         <div className="flex items-center gap-1 ml-auto">
@@ -829,8 +612,8 @@ export default function Dashboard() {
                 const isExpanded = expandedGames[game.id];
                 const isLive = game.isLive || game.status === 'IN_PROGRESS';
                 const isFinal = game.isCompleted || game.status === 'FINAL';
-                const hasAnyLines = game.lines && (game.lines.moneyline || game.lines.spread || game.lines.total);
-                const linesLocked = game.linesLocked || isFinal || !hasAnyLines;
+                const hasLines = game.lines && game.lines.moneyline && game.lines.spread && game.lines.total;
+                const linesLocked = game.linesLocked || isFinal || !hasLines;
                 
                 return (
                   <div 
@@ -845,16 +628,16 @@ export default function Dashboard() {
                           {isFinal ? (
                             <span className="text-gray-400 text-xs font-bold">FINAL</span>
                           ) : isLive ? (
-                            <LiveGameTimer 
-                              elapsedTime={game.elapsedTime || game.displayClock}
-                              period={game.period || game.quarter}
-                              sport={game.sport || sport}
-                              stateCode={game.stateCode}
-                            />
+                            <div className="flex items-center gap-1">
+                              <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                              <span className="text-red-500 text-xs font-medium">LIVE</span>
+                              {(game.displayClock || game.quarter) && <span className="text-gray-400 text-xs">• {game.displayClock || game.quarter}</span>}
+                            </div>
                           ) : (
                             <span className="text-gray-400 text-xs font-medium">{game.time || 'TBD'}</span>
                           )}
                         </div>
+{/* Toggle button removed - keeping expanded view as default */}
                       </div>
                       
                       <div 
@@ -885,17 +668,6 @@ export default function Dashboard() {
                           )}
                         </div>
                       </div>
-
-                      {isLive && game.comments && game.comments.length > 0 && (
-                        <div className="mb-4">
-                          <LiveActionFeed 
-                            comments={game.comments}
-                            maxItems={3}
-                            homeTeam={game.homeTeamFull || game.homeTeam}
-                            awayTeam={game.awayTeamFull || game.awayTeam}
-                          />
-                        </div>
-                      )}
 
                       {linesLocked ? (
                         <div>
@@ -1124,4 +896,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
