@@ -3,7 +3,8 @@ import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import TapSurface from '../components/TapSurface';
-import GameDetailPopup from '../components/GameDetailPopup';
+import LiveGameTimer from '../components/LiveGameTimer';
+import LiveActionFeed from '../components/LiveActionFeed';
 import { inferLeague } from '../lib/leagueInference';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -24,7 +25,6 @@ export default function Dashboard() {
   const [bankroll, setBankroll] = useState(10000);
   const [pnl, setPnl] = useState(0);
   const [expandedGames, setExpandedGames] = useState({});
-  const [selectedGame, setSelectedGame] = useState(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -107,7 +107,6 @@ export default function Dashboard() {
   const [apiGames, setApiGames] = useState([]);
   const [gamesError, setGamesError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
-  const lastValidGamesCountRef = useRef(0); // Track last valid games count to detect unexpected empty responses
   
   const { liveScores, liveOdds, events: inplayEvents, isConnected: liveConnected } = useGoalserveLive({ autoConnect: true });
   
@@ -118,73 +117,72 @@ export default function Dashboard() {
   const lastFetchTimeRef = useRef(null);
   
   useEffect(() => {
-    let isMounted = true;
     const fetchAllGames = async () => {
       try {
         const response = await fetch('/api/games');
-        if (!isMounted) return;
-        
         if (response.ok) {
           const data = await response.json();
-          const newGames = data.games || [];
-          
-          // Use API signals to determine if empty response is legitimate
-          // Legitimate empty: fresh data with no games (all events completed)
-          // Transient empty: had games before and getting empty without clear indication
-          const hadPreviousGames = lastValidGamesCountRef.current > 0;
-          const isFreshResponse = data.fromCache === false;
-          const noLiveGamesIndicated = data.freshness?.hasLiveGames === false;
-          
-          // Accept empty response if:
-          // 1. We're getting actual games, or
-          // 2. This is our first load (no previous games), or
-          // 3. API explicitly indicates fresh data with no live games, or
-          // 4. It's a fresh (non-cached) response
-          const shouldAcceptEmpty = !hadPreviousGames || isFreshResponse || noLiveGamesIndicated;
-          
-          if (newGames.length > 0 || shouldAcceptEmpty) {
-            setApiGames([...newGames]);
-            lastValidGamesCountRef.current = newGames.length;
-          } else {
-            console.warn('[DASHBOARD] Skipping suspicious empty cached response, keeping previous games');
-          }
-          
+          setApiGames([...(data.games || [])]);
           setLastUpdated(new Date());
           setGamesError(null);
-          setLoading(false);
+          
+          // Track last odds update for stale detection (using refs to avoid closure issues)
+          if (data.freshness?.lastOddsUpdate) {
+            const newLastUpdate = data.freshness.lastOddsUpdate;
+            const previousLastUpdate = lastOddsUpdateRef.current;
+            const previousFetchTime = lastFetchTimeRef.current;
+            
+            // Detect stale data - if last_update hasn't changed in 45+ seconds
+            if (previousLastUpdate && previousLastUpdate === newLastUpdate && previousFetchTime) {
+              const staleTime = Date.now() - previousFetchTime;
+              if (staleTime > 45000) {
+                console.log('[DASHBOARD] Stale data detected, forcing refresh...');
+                fetch('/api/games?refresh=true').then(r => r.json()).then(freshData => {
+                  if (freshData.games) {
+                    setApiGames([...(freshData.games || [])]);
+                    setLastUpdated(new Date());
+                    lastOddsUpdateRef.current = freshData.freshness?.lastOddsUpdate || null;
+                    lastFetchTimeRef.current = Date.now();
+                  }
+                });
+                return;
+              }
+            }
+            
+            // Update refs with new values
+            if (newLastUpdate !== previousLastUpdate) {
+              lastOddsUpdateRef.current = newLastUpdate;
+              lastFetchTimeRef.current = Date.now();
+            }
+          }
           
           // Adaptive polling - adjust interval based on server recommendation
           const recommendedInterval = data.polling?.recommendedInterval || 60000;
           if (recommendedInterval !== currentIntervalRef.current) {
-            console.log(`[DASHBOARD] Adjusting polling: ${currentIntervalRef.current}ms -> ${recommendedInterval}ms`);
+            console.log(`[DASHBOARD] Adjusting polling: ${currentIntervalRef.current}ms -> ${recommendedInterval}ms (live games: ${data.polling?.hasLiveGames})`);
             currentIntervalRef.current = recommendedInterval;
+            // Clear and restart with new interval
             if (pollingIntervalRef.current) {
               clearInterval(pollingIntervalRef.current);
             }
             pollingIntervalRef.current = setInterval(fetchAllGames, recommendedInterval);
           }
           
-          console.log('[DASHBOARD] Games refreshed:', newGames.length, 'games');
+          console.log('[DASHBOARD] Games refreshed:', data.games?.length, 'games at', new Date().toLocaleTimeString(), 
+            `(polling: ${currentIntervalRef.current}ms, live: ${data.polling?.hasLiveGames})`);
         } else {
           console.error('Failed to fetch games');
-          if (isMounted) {
-            setGamesError('Failed to load games');
-            setLoading(false);
-          }
+          setGamesError('Failed to load games');
         }
       } catch (error) {
         console.error('Error fetching games:', error);
-        if (isMounted) {
-          setGamesError('Failed to load games');
-          setLoading(false);
-        }
+        setGamesError('Failed to load games');
       }
     };
     
     fetchAllGames();
-    pollingIntervalRef.current = setInterval(fetchAllGames, 60000);
+    pollingIntervalRef.current = setInterval(fetchAllGames, 5000);
     return () => {
-      isMounted = false;
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
       }
@@ -610,7 +608,7 @@ export default function Dashboard() {
                     </div>
                     <div 
                       className="mb-4 cursor-pointer hover:bg-white/5 -mx-2 px-2 py-1 rounded-lg transition-colors"
-                      onClick={() => setSelectedGame(game)}
+                      onClick={() => router.push(`/game/${game.id}`)}
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-base truncate" style={{ color: isDarkMode ? '#ffffff' : '#111827', maxWidth: '180px', display: 'block' }}>{game.awayTeamFull || game.awayTeam}</span>
@@ -706,7 +704,12 @@ export default function Dashboard() {
                           {isFinal ? (
                             <span className="text-gray-400 text-xs font-bold">FINAL</span>
                           ) : isLive ? (
-                            <span className="text-red-500 text-xs font-bold">LIVE</span>
+                            <LiveGameTimer 
+                              elapsedTime={game.elapsedTime || game.displayClock}
+                              period={game.period || game.quarter}
+                              sport={game.sport || sport}
+                              stateCode={game.stateCode}
+                            />
                           ) : (
                             <span className="text-gray-400 text-xs font-medium">{game.time || 'TBD'}</span>
                           )}
@@ -715,7 +718,7 @@ export default function Dashboard() {
                       
                       <div 
                         className="space-y-2 mb-4 cursor-pointer hover:bg-white/5 -mx-2 px-2 py-1 rounded-lg transition-colors"
-                        onClick={() => setSelectedGame(game)}
+                        onClick={() => router.push(`/game/${game.id}`)}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -742,6 +745,16 @@ export default function Dashboard() {
                         </div>
                       </div>
 
+                      {isLive && game.comments && game.comments.length > 0 && (
+                        <div className="mb-4">
+                          <LiveActionFeed 
+                            comments={game.comments}
+                            maxItems={3}
+                            homeTeam={game.homeTeamFull || game.homeTeam}
+                            awayTeam={game.awayTeamFull || game.awayTeam}
+                          />
+                        </div>
+                      )}
 
                       {linesLocked ? (
                         <div>
@@ -948,12 +961,6 @@ export default function Dashboard() {
         isOpen={showBetSlip}
         onClose={() => setShowBetSlip(false)}
         onBetPlaced={handleBetPlaced}
-      />
-
-      <GameDetailPopup
-        isOpen={!!selectedGame}
-        onClose={() => setSelectedGame(null)}
-        game={selectedGame}
       />
 
       <style jsx>{`

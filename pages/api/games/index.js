@@ -9,10 +9,9 @@ import {
 
 let globalCache = null;
 let globalCacheTimestamp = null;
-let fetchInProgress = null;
 
-const LIVE_GAMES_CACHE_DURATION = 30 * 1000;
-const NO_LIVE_GAMES_CACHE_DURATION = 60 * 1000;
+const LIVE_GAMES_CACHE_DURATION = 5 * 1000;
+const NO_LIVE_GAMES_CACHE_DURATION = 30 * 1000;
 
 function getGoalserveStatus() {
   return {
@@ -217,18 +216,6 @@ export default async function handler(req, res) {
       }
       
       return res.status(200).json(response);
-    }
-
-    // If a fetch is already in progress, wait for it instead of starting another
-    if (fetchInProgress) {
-      console.log('[GAMES API] Fetch already in progress, waiting...');
-      try {
-        const result = await fetchInProgress;
-        return res.status(200).json(result);
-      } catch (e) {
-        console.error('[GAMES API] Error waiting for in-progress fetch:', e.message);
-        // Fall through to try a new fetch
-      }
     }
 
     console.log('[GAMES API] Fetching all games from Goalserve...');
