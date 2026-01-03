@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useLiveGame } from '../hooks/useGoalserveLive';
+import { useLiveEvent } from '../hooks/useGoalserveLive';
 
 export default function LiveGameTracker({ gameId, sport = 'basketball_nba', initialData = null }) {
-  const { score, odds, position, isConnected, error } = useLiveGame(gameId, { autoConnect: true });
+  const { data, isConnected, error } = useLiveEvent(gameId, { autoConnect: true });
+  const score = data?.score || null;
+  const odds = data?.odds || null;
+  const position = data?.position || null;
   
   const [gameData, setGameData] = useState(initialData);
 

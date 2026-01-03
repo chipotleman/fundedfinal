@@ -5,6 +5,7 @@ import BetSlip from '../components/BetSlip';
 import TapSurface from '../components/TapSurface';
 import LiveGameTimer from '../components/LiveGameTimer';
 import LiveActionFeed from '../components/LiveActionFeed';
+import GameDetailPopup from '../components/GameDetailPopup';
 import { inferLeague } from '../lib/leagueInference';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -25,6 +26,7 @@ export default function Dashboard() {
   const [bankroll, setBankroll] = useState(10000);
   const [pnl, setPnl] = useState(0);
   const [expandedGames, setExpandedGames] = useState({});
+  const [selectedGame, setSelectedGame] = useState(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -608,7 +610,7 @@ export default function Dashboard() {
                     </div>
                     <div 
                       className="mb-4 cursor-pointer hover:bg-white/5 -mx-2 px-2 py-1 rounded-lg transition-colors"
-                      onClick={() => router.push(`/game/${game.id}`)}
+                      onClick={() => setSelectedGame(game)}
                     >
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-base truncate" style={{ color: isDarkMode ? '#ffffff' : '#111827', maxWidth: '180px', display: 'block' }}>{game.awayTeamFull || game.awayTeam}</span>
@@ -718,7 +720,7 @@ export default function Dashboard() {
                       
                       <div 
                         className="space-y-2 mb-4 cursor-pointer hover:bg-white/5 -mx-2 px-2 py-1 rounded-lg transition-colors"
-                        onClick={() => router.push(`/game/${game.id}`)}
+                        onClick={() => setSelectedGame(game)}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
@@ -961,6 +963,12 @@ export default function Dashboard() {
         isOpen={showBetSlip}
         onClose={() => setShowBetSlip(false)}
         onBetPlaced={handleBetPlaced}
+      />
+
+      <GameDetailPopup
+        isOpen={!!selectedGame}
+        onClose={() => setSelectedGame(null)}
+        game={selectedGame}
       />
 
       <style jsx>{`
