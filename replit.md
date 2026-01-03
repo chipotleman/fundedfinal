@@ -69,8 +69,7 @@ None documented yet.
     - Main endpoint: `/api/games` - Fetches all games with bet365 odds
     - Primary bookmaker: bet365 (with multi-bookmaker comparison in admin panel)
     - Features: Live scores, play-by-play with court position, odds from 10+ bookmakers
-    - **Home/Away Convention**: Goalserve REST API uses correct convention where `hometeam` = home team and `awayteam` = away team.
-    - **CRITICAL: Inplay Feed Swap**: Goalserve's inplay/WebSocket feed has `home`/`away` REVERSED. The parser in `lib/goalserve-inplay.js` swaps them so live games display correctly as "Away @ Home".
+    - **Home/Away Convention**: Goalserve REST API uses `hometeam` = home team and `awayteam` = away team. Dashboard displays games as "Away @ Home" (away team first/top, home team second/bottom).
     - Additional endpoints:
       - `/api/goalserve/games` - Direct Goalserve games endpoint
       - `/api/goalserve/odds?sport=basketball_nba` - Odds only
