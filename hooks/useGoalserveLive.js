@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-const REST_POLLING_INTERVAL = 30000; // 30 seconds
+const REST_POLLING_INTERVAL = 5000; // 5 seconds for faster live updates
 
 export function useGoalserveLive(options = {}) {
-  const { sport = null, eventId = null, autoConnect = true, onUpdate = null, enableRestFallback = true } = options;
+  const { sport = null, eventId = null, autoConnect = true, onUpdate = null, enableRestFallback = true, useInplaySource = true } = options;
   
   const [isConnected, setIsConnected] = useState(false);
   const [events, setEvents] = useState({});
@@ -81,6 +81,8 @@ export function useGoalserveLive(options = {}) {
       const params = new URLSearchParams();
       if (sport) params.set('sport', sport);
       if (eventId) params.set('eventId', eventId);
+      // Use inplay source by default for faster polling (1s) - WebSocket needs IP whitelisting
+      if (useInplaySource) params.set('source', 'inplay');
       
       const url = `/api/goalserve/stream${params.toString() ? '?' + params.toString() : ''}`;
 
@@ -234,7 +236,7 @@ export function useGoalserveLive(options = {}) {
       console.error('[Goalserve Live] Connection error:', err);
       setError(err.message);
     }
-  }, [sport, eventId, onUpdate, enableRestFallback, startRestPolling, stopRestPolling]);
+  }, [sport, eventId, onUpdate, enableRestFallback, startRestPolling, stopRestPolling, useInplaySource]);
 
   const disconnect = useCallback(() => {
     if (eventSourceRef.current) {

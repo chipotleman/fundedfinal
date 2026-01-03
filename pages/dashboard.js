@@ -228,8 +228,11 @@ export default function Dashboard() {
     };
     
     fetchWithDebounce();
-    // Start with 60s polling to avoid overwhelming slow API
-    pollingIntervalRef.current = setInterval(fetchWithDebounce, 60000);
+    // Use server-recommended polling interval (adaptive based on live games)
+    // Initial: 30s, adjusts to 15s when live games detected
+    const initialPollingInterval = 30000;
+    pollingIntervalRef.current = setInterval(fetchWithDebounce, initialPollingInterval);
+    currentIntervalRef.current = initialPollingInterval;
     return () => {
       if (pollingIntervalRef.current) {
         clearInterval(pollingIntervalRef.current);
