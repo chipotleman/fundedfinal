@@ -192,9 +192,11 @@ export default function Dashboard() {
   const gamesWithLiveData = useMemo(() => {
     // Convert inplay events to game format
     const inplayGames = Object.values(inplayEvents || {}).map(event => {
-      // Inplay feed uses correct convention, no swap needed
-      const homeTeam = event.homeTeam || event.stats?.[0]?.home || 'Home';
-      const awayTeam = event.awayTeam || event.stats?.[0]?.away || 'Away';
+      // Trust the normalized homeTeam/awayTeam from inplay normalizer
+      // CRITICAL: If falling back to stats, those are in Goalserve's REVERSED convention
+      // So swap them: stats.home = actual away, stats.away = actual home
+      const homeTeam = event.homeTeam || event.stats?.[0]?.away || 'Home';
+      const awayTeam = event.awayTeam || event.stats?.[0]?.home || 'Away';
       
       // USE the pre-computed scores from the normalized event (from info.score or team_info)
       // These are the REAL-TIME scores, not the halftime stats
@@ -202,13 +204,14 @@ export default function Dashboard() {
       let awayScore = event.awayScore ?? 0;
       
       // Only fallback to stats if homeScore/awayScore are 0 and we have stats
-      // Inplay feed uses correct convention, no swap needed
+      // CRITICAL: Stats are in Goalserve's REVERSED convention, so swap them
       if (homeScore === 0 && awayScore === 0 && event.stats) {
         // Try stats.T first (current total), not Half (halftime only)
         const totalStat = Object.values(event.stats).find(s => s.name === 'T');
         if (totalStat) {
-          homeScore = parseInt(totalStat.home) || 0;
-          awayScore = parseInt(totalStat.away) || 0;
+          // Swap: stats.home = actual away, stats.away = actual home
+          homeScore = parseInt(totalStat.away) || 0;
+          awayScore = parseInt(totalStat.home) || 0;
         }
       }
       
