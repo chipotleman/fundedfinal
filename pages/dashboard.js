@@ -3,10 +3,14 @@ import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import TapSurface from '../components/TapSurface';
+import LiveGameTimer from '../components/LiveGameTimer';
+import LiveActionFeed from '../components/LiveActionFeed';
+import { inferLeague } from '../lib/leagueInference';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { categorizeGames, filterGamesBySport } from '../lib/gamesUtils';
+import { useGoalserveLive } from '../hooks/useGoalserveLive';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -103,8 +107,8 @@ export default function Dashboard() {
   const [apiGames, setApiGames] = useState([]);
   const [gamesError, setGamesError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [apiStatus, setApiStatus] = useState('ok'); // 'ok', 'degraded', 'down'
-  const [apiMessage, setApiMessage] = useState(null);
+  
+  const { liveScores, liveOdds, events: inplayEvents, isConnected: liveConnected } = useGoalserveLive({ autoConnect: true });
   
   // Adaptive polling - use refs to avoid closure issues
   const pollingIntervalRef = useRef(null);
@@ -121,15 +125,6 @@ export default function Dashboard() {
           setApiGames([...(data.games || [])]);
           setLastUpdated(new Date());
           setGamesError(null);
-          
-          // Track API status for outage banner
-          if (data.apiStatus) {
-            setApiStatus(data.apiStatus);
-            setApiMessage(data.message || null);
-          } else {
-            setApiStatus('ok');
-            setApiMessage(null);
-          }
           
           // Track last odds update for stale detection (using refs to avoid closure issues)
           if (data.freshness?.lastOddsUpdate) {
@@ -194,21 +189,214 @@ export default function Dashboard() {
     };
   }, []);
 
-  // Simple game processing - just use REST API data, add league field
   const gamesWithLiveData = useMemo(() => {
-    const processed = apiGames.map(game => ({
-      ...game,
-      league: game.league || game.sportName
-    }));
-    console.log('[DASHBOARD] gamesWithLiveData count:', processed.length);
-    return processed;
-  }, [apiGames]);
+    // Convert inplay events to game format
+    const inplayGames = Object.values(inplayEvents || {}).map(event => {
+      // Trust the normalized homeTeam/awayTeam from inplay normalizer
+      // Inplay feed already uses correct convention, no swap needed
+      const homeTeam = event.homeTeam || event.stats?.[0]?.home || 'Home';
+      const awayTeam = event.awayTeam || event.stats?.[0]?.away || 'Away';
+      
+      // USE the pre-computed scores from the normalized event (from info.score or team_info)
+      // These are the REAL-TIME scores, not the halftime stats
+      let homeScore = event.homeScore ?? 0;
+      let awayScore = event.awayScore ?? 0;
+      
+      // Only fallback to stats if homeScore/awayScore are 0 and we have stats
+      // Inplay feed already uses correct convention, no swap needed
+      if (homeScore === 0 && awayScore === 0 && event.stats) {
+        // Try stats.T first (current total), not Half (halftime only)
+        const totalStat = Object.values(event.stats).find(s => s.name === 'T');
+        if (totalStat) {
+          homeScore = parseInt(totalStat.home) || 0;
+          awayScore = parseInt(totalStat.away) || 0;
+        }
+      }
+      
+      // Icon mapping by sport type
+      const sportIcons = {
+        basketball: '🏀',
+        hockey: '🏒',
+        soccer: '⚽',
+        amfootball: '🏈',
+        baseball: '⚾',
+        esports: '🎮'
+      };
+      const sportIcon = sportIcons[event.sport] || '🏆';
+      
+      // Use AI inference to determine league from team names
+      const leagueName = event.league || inferLeague(homeTeam, awayTeam, event.sport);
+      
+      return {
+        id: `inplay_${event.id}`,
+        gameId: `inplay_${event.id}`,
+        sport: event.sport,
+        sportName: leagueName,
+        league: leagueName,
+        sportIcon: sportIcon,
+        homeTeam: homeTeam.substring(0, 20),
+        awayTeam: awayTeam.substring(0, 20),
+        homeTeamFull: homeTeam,
+        awayTeamFull: awayTeam,
+        time: 'LIVE',
+        commenceTime: new Date().toISOString(),
+        status: 'IN_PROGRESS',
+        isLive: true,
+        isInplay: true,
+        displayClock: event.displayClock,
+        elapsedTime: event.elapsedTime,
+        period: event.period,
+        stateCode: event.stateCode,
+        comments: event.comments || [],
+        scores: {
+          home: { total: homeScore },
+          away: { total: awayScore }
+        },
+        lines: event.odds && Object.keys(event.odds).length > 0 ? {
+          moneyline: {
+            home: event.odds.moneyline?.home || null,
+            away: event.odds.moneyline?.away || null
+          },
+          spread: {
+            home: event.odds.spread?.home ? 
+              { point: parseFloat(event.odds.spread.home.line) || 0, odds: parseFloat(event.odds.spread.home.odds) || -110 } 
+              : null,
+            away: event.odds.spread?.away ? 
+              { point: parseFloat(event.odds.spread.away.line) || 0, odds: parseFloat(event.odds.spread.away.odds) || -110 } 
+              : null
+          },
+          total: {
+            over: (event.odds.total?.line !== undefined && event.odds.total?.line !== null) ? 
+              { point: parseFloat(event.odds.total.line) || 0, odds: parseFloat(event.odds.total.over) || -110 } 
+              : null,
+            under: (event.odds.total?.line !== undefined && event.odds.total?.line !== null) ? 
+              { point: parseFloat(event.odds.total.line) || 0, odds: parseFloat(event.odds.total.under) || -110 } 
+              : null
+          }
+        } : null,
+        dataSource: 'Goalserve Inplay'
+      };
+    });
+    
+    // Update API games with live data - also add league field
+    const updatedApiGames = apiGames.map(game => {
+      const liveScore = liveScores[game.id];
+      const liveOdd = liveOdds[game.id];
+      
+      // For API games, sportName IS the league (NBA, NCAAB, NFL, etc.)
+      const gameWithLeague = { ...game, league: game.league || game.sportName };
+      
+      if (!liveScore && !liveOdd) return gameWithLeague;
+      
+      const updatedGame = { ...gameWithLeague };
+      
+      if (liveScore) {
+        updatedGame.scores = {
+          home: { total: liveScore.homeScore || game.scores?.home?.total || 0 },
+          away: { total: liveScore.awayScore || game.scores?.away?.total || 0 }
+        };
+        if (liveScore.status) updatedGame.status = liveScore.status;
+        if (liveScore.isLive !== undefined) updatedGame.isLive = liveScore.isLive;
+        if (liveScore.quarter) updatedGame.quarter = liveScore.quarter;
+        if (liveScore.elapsedTime) updatedGame.elapsedTime = liveScore.elapsedTime;
+        if (liveScore.period) updatedGame.period = liveScore.period;
+        if (liveScore.stateCode) updatedGame.stateCode = liveScore.stateCode;
+        if (liveScore.displayClock) updatedGame.displayClock = liveScore.displayClock;
+        if (liveScore.comments && liveScore.comments.length > 0) {
+          updatedGame.comments = liveScore.comments;
+        }
+      }
+      
+      if (liveOdd && updatedGame.lines) {
+        if (liveOdd.moneyline) {
+          updatedGame.lines.moneyline = {
+            home: liveOdd.moneyline.home || updatedGame.lines.moneyline.home,
+            away: liveOdd.moneyline.away || updatedGame.lines.moneyline.away
+          };
+        }
+        if (liveOdd.spread) {
+          updatedGame.lines.spread = {
+            home: liveOdd.spread.home || updatedGame.lines.spread.home,
+            away: liveOdd.spread.away || updatedGame.lines.spread.away
+          };
+        }
+        if (liveOdd.total) {
+          updatedGame.lines.total = {
+            over: liveOdd.total.over || updatedGame.lines.total.over,
+            under: liveOdd.total.under || updatedGame.lines.total.under
+          };
+        }
+      }
+      
+      return updatedGame;
+    });
+    
+    // Merge inplay games with API games - DEDUPLICATE by matching team names
+    // This prevents the same game from appearing twice (once from inplay, once from REST API)
+    const normalizeTeamName = (name) => {
+      if (!name) return '';
+      return name.toLowerCase()
+        .replace(/[^a-z0-9]/g, '') // Remove special chars
+        .replace(/state$/, 'st')   // Normalize State -> St
+        .replace(/university$/, ''); // Remove university suffix
+    };
+    
+    const matchesTeams = (game1, game2) => {
+      const home1 = normalizeTeamName(game1.homeTeamFull || game1.homeTeam);
+      const away1 = normalizeTeamName(game1.awayTeamFull || game1.awayTeam);
+      const home2 = normalizeTeamName(game2.homeTeamFull || game2.homeTeam);
+      const away2 = normalizeTeamName(game2.awayTeamFull || game2.awayTeam);
+      
+      // Check if teams match (either direction since home/away might be swapped)
+      return (home1 === home2 && away1 === away2) || 
+             (home1 === away2 && away1 === home2);
+    };
+    
+    // Check if teams are in the same order (not reversed)
+    const teamsInSameOrder = (game1, game2) => {
+      const home1 = normalizeTeamName(game1.homeTeamFull || game1.homeTeam);
+      const home2 = normalizeTeamName(game2.homeTeamFull || game2.homeTeam);
+      return home1 === home2;
+    };
+    
+    // For each API game, try to find matching inplay event and merge
+    const mergedGames = updatedApiGames.map(apiGame => {
+      const matchingInplay = inplayGames.find(inplay => matchesTeams(apiGame, inplay));
+      
+      if (matchingInplay) {
+        // Merge inplay data into API game (preserve API game's ID, sport name, structure)
+        return {
+          ...apiGame,
+          isLive: true,
+          isInplay: true,
+          displayClock: matchingInplay.displayClock || apiGame.displayClock,
+          period: matchingInplay.period || apiGame.period,
+          stateCode: matchingInplay.stateCode || apiGame.stateCode,
+          comments: matchingInplay.comments?.length > 0 ? matchingInplay.comments : apiGame.comments,
+          // Update scores from inplay if available
+          scores: matchingInplay.scores?.home?.total > 0 || matchingInplay.scores?.away?.total > 0
+            ? matchingInplay.scores
+            : apiGame.scores,
+          // Update lines from inplay if available (live odds)
+          lines: matchingInplay.lines && (matchingInplay.lines.moneyline?.home || matchingInplay.lines.spread?.home)
+            ? matchingInplay.lines
+            : apiGame.lines,
+          dataSource: 'Goalserve Inplay (merged)'
+        };
+      }
+      
+      return apiGame;
+    });
+    
+    // Add any inplay games that don't match API games (truly new events)
+    const unmatchedInplay = inplayGames.filter(inplay => 
+      !updatedApiGames.some(apiGame => matchesTeams(apiGame, inplay))
+    );
+    
+    return [...mergedGames, ...unmatchedInplay];
+  }, [apiGames, liveScores, liveOdds, inplayEvents]);
 
-  const categorizedGames = useMemo(() => {
-    const result = categorizeGames(gamesWithLiveData);
-    console.log('[DASHBOARD] Categorized - live:', result.liveGames?.length, 'upcoming:', result.upcomingGames?.length);
-    return result;
-  }, [gamesWithLiveData, lastUpdated]);
+  const categorizedGames = useMemo(() => categorizeGames(gamesWithLiveData), [gamesWithLiveData, lastUpdated]);
 
   useEffect(() => {
     setAllGames(gamesWithLiveData);
@@ -318,34 +506,6 @@ export default function Dashboard() {
         betSlipCount={betSlip.length}
         onBetSlipClick={handleBetSlipClick}
       />
-
-      {/* API Outage Banner */}
-      {(apiStatus === 'degraded' || apiStatus === 'down') && (
-        <div 
-          className="px-4 py-3 flex items-center gap-3"
-          style={{ 
-            backgroundColor: apiStatus === 'down' ? '#7f1d1d' : '#78350f',
-            borderBottom: '1px solid rgba(255,255,255,0.1)'
-          }}
-        >
-          <div 
-            className="w-2 h-2 rounded-full animate-pulse"
-            style={{ backgroundColor: apiStatus === 'down' ? '#f87171' : '#fbbf24' }}
-          ></div>
-          <span className="text-sm text-white">
-            {apiMessage || (apiStatus === 'down' 
-              ? 'Sports data is temporarily unavailable. Please try again later.' 
-              : 'Showing cached data - live updates may be delayed.'
-            )}
-          </span>
-          <button 
-            onClick={() => fetch('/api/games?refresh=true').then(() => window.location.reload())}
-            className="ml-auto text-xs text-white/70 hover:text-white underline"
-          >
-            Retry
-          </button>
-        </div>
-      )}
 
       <div className="pt-4 sm:pt-6 lg:pt-8 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
         <div className="mb-4">
