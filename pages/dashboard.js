@@ -388,12 +388,9 @@ export default function Dashboard() {
       return apiGame;
     });
     
-    // Add any inplay games that don't match API games (truly new events)
-    const unmatchedInplay = inplayGames.filter(inplay => 
-      !updatedApiGames.some(apiGame => matchesTeams(apiGame, inplay))
-    );
-    
-    return [...mergedGames, ...unmatchedInplay];
+    // Only return REST API games (merged with inplay data when available)
+    // Don't add standalone inplay games - they lack proper odds/scores
+    return mergedGames;
   }, [apiGames, liveScores, liveOdds, inplayEvents]);
 
   const categorizedGames = useMemo(() => categorizeGames(gamesWithLiveData), [gamesWithLiveData, lastUpdated]);
