@@ -99,8 +99,6 @@ export default function Dashboard() {
 
   const baseGamesRef = useRef({});
   const betSlipRef = useRef(betSlip);
-  const lastValidGamesRef = useRef([]);
-  const lastValidApiGamesRef = useRef([]);
   
   useEffect(() => {
     betSlipRef.current = betSlip;
@@ -109,6 +107,7 @@ export default function Dashboard() {
   const [apiGames, setApiGames] = useState([]);
   const [gamesError, setGamesError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const lastValidGamesCountRef = useRef(0); // Track last valid games count to detect unexpected empty responses
   
   const { liveScores, liveOdds, events: inplayEvents, isConnected: liveConnected } = useGoalserveLive({ autoConnect: true });
   
@@ -128,14 +127,28 @@ export default function Dashboard() {
         if (response.ok) {
           const data = await response.json();
           const newGames = data.games || [];
-          // Only update if we have valid data - preserve last valid data otherwise
-          if (newGames.length > 0) {
+          
+          // Use API signals to determine if empty response is legitimate
+          // Legitimate empty: fresh data with no games (all events completed)
+          // Transient empty: had games before and getting empty without clear indication
+          const hadPreviousGames = lastValidGamesCountRef.current > 0;
+          const isFreshResponse = data.fromCache === false;
+          const noLiveGamesIndicated = data.freshness?.hasLiveGames === false;
+          
+          // Accept empty response if:
+          // 1. We're getting actual games, or
+          // 2. This is our first load (no previous games), or
+          // 3. API explicitly indicates fresh data with no live games, or
+          // 4. It's a fresh (non-cached) response
+          const shouldAcceptEmpty = !hadPreviousGames || isFreshResponse || noLiveGamesIndicated;
+          
+          if (newGames.length > 0 || shouldAcceptEmpty) {
             setApiGames([...newGames]);
-            lastValidApiGamesRef.current = [...newGames];
-          } else if (lastValidApiGamesRef.current.length > 0) {
-            // No new data, keep using the last valid data
-            setApiGames([...lastValidApiGamesRef.current]);
+            lastValidGamesCountRef.current = newGames.length;
+          } else {
+            console.warn('[DASHBOARD] Skipping suspicious empty cached response, keeping previous games');
           }
+          
           setLastUpdated(new Date());
           setGamesError(null);
           setLoading(false);
@@ -151,7 +164,7 @@ export default function Dashboard() {
             pollingIntervalRef.current = setInterval(fetchAllGames, recommendedInterval);
           }
           
-          console.log('[DASHBOARD] Games refreshed:', data.games?.length, 'games');
+          console.log('[DASHBOARD] Games refreshed:', newGames.length, 'games');
         } else {
           console.error('Failed to fetch games');
           if (isMounted) {
@@ -388,22 +401,11 @@ export default function Dashboard() {
   const categorizedGames = useMemo(() => categorizeGames(gamesWithLiveData), [gamesWithLiveData, lastUpdated]);
 
   useEffect(() => {
-    // Preserve valid games data - only update if we have data
-    if (gamesWithLiveData.length > 0) {
-      setAllGames(gamesWithLiveData);
-      lastValidGamesRef.current = gamesWithLiveData;
-    } else if (lastValidGamesRef.current.length > 0) {
-      // Keep using last valid data if current is empty
-      setAllGames(lastValidGamesRef.current);
-    }
-    
-    // Use current data or fall back to last valid
-    const sourceGames = gamesWithLiveData.length > 0 ? categorizedGames : 
-      categorizeGames(lastValidGamesRef.current);
+    setAllGames(gamesWithLiveData);
     
     // Get both live and upcoming games - DON'T filter by tab here, show all
-    const liveGames = [...(sourceGames.liveGames || []), ...(sourceGames.recentlyCompletedGames || [])];
-    const upcomingGames = sourceGames.upcomingGames || [];
+    const liveGames = [...categorizedGames.liveGames, ...(categorizedGames.recentlyCompletedGames || [])];
+    const upcomingGames = categorizedGames.upcomingGames || [];
     
     // Choose which to display based on tab, but keep both available
     const activeGames = selectedTab === 'live' ? liveGames : upcomingGames;
@@ -429,12 +431,9 @@ export default function Dashboard() {
       });
     }
     
-    // Only update games if we have data or are actively loading
-    if (filteredGames.length > 0 || !loading) {
-      setGames(filteredGames);
-    }
+    setGames(filteredGames);
     setLoading(false);
-  }, [selectedSport, selectedTab, gamesWithLiveData, categorizedGames, loading]);
+  }, [selectedSport, selectedTab, gamesWithLiveData, categorizedGames]);
 
 
   const formatOdds = (odds) => {

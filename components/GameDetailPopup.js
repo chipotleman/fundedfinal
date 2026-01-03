@@ -8,33 +8,33 @@ export default function GameDetailPopup({ isOpen, onClose, game }) {
 
   const tabs = ['Live SGP', 'Featured', 'Game Lines', 'Player Props'];
 
+  // Store scroll position when popup opens, restore on close
+  // Using overflow:hidden only to prevent background scroll without affecting layout
   useEffect(() => {
-    if (isOpen) {
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
-    } else {
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-      window.scrollTo(0, parseInt(scrollY || '0') * -1);
-    }
+    if (!isOpen) return;
+    
+    const scrollY = window.scrollY;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    
     return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
+      document.body.style.overflow = originalOverflow;
+      // Only restore scroll if we're actually closing (component unmounting while open)
     };
   }, [isOpen]);
 
+  // Reset liveData when game changes so we use fresh data from parent
+  useEffect(() => {
+    setLiveData(null);
+  }, [game?.id]);
+
+  // Optionally fetch updated data, but less frequently to avoid conflicts with dashboard
   useEffect(() => {
     if (!isOpen || !game?.id) return;
     
-    const fetchLiveData = async () => {
+    // Only fetch if the popup has been open for a while (30 seconds)
+    // This avoids conflicting with the dashboard's own polling
+    const timeoutId = setTimeout(async () => {
       try {
         const response = await fetch('/api/games');
         if (response.ok) {
@@ -47,11 +47,9 @@ export default function GameDetailPopup({ isOpen, onClose, game }) {
       } catch (error) {
         console.error('Error fetching live data:', error);
       }
-    };
-
-    fetchLiveData();
-    const interval = setInterval(fetchLiveData, 15000);
-    return () => clearInterval(interval);
+    }, 30000);
+    
+    return () => clearTimeout(timeoutId);
   }, [isOpen, game?.id]);
 
   if (!isOpen || !game) return null;
