@@ -5,7 +5,7 @@ let scoresCacheTimestamp = null;
 // Only fetch sports likely to have live games at current time
 // This dramatically reduces API calls and speeds up the endpoint
 let liveSportsCache = [];
-const SCORES_CACHE_DURATION = 2000;  // 2s cache - good balance of freshness vs speed
+const SCORES_CACHE_DURATION = 500;  // 500ms cache for near-realtime updates
 const STALE_CACHE_DURATION = 30000;  // Serve stale cache for 30s while fetching fresh
 
 // Determine which sports are likely live based on time of day

@@ -232,8 +232,8 @@ export default function Dashboard() {
     };
     
     fetchWithDebounce();
-    // Use slower polling for full games/odds (30s) - fast scores come from dedicated endpoint
-    const initialPollingInterval = 30000;
+    // Fast polling for live games - 1 second for near-realtime updates
+    const initialPollingInterval = 1000;
     pollingIntervalRef.current = setInterval(fetchWithDebounce, initialPollingInterval);
     currentIntervalRef.current = initialPollingInterval;
     return () => {
