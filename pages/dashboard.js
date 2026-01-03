@@ -189,23 +189,20 @@ export default function Dashboard() {
     };
   }, []);
 
-  const gamesWithLiveData = useMemo(() => {
-    // Convert inplay events to game format
-    const inplayGames = Object.values(inplayEvents || {}).map(event => {
-      // Trust the normalized homeTeam/awayTeam from inplay normalizer
-      // Inplay feed already uses correct convention, no swap needed
+  // SEPARATED DATA SOURCES - No more merging!
+  // Live tab uses ONLY inplay SSE data (fastest, real-time)
+  // Upcoming tab uses ONLY REST API data (scheduled games)
+  
+  // Convert inplay events to game format for Live tab
+  const liveGamesFromInplay = useMemo(() => {
+    return Object.values(inplayEvents || {}).map(event => {
       const homeTeam = event.homeTeam || event.stats?.[0]?.home || 'Home';
       const awayTeam = event.awayTeam || event.stats?.[0]?.away || 'Away';
       
-      // USE the pre-computed scores from the normalized event (from info.score or team_info)
-      // These are the REAL-TIME scores, not the halftime stats
       let homeScore = event.homeScore ?? 0;
       let awayScore = event.awayScore ?? 0;
       
-      // Only fallback to stats if homeScore/awayScore are 0 and we have stats
-      // Inplay feed already uses correct convention, no swap needed
       if (homeScore === 0 && awayScore === 0 && event.stats) {
-        // Try stats.T first (current total), not Half (halftime only)
         const totalStat = Object.values(event.stats).find(s => s.name === 'T');
         if (totalStat) {
           homeScore = parseInt(totalStat.home) || 0;
@@ -213,7 +210,6 @@ export default function Dashboard() {
         }
       }
       
-      // Icon mapping by sport type
       const sportIcons = {
         basketball: '🏀',
         hockey: '🏒',
@@ -223,8 +219,6 @@ export default function Dashboard() {
         esports: '🎮'
       };
       const sportIcon = sportIcons[event.sport] || '🏆';
-      
-      // Use AI inference to determine league from team names
       const leagueName = event.league || inferLeague(homeTeam, awayTeam, event.sport);
       
       return {
@@ -277,129 +271,46 @@ export default function Dashboard() {
         dataSource: 'Goalserve Inplay'
       };
     });
-    
-    // Update API games with live data - also add league field
-    const updatedApiGames = apiGames.map(game => {
-      const liveScore = liveScores[game.id];
-      const liveOdd = liveOdds[game.id];
-      
-      // For API games, sportName IS the league (NBA, NCAAB, NFL, etc.)
-      const gameWithLeague = { ...game, league: game.league || game.sportName };
-      
-      if (!liveScore && !liveOdd) return gameWithLeague;
-      
-      const updatedGame = { ...gameWithLeague };
-      
-      if (liveScore) {
-        updatedGame.scores = {
-          home: { total: liveScore.homeScore || game.scores?.home?.total || 0 },
-          away: { total: liveScore.awayScore || game.scores?.away?.total || 0 }
-        };
-        if (liveScore.status) updatedGame.status = liveScore.status;
-        if (liveScore.isLive !== undefined) updatedGame.isLive = liveScore.isLive;
-        if (liveScore.quarter) updatedGame.quarter = liveScore.quarter;
-        if (liveScore.elapsedTime) updatedGame.elapsedTime = liveScore.elapsedTime;
-        if (liveScore.period) updatedGame.period = liveScore.period;
-        if (liveScore.stateCode) updatedGame.stateCode = liveScore.stateCode;
-        if (liveScore.displayClock) updatedGame.displayClock = liveScore.displayClock;
-        if (liveScore.comments && liveScore.comments.length > 0) {
-          updatedGame.comments = liveScore.comments;
-        }
-      }
-      
-      if (liveOdd && updatedGame.lines) {
-        if (liveOdd.moneyline) {
-          updatedGame.lines.moneyline = {
-            home: liveOdd.moneyline.home || updatedGame.lines.moneyline.home,
-            away: liveOdd.moneyline.away || updatedGame.lines.moneyline.away
-          };
-        }
-        if (liveOdd.spread) {
-          updatedGame.lines.spread = {
-            home: liveOdd.spread.home || updatedGame.lines.spread.home,
-            away: liveOdd.spread.away || updatedGame.lines.spread.away
-          };
-        }
-        if (liveOdd.total) {
-          updatedGame.lines.total = {
-            over: liveOdd.total.over || updatedGame.lines.total.over,
-            under: liveOdd.total.under || updatedGame.lines.total.under
-          };
-        }
-      }
-      
-      return updatedGame;
-    });
-    
-    // Merge inplay games with API games - DEDUPLICATE by matching team names
-    // This prevents the same game from appearing twice (once from inplay, once from REST API)
-    const normalizeTeamName = (name) => {
-      if (!name) return '';
-      return name.toLowerCase()
-        .replace(/[^a-z0-9]/g, '') // Remove special chars
-        .replace(/state$/, 'st')   // Normalize State -> St
-        .replace(/university$/, ''); // Remove university suffix
-    };
-    
-    const matchesTeams = (game1, game2) => {
-      const home1 = normalizeTeamName(game1.homeTeamFull || game1.homeTeam);
-      const away1 = normalizeTeamName(game1.awayTeamFull || game1.awayTeam);
-      const home2 = normalizeTeamName(game2.homeTeamFull || game2.homeTeam);
-      const away2 = normalizeTeamName(game2.awayTeamFull || game2.awayTeam);
-      
-      // Check if teams match (either direction since home/away might be swapped)
-      return (home1 === home2 && away1 === away2) || 
-             (home1 === away2 && away1 === home2);
-    };
-    
-    // Check if teams are in the same order (not reversed)
-    const teamsInSameOrder = (game1, game2) => {
-      const home1 = normalizeTeamName(game1.homeTeamFull || game1.homeTeam);
-      const home2 = normalizeTeamName(game2.homeTeamFull || game2.homeTeam);
-      return home1 === home2;
-    };
-    
-    // For each API game, try to find matching inplay event and merge
-    const mergedGames = updatedApiGames.map(apiGame => {
-      const matchingInplay = inplayGames.find(inplay => matchesTeams(apiGame, inplay));
-      
-      if (matchingInplay) {
-        // Merge inplay data into API game (preserve API game's ID, sport name, structure)
-        // ALWAYS prefer inplay scores when available - they are most real-time
-        // This prevents flickering between REST API and inplay scores
-        const inplayHasScores = matchingInplay.scores?.home?.total !== undefined && 
-                                matchingInplay.scores?.away?.total !== undefined;
-        return {
-          ...apiGame,
-          isLive: true,
-          isInplay: true,
-          displayClock: matchingInplay.displayClock || apiGame.displayClock,
-          period: matchingInplay.period || apiGame.period,
-          stateCode: matchingInplay.stateCode || apiGame.stateCode,
-          comments: matchingInplay.comments?.length > 0 ? matchingInplay.comments : apiGame.comments,
-          // ALWAYS use inplay scores when we have a matching inplay game
-          // This prevents race conditions between REST API and inplay SSE
-          scores: inplayHasScores ? matchingInplay.scores : apiGame.scores,
-          // Update lines from inplay if available (live odds)
-          lines: matchingInplay.lines && (matchingInplay.lines.moneyline?.home || matchingInplay.lines.spread?.home)
-            ? matchingInplay.lines
-            : apiGame.lines,
-          dataSource: 'Goalserve Inplay (merged)'
-        };
-      }
-      
-      return apiGame;
-    });
-    
-    // Add any inplay games that don't match API games (truly new events)
-    const unmatchedInplay = inplayGames.filter(inplay => 
-      !updatedApiGames.some(apiGame => matchesTeams(apiGame, inplay))
-    );
-    
-    return [...mergedGames, ...unmatchedInplay];
-  }, [apiGames, liveScores, liveOdds, inplayEvents]);
+  }, [inplayEvents]);
+  
+  // Helper to normalize team names for matching
+  const normalizeTeamName = (name) => {
+    if (!name) return '';
+    return name.toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+      .replace(/state$/, 'st')
+      .replace(/university$/, '');
+  };
+  
+  // Get upcoming games from REST API (exclude any that are live in inplay)
+  const upcomingGamesFromApi = useMemo(() => {
+    return apiGames
+      .map(game => ({ ...game, league: game.league || game.sportName }))
+      .filter(game => {
+        // Exclude games that are already showing in inplay
+        const isInInplay = liveGamesFromInplay.some(inplay => {
+          const home1 = normalizeTeamName(game.homeTeamFull || game.homeTeam);
+          const away1 = normalizeTeamName(game.awayTeamFull || game.awayTeam);
+          const home2 = normalizeTeamName(inplay.homeTeamFull || inplay.homeTeam);
+          const away2 = normalizeTeamName(inplay.awayTeamFull || inplay.awayTeam);
+          return (home1 === home2 && away1 === away2) || (home1 === away2 && away1 === home2);
+        });
+        // Also exclude games marked as live or completed by REST API
+        return !isInInplay && !game.isLive && !game.isCompleted;
+      });
+  }, [apiGames, liveGamesFromInplay]);
+  
+  // Combined for backward compatibility with existing code
+  const gamesWithLiveData = useMemo(() => {
+    return [...liveGamesFromInplay, ...upcomingGamesFromApi];
+  }, [liveGamesFromInplay, upcomingGamesFromApi]);
 
-  const categorizedGames = useMemo(() => categorizeGames(gamesWithLiveData), [gamesWithLiveData, lastUpdated]);
+  // Simplified categorization - no merge logic needed
+  const categorizedGames = useMemo(() => ({
+    liveGames: liveGamesFromInplay,
+    upcomingGames: upcomingGamesFromApi,
+    recentlyCompletedGames: []
+  }), [liveGamesFromInplay, upcomingGamesFromApi]);
 
   useEffect(() => {
     setAllGames(gamesWithLiveData);
