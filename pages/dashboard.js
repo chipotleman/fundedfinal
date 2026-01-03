@@ -585,7 +585,7 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {allGames.filter(g => g.lines && g.lines.moneyline).slice(0, 3).map((game) => {
+            {categorizedGames.liveGames.filter(g => g.lines && g.lines.moneyline).slice(0, 3).map((game) => {
               const isLive = game.isLive || game.status === 'IN_PROGRESS';
               return (
                 <div 
