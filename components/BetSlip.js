@@ -33,6 +33,26 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
   const liveScores = useMemo(() => {
     const scoresMap = {};
     
+    // Helper to add game data with multiple key variations
+    const addGameKeys = (game, scoreData) => {
+      if (game.id) scoresMap[game.id] = scoreData;
+      if (game.gameId) scoresMap[game.gameId] = scoreData;
+      
+      // Matchup keys with full names
+      if (game.awayTeamFull && game.homeTeamFull) {
+        const fullMatchup = `${game.awayTeamFull} @ ${game.homeTeamFull}`;
+        scoresMap[fullMatchup] = scoreData;
+        scoresMap[fullMatchup.toLowerCase()] = scoreData;
+      }
+      
+      // Matchup keys with abbreviations
+      if (game.awayTeam && game.homeTeam) {
+        const abbrMatchup = `${game.awayTeam} @ ${game.homeTeam}`;
+        scoresMap[abbrMatchup] = scoreData;
+        scoresMap[abbrMatchup.toLowerCase()] = scoreData;
+      }
+    };
+    
     // First, add all inplay events (real-time SSE data with live scores)
     Object.entries(inplayEvents || {}).forEach(([id, event]) => {
       const scoreData = {
@@ -42,13 +62,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
         time: event.time || event.clock || ''
       };
       scoresMap[id] = scoreData;
-      scoresMap[event.id] = scoreData;
-      // Also key by matchup
-      if (event.awayTeam && event.homeTeam) {
-        const matchup = `${event.awayTeam} @ ${event.homeTeam}`;
-        scoresMap[matchup] = scoreData;
-        scoresMap[matchup.toLowerCase()] = scoreData;
-      }
+      addGameKeys(event, scoreData);
     });
     
     // Then add API games (for games not in inplay but might have scores)
@@ -58,17 +72,11 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
       
       const scoreData = {
         isLive: game.isLive || game.status === 'IN_PROGRESS',
-        awayScore: game.scores?.away?.total ?? 0,
-        homeScore: game.scores?.home?.total ?? 0,
+        awayScore: game.scores?.away?.total ?? game.awayScore ?? 0,
+        homeScore: game.scores?.home?.total ?? game.homeScore ?? 0,
         time: game.time || ''
       };
-      scoresMap[game.id] = scoreData;
-      scoresMap[game.gameId] = scoreData;
-      const matchup = `${game.awayTeam} @ ${game.homeTeam}`;
-      scoresMap[matchup] = scoreData;
-      const fullMatchup = `${game.awayTeamFull} @ ${game.homeTeamFull}`;
-      scoresMap[fullMatchup] = scoreData;
-      scoresMap[fullMatchup.toLowerCase()] = scoreData;
+      addGameKeys(game, scoreData);
     });
     
     return scoresMap;
@@ -480,7 +488,22 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                               
                               {/* Live Game Info */}
                               {(() => {
-                                const live = liveScores[bet.gameId] || liveScores[bet.matchup] || liveScores[bet.matchup?.toLowerCase()] || {};
+                                // Try multiple matching strategies
+                                const fullMatchup = bet.awayTeamFull && bet.homeTeamFull 
+                                  ? `${bet.awayTeamFull} @ ${bet.homeTeamFull}` 
+                                  : null;
+                                const abbrMatchup = bet.awayTeam && bet.homeTeam 
+                                  ? `${bet.awayTeam} @ ${bet.homeTeam}` 
+                                  : null;
+                                
+                                const live = liveScores[bet.gameId] || 
+                                  liveScores[bet.matchup] || 
+                                  liveScores[bet.matchup?.toLowerCase()] ||
+                                  (fullMatchup && liveScores[fullMatchup]) ||
+                                  (fullMatchup && liveScores[fullMatchup.toLowerCase()]) ||
+                                  (abbrMatchup && liveScores[abbrMatchup]) ||
+                                  (abbrMatchup && liveScores[abbrMatchup.toLowerCase()]) ||
+                                  {};
                                 const isLive = live.isLive || bet.isLive;
                                 const awayScore = live.awayScore ?? bet.awayScore ?? 0;
                                 const homeScore = live.homeScore ?? bet.homeScore ?? 0;

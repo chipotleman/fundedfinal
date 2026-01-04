@@ -27,6 +27,30 @@ export default function BetHistory() {
   const liveGames = useMemo(() => {
     const gamesMap = {};
     
+    // Helper to add game with multiple key variations
+    const addGameKeys = (game, gameData) => {
+      if (game.id) gamesMap[game.id] = gameData;
+      if (game.gameId) gamesMap[game.gameId] = gameData;
+      
+      // Full team name matchups
+      if (game.awayTeamFull && game.homeTeamFull) {
+        const fullMatchup = `${game.awayTeamFull} @ ${game.homeTeamFull}`;
+        gamesMap[fullMatchup] = gameData;
+        gamesMap[fullMatchup.toLowerCase()] = gameData;
+        // Normalize (w) to (W)
+        const normalizedMatchup = fullMatchup.replace(/\(w\)/gi, '(W)');
+        gamesMap[normalizedMatchup] = gameData;
+        gamesMap[normalizedMatchup.toLowerCase()] = gameData;
+      }
+      
+      // Abbreviation matchups  
+      if (game.awayTeam && game.homeTeam) {
+        const abbrMatchup = `${game.awayTeam} @ ${game.homeTeam}`;
+        gamesMap[abbrMatchup] = gameData;
+        gamesMap[abbrMatchup.toLowerCase()] = gameData;
+      }
+    };
+    
     // First, add all inplay events (real-time SSE data with live scores)
     Object.entries(inplayEvents || {}).forEach(([id, event]) => {
       const gameData = {
@@ -36,8 +60,8 @@ export default function BetHistory() {
         awayScore: event.awayScore ?? 0,
         homeTeam: event.homeTeam,
         awayTeam: event.awayTeam,
-        homeTeamFull: event.homeTeam,
-        awayTeamFull: event.awayTeam,
+        homeTeamFull: event.homeTeamFull || event.homeTeam,
+        awayTeamFull: event.awayTeamFull || event.awayTeam,
         time: event.time || event.clock || '',
         scores: {
           home: { total: event.homeScore ?? 0 },
@@ -45,29 +69,13 @@ export default function BetHistory() {
         }
       };
       gamesMap[id] = gameData;
-      gamesMap[event.id] = gameData;
-      if (event.awayTeam && event.homeTeam) {
-        const matchup = `${event.awayTeam} @ ${event.homeTeam}`;
-        gamesMap[matchup] = gameData;
-        gamesMap[matchup.toLowerCase()] = gameData;
-      }
+      addGameKeys(event, gameData);
     });
     
     // Then add API games
     (apiGames || []).forEach(game => {
       if (gamesMap[game.id]) return; // Skip if we have inplay data
-      
-      gamesMap[game.id] = game;
-      gamesMap[game.gameId] = game;
-      const matchup = `${game.awayTeam} @ ${game.homeTeam}`;
-      gamesMap[matchup] = game;
-      gamesMap[matchup.toLowerCase()] = game;
-      const fullMatchup = `${game.awayTeamFull} @ ${game.homeTeamFull}`;
-      gamesMap[fullMatchup] = game;
-      gamesMap[fullMatchup.toLowerCase()] = game;
-      const normalizedMatchup = fullMatchup.replace(/\(w\)/gi, '(W)');
-      gamesMap[normalizedMatchup] = game;
-      gamesMap[normalizedMatchup.toLowerCase()] = game;
+      addGameKeys(game, game);
     });
     
     return gamesMap;
@@ -376,12 +384,26 @@ export default function BetHistory() {
           {/* Bets List */}
           <div className="grid grid-cols-1 gap-4 max-w-2xl mx-auto">
             {filteredBets.map(bet => {
-              const liveGame = liveGames[bet.gameId] || liveGames[bet.matchup] || liveGames[bet.matchup?.toLowerCase()];
+              // Try multiple matching strategies for finding live game
+              const findLiveGame = (gameId, matchup, awayTeam, homeTeam, awayTeamFull, homeTeamFull) => {
+                const fullMatchup = awayTeamFull && homeTeamFull ? `${awayTeamFull} @ ${homeTeamFull}` : null;
+                const abbrMatchup = awayTeam && homeTeam ? `${awayTeam} @ ${homeTeam}` : null;
+                return liveGames[gameId] || 
+                  liveGames[matchup] || 
+                  liveGames[matchup?.toLowerCase()] ||
+                  (fullMatchup && liveGames[fullMatchup]) ||
+                  (fullMatchup && liveGames[fullMatchup.toLowerCase()]) ||
+                  (abbrMatchup && liveGames[abbrMatchup]) ||
+                  (abbrMatchup && liveGames[abbrMatchup.toLowerCase()]) ||
+                  null;
+              };
+              
+              const liveGame = findLiveGame(bet.gameId, bet.matchup, bet.awayTeam, bet.homeTeam, bet.awayTeamFull, bet.homeTeamFull);
               
               let enrichedLegs = bet.legs;
               if (bet.legs && Array.isArray(bet.legs)) {
                 enrichedLegs = bet.legs.map(leg => {
-                  const legGame = liveGames[leg.gameId] || liveGames[leg.matchup] || liveGames[leg.matchup?.toLowerCase()];
+                  const legGame = findLiveGame(leg.gameId, leg.matchup, leg.awayTeam, leg.homeTeam, leg.awayTeamFull, leg.homeTeamFull);
                   const legIsLive = !!(legGame && (legGame.isLive || legGame.status === 'IN_PROGRESS'));
                   if (legGame) {
                     return {
