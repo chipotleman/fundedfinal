@@ -6,6 +6,12 @@ import ShareableBetSlip from './ShareableBetSlip';
 import PiksBetCard from './PiksBetCard';
 import CoinRain from './CoinRain';
 
+// Capitalize league identifiers like (w) -> (W), (m) -> (M)
+const capitalizeLeagueId = (text) => {
+  if (!text) return text;
+  return text.replace(/\(([wm])\)/gi, (match, letter) => `(${letter.toUpperCase()})`);
+};
+
 export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
   const { isDarkMode } = useTheme();
   const { betSlip: bets, removeBet, updateStake, clearBetSlip } = useBetSlip();
@@ -416,7 +422,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                               bet.oddsMoved === 'down' ? 'text-red-400' : 'text-blue-400'
                             }`}>{bet.betType || 'Spread'}</span>
                             {!isExpanded && (
-                              <span className="text-gray-300 text-xs ml-2 truncate">{bet.selection}</span>
+                              <span className="text-gray-300 text-xs ml-2 truncate">{capitalizeLeagueId(bet.selection)}</span>
                             )}
                           </div>
                           <div className="flex items-center gap-2">
@@ -441,7 +447,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                             <div className="px-4 py-3">
                               <div className="flex justify-between items-start mb-2">
                                 <div className="flex-1">
-                                  <div className="text-white font-bold text-base">{bet.selection}</div>
+                                  <div className="text-white font-bold text-base">{capitalizeLeagueId(bet.selection)}</div>
                                   <div className="text-gray-400 text-xs uppercase mt-0.5">{bet.betType}</div>
                                 </div>
                                 <div className={`font-bold text-xl flex items-center gap-1 ${
@@ -467,11 +473,11 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                                     <div className="text-gray-500 text-[10px] uppercase mb-1">Game</div>
                                     <div className="space-y-1">
                                       <div className="flex justify-between items-center">
-                                        <span className="text-white text-sm font-medium">{bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0]}</span>
+                                        <span className="text-white text-sm font-medium">{capitalizeLeagueId(bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0])}</span>
                                         {isLive && <span className="text-white font-bold">{awayScore}</span>}
                                       </div>
                                       <div className="flex justify-between items-center">
-                                        <span className="text-white text-sm font-medium">{bet.homeTeamFull || bet.homeTeam || bet.matchup?.split(' @ ')[1]}</span>
+                                        <span className="text-white text-sm font-medium">{capitalizeLeagueId(bet.homeTeamFull || bet.homeTeam || bet.matchup?.split(' @ ')[1])}</span>
                                         {isLive && <span className="text-white font-bold">{homeScore}</span>}
                                       </div>
                                     </div>

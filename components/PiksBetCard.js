@@ -42,6 +42,12 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
     return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
+  // Capitalize league identifiers like (w) -> (W), (m) -> (M)
+  const capitalizeLeagueId = (text) => {
+    if (!text) return text;
+    return text.replace(/\(([wm])\)/gi, (match, letter) => `(${letter.toUpperCase()})`);
+  };
+
   const formatPlacedDate = () => {
     const date = bet.placedAt ? new Date(bet.placedAt) : bet.settledAt ? new Date(bet.settledAt) : new Date();
     const month = date.toLocaleString('en-US', { month: 'short' }).toUpperCase();
@@ -142,7 +148,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         return selection;
       }
       
-      return `${teamName} ML`;
+      return teamName;
     }).join(', ');
   }, [isParlay, parlayLegs.legs, bet.selection]);
 
@@ -462,7 +468,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                 <div key={index} className="pb-3 border-b border-white/10 last:border-b-0 last:pb-0">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
-                      <div className="text-white font-bold text-base">{leg.selection}</div>
+                      <div className="text-white font-bold text-base">{capitalizeLeagueId(leg.selection)}</div>
                       <div className="text-gray-400 text-xs uppercase tracking-wide">
                         {leg.betType || 'Moneyline'}
                       </div>
@@ -475,7 +481,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{legTeams.homeTeam}</span>
+                      <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{capitalizeLeagueId(legTeams.homeTeam)}</span>
                       <div className="flex items-center gap-3">
                         <div className="flex gap-2 text-gray-400 text-sm">
                           {legScores.homeQuarters.map((q, i) => <span key={i}>{q}</span>)}
@@ -484,7 +490,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{legTeams.awayTeam}</span>
+                      <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{capitalizeLeagueId(legTeams.awayTeam)}</span>
                       <div className="flex items-center gap-3">
                         <div className="flex gap-2 text-gray-400 text-sm">
                           {legScores.awayQuarters.map((q, i) => <span key={i}>{q}</span>)}
