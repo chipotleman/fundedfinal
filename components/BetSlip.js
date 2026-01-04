@@ -33,6 +33,12 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
   const liveScores = useMemo(() => {
     const scoresMap = {};
     
+    // Normalize team names for matching (remove special chars, lowercase)
+    const normalizeTeam = (name) => {
+      if (!name) return '';
+      return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    };
+    
     // Helper to add game data with multiple key variations
     const addGameKeys = (game, scoreData) => {
       if (game.id) scoresMap[game.id] = scoreData;
@@ -43,6 +49,9 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
         const fullMatchup = `${game.awayTeamFull} @ ${game.homeTeamFull}`;
         scoresMap[fullMatchup] = scoreData;
         scoresMap[fullMatchup.toLowerCase()] = scoreData;
+        // Normalized key
+        const normalizedFull = `${normalizeTeam(game.awayTeamFull)}@${normalizeTeam(game.homeTeamFull)}`;
+        scoresMap[normalizedFull] = scoreData;
       }
       
       // Matchup keys with abbreviations
@@ -50,6 +59,9 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
         const abbrMatchup = `${game.awayTeam} @ ${game.homeTeam}`;
         scoresMap[abbrMatchup] = scoreData;
         scoresMap[abbrMatchup.toLowerCase()] = scoreData;
+        // Normalized key
+        const normalizedAbbr = `${normalizeTeam(game.awayTeam)}@${normalizeTeam(game.homeTeam)}`;
+        scoresMap[normalizedAbbr] = scoreData;
       }
     };
     
@@ -74,7 +86,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
         isLive: game.isLive || game.status === 'IN_PROGRESS',
         awayScore: game.scores?.away?.total ?? game.awayScore ?? 0,
         homeScore: game.scores?.home?.total ?? game.homeScore ?? 0,
-        time: game.time || ''
+        time: game.time || game.formatted_time || ''
       };
       addGameKeys(game, scoreData);
     });
@@ -488,12 +500,21 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                               
                               {/* Live Game Info */}
                               {(() => {
+                                // Normalize team names for matching
+                                const normalizeTeam = (name) => {
+                                  if (!name) return '';
+                                  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+                                };
+                                
                                 // Try multiple matching strategies
                                 const fullMatchup = bet.awayTeamFull && bet.homeTeamFull 
                                   ? `${bet.awayTeamFull} @ ${bet.homeTeamFull}` 
                                   : null;
                                 const abbrMatchup = bet.awayTeam && bet.homeTeam 
                                   ? `${bet.awayTeam} @ ${bet.homeTeam}` 
+                                  : null;
+                                const normalizedMatchup = bet.matchup 
+                                  ? `${normalizeTeam(bet.matchup.split(' @ ')[0])}@${normalizeTeam(bet.matchup.split(' @ ')[1])}`
                                   : null;
                                 
                                 const live = liveScores[bet.gameId] || 
@@ -503,6 +524,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                                   (fullMatchup && liveScores[fullMatchup.toLowerCase()]) ||
                                   (abbrMatchup && liveScores[abbrMatchup]) ||
                                   (abbrMatchup && liveScores[abbrMatchup.toLowerCase()]) ||
+                                  (normalizedMatchup && liveScores[normalizedMatchup]) ||
                                   {};
                                 const isLive = live.isLive || bet.isLive;
                                 const awayScore = live.awayScore ?? bet.awayScore ?? 0;

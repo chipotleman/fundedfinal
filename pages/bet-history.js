@@ -27,6 +27,12 @@ export default function BetHistory() {
   const liveGames = useMemo(() => {
     const gamesMap = {};
     
+    // Normalize team names for matching (remove special chars, lowercase)
+    const normalizeTeam = (name) => {
+      if (!name) return '';
+      return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    };
+    
     // Helper to add game with multiple key variations
     const addGameKeys = (game, gameData) => {
       if (game.id) gamesMap[game.id] = gameData;
@@ -41,6 +47,9 @@ export default function BetHistory() {
         const normalizedMatchup = fullMatchup.replace(/\(w\)/gi, '(W)');
         gamesMap[normalizedMatchup] = gameData;
         gamesMap[normalizedMatchup.toLowerCase()] = gameData;
+        // Fully normalized key
+        const normalizedKey = `${normalizeTeam(game.awayTeamFull)}@${normalizeTeam(game.homeTeamFull)}`;
+        gamesMap[normalizedKey] = gameData;
       }
       
       // Abbreviation matchups  
@@ -48,6 +57,9 @@ export default function BetHistory() {
         const abbrMatchup = `${game.awayTeam} @ ${game.homeTeam}`;
         gamesMap[abbrMatchup] = gameData;
         gamesMap[abbrMatchup.toLowerCase()] = gameData;
+        // Fully normalized key
+        const normalizedKey = `${normalizeTeam(game.awayTeam)}@${normalizeTeam(game.homeTeam)}`;
+        gamesMap[normalizedKey] = gameData;
       }
     };
     
@@ -384,10 +396,19 @@ export default function BetHistory() {
           {/* Bets List */}
           <div className="grid grid-cols-1 gap-4 max-w-2xl mx-auto">
             {filteredBets.map(bet => {
+              // Normalize team names for matching
+              const normalizeTeam = (name) => {
+                if (!name) return '';
+                return name.toLowerCase().replace(/[^a-z0-9]/g, '');
+              };
+              
               // Try multiple matching strategies for finding live game
               const findLiveGame = (gameId, matchup, awayTeam, homeTeam, awayTeamFull, homeTeamFull) => {
                 const fullMatchup = awayTeamFull && homeTeamFull ? `${awayTeamFull} @ ${homeTeamFull}` : null;
                 const abbrMatchup = awayTeam && homeTeam ? `${awayTeam} @ ${homeTeam}` : null;
+                const normalizedMatchup = matchup 
+                  ? `${normalizeTeam(matchup.split(' @ ')[0])}@${normalizeTeam(matchup.split(' @ ')[1])}`
+                  : null;
                 return liveGames[gameId] || 
                   liveGames[matchup] || 
                   liveGames[matchup?.toLowerCase()] ||
@@ -395,6 +416,7 @@ export default function BetHistory() {
                   (fullMatchup && liveGames[fullMatchup.toLowerCase()]) ||
                   (abbrMatchup && liveGames[abbrMatchup]) ||
                   (abbrMatchup && liveGames[abbrMatchup.toLowerCase()]) ||
+                  (normalizedMatchup && liveGames[normalizedMatchup]) ||
                   null;
               };
               
