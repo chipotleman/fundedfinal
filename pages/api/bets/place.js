@@ -70,7 +70,12 @@ export default async function handler(req, res) {
         selection: b.selection,
         matchup: b.matchup,
         betType: b.betType,
-        odds: typeof b.odds === 'object' ? b.odds.odds || b.odds.value || 0 : parseInt(b.odds)
+        odds: typeof b.odds === 'object' ? b.odds.odds || b.odds.value || 0 : parseInt(b.odds),
+        homeTeamFull: b.homeTeamFull,
+        awayTeamFull: b.awayTeamFull,
+        homeTeam: b.homeTeam,
+        awayTeam: b.awayTeam,
+        gameId: b.gameId
       }));
 
       const parlayBet = {
@@ -107,6 +112,8 @@ export default async function handler(req, res) {
           status: 'pending',
           balanceBefore: currentBankroll.toFixed(2),
           balanceAfter: (currentBankroll - bet.stake).toFixed(2),
+          homeTeamFull: bet.homeTeamFull,
+          awayTeamFull: bet.awayTeamFull,
         };
 
         const [insertedBet] = await db.insert(userBets).values(newBet).returning();
