@@ -45,10 +45,19 @@ None documented yet.
     - **Performance Stats**: Win rate, ROI, and record computed from graded bets
     - **Seller Dashboard**: Revenue tracking, subscriber management, product creation
     - **Admin Management**: Marketplace section in admin panel for managing cappers, subscriptions, and moderating reviews
+- **1v1 Matchmaking System**: Full competitive betting where users battle against each other:
+    - **Matchup Flow**: User pays for challenge → "FINDING MATCHUP..." screen (8 sec search for real opponent) → matched with real user OR admin-controlled fake opponent
+    - **Prize Structure**: Winner gets combined pot minus 10% platform fee (e.g., $10k + $10k = $20k pot → $18k to winner). Ties return 90% to each player
+    - **Battle Durations**: Configurable via `/battle` page - 30 min, 1 hour, 1 day (recommended), 3 days, 1 week
+    - **Visibility Rule**: Users can only see opponent's bets AFTER placing their own bet
+    - **Fake Opponents**: Admin-controlled through `/admin-panel/matchups` - admins create profiles and manually place bets for them
+    - **Resolution**: Bets are scoped to matchup time range only. `/api/matchups/resolve` settles expired matchups, calculates balances, determines winner
+    - **UI Components**: MatchupBanner (opponent info/timer), OpponentBets (reveals after betting), FindingMatchup (loading screen)
+    - **Context**: MatchupContext wraps app in `_app.js`, provides matchup state globally
 
 ### System Design Choices
 - **Authentication Flow**: Beta access -> NextAuth.js -> JWT session -> User profile creation -> Challenge selection & purchase -> Challenge data persistence.
-- **Database Schema**: Includes `users`, `profiles`, `user_bets`, `accounts`, `sessions`, `verification_tokens`, `admin_users`, `admin_staff`, `payment_methods`, `withdrawals`, `user_events`, `session_metrics`, `page_views`, `demo_bets`, `unplaced_bets`, `odds_history_pulls`, `completed_games`, `cappers`, `capper_products`, `capper_subscriptions`, `capper_reviews`, `discord_links`, `capper_performance`, `discord_jobs`.
+- **Database Schema**: Includes `users`, `profiles`, `user_bets`, `accounts`, `sessions`, `verification_tokens`, `admin_users`, `admin_staff`, `payment_methods`, `withdrawals`, `user_events`, `session_metrics`, `page_views`, `demo_bets`, `unplaced_bets`, `odds_history_pulls`, `completed_games`, `cappers`, `capper_products`, `capper_subscriptions`, `capper_reviews`, `discord_links`, `capper_performance`, `discord_jobs`, `matchups`, `matchup_queue`, `fake_opponents`, `fake_opponent_bets`.
 - **Bet Autograding System**:
   - AutoGrader component in `_app.js` polls `/api/bets/grade` every 60 seconds when users are active
   - Completed games are saved to `completed_games` table to preserve results after they disappear from the API

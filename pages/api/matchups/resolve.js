@@ -1,6 +1,6 @@
 import { db } from '../../../lib/db';
 import { matchups, fakeOpponents, profiles, userBets, fakeOpponentBets, userChallenges } from '../../../shared/schema';
-import { eq, and, or, lt } from 'drizzle-orm';
+import { eq, and, or, lt, gte, lte } from 'drizzle-orm';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -22,13 +22,20 @@ export default async function handler(req, res) {
 
     for (const matchup of expiredMatchups) {
       try {
-        let user1FinalBalance = parseFloat(matchup.user1Balance);
-        let user2FinalBalance = parseFloat(matchup.user2Balance);
+        const matchupStartTime = new Date(matchup.startedAt);
+        const matchupEndTime = new Date(matchup.endsAt);
+        
+        let user1FinalBalance = parseFloat(matchup.startingBalance);
+        let user2FinalBalance = parseFloat(matchup.startingBalance);
 
         const user1Bets = await db
           .select()
           .from(userBets)
-          .where(eq(userBets.userId, matchup.user1Id));
+          .where(and(
+            eq(userBets.userId, matchup.user1Id),
+            gte(userBets.placedAt, matchupStartTime),
+            lte(userBets.placedAt, matchupEndTime)
+          ));
 
         for (const bet of user1Bets) {
           if (bet.status === 'won' && bet.pnl) {
@@ -55,7 +62,11 @@ export default async function handler(req, res) {
           const user2Bets = await db
             .select()
             .from(userBets)
-            .where(eq(userBets.userId, matchup.user2Id));
+            .where(and(
+              eq(userBets.userId, matchup.user2Id),
+              gte(userBets.placedAt, matchupStartTime),
+              lte(userBets.placedAt, matchupEndTime)
+            ));
 
           for (const bet of user2Bets) {
             if (bet.status === 'won' && bet.pnl) {
@@ -79,6 +90,10 @@ export default async function handler(req, res) {
           winnerType = 'tie';
         }
 
+        const totalPot = parseFloat(matchup.startingBalance) * 2;
+        const platformFee = totalPot * 0.10;
+        const winnerPayout = totalPot - platformFee;
+
         await db
           .update(matchups)
           .set({
@@ -87,13 +102,12 @@ export default async function handler(req, res) {
             user2FinalBalance: user2FinalBalance.toString(),
             winnerId,
             winnerType,
+            platformFee: platformFee.toString(),
             updatedAt: now,
           })
           .where(eq(matchups.id, matchup.id));
 
         if (winnerId && winnerType !== 'tie') {
-          const winnerPayout = parseFloat(matchup.winnerPayout);
-
           if (winnerType === 'user1') {
             const [challenge] = await db
               .select()
@@ -122,7 +136,8 @@ export default async function handler(req, res) {
             }
           }
         } else if (winnerType === 'tie') {
-          const halfPot = parseFloat(matchup.startingBalance);
+          const halfPot = totalPot / 2;
+          const tieRefund = halfPot * 0.9;
           
           if (matchup.user1ChallengeId) {
             const [challenge1] = await db
@@ -131,7 +146,7 @@ export default async function handler(req, res) {
               .where(eq(userChallenges.id, matchup.user1ChallengeId));
 
             if (challenge1) {
-              const newBalance = parseFloat(challenge1.currentBalance) + halfPot * 0.9;
+              const newBalance = parseFloat(challenge1.currentBalance) + tieRefund;
               await db
                 .update(userChallenges)
                 .set({ currentBalance: newBalance.toString() })
@@ -146,7 +161,7 @@ export default async function handler(req, res) {
               .where(eq(userChallenges.id, matchup.user2ChallengeId));
 
             if (challenge2) {
-              const newBalance = parseFloat(challenge2.currentBalance) + halfPot * 0.9;
+              const newBalance = parseFloat(challenge2.currentBalance) + tieRefund;
               await db
                 .update(userChallenges)
                 .set({ currentBalance: newBalance.toString() })
@@ -161,6 +176,10 @@ export default async function handler(req, res) {
           winnerType,
           user1FinalBalance,
           user2FinalBalance,
+          totalPot,
+          platformFee,
+          winnerPayout: winnerType !== 'tie' ? winnerPayout : null,
+          betsCountUser1: user1Bets.length,
         });
 
       } catch (matchupError) {
