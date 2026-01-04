@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import PiksBetCard from '../components/PiksBetCard';
@@ -6,11 +6,13 @@ import ShareableBetSlip from '../components/ShareableBetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useGames } from '../contexts/GamesContext';
 
 export default function BetHistory() {
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
+  const { apiGames, inplayEvents } = useGames();
   const [allBets, setAllBets] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const tabsRef = useRef(null);
@@ -20,7 +22,56 @@ export default function BetHistory() {
   const [bankroll, setBankroll] = useState(10000);
 
   const [loading, setLoading] = useState(true);
-  const [liveGames, setLiveGames] = useState({});
+  
+  // Build live games map from GamesContext (same source as dashboard)
+  const liveGames = useMemo(() => {
+    const gamesMap = {};
+    
+    // First, add all inplay events (real-time SSE data with live scores)
+    Object.entries(inplayEvents || {}).forEach(([id, event]) => {
+      const gameData = {
+        id: event.id,
+        isLive: true,
+        homeScore: event.homeScore ?? 0,
+        awayScore: event.awayScore ?? 0,
+        homeTeam: event.homeTeam,
+        awayTeam: event.awayTeam,
+        homeTeamFull: event.homeTeam,
+        awayTeamFull: event.awayTeam,
+        time: event.time || event.clock || '',
+        scores: {
+          home: { total: event.homeScore ?? 0 },
+          away: { total: event.awayScore ?? 0 }
+        }
+      };
+      gamesMap[id] = gameData;
+      gamesMap[event.id] = gameData;
+      if (event.awayTeam && event.homeTeam) {
+        const matchup = `${event.awayTeam} @ ${event.homeTeam}`;
+        gamesMap[matchup] = gameData;
+        gamesMap[matchup.toLowerCase()] = gameData;
+      }
+    });
+    
+    // Then add API games
+    (apiGames || []).forEach(game => {
+      if (gamesMap[game.id]) return; // Skip if we have inplay data
+      
+      gamesMap[game.id] = game;
+      gamesMap[game.gameId] = game;
+      const matchup = `${game.awayTeam} @ ${game.homeTeam}`;
+      gamesMap[matchup] = game;
+      gamesMap[matchup.toLowerCase()] = game;
+      const fullMatchup = `${game.awayTeamFull} @ ${game.homeTeamFull}`;
+      gamesMap[fullMatchup] = game;
+      gamesMap[fullMatchup.toLowerCase()] = game;
+      const normalizedMatchup = fullMatchup.replace(/\(w\)/gi, '(W)');
+      gamesMap[normalizedMatchup] = game;
+      gamesMap[normalizedMatchup.toLowerCase()] = game;
+    });
+    
+    return gamesMap;
+  }, [apiGames, inplayEvents]);
 
   useEffect(() => {
     const fetchBetHistory = async () => {
@@ -52,45 +103,6 @@ export default function BetHistory() {
     
     fetchBetHistory();
   }, [user]);
-
-  useEffect(() => {
-    const fetchLiveScores = async () => {
-      const openBets = allBets.filter(b => b.status === 'open');
-      if (openBets.length === 0) return;
-
-      try {
-        const response = await fetch('/api/games');
-        if (response.ok) {
-          const data = await response.json();
-          const gamesMap = {};
-          data.games?.forEach(game => {
-            // Key by game ID
-            gamesMap[game.id] = game;
-            gamesMap[game.gameId] = game;
-            // Key by abbreviation matchup
-            const matchup = `${game.awayTeam} @ ${game.homeTeam}`;
-            gamesMap[matchup] = game;
-            gamesMap[matchup.toLowerCase()] = game;
-            // Key by full matchup
-            const fullMatchup = `${game.awayTeamFull} @ ${game.homeTeamFull}`;
-            gamesMap[fullMatchup] = game;
-            gamesMap[fullMatchup.toLowerCase()] = game;
-            // Normalize (W) and (w) for women's basketball
-            const normalizedMatchup = fullMatchup.replace(/\(w\)/gi, '(W)');
-            gamesMap[normalizedMatchup] = game;
-            gamesMap[normalizedMatchup.toLowerCase()] = game;
-          });
-          setLiveGames(gamesMap);
-        }
-      } catch (error) {
-        console.error('Error fetching live scores:', error);
-      }
-    };
-
-    fetchLiveScores();
-    const interval = setInterval(fetchLiveScores, 60000);
-    return () => clearInterval(interval);
-  }, [allBets]);
 
   useEffect(() => {
     const fetchUserProfile = async () => {

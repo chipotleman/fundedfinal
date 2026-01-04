@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import ReactDOM from 'react-dom';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useGames } from '../contexts/GamesContext';
 import ShareableBetSlip from './ShareableBetSlip';
 import PiksBetCard from './PiksBetCard';
 import CoinRain from './CoinRain';
@@ -15,6 +16,7 @@ const capitalizeLeagueId = (text) => {
 export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
   const { isDarkMode } = useTheme();
   const { betSlip: bets, removeBet, updateStake, clearBetSlip } = useBetSlip();
+  const { apiGames, inplayEvents } = useGames();
   const [isPlacing, setIsPlacing] = useState(false);
   const [betType, setBetType] = useState('single');
   const [parlayStake, setParlayStake] = useState(0);
@@ -26,44 +28,51 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
   const [showCoinRain, setShowCoinRain] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [expandedBets, setExpandedBets] = useState({});
-  const [liveScores, setLiveScores] = useState({});
 
-  useEffect(() => {
-    const fetchLiveScores = async () => {
-      if (bets.length === 0) return;
-      try {
-        const response = await fetch('/api/games');
-        if (response.ok) {
-          const data = await response.json();
-          const scoresMap = {};
-          data.games?.forEach(game => {
-            const scoreData = {
-              isLive: game.isLive || game.status === 'IN_PROGRESS',
-              awayScore: game.scores?.away?.total ?? game.awayScore ?? 0,
-              homeScore: game.scores?.home?.total ?? game.homeScore ?? 0,
-              time: game.time || ''
-            };
-            // Key by game ID
-            scoresMap[game.id] = scoreData;
-            scoresMap[game.gameId] = scoreData;
-            // Key by matchup strings for better matching
-            const matchup = `${game.awayTeam} @ ${game.homeTeam}`;
-            scoresMap[matchup] = scoreData;
-            const fullMatchup = `${game.awayTeamFull} @ ${game.homeTeamFull}`;
-            scoresMap[fullMatchup] = scoreData;
-            scoresMap[fullMatchup.toLowerCase()] = scoreData;
-          });
-          setLiveScores(scoresMap);
-        }
-      } catch (error) {
-        console.error('Error fetching live scores:', error);
+  // Build live scores map from GamesContext (same source as dashboard)
+  const liveScores = useMemo(() => {
+    const scoresMap = {};
+    
+    // First, add all inplay events (real-time SSE data with live scores)
+    Object.entries(inplayEvents || {}).forEach(([id, event]) => {
+      const scoreData = {
+        isLive: true,
+        awayScore: event.awayScore ?? 0,
+        homeScore: event.homeScore ?? 0,
+        time: event.time || event.clock || ''
+      };
+      scoresMap[id] = scoreData;
+      scoresMap[event.id] = scoreData;
+      // Also key by matchup
+      if (event.awayTeam && event.homeTeam) {
+        const matchup = `${event.awayTeam} @ ${event.homeTeam}`;
+        scoresMap[matchup] = scoreData;
+        scoresMap[matchup.toLowerCase()] = scoreData;
       }
-    };
-
-    fetchLiveScores();
-    const interval = setInterval(fetchLiveScores, 30000);
-    return () => clearInterval(interval);
-  }, [bets.length]);
+    });
+    
+    // Then add API games (for games not in inplay but might have scores)
+    (apiGames || []).forEach(game => {
+      // Skip if we already have inplay data for this game
+      if (scoresMap[game.id]) return;
+      
+      const scoreData = {
+        isLive: game.isLive || game.status === 'IN_PROGRESS',
+        awayScore: game.scores?.away?.total ?? 0,
+        homeScore: game.scores?.home?.total ?? 0,
+        time: game.time || ''
+      };
+      scoresMap[game.id] = scoreData;
+      scoresMap[game.gameId] = scoreData;
+      const matchup = `${game.awayTeam} @ ${game.homeTeam}`;
+      scoresMap[matchup] = scoreData;
+      const fullMatchup = `${game.awayTeamFull} @ ${game.homeTeamFull}`;
+      scoresMap[fullMatchup] = scoreData;
+      scoresMap[fullMatchup.toLowerCase()] = scoreData;
+    });
+    
+    return scoresMap;
+  }, [apiGames, inplayEvents]);
 
   useEffect(() => {
     if (bets.length < 2 && betType === 'parlay') {
