@@ -483,6 +483,107 @@ export const capperPerformance = pgTable("capper_performance", {
   periodStartIdx: index("capper_performance_period_start_idx").on(table.periodStart),
 }));
 
+// 1v1 Matchups - The actual battle between two participants
+export const matchups = pgTable("matchups", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  challengeType: varchar("challenge_type", { length: 50 }).notNull(), // starter, pro, elite
+  startingBalance: decimal("starting_balance", { precision: 10, scale: 2 }).notNull(),
+  potSize: decimal("pot_size", { precision: 10, scale: 2 }).notNull(), // Total pot (2x starting balance)
+  platformFee: decimal("platform_fee", { precision: 10, scale: 2 }).notNull(), // 10% of pot
+  winnerPayout: decimal("winner_payout", { precision: 10, scale: 2 }).notNull(), // pot - fee
+  
+  // Participant 1 (real user)
+  user1Id: varchar("user1_id").notNull(),
+  user1ChallengeId: varchar("user1_challenge_id"),
+  user1Balance: decimal("user1_balance", { precision: 10, scale: 2 }).notNull(),
+  user1FinalBalance: decimal("user1_final_balance", { precision: 10, scale: 2 }),
+  
+  // Participant 2 (real user or fake opponent)
+  user2Id: varchar("user2_id"), // null until matched
+  user2ChallengeId: varchar("user2_challenge_id"),
+  user2Balance: decimal("user2_balance", { precision: 10, scale: 2 }),
+  user2FinalBalance: decimal("user2_final_balance", { precision: 10, scale: 2 }),
+  isFakeOpponent: boolean("is_fake_opponent").default(false),
+  fakeOpponentId: varchar("fake_opponent_id"),
+  
+  // Timing
+  durationMinutes: integer("duration_minutes").default(1440).notNull(), // Default 24 hours (1440 min)
+  durationType: varchar("duration_type", { length: 50 }).default('1_day'), // 30_min, 1_day, 3_days, etc
+  startsAt: timestamp("starts_at"),
+  endsAt: timestamp("ends_at"),
+  
+  // Status
+  status: varchar("status", { length: 50 }).default('waiting').notNull(), // waiting, matched, active, completed, cancelled
+  winnerId: varchar("winner_id"),
+  winnerType: varchar("winner_type", { length: 20 }), // user1, user2, tie
+  
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  user1IdIdx: index("matchups_user1_id_idx").on(table.user1Id),
+  user2IdIdx: index("matchups_user2_id_idx").on(table.user2Id),
+  statusIdx: index("matchups_status_idx").on(table.status),
+  challengeTypeIdx: index("matchups_challenge_type_idx").on(table.challengeType),
+}));
+
+// Matchup Queue - Users waiting to be matched
+export const matchupQueue = pgTable("matchup_queue", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  challengeId: varchar("challenge_id").notNull(),
+  challengeType: varchar("challenge_type", { length: 50 }).notNull(),
+  startingBalance: decimal("starting_balance", { precision: 10, scale: 2 }).notNull(),
+  durationType: varchar("duration_type", { length: 50 }).default('1_day'),
+  status: varchar("status", { length: 50 }).default('waiting').notNull(), // waiting, matched, expired
+  matchupId: varchar("matchup_id"), // Set when matched
+  queuedAt: timestamp("queued_at").defaultNow().notNull(),
+  matchedAt: timestamp("matched_at"),
+  expiresAt: timestamp("expires_at"), // Auto-expire from queue
+}, (table) => ({
+  userIdIdx: index("matchup_queue_user_id_idx").on(table.userId),
+  statusIdx: index("matchup_queue_status_idx").on(table.status),
+  challengeTypeIdx: index("matchup_queue_challenge_type_idx").on(table.challengeType),
+}));
+
+// Fake Opponents - Admin-controlled profiles for when no real match is found
+export const fakeOpponents = pgTable("fake_opponents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  username: varchar("username", { length: 100 }).notNull(),
+  displayName: varchar("display_name", { length: 255 }).notNull(),
+  avatar: text("avatar"), // URL or base64 avatar
+  bio: text("bio"),
+  winRate: decimal("win_rate", { precision: 5, scale: 2 }).default('52.5'), // Fake win rate to display
+  totalBattles: integer("total_battles").default(0), // Fake battle count
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  usernameIdx: index("fake_opponents_username_idx").on(table.username),
+  isActiveIdx: index("fake_opponents_is_active_idx").on(table.isActive),
+}));
+
+// Fake Opponent Bets - Bets made by admins on behalf of fake opponents
+export const fakeOpponentBets = pgTable("fake_opponent_bets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  matchupId: varchar("matchup_id").notNull(),
+  fakeOpponentId: varchar("fake_opponent_id").notNull(),
+  matchupName: varchar("matchup_name", { length: 255 }),
+  marketType: varchar("market_type", { length: 100 }),
+  selection: varchar("selection", { length: 255 }),
+  odds: varchar("odds", { length: 20 }),
+  stake: decimal("stake", { precision: 10, scale: 2 }),
+  potentialPayout: decimal("potential_payout", { precision: 10, scale: 2 }),
+  status: varchar("status", { length: 50 }).default('pending'), // pending, won, lost, push
+  pnl: decimal("pnl", { precision: 10, scale: 2 }),
+  placedByAdminId: varchar("placed_by_admin_id"),
+  placedAt: timestamp("placed_at").defaultNow().notNull(),
+  settledAt: timestamp("settled_at"),
+}, (table) => ({
+  matchupIdIdx: index("fake_opponent_bets_matchup_id_idx").on(table.matchupId),
+  fakeOpponentIdIdx: index("fake_opponent_bets_fake_opponent_id_idx").on(table.fakeOpponentId),
+  statusIdx: index("fake_opponent_bets_status_idx").on(table.status),
+}));
+
 // Discord member management job queue
 export const discordJobs = pgTable("discord_jobs", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -547,3 +648,11 @@ export type CapperPerformanceRecord = typeof capperPerformance.$inferSelect;
 export type InsertCapperPerformance = typeof capperPerformance.$inferInsert;
 export type DiscordJob = typeof discordJobs.$inferSelect;
 export type InsertDiscordJob = typeof discordJobs.$inferInsert;
+export type Matchup = typeof matchups.$inferSelect;
+export type InsertMatchup = typeof matchups.$inferInsert;
+export type MatchupQueueEntry = typeof matchupQueue.$inferSelect;
+export type InsertMatchupQueueEntry = typeof matchupQueue.$inferInsert;
+export type FakeOpponent = typeof fakeOpponents.$inferSelect;
+export type InsertFakeOpponent = typeof fakeOpponents.$inferInsert;
+export type FakeOpponentBet = typeof fakeOpponentBets.$inferSelect;
+export type InsertFakeOpponentBet = typeof fakeOpponentBets.$inferInsert;
