@@ -106,9 +106,14 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
       const selection = leg.selection || '';
       const betType = leg.betType?.toLowerCase() || '';
       
-      // Extract just the last word (team nickname) from selection
+      // Extract team nickname from selection, handling league identifiers like (w), (W), (m)
       const words = selection.trim().split(' ');
-      const lastWord = words[words.length - 1] || selection;
+      let lastWord = words[words.length - 1] || selection;
+      
+      // If last word is a league identifier like (w), (W), (m), include the previous word too
+      if (/^\([wWmM]\)$/.test(lastWord) && words.length > 1) {
+        lastWord = `${words[words.length - 2]} ${lastWord}`;
+      }
       
       const spreadMatch = selection.match(/([+-]\d+\.?\d*)/);
       if (spreadMatch) {
