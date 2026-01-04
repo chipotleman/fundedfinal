@@ -524,11 +524,11 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
             {bet.isLive && typeof bet.currentHomeScore === 'number' ? (
               <div className="space-y-1">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{bet.awayTeamFull || bet.matchup?.split(' @ ')[0]}</span>
+                  <span className="text-sm font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.awayTeamFull || bet.matchup?.split(' @ ')[0])}</span>
                   <span className="text-white font-bold">{bet.currentAwayScore}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{bet.homeTeamFull || bet.matchup?.split(' @ ')[1]}</span>
+                  <span className="text-sm font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.homeTeamFull || bet.matchup?.split(' @ ')[1])}</span>
                   <span className="text-white font-bold">{bet.currentHomeScore}</span>
                 </div>
                 <div className="flex items-center gap-2 mt-1">
@@ -538,7 +538,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
               </div>
             ) : (
               <>
-                <div className="text-sm font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{bet.matchup}</div>
+                <div className="text-sm font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.matchup)}</div>
                 <div className="text-xs mt-0.5" style={{ color: isDarkMode ? '#93c5fd' : '#111827' }}>
                   {bet.gameStart ? new Date(bet.gameStart).toLocaleString('en-US', {
                     month: 'short',
@@ -607,7 +607,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <div className="text-white font-bold text-base">{getFullSelection()}</div>
+                            <div className="text-white font-bold text-base">{capitalizeLeagueId(getFullSelection())}</div>
                             {isLegCompleted && (
                               <span className={`text-xs font-bold px-2 py-0.5 rounded ${legWon ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
                                 {legWon ? 'WON' : 'LOST'}
@@ -626,7 +626,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                       </div>
                       <div className="space-y-1">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{leg.homeTeamFull || legTeams.homeTeam}</span>
+                          <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{capitalizeLeagueId(leg.homeTeamFull || legTeams.homeTeam)}</span>
                           {(isLegLive || hasScores) ? (
                             <span className="text-white font-bold">{leg.homeScore}</span>
                           ) : (
@@ -634,7 +634,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
                           )}
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{leg.awayTeamFull || legTeams.awayTeam}</span>
+                          <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{capitalizeLeagueId(leg.awayTeamFull || legTeams.awayTeam)}</span>
                           {(isLegLive || hasScores) ? (
                             <span className="text-white font-bold">{leg.awayScore}</span>
                           ) : (
