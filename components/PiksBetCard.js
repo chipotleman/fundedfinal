@@ -106,23 +106,25 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
       const selection = leg.selection || '';
       const betType = leg.betType?.toLowerCase() || '';
       
-      // Extract team nickname from selection, handling league identifiers like (w), (W), (m)
-      const words = selection.trim().split(' ');
-      let lastWord = words[words.length - 1] || selection;
+      // Extract team nickname from selection
+      // Remove spread/total numbers first to get the team name
+      const selectionWithoutNumbers = selection.replace(/[+-]?\d+\.?\d*$/, '').trim();
+      const words = selectionWithoutNumbers.split(' ');
+      let teamName = words[words.length - 1] || selection;
       
       // If last word is a league identifier like (w), (W), (m), include the previous word too
-      if (/^\([wWmM]\)$/.test(lastWord) && words.length > 1) {
-        lastWord = `${words[words.length - 2]} ${lastWord}`;
+      if (/^\([wWmM]\)$/.test(teamName) && words.length > 1) {
+        teamName = `${words[words.length - 2]} ${teamName}`;
       }
       
       const spreadMatch = selection.match(/([+-]\d+\.?\d*)/);
       if (spreadMatch) {
         // For spreads, show "TeamName +5.5"
-        return `${lastWord} ${spreadMatch[1]}`;
+        return `${teamName} ${spreadMatch[1]}`;
       }
       
       if (betType.includes('spread')) {
-        return `${lastWord} ${spreadMatch ? spreadMatch[1] : ''}`.trim();
+        return `${teamName} ${spreadMatch ? spreadMatch[1] : ''}`.trim();
       }
       
       if (betType.includes('over') || selection.toLowerCase().includes('over')) {
@@ -139,7 +141,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         return selection;
       }
       
-      return `${lastWord} ML`;
+      return `${teamName} ML`;
     }).join(', ');
   }, [isParlay, parlayLegs.legs, bet.selection]);
 
