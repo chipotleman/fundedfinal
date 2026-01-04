@@ -6,6 +6,7 @@ import { BetSlipProvider } from '../contexts/BetSlipContext';
 import { UserProfilesProvider } from '../contexts/UserProfilesContext';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { GamesProvider } from '../contexts/GamesContext';
+import { MatchupProvider } from '../contexts/MatchupContext';
 import ChallengePopup from '../components/ChallengePopup';
 import HowItWorksPopup from '../components/HowItWorksPopup';
 import DemoPopup from '../components/DemoPopup';
@@ -264,6 +265,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
           <BetSlipProvider>
             <UserProfilesProvider>
               <GamesProvider>
+                <MatchupProvider>
                 <AnalyticsTracker />
                 <AutoGrader />
                 {/* Solid Black Background */}
@@ -361,6 +363,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
                   currentUser={currentUser}
                   isLoggedIn={isLoggedIn}
                 />
+                </MatchupProvider>
               </GamesProvider>
             </UserProfilesProvider>
           </BetSlipProvider>
