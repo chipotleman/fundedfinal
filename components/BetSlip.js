@@ -39,8 +39,8 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
           data.games?.forEach(game => {
             scoresMap[game.id] = {
               isLive: game.isLive || game.status === 'IN_PROGRESS',
-              awayScore: game.awayScore || 0,
-              homeScore: game.homeScore || 0,
+              awayScore: game.scores?.away?.total ?? game.awayScore ?? 0,
+              homeScore: game.scores?.home?.total ?? game.homeScore ?? 0,
               time: game.time || ''
             };
           });

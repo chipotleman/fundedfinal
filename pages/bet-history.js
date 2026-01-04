@@ -365,8 +365,8 @@ export default function BetHistory() {
                     return {
                       ...leg,
                       isLive: legIsLive,
-                      homeScore: legGame.homeScore,
-                      awayScore: legGame.awayScore,
+                      homeScore: legGame.scores?.home?.total ?? legGame.homeScore,
+                      awayScore: legGame.scores?.away?.total ?? legGame.awayScore,
                       homeTeamFull: legGame.homeTeamFull || legGame.homeTeam,
                       awayTeamFull: legGame.awayTeamFull || legGame.awayTeam,
                       gameStart: legGame.startTime
@@ -380,8 +380,8 @@ export default function BetHistory() {
                 ...bet,
                 legs: enrichedLegs,
                 isLive: liveGame?.isLive || liveGame?.status === 'IN_PROGRESS' || enrichedLegs?.some(leg => leg.isLive),
-                currentHomeScore: liveGame?.homeScore,
-                currentAwayScore: liveGame?.awayScore,
+                currentHomeScore: liveGame?.scores?.home?.total ?? liveGame?.homeScore,
+                currentAwayScore: liveGame?.scores?.away?.total ?? liveGame?.awayScore,
                 homeTeamFull: liveGame?.homeTeamFull || liveGame?.homeTeam,
                 awayTeamFull: liveGame?.awayTeamFull || liveGame?.awayTeam
               };
