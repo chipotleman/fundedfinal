@@ -113,8 +113,9 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
       let teamName = words[words.length - 1] || selection;
       
       // If last word is a league identifier like (w), (W), (m), include the previous word too
+      // Also uppercase the identifier for consistent display
       if (/^\([wWmM]\)$/.test(teamName) && words.length > 1) {
-        teamName = `${words[words.length - 2]} ${teamName}`;
+        teamName = `${words[words.length - 2]} ${teamName.toUpperCase()}`;
       }
       
       const spreadMatch = selection.match(/([+-]\d+\.?\d*)/);
