@@ -31,12 +31,16 @@ export default function BetHistory() {
       
       try {
         // First trigger auto-grading of completed games
-        await fetch('/api/bets/grade', { method: 'POST' });
+        await fetch('/api/bets/grade', { method: 'POST', credentials: 'include' });
         
-        const response = await fetch('/api/bets/history');
+        const response = await fetch('/api/bets/history', {
+          credentials: 'include'
+        });
         if (response.ok) {
           const bets = await response.json();
           setAllBets(bets);
+        } else if (response.status === 401) {
+          console.error('Session expired or not authenticated');
         }
       } catch (error) {
         console.error('Error fetching bet history:', error);
