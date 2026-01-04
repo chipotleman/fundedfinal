@@ -4,7 +4,6 @@ import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import TapSurface from '../components/TapSurface';
 import LiveGameTimer from '../components/LiveGameTimer';
-import LiveActionFeed from '../components/LiveActionFeed';
 import { inferLeague } from '../lib/leagueInference';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -595,16 +594,6 @@ export default function Dashboard() {
                         </div>
                       </div>
 
-                      {isLive && game.comments && game.comments.length > 0 && (
-                        <div className="mb-4">
-                          <LiveActionFeed 
-                            comments={game.comments}
-                            maxItems={3}
-                            homeTeam={game.homeTeamFull || game.homeTeam}
-                            awayTeam={game.awayTeamFull || game.awayTeam}
-                          />
-                        </div>
-                      )}
 
                       {linesLocked ? (
                         <div>
