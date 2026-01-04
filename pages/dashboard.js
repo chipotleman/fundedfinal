@@ -279,8 +279,8 @@ export default function Dashboard() {
     }
     
     setGames(filteredGames);
-    // Use context loading state - games are preloaded so should be fast
-    setLoading(gamesLoading);
+    // Only show loading if context is still loading AND we have no games yet
+    setLoading(gamesLoading && filteredGames.length === 0);
   }, [selectedSport, selectedTab, gamesWithLiveData, categorizedGames, gamesLoading]);
 
 
