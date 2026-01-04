@@ -5,6 +5,7 @@ import { AuthProvider } from '../contexts/AuthContext';
 import { BetSlipProvider } from '../contexts/BetSlipContext';
 import { UserProfilesProvider } from '../contexts/UserProfilesContext';
 import { ThemeProvider } from '../contexts/ThemeContext';
+import { GamesProvider } from '../contexts/GamesContext';
 import ChallengePopup from '../components/ChallengePopup';
 import HowItWorksPopup from '../components/HowItWorksPopup';
 import DemoPopup from '../components/DemoPopup';
@@ -262,103 +263,105 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
         <AuthProvider>
           <BetSlipProvider>
             <UserProfilesProvider>
-            <AnalyticsTracker />
-            <AutoGrader />
-          {/* Solid Black Background */}
-          <div
-            style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100vh',
-              zIndex: -1,
-              backgroundColor: '#000000',
-            }}
-          />
-          <style jsx global>{`
-            body {
-              overflow-x: hidden;
-            }
-          `}</style>
+              <GamesProvider>
+                <AnalyticsTracker />
+                <AutoGrader />
+                {/* Solid Black Background */}
+                <div
+                  style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
+                    height: '100vh',
+                    zIndex: -1,
+                    backgroundColor: '#000000',
+                  }}
+                />
+                <style jsx global>{`
+                  body {
+                    overflow-x: hidden;
+                  }
+                `}</style>
 
-          {/* Logo preloader - loads once, stays cached for all pages */}
-          <img 
-            src="/pikslogotransparent.png" 
-            alt="" 
-            aria-hidden="true"
-            style={{
-              position: 'fixed',
-              width: 1,
-              height: 1,
-              opacity: 0,
-              pointerEvents: 'none',
-              zIndex: -1
-            }}
-          />
-          
-          {/* Page wrapper that slides left on mobile when menu opens */}
-          <div 
-            style={{
-              transform: mobileMenuOpen ? 'translateX(-256px)' : 'translateX(0)',
-              transition: 'transform 0.3s ease-in-out',
-              minHeight: '100vh',
-              backgroundColor: '#000000',
-              width: '100vw',
-              position: 'relative',
-            }}
-            className="lg:transform-none"
-          >
-            <Component {...pageProps} />
-          </div>
-          
-          {/* Global Popups - Available on all pages */}
-          <ChallengePopup 
-            isOpen={showChallengePopup} 
-            onClose={() => setShowChallengePopup(false)}
-            initialIndex={selectedChallengeIndex}
-          />
-          
-          <HowItWorksPopup 
-            isOpen={showHowItWorksPopup} 
-            onClose={() => setShowHowItWorksPopup(false)} 
-          />
+                {/* Logo preloader - loads once, stays cached for all pages */}
+                <img 
+                  src="/pikslogotransparent.png" 
+                  alt="" 
+                  aria-hidden="true"
+                  style={{
+                    position: 'fixed',
+                    width: 1,
+                    height: 1,
+                    opacity: 0,
+                    pointerEvents: 'none',
+                    zIndex: -1
+                  }}
+                />
+                
+                {/* Page wrapper that slides left on mobile when menu opens */}
+                <div 
+                  style={{
+                    transform: mobileMenuOpen ? 'translateX(-256px)' : 'translateX(0)',
+                    transition: 'transform 0.3s ease-in-out',
+                    minHeight: '100vh',
+                    backgroundColor: '#000000',
+                    width: '100vw',
+                    position: 'relative',
+                  }}
+                  className="lg:transform-none"
+                >
+                  <Component {...pageProps} />
+                </div>
+                
+                {/* Global Popups - Available on all pages */}
+                <ChallengePopup 
+                  isOpen={showChallengePopup} 
+                  onClose={() => setShowChallengePopup(false)}
+                  initialIndex={selectedChallengeIndex}
+                />
+                
+                <HowItWorksPopup 
+                  isOpen={showHowItWorksPopup} 
+                  onClose={() => setShowHowItWorksPopup(false)} 
+                />
 
-          <DemoPopup 
-            isOpen={showDemoPopup} 
-            onClose={() => setShowDemoPopup(false)} 
-          />
+                <DemoPopup 
+                  isOpen={showDemoPopup} 
+                  onClose={() => setShowDemoPopup(false)} 
+                />
 
-          <AuthPopup 
-            isOpen={showAuthPopup} 
-            onClose={() => setShowAuthPopup(false)}
-            initialMode={authPopupMode}
-          />
+                <AuthPopup 
+                  isOpen={showAuthPopup} 
+                  onClose={() => setShowAuthPopup(false)}
+                  initialMode={authPopupMode}
+                />
 
-          <SessionSummaryPopup
-            isOpen={showSessionSummary}
-            onClose={() => {
-              setShowSessionSummary(false);
-              setSessionSummaryData(null);
-            }}
-            sessionData={sessionSummaryData}
-          />
+                <SessionSummaryPopup
+                  isOpen={showSessionSummary}
+                  onClose={() => {
+                    setShowSessionSummary(false);
+                    setSessionSummaryData(null);
+                  }}
+                  sessionData={sessionSummaryData}
+                />
 
-          <MyChallengePopup
-            isOpen={showMyChallengePopup}
-            onClose={() => setShowMyChallengePopup(false)}
-          />
+                <MyChallengePopup
+                  isOpen={showMyChallengePopup}
+                  onClose={() => setShowMyChallengePopup(false)}
+                />
 
-          {/* Mobile Menu - Rendered outside page wrapper via portal */}
-          <MobileNavMenu
-            isOpen={mobileMenuOpen}
-            onClose={() => {
-              setMobileMenuOpen(false);
-              window.dispatchEvent(new CustomEvent('mobileMenuClosed'));
-            }}
-            currentUser={currentUser}
-            isLoggedIn={isLoggedIn}
-          />
+                {/* Mobile Menu - Rendered outside page wrapper via portal */}
+                <MobileNavMenu
+                  isOpen={mobileMenuOpen}
+                  onClose={() => {
+                    setMobileMenuOpen(false);
+                    window.dispatchEvent(new CustomEvent('mobileMenuClosed'));
+                  }}
+                  currentUser={currentUser}
+                  isLoggedIn={isLoggedIn}
+                />
+              </GamesProvider>
             </UserProfilesProvider>
           </BetSlipProvider>
         </AuthProvider>

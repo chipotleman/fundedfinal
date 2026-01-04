@@ -9,6 +9,7 @@ import { inferLeague } from '../lib/leagueInference';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useGames } from '../contexts/GamesContext';
 import { categorizeGames, filterGamesBySport } from '../lib/gamesUtils';
 import { useGoalserveLive } from '../hooks/useGoalserveLive';
 
@@ -17,6 +18,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
+  const { apiGames: contextApiGames, inplayEvents: contextInplayEvents, loading: gamesLoading, error: gamesError, lastUpdated } = useGames();
   const [selectedSport, setSelectedSport] = useState('All Sports');
   const [selectedTab, setSelectedTab] = useState('live');
   const [games, setGames] = useState([]);
@@ -104,90 +106,23 @@ export default function Dashboard() {
     betSlipRef.current = betSlip;
   }, [betSlip]);
 
-  const [apiGames, setApiGames] = useState([]);
-  const [gamesError, setGamesError] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(null);
+  // Use games from context (preloaded on app start)
+  const apiGames = contextApiGames || [];
+  const inplayEvents = contextInplayEvents || {};
   
-  const { liveScores, liveOdds, events: inplayEvents, isConnected: liveConnected } = useGoalserveLive({ autoConnect: true });
+  // Also get SSE data from hook for real-time updates
+  const { liveScores, liveOdds, events: hookInplayEvents, isConnected: liveConnected } = useGoalserveLive({ autoConnect: true });
   
-  // Adaptive polling - use refs to avoid closure issues
-  const pollingIntervalRef = useRef(null);
-  const currentIntervalRef = useRef(5000); // Start with fast polling for live updates
-  const lastOddsUpdateRef = useRef(null);
-  const lastFetchTimeRef = useRef(null);
-  
-  useEffect(() => {
-    const fetchAllGames = async () => {
-      try {
-        const response = await fetch('/api/games');
-        if (response.ok) {
-          const data = await response.json();
-          setApiGames([...(data.games || [])]);
-          setLastUpdated(new Date());
-          setGamesError(null);
-          
-          // Track last odds update for stale detection (using refs to avoid closure issues)
-          if (data.freshness?.lastOddsUpdate) {
-            const newLastUpdate = data.freshness.lastOddsUpdate;
-            const previousLastUpdate = lastOddsUpdateRef.current;
-            const previousFetchTime = lastFetchTimeRef.current;
-            
-            // Detect stale data - if last_update hasn't changed in 45+ seconds
-            if (previousLastUpdate && previousLastUpdate === newLastUpdate && previousFetchTime) {
-              const staleTime = Date.now() - previousFetchTime;
-              if (staleTime > 45000) {
-                console.log('[DASHBOARD] Stale data detected, forcing refresh...');
-                fetch('/api/games?refresh=true').then(r => r.json()).then(freshData => {
-                  if (freshData.games) {
-                    setApiGames([...(freshData.games || [])]);
-                    setLastUpdated(new Date());
-                    lastOddsUpdateRef.current = freshData.freshness?.lastOddsUpdate || null;
-                    lastFetchTimeRef.current = Date.now();
-                  }
-                });
-                return;
-              }
-            }
-            
-            // Update refs with new values
-            if (newLastUpdate !== previousLastUpdate) {
-              lastOddsUpdateRef.current = newLastUpdate;
-              lastFetchTimeRef.current = Date.now();
-            }
-          }
-          
-          // Adaptive polling - adjust interval based on server recommendation
-          const recommendedInterval = data.polling?.recommendedInterval || 60000;
-          if (recommendedInterval !== currentIntervalRef.current) {
-            console.log(`[DASHBOARD] Adjusting polling: ${currentIntervalRef.current}ms -> ${recommendedInterval}ms (live games: ${data.polling?.hasLiveGames})`);
-            currentIntervalRef.current = recommendedInterval;
-            // Clear and restart with new interval
-            if (pollingIntervalRef.current) {
-              clearInterval(pollingIntervalRef.current);
-            }
-            pollingIntervalRef.current = setInterval(fetchAllGames, recommendedInterval);
-          }
-          
-          console.log('[DASHBOARD] Games refreshed:', data.games?.length, 'games at', new Date().toLocaleTimeString(), 
-            `(polling: ${currentIntervalRef.current}ms, live: ${data.polling?.hasLiveGames})`);
-        } else {
-          console.error('Failed to fetch games');
-          setGamesError('Failed to load games');
-        }
-      } catch (error) {
-        console.error('Error fetching games:', error);
-        setGamesError('Failed to load games');
-      }
-    };
-    
-    fetchAllGames();
-    pollingIntervalRef.current = setInterval(fetchAllGames, 5000);
-    return () => {
-      if (pollingIntervalRef.current) {
-        clearInterval(pollingIntervalRef.current);
-      }
-    };
-  }, []);
+  // Merge context inplay events with hook inplay events (hook may have fresher data)
+  const mergedInplayEvents = useMemo(() => {
+    const merged = { ...inplayEvents };
+    if (hookInplayEvents) {
+      Object.entries(hookInplayEvents).forEach(([id, event]) => {
+        merged[id] = event;
+      });
+    }
+    return merged;
+  }, [inplayEvents, hookInplayEvents]);
 
   // SEPARATED DATA SOURCES - No more merging!
   // Live tab uses ONLY inplay SSE data (fastest, real-time)
@@ -195,7 +130,7 @@ export default function Dashboard() {
   
   // Convert inplay events to game format for Live tab
   const liveGamesFromInplay = useMemo(() => {
-    return Object.values(inplayEvents || {}).map(event => {
+    return Object.values(mergedInplayEvents || {}).map(event => {
       const homeTeam = event.homeTeam || event.stats?.[0]?.home || 'Home';
       const awayTeam = event.awayTeam || event.stats?.[0]?.away || 'Away';
       
@@ -271,7 +206,7 @@ export default function Dashboard() {
         dataSource: 'Goalserve Inplay'
       };
     });
-  }, [inplayEvents]);
+  }, [mergedInplayEvents]);
   
   // Helper to normalize team names for matching
   const normalizeTeamName = (name) => {
@@ -344,8 +279,9 @@ export default function Dashboard() {
     }
     
     setGames(filteredGames);
-    setLoading(false);
-  }, [selectedSport, selectedTab, gamesWithLiveData, categorizedGames]);
+    // Use context loading state - games are preloaded so should be fast
+    setLoading(gamesLoading);
+  }, [selectedSport, selectedTab, gamesWithLiveData, categorizedGames, gamesLoading]);
 
 
   const formatOdds = (odds) => {

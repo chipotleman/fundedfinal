@@ -18,7 +18,7 @@ None documented yet.
 ### Technical Implementations
 - **Framework**: Next.js 14.2.30
 - **Styling**: Tailwind CSS
-- **State Management**: React Context (AuthContext, BetSlipContext, UserProfilesContext)
+- **State Management**: React Context (AuthContext, BetSlipContext, UserProfilesContext, GamesContext, ThemeContext)
 - **Authentication**: NextAuth.js v4 with email/password (bcrypt) and JWT-based sessions. OAuth providers are disabled but integrated for future use.
 - **Database ORM**: Drizzle ORM with `@neondatabase/serverless` HTTP driver.
 - **Beta Access**: Password-protected beta landing page with persistence via localStorage.
@@ -136,6 +136,7 @@ None documented yet.
     - **Featured Section**: Uses `categorizedGames.liveGames` which points directly to inplay SSE data
     - **No Merge Logic**: Previous architecture merged inplay + REST causing score flickering from race conditions
     - Games display in "Away @ Home" format: away team TOP, home team BOTTOM (matching bet365/sportsbook conventions)
+  - **Games Preloading**: GamesContext (`contexts/GamesContext.js`) starts fetching games immediately when the app loads (on any page). By the time users navigate to the dashboard, games are already available without any loading delay. The context also connects to SSE for real-time inplay updates.
   - **Game Display Tabs**: Live vs Upcoming tabs on all game pages
   - **Caching**: 30-second server-side cache per sport (Goalserve), 10-minute (The Odds API)
   - **Odds Parsing**: 
