@@ -37,12 +37,21 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
           const data = await response.json();
           const scoresMap = {};
           data.games?.forEach(game => {
-            scoresMap[game.id] = {
+            const scoreData = {
               isLive: game.isLive || game.status === 'IN_PROGRESS',
               awayScore: game.scores?.away?.total ?? game.awayScore ?? 0,
               homeScore: game.scores?.home?.total ?? game.homeScore ?? 0,
               time: game.time || ''
             };
+            // Key by game ID
+            scoresMap[game.id] = scoreData;
+            scoresMap[game.gameId] = scoreData;
+            // Key by matchup strings for better matching
+            const matchup = `${game.awayTeam} @ ${game.homeTeam}`;
+            scoresMap[matchup] = scoreData;
+            const fullMatchup = `${game.awayTeamFull} @ ${game.homeTeamFull}`;
+            scoresMap[fullMatchup] = scoreData;
+            scoresMap[fullMatchup.toLowerCase()] = scoreData;
           });
           setLiveScores(scoresMap);
         }
@@ -462,7 +471,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                               
                               {/* Live Game Info */}
                               {(() => {
-                                const live = liveScores[bet.gameId] || {};
+                                const live = liveScores[bet.gameId] || liveScores[bet.matchup] || liveScores[bet.matchup?.toLowerCase()] || {};
                                 const isLive = live.isLive || bet.isLive;
                                 const awayScore = live.awayScore ?? bet.awayScore ?? 0;
                                 const homeScore = live.homeScore ?? bet.homeScore ?? 0;

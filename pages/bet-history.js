@@ -64,11 +64,21 @@ export default function BetHistory() {
           const data = await response.json();
           const gamesMap = {};
           data.games?.forEach(game => {
+            // Key by game ID
             gamesMap[game.id] = game;
+            gamesMap[game.gameId] = game;
+            // Key by abbreviation matchup
             const matchup = `${game.awayTeam} @ ${game.homeTeam}`;
             gamesMap[matchup] = game;
+            gamesMap[matchup.toLowerCase()] = game;
+            // Key by full matchup
             const fullMatchup = `${game.awayTeamFull} @ ${game.homeTeamFull}`;
             gamesMap[fullMatchup] = game;
+            gamesMap[fullMatchup.toLowerCase()] = game;
+            // Normalize (W) and (w) for women's basketball
+            const normalizedMatchup = fullMatchup.replace(/\(w\)/gi, '(W)');
+            gamesMap[normalizedMatchup] = game;
+            gamesMap[normalizedMatchup.toLowerCase()] = game;
           });
           setLiveGames(gamesMap);
         }
@@ -354,12 +364,12 @@ export default function BetHistory() {
           {/* Bets List */}
           <div className="grid grid-cols-1 gap-4 max-w-2xl mx-auto">
             {filteredBets.map(bet => {
-              const liveGame = liveGames[bet.gameId] || liveGames[bet.matchup];
+              const liveGame = liveGames[bet.gameId] || liveGames[bet.matchup] || liveGames[bet.matchup?.toLowerCase()];
               
               let enrichedLegs = bet.legs;
               if (bet.legs && Array.isArray(bet.legs)) {
                 enrichedLegs = bet.legs.map(leg => {
-                  const legGame = liveGames[leg.gameId] || liveGames[leg.matchup];
+                  const legGame = liveGames[leg.gameId] || liveGames[leg.matchup] || liveGames[leg.matchup?.toLowerCase()];
                   const legIsLive = !!(legGame && (legGame.isLive || legGame.status === 'IN_PROGRESS'));
                   if (legGame) {
                     return {
