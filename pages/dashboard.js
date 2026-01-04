@@ -22,7 +22,7 @@ export default function Dashboard() {
   const [selectedTab, setSelectedTab] = useState('live');
   const [games, setGames] = useState([]);
   const [allGames, setAllGames] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [bankroll, setBankroll] = useState(10000);
   const [pnl, setPnl] = useState(0);
   const [expandedGames, setExpandedGames] = useState({});
@@ -249,38 +249,51 @@ export default function Dashboard() {
   useEffect(() => {
     setAllGames(gamesWithLiveData);
     
-    // Get both live and upcoming games - DON'T filter by tab here, show all
     const liveGames = [...categorizedGames.liveGames, ...(categorizedGames.recentlyCompletedGames || [])];
     const upcomingGames = categorizedGames.upcomingGames || [];
     
-    // Choose which to display based on tab, but keep both available
-    const activeGames = selectedTab === 'live' ? liveGames : upcomingGames;
+    // Sport filter helper
+    const sportMappings = {
+      'NBA': ['NBA', 'BASKETBALL', "WOMEN'S BASKETBALL"],
+      'NCAAB': ['NCAAB', 'BASKETBALL', "WOMEN'S BASKETBALL", "WOMEN'S NCAAB"],
+      'NFL': ['NFL', 'FOOTBALL'],
+      'NCAAF': ['NCAAF', 'FOOTBALL'],
+      'MLB': ['MLB', 'BASEBALL', 'COLLEGE BASEBALL'],
+      'NHL': ['NHL', 'HOCKEY'],
+      'Euro Basketball': ['EUROLEAGUE', 'TURKEY BASKETBALL', 'ITALY BASKETBALL', 'GREECE BASKETBALL', 'SPAIN BASKETBALL', 'FRANCE BASKETBALL', 'GERMANY BASKETBALL', 'EUROPEAN BASKETBALL', 'BASKETBALL'],
+      "Int'l Hockey": ['HOCKEY', 'NHL']
+    };
     
-    // Apply sport filter - match both specific leagues AND base sport fallbacks
-    let filteredGames = activeGames;
-    if (selectedSport !== 'All Sports') {
-      // Map sport buttons to base sport fallbacks for matching
-      const sportMappings = {
-        'NBA': ['NBA', 'BASKETBALL', "WOMEN'S BASKETBALL"],
-        'NCAAB': ['NCAAB', 'BASKETBALL', "WOMEN'S BASKETBALL", "WOMEN'S NCAAB"],
-        'NFL': ['NFL', 'FOOTBALL'],
-        'NCAAF': ['NCAAF', 'FOOTBALL'],
-        'MLB': ['MLB', 'BASEBALL', 'COLLEGE BASEBALL'],
-        'NHL': ['NHL', 'HOCKEY'],
-        'Euro Basketball': ['EUROLEAGUE', 'TURKEY BASKETBALL', 'ITALY BASKETBALL', 'GREECE BASKETBALL', 'SPAIN BASKETBALL', 'FRANCE BASKETBALL', 'GERMANY BASKETBALL', 'EUROPEAN BASKETBALL', 'BASKETBALL'],
-        "Int'l Hockey": ['HOCKEY', 'NHL']
-      };
+    const filterBySport = (games) => {
+      if (selectedSport === 'All Sports') return games;
       const validSportNames = sportMappings[selectedSport] || [selectedSport];
-      filteredGames = activeGames.filter(g => {
+      return games.filter(g => {
         const sportNameUpper = (g.sportName || '').toUpperCase();
         return validSportNames.some(name => sportNameUpper === name.toUpperCase());
       });
+    };
+    
+    // Get games for selected tab
+    const primaryGames = selectedTab === 'live' ? liveGames : upcomingGames;
+    const fallbackGames = selectedTab === 'live' ? upcomingGames : liveGames;
+    
+    // Apply sport filter
+    let filteredGames = filterBySport(primaryGames);
+    
+    // ALWAYS show games - if primary tab is empty, use fallback
+    if (filteredGames.length === 0) {
+      filteredGames = filterBySport(fallbackGames);
+    }
+    
+    // If still empty after sport filter, show ALL games from both tabs
+    if (filteredGames.length === 0 && selectedSport !== 'All Sports') {
+      filteredGames = [...liveGames, ...upcomingGames];
     }
     
     setGames(filteredGames);
-    // Only show loading if context is still loading AND we have no games yet
-    setLoading(gamesLoading && filteredGames.length === 0);
-  }, [selectedSport, selectedTab, gamesWithLiveData, categorizedGames, gamesLoading]);
+    // NEVER show loading - always display whatever games we have
+    setLoading(false);
+  }, [selectedSport, selectedTab, gamesWithLiveData, categorizedGames]);
 
 
   const formatOdds = (odds) => {
