@@ -70,20 +70,56 @@ export function GamesProvider({ children }) {
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.type === 'update' && data.events) {
-          if (isMountedRef.current) {
-            setInplayEvents(prev => {
-              const updated = { ...prev };
-              Object.entries(data.events).forEach(([id, eventData]) => {
-                updated[id] = eventData;
-              });
-              return updated;
+        
+        if (!isMountedRef.current) return;
+        
+        // Handle initial events (array format from inplay)
+        if (data.type === 'initial' && data.events) {
+          const eventsObj = {};
+          if (Array.isArray(data.events)) {
+            data.events.forEach(evt => {
+              if (evt.id) eventsObj[evt.id] = evt;
             });
+          } else {
+            Object.assign(eventsObj, data.events);
           }
-        } else if (data.type === 'initial' && data.events) {
-          if (isMountedRef.current) {
-            setInplayEvents(data.events);
-          }
+          setInplayEvents(eventsObj);
+          setLastUpdated(new Date());
+        }
+        // Handle 'events' type with changes array (from inplay polling)
+        else if (data.type === 'events' && data.changes) {
+          setInplayEvents(prev => {
+            const updated = { ...prev };
+            data.changes.forEach(change => {
+              if (change.event && change.event.id) {
+                updated[change.event.id] = change.event;
+              }
+            });
+            return updated;
+          });
+          setLastUpdated(new Date());
+        }
+        // Handle 'update' type with events object
+        else if (data.type === 'update' && data.events) {
+          setInplayEvents(prev => {
+            const updated = { ...prev };
+            Object.entries(data.events).forEach(([id, eventData]) => {
+              updated[id] = eventData;
+            });
+            return updated;
+          });
+          setLastUpdated(new Date());
+        }
+        // Handle single event update
+        else if (data.type === 'update' && data.data) {
+          setInplayEvents(prev => {
+            const updated = { ...prev };
+            if (data.data.id) {
+              updated[data.data.id] = data.data;
+            }
+            return updated;
+          });
+          setLastUpdated(new Date());
         }
       } catch (err) {
         console.error('[GamesContext] SSE parse error:', err);
