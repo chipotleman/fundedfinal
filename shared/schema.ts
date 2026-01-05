@@ -26,6 +26,8 @@ export const users = pgTable("users", {
 export const profiles = pgTable("profiles", {
   id: varchar("id").primaryKey(), // References users.id
   username: varchar("username", { length: 100 }),
+  avatar: text("avatar"), // Avatar URL or base64
+  bio: text("bio"),
   bankroll: decimal("bankroll", { precision: 10, scale: 2 }).default('0').notNull(),
   challenge: jsonb("challenge"),
   challengeStartDate: timestamp("challenge_start_date"),
@@ -42,9 +44,14 @@ export const profiles = pgTable("profiles", {
   bettingDays: integer("betting_days").default(0),
   achievements: jsonb("achievements").default([]),
   profileStats: jsonb("profile_stats"),
+  battleWins: integer("battle_wins").default(0),
+  battleLosses: integer("battle_losses").default(0),
+  totalWinnings: decimal("total_winnings", { precision: 12, scale: 2 }).default('0'),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  usernameIdx: index("profiles_username_idx").on(table.username),
+}));
 
 // User bets
 export const userBets = pgTable("user_bets", {
