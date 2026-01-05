@@ -54,6 +54,13 @@ None documented yet.
     - **Resolution**: Bets are scoped to matchup time range only. `/api/matchups/resolve` settles expired matchups, calculates balances, determines winner
     - **UI Components**: MatchupBanner (opponent info/timer), OpponentBets (reveals after betting), FindingMatchup (loading screen)
     - **Context**: MatchupContext wraps app in `_app.js`, provides matchup state globally
+    - **My Battle Page** (`/my-battle`): Dedicated page showing current battle stats, opponent info, user bets vs opponent bets, and full battle history
+- **User Profiles**: Full profile system for all users:
+    - **Profile Fields**: username, avatar (base64 image upload), bio, battleWins, battleLosses, totalWinnings
+    - **Public Profile Page** (`/profile/[id]`): View any user's profile with battle history and stats
+    - **Profile Editing**: Users can change username (with availability check), upload avatar, and edit bio
+    - **API Endpoints**: `/api/profiles/update` (POST), `/api/profiles/check-username` (GET), `/api/profiles/battle-history` (GET)
+    - **Navigation**: "My Battle" link in nav replaces "My Challenge" popup when user has active challenge
 
 ### System Design Choices
 - **Authentication Flow**: Beta access -> NextAuth.js -> JWT session -> User profile creation -> Challenge selection & purchase -> Challenge data persistence.
