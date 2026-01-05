@@ -21,6 +21,7 @@ export default function FindingMatchup({ userId, profile, durationType = '1_day'
       const response = await fetch('/api/matchups/queue', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ 
           userId,
           challengeType,
@@ -60,7 +61,7 @@ export default function FindingMatchup({ userId, profile, durationType = '1_day'
 
   const checkQueueStatus = useCallback(async () => {
     try {
-      const response = await fetch('/api/matchups/queue');
+      const response = await fetch('/api/matchups/queue', { credentials: 'include' });
       const data = await response.json();
 
       if (data.status === 'matched') {
@@ -90,6 +91,7 @@ export default function FindingMatchup({ userId, profile, durationType = '1_day'
       const response = await fetch('/api/matchups/assign-opponent', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
       });
 
       const data = await response.json();
@@ -144,7 +146,7 @@ export default function FindingMatchup({ userId, profile, durationType = '1_day'
 
   const handleCancel = async () => {
     try {
-      await fetch('/api/matchups/queue', { method: 'DELETE' });
+      await fetch('/api/matchups/queue', { method: 'DELETE', credentials: 'include' });
       if (onCancel) {
         onCancel();
       } else {
