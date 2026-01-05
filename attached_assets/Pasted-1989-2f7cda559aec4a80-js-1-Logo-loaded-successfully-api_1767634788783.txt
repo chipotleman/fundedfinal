@@ -1,0 +1,79 @@
+1989-2f7cda559aec4a80.js:1 Logo loaded successfully
+api/matchups/current:1  Failed to load resource: the server responded with a status of 401 ()
+1989-2f7cda559aec4a80.js:1 Logo loaded successfully
+dashboard-ef743a03a2683523.js:1 [Goalserve Live] SSE connected
+dashboard-ef743a03a2683523.js:1 [Goalserve Live] Initial status: Object
+dashboard-ef743a03a2683523.js:1 [Goalserve Live] Unknown event type: fallback
+dashboard-ef743a03a2683523.js:1 [Goalserve Live] Initial status: Object
+api/matchups/current:1  Failed to load resource: the server responded with a status of 401 ()
+1989-2f7cda559aec4a80.js:1 Logo loaded successfully
+battle-43aee48dc61bf04c.js:1  POST https://thepiks.com/api/matchups/queue 401 (Unauthorized)
+(anonymous) @ battle-43aee48dc61bf04c.js:1
+(anonymous) @ battle-43aee48dc61bf04c.js:1
+uU @ framework-79bf9954148d0de3.js:1
+oV @ framework-79bf9954148d0de3.js:1
+(anonymous) @ framework-79bf9954148d0de3.js:1
+oU @ framework-79bf9954148d0de3.js:1
+oP @ framework-79bf9954148d0de3.js:1
+r8 @ framework-79bf9954148d0de3.js:1
+(anonymous) @ framework-79bf9954148d0de3.js:1
+battle-43aee48dc61bf04c.js:1 Queue error: Error: Unauthorized
+    at battle-43aee48dc61bf04c.js:1:1083
+(anonymous) @ battle-43aee48dc61bf04c.js:1
+await in (anonymous)
+(anonymous) @ battle-43aee48dc61bf04c.js:1
+uU @ framework-79bf9954148d0de3.js:1
+oV @ framework-79bf9954148d0de3.js:1
+(anonymous) @ framework-79bf9954148d0de3.js:1
+oU @ framework-79bf9954148d0de3.js:1
+oP @ framework-79bf9954148d0de3.js:1
+r8 @ framework-79bf9954148d0de3.js:1
+(anonymous) @ framework-79bf9954148d0de3.js:1
+battle-43aee48dc61bf04c.js:1  GET https://thepiks.com/api/matchups/queue 401 (Unauthorized)
+(anonymous) @ battle-43aee48dc61bf04c.js:1
+(anonymous) @ battle-43aee48dc61bf04c.js:1
+setInterval
+(anonymous) @ battle-43aee48dc61bf04c.js:1
+uU @ framework-79bf9954148d0de3.js:1
+oV @ framework-79bf9954148d0de3.js:1
+(anonymous) @ framework-79bf9954148d0de3.js:1
+oU @ framework-79bf9954148d0de3.js:1
+oP @ framework-79bf9954148d0de3.js:1
+r8 @ framework-79bf9954148d0de3.js:1
+(anonymous) @ framework-79bf9954148d0de3.js:1
+battle-43aee48dc61bf04c.js:1  GET https://thepiks.com/api/matchups/queue 401 (Unauthorized)
+(anonymous) @ battle-43aee48dc61bf04c.js:1
+(anonymous) @ battle-43aee48dc61bf04c.js:1
+setInterval
+(anonymous) @ battle-43aee48dc61bf04c.js:1
+uU @ framework-79bf9954148d0de3.js:1
+oV @ framework-79bf9954148d0de3.js:1
+(anonymous) @ framework-79bf9954148d0de3.js:1
+oU @ framework-79bf9954148d0de3.js:1
+oP @ framework-79bf9954148d0de3.js:1
+r8 @ framework-79bf9954148d0de3.js:1
+(anonymous) @ framework-79bf9954148d0de3.js:1
+battle-43aee48dc61bf04c.js:1  GET https://thepiks.com/api/matchups/queue 401 (Unauthorized)
+(anonymous) @ battle-43aee48dc61bf04c.js:1
+(anonymous) @ battle-43aee48dc61bf04c.js:1
+setInterval
+(anonymous) @ battle-43aee48dc61bf04c.js:1
+uU @ framework-79bf9954148d0de3.js:1
+oV @ framework-79bf9954148d0de3.js:1
+(anonymous) @ framework-79bf9954148d0de3.js:1
+oU @ framework-79bf9954148d0de3.js:1
+oP @ framework-79bf9954148d0de3.js:1
+r8 @ framework-79bf9954148d0de3.js:1
+(anonymous) @ framework-79bf9954148d0de3.js:1
+battle-43aee48dc61bf04c.js:1  GET https://thepiks.com/api/matchups/queue 401 (Unauthorized)
+(anonymous) @ battle-43aee48dc61bf04c.js:1
+(anonymous) @ battle-43aee48dc61bf04c.js:1
+setInterval
+(anonymous) @ battle-43aee48dc61bf04c.js:1
+uU @ framework-79bf9954148d0de3.js:1
+oV @ framework-79bf9954148d0de3.js:1
+(anonymous) @ framework-79bf9954148d0de3.js:1
+oU @ framework-79bf9954148d0de3.js:1
+oP @ framework-79bf9954148d0de3.js:1
+r8 @ framework-79bf9954148d0de3.js:1
+(anonymous) @ framework-79bf9954148d0de3.js:1
