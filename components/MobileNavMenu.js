@@ -209,15 +209,13 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 Bet History
               </Link>
               {hasActiveChallenge ? (
-                <button
-                  onClick={() => {
-                    onClose();
-                    window.dispatchEvent(new CustomEvent('openMyChallengePopup'));
-                  }}
-                  className="block w-full text-left text-gray-300 font-light text-base uppercase tracking-wider py-3"
+                <Link
+                  href="/my-battle"
+                  onClick={onClose}
+                  className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
                 >
-                  My Challenge
-                </button>
+                  My Battle
+                </Link>
               ) : (
                 <button
                   onClick={() => {

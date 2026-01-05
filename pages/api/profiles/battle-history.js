@@ -101,14 +101,17 @@ export default async function handler(req, res) {
       };
     }));
 
+    const completedBattles = battleHistory.filter(b => b.status === 'completed');
     const stats = {
       totalBattles: battleHistory.length,
+      completedBattles: completedBattles.length,
       wins: battleHistory.filter(b => b.result === 'win').length,
       losses: battleHistory.filter(b => b.result === 'loss').length,
       ties: battleHistory.filter(b => b.result === 'tie').length,
       totalWinnings: battleHistory
         .filter(b => b.result === 'win')
         .reduce((sum, b) => sum + b.pnl, 0),
+      netPnl: completedBattles.reduce((sum, b) => sum + b.pnl, 0),
     };
 
     return res.status(200).json({ battles: battleHistory, stats });

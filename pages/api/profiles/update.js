@@ -27,6 +27,23 @@ export default async function handler(req, res) {
   const { username, avatar, bio } = req.body;
 
   try {
+    if (avatar && typeof avatar === 'string') {
+      if (!avatar.startsWith('data:image/')) {
+        return res.status(400).json({ error: 'Invalid avatar format. Must be a valid image.' });
+      }
+      const validMimeTypes = ['data:image/jpeg;', 'data:image/jpg;', 'data:image/png;', 'data:image/gif;', 'data:image/webp;'];
+      const isValidMime = validMimeTypes.some(mime => avatar.startsWith(mime));
+      if (!isValidMime) {
+        return res.status(400).json({ error: 'Invalid image type. Allowed: JPEG, PNG, GIF, WebP' });
+      }
+      if (avatar.length > 2 * 1024 * 1024) {
+        return res.status(400).json({ error: 'Avatar image too large. Max 2MB.' });
+      }
+    }
+
+    if (bio && typeof bio === 'string' && bio.length > 500) {
+      return res.status(400).json({ error: 'Bio too long. Max 500 characters.' });
+    }
     if (username) {
       const existingUser = await db
         .select({ id: profiles.id })
