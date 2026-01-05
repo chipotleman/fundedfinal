@@ -402,7 +402,7 @@ export default function Dashboard() {
               onRefresh={refreshMatchup}
             />
           </>
-        ) : session?.user && (
+        ) : user && (
           <div className="mb-6">
             <div 
               className="glass-card p-4 flex items-center justify-between cursor-pointer hover:border-blue-500/50 transition-all"

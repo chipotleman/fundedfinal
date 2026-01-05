@@ -1,0 +1,43 @@
+[Error] [GamesContext] Error fetching games: – TypeError: Load failed
+TypeError: Load failed
+	(anonymous function) (_app-0261b770e3ef1982.js:1:26931)
+[Error] ReferenceError: Can't find variable: session — dashboard-83e6faa4a1cdd059.js:1:27073
+	a9 (framework-79bf9954148d0de3.js:1:69901)
+	(anonymous function) (framework-79bf9954148d0de3.js:1:70413)
+	lW (framework-79bf9954148d0de3.js:1:51484)
+	uX (framework-79bf9954148d0de3.js:1:90862)
+	e (framework-79bf9954148d0de3.js:1:111179)
+	(anonymous function) (framework-79bf9954148d0de3.js:1:111188)
+	oU (framework-79bf9954148d0de3.js:1:111700)
+	ox (framework-79bf9954148d0de3.js:1:95072)
+	x (framework-79bf9954148d0de3.js:1:137551)
+	T (framework-79bf9954148d0de3.js:1:138081)
+[Error] ReferenceError: Can't find variable: session — dashboard-83e6faa4a1cdd059.js:1:27073
+	ee (main-64b0053555f73f9f.js:1:17573)
+	fn (main-64b0053555f73f9f.js:1:16618)
+	componentDidCatch (main-64b0053555f73f9f.js:1:15083)
+	(anonymous function) (framework-79bf9954148d0de3.js:1:70521)
+	lW (framework-79bf9954148d0de3.js:1:51484)
+	uX (framework-79bf9954148d0de3.js:1:90862)
+	e (framework-79bf9954148d0de3.js:1:111179)
+	(anonymous function) (framework-79bf9954148d0de3.js:1:111188)
+	oU (framework-79bf9954148d0de3.js:1:111700)
+	ox (framework-79bf9954148d0de3.js:1:95072)
+	x (framework-79bf9954148d0de3.js:1:137551)
+	T (framework-79bf9954148d0de3.js:1:138081)
+[Error] A client-side exception has occurred, see here for more info: https://nextjs.org/docs/messages/client-side-exception-occurred
+	ee (main-64b0053555f73f9f.js:1:17590)
+	fn (main-64b0053555f73f9f.js:1:16618)
+	componentDidCatch (main-64b0053555f73f9f.js:1:15083)
+	(anonymous function) (framework-79bf9954148d0de3.js:1:70521)
+	lW (framework-79bf9954148d0de3.js:1:51484)
+	uX (framework-79bf9954148d0de3.js:1:90862)
+	e (framework-79bf9954148d0de3.js:1:111179)
+	(anonymous function) (framework-79bf9954148d0de3.js:1:111188)
+	oU (framework-79bf9954148d0de3.js:1:111700)
+	ox (framework-79bf9954148d0de3.js:1:95072)
+	x (framework-79bf9954148d0de3.js:1:137551)
+	T (framework-79bf9954148d0de3.js:1:138081)
+[Error] Failed to load resource: the server responded with a status of 401 () (current, line 0)
+> Selected Element
+< <div style="font-family: system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"; height: 100vh; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">…</div>
