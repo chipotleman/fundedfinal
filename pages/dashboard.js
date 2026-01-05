@@ -386,7 +386,7 @@ export default function Dashboard() {
       />
 
       <div className="pt-4 sm:pt-6 lg:pt-8 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
-        {hasActiveMatchup && matchup && opponent && (
+        {hasActiveMatchup && matchup && opponent ? (
           <>
             <MatchupBanner
               matchup={matchup}
@@ -402,6 +402,31 @@ export default function Dashboard() {
               onRefresh={refreshMatchup}
             />
           </>
+        ) : session?.user && (
+          <div className="mb-6">
+            <div 
+              className="glass-card p-4 flex items-center justify-between cursor-pointer hover:border-blue-500/50 transition-all"
+              onClick={() => router.push('/battle')}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-white font-semibold">1v1 Battle Mode</h3>
+                  <p className="text-gray-400 text-sm">Challenge another player and compete for the pot</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-blue-400 font-medium text-sm">Find Opponent</span>
+                <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </div>
         )}
         <div className="mb-4">
           <div className="flex items-center gap-4 mb-4">

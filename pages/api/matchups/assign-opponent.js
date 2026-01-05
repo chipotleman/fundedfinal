@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]';
 import { db } from '../../../lib/db';
-import { matchups, matchupQueue, fakeOpponents, userChallenges } from '../../../shared/schema';
+import { matchups, matchupQueue, fakeOpponents } from '../../../shared/schema';
 import { eq, and } from 'drizzle-orm';
 
 const DURATION_CONFIGS = {
@@ -38,15 +38,6 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'Not in queue' });
     }
 
-    const [challenge] = await db
-      .select()
-      .from(userChallenges)
-      .where(eq(userChallenges.id, queueEntry.challengeId));
-
-    if (!challenge) {
-      return res.status(404).json({ error: 'Challenge not found' });
-    }
-
     const activeFakeOpponents = await db
       .select()
       .from(fakeOpponents)
@@ -60,7 +51,7 @@ export default async function handler(req, res) {
     }
 
     const randomFake = activeFakeOpponents[Math.floor(Math.random() * activeFakeOpponents.length)];
-    const startingBalance = parseFloat(challenge.startingBalance);
+    const startingBalance = parseFloat(queueEntry.startingBalance) || 5000;
     const potSize = startingBalance * 2;
     const platformFee = potSize * PLATFORM_FEE_PERCENT;
     const winnerPayout = potSize - platformFee;
@@ -76,10 +67,8 @@ export default async function handler(req, res) {
       platformFee: platformFee.toString(),
       winnerPayout: winnerPayout.toString(),
       user1Id: userId,
-      user1ChallengeId: queueEntry.challengeId,
       user1Balance: startingBalance.toString(),
       user2Id: randomFake.id,
-      user2ChallengeId: null,
       user2Balance: startingBalance.toString(),
       isFakeOpponent: true,
       fakeOpponentId: randomFake.id,

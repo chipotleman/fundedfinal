@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 
 const FINDING_TIMEOUT_MS = 8000;
 
-export default function FindingMatchup({ challengeId, durationType = '1_day', onMatchFound, onCancel }) {
+export default function FindingMatchup({ userId, profile, durationType = '1_day', onMatchFound, onCancel }) {
   const router = useRouter();
   const [status, setStatus] = useState('searching');
   const [dots, setDots] = useState('');
@@ -12,12 +12,21 @@ export default function FindingMatchup({ challengeId, durationType = '1_day', on
   const [error, setError] = useState(null);
   const [searchStartTime] = useState(Date.now());
 
+  const challengeData = profile?.challenge ? (typeof profile.challenge === 'string' ? JSON.parse(profile.challenge) : profile.challenge) : null;
+  const challengeType = challengeData?.challengeType || 'starter';
+  const bankroll = parseFloat(profile?.bankroll) || 5000;
+
   const queueForMatch = useCallback(async () => {
     try {
       const response = await fetch('/api/matchups/queue', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ challengeId, durationType }),
+        body: JSON.stringify({ 
+          userId,
+          challengeType,
+          bankroll,
+          durationType 
+        }),
       });
 
       const data = await response.json();
@@ -47,7 +56,7 @@ export default function FindingMatchup({ challengeId, durationType = '1_day', on
       console.error('Queue error:', err);
       setError(err.message);
     }
-  }, [challengeId, durationType, onMatchFound, router]);
+  }, [userId, challengeType, bankroll, durationType, onMatchFound, router]);
 
   const checkQueueStatus = useCallback(async () => {
     try {

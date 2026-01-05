@@ -530,7 +530,7 @@ export const matchups = pgTable("matchups", {
 export const matchupQueue = pgTable("matchup_queue", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull(),
-  challengeId: varchar("challenge_id").notNull(),
+  challengeId: varchar("challenge_id"), // Optional - can use profile data instead
   challengeType: varchar("challenge_type", { length: 50 }).notNull(),
   startingBalance: decimal("starting_balance", { precision: 10, scale: 2 }).notNull(),
   durationType: varchar("duration_type", { length: 50 }).default('1_day'),

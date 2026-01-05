@@ -15,12 +15,12 @@ const DURATION_OPTIONS = [
 export default function BattlePage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { challengeId } = router.query;
   
   const [step, setStep] = useState('select');
   const [selectedDuration, setSelectedDuration] = useState('1_day');
-  const [challenge, setChallenge] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeMatchup, setActiveMatchup] = useState(null);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -28,45 +28,38 @@ export default function BattlePage() {
       return;
     }
 
-    if (challengeId && session?.user?.id) {
-      fetchChallenge();
-    } else if (session?.user?.id) {
-      fetchActiveChallenge();
+    if (session?.user?.id) {
+      fetchProfileAndMatchup();
     }
-  }, [challengeId, session, status, router]);
+  }, [session, status, router]);
 
-  const fetchChallenge = async () => {
+  const fetchProfileAndMatchup = async () => {
     try {
-      const response = await fetch(`/api/challenges/${challengeId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setChallenge(data);
+      const [profileRes, matchupRes] = await Promise.all([
+        fetch(`/api/profiles/${session.user.id}`),
+        fetch('/api/matchups/current')
+      ]);
+
+      if (profileRes.ok) {
+        const profileData = await profileRes.json();
+        setProfile(profileData);
       }
-    } catch (error) {
-      console.error('Error fetching challenge:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const fetchActiveChallenge = async () => {
-    try {
-      const response = await fetch('/api/challenges/active');
-      if (response.ok) {
-        const data = await response.json();
-        if (data.challenge) {
-          setChallenge(data.challenge);
+      if (matchupRes.ok) {
+        const matchupData = await matchupRes.json();
+        if (matchupData.matchup) {
+          setActiveMatchup(matchupData.matchup);
         }
       }
     } catch (error) {
-      console.error('Error fetching active challenge:', error);
+      console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const startBattle = () => {
-    if (!challenge) return;
+    if (!profile) return;
     setStep('finding');
   };
 
@@ -86,10 +79,34 @@ export default function BattlePage() {
     );
   }
 
-  if (step === 'finding' && challenge) {
+  if (activeMatchup) {
+    return (
+      <div className="min-h-screen bg-black">
+        <TopNavbar />
+        <div className="pt-20 px-4 text-center max-w-md mx-auto">
+          <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-xl p-6 border border-blue-500/30 mb-6">
+            <h1 className="text-2xl font-bold text-white mb-2">Battle In Progress</h1>
+            <p className="text-gray-400 mb-4">You already have an active battle</p>
+            <div className="text-sm text-gray-500 mb-4">
+              Ends: {new Date(activeMatchup.endsAt).toLocaleString()}
+            </div>
+          </div>
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
+          >
+            Go to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 'finding' && profile) {
     return (
       <FindingMatchup
-        challengeId={challenge.id}
+        userId={session.user.id}
+        profile={profile}
         durationType={selectedDuration}
         onMatchFound={handleMatchFound}
         onCancel={handleCancel}
@@ -97,7 +114,7 @@ export default function BattlePage() {
     );
   }
 
-  if (!challenge) {
+  if (!profile || !profile.challenge) {
     return (
       <div className="min-h-screen bg-black">
         <TopNavbar />
@@ -115,6 +132,13 @@ export default function BattlePage() {
     );
   }
 
+  const challengeData = typeof profile.challenge === 'string' 
+    ? JSON.parse(profile.challenge) 
+    : profile.challenge;
+  
+  const bankroll = parseFloat(profile.bankroll) || 0;
+  const challengeType = challengeData?.challengeType || 'Starter';
+
   return (
     <div className="min-h-screen bg-black">
       <TopNavbar />
@@ -123,25 +147,25 @@ export default function BattlePage() {
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Start a Battle</h1>
           <p className="text-gray-400">
-            Challenge another player with your {challenge.challengeType?.charAt(0).toUpperCase() + challenge.challengeType?.slice(1)} account
+            Challenge another player with your {challengeType} account
           </p>
         </div>
 
         <div className="bg-gray-900 rounded-xl p-6 mb-6 border border-gray-800">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-white font-semibold capitalize">{challenge.challengeType} Challenge</h2>
+              <h2 className="text-white font-semibold capitalize">{challengeType} Challenge</h2>
               <p className="text-gray-500 text-sm">Your battle balance</p>
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold text-green-500">
-                ${parseFloat(challenge.startingBalance || 0).toLocaleString()}
+                ${bankroll.toLocaleString()}
               </p>
             </div>
           </div>
           
           <div className="flex gap-4 text-sm text-gray-400">
-            <span>Winner Takes: <span className="text-yellow-500 font-semibold">${(parseFloat(challenge.startingBalance || 0) * 1.8).toLocaleString()}</span></span>
+            <span>Winner Takes: <span className="text-yellow-500 font-semibold">${(bankroll * 1.8).toLocaleString()}</span></span>
             <span>Platform Fee: 10%</span>
           </div>
         </div>
@@ -189,7 +213,7 @@ export default function BattlePage() {
           <h4 className="text-white font-medium mb-2">How it works</h4>
           <ul className="text-sm text-gray-400 space-y-1">
             <li>• You'll be matched with another player at your tier</li>
-            <li>• Both players start with ${parseFloat(challenge.startingBalance || 0).toLocaleString()}</li>
+            <li>• Both players start with ${bankroll.toLocaleString()}</li>
             <li>• Place bets on real games throughout the battle period</li>
             <li>• Whoever has the higher balance when time expires wins</li>
             <li>• Winner receives the combined pot minus 10% platform fee</li>

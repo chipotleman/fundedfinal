@@ -32,24 +32,30 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
-      const { challengeId, durationType = '1_day' } = req.body;
-
-      if (!challengeId) {
-        return res.status(400).json({ error: 'Challenge ID required' });
-      }
+      const { challengeType: bodyType, bankroll: bodyBankroll, durationType = '1_day' } = req.body;
 
       const durationConfig = DURATION_CONFIGS[durationType];
       if (!durationConfig) {
         return res.status(400).json({ error: 'Invalid duration type' });
       }
 
-      const [challenge] = await db
+      const [userProfile] = await db
         .select()
-        .from(userChallenges)
-        .where(and(eq(userChallenges.id, challengeId), eq(userChallenges.userId, userId)));
+        .from(profiles)
+        .where(eq(profiles.id, userId));
 
-      if (!challenge) {
-        return res.status(404).json({ error: 'Challenge not found' });
+      if (!userProfile) {
+        return res.status(404).json({ error: 'Profile not found' });
+      }
+
+      let challengeType = bodyType || 'starter';
+      let startingBalance = bodyBankroll || parseFloat(userProfile.bankroll) || 5000;
+
+      if (userProfile.challenge) {
+        const challengeData = typeof userProfile.challenge === 'string' 
+          ? JSON.parse(userProfile.challenge) 
+          : userProfile.challenge;
+        challengeType = challengeData?.challengeType || challengeType;
       }
 
       const [existingQueue] = await db
@@ -76,9 +82,6 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Already in an active matchup', matchupId: existingMatchup.id });
       }
 
-      const challengeType = challenge.challengeType;
-      const startingBalance = parseFloat(challenge.startingBalance);
-
       const [potentialMatch] = await db
         .select()
         .from(matchupQueue)
@@ -103,10 +106,8 @@ export default async function handler(req, res) {
           platformFee: platformFee.toString(),
           winnerPayout: winnerPayout.toString(),
           user1Id: potentialMatch.userId,
-          user1ChallengeId: potentialMatch.challengeId,
           user1Balance: startingBalance.toString(),
           user2Id: userId,
-          user2ChallengeId: challengeId,
           user2Balance: startingBalance.toString(),
           isFakeOpponent: false,
           durationMinutes: durationConfig.minutes,
@@ -141,7 +142,6 @@ export default async function handler(req, res) {
 
       const [queueEntry] = await db.insert(matchupQueue).values({
         userId,
-        challengeId,
         challengeType,
         startingBalance: startingBalance.toString(),
         durationType,
