@@ -1,6 +1,6 @@
 import { db } from '../../../lib/db';
-import { userBets, profiles } from '../../../shared/schema';
-import { eq } from 'drizzle-orm';
+import { userBets, profiles, fakeOpponents, fakeOpponentBets, matchups } from '../../../shared/schema';
+import { eq, and, or, inArray } from 'drizzle-orm';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
 
@@ -21,6 +21,31 @@ export default async function handler(req, res) {
 
     if (!bets || !Array.isArray(bets) || bets.length === 0) {
       return res.status(400).json({ error: 'No bets provided' });
+    }
+
+    // Check if this user is a fake opponent
+    const [fakeOpponentEntry] = await db
+      .select()
+      .from(fakeOpponents)
+      .where(eq(fakeOpponents.userId, userId));
+
+    const isFakeOpponent = !!fakeOpponentEntry;
+    let activeMatchup = null;
+
+    // If fake opponent, find their active matchup
+    if (isFakeOpponent) {
+      const [matchup] = await db
+        .select()
+        .from(matchups)
+        .where(and(
+          or(
+            eq(matchups.fakeOpponentId, fakeOpponentEntry.id),
+            eq(matchups.user2Id, fakeOpponentEntry.id)
+          ),
+          inArray(matchups.status, ['active', 'matched'])
+        ));
+      activeMatchup = matchup;
+      console.log('[Place Bet] Fake opponent detected:', fakeOpponentEntry.displayName, 'matchup:', matchup?.id);
     }
 
     const [userProfile] = await db
@@ -78,22 +103,40 @@ export default async function handler(req, res) {
         gameId: b.gameId
       }));
 
-      const parlayBet = {
-        userId,
-        matchupName: `${bets.length}-Leg Parlay`,
-        marketType: 'parlay',
-        selection: bets.map(b => b.selection).join(', '),
-        odds: americanOdds.toString(),
-        stake: parlayStake.toString(),
-        potentialPayout: potentialPayout.toFixed(2),
-        status: 'pending',
-        balanceBefore: currentBankroll.toFixed(2),
-        balanceAfter: (currentBankroll - parlayStake).toFixed(2),
-        legs: legsData,
-      };
-
-      const [insertedParlay] = await db.insert(userBets).values(parlayBet).returning();
-      insertedBets.push(insertedParlay);
+      // Use different table for fake opponents
+      if (isFakeOpponent && activeMatchup) {
+        const fakeParlayBet = {
+          matchupId: activeMatchup.id,
+          fakeOpponentId: fakeOpponentEntry.id,
+          matchupName: `${bets.length}-Leg Parlay`,
+          marketType: 'parlay',
+          selection: bets.map(b => b.selection).join(', '),
+          odds: americanOdds.toString(),
+          stake: parlayStake.toString(),
+          potentialPayout: potentialPayout.toFixed(2),
+          status: 'pending',
+          legs: legsData,
+        };
+        const [insertedParlay] = await db.insert(fakeOpponentBets).values(fakeParlayBet).returning();
+        insertedBets.push(insertedParlay);
+        console.log('[Place Bet] Fake opponent parlay saved to fakeOpponentBets:', insertedParlay.id);
+      } else {
+        const parlayBet = {
+          userId,
+          matchupName: `${bets.length}-Leg Parlay`,
+          marketType: 'parlay',
+          selection: bets.map(b => b.selection).join(', '),
+          odds: americanOdds.toString(),
+          stake: parlayStake.toString(),
+          potentialPayout: potentialPayout.toFixed(2),
+          status: 'pending',
+          balanceBefore: currentBankroll.toFixed(2),
+          balanceAfter: (currentBankroll - parlayStake).toFixed(2),
+          legs: legsData,
+        };
+        const [insertedParlay] = await db.insert(userBets).values(parlayBet).returning();
+        insertedBets.push(insertedParlay);
+      }
     } else {
       for (const bet of bets) {
         if (!bet.stake || bet.stake <= 0) continue;
@@ -101,27 +144,46 @@ export default async function handler(req, res) {
         const oddsValue = typeof bet.odds === 'object' ? bet.odds.odds || bet.odds.value || 0 : bet.odds;
         const potentialPayout = calculatePayout(oddsValue, bet.stake);
 
-        const newBet = {
-          userId,
-          matchupName: bet.matchup,
-          marketType: bet.betType,
-          selection: bet.selection,
-          odds: oddsValue.toString(),
-          stake: bet.stake.toString(),
-          potentialPayout: potentialPayout.toFixed(2),
-          status: 'pending',
-          balanceBefore: currentBankroll.toFixed(2),
-          balanceAfter: (currentBankroll - bet.stake).toFixed(2),
-          homeTeamFull: bet.homeTeamFull,
-          awayTeamFull: bet.awayTeamFull,
-        };
-
-        const [insertedBet] = await db.insert(userBets).values(newBet).returning();
-        insertedBets.push(insertedBet);
+        // Use different table for fake opponents
+        if (isFakeOpponent && activeMatchup) {
+          const fakeBet = {
+            matchupId: activeMatchup.id,
+            fakeOpponentId: fakeOpponentEntry.id,
+            matchupName: bet.matchup,
+            marketType: bet.betType,
+            selection: bet.selection,
+            odds: oddsValue.toString(),
+            stake: bet.stake.toString(),
+            potentialPayout: potentialPayout.toFixed(2),
+            status: 'pending',
+          };
+          const [insertedBet] = await db.insert(fakeOpponentBets).values(fakeBet).returning();
+          insertedBets.push(insertedBet);
+          console.log('[Place Bet] Fake opponent bet saved to fakeOpponentBets:', insertedBet.id);
+        } else {
+          const newBet = {
+            userId,
+            matchupName: bet.matchup,
+            marketType: bet.betType,
+            selection: bet.selection,
+            odds: oddsValue.toString(),
+            stake: bet.stake.toString(),
+            potentialPayout: potentialPayout.toFixed(2),
+            status: 'pending',
+            balanceBefore: currentBankroll.toFixed(2),
+            balanceAfter: (currentBankroll - bet.stake).toFixed(2),
+            homeTeamFull: bet.homeTeamFull,
+            awayTeamFull: bet.awayTeamFull,
+          };
+          const [insertedBet] = await db.insert(userBets).values(newBet).returning();
+          insertedBets.push(insertedBet);
+        }
       }
     }
 
     const newBankroll = currentBankroll - totalStake;
+    
+    // Update profile bankroll
     await db
       .update(profiles)
       .set({ 
@@ -131,6 +193,20 @@ export default async function handler(req, res) {
         updatedAt: new Date()
       })
       .where(eq(profiles.id, userId));
+
+    // Also update matchup balance for fake opponents
+    if (isFakeOpponent && activeMatchup) {
+      const currentMatchupBalance = parseFloat(activeMatchup.user2Balance || activeMatchup.startingBalance || '0');
+      const newMatchupBalance = currentMatchupBalance - totalStake;
+      await db
+        .update(matchups)
+        .set({ 
+          user2Balance: newMatchupBalance.toFixed(2),
+          updatedAt: new Date()
+        })
+        .where(eq(matchups.id, activeMatchup.id));
+      console.log('[Place Bet] Updated matchup user2Balance:', newMatchupBalance.toFixed(2));
+    }
 
     return res.status(200).json({ 
       success: true, 
