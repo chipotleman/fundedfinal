@@ -73,9 +73,20 @@ export default function MatchupBanner({
   const settledBets = opponentBets.filter(b => b.status !== 'pending');
   const oppTotalStaked = opponentBets.reduce((sum, b) => sum + parseFloat(b.stake || 0), 0);
 
-  const challengeLabel = matchup.challengeType?.charAt(0).toUpperCase() + matchup.challengeType?.slice(1);
+  const getDurationLabel = (durationType) => {
+    const labels = {
+      '30_min': '30 MIN FLASH',
+      '1_hour': '1 HOUR BATTLE',
+      '1_day': '24 HOUR BATTLE',
+      '3_days': '3 DAY BATTLE',
+      '1_week': '1 WEEK BATTLE'
+    };
+    return labels[durationType] || durationType?.replace(/_/g, ' ')?.toUpperCase() || 'BATTLE';
+  };
 
-  const minPicks = 20;
+  const durationLabel = getDurationLabel(matchup.durationType);
+
+  const minPicks = 4;
   const piksRemaining = Math.max(0, minPicks - myBetsCount);
   const oppPiksRemaining = Math.max(0, minPicks - opponentBets.length);
 
@@ -105,7 +116,7 @@ export default function MatchupBanner({
         }`}>
           <span className="text-lg">🎮</span>
           <span className={`text-sm font-bold uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            {challengeLabel} Battle
+            {durationLabel}
           </span>
         </div>
       </div>
