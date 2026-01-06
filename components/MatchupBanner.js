@@ -283,7 +283,7 @@ export default function MatchupBanner({
       {/* Modal for detailed info */}
       {showModal && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 flex items-start justify-center pt-16 md:pt-24 p-4"
           onClick={() => setShowModal(false)}
         >
           <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
