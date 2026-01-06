@@ -67,3 +67,6 @@ NEXT_PUBLIC_FANBASIS_PRODUCT_ELITE = "G5KXr"
 [userenv.production]
 NEXTAUTH_URL = "https://thepiks.com"
 NEXTAUTH_SECRET = "62HlAI9+LH0Q7tl8WjI7nWhbWWMxDIMfDAMqSPq9Zy0="
+
+[userenv.development]
+NEXTAUTH_SECRET = "62HlAI9+LH0Q7tl8WjI7nWhbWWMxDIMfDAMqSPq9Zy0="
