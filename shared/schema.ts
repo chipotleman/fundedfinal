@@ -591,6 +591,9 @@ export const fakeOpponentBets = pgTable("fake_opponent_bets", {
   status: varchar("status", { length: 50 }).default('pending'), // pending, won, lost, push
   pnl: decimal("pnl", { precision: 10, scale: 2 }),
   placedByAdminId: varchar("placed_by_admin_id"),
+  homeTeamFull: varchar("home_team_full", { length: 255 }),
+  awayTeamFull: varchar("away_team_full", { length: 255 }),
+  legs: jsonb("legs"),
   placedAt: timestamp("placed_at").defaultNow().notNull(),
   settledAt: timestamp("settled_at"),
 }, (table) => ({

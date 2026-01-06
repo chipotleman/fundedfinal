@@ -156,6 +156,8 @@ export default async function handler(req, res) {
             stake: bet.stake.toString(),
             potentialPayout: potentialPayout.toFixed(2),
             status: 'pending',
+            homeTeamFull: bet.homeTeamFull,
+            awayTeamFull: bet.awayTeamFull,
           };
           const [insertedBet] = await db.insert(fakeOpponentBets).values(fakeBet).returning();
           insertedBets.push(insertedBet);
