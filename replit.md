@@ -1,7 +1,7 @@
 # Piks - Sports Betting Challenge Platform
 
 ## Overview
-Piks is a Next.js sports betting platform offering funded challenges. Users can participate in various challenge tiers, gain access to funded accounts, and retain a percentage of their profits. The platform aims to provide a comprehensive betting experience, from demo trials to real-money challenges, focusing on user progression and profit sharing.
+Piks is a Next.js sports betting platform that offers funded challenges across various tiers. Its core purpose is to enable users to participate in betting challenges, gain access to funded accounts upon successful completion, and share in the profits. The platform supports a full user journey from demo practice to real-money challenges, emphasizing user progression and a profit-sharing model.
 
 ## User Preferences
 None documented yet.
@@ -9,157 +9,41 @@ None documented yet.
 ## System Architecture
 
 ### UI/UX Decisions
-- **Design Aesthetic**: Clean, professional, minimal with a black background and glass-morphism card effects.
-- **Logo**: Prominent Piks logo, centered on mobile and left-aligned on desktop.
-- **Mobile Navigation**: Standard hamburger menu with swipe gestures and body scroll lock.
-- **Bet Slip**: Floating bet slip button, full-screen on mobile.
-- **Bet Receipt**: Professional bet confirmation display with auto-dismissal.
+The platform features a clean, professional, and minimal design with a black background and glass-morphism card effects. Key UI elements include a prominent Piks logo, mobile-first navigation with a hamburger menu, a floating bet slip button that expands to full screen on mobile, and a professional bet receipt display.
 
 ### Technical Implementations
-- **Framework**: Next.js 14.2.30
-- **Styling**: Tailwind CSS
-- **State Management**: React Context (AuthContext, BetSlipContext, UserProfilesContext, GamesContext, ThemeContext)
-- **Authentication**: NextAuth.js v4 with email/password (bcrypt) and JWT-based sessions. OAuth providers are disabled but integrated for future use.
-- **Database ORM**: Drizzle ORM with `@neondatabase/serverless` HTTP driver.
-- **Beta Access**: Password-protected beta landing page with persistence via localStorage.
-- **Demo Platform**: Fully functional demo with localStorage persistence for practice betting.
-- **Challenge Persistence**: Challenge selections stored in localStorage and database via API.
+Built with Next.js 14.2.30 and styled using Tailwind CSS. State management is handled by React Context (Auth, BetSlip, UserProfiles, Games, Theme). Authentication uses NextAuth.js v4 with email/password and JWT sessions. Drizzle ORM with `@neondatabase/serverless` interacts with the database. The platform includes a password-protected beta landing page, a functional demo platform with localStorage persistence, and challenge persistence managed via localStorage and database API.
 
 ### Feature Specifications
-- **Challenge Tiers**: Starter ($5k funding, $149), Pro ($10k funding, $249), Elite ($25k funding, $399), all with 90% profit split in Reward phase.
-- **Challenge Phases & Rules**:
-    - **Phase 1 & 2**: 20 picks min, 1-5% risk/pick, 10% max daily loss, 15% max drawdown, 20% profit target. 10% pick cashout fee.
-    - **Reward Phase**: Same as above but no profit target, 90% reward split, 5-day inactivity timer.
-    - Same-game parlays allowed across all phases.
-- **Global Popups**: Challenge, How-It-Works, Demo, Auth, Session Summary popups accessible site-wide.
-- **Session Summary Popup**: Displays session duration, bets, wins/losses, pending bets, profit/loss, and challenge info upon sign out.
-- **Admin Panel**: Accessible at `/admin-panel/login`, includes dashboard, user management (search, multi-select, CSV export, password reset, activity modal with detailed timeline, bets, and withdrawals), bet management, staff management with roles and granular permissions, and analytics.
-- **Withdrawal System**: Comprehensive withdrawal management including payment method-specific forms, history, status flows (Under Review, Awaiting Processing, Finalized/Denied), user cancellation, and admin approval/denial.
-- **User Tracking & Analytics**: Tracks all user interactions, session metrics, page views, demo bets, and unplaced bets via dedicated database tables and client-side hooks.
-- **Education Marketplace**: Verified cappers (users who passed funded challenges) can sell picks and Discord access:
-    - **Capper Registration**: Users who complete challenges become "Piks Verified" and can register as sellers
-    - **Products/Passes**: Cappers create subscription products (daily, weekly, monthly, lifetime) with custom pricing
-    - **Subscriptions**: Buyers purchase passes to access picks and Discord communities
-    - **Discord Integration**: Auto add/remove members when subscriptions start/expire
-    - **Review System**: Buyers can rate and review cappers they've subscribed to
-    - **Performance Stats**: Win rate, ROI, and record computed from graded bets
-    - **Seller Dashboard**: Revenue tracking, subscriber management, product creation
-    - **Admin Management**: Marketplace section in admin panel for managing cappers, subscriptions, and moderating reviews
-- **1v1 Matchmaking System**: Full competitive betting where users battle against each other:
-    - **Matchup Flow**: User pays for challenge → "FINDING MATCHUP..." screen (8 sec search for real opponent) → matched with real user OR admin-controlled fake opponent
-    - **Prize Structure**: Winner gets combined pot minus 10% platform fee (e.g., $10k + $10k = $20k pot → $18k to winner). Ties return 90% to each player
-    - **Battle Durations**: Configurable via `/battle` page - 30 min, 1 hour, 1 day (recommended), 3 days, 1 week
-    - **Visibility Rule**: Users can only see opponent's bets AFTER placing their own bet
-    - **Fake Opponents**: Admin-controlled through `/admin-panel/matchups` - admins create profiles and manually place bets for them
-    - **Resolution**: Bets are scoped to matchup time range only. `/api/matchups/resolve` settles expired matchups, calculates balances, determines winner
-    - **UI Components**: MatchupBanner (opponent info/timer), OpponentBets (reveals after betting), FindingMatchup (loading screen)
-    - **Context**: MatchupContext wraps app in `_app.js`, provides matchup state globally
-    - **My Battle Page** (`/my-battle`): Dedicated page showing current battle stats, opponent info, user bets vs opponent bets, and full battle history
-- **User Profiles**: Full profile system for all users:
-    - **Profile Fields**: username, avatar (base64 image upload), bio, battleWins, battleLosses, totalWinnings
-    - **Public Profile Page** (`/profile/[id]`): View any user's profile with battle history and stats
-    - **Profile Editing**: Users can change username (with availability check), upload avatar, and edit bio
-    - **API Endpoints**: `/api/profiles/update` (POST), `/api/profiles/check-username` (GET), `/api/profiles/battle-history` (GET)
-    - **Navigation**: "My Battle" link in nav replaces "My Challenge" popup when user has active challenge
+- **Challenge Tiers**: Starter ($5k), Pro ($10k), Elite ($25k) with 90% profit split in Reward phase.
+- **Challenge Phases & Rules**: Standardized rules for 20 picks minimum, risk limits (1-5% per pick), max daily loss (10%), max drawdown (15%), and profit targets (20% for Phases 1 & 2). Same-game parlays are allowed.
+- **Global Popups**: Centralized popups for Challenges, How-It-Works, Demo, Auth, and Session Summary.
+- **Session Summary**: Provides a detailed overview of betting activity and challenge status upon sign out.
+- **Admin Panel**: Comprehensive administration at `/admin-panel/login` for user, bet, staff management (with roles and permissions), and analytics.
+- **Withdrawal System**: Manages user withdrawals with payment method-specific forms, history tracking, and admin approval workflows.
+- **User Tracking & Analytics**: Extensive logging of user interactions, sessions, page views, demo bets, and unplaced bets.
+- **Education Marketplace**: Allows "Piks Verified" cappers (users who passed funded challenges) to sell picks and Discord access through subscription products. Includes Discord integration for member management, a review system, performance stats, and a seller dashboard.
+- **1v1 Matchmaking System**: A competitive betting system where users challenge each other, with configurable battle durations (30 min to 1 week). Winners take 90% of the combined pot. Features include real-time opponent matching, bet visibility rules (opponent's bets visible only after placing your own), admin-controlled fake opponents, and automated matchup resolution.
+- **User Profiles**: Full user profile system with customizable usernames, avatars, bios, and public profile pages displaying battle history and stats.
 
 ### System Design Choices
-- **Authentication Flow**: Beta access -> NextAuth.js -> JWT session -> User profile creation -> Challenge selection & purchase -> Challenge data persistence.
-- **Database Schema**: Includes `users`, `profiles`, `user_bets`, `accounts`, `sessions`, `verification_tokens`, `admin_users`, `admin_staff`, `payment_methods`, `withdrawals`, `user_events`, `session_metrics`, `page_views`, `demo_bets`, `unplaced_bets`, `odds_history_pulls`, `completed_games`, `cappers`, `capper_products`, `capper_subscriptions`, `capper_reviews`, `discord_links`, `capper_performance`, `discord_jobs`, `matchups`, `matchup_queue`, `fake_opponents`, `fake_opponent_bets`.
-- **Bet Autograding System**:
-  - AutoGrader component in `_app.js` polls `/api/bets/grade` every 60 seconds when users are active
-  - Completed games are saved to `completed_games` table to preserve results after they disappear from the API
-  - Grading logic matches pending bets to completed games by matchup name (e.g., "Team A @ Team B")
-  - Supports single bets, spreads, totals, moneylines, and parlays
-  - Automatically updates user bankroll on win/push
-  - Grading endpoint: `/api/bets/grade` (POST)
-- **API Architecture**: RESTful API routes in `/pages/api/*` for authentication, user profiles, admin functions, analytics, payment methods, and withdrawals.
+- **Authentication Flow**: Structured from beta access to challenge purchase and data persistence.
+- **Database Schema**: Comprehensive schema including tables for users, profiles, bets, accounts, admin, payment, withdrawals, events, metrics, demo bets, unplaced bets, odds history, completed games, cappers, marketplace subscriptions, reviews, Discord integrations, matchups, and ad slots.
+- **Ad Slot Management**: Configurable banner carousel ads managed via the admin panel, supporting direct image uploads.
+- **Bet Autograding System**: An automated system (AutoGrader) polls for completed games every 60 seconds to grade pending bets, supporting various bet types (moneyline, spread, total, parlays), and updating user bankrolls.
+- **API Architecture**: Utilizes RESTful API routes for all core functionalities, including authentication, user management, admin tasks, analytics, and financial operations.
 
 ## External Dependencies
 - **Authentication**: NextAuth.js v4
 - **Database**: Replit PostgreSQL (Neon-backed) via Drizzle ORM
 - **Payment Processing**: Stripe (for environment variables)
-- **Sports Data**: Goalserve API (primary source for all data)
-  - **Goalserve REST API** (primary - powers main dashboard)
-    - API service: `lib/goalserve.js`
-    - Secret: GOALSERVE_API_KEY
-    - Main endpoint: `/api/games` - Fetches all games with bet365 odds
-    - Primary bookmaker: bet365 (with multi-bookmaker comparison in admin panel)
-    - Features: Live scores, play-by-play with court position, odds from 10+ bookmakers
-    - **CRITICAL: Home/Away REVERSED in ALL Goalserve feeds**: Both REST API and Inplay feeds have `hometeam`/`awayteam` REVERSED. Both parsers swap them:
-      - `lib/goalserve.js` swaps REST API data (Goalserve hometeam → our awayTeam)
-      - `lib/goalserve-inplay.js` swaps Inplay data (Goalserve home → our awayTeam)
-      - This ensures games display correctly as "Away @ Home" (away team first/top, home team second/bottom)
-    - Additional endpoints:
-      - `/api/goalserve/games` - Direct Goalserve games endpoint
-      - `/api/goalserve/odds?sport=basketball_nba` - Odds only
-      - `/api/goalserve/playbyplay?sport=basketball_nba` - Live play-by-play with X/Y court positions
-      - `/api/goalserve/live` - All live games across sports
-    - Supported sports: basketball_nba, americanfootball_nfl, basketball_ncaab, americanfootball_ncaaf, baseball_mlb, icehockey_nhl
-    - Caching: 30-second cache (12s during live games)
-    - Pricing: Subscription-based (unlimited requests)
-  - **Goalserve WebSocket** (real-time feeds - IP whitelisted for production only)
-    - Service: `lib/goalserve-ws.js`
-    - Features: Sub-second live scores, in-play odds from bet365, ball position tracking
-    - Authentication: JWT token flow via `http://live.goalserve.com/api/v1/auth/gettoken`
-    - WebSocket URL: `ws://live.goalserve.com/ws/{sport}?tkn={jwt_token}`
-    - **IP Whitelisting**: Goalserve whitelisted 2 static deployment IPs only (not development). WebSocket will fail locally but work in production deployment.
-    - **Development Fallback**: REST API polling (30-second cache) is used automatically in development
-    - Message types: `avl` (available events list), `updt` (real-time score/odds updates)
-    - **WebSocket Sport Identifiers** (must use exact names):
-      - `soccer` - Soccer/Football
-      - `basket` - Basketball (NBA, NCAAB, Euro)
-      - `amfootball` - American Football (NFL, NCAAF)
-      - `hockey` - Ice Hockey (NHL)
-      - `baseball` - Baseball (MLB)
-      - `tennis` - Tennis
-      - `volleyball` - Volleyball
-    - Sport mapping in `lib/goalserve-ws.js` converts internal names to WebSocket identifiers
-    - Endpoints:
-      - `/api/goalserve/stream` - Server-Sent Events (SSE) for real-time updates from WebSocket
-      - `/api/goalserve/ws-status` - WebSocket connection status (use `?connect=true` to attempt connection)
-      - `/api/goalserve/ws-live` - Get current live events from WebSocket data store
-    - Client hooks in `hooks/useGoalserveLive.js`:
-      - `useGoalserveLive({ sport, eventId, autoConnect })` - Main hook for live data
-      - `useLiveEvent(eventId)` - Hook for specific event updates
-      - `useLiveSport(sport)` - Hook for sport-specific updates
-    - Fallback: If WebSocket unavailable, use REST API polling via `/api/goalserve/live` (30-second cache)
-  - **Goalserve Inplay HTTP Feeds** (alternative real-time data - requires IP whitelisting)
-    - **Home/Away Convention**: Same as REST API - Goalserve inplay feed ALSO has home/away REVERSED. The parser in `lib/goalserve-inplay.js` swaps them to match the REST API convention.
-    - Service: `lib/goalserve-inplay.js`
-    - Features: Gzipped JSON feeds updating every second with live scores and odds
-    - Endpoints provided by Goalserve:
-      - `http://inplay.goalserve.com/inplay-basket.gz` (basketball)
-      - `http://inplay.goalserve.com/inplay-hockey.gz` (hockey)
-      - `http://inplay.goalserve.com/inplay-amfootball.gz` (football)
-      - `http://inplay.goalserve.com/inplay-baseball.gz` (baseball)
-      - `http://inplay.goalserve.com/inplay-soccer.gz` (soccer)
-    - API endpoints:
-      - `/api/goalserve/inplay?action=status` - Get polling status
-      - `/api/goalserve/inplay?action=fetch&sport=basketball` - Fetch single feed
-      - `/api/goalserve/inplay?live=true` - Get live events
-      - `/api/goalserve/test-access` - Diagnostic endpoint to verify IP whitelisting
-    - **IP Whitelisting Required**: Both production IPs must be whitelisted: 52.70.127.138 AND 54.92.239.253
-  - **The Odds API** (backup - not currently used)
-    - API service: `lib/theoddsapi.js`
-    - Provides: US bookmaker odds (FanDuel, DraftKings, BetMGM)
-    - Secret: THE_ODDS_API_KEY
-    - Pay-as-you-go pricing model
-    - Note: Available but disabled in favor of Goalserve
-  - **Supported Sports**: NBA, NFL, NCAAB, NCAAF, MLB, NHL, Euro Basketball (via inplay), Int'l Hockey (via inplay)
-  - **Dashboard Data Architecture** (SEPARATED - no merge to prevent flickering):
-    - **Live Tab**: Uses ONLY Inplay SSE data (`liveGamesFromInplay`) - fastest real-time updates, no REST API
-    - **Upcoming Tab**: Uses ONLY REST API data (`upcomingGamesFromApi`) - scheduled games, excludes live games
-    - **Featured Section**: Uses `categorizedGames.liveGames` which points directly to inplay SSE data
-    - **No Merge Logic**: Previous architecture merged inplay + REST causing score flickering from race conditions
-    - Games display in "Away @ Home" format: away team TOP, home team BOTTOM (matching bet365/sportsbook conventions)
-  - **Games Preloading**: GamesContext (`contexts/GamesContext.js`) starts fetching games immediately when the app loads (on any page). By the time users navigate to the dashboard, games are already available without any loading delay. The context also connects to SSE for real-time inplay updates.
-  - **Game Display Tabs**: Live vs Upcoming tabs on all game pages
-  - **Caching**: 30-second server-side cache per sport (Goalserve), 10-minute (The Odds API)
-  - **Odds Parsing**: 
-    - Moneyline: Home/Away type (id:2) 
-    - Spreads: Handicap type (id:4) for basketball, Puck Line (id:23679) for NHL
-    - Totals: Total type (id:5) with Over/Under
-    - NBA handicap structure: `bm.handicap[].odd` is an array of 2 odds objects (home/away)
-    - NHL handicap structure: `bm.handicap[].odd` is a single object per line
-  - **Admin Odds View**: Full bookmaker comparison spreadsheet available in admin panel at /admin-panel/games
-  - **Historical Odds Downloads**: Save current odds pulls to database and download any historical pull as Excel spreadsheet via `/api/admin-panel/odds-history`
+- **Sports Data**: Goalserve API (primary source)
+  - **Goalserve REST API**: Used for fetching games, odds (primarily bet365, with multi-bookmaker comparison in admin), live scores, and play-by-play data. Noteworthy is the critical handling of `hometeam`/`awayteam` reversal in all Goalserve feeds, which is corrected by internal parsers. Caches data for 30 seconds (12s live).
+  - **Goalserve WebSocket**: Provides real-time, sub-second live scores and in-play odds. Requires IP whitelisting for production and uses a JWT token for authentication. A development fallback to the REST API is in place.
+  - **Goalserve Inplay HTTP Feeds**: Alternative real-time data source with gzipped JSON feeds updating every second. Also requires IP whitelisting and has the same `hometeam`/`awayteam` reversal as the REST API.
+  - **The Odds API**: A backup odds API, currently disabled in favor of Goalserve.
+  - **Dashboard Data Architecture**: Live and Upcoming tabs on the dashboard use separate data sources (Goalserve Inplay SSE for live, Goalserve REST API for upcoming) to prevent flickering. Games are displayed in "Away @ Home" format.
+  - **Games Preloading**: GamesContext preloads game data on app load and connects to SSE for real-time updates.
+  - **Caching**: Server-side caching for Goalserve data (30 seconds per sport).
+  - **Odds Parsing**: Specific parsing logic for Moneyline, Spreads, and Totals, including nuances for NBA and NHL handicaps.
+  - **Admin Odds View**: Provides a full bookmaker comparison spreadsheet and historical odds downloads.

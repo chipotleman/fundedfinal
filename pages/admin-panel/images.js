@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import AdminLayout from '../../components/admin-panel/AdminLayout';
 
 export default function ImagesPage() {
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState({});
+  const [uploading, setUploading] = useState({});
   const [message, setMessage] = useState(null);
+  const fileInputRefs = useRef({});
 
   useEffect(() => {
     fetchSlots();
@@ -30,6 +32,56 @@ export default function ImagesPage() {
       console.error('Error fetching slots:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleUpload = async (slotNumber, file) => {
+    if (!file) return;
+
+    setUploading(prev => ({ ...prev, [slotNumber]: true }));
+    setMessage(null);
+
+    try {
+      const token = localStorage.getItem('admin_token');
+      
+      const urlRes = await fetch('/api/admin-panel/upload-image', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: file.name,
+          contentType: file.type || 'image/jpeg'
+        })
+      });
+
+      if (!urlRes.ok) {
+        const error = await urlRes.json();
+        throw new Error(error.error || 'Failed to get upload URL');
+      }
+
+      const { uploadURL, publicURL } = await urlRes.json();
+
+      const uploadRes = await fetch(uploadURL, {
+        method: 'PUT',
+        body: file,
+        headers: {
+          'Content-Type': file.type || 'image/jpeg'
+        }
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error('Failed to upload file');
+      }
+
+      updateSlot(slotNumber, 'image_url', publicURL);
+      setMessage({ type: 'success', text: `Image uploaded for Slot ${slotNumber}. Click Save to apply.` });
+    } catch (error) {
+      console.error('Upload error:', error);
+      setMessage({ type: 'error', text: error.message || 'Failed to upload image' });
+    } finally {
+      setUploading(prev => ({ ...prev, [slotNumber]: false }));
     }
   };
 
@@ -132,7 +184,7 @@ export default function ImagesPage() {
               </div>
 
               <div className="mb-4">
-                <div className="bg-black/30 rounded-lg overflow-hidden" style={{ height: '180px' }}>
+                <div className="bg-black/30 rounded-lg overflow-hidden relative" style={{ height: '180px' }}>
                   {slot.image_url ? (
                     <img 
                       src={slot.image_url} 
@@ -140,12 +192,13 @@ export default function ImagesPage() {
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'flex';
+                        if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
                       }}
                     />
                   ) : null}
                   <div 
                     className={`w-full h-full flex flex-col items-center justify-center text-gray-500 ${slot.image_url ? 'hidden' : ''}`}
+                    style={{ position: slot.image_url ? 'absolute' : 'relative', top: 0, left: 0 }}
                   >
                     <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -153,12 +206,48 @@ export default function ImagesPage() {
                     <span className="text-sm">No image set</span>
                     <span className="text-xs mt-1">864 x 180 recommended</span>
                   </div>
+                  
+                  {uploading[slot.slot_number] && (
+                    <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                      <div className="flex flex-col items-center">
+                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500 mb-2"></div>
+                        <span className="text-white text-sm">Uploading...</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Image URL</label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Upload Image</label>
+                  <div className="flex gap-3">
+                    <input
+                      ref={el => fileInputRefs.current[slot.slot_number] = el}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleUpload(slot.slot_number, file);
+                        e.target.value = '';
+                      }}
+                      className="hidden"
+                    />
+                    <button
+                      onClick={() => fileInputRefs.current[slot.slot_number]?.click()}
+                      disabled={uploading[slot.slot_number]}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                      </svg>
+                      {uploading[slot.slot_number] ? 'Uploading...' : 'Upload from Computer'}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="border-t border-white/10 pt-4">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">Or enter Image URL</label>
                   <input
                     type="url"
                     value={slot.image_url || ''}
@@ -222,7 +311,7 @@ export default function ImagesPage() {
             <li>Recommended size: <strong>864 x 180 pixels</strong></li>
             <li>Mobile display: Images scale to fit screen width</li>
             <li>Supported formats: JPG, PNG, WebP, GIF</li>
-            <li>Use external image hosting (Cloudinary, Imgur, etc.)</li>
+            <li>Max file size: 10MB</li>
           </ul>
         </div>
       </div>
