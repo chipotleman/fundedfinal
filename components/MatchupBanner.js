@@ -33,9 +33,9 @@ function formatTimeRemaining(ms) {
  * Images will be scaled to fit and cover the container.
  * 
  * Props for ad containers:
- * - adSlot1: { image: 'url', link: 'url', alt: 'text' } - Second container
- * - adSlot2: { image: 'url', link: 'url', alt: 'text' } - Third container  
- * - adSlot3: { image: 'url', link: 'url', alt: 'text' } - Fourth container
+ * - adSlot1: { image: 'url', mobileImage: 'url', link: 'url', alt: 'text' } - Second container
+ * - adSlot2: { image: 'url', mobileImage: 'url', link: 'url', alt: 'text' } - Third container  
+ * - adSlot3: { image: 'url', mobileImage: 'url', link: 'url', alt: 'text' } - Fourth container
  */
 export default function MatchupBanner({ 
   matchup, 
@@ -254,10 +254,16 @@ export default function MatchupBanner({
               {adSlot1?.image ? (
                 adSlot1.link ? (
                   <a href={adSlot1.link} target="_blank" rel="noopener noreferrer" className="block h-full">
-                    <img src={adSlot1.image} alt={adSlot1.alt || 'Promotion'} className="w-full h-full object-cover min-h-[140px] md:min-h-[180px]" />
+                    <picture>
+                      {adSlot1.mobileImage && <source media="(max-width: 767px)" srcSet={adSlot1.mobileImage} />}
+                      <img src={adSlot1.image} alt={adSlot1.alt || 'Promotion'} className="w-full h-full object-cover min-h-[140px] md:min-h-[180px]" />
+                    </picture>
                   </a>
                 ) : (
-                  <img src={adSlot1.image} alt={adSlot1.alt || 'Promotion'} className="w-full h-full object-cover min-h-[140px] md:min-h-[180px]" />
+                  <picture>
+                    {adSlot1.mobileImage && <source media="(max-width: 767px)" srcSet={adSlot1.mobileImage} />}
+                    <img src={adSlot1.image} alt={adSlot1.alt || 'Promotion'} className="w-full h-full object-cover min-h-[140px] md:min-h-[180px]" />
+                  </picture>
                 )
               ) : (
                 <div className="h-full flex flex-col items-center justify-center p-6 min-h-[140px] md:min-h-[180px]">
@@ -273,10 +279,16 @@ export default function MatchupBanner({
               {adSlot2?.image ? (
                 adSlot2.link ? (
                   <a href={adSlot2.link} target="_blank" rel="noopener noreferrer" className="block h-full">
-                    <img src={adSlot2.image} alt={adSlot2.alt || 'Promotion'} className="w-full h-full object-cover min-h-[140px] md:min-h-[180px]" />
+                    <picture>
+                      {adSlot2.mobileImage && <source media="(max-width: 767px)" srcSet={adSlot2.mobileImage} />}
+                      <img src={adSlot2.image} alt={adSlot2.alt || 'Promotion'} className="w-full h-full object-cover min-h-[140px] md:min-h-[180px]" />
+                    </picture>
                   </a>
                 ) : (
-                  <img src={adSlot2.image} alt={adSlot2.alt || 'Promotion'} className="w-full h-full object-cover min-h-[140px] md:min-h-[180px]" />
+                  <picture>
+                    {adSlot2.mobileImage && <source media="(max-width: 767px)" srcSet={adSlot2.mobileImage} />}
+                    <img src={adSlot2.image} alt={adSlot2.alt || 'Promotion'} className="w-full h-full object-cover min-h-[140px] md:min-h-[180px]" />
+                  </picture>
                 )
               ) : (
                 <div className="h-full flex flex-col items-center justify-center p-6 min-h-[140px] md:min-h-[180px]">
@@ -292,10 +304,16 @@ export default function MatchupBanner({
               {adSlot3?.image ? (
                 adSlot3.link ? (
                   <a href={adSlot3.link} target="_blank" rel="noopener noreferrer" className="block h-full">
-                    <img src={adSlot3.image} alt={adSlot3.alt || 'Promotion'} className="w-full h-full object-cover min-h-[140px] md:min-h-[180px]" />
+                    <picture>
+                      {adSlot3.mobileImage && <source media="(max-width: 767px)" srcSet={adSlot3.mobileImage} />}
+                      <img src={adSlot3.image} alt={adSlot3.alt || 'Promotion'} className="w-full h-full object-cover min-h-[140px] md:min-h-[180px]" />
+                    </picture>
                   </a>
                 ) : (
-                  <img src={adSlot3.image} alt={adSlot3.alt || 'Promotion'} className="w-full h-full object-cover min-h-[140px] md:min-h-[180px]" />
+                  <picture>
+                    {adSlot3.mobileImage && <source media="(max-width: 767px)" srcSet={adSlot3.mobileImage} />}
+                    <img src={adSlot3.image} alt={adSlot3.alt || 'Promotion'} className="w-full h-full object-cover min-h-[140px] md:min-h-[180px]" />
+                  </picture>
                 )
               ) : (
                 <div className="h-full flex flex-col items-center justify-center p-6 min-h-[140px] md:min-h-[180px]">

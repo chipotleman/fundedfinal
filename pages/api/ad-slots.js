@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     }
 
     const slots = await sql`
-      SELECT slot_number, image_url, link_url, alt_text, is_active
+      SELECT slot_number, image_url, mobile_image_url, link_url, alt_text, is_active
       FROM ad_slots
       WHERE is_active = true
       ORDER BY slot_number ASC
@@ -26,9 +26,10 @@ export default async function handler(req, res) {
 
     const formattedSlots = {};
     slots.forEach(slot => {
-      if (slot.image_url) {
+      if (slot.image_url || slot.mobile_image_url) {
         formattedSlots[`slot${slot.slot_number}`] = {
-          image: slot.image_url,
+          image: slot.image_url || slot.mobile_image_url,
+          mobileImage: slot.mobile_image_url || slot.image_url,
           link: slot.link_url || null,
           alt: slot.alt_text || 'Promotion'
         };

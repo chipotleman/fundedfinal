@@ -625,7 +625,8 @@ export const discordJobs = pgTable("discord_jobs", {
 export const adSlots = pgTable("ad_slots", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   slotNumber: integer("slot_number").notNull().unique(), // 1, 2, or 3
-  imageUrl: text("image_url"),
+  imageUrl: text("image_url"), // Desktop image (864x180 recommended)
+  mobileImageUrl: text("mobile_image_url"), // Mobile image (343x140 recommended)
   linkUrl: text("link_url"),
   altText: varchar("alt_text", { length: 255 }),
   isActive: boolean("is_active").default(true),

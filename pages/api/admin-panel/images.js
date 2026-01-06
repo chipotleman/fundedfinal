@@ -72,7 +72,7 @@ export default async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       let slots = await sql`
-        SELECT id, slot_number, image_url, link_url, alt_text, is_active, updated_at, updated_by
+        SELECT id, slot_number, image_url, mobile_image_url, link_url, alt_text, is_active, updated_at, updated_by
         FROM ad_slots
         ORDER BY slot_number ASC
       `;
@@ -85,7 +85,7 @@ export default async function handler(req, res) {
           `;
         }
         slots = await sql`
-          SELECT id, slot_number, image_url, link_url, alt_text, is_active, updated_at, updated_by
+          SELECT id, slot_number, image_url, mobile_image_url, link_url, alt_text, is_active, updated_at, updated_by
           FROM ad_slots
           ORDER BY slot_number ASC
         `;
@@ -104,7 +104,7 @@ export default async function handler(req, res) {
     }
 
     try {
-      const { slotNumber, imageUrl, linkUrl, altText, isActive } = req.body;
+      const { slotNumber, imageUrl, mobileImageUrl, linkUrl, altText, isActive } = req.body;
 
       if (!slotNumber || slotNumber < 1 || slotNumber > 3) {
         return res.status(400).json({ error: 'Invalid slot number (must be 1, 2, or 3)' });
@@ -116,14 +116,15 @@ export default async function handler(req, res) {
 
       if (existing.length === 0) {
         await sql`
-          INSERT INTO ad_slots (slot_number, image_url, link_url, alt_text, is_active, updated_by, updated_at)
-          VALUES (${slotNumber}, ${imageUrl || null}, ${linkUrl || null}, ${altText || null}, ${isActive !== false}, ${auth.id}, NOW())
+          INSERT INTO ad_slots (slot_number, image_url, mobile_image_url, link_url, alt_text, is_active, updated_by, updated_at)
+          VALUES (${slotNumber}, ${imageUrl || null}, ${mobileImageUrl || null}, ${linkUrl || null}, ${altText || null}, ${isActive !== false}, ${auth.id}, NOW())
         `;
       } else {
         await sql`
           UPDATE ad_slots
           SET 
             image_url = ${imageUrl || null},
+            mobile_image_url = ${mobileImageUrl || null},
             link_url = ${linkUrl || null},
             alt_text = ${altText || null},
             is_active = ${isActive !== false},
@@ -134,7 +135,7 @@ export default async function handler(req, res) {
       }
 
       const updated = await sql`
-        SELECT id, slot_number, image_url, link_url, alt_text, is_active, updated_at, updated_by
+        SELECT id, slot_number, image_url, mobile_image_url, link_url, alt_text, is_active, updated_at, updated_by
         FROM ad_slots
         WHERE slot_number = ${slotNumber}
       `;

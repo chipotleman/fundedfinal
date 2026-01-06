@@ -7,7 +7,8 @@ export default function ImagesPage() {
   const [saving, setSaving] = useState({});
   const [uploading, setUploading] = useState({});
   const [message, setMessage] = useState(null);
-  const fileInputRefs = useRef({});
+  const desktopFileRefs = useRef({});
+  const mobileFileRefs = useRef({});
 
   useEffect(() => {
     fetchSlots();
@@ -24,7 +25,7 @@ export default function ImagesPage() {
       const slotsArray = data.slots || [];
       const normalized = [1, 2, 3].map(num => {
         const existing = slotsArray.find(s => s.slot_number === num);
-        return existing || { slot_number: num, image_url: '', link_url: '', alt_text: '', is_active: true };
+        return existing || { slot_number: num, image_url: '', mobile_image_url: '', link_url: '', alt_text: '', is_active: true };
       });
       
       setSlots(normalized);
@@ -35,10 +36,11 @@ export default function ImagesPage() {
     }
   };
 
-  const handleUpload = async (slotNumber, file) => {
+  const handleUpload = async (slotNumber, file, type) => {
     if (!file) return;
 
-    setUploading(prev => ({ ...prev, [slotNumber]: true }));
+    const uploadKey = `${slotNumber}-${type}`;
+    setUploading(prev => ({ ...prev, [uploadKey]: true }));
     setMessage(null);
 
     try {
@@ -75,13 +77,14 @@ export default function ImagesPage() {
         throw new Error('Failed to upload file');
       }
 
-      updateSlot(slotNumber, 'image_url', publicURL);
-      setMessage({ type: 'success', text: `Image uploaded for Slot ${slotNumber}. Click Save to apply.` });
+      const field = type === 'desktop' ? 'image_url' : 'mobile_image_url';
+      updateSlot(slotNumber, field, publicURL);
+      setMessage({ type: 'success', text: `${type === 'desktop' ? 'Desktop' : 'Mobile'} image uploaded for Slot ${slotNumber}. Click Save to apply.` });
     } catch (error) {
       console.error('Upload error:', error);
       setMessage({ type: 'error', text: error.message || 'Failed to upload image' });
     } finally {
-      setUploading(prev => ({ ...prev, [slotNumber]: false }));
+      setUploading(prev => ({ ...prev, [uploadKey]: false }));
     }
   };
 
@@ -103,6 +106,7 @@ export default function ImagesPage() {
         body: JSON.stringify({
           slotNumber: slot.slot_number,
           imageUrl: slot.image_url,
+          mobileImageUrl: slot.mobile_image_url,
           linkUrl: slot.link_url,
           altText: slot.alt_text,
           isActive: slot.is_active
@@ -128,7 +132,7 @@ export default function ImagesPage() {
   const handleClear = (slotNumber) => {
     setSlots(prev => prev.map(s => 
       s.slot_number === slotNumber 
-        ? { ...s, image_url: '', link_url: '', alt_text: '' }
+        ? { ...s, image_url: '', mobile_image_url: '', link_url: '', alt_text: '' }
         : s
     ));
   };
@@ -156,7 +160,7 @@ export default function ImagesPage() {
           <div>
             <h1 className="text-2xl font-bold text-white">Ad Images</h1>
             <p className="text-gray-400 text-sm mt-1">
-              Manage banner carousel ad slots. Recommended size: 864 x 180 pixels
+              Manage banner carousel ad slots with separate desktop and mobile images
             </p>
           </div>
         </div>
@@ -183,78 +187,136 @@ export default function ImagesPage() {
                 </label>
               </div>
 
-              <div className="mb-4">
-                <div className="bg-black/30 rounded-lg overflow-hidden relative" style={{ height: '180px' }}>
-                  {slot.image_url ? (
-                    <img 
-                      src={slot.image_url} 
-                      alt={slot.alt_text || 'Preview'} 
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        if (e.target.nextSibling) e.target.nextSibling.style.display = 'flex';
-                      }}
-                    />
-                  ) : null}
-                  <div 
-                    className={`w-full h-full flex flex-col items-center justify-center text-gray-500 ${slot.image_url ? 'hidden' : ''}`}
-                    style={{ position: slot.image_url ? 'absolute' : 'relative', top: 0, left: 0 }}
-                  >
-                    <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <span className="text-sm">No image set</span>
-                    <span className="text-xs mt-1">864 x 180 recommended</span>
-                  </div>
-                  
-                  {uploading[slot.slot_number] && (
-                    <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
-                      <div className="flex flex-col items-center">
-                        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500 mb-2"></div>
-                        <span className="text-white text-sm">Uploading...</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Upload Image</label>
-                  <div className="flex gap-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-sm font-medium text-gray-300">Desktop (864 x 180)</span>
+                  </div>
+                  <div className="bg-black/30 rounded-lg overflow-hidden relative" style={{ height: '120px' }}>
+                    {slot.image_url ? (
+                      <img 
+                        src={slot.image_url} 
+                        alt="Desktop preview" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-gray-500">
+                        <svg className="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-xs">No desktop image</span>
+                      </div>
+                    )}
+                    {uploading[`${slot.slot_number}-desktop`] && (
+                      <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-purple-500"></div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-2">
                     <input
-                      ref={el => fileInputRefs.current[slot.slot_number] = el}
+                      ref={el => desktopFileRefs.current[slot.slot_number] = el}
                       type="file"
                       accept="image/*"
                       onChange={(e) => {
                         const file = e.target.files?.[0];
-                        if (file) handleUpload(slot.slot_number, file);
+                        if (file) handleUpload(slot.slot_number, file, 'desktop');
                         e.target.value = '';
                       }}
                       className="hidden"
                     />
                     <button
-                      onClick={() => fileInputRefs.current[slot.slot_number]?.click()}
-                      disabled={uploading[slot.slot_number]}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
+                      onClick={() => desktopFileRefs.current[slot.slot_number]?.click()}
+                      disabled={uploading[`${slot.slot_number}-desktop`]}
+                      className="w-full px-3 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
                     >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                       </svg>
-                      {uploading[slot.slot_number] ? 'Uploading...' : 'Upload from Computer'}
+                      Upload Desktop
                     </button>
                   </div>
                 </div>
 
-                <div className="border-t border-white/10 pt-4">
-                  <label className="block text-sm font-medium text-gray-300 mb-1">Or enter Image URL</label>
-                  <input
-                    type="url"
-                    value={slot.image_url || ''}
-                    onChange={(e) => updateSlot(slot.slot_number, 'image_url', e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                    className="w-full px-4 py-2 bg-black/30 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
-                  />
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-sm font-medium text-gray-300">Mobile (343 x 140)</span>
+                  </div>
+                  <div className="bg-black/30 rounded-lg overflow-hidden relative" style={{ height: '120px' }}>
+                    {slot.mobile_image_url ? (
+                      <img 
+                        src={slot.mobile_image_url} 
+                        alt="Mobile preview" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex flex-col items-center justify-center text-gray-500">
+                        <svg className="w-8 h-8 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-xs">No mobile image</span>
+                      </div>
+                    )}
+                    {uploading[`${slot.slot_number}-mobile`] && (
+                      <div className="absolute inset-0 bg-black/70 flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-purple-500"></div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-2">
+                    <input
+                      ref={el => mobileFileRefs.current[slot.slot_number] = el}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleUpload(slot.slot_number, file, 'mobile');
+                        e.target.value = '';
+                      }}
+                      className="hidden"
+                    />
+                    <button
+                      onClick={() => mobileFileRefs.current[slot.slot_number]?.click()}
+                      disabled={uploading[`${slot.slot_number}-mobile`]}
+                      className="w-full px-3 py-2 bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                      </svg>
+                      Upload Mobile
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4 border-t border-white/10 pt-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Desktop Image URL</label>
+                    <input
+                      type="url"
+                      value={slot.image_url || ''}
+                      onChange={(e) => updateSlot(slot.slot_number, 'image_url', e.target.value)}
+                      placeholder="https://example.com/desktop.jpg"
+                      className="w-full px-4 py-2 bg-black/30 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Mobile Image URL</label>
+                    <input
+                      type="url"
+                      value={slot.mobile_image_url || ''}
+                      onChange={(e) => updateSlot(slot.slot_number, 'mobile_image_url', e.target.value)}
+                      placeholder="https://example.com/mobile.jpg"
+                      className="w-full px-4 py-2 bg-black/30 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 text-sm"
+                    />
+                  </div>
                 </div>
 
                 <div>
@@ -291,7 +353,7 @@ export default function ImagesPage() {
                     onClick={() => handleClear(slot.slot_number)}
                     className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
                   >
-                    Clear
+                    Clear All
                   </button>
                 </div>
 
@@ -306,12 +368,12 @@ export default function ImagesPage() {
         </div>
 
         <div className="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4">
-          <h4 className="font-semibold text-blue-400 mb-2">Image Guidelines</h4>
+          <h4 className="font-semibold text-blue-400 mb-2">Image Size Guidelines</h4>
           <ul className="text-sm text-gray-300 space-y-1">
-            <li>Recommended size: <strong>864 x 180 pixels</strong></li>
-            <li>Mobile display: Images scale to fit screen width</li>
+            <li><strong>Desktop:</strong> 864 x 180 pixels (landscape banner)</li>
+            <li><strong>Mobile:</strong> 343 x 140 pixels (optimized for phone screens)</li>
             <li>Supported formats: JPG, PNG, WebP, GIF</li>
-            <li>Max file size: 10MB</li>
+            <li>If only one image is uploaded, it will be used for both sizes</li>
           </ul>
         </div>
       </div>
