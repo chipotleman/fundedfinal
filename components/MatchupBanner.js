@@ -270,7 +270,7 @@ export default function MatchupBanner({
               key={i}
               onClick={() => scrollToSlide(i)}
               aria-label={`Go to slide ${i + 1}`}
-              className={`w-1 h-1 md:w-1.5 md:h-1.5 rounded-full transition-all duration-200 ${
+              className={`w-[5px] h-[5px] rounded-full transition-all duration-200 ${
                 currentSlide === i 
                   ? (isDarkMode ? 'bg-white' : 'bg-gray-900')
                   : (isDarkMode ? 'bg-white/30' : 'bg-gray-300')
