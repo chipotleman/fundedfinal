@@ -1,6 +1,6 @@
 import { db } from '../../../lib/db';
-import { userBets } from '../../../shared/schema';
-import { eq, desc } from 'drizzle-orm';
+import { userBets, fakeOpponents, fakeOpponentBets } from '../../../shared/schema';
+import { eq, desc, or } from 'drizzle-orm';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
 
@@ -18,11 +18,32 @@ export default async function handler(req, res) {
 
     const userId = session.user.id;
 
-    const bets = await db
+    // Check if this user is a fake opponent
+    const [fakeOpponent] = await db
       .select()
-      .from(userBets)
-      .where(eq(userBets.userId, userId))
-      .orderBy(desc(userBets.placedAt));
+      .from(fakeOpponents)
+      .where(or(
+        eq(fakeOpponents.userId, userId),
+        eq(fakeOpponents.id, userId)
+      ));
+
+    let bets = [];
+    
+    if (fakeOpponent) {
+      // For fake opponents, get bets from fakeOpponentBets table
+      bets = await db
+        .select()
+        .from(fakeOpponentBets)
+        .where(eq(fakeOpponentBets.fakeOpponentId, fakeOpponent.id))
+        .orderBy(desc(fakeOpponentBets.placedAt));
+    } else {
+      // For regular users, get bets from userBets table
+      bets = await db
+        .select()
+        .from(userBets)
+        .where(eq(userBets.userId, userId))
+        .orderBy(desc(userBets.placedAt));
+    }
 
     const formattedBets = bets.map(bet => ({
       id: bet.id,
