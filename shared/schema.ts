@@ -47,6 +47,7 @@ export const profiles = pgTable("profiles", {
   battleWins: integer("battle_wins").default(0),
   battleLosses: integer("battle_losses").default(0),
   totalWinnings: decimal("total_winnings", { precision: 12, scale: 2 }).default('0'),
+  isFakeAccount: boolean("is_fake_account").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
@@ -555,6 +556,9 @@ export const matchupQueue = pgTable("matchup_queue", {
 // Fake Opponents - Admin-controlled profiles for when no real match is found
 export const fakeOpponents = pgTable("fake_opponents", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id"), // Links to users table for authentication
+  email: varchar("email", { length: 255 }), // Login email for this fake account
+  hashedPassword: varchar("hashed_password", { length: 255 }), // Bcrypt hashed password
   username: varchar("username", { length: 100 }).notNull(),
   displayName: varchar("display_name", { length: 255 }).notNull(),
   avatar: text("avatar"), // URL or base64 avatar
@@ -562,11 +566,15 @@ export const fakeOpponents = pgTable("fake_opponents", {
   winRate: decimal("win_rate", { precision: 5, scale: 2 }).default('52.5'), // Fake win rate to display
   totalBattles: integer("total_battles").default(0), // Fake battle count
   isActive: boolean("is_active").default(true),
+  lastImpersonatedAt: timestamp("last_impersonated_at"), // Track admin impersonation
+  lastImpersonatedBy: varchar("last_impersonated_by"), // Admin who last impersonated
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
   usernameIdx: index("fake_opponents_username_idx").on(table.username),
   isActiveIdx: index("fake_opponents_is_active_idx").on(table.isActive),
+  userIdIdx: index("fake_opponents_user_id_idx").on(table.userId),
+  emailIdx: index("fake_opponents_email_idx").on(table.email),
 }));
 
 // Fake Opponent Bets - Bets made by admins on behalf of fake opponents
