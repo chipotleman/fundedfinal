@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 
 function formatTimeRemaining(ms) {
@@ -37,7 +37,8 @@ export default function MatchupBanner({
   myLosses = 0
 }) {
   const [timeRemaining, setTimeRemaining] = useState(null);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const scrollRef = useRef(null);
   const { isDarkMode } = useTheme();
 
   useEffect(() => {
@@ -62,7 +63,6 @@ export default function MatchupBanner({
   const isWinning = myBalanceNum > oppBalanceNum;
   const isLosing = myBalanceNum < oppBalanceNum;
   const isTied = myBalanceNum === oppBalanceNum;
-  const hasEnded = timeRemaining && timeRemaining <= 0;
 
   const winnerPayout = parseFloat(matchup.winnerPayout || 0);
 
@@ -71,7 +71,6 @@ export default function MatchupBanner({
 
   const pendingBets = opponentBets.filter(b => b.status === 'pending');
   const settledBets = opponentBets.filter(b => b.status !== 'pending');
-  const oppTotalStaked = opponentBets.reduce((sum, b) => sum + parseFloat(b.stake || 0), 0);
 
   const getDurationLabel = (durationType) => {
     const labels = {
@@ -102,239 +101,267 @@ export default function MatchupBanner({
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
+  const slides = [
+    { id: 'battle', label: 'Battle Status' },
+    { id: 'stats', label: 'Detailed Stats' },
+    { id: 'bets', label: 'Opponent Bets' }
+  ];
+
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      const scrollLeft = scrollRef.current.scrollLeft;
+      const slideWidth = scrollRef.current.offsetWidth;
+      const newSlide = Math.round(scrollLeft / slideWidth);
+      setCurrentSlide(newSlide);
+    }
+  };
+
+  const scrollToSlide = (index) => {
+    if (scrollRef.current) {
+      const slideWidth = scrollRef.current.offsetWidth;
+      scrollRef.current.scrollTo({ left: slideWidth * index, behavior: 'smooth' });
+      setCurrentSlide(index);
+    }
+  };
+
   return (
-    <div className={`${
-      isDarkMode 
-        ? 'bg-white/5 backdrop-blur-xl border-white/10' 
-        : 'bg-white/80 backdrop-blur-xl border-gray-200'
-    } border rounded-3xl mb-6 overflow-hidden`}>
-      
-      {/* Header - Battle Type - positioned at top edge */}
-      <div className="flex justify-center -mt-0">
-        <div className={`flex items-center gap-2 px-5 py-2 rounded-b-xl ${
-          isDarkMode ? 'bg-white/10 backdrop-blur-md border-x border-b border-white/10' : 'bg-gray-100 border border-gray-200'
-        }`}>
-          <span className="text-lg">🎮</span>
-          <span className={`text-sm font-bold uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-            {durationLabel}
-          </span>
-        </div>
-      </div>
-
-      <div 
-        className="p-3 pt-3 cursor-pointer"
-        onClick={() => setIsExpanded(!isExpanded)}
-      >
-        {/* Main content - 3 columns */}
-        <div className="flex items-stretch gap-2">
-          
-          {/* Left side - User */}
-          <div className={`flex flex-col items-center flex-1 py-3 md:py-6 px-2 md:px-4 rounded-xl ${
-            isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'
-          }`}>
-            <div className="w-12 h-12 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-lg md:text-3xl text-white shadow-lg shadow-green-500/30 mb-2 md:mb-4 border-2 border-green-300/50">
-              🐉
-            </div>
-            <span className={`text-[10px] md:text-sm uppercase tracking-wider font-semibold mb-1 md:mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Your Balance</span>
-            <p className="text-xl md:text-4xl font-extrabold text-green-400 mb-2 md:mb-3">
-              ${myBalanceNum.toLocaleString()}
-            </p>
-            <p className={`text-[9px] md:text-sm uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-              Piks: <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{piksRemaining}</span> · <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatTimer(timeRemaining)}</span>
-            </p>
-          </div>
-
-          {/* Center - Prize Pool */}
-          <div className="flex flex-col items-center justify-center flex-1 px-2 md:px-6 py-3 md:py-6">
-            <span className="text-3xl md:text-6xl mb-1 md:mb-3">🏆</span>
-            <span className={`text-[10px] md:text-sm uppercase tracking-wider font-semibold mb-1 md:mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Prize Pool</span>
-            <p className="text-3xl md:text-6xl font-black text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)] mb-2 md:mb-4">
-              ${winnerPayout.toLocaleString()}
-            </p>
-            
-            {/* Status pill */}
-            <div className={`flex items-center gap-1.5 md:gap-2 px-3 md:px-5 py-1.5 md:py-2.5 rounded-full shadow-lg text-xs md:text-base ${
-              isWinning 
-                ? 'bg-green-500 text-white shadow-green-500/30' 
-                : isLosing 
-                  ? 'bg-red-500 text-white shadow-red-500/30' 
-                  : 'bg-yellow-500 text-black shadow-yellow-500/30'
-            }`}>
-              <svg className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-              </svg>
-              <span className="font-bold whitespace-nowrap">
-                {isTied ? 'Tied!' : isWinning ? "You're winning!" : "You're behind"}
-              </span>
-            </div>
-          </div>
-
-          {/* Right side - Opponent */}
-          <div className={`flex flex-col items-center flex-1 py-3 md:py-6 px-2 md:px-4 rounded-xl ${
-            isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'
-          }`}>
-            {opponent.avatar ? (
-              <img 
-                src={opponent.avatar} 
-                alt={opponent.username}
-                className="w-12 h-12 md:w-20 md:h-20 rounded-full border-2 border-red-300/50 shadow-lg shadow-red-500/30 mb-2 md:mb-4"
-              />
-            ) : (
-              <div className="w-12 h-12 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center text-lg md:text-3xl text-white shadow-lg shadow-red-500/30 mb-2 md:mb-4 border-2 border-red-300/50">
-                🦅
+    <div className="mb-6">
+      <div className="flex justify-center md:justify-start">
+        <div 
+          ref={scrollRef}
+          onScroll={handleScroll}
+          className="w-full md:w-[864px] overflow-x-auto snap-x snap-mandatory scrollbar-hide flex"
+          style={{ scrollSnapType: 'x mandatory' }}
+        >
+          {/* Slide 1: Battle Status */}
+          <div className="w-full md:w-[864px] flex-shrink-0 snap-center">
+            <div className={`h-full ${
+              isDarkMode 
+                ? 'bg-white/5 backdrop-blur-xl border-white/10' 
+                : 'bg-white/80 backdrop-blur-xl border-gray-200'
+            } border rounded-2xl overflow-hidden`}>
+              
+              <div className="flex justify-center">
+                <div className={`flex items-center gap-2 px-4 py-1.5 rounded-b-lg ${
+                  isDarkMode ? 'bg-white/10 backdrop-blur-md border-x border-b border-white/10' : 'bg-gray-100 border border-gray-200'
+                }`}>
+                  <span className="text-sm">🎮</span>
+                  <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {durationLabel}
+                  </span>
+                </div>
               </div>
-            )}
-            <span className={`text-[10px] md:text-sm uppercase tracking-wider font-semibold mb-1 md:mb-2 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Opponent</span>
-            <p className="text-xl md:text-4xl font-extrabold text-red-400 mb-2 md:mb-3">
-              ${oppBalanceNum.toLocaleString()}
-            </p>
-            <p className={`text-[9px] md:text-sm uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-              Piks: <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{oppPiksRemaining}</span> · <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatTimer(timeRemaining)}</span>
-            </p>
-          </div>
-        </div>
 
-        {/* Expand indicator */}
-        <div className="flex justify-center mt-2">
-          <span className={`transition-transform duration-200 text-xs ${isExpanded ? 'rotate-180' : ''} ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-            ▼
-          </span>
-        </div>
-      </div>
-
-      {isExpanded && (
-        <div className={`border-t ${isDarkMode ? 'border-gray-700/50 bg-[#0a0a0a]' : 'border-gray-200 bg-gray-50'}`}>
-          <div className="p-4">
-            <div className="grid grid-cols-2 gap-3 mb-3">
-              <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-[#111111] border border-gray-800/50' : 'bg-white border border-gray-200'}`}>
-                <h4 className={`font-semibold text-sm mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Your Stats</h4>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Balance</p>
-                    <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${myBalanceNum.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>P&L</p>
-                    <p className={`font-bold ${myPnL >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {myPnL >= 0 ? '+' : ''}${myPnL.toLocaleString()}
+              <div className="p-3">
+                <div className="flex items-stretch gap-2">
+                  
+                  <div className={`flex flex-col items-center flex-1 py-2 md:py-3 px-2 rounded-xl ${
+                    isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'
+                  }`}>
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-green-500/30 mb-1.5 border-2 border-green-300/50">
+                      🐉
+                    </div>
+                    <span className={`text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Your Balance</span>
+                    <p className="text-lg md:text-2xl font-extrabold text-green-400 mb-1">
+                      ${myBalanceNum.toLocaleString()}
+                    </p>
+                    <p className={`text-[8px] md:text-[9px] uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                      Piks: <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{piksRemaining}</span> · <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatTimer(timeRemaining)}</span>
                     </p>
                   </div>
-                  <div>
-                    <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Total Bets</p>
-                    <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{myBetsCount}</p>
-                  </div>
-                  <div>
-                    <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Record</p>
-                    <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{myWins}W - {myLosses}L</p>
-                  </div>
-                </div>
-              </div>
 
-              <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-[#111111] border border-gray-800/50' : 'bg-white border border-gray-200'}`}>
-                <h4 className={`font-semibold text-sm mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponent.username}'s Stats</h4>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Balance</p>
-                    <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${oppBalanceNum.toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>P&L</p>
-                    <p className={`font-bold ${oppPnL >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                      {oppPnL >= 0 ? '+' : ''}${oppPnL.toLocaleString()}
+                  <div className="flex flex-col items-center justify-center flex-1 px-2 py-2 md:py-3">
+                    <span className="text-2xl md:text-3xl mb-0.5">🏆</span>
+                    <span className={`text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Prize Pool</span>
+                    <p className="text-2xl md:text-3xl font-black text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)] mb-1.5">
+                      ${winnerPayout.toLocaleString()}
                     </p>
+                    
+                    <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full shadow-lg text-[10px] md:text-xs ${
+                      isWinning 
+                        ? 'bg-green-500 text-white shadow-green-500/30' 
+                        : isLosing 
+                          ? 'bg-red-500 text-white shadow-red-500/30' 
+                          : 'bg-yellow-500 text-black shadow-yellow-500/30'
+                    }`}>
+                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      </svg>
+                      <span className="font-bold whitespace-nowrap">
+                        {isTied ? 'Tied!' : isWinning ? "You're winning!" : "You're behind"}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Total Bets</p>
-                    <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponentBets.length}</p>
-                  </div>
-                  <div>
-                    <p className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>Staked</p>
-                    <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${oppTotalStaked.toLocaleString()}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
 
-            <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-[#111111] border border-gray-800/50' : 'bg-white border border-gray-200'}`}>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className="text-base">{canSeeBets ? '👀' : '🔒'}</span>
-                  <h4 className={`font-semibold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponent.username}'s Bets</h4>
-                </div>
-                {canSeeBets && (
-                  <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-500 rounded text-[10px]">
-                      {pendingBets.length} pending
-                    </span>
-                    <span className={`px-2 py-0.5 rounded text-[10px] ${isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'}`}>
-                      {settledBets.length} settled
-                    </span>
-                    {onRefreshOpponentBets && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRefreshOpponentBets();
-                        }}
-                        className="text-blue-400 text-[10px] hover:text-blue-300 transition"
-                      >
-                        Refresh
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {!canSeeBets ? (
-                <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Place a bet to unlock your opponent's picks
-                </p>
-              ) : opponentBets.length === 0 ? (
-                <p className={`text-xs text-center py-3 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-                  No bets placed yet
-                </p>
-              ) : (
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {opponentBets.map((bet, index) => (
-                    <div 
-                      key={bet.id || index}
-                      className={`flex items-center justify-between p-2 rounded-lg ${isDarkMode ? 'bg-[#0a0a0a] border border-gray-800/50' : 'bg-gray-100'}`}
-                    >
-                      <div className="flex-1">
-                        <p className={`font-medium text-xs ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                          {bet.selection || bet.matchupName}
-                        </p>
-                        <p className={`text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                          {bet.matchupName} {bet.marketType ? `• ${bet.marketType}` : ''}
-                        </p>
+                  <div className={`flex flex-col items-center flex-1 py-2 md:py-3 px-2 rounded-xl ${
+                    isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'
+                  }`}>
+                    {opponent.avatar ? (
+                      <img 
+                        src={opponent.avatar} 
+                        alt={opponent.username}
+                        className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-red-300/50 shadow-lg shadow-red-500/30 mb-1.5"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-red-500/30 mb-1.5 border-2 border-red-300/50">
+                        🦅
                       </div>
-                      
-                      <div className="text-right">
-                        <p className={`font-semibold text-xs ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                          ${parseFloat(bet.stake || 0).toLocaleString()}
-                        </p>
-                        <div className="flex items-center gap-1">
-                          <span className={`text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>@ {bet.odds}</span>
-                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                    )}
+                    <span className={`text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Opponent</span>
+                    <p className="text-lg md:text-2xl font-extrabold text-red-400 mb-1">
+                      ${oppBalanceNum.toLocaleString()}
+                    </p>
+                    <p className={`text-[8px] md:text-[9px] uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                      Piks: <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{oppPiksRemaining}</span> · <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatTimer(timeRemaining)}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Slide 2: Detailed Stats */}
+          <div className="w-full md:w-[864px] flex-shrink-0 snap-center">
+            <div className={`h-full ${
+              isDarkMode 
+                ? 'bg-white/5 backdrop-blur-xl border-white/10' 
+                : 'bg-white/80 backdrop-blur-xl border-gray-200'
+            } border rounded-2xl overflow-hidden p-4`}>
+              
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <span className="text-lg">📊</span>
+                <span className={`text-sm font-bold uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Battle Stats
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className={`p-3 rounded-xl ${isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
+                  <h4 className={`font-semibold text-xs mb-2 text-green-400`}>Your Stats</h4>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <p className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Balance</p>
+                      <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${myBalanceNum.toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>P&L</p>
+                      <p className={`font-bold ${myPnL >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {myPnL >= 0 ? '+' : ''}${myPnL.toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Total Bets</p>
+                      <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{myBetsCount}</p>
+                    </div>
+                    <div>
+                      <p className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Record</p>
+                      <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{myWins}W - {myLosses}L</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`p-3 rounded-xl ${isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
+                  <h4 className={`font-semibold text-xs mb-2 text-red-400`}>{opponent.username}'s Stats</h4>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                      <p className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Balance</p>
+                      <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${oppBalanceNum.toLocaleString()}</p>
+                    </div>
+                    <div>
+                      <p className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>P&L</p>
+                      <p className={`font-bold ${oppPnL >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                        {oppPnL >= 0 ? '+' : ''}${oppPnL.toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <p className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Total Bets</p>
+                      <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponentBets.length}</p>
+                    </div>
+                    <div>
+                      <p className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Total Staked</p>
+                      <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${settledBets.reduce((sum, b) => sum + parseFloat(b.stake || 0), 0).toLocaleString()}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Slide 3: Opponent Bets */}
+          <div className="w-full md:w-[864px] flex-shrink-0 snap-center">
+            <div className={`h-full ${
+              isDarkMode 
+                ? 'bg-white/5 backdrop-blur-xl border-white/10' 
+                : 'bg-white/80 backdrop-blur-xl border-gray-200'
+            } border rounded-2xl overflow-hidden p-4`}>
+              
+              <div className="flex items-center justify-center gap-2 mb-3">
+                <span className="text-lg">🎯</span>
+                <span className={`text-sm font-bold uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Opponent's Bets
+                </span>
+              </div>
+
+              {canSeeBets ? (
+                <div className="space-y-2 max-h-[120px] overflow-y-auto">
+                  {opponentBets.length === 0 ? (
+                    <p className={`text-center text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>No bets placed yet</p>
+                  ) : (
+                    opponentBets.slice(0, 4).map((bet, i) => (
+                      <div key={i} className={`flex justify-between items-center p-2 rounded-lg text-xs ${
+                        isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'
+                      }`}>
+                        <div className="flex-1 truncate">
+                          <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{bet.selection}</span>
+                          <span className={`ml-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>({bet.odds})</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>${parseFloat(bet.stake).toFixed(0)}</span>
+                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${
                             bet.status === 'won' ? 'bg-green-500/20 text-green-400' :
                             bet.status === 'lost' ? 'bg-red-500/20 text-red-400' :
-                            bet.status === 'push' ? 'bg-gray-500/20 text-gray-400' :
                             'bg-yellow-500/20 text-yellow-400'
                           }`}>
-                            {bet.status === 'pending' ? 'Pending' :
-                             bet.status === 'won' ? `+$${parseFloat(bet.pnl || 0).toLocaleString()}` :
-                             bet.status === 'lost' ? `-$${parseFloat(bet.stake || 0).toLocaleString()}` :
-                             'Push'}
+                            {bet.status.toUpperCase()}
                           </span>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
+                  {opponentBets.length > 4 && (
+                    <p className={`text-center text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                      +{opponentBets.length - 4} more bets
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-4">
+                  <div className="text-3xl mb-2">🔒</div>
+                  <p className={`text-xs text-center ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                    Place a bet to reveal opponent's bets
+                  </p>
                 </div>
               )}
             </div>
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Scroll indicators */}
+      <div className="flex justify-center gap-2 mt-3">
+        {slides.map((slide, index) => (
+          <button
+            key={slide.id}
+            onClick={() => scrollToSlide(index)}
+            className={`w-2 h-2 rounded-full transition-all duration-300 ${
+              currentSlide === index 
+                ? (isDarkMode ? 'bg-white w-6' : 'bg-gray-900 w-6')
+                : (isDarkMode ? 'bg-white/30 hover:bg-white/50' : 'bg-gray-300 hover:bg-gray-400')
+            }`}
+            aria-label={`Go to ${slide.label}`}
+          />
+        ))}
+      </div>
     </div>
   );
 }
