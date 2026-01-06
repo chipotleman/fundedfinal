@@ -39,10 +39,6 @@ export default function AdminMatchups() {
     stake: '',
   });
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   const getAuthHeaders = () => {
     const token = localStorage.getItem('admin_token');
     return {
@@ -50,6 +46,22 @@ export default function AdminMatchups() {
       'Authorization': `Bearer ${token}`,
     };
   };
+
+  useEffect(() => {
+    const token = localStorage.getItem('admin_token');
+    if (token) {
+      fetchData();
+    } else {
+      const checkToken = setInterval(() => {
+        const t = localStorage.getItem('admin_token');
+        if (t) {
+          clearInterval(checkToken);
+          fetchData();
+        }
+      }, 100);
+      return () => clearInterval(checkToken);
+    }
+  }, []);
 
   const fetchData = async () => {
     setLoading(true);
