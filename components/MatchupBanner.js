@@ -60,13 +60,37 @@ export default function MatchupBanner({
 
   const handleScroll = () => {
     if (scrollRef.current) {
-      const scrollLeft = scrollRef.current.scrollLeft;
-      const scrollContainer = scrollRef.current.firstChild;
-      const firstSlide = scrollContainer?.firstChild;
-      const slideWidth = firstSlide?.offsetWidth || 1;
-      const gap = 12;
-      const newSlide = Math.round(scrollLeft / (slideWidth + gap));
-      setCurrentSlide(Math.max(0, Math.min(newSlide, totalSlides - 1)));
+      const container = scrollRef.current;
+      const scrollLeft = container.scrollLeft;
+      const containerCenter = scrollLeft + container.offsetWidth / 2;
+      
+      const slides = container.querySelectorAll('[data-slide-index]');
+      let closestIndex = 0;
+      let closestDistance = Infinity;
+      
+      slides.forEach((slide, index) => {
+        const slideCenter = slide.offsetLeft + slide.offsetWidth / 2;
+        const distance = Math.abs(containerCenter - slideCenter);
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestIndex = index;
+        }
+      });
+      
+      setCurrentSlide(closestIndex);
+    }
+  };
+
+  const scrollToSlide = (index) => {
+    if (scrollRef.current) {
+      const slides = scrollRef.current.querySelectorAll('[data-slide-index]');
+      const targetSlide = slides[index];
+      if (targetSlide) {
+        scrollRef.current.scrollTo({
+          left: targetSlide.offsetLeft,
+          behavior: 'smooth'
+        });
+      }
     }
   };
 
@@ -134,6 +158,7 @@ export default function MatchupBanner({
             
             {/* Container 1: Battle Status */}
             <div 
+              data-slide-index="0"
               className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${containerClass} p-4`}
               onClick={() => setShowModal(true)}
             >
@@ -209,7 +234,7 @@ export default function MatchupBanner({
             </div>
 
             {/* Container 2: Promo Placeholder */}
-            <div className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${containerClass}`}>
+            <div data-slide-index="1" className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${containerClass}`}>
               <div className="h-full flex flex-col items-center justify-center p-6 min-h-[140px] md:min-h-[180px]">
                 <span className="text-3xl md:text-4xl mb-2 md:mb-3">🎁</span>
                 <h3 className={`text-base md:text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Coming Soon</h3>
@@ -218,7 +243,7 @@ export default function MatchupBanner({
             </div>
 
             {/* Container 3: Promo Placeholder */}
-            <div className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${containerClass}`}>
+            <div data-slide-index="2" className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${containerClass}`}>
               <div className="h-full flex flex-col items-center justify-center p-6 min-h-[140px] md:min-h-[180px]">
                 <span className="text-3xl md:text-4xl mb-2 md:mb-3">🏆</span>
                 <h3 className={`text-base md:text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Leaderboard</h3>
@@ -227,7 +252,7 @@ export default function MatchupBanner({
             </div>
 
             {/* Container 4: Promo Placeholder */}
-            <div className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${containerClass}`}>
+            <div data-slide-index="3" className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${containerClass}`}>
               <div className="h-full flex flex-col items-center justify-center p-6 min-h-[140px] md:min-h-[180px]">
                 <span className="text-3xl md:text-4xl mb-2 md:mb-3">💎</span>
                 <h3 className={`text-base md:text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>VIP Program</h3>
@@ -241,8 +266,10 @@ export default function MatchupBanner({
         {/* Small indicator dots */}
         <div className="flex justify-center gap-1.5 mt-2">
           {[...Array(totalSlides)].map((_, i) => (
-            <div
+            <button
               key={i}
+              onClick={() => scrollToSlide(i)}
+              aria-label={`Go to slide ${i + 1}`}
               className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
                 currentSlide === i 
                   ? (isDarkMode ? 'bg-white' : 'bg-gray-900')
