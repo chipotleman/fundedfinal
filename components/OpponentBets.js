@@ -15,7 +15,7 @@ export default function OpponentBets({
     return (
       <div className={`${
         isDarkMode 
-          ? 'bg-gray-900 border-gray-700' 
+          ? 'bg-[#0a0a0a] border-gray-800/50' 
           : 'bg-white border-gray-300 shadow-lg'
       } border rounded-xl p-4 mb-4`}>
         <div className="flex items-center justify-between">
@@ -38,7 +38,7 @@ export default function OpponentBets({
   return (
     <div className={`${
       isDarkMode 
-        ? 'bg-gray-900 border-gray-700' 
+        ? 'bg-[#0a0a0a] border-gray-800/50' 
         : 'bg-white border-gray-300 shadow-lg'
     } border rounded-xl p-4 mb-4`}>
       <div 
@@ -61,7 +61,7 @@ export default function OpponentBets({
               {pendingBets.length} pending
             </span>
             <span className={`px-2 py-1 rounded text-xs ${
-              isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
+              isDarkMode ? 'bg-[#1a1a1a] text-gray-300' : 'bg-gray-200 text-gray-700'
             }`}>
               {settledBets.length} settled
             </span>
@@ -73,7 +73,7 @@ export default function OpponentBets({
       </div>
 
       {isExpanded && (
-        <div className={`mt-4 pt-4 border-t space-y-3 ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+        <div className={`mt-4 pt-4 border-t space-y-3 ${isDarkMode ? 'border-gray-800/50' : 'border-gray-200'}`}>
           {opponentBets.length === 0 ? (
             <p className={`text-center py-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>No bets placed yet</p>
           ) : (
@@ -81,7 +81,7 @@ export default function OpponentBets({
               <div 
                 key={bet.id || index}
                 className={`flex items-center justify-between p-3 rounded-lg ${
-                  isDarkMode ? 'bg-gray-800' : 'bg-gray-100'
+                  isDarkMode ? 'bg-[#111111] border border-gray-800/50' : 'bg-gray-100'
                 }`}
               >
                 <div className="flex-1">

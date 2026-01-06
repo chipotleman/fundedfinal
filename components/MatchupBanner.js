@@ -63,8 +63,8 @@ export default function MatchupBanner({
   return (
     <div className={`${
       isDarkMode 
-        ? 'bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border-gray-700' 
-        : 'bg-gradient-to-r from-gray-100 via-white to-gray-100 border-gray-300 shadow-lg'
+        ? 'bg-[#0a0a0a] border-gray-800/50' 
+        : 'bg-white border-gray-300 shadow-lg'
     } border rounded-xl p-4 mb-6`}>
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
@@ -139,7 +139,7 @@ export default function MatchupBanner({
         </div>
       </div>
 
-      <div className={`mt-3 pt-3 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-300'}`}>
+      <div className={`mt-3 pt-3 border-t ${isDarkMode ? 'border-gray-800/50' : 'border-gray-300'}`}>
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-2">
             <span className={`w-2 h-2 rounded-full ${
