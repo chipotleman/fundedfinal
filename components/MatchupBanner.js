@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 
 function formatTimeRemaining(ms) {
@@ -37,8 +37,7 @@ export default function MatchupBanner({
   myLosses = 0
 }) {
   const [timeRemaining, setTimeRemaining] = useState(null);
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const scrollRef = useRef(null);
+  const [showModal, setShowModal] = useState(false);
   const { isDarkMode } = useTheme();
 
   useEffect(() => {
@@ -69,7 +68,6 @@ export default function MatchupBanner({
   const myPnL = myBalanceNum - startingBalance;
   const oppPnL = oppBalanceNum - startingBalance;
 
-  const pendingBets = opponentBets.filter(b => b.status === 'pending');
   const settledBets = opponentBets.filter(b => b.status !== 'pending');
 
   const getDurationLabel = (durationType) => {
@@ -101,267 +99,250 @@ export default function MatchupBanner({
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const slides = [
-    { id: 'battle', label: 'Battle Status' },
-    { id: 'stats', label: 'Detailed Stats' },
-    { id: 'bets', label: 'Opponent Bets' }
-  ];
-
-  const handleScroll = () => {
-    if (scrollRef.current) {
-      const scrollLeft = scrollRef.current.scrollLeft;
-      const slideWidth = scrollRef.current.offsetWidth;
-      const newSlide = Math.round(scrollLeft / slideWidth);
-      setCurrentSlide(newSlide);
-    }
-  };
-
-  const scrollToSlide = (index) => {
-    if (scrollRef.current) {
-      const slideWidth = scrollRef.current.offsetWidth;
-      scrollRef.current.scrollTo({ left: slideWidth * index, behavior: 'smooth' });
-      setCurrentSlide(index);
-    }
-  };
+  const containerClass = `${
+    isDarkMode 
+      ? 'bg-white/5 backdrop-blur-xl border-white/10 hover:bg-white/10' 
+      : 'bg-white/80 backdrop-blur-xl border-gray-200 hover:bg-white'
+  } border rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer`;
 
   return (
-    <div className="mb-6">
-      <div className="flex justify-center md:justify-start">
-        <div 
-          ref={scrollRef}
-          onScroll={handleScroll}
-          className="w-full md:w-[864px] overflow-x-auto snap-x snap-mandatory scrollbar-hide flex"
-          style={{ scrollSnapType: 'x mandatory' }}
-        >
-          {/* Slide 1: Battle Status */}
-          <div className="w-full md:w-[864px] flex-shrink-0 snap-center">
-            <div className={`h-full ${
-              isDarkMode 
-                ? 'bg-white/5 backdrop-blur-xl border-white/10' 
-                : 'bg-white/80 backdrop-blur-xl border-gray-200'
-            } border rounded-2xl overflow-hidden`}>
-              
-              <div className="flex justify-center">
-                <div className={`flex items-center gap-2 px-4 py-1.5 rounded-b-lg ${
-                  isDarkMode ? 'bg-white/10 backdrop-blur-md border-x border-b border-white/10' : 'bg-gray-100 border border-gray-200'
-                }`}>
-                  <span className="text-sm">🎮</span>
-                  <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {durationLabel}
-                  </span>
-                </div>
+    <>
+      <div className="mb-6 overflow-x-auto scrollbar-hide">
+        <div className="flex gap-3 pb-2" style={{ minWidth: 'max-content' }}>
+          
+          {/* Container 1: Battle Status */}
+          <div 
+            className={`w-full md:w-[864px] flex-shrink-0 ${containerClass}`}
+            onClick={() => setShowModal(true)}
+          >
+            <div className="flex justify-center">
+              <div className={`flex items-center gap-2 px-4 py-1.5 rounded-b-lg ${
+                isDarkMode ? 'bg-white/10 backdrop-blur-md border-x border-b border-white/10' : 'bg-gray-100 border border-gray-200'
+              }`}>
+                <span className="text-sm">🎮</span>
+                <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  {durationLabel}
+                </span>
               </div>
+            </div>
 
-              <div className="p-3">
-                <div className="flex items-stretch gap-2">
+            <div className="p-3">
+              <div className="flex items-stretch gap-2">
+                
+                <div className={`flex flex-col items-center flex-1 py-2 md:py-3 px-2 rounded-xl ${
+                  isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'
+                }`}>
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-green-500/30 mb-1.5 border-2 border-green-300/50">
+                    🐉
+                  </div>
+                  <span className={`text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Your Balance</span>
+                  <p className="text-lg md:text-2xl font-extrabold text-green-400 mb-1">
+                    ${myBalanceNum.toLocaleString()}
+                  </p>
+                  <p className={`text-[8px] md:text-[9px] uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                    Piks: <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{piksRemaining}</span> · <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatTimer(timeRemaining)}</span>
+                  </p>
+                </div>
+
+                <div className="flex flex-col items-center justify-center flex-1 px-2 py-2 md:py-3">
+                  <span className="text-2xl md:text-3xl mb-0.5">🏆</span>
+                  <span className={`text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Prize Pool</span>
+                  <p className="text-2xl md:text-3xl font-black text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)] mb-1.5">
+                    ${winnerPayout.toLocaleString()}
+                  </p>
                   
-                  <div className={`flex flex-col items-center flex-1 py-2 md:py-3 px-2 rounded-xl ${
-                    isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'
+                  <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full shadow-lg text-[10px] md:text-xs ${
+                    isWinning 
+                      ? 'bg-green-500 text-white shadow-green-500/30' 
+                      : isLosing 
+                        ? 'bg-red-500 text-white shadow-red-500/30' 
+                        : 'bg-yellow-500 text-black shadow-yellow-500/30'
                   }`}>
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-green-500/30 mb-1.5 border-2 border-green-300/50">
-                      🐉
-                    </div>
-                    <span className={`text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Your Balance</span>
-                    <p className="text-lg md:text-2xl font-extrabold text-green-400 mb-1">
-                      ${myBalanceNum.toLocaleString()}
-                    </p>
-                    <p className={`text-[8px] md:text-[9px] uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                      Piks: <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{piksRemaining}</span> · <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatTimer(timeRemaining)}</span>
-                    </p>
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className="font-bold whitespace-nowrap">
+                      {isTied ? 'Tied!' : isWinning ? "You're winning!" : "You're behind"}
+                    </span>
                   </div>
+                </div>
 
-                  <div className="flex flex-col items-center justify-center flex-1 px-2 py-2 md:py-3">
-                    <span className="text-2xl md:text-3xl mb-0.5">🏆</span>
-                    <span className={`text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Prize Pool</span>
-                    <p className="text-2xl md:text-3xl font-black text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)] mb-1.5">
-                      ${winnerPayout.toLocaleString()}
-                    </p>
-                    
-                    <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full shadow-lg text-[10px] md:text-xs ${
-                      isWinning 
-                        ? 'bg-green-500 text-white shadow-green-500/30' 
-                        : isLosing 
-                          ? 'bg-red-500 text-white shadow-red-500/30' 
-                          : 'bg-yellow-500 text-black shadow-yellow-500/30'
-                    }`}>
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <span className="font-bold whitespace-nowrap">
-                        {isTied ? 'Tied!' : isWinning ? "You're winning!" : "You're behind"}
-                      </span>
+                <div className={`flex flex-col items-center flex-1 py-2 md:py-3 px-2 rounded-xl ${
+                  isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'
+                }`}>
+                  {opponent.avatar ? (
+                    <img 
+                      src={opponent.avatar} 
+                      alt={opponent.username}
+                      className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-red-300/50 shadow-lg shadow-red-500/30 mb-1.5"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-red-500/30 mb-1.5 border-2 border-red-300/50">
+                      🦅
                     </div>
-                  </div>
-
-                  <div className={`flex flex-col items-center flex-1 py-2 md:py-3 px-2 rounded-xl ${
-                    isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'
-                  }`}>
-                    {opponent.avatar ? (
-                      <img 
-                        src={opponent.avatar} 
-                        alt={opponent.username}
-                        className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-red-300/50 shadow-lg shadow-red-500/30 mb-1.5"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-red-500/30 mb-1.5 border-2 border-red-300/50">
-                        🦅
-                      </div>
-                    )}
-                    <span className={`text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Opponent</span>
-                    <p className="text-lg md:text-2xl font-extrabold text-red-400 mb-1">
-                      ${oppBalanceNum.toLocaleString()}
-                    </p>
-                    <p className={`text-[8px] md:text-[9px] uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                      Piks: <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{oppPiksRemaining}</span> · <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatTimer(timeRemaining)}</span>
-                    </p>
-                  </div>
+                  )}
+                  <span className={`text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Opponent</span>
+                  <p className="text-lg md:text-2xl font-extrabold text-red-400 mb-1">
+                    ${oppBalanceNum.toLocaleString()}
+                  </p>
+                  <p className={`text-[8px] md:text-[9px] uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                    Piks: <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{oppPiksRemaining}</span> · <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatTimer(timeRemaining)}</span>
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Slide 2: Detailed Stats */}
-          <div className="w-full md:w-[864px] flex-shrink-0 snap-center">
-            <div className={`h-full ${
-              isDarkMode 
-                ? 'bg-white/5 backdrop-blur-xl border-white/10' 
-                : 'bg-white/80 backdrop-blur-xl border-gray-200'
-            } border rounded-2xl overflow-hidden p-4`}>
-              
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <span className="text-lg">📊</span>
-                <span className={`text-sm font-bold uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Battle Stats
-                </span>
-              </div>
+          {/* Container 2: Promo Placeholder */}
+          <div className={`hidden md:block w-[864px] flex-shrink-0 ${containerClass}`}>
+            <div className="h-full flex flex-col items-center justify-center p-6">
+              <span className="text-4xl mb-3">🎁</span>
+              <h3 className={`text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Coming Soon</h3>
+              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Special promotions & rewards</p>
+            </div>
+          </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className={`p-3 rounded-xl ${isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
-                  <h4 className={`font-semibold text-xs mb-2 text-green-400`}>Your Stats</h4>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
+          {/* Container 3: Promo Placeholder */}
+          <div className={`hidden md:block w-[864px] flex-shrink-0 ${containerClass}`}>
+            <div className="h-full flex flex-col items-center justify-center p-6">
+              <span className="text-4xl mb-3">🏆</span>
+              <h3 className={`text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Leaderboard</h3>
+              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Top players this week</p>
+            </div>
+          </div>
+
+          {/* Container 4: Promo Placeholder */}
+          <div className={`hidden md:block w-[864px] flex-shrink-0 ${containerClass}`}>
+            <div className="h-full flex flex-col items-center justify-center p-6">
+              <span className="text-4xl mb-3">💎</span>
+              <h3 className={`text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>VIP Program</h3>
+              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Exclusive benefits await</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Modal for detailed info */}
+      {showModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowModal(false)}
+        >
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div 
+            className={`relative w-full max-w-2xl ${
+              isDarkMode ? 'bg-[#111] border-gray-800' : 'bg-white border-gray-200'
+            } border rounded-2xl overflow-hidden`}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-4 border-b border-gray-800">
+              <h2 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Battle Details</h2>
+              <button 
+                onClick={() => setShowModal(false)}
+                className={`p-2 rounded-full ${isDarkMode ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-4 space-y-4">
+              {/* Stats Grid */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
+                  <h4 className="font-semibold text-sm mb-3 text-green-400">Your Stats</h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <p className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Balance</p>
+                      <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Balance</p>
                       <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${myBalanceNum.toLocaleString()}</p>
                     </div>
                     <div>
-                      <p className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>P&L</p>
+                      <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>P&L</p>
                       <p className={`font-bold ${myPnL >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                         {myPnL >= 0 ? '+' : ''}${myPnL.toLocaleString()}
                       </p>
                     </div>
                     <div>
-                      <p className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Total Bets</p>
+                      <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Total Bets</p>
                       <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{myBetsCount}</p>
                     </div>
                     <div>
-                      <p className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Record</p>
+                      <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Record</p>
                       <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{myWins}W - {myLosses}L</p>
                     </div>
                   </div>
                 </div>
 
-                <div className={`p-3 rounded-xl ${isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
-                  <h4 className={`font-semibold text-xs mb-2 text-red-400`}>{opponent.username}'s Stats</h4>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
+                  <h4 className="font-semibold text-sm mb-3 text-red-400">{opponent.username}'s Stats</h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
-                      <p className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Balance</p>
+                      <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Balance</p>
                       <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${oppBalanceNum.toLocaleString()}</p>
                     </div>
                     <div>
-                      <p className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>P&L</p>
+                      <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>P&L</p>
                       <p className={`font-bold ${oppPnL >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                         {oppPnL >= 0 ? '+' : ''}${oppPnL.toLocaleString()}
                       </p>
                     </div>
                     <div>
-                      <p className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Total Bets</p>
+                      <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Total Bets</p>
                       <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponentBets.length}</p>
                     </div>
                     <div>
-                      <p className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Total Staked</p>
+                      <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Total Staked</p>
                       <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${settledBets.reduce((sum, b) => sum + parseFloat(b.stake || 0), 0).toLocaleString()}</p>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Slide 3: Opponent Bets */}
-          <div className="w-full md:w-[864px] flex-shrink-0 snap-center">
-            <div className={`h-full ${
-              isDarkMode 
-                ? 'bg-white/5 backdrop-blur-xl border-white/10' 
-                : 'bg-white/80 backdrop-blur-xl border-gray-200'
-            } border rounded-2xl overflow-hidden p-4`}>
-              
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <span className="text-lg">🎯</span>
-                <span className={`text-sm font-bold uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Opponent's Bets
-                </span>
-              </div>
-
-              {canSeeBets ? (
-                <div className="space-y-2 max-h-[120px] overflow-y-auto">
-                  {opponentBets.length === 0 ? (
-                    <p className={`text-center text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>No bets placed yet</p>
-                  ) : (
-                    opponentBets.slice(0, 4).map((bet, i) => (
-                      <div key={i} className={`flex justify-between items-center p-2 rounded-lg text-xs ${
-                        isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'
-                      }`}>
-                        <div className="flex-1 truncate">
-                          <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{bet.selection}</span>
-                          <span className={`ml-1 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>({bet.odds})</span>
+              {/* Opponent Bets */}
+              <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
+                <h4 className={`font-semibold text-sm mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Opponent's Bets</h4>
+                {canSeeBets ? (
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                    {opponentBets.length === 0 ? (
+                      <p className={`text-center text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>No bets placed yet</p>
+                    ) : (
+                      opponentBets.map((bet, i) => (
+                        <div key={i} className={`flex justify-between items-center p-3 rounded-lg text-sm ${
+                          isDarkMode ? 'bg-black/30' : 'bg-white'
+                        }`}>
+                          <div className="flex-1 truncate">
+                            <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{bet.selection}</span>
+                            <span className={`ml-2 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>({bet.odds})</span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>${parseFloat(bet.stake).toFixed(0)}</span>
+                            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                              bet.status === 'won' ? 'bg-green-500/20 text-green-400' :
+                              bet.status === 'lost' ? 'bg-red-500/20 text-red-400' :
+                              'bg-yellow-500/20 text-yellow-400'
+                            }`}>
+                              {bet.status.toUpperCase()}
+                            </span>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>${parseFloat(bet.stake).toFixed(0)}</span>
-                          <span className={`px-1.5 py-0.5 rounded text-[9px] font-medium ${
-                            bet.status === 'won' ? 'bg-green-500/20 text-green-400' :
-                            bet.status === 'lost' ? 'bg-red-500/20 text-red-400' :
-                            'bg-yellow-500/20 text-yellow-400'
-                          }`}>
-                            {bet.status.toUpperCase()}
-                          </span>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                  {opponentBets.length > 4 && (
-                    <p className={`text-center text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                      +{opponentBets.length - 4} more bets
+                      ))
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-6">
+                    <div className="text-4xl mb-2">🔒</div>
+                    <p className={`text-sm text-center ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                      Place a bet to reveal opponent's bets
                     </p>
-                  )}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-4">
-                  <div className="text-3xl mb-2">🔒</div>
-                  <p className={`text-xs text-center ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                    Place a bet to reveal opponent's bets
-                  </p>
-                </div>
-              )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Scroll indicators */}
-      <div className="flex justify-center gap-2 mt-3">
-        {slides.map((slide, index) => (
-          <button
-            key={slide.id}
-            onClick={() => scrollToSlide(index)}
-            className={`w-2 h-2 rounded-full transition-all duration-300 ${
-              currentSlide === index 
-                ? (isDarkMode ? 'bg-white w-6' : 'bg-gray-900 w-6')
-                : (isDarkMode ? 'bg-white/30 hover:bg-white/50' : 'bg-gray-300 hover:bg-gray-400')
-            }`}
-            aria-label={`Go to ${slide.label}`}
-          />
-        ))}
-      </div>
-    </div>
+      )}
+    </>
   );
 }
