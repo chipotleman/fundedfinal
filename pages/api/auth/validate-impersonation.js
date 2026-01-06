@@ -1,6 +1,6 @@
 import { db } from '../../../lib/db';
 import { fakeOpponents, users, profiles, matchups } from '../../../shared/schema';
-import { eq, and, or } from 'drizzle-orm';
+import { eq, and, or, inArray } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 
@@ -87,48 +87,58 @@ export default async function handler(req, res) {
       .set({ hashedPassword: hashedTempPassword, updatedAt: new Date() })
       .where(eq(fakeOpponents.id, fakeOpponentId));
 
-    // Get the active matchup for this fake opponent to sync profile data
-    const matchupId = decoded.matchupId;
-    if (matchupId) {
-      console.log('[Validate Impersonation] Syncing profile data from matchup:', matchupId);
-      const [matchup] = await db
-        .select()
-        .from(matchups)
-        .where(eq(matchups.id, matchupId));
+    // Get ALL active/matched matchups for this fake opponent to sync profile data
+    // Calculate total balance across all battles (includes active and matched statuses)
+    const allActiveMatchups = await db
+      .select()
+      .from(matchups)
+      .where(and(
+        or(
+          eq(matchups.fakeOpponentId, fakeOpponentId),
+          eq(matchups.user2Id, fakeOpponentId)
+        ),
+        inArray(matchups.status, ['active', 'matched'])
+      ));
 
-      if (matchup) {
-        // Determine the fake opponent's bankroll from the matchup
-        const challengeBankrolls = {
-          starter: 5000,
-          pro: 10000,
-          elite: 25000
-        };
-        const bankroll = challengeBankrolls[matchup.challengeType] || 5000;
+    console.log('[Validate Impersonation] Found', allActiveMatchups.length, 'active matchups for fake opponent');
 
-        // Update the profile to be active with correct challenge data
-        await db
-          .update(profiles)
-          .set({
-            status: 'active',
-            bankroll: bankroll.toString(),
-            challenge: { type: matchup.challengeType, phase: 1 },
-            challengePhase: 1,
-            updatedAt: new Date()
-          })
-          .where(eq(profiles.id, userId));
-
-        console.log('[Validate Impersonation] Profile synced - status: active, bankroll:', bankroll);
+    if (allActiveMatchups.length > 0) {
+      // Calculate total balance across all active matchups
+      // The fake opponent is always user2, so use user2Balance
+      // Use the actual balance from the matchup, which reflects current state after bets
+      let totalBalance = 0;
+      for (const m of allActiveMatchups) {
+        // user2Balance is the fake opponent's current balance in this matchup
+        // It starts at startingBalance and changes as bets are placed
+        const balance = parseFloat(m.user2Balance || m.startingBalance || '0');
+        totalBalance += balance;
+        console.log('[Validate Impersonation] Matchup', m.id, '- user2Balance:', balance, 'starting:', m.startingBalance, 'pot:', m.potSize);
       }
-    } else {
-      // No matchup - just set profile to active
+
+      // Update the profile to be active with aggregated balance
       await db
         .update(profiles)
         .set({
           status: 'active',
+          bankroll: totalBalance.toString(),
+          challenge: { type: 'battle', phase: 1 },
+          challengePhase: 1,
           updatedAt: new Date()
         })
         .where(eq(profiles.id, userId));
-      console.log('[Validate Impersonation] Profile set to active (no matchup)');
+
+      console.log('[Validate Impersonation] Profile synced - status: active, total bankroll:', totalBalance, 'from', allActiveMatchups.length, 'battles');
+    } else {
+      // No active matchups - set profile to active with zero balance
+      await db
+        .update(profiles)
+        .set({
+          status: 'active',
+          bankroll: '0',
+          updatedAt: new Date()
+        })
+        .where(eq(profiles.id, userId));
+      console.log('[Validate Impersonation] Profile set to active (no active matchups)');
     }
 
     console.log('[Validate Impersonation] Success - returning credentials for:', fakeOpponent.email);

@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { matchups, fakeOpponents, profiles, userBets, fakeOpponentBets, matchupQueue } from '../../../shared/schema';
-import { eq, and, or, inArray } from 'drizzle-orm';
+import { eq, and, or, inArray, sql } from 'drizzle-orm';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -18,16 +18,41 @@ export default async function handler(req, res) {
   const userId = session.user.id;
 
   try {
+    // Check if this user is a fake opponent (has a fake_opponents entry with this userId)
+    const [fakeOpponentEntry] = await db
+      .select()
+      .from(fakeOpponents)
+      .where(eq(fakeOpponents.userId, userId));
+
+    // Build the search conditions - include fake opponent ID if this is a fake account
+    const userIdConditions = [
+      eq(matchups.user1Id, userId),
+      eq(matchups.user2Id, userId)
+    ];
+    
+    // If this is a fake opponent, also search by their fake opponent ID
+    if (fakeOpponentEntry) {
+      userIdConditions.push(eq(matchups.user2Id, fakeOpponentEntry.id));
+      userIdConditions.push(eq(matchups.fakeOpponentId, fakeOpponentEntry.id));
+    }
+
+    // Prioritize active battles, then matched, then waiting
     const activeMatchups = await db
       .select()
       .from(matchups)
       .where(and(
-        or(
-          eq(matchups.user1Id, userId),
-          eq(matchups.user2Id, userId)
-        ),
+        or(...userIdConditions),
         inArray(matchups.status, ['waiting', 'matched', 'active'])
-      ));
+      ))
+      .orderBy(
+        // Custom order: active > matched > waiting
+        sql`CASE 
+          WHEN status = 'active' THEN 1 
+          WHEN status = 'matched' THEN 2 
+          WHEN status = 'waiting' THEN 3 
+          ELSE 4 
+        END`
+      );
 
     if (activeMatchups.length === 0) {
       const [queueEntry] = await db
@@ -53,12 +78,48 @@ export default async function handler(req, res) {
     }
 
     const matchup = activeMatchups[0];
-    const isUser1 = matchup.user1Id === userId;
+    
+    // Determine if current user is user1 or user2
+    // For fake opponents, they're user2 if their fakeOpponentId matches
+    const isFakeOpponentUser = fakeOpponentEntry && 
+      (matchup.fakeOpponentId === fakeOpponentEntry.id || matchup.user2Id === fakeOpponentEntry.id);
+    const isUser1 = !isFakeOpponentUser && matchup.user1Id === userId;
+    
     let opponent = null;
     let opponentBets = [];
-    const opponentId = isUser1 ? matchup.user2Id : matchup.user1Id;
+    let myBets = [];
 
-    if (matchup.isFakeOpponent && matchup.fakeOpponentId) {
+    if (isFakeOpponentUser) {
+      // Current user is the fake opponent - get user1 as the opponent
+      const opponentId = matchup.user1Id;
+      const [profile] = await db
+        .select()
+        .from(profiles)
+        .where(eq(profiles.id, opponentId));
+
+      opponent = {
+        id: opponentId,
+        username: profile?.username || 'Opponent',
+        avatar: profile?.avatar,
+        winRate: profile?.winRate,
+        isReal: true,
+      };
+
+      // Get opponent's bets (user1's bets)
+      const realOpponentBets = await db
+        .select()
+        .from(userBets)
+        .where(eq(userBets.userId, opponentId));
+      opponentBets = realOpponentBets;
+
+      // Get my bets (fake opponent's bets)
+      const fakeBets = await db
+        .select()
+        .from(fakeOpponentBets)
+        .where(eq(fakeOpponentBets.matchupId, matchup.id));
+      myBets = fakeBets;
+    } else if (matchup.isFakeOpponent && matchup.fakeOpponentId) {
+      // Current user is user1, opponent is fake
       const [fake] = await db
         .select()
         .from(fakeOpponents)
@@ -80,9 +141,16 @@ export default async function handler(req, res) {
         .select()
         .from(fakeOpponentBets)
         .where(eq(fakeOpponentBets.matchupId, matchup.id));
-      
       opponentBets = fakeBets;
-    } else if (opponentId) {
+
+      // Get my bets (user1's bets)
+      myBets = await db
+        .select()
+        .from(userBets)
+        .where(eq(userBets.userId, userId));
+    } else {
+      // Real user vs real user
+      const opponentId = isUser1 ? matchup.user2Id : matchup.user1Id;
       const [profile] = await db
         .select()
         .from(profiles)
@@ -99,14 +167,14 @@ export default async function handler(req, res) {
         .select()
         .from(userBets)
         .where(eq(userBets.userId, opponentId));
-      
       opponentBets = realOpponentBets;
-    }
 
-    const myBets = await db
-      .select()
-      .from(userBets)
-      .where(eq(userBets.userId, userId));
+      // Get my bets
+      myBets = await db
+        .select()
+        .from(userBets)
+        .where(eq(userBets.userId, userId));
+    }
 
     const hasPlacedBets = myBets.length > 0;
     const canSeeOpponentBets = hasPlacedBets;
