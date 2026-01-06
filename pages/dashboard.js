@@ -390,8 +390,11 @@ export default function Dashboard() {
         {hasActiveMatchup && matchup && opponent ? (
           <>
             <div 
-              className="cursor-pointer mb-4"
-              onClick={() => setShowBattlePopup(true)}
+              className="cursor-pointer mb-4 hover:opacity-90 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowBattlePopup(true);
+              }}
             >
               <MatchupBanner
                 matchup={matchup}
