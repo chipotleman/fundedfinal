@@ -126,6 +126,7 @@ export default function AdminLayout({ children, title = 'Admin Panel', requiredP
   const canAccessItem = (item) => {
     if (!admin) return false;
     if (admin.type === 'admin') return true;
+    if (admin.role === 'admin') return true;
     if (item.adminOnly) return false;
     if (item.permissions.length === 0) return true;
     const userPermissions = admin.permissions || [];
