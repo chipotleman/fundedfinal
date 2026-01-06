@@ -5,7 +5,7 @@ import BetSlip from '../components/BetSlip';
 import TapSurface from '../components/TapSurface';
 import LiveGameTimer from '../components/LiveGameTimer';
 import MatchupBanner from '../components/MatchupBanner';
-import OpponentBets from '../components/OpponentBets';
+import BattleDetailsPopup from '../components/BattleDetailsPopup';
 import { inferLeague } from '../lib/leagueInference';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -21,7 +21,7 @@ export default function Dashboard() {
   const { isDarkMode } = useTheme();
   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
   const { apiGames: contextApiGames, inplayEvents: contextInplayEvents, loading: gamesLoading, error: gamesError, lastUpdated } = useGames();
-  const { matchup, opponent, myBalance: matchupBalance, opponentBalance, opponentBets, canSeeOpponentBets, hasActiveMatchup, refresh: refreshMatchup } = useMatchup();
+  const { matchup, opponent, myBalance: matchupBalance, opponentBalance, myBets, opponentBets, canSeeOpponentBets, hasActiveMatchup, refresh: refreshMatchup } = useMatchup();
   const [selectedSport, setSelectedSport] = useState('All Sports');
   const [selectedTab, setSelectedTab] = useState('live');
   const [games, setGames] = useState([]);
@@ -30,6 +30,7 @@ export default function Dashboard() {
   const [bankroll, setBankroll] = useState(10000);
   const [pnl, setPnl] = useState(0);
   const [expandedGames, setExpandedGames] = useState({});
+  const [showBattlePopup, setShowBattlePopup] = useState(false);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -387,8 +388,11 @@ export default function Dashboard() {
 
       <div className="pt-4 sm:pt-6 lg:pt-8 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
         {hasActiveMatchup && matchup && opponent ? (
-          <div className="flex gap-3 mb-4">
-            <div className="flex-1">
+          <>
+            <div 
+              className="cursor-pointer mb-4"
+              onClick={() => setShowBattlePopup(true)}
+            >
               <MatchupBanner
                 matchup={matchup}
                 opponent={opponent}
@@ -397,17 +401,19 @@ export default function Dashboard() {
                 compact
               />
             </div>
-            <div className="flex-1">
-              <OpponentBets
-                matchupId={matchup.id}
-                canSeeBets={canSeeOpponentBets}
-                opponentBets={opponentBets}
-                opponentName={opponent.username}
-                onRefresh={refreshMatchup}
-                compact
-              />
-            </div>
-          </div>
+            <BattleDetailsPopup
+              isOpen={showBattlePopup}
+              onClose={() => setShowBattlePopup(false)}
+              matchup={matchup}
+              opponent={opponent}
+              myBalance={matchupBalance}
+              opponentBalance={opponentBalance}
+              myBets={myBets}
+              opponentBets={opponentBets}
+              canSeeOpponentBets={canSeeOpponentBets}
+              onRefresh={refreshMatchup}
+            />
+          </>
         ) : user && (
           <div className="mb-6">
             <div 
