@@ -5,7 +5,6 @@ import BetSlip from '../components/BetSlip';
 import TapSurface from '../components/TapSurface';
 import LiveGameTimer from '../components/LiveGameTimer';
 import MatchupBanner from '../components/MatchupBanner';
-import OpponentBets from '../components/OpponentBets';
 import { inferLeague } from '../lib/leagueInference';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -387,21 +386,15 @@ export default function Dashboard() {
 
       <div className="pt-4 sm:pt-6 lg:pt-8 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
         {hasActiveMatchup && matchup && opponent ? (
-          <>
-            <MatchupBanner
-              matchup={matchup}
-              opponent={opponent}
-              myBalance={matchupBalance}
-              opponentBalance={opponentBalance}
-            />
-            <OpponentBets
-              matchupId={matchup.id}
-              canSeeBets={canSeeOpponentBets}
-              opponentBets={opponentBets}
-              opponentName={opponent.username}
-              onRefresh={refreshMatchup}
-            />
-          </>
+          <MatchupBanner
+            matchup={matchup}
+            opponent={opponent}
+            myBalance={matchupBalance}
+            opponentBalance={opponentBalance}
+            opponentBets={opponentBets}
+            canSeeBets={canSeeOpponentBets}
+            onRefreshOpponentBets={refreshMatchup}
+          />
         ) : user && (
           <div className="mb-6">
             <div 
