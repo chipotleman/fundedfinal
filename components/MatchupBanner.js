@@ -283,16 +283,17 @@ export default function MatchupBanner({
       {/* Modal for detailed info */}
       {showModal && (
         <div 
-          className="fixed inset-0 z-50 flex items-start justify-center pt-16 md:pt-24 p-4"
+          className="fixed inset-0 z-50 overflow-y-auto"
           onClick={() => setShowModal(false)}
         >
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
-          <div 
-            className={`relative w-full max-w-2xl ${
-              isDarkMode ? 'bg-[#111] border-gray-800' : 'bg-white border-gray-200'
-            } border rounded-2xl overflow-hidden`}
-            onClick={e => e.stopPropagation()}
-          >
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
+          <div className="flex min-h-full items-start justify-center p-4 pt-4 md:pt-8">
+            <div 
+              className={`relative w-full max-w-2xl ${
+                isDarkMode ? 'bg-[#111] border-gray-800' : 'bg-white border-gray-200'
+              } border rounded-2xl overflow-hidden`}
+              onClick={e => e.stopPropagation()}
+            >
             <div className="flex items-center justify-between p-4 border-b border-gray-800">
               <h2 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Battle Details</h2>
               <button 
@@ -396,6 +397,7 @@ export default function MatchupBanner({
                   </div>
                 )}
               </div>
+            </div>
             </div>
           </div>
         </div>
