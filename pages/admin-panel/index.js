@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin-panel/AdminLayout';
-import Link from 'next/link';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -82,39 +81,6 @@ export default function AdminDashboard() {
     },
   ];
 
-  const quickActions = [
-    { href: '/admin-panel/users', label: 'Manage Users', icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-      </svg>
-    ), color: 'blue' },
-    { href: '/admin-panel/bets', label: 'View & Edit Bets', icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-      </svg>
-    ), color: 'purple' },
-    { href: '/admin-panel/withdrawals', label: 'Process Withdrawals', icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ), color: 'green' },
-    { href: '/admin-panel/games', label: 'Games & Odds', icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    ), color: 'orange' },
-    { href: '/admin-panel/matchups', label: 'Matchups & Fake Opponents', icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-      </svg>
-    ), color: 'pink' },
-    { href: '/admin-panel/battles', label: 'Battle Control (Play As)', icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
-    ), color: 'red' },
-  ];
 
   return (
     <AdminLayout title="Dashboard">
@@ -151,41 +117,7 @@ export default function AdminDashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="glass-card p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-white">Quick Actions</h2>
-            <div className="p-2 rounded-lg bg-purple-500/20">
-              <svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-            </div>
-          </div>
-          <div className="space-y-3">
-            {quickActions.map((action, idx) => (
-              <Link
-                key={idx}
-                href={action.href}
-                className="flex items-center gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all duration-200 group"
-              >
-                <div className={`p-2.5 rounded-lg ${
-                  action.color === 'blue' ? 'bg-blue-500/20 text-blue-400' :
-                  action.color === 'purple' ? 'bg-purple-500/20 text-purple-400' :
-                  action.color === 'green' ? 'bg-green-500/20 text-green-400' :
-                  'bg-orange-500/20 text-orange-400'
-                }`}>
-                  {action.icon}
-                </div>
-                <span className="text-white font-medium group-hover:text-purple-400 transition-colors">{action.label}</span>
-                <svg className="w-5 h-5 text-gray-500 ml-auto group-hover:text-purple-400 group-hover:translate-x-1 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        <div className="glass-card p-6">
+      <div className="glass-card p-6 max-w-md">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-white">System Status</h2>
             <div className="p-2 rounded-lg bg-green-500/20">
@@ -250,7 +182,6 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
-      </div>
     </AdminLayout>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import AdminLayout from '../../components/admin-panel/AdminLayout';
 
 const DURATION_OPTIONS = [
   { value: '30_min', label: '30 Minutes' },
@@ -39,20 +40,24 @@ export default function AdminMatchups() {
   });
 
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem('adminLoggedIn');
-    if (!isLoggedIn) {
-      router.push('/admin-panel/login');
-      return;
-    }
     fetchData();
-  }, [router]);
+  }, []);
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('admin_token');
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    };
+  };
 
   const fetchData = async () => {
     setLoading(true);
     try {
+      const headers = getAuthHeaders();
       const [matchupsRes, opponentsRes] = await Promise.all([
-        fetch('/api/admin-panel/matchups'),
-        fetch('/api/admin-panel/matchups/fake-opponents'),
+        fetch('/api/admin-panel/matchups', { headers }),
+        fetch('/api/admin-panel/matchups/fake-opponents', { headers }),
       ]);
 
       if (matchupsRes.ok) {
@@ -73,7 +78,7 @@ export default function AdminMatchups() {
 
   const fetchBetsForMatchup = async (matchupId) => {
     try {
-      const response = await fetch(`/api/admin-panel/matchups/fake-bets?matchupId=${matchupId}`);
+      const response = await fetch(`/api/admin-panel/matchups/fake-bets?matchupId=${matchupId}`, { headers: getAuthHeaders() });
       if (response.ok) {
         const data = await response.json();
         setFakeBets(data);
@@ -87,7 +92,7 @@ export default function AdminMatchups() {
     try {
       const response = await fetch('/api/admin-panel/matchups/fake-opponents', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify(newOpponent),
       });
 
@@ -112,7 +117,7 @@ export default function AdminMatchups() {
     try {
       await fetch('/api/admin-panel/matchups/fake-opponents', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ id: opponent.id, isActive: !opponent.isActive }),
       });
       fetchData();
@@ -125,7 +130,7 @@ export default function AdminMatchups() {
     try {
       const response = await fetch('/api/admin-panel/matchups/setup-credentials', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ fakeOpponentId: opponent.id }),
       });
 
@@ -148,7 +153,7 @@ export default function AdminMatchups() {
     try {
       await fetch('/api/admin-panel/matchups/fake-opponents', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ id }),
       });
       fetchData();
@@ -162,7 +167,7 @@ export default function AdminMatchups() {
     try {
       const response = await fetch('/api/admin-panel/matchups/fake-bets', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({
           matchupId: selectedMatchup.id,
           ...newBet,
@@ -188,7 +193,7 @@ export default function AdminMatchups() {
     try {
       await fetch('/api/admin-panel/matchups/fake-bets', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ id: betId, status }),
       });
       if (selectedMatchup) {
@@ -203,7 +208,7 @@ export default function AdminMatchups() {
     try {
       await fetch('/api/admin-panel/matchups/fake-bets', {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getAuthHeaders(),
         body: JSON.stringify({ id }),
       });
       if (selectedMatchup) {
@@ -234,26 +239,55 @@ export default function AdminMatchups() {
     }
   };
 
+  const [impersonating, setImpersonating] = useState(null);
+
+  const handlePlayAs = async (matchup) => {
+    const fakeOpponent = fakeOpponents.find(fo => fo.id === matchup.fakeOpponentId);
+    if (!fakeOpponent?.hasCredentials) {
+      alert('This fake opponent does not have login credentials. Please set up credentials first.');
+      return;
+    }
+    setImpersonating(matchup.id);
+    try {
+      const response = await fetch('/api/admin-panel/battles/impersonate', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+          fakeOpponentId: matchup.fakeOpponentId,
+          matchupId: matchup.id,
+        }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        alert(error.error || 'Failed to impersonate');
+        return;
+      }
+      const { loginUrl } = await response.json();
+      window.open(loginUrl, '_blank', 'width=1200,height=800');
+    } catch (error) {
+      console.error('Impersonate error:', error);
+      alert('Failed to start impersonation');
+    } finally {
+      setImpersonating(null);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-white">Loading...</div>
-      </div>
+      <AdminLayout title="Matchups & Battles" requiredPermission="matchups">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-white">Loading...</div>
+        </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">Matchups & Battles</h1>
-          <button
-            onClick={() => router.push('/admin-panel')}
-            className="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600 transition"
-          >
-            Back to Dashboard
-          </button>
-        </div>
+    <AdminLayout title="Matchups & Battles" requiredPermission="matchups">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-white">Matchups & Battles</h1>
+        <p className="text-gray-400 mt-1">Manage battles and fake opponents</p>
+      </div>
 
         <div className="flex gap-4 mb-6">
           <button
@@ -307,14 +341,23 @@ export default function AdminMatchups() {
                       <td className="p-3">${parseFloat(matchup.user2Balance || 0).toLocaleString()}</td>
                       <td className="p-3 text-green-400">${parseFloat(matchup.winnerPayout || 0).toLocaleString()}</td>
                       <td className="p-3">{formatDate(matchup.endsAt)}</td>
-                      <td className="p-3">
+                      <td className="p-3 space-x-2">
                         {matchup.isFakeOpponent && matchup.status === 'active' && (
-                          <button
-                            onClick={() => openBetModal(matchup)}
-                            className="px-3 py-1 bg-purple-600 rounded text-sm hover:bg-purple-500"
-                          >
-                            Manage Bets
-                          </button>
+                          <>
+                            <button
+                              onClick={() => openBetModal(matchup)}
+                              className="px-3 py-1 bg-purple-600 rounded text-sm hover:bg-purple-500"
+                            >
+                              Manage Bets
+                            </button>
+                            <button
+                              onClick={() => handlePlayAs(matchup)}
+                              disabled={impersonating === matchup.id}
+                              className="px-3 py-1 bg-green-600 rounded text-sm hover:bg-green-500 disabled:opacity-50"
+                            >
+                              {impersonating === matchup.id ? 'Opening...' : 'Play As'}
+                            </button>
+                          </>
                         )}
                       </td>
                     </tr>
@@ -616,7 +659,6 @@ export default function AdminMatchups() {
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </AdminLayout>
   );
 }

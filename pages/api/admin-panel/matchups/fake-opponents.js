@@ -2,6 +2,7 @@ import { db } from '../../../../lib/db';
 import { fakeOpponents, users, profiles } from '../../../../shared/schema';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
+import { requireAdmin } from '../../../../lib/adminAuth';
 
 function generatePassword() {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -12,7 +13,7 @@ function generatePassword() {
   return password;
 }
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method === 'GET') {
     try {
       const opponents = await db.select().from(fakeOpponents).orderBy(fakeOpponents.createdAt);
@@ -178,3 +179,5 @@ export default async function handler(req, res) {
 
   return res.status(405).json({ error: 'Method not allowed' });
 }
+
+export default requireAdmin(handler);
