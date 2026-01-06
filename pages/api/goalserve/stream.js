@@ -60,25 +60,15 @@ async function handleWebSocketStream(req, res, sendEvent, sport, eventId) {
     if (!connected) {
       const updatedStatus = goalserveWs.getStatus();
       
-      if (updatedStatus.connectionStatus === 'ws_access_not_enabled' || 
-          updatedStatus.connectionStatus === 'rate_limited') {
-        console.log('[Stream WS] WebSocket unavailable, falling back to inplay');
-        sendEvent({
-          type: 'fallback',
-          message: 'WebSocket unavailable, using inplay feeds',
-          reason: updatedStatus.connectionStatus,
-          timestamp: Date.now()
-        });
-        
-        return handleInplayStream(req, res, sendEvent, sport, eventId);
-      }
-      
+      console.log('[Stream WS] WebSocket connection failed, falling back to inplay. Status:', updatedStatus.connectionStatus);
       sendEvent({
-        type: 'connection_failed',
-        message: updatedStatus.lastError || 'Failed to connect to WebSocket',
-        status: updatedStatus,
+        type: 'fallback',
+        message: 'WebSocket unavailable, using inplay feeds',
+        reason: updatedStatus.connectionStatus || 'connection_failed',
         timestamp: Date.now()
       });
+      
+      return handleInplayStream(req, res, sendEvent, sport, eventId);
     }
   }
 
