@@ -89,27 +89,27 @@ export default function MatchupBanner({
           <span className="text-3xl font-bold text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">VS</span>
         </div>
 
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start justify-between mb-3">
           <div className="text-left flex-1">
             <div className="flex items-center gap-1 mb-1">
-              <span className="text-green-400 text-lg">💵</span>
+              <span className="text-green-400 text-sm">💵</span>
               <span className="text-[10px] uppercase tracking-wide text-green-400 font-medium">Your Balance</span>
             </div>
-            <p className={`text-xl font-bold ${isWinning ? 'text-green-400' : isLosing ? 'text-green-400' : 'text-green-400'}`}>
+            <p className="text-2xl font-bold text-green-400">
               ${myBalanceNum.toLocaleString()}
             </p>
           </div>
 
-          <div className="flex flex-col items-center flex-shrink-0 px-2">
+          <div className="flex flex-col items-center flex-shrink-0 px-4">
             <div className="relative">
               {opponent.avatar ? (
                 <img 
                   src={opponent.avatar} 
                   alt={opponent.username}
-                  className="w-12 h-12 rounded-full border-2 border-blue-400"
+                  className="w-10 h-10 rounded-full border-2 border-blue-400"
                 />
               ) : (
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-lg font-bold text-white border-2 border-blue-400">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-base font-bold text-white border-2 border-blue-400">
                   {opponent.username?.charAt(0)?.toUpperCase() || 'O'}
                 </div>
               )}
@@ -118,28 +118,25 @@ export default function MatchupBanner({
             <span className={`text-[10px] px-2 py-0.5 rounded-full ${isDarkMode ? 'bg-gray-700/50 text-gray-300' : 'bg-gray-200 text-gray-600'}`}>
               {opponent.winRate ? `${parseFloat(opponent.winRate).toFixed(0)}% win rate` : 'New player'}
             </span>
+            <div className="flex items-center gap-1 mt-2">
+              <span className="text-lg">🏆</span>
+              <p className="text-xl font-bold text-yellow-400">${winnerPayout.toLocaleString()}</p>
+            </div>
+            <p className={`text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Winner takes all</p>
           </div>
 
           <div className="text-right flex-1">
             <div className="flex items-center justify-end gap-1 mb-1">
-              <span className="text-red-400 text-lg">👥</span>
+              <span className="text-red-400 text-sm">👥</span>
               <span className="text-[10px] uppercase tracking-wide text-red-400 font-medium">Opponent</span>
             </div>
-            <p className="text-xl font-bold text-red-400">
+            <p className="text-2xl font-bold text-red-400">
               ${oppBalanceNum.toLocaleString()}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-1">
-            <span className="text-lg">🏆</span>
-            <div>
-              <p className="text-lg font-bold text-yellow-400">${winnerPayout.toLocaleString()}</p>
-              <p className={`text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Winner takes all</p>
-            </div>
-          </div>
-
+        <div className="flex items-center justify-end mb-3">
           <button className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium text-sm ${
             hasEnded 
               ? 'bg-red-500 text-white' 
