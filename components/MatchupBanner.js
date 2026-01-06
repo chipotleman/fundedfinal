@@ -180,11 +180,11 @@ export default function MatchupBanner({
 
                 {/* Center - Prize Pool */}
                 <div className="flex flex-col items-center flex-1">
-                  <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full mb-2 ${
+                  <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full mb-2 ${
                     isDarkMode ? 'bg-white/10' : 'bg-gray-100'
                   }`}>
-                    <span className="text-xs">🎮</span>
-                    <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    <span className="text-[10px]">🎮</span>
+                    <span className={`text-[9px] font-bold uppercase tracking-wide whitespace-nowrap ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                       {durationLabel}
                     </span>
                   </div>
