@@ -120,9 +120,12 @@ export default function BattleDetailsPopup({
         onClick={onClose}
       />
       
-      <div className={`relative w-full max-w-lg mx-4 rounded-2xl overflow-hidden ${
-        isDarkMode ? 'bg-[#0a0a0a]' : 'bg-white'
-      }`}>
+      <div 
+        className={`relative w-full max-w-lg mx-4 rounded-2xl overflow-hidden ${
+          isDarkMode ? 'bg-[#0a0a0a]' : 'bg-white'
+        }`}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-blue-600/20 p-6 text-center relative">
           <button
             onClick={onClose}
