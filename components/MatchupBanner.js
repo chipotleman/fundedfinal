@@ -173,7 +173,7 @@ export default function MatchupBanner({
                   <p className="text-lg md:text-2xl font-extrabold text-green-400 mb-1">
                     ${myBalanceNum.toLocaleString()}
                   </p>
-                  <p className={`text-[8px] md:text-[9px] uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  <p className={`text-[11px] md:text-xs uppercase tracking-wide ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                     Piks: <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{piksRemaining}</span> · <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatTimer(timeRemaining)}</span>
                   </p>
                 </div>
@@ -226,7 +226,7 @@ export default function MatchupBanner({
                   <p className="text-lg md:text-2xl font-extrabold text-red-400 mb-1">
                     ${oppBalanceNum.toLocaleString()}
                   </p>
-                  <p className={`text-[8px] md:text-[9px] uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  <p className={`text-[11px] md:text-xs uppercase tracking-wide ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                     Piks: <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{oppPiksRemaining}</span> · <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatTimer(timeRemaining)}</span>
                   </p>
                 </div>
