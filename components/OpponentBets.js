@@ -17,14 +17,12 @@ export default function OpponentBets({
         isDarkMode 
           ? 'bg-[#0a0a0a] border-gray-800/50' 
           : 'bg-white border-gray-300 shadow-lg'
-      } border rounded-xl p-4 mb-4`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🔒</span>
-            <div>
-              <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponentName}'s Bets</h3>
-              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Place a bet to see your opponent's picks</p>
-            </div>
+      } border rounded-xl px-4 py-3 mb-3`}>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">🔒</span>
+            <span className={`font-semibold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponentName}'s Bets</span>
+            <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>• Place a bet to unlock</span>
           </div>
         </div>
       </div>
@@ -40,32 +38,28 @@ export default function OpponentBets({
       isDarkMode 
         ? 'bg-[#0a0a0a] border-gray-800/50' 
         : 'bg-white border-gray-300 shadow-lg'
-    } border rounded-xl p-4 mb-4`}>
+    } border rounded-xl px-4 py-3 mb-3`}>
       <div 
-        className="flex items-center justify-between cursor-pointer"
+        className="flex items-center justify-between gap-4 cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="flex items-center gap-3">
-          <span className="text-2xl">👀</span>
-          <div>
-            <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponentName}'s Bets</h3>
-            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              {opponentBets.length} pick{opponentBets.length !== 1 ? 's' : ''} • ${totalStaked.toLocaleString()} staked
-            </p>
-          </div>
+        <div className="flex items-center gap-2">
+          <span className="text-lg">👀</span>
+          <span className={`font-semibold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponentName}'s Bets</span>
+          <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            • {opponentBets.length} pick{opponentBets.length !== 1 ? 's' : ''} • ${totalStaked.toLocaleString()} staked
+          </span>
         </div>
         
-        <div className="flex items-center gap-4">
-          <div className="flex gap-2">
-            <span className="px-2 py-1 bg-yellow-500/20 text-yellow-500 rounded text-xs">
-              {pendingBets.length} pending
-            </span>
-            <span className={`px-2 py-1 rounded text-xs ${
-              isDarkMode ? 'bg-[#1a1a1a] text-gray-300' : 'bg-gray-200 text-gray-700'
-            }`}>
-              {settledBets.length} settled
-            </span>
-          </div>
+        <div className="flex items-center gap-3">
+          <span className="px-2 py-1 bg-yellow-500/20 text-yellow-500 rounded text-xs">
+            {pendingBets.length} pending
+          </span>
+          <span className={`px-2 py-1 rounded text-xs ${
+            isDarkMode ? 'bg-[#1a1a1a] text-gray-300' : 'bg-gray-200 text-gray-700'
+          }`}>
+            {settledBets.length} settled
+          </span>
           <span className={`transition-transform ${isExpanded ? 'rotate-180' : ''} ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             ▼
           </span>

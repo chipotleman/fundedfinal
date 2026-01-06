@@ -65,93 +65,81 @@ export default function MatchupBanner({
       isDarkMode 
         ? 'bg-[#0a0a0a] border-gray-800/50' 
         : 'bg-white border-gray-300 shadow-lg'
-    } border rounded-xl p-4 mb-6`}>
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-4">
-          <div className="text-2xl font-bold text-blue-500">VS</div>
+    } border rounded-xl px-4 py-3 mb-3`}>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="text-lg font-bold text-blue-500">VS</div>
           
-          <div className="flex items-center gap-3">
-            {opponent.avatar ? (
-              <img 
-                src={opponent.avatar} 
-                alt={opponent.username}
-                className="w-12 h-12 rounded-full border-2 border-blue-500"
-              />
-            ) : (
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xl font-bold text-white">
-                {opponent.username?.charAt(0)?.toUpperCase() || 'O'}
-              </div>
-            )}
-            
-            <div>
-              <p className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponent.username}</p>
-              {opponent.winRate && (
-                <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {parseFloat(opponent.winRate).toFixed(0)}% win rate
-                </p>
-              )}
+          {opponent.avatar ? (
+            <img 
+              src={opponent.avatar} 
+              alt={opponent.username}
+              className="w-8 h-8 rounded-full border-2 border-blue-500"
+            />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm font-bold text-white">
+              {opponent.username?.charAt(0)?.toUpperCase() || 'O'}
             </div>
+          )}
+          
+          <div>
+            <p className={`font-semibold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponent.username}</p>
+            <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              {opponent.winRate ? `${parseFloat(opponent.winRate).toFixed(0)}% win rate` : 'Opponent'}
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-6 text-center">
+        <div className="flex items-center gap-4 text-center flex-shrink-0">
           <div>
-            <p className={`text-xs uppercase mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Your Balance</p>
-            <p className={`text-xl font-bold ${isWinning ? 'text-green-500' : isLosing ? 'text-red-500' : isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            <p className={`text-[10px] uppercase ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>You</p>
+            <p className={`text-base font-bold ${isWinning ? 'text-green-500' : isLosing ? 'text-red-500' : isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               ${myBalanceNum.toLocaleString()}
             </p>
           </div>
           
-          <div className={isDarkMode ? 'text-gray-600' : 'text-gray-400'}>vs</div>
+          <div className={`text-xs ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`}>vs</div>
           
           <div>
-            <p className={`text-xs uppercase mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Opponent</p>
-            <p className={`text-xl font-bold ${isLosing ? 'text-green-500' : isWinning ? 'text-red-500' : isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            <p className={`text-[10px] uppercase ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Opp</p>
+            <p className={`text-base font-bold ${isLosing ? 'text-green-500' : isWinning ? 'text-red-500' : isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               ${oppBalanceNum.toLocaleString()}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 flex-shrink-0">
           <div className="text-center">
-            <p className={`text-xs uppercase mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Prize Pool</p>
-            <p className="text-yellow-500 font-bold text-lg">
+            <p className={`text-[10px] uppercase ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Prize</p>
+            <p className="text-yellow-500 font-bold text-base">
               ${winnerPayout.toLocaleString()}
             </p>
-            <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Winner takes all</p>
           </div>
 
-          <div className="text-center min-w-[100px]">
-            <p className={`text-xs uppercase mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Time Left</p>
-            <p className={`text-xl font-bold ${timeRemaining && timeRemaining < 3600000 ? 'text-red-500 animate-pulse' : isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          <div className="text-center">
+            <p className={`text-[10px] uppercase ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Time</p>
+            <p className={`text-base font-bold ${timeRemaining && timeRemaining < 3600000 ? 'text-red-500 animate-pulse' : isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               {formatTimeRemaining(timeRemaining)}
             </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className={`w-2 h-2 rounded-full ${
+              isWinning ? 'bg-green-500' : isLosing ? 'bg-red-500' : 'bg-yellow-500'
+            }`} />
+            <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              {isTied ? 'Tied' : isWinning ? 'Winning' : 'Behind'}
+            </span>
           </div>
 
           {onViewDetails && (
             <button
               onClick={onViewDetails}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition text-sm font-medium"
+              className="px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition text-xs font-medium"
             >
-              View Battle
+              View
             </button>
           )}
-        </div>
-      </div>
-
-      <div className={`mt-3 pt-3 border-t ${isDarkMode ? 'border-gray-800/50' : 'border-gray-300'}`}>
-        <div className="flex items-center justify-between text-sm">
-          <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${
-              isWinning ? 'bg-green-500' : isLosing ? 'bg-red-500' : 'bg-yellow-500'
-            }`} />
-            <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
-              {isTied ? 'Tied' : isWinning ? 'You\'re winning!' : 'You\'re behind'}
-            </span>
-          </div>
-          <span className={isDarkMode ? 'text-gray-500' : 'text-gray-500'}>
-            Challenge: {matchup.challengeType?.charAt(0).toUpperCase() + matchup.challengeType?.slice(1)} (${parseFloat(matchup.startingBalance).toLocaleString()})
-          </span>
         </div>
       </div>
     </div>
