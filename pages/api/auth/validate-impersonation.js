@@ -1,6 +1,6 @@
 import { db } from '../../../lib/db';
-import { fakeOpponents, users } from '../../../shared/schema';
-import { eq } from 'drizzle-orm';
+import { fakeOpponents, users, profiles, matchups } from '../../../shared/schema';
+import { eq, and, or } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 
@@ -86,6 +86,50 @@ export default async function handler(req, res) {
       .update(fakeOpponents)
       .set({ hashedPassword: hashedTempPassword, updatedAt: new Date() })
       .where(eq(fakeOpponents.id, fakeOpponentId));
+
+    // Get the active matchup for this fake opponent to sync profile data
+    const matchupId = decoded.matchupId;
+    if (matchupId) {
+      console.log('[Validate Impersonation] Syncing profile data from matchup:', matchupId);
+      const [matchup] = await db
+        .select()
+        .from(matchups)
+        .where(eq(matchups.id, matchupId));
+
+      if (matchup) {
+        // Determine the fake opponent's bankroll from the matchup
+        const challengeBankrolls = {
+          starter: 5000,
+          pro: 10000,
+          elite: 25000
+        };
+        const bankroll = challengeBankrolls[matchup.challengeType] || 5000;
+
+        // Update the profile to be active with correct challenge data
+        await db
+          .update(profiles)
+          .set({
+            status: 'active',
+            bankroll: bankroll.toString(),
+            challenge: { type: matchup.challengeType, phase: 1 },
+            challengePhase: 1,
+            updatedAt: new Date()
+          })
+          .where(eq(profiles.id, userId));
+
+        console.log('[Validate Impersonation] Profile synced - status: active, bankroll:', bankroll);
+      }
+    } else {
+      // No matchup - just set profile to active
+      await db
+        .update(profiles)
+        .set({
+          status: 'active',
+          updatedAt: new Date()
+        })
+        .where(eq(profiles.id, userId));
+      console.log('[Validate Impersonation] Profile set to active (no matchup)');
+    }
 
     console.log('[Validate Impersonation] Success - returning credentials for:', fakeOpponent.email);
     return res.status(200).json({

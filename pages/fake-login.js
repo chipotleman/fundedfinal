@@ -45,8 +45,9 @@ export default function FakeLogin() {
 
         setStatus('Redirecting to dashboard...');
         
+        // Use full page reload to ensure session is properly established
         setTimeout(() => {
-          router.push('/dashboard');
+          window.location.href = '/dashboard';
         }, 500);
       } catch (err) {
         console.error('Fake login error:', err);
