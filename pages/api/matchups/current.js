@@ -90,6 +90,7 @@ export default async function handler(req, res) {
     let myBets = [];
 
     if (isFakeOpponentUser) {
+      console.log('[Matchups Current] User is fake opponent, fakeOpponentId:', fakeOpponentEntry.id);
       // Current user is the fake opponent - get user1 as the opponent
       const opponentId = matchup.user1Id;
       const [profile] = await db
@@ -111,6 +112,7 @@ export default async function handler(req, res) {
         .from(userBets)
         .where(eq(userBets.userId, opponentId));
       opponentBets = realOpponentBets;
+      console.log('[Matchups Current] Opponent bets count:', realOpponentBets.length);
 
       // Get my bets (fake opponent's bets)
       const fakeBets = await db
@@ -118,6 +120,7 @@ export default async function handler(req, res) {
         .from(fakeOpponentBets)
         .where(eq(fakeOpponentBets.matchupId, matchup.id));
       myBets = fakeBets;
+      console.log('[Matchups Current] My fake bets count:', fakeBets.length, 'for matchup:', matchup.id);
     } else if (matchup.isFakeOpponent && matchup.fakeOpponentId) {
       // Current user is user1, opponent is fake
       const [fake] = await db
@@ -178,6 +181,7 @@ export default async function handler(req, res) {
 
     const hasPlacedBets = myBets.length > 0;
     const canSeeOpponentBets = hasPlacedBets;
+    console.log('[Matchups Current] hasPlacedBets:', hasPlacedBets, 'canSeeOpponentBets:', canSeeOpponentBets, 'myBets count:', myBets.length);
 
     const myBalance = isUser1 
       ? parseFloat(matchup.user1Balance || matchup.startingBalance)

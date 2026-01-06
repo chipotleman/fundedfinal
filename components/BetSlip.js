@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useGames } from '../contexts/GamesContext';
+import { useMatchup } from '../contexts/MatchupContext';
 import ShareableBetSlip from './ShareableBetSlip';
 import PiksBetCard from './PiksBetCard';
 import CoinRain from './CoinRain';
@@ -17,6 +18,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
   const { isDarkMode } = useTheme();
   const { betSlip: bets, removeBet, updateStake, clearBetSlip } = useBetSlip();
   const { apiGames, inplayEvents } = useGames();
+  const { refresh: refreshMatchup } = useMatchup();
   const [isPlacing, setIsPlacing] = useState(false);
   const [betType, setBetType] = useState('single');
   const [parlayStake, setParlayStake] = useState(0);
@@ -224,6 +226,11 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
           // Emit global event so TopNavbar can update
           window.dispatchEvent(new CustomEvent('bankrollUpdated', { detail: { bankroll: bankrollValue } }));
         }
+      }
+
+      // Refresh matchup data to unlock opponent bets view
+      if (refreshMatchup) {
+        refreshMatchup();
       }
 
       if (data.bets && data.bets.length > 0) {
