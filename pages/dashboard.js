@@ -388,35 +388,21 @@ export default function Dashboard() {
 
       <div className="pt-4 sm:pt-6 lg:pt-8 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
         {hasActiveMatchup && matchup && opponent ? (
-          <>
-            <div 
-              className="cursor-pointer mb-4 hover:opacity-90 transition-opacity"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowBattlePopup(true);
-              }}
-            >
-              <MatchupBanner
-                matchup={matchup}
-                opponent={opponent}
-                myBalance={matchupBalance}
-                opponentBalance={opponentBalance}
-                compact
-              />
-            </div>
-            <BattleDetailsPopup
-              isOpen={showBattlePopup}
-              onClose={() => setShowBattlePopup(false)}
+          <div 
+            className="cursor-pointer mb-4 hover:opacity-90 transition-opacity"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowBattlePopup(true);
+            }}
+          >
+            <MatchupBanner
               matchup={matchup}
               opponent={opponent}
               myBalance={matchupBalance}
               opponentBalance={opponentBalance}
-              myBets={myBets}
-              opponentBets={opponentBets}
-              canSeeOpponentBets={canSeeOpponentBets}
-              onRefresh={refreshMatchup}
+              compact
             />
-          </>
+          </div>
         ) : user && (
           <div className="mb-6">
             <div 
@@ -886,6 +872,19 @@ export default function Dashboard() {
         isOpen={showBetSlip}
         onClose={() => setShowBetSlip(false)}
         onBetPlaced={handleBetPlaced}
+      />
+
+      <BattleDetailsPopup
+        isOpen={showBattlePopup}
+        onClose={() => setShowBattlePopup(false)}
+        matchup={matchup}
+        opponent={opponent}
+        myBalance={matchupBalance}
+        opponentBalance={opponentBalance}
+        myBets={myBets}
+        opponentBets={opponentBets}
+        canSeeOpponentBets={canSeeOpponentBets}
+        onRefresh={refreshMatchup}
       />
 
       <style jsx>{`
