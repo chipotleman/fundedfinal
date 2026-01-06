@@ -264,13 +264,15 @@ export default function MatchupBanner({
         </div>
 
         {/* Small indicator dots */}
-        <div className="flex justify-center gap-1 mt-2">
+        <div className="flex justify-center gap-1.5 mt-2">
           {[...Array(totalSlides)].map((_, i) => (
-            <button
+            <span
               key={i}
               onClick={() => scrollToSlide(i)}
+              role="button"
               aria-label={`Go to slide ${i + 1}`}
-              className={`w-[5px] h-[5px] rounded-full transition-all duration-200 ${
+              style={{ width: '6px', height: '6px', minWidth: '6px', minHeight: '6px' }}
+              className={`block rounded-full cursor-pointer transition-all duration-200 ${
                 currentSlide === i 
                   ? (isDarkMode ? 'bg-white' : 'bg-gray-900')
                   : (isDarkMode ? 'bg-white/30' : 'bg-gray-300')
