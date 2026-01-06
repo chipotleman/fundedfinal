@@ -85,22 +85,21 @@ export default function MatchupBanner({
         className="p-4 cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="text-center mb-3">
-          <span className="text-3xl font-bold text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">VS</span>
-        </div>
-
-        <div className="flex items-start justify-between mb-3">
-          <div className="text-left flex-1">
-            <div className="flex items-center gap-1 mb-1">
-              <span className="text-green-400 text-sm">💵</span>
-              <span className="text-[10px] uppercase tracking-wide text-green-400 font-medium">Your Balance</span>
+        <div className="flex items-start justify-between mb-2">
+          {/* Left side - User */}
+          <div className="flex flex-col items-center flex-1">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-base font-bold text-white border-2 border-green-400 mb-1">
+              Y
             </div>
+            <span className="text-[10px] uppercase tracking-wide text-green-400 font-medium mb-0.5">Your Balance</span>
             <p className="text-2xl font-bold text-green-400">
               ${myBalanceNum.toLocaleString()}
             </p>
           </div>
 
-          <div className="flex flex-col items-center flex-shrink-0 px-4">
+          {/* Center - VS, Opponent Avatar, Prize */}
+          <div className="flex flex-col items-center flex-shrink-0 px-2">
+            <span className="text-2xl font-bold text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] mb-1">VS</span>
             <div className="relative">
               {opponent.avatar ? (
                 <img 
@@ -114,22 +113,32 @@ export default function MatchupBanner({
                 </div>
               )}
             </div>
-            <p className={`font-semibold text-sm mt-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponent.username}</p>
-            <span className={`text-[10px] px-2 py-0.5 rounded-full ${isDarkMode ? 'bg-gray-700/50 text-gray-300' : 'bg-gray-200 text-gray-600'}`}>
+            <p className={`font-semibold text-xs mt-0.5 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponent.username}</p>
+            <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${isDarkMode ? 'bg-gray-700/50 text-gray-300' : 'bg-gray-200 text-gray-600'}`}>
               {opponent.winRate ? `${parseFloat(opponent.winRate).toFixed(0)}% win rate` : 'New player'}
             </span>
-            <div className="flex items-center gap-1 mt-2">
-              <span className="text-lg">🏆</span>
-              <p className="text-xl font-bold text-yellow-400">${winnerPayout.toLocaleString()}</p>
+            <div className="flex items-center gap-1 mt-1">
+              <span className="text-base">🏆</span>
+              <p className="text-lg font-bold text-yellow-400">${winnerPayout.toLocaleString()}</p>
             </div>
-            <p className={`text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Winner takes all</p>
           </div>
 
-          <div className="text-right flex-1">
-            <div className="flex items-center justify-end gap-1 mb-1">
-              <span className="text-red-400 text-sm">👥</span>
-              <span className="text-[10px] uppercase tracking-wide text-red-400 font-medium">Opponent</span>
+          {/* Right side - Opponent */}
+          <div className="flex flex-col items-center flex-1">
+            <div className="relative">
+              {opponent.avatar ? (
+                <img 
+                  src={opponent.avatar} 
+                  alt={opponent.username}
+                  className="w-10 h-10 rounded-full border-2 border-red-400 mb-1"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center text-base font-bold text-white border-2 border-red-400 mb-1">
+                  {opponent.username?.charAt(0)?.toUpperCase() || 'O'}
+                </div>
+              )}
             </div>
+            <span className="text-[10px] uppercase tracking-wide text-red-400 font-medium mb-0.5">Opponent</span>
             <p className="text-2xl font-bold text-red-400">
               ${oppBalanceNum.toLocaleString()}
             </p>
