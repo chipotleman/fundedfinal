@@ -101,7 +101,7 @@ export default function AdminLayout({ children, title = 'Admin Panel', requiredP
       const data = await res.json();
       setAdmin(data.admin);
 
-      if (requiredPermission && data.admin.type === 'staff') {
+      if (requiredPermission && data.admin.type === 'staff' && data.admin.role !== 'admin') {
         const permissions = data.admin.permissions || [];
         const hasPermission = permissions.includes('all') || 
           permissions.includes(requiredPermission) ||
