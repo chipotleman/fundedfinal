@@ -233,7 +233,22 @@ export default function Dashboard() {
       .replace(/university$/, '');
   };
   
-  // Get upcoming games from REST API (exclude any that are live in inplay)
+  // Get live games from REST API as a fallback when inplay SSE is unavailable
+  const liveGamesFromRestApi = useMemo(() => {
+    return apiGames
+      .filter(game => game.isLive && !game.isCompleted)
+      .map(game => ({ ...game, league: game.league || game.sportName, dataSource: 'Goalserve REST' }));
+  }, [apiGames]);
+  
+  // Use inplay SSE if available, otherwise fall back to REST API live games
+  const effectiveLiveGames = useMemo(() => {
+    if (liveGamesFromInplay.length > 0) {
+      return liveGamesFromInplay;
+    }
+    return liveGamesFromRestApi;
+  }, [liveGamesFromInplay, liveGamesFromRestApi]);
+  
+  // Get upcoming games from REST API (exclude any that are live in inplay or REST)
   const upcomingGamesFromApi = useMemo(() => {
     return apiGames
       .map(game => ({ ...game, league: game.league || game.sportName }))
@@ -253,15 +268,15 @@ export default function Dashboard() {
   
   // Combined for backward compatibility with existing code
   const gamesWithLiveData = useMemo(() => {
-    return [...liveGamesFromInplay, ...upcomingGamesFromApi];
-  }, [liveGamesFromInplay, upcomingGamesFromApi]);
+    return [...effectiveLiveGames, ...upcomingGamesFromApi];
+  }, [effectiveLiveGames, upcomingGamesFromApi]);
 
-  // Simplified categorization - no merge logic needed
+  // Categorization with fallback for live games
   const categorizedGames = useMemo(() => ({
-    liveGames: liveGamesFromInplay,
+    liveGames: effectiveLiveGames,
     upcomingGames: upcomingGamesFromApi,
     recentlyCompletedGames: []
-  }), [liveGamesFromInplay, upcomingGamesFromApi]);
+  }), [effectiveLiveGames, upcomingGamesFromApi]);
 
   useEffect(() => {
     setAllGames(gamesWithLiveData);
