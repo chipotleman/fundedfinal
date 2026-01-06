@@ -94,14 +94,14 @@ export default function MatchupBanner({
   return (
     <div className={`${
       isDarkMode 
-        ? 'bg-gradient-to-br from-[#1e1e3f] via-[#1a1a35] to-[#15152a] border-gray-600/30' 
-        : 'bg-white border-gray-300 shadow-lg'
+        ? 'bg-white/5 backdrop-blur-xl border-white/10' 
+        : 'bg-white/80 backdrop-blur-xl border-gray-200'
     } border rounded-3xl mb-6 overflow-hidden`}>
       
       {/* Header - Battle Type - positioned at top edge */}
       <div className="flex justify-center -mt-0">
         <div className={`flex items-center gap-2 px-5 py-2 rounded-b-xl ${
-          isDarkMode ? 'bg-[#2a2a4a] border-x border-b border-gray-600/30' : 'bg-gray-100 border border-gray-200'
+          isDarkMode ? 'bg-white/10 backdrop-blur-md border-x border-b border-white/10' : 'bg-gray-100 border border-gray-200'
         }`}>
           <span className="text-lg">🎮</span>
           <span className={`text-sm font-bold uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
@@ -119,7 +119,7 @@ export default function MatchupBanner({
           
           {/* Left side - User */}
           <div className={`flex flex-col items-center flex-1 py-3 px-2 rounded-xl ${
-            isDarkMode ? 'bg-gradient-to-b from-blue-900/20 to-purple-900/20' : 'bg-blue-50'
+            isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'
           }`}>
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-lg text-white shadow-lg shadow-green-500/30 mb-2 border-2 border-green-300/50">
               🐉
@@ -160,7 +160,7 @@ export default function MatchupBanner({
 
           {/* Right side - Opponent */}
           <div className={`flex flex-col items-center flex-1 py-3 px-2 rounded-xl ${
-            isDarkMode ? 'bg-gradient-to-b from-rose-900/20 to-orange-900/20' : 'bg-red-50'
+            isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'
           }`}>
             {opponent.avatar ? (
               <img 
