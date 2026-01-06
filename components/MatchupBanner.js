@@ -99,10 +99,11 @@ export default function MatchupBanner({
 
           {/* Center - VS and Prize */}
           <div className="flex flex-col items-center flex-shrink-0 px-2">
-            <span className="text-2xl font-bold text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">VS</span>
-            <div className="flex items-center gap-1 mt-1">
-              <span className="text-base">🏆</span>
-              <p className="text-lg font-bold text-yellow-400">${winnerPayout.toLocaleString()}</p>
+            <span className="text-xl font-bold text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">VS</span>
+            <span className="text-[9px] uppercase tracking-wide text-yellow-400/80 font-medium mt-1">Prize Pool</span>
+            <div className="flex items-center gap-1">
+              <span className="text-xl">🏆</span>
+              <p className="text-3xl font-bold text-yellow-400 drop-shadow-[0_0_8px_rgba(234,179,8,0.4)]">${winnerPayout.toLocaleString()}</p>
             </div>
           </div>
 
