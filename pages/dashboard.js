@@ -5,7 +5,7 @@ import BetSlip from '../components/BetSlip';
 import TapSurface from '../components/TapSurface';
 import LiveGameTimer from '../components/LiveGameTimer';
 import MatchupBanner from '../components/MatchupBanner';
-import BattleDetailsPopup from '../components/BattleDetailsPopup';
+import OpponentBets from '../components/OpponentBets';
 import { inferLeague } from '../lib/leagueInference';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -21,7 +21,7 @@ export default function Dashboard() {
   const { isDarkMode } = useTheme();
   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
   const { apiGames: contextApiGames, inplayEvents: contextInplayEvents, loading: gamesLoading, error: gamesError, lastUpdated } = useGames();
-  const { matchup, opponent, myBalance: matchupBalance, opponentBalance, myBets, opponentBets, canSeeOpponentBets, hasActiveMatchup, refresh: refreshMatchup } = useMatchup();
+  const { matchup, opponent, myBalance: matchupBalance, opponentBalance, opponentBets, canSeeOpponentBets, hasActiveMatchup, refresh: refreshMatchup } = useMatchup();
   const [selectedSport, setSelectedSport] = useState('All Sports');
   const [selectedTab, setSelectedTab] = useState('live');
   const [games, setGames] = useState([]);
@@ -30,7 +30,6 @@ export default function Dashboard() {
   const [bankroll, setBankroll] = useState(10000);
   const [pnl, setPnl] = useState(0);
   const [expandedGames, setExpandedGames] = useState({});
-  const [showBattlePopup, setShowBattlePopup] = useState(false);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -133,12 +132,18 @@ export default function Dashboard() {
   // Upcoming tab uses ONLY REST API data (scheduled games)
   
   // Convert inplay events to game format for Live tab
-  // Show all live games from SSE - odds may come from different fields
+  // FILTER: Only include games that have odds (otherwise show locked/unusable cards)
   const liveGamesFromInplay = useMemo(() => {
     return Object.values(mergedInplayEvents || {})
     .filter(event => {
-      // Accept any event that has basic game info (teams or id)
-      return event && (event.id || event.homeTeam || event.awayTeam);
+      // Only show games that have at least some odds data
+      const hasOdds = event.odds && (
+        event.odds.moneyline?.home || 
+        event.odds.moneyline?.away || 
+        event.odds.spread?.home || 
+        event.odds.total?.line
+      );
+      return hasOdds;
     })
     .map(event => {
       const homeTeam = event.homeTeam || event.stats?.[0]?.home || 'Home';
@@ -382,21 +387,21 @@ export default function Dashboard() {
 
       <div className="pt-4 sm:pt-6 lg:pt-8 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
         {hasActiveMatchup && matchup && opponent ? (
-          <div 
-            className="cursor-pointer mb-4 hover:opacity-90 transition-opacity"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowBattlePopup(true);
-            }}
-          >
+          <>
             <MatchupBanner
               matchup={matchup}
               opponent={opponent}
               myBalance={matchupBalance}
               opponentBalance={opponentBalance}
-              compact
             />
-          </div>
+            <OpponentBets
+              matchupId={matchup.id}
+              canSeeBets={canSeeOpponentBets}
+              opponentBets={opponentBets}
+              opponentName={opponent.username}
+              onRefresh={refreshMatchup}
+            />
+          </>
         ) : user && (
           <div className="mb-6">
             <div 
@@ -866,19 +871,6 @@ export default function Dashboard() {
         isOpen={showBetSlip}
         onClose={() => setShowBetSlip(false)}
         onBetPlaced={handleBetPlaced}
-      />
-
-      <BattleDetailsPopup
-        isOpen={showBattlePopup}
-        onClose={() => setShowBattlePopup(false)}
-        matchup={matchup}
-        opponent={opponent}
-        myBalance={matchupBalance}
-        opponentBalance={opponentBalance}
-        myBets={myBets}
-        opponentBets={opponentBets}
-        canSeeOpponentBets={canSeeOpponentBets}
-        onRefresh={refreshMatchup}
       />
 
       <style jsx>{`
