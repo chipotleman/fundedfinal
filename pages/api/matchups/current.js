@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { matchups, fakeOpponents, profiles, userBets, fakeOpponentBets, matchupQueue } from '../../../shared/schema';
-import { eq, and, or, inArray, sql } from 'drizzle-orm';
+import { eq, and, or, inArray, sql, gte, lte } from 'drizzle-orm';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -106,13 +106,19 @@ export default async function handler(req, res) {
         isReal: true,
       };
 
-      // Get opponent's bets (user1's bets)
+      // Get opponent's bets (user1's bets) - only from during this battle
+      const battleStart = matchup.startsAt || matchup.createdAt;
+      const battleEnd = matchup.endsAt || new Date();
       const realOpponentBets = await db
         .select()
         .from(userBets)
-        .where(eq(userBets.userId, opponentId));
+        .where(and(
+          eq(userBets.userId, opponentId),
+          gte(userBets.placedAt, battleStart),
+          lte(userBets.placedAt, battleEnd)
+        ));
       opponentBets = realOpponentBets;
-      console.log('[Matchups Current] Opponent bets count:', realOpponentBets.length);
+      console.log('[Matchups Current] Opponent bets count:', realOpponentBets.length, 'from battle:', battleStart, 'to', battleEnd);
 
       // Get my bets (fake opponent's bets)
       const fakeBets = await db
@@ -146,11 +152,17 @@ export default async function handler(req, res) {
         .where(eq(fakeOpponentBets.matchupId, matchup.id));
       opponentBets = fakeBets;
 
-      // Get my bets (user1's bets)
+      // Get my bets (user1's bets) - only from during this battle
+      const battleStart = matchup.startsAt || matchup.createdAt;
+      const battleEnd = matchup.endsAt || new Date();
       myBets = await db
         .select()
         .from(userBets)
-        .where(eq(userBets.userId, userId));
+        .where(and(
+          eq(userBets.userId, userId),
+          gte(userBets.placedAt, battleStart),
+          lte(userBets.placedAt, battleEnd)
+        ));
     } else {
       // Real user vs real user
       const opponentId = isUser1 ? matchup.user2Id : matchup.user1Id;
@@ -166,17 +178,29 @@ export default async function handler(req, res) {
         isReal: true,
       };
 
+      // Only get bets from during this battle
+      const battleStart = matchup.startsAt || matchup.createdAt;
+      const battleEnd = matchup.endsAt || new Date();
+
       const realOpponentBets = await db
         .select()
         .from(userBets)
-        .where(eq(userBets.userId, opponentId));
+        .where(and(
+          eq(userBets.userId, opponentId),
+          gte(userBets.placedAt, battleStart),
+          lte(userBets.placedAt, battleEnd)
+        ));
       opponentBets = realOpponentBets;
 
-      // Get my bets
+      // Get my bets - only from during this battle
       myBets = await db
         .select()
         .from(userBets)
-        .where(eq(userBets.userId, userId));
+        .where(and(
+          eq(userBets.userId, userId),
+          gte(userBets.placedAt, battleStart),
+          lte(userBets.placedAt, battleEnd)
+        ));
     }
 
     const hasPlacedBets = myBets.length > 0;
