@@ -387,21 +387,27 @@ export default function Dashboard() {
 
       <div className="pt-4 sm:pt-6 lg:pt-8 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
         {hasActiveMatchup && matchup && opponent ? (
-          <>
-            <MatchupBanner
-              matchup={matchup}
-              opponent={opponent}
-              myBalance={matchupBalance}
-              opponentBalance={opponentBalance}
-            />
-            <OpponentBets
-              matchupId={matchup.id}
-              canSeeBets={canSeeOpponentBets}
-              opponentBets={opponentBets}
-              opponentName={opponent.username}
-              onRefresh={refreshMatchup}
-            />
-          </>
+          <div className="flex gap-3 mb-4">
+            <div className="flex-1">
+              <MatchupBanner
+                matchup={matchup}
+                opponent={opponent}
+                myBalance={matchupBalance}
+                opponentBalance={opponentBalance}
+                compact
+              />
+            </div>
+            <div className="flex-1">
+              <OpponentBets
+                matchupId={matchup.id}
+                canSeeBets={canSeeOpponentBets}
+                opponentBets={opponentBets}
+                opponentName={opponent.username}
+                onRefresh={refreshMatchup}
+                compact
+              />
+            </div>
+          </div>
         ) : user && (
           <div className="mb-6">
             <div 

@@ -6,7 +6,8 @@ export default function OpponentBets({
   canSeeBets, 
   opponentBets = [],
   opponentName = 'Opponent',
-  onRefresh 
+  onRefresh,
+  compact = false 
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const { isDarkMode } = useTheme();
@@ -17,7 +18,7 @@ export default function OpponentBets({
         isDarkMode 
           ? 'bg-[#0a0a0a] border-gray-800/50' 
           : 'bg-white border-gray-300 shadow-lg'
-      } border rounded-xl px-4 py-3 mb-3`}>
+      } border rounded-xl px-4 py-3 ${compact ? '' : 'mb-3'} h-full`}>
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <span className="text-lg">🔒</span>
@@ -38,7 +39,7 @@ export default function OpponentBets({
       isDarkMode 
         ? 'bg-[#0a0a0a] border-gray-800/50' 
         : 'bg-white border-gray-300 shadow-lg'
-    } border rounded-xl px-4 py-3 mb-3`}>
+    } border rounded-xl px-4 py-3 ${compact ? '' : 'mb-3'} h-full`}>
       <div 
         className="flex items-center justify-between gap-4 cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}

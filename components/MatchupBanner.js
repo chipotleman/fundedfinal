@@ -29,7 +29,8 @@ export default function MatchupBanner({
   opponent, 
   myBalance, 
   opponentBalance,
-  onViewDetails 
+  onViewDetails,
+  compact = false 
 }) {
   const [timeRemaining, setTimeRemaining] = useState(null);
 
@@ -65,7 +66,7 @@ export default function MatchupBanner({
       isDarkMode 
         ? 'bg-[#0a0a0a] border-gray-800/50' 
         : 'bg-white border-gray-300 shadow-lg'
-    } border rounded-xl px-4 py-3 mb-3`}>
+    } border rounded-xl px-4 py-3 ${compact ? '' : 'mb-3'} h-full`}>
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3 flex-shrink-0">
           <div className="text-lg font-bold text-blue-500">VS</div>
@@ -110,7 +111,7 @@ export default function MatchupBanner({
 
         <div className="flex items-center gap-4 flex-shrink-0">
           <div className="text-center">
-            <p className={`text-[10px] uppercase ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Prize</p>
+            <p className={`text-[10px] uppercase ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Piks Pool</p>
             <p className="text-yellow-500 font-bold text-base">
               ${winnerPayout.toLocaleString()}
             </p>
