@@ -121,6 +121,28 @@ export default function AdminMatchups() {
     }
   };
 
+  const setupCredentials = async (opponent) => {
+    try {
+      const response = await fetch('/api/admin-panel/matchups/setup-credentials', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fakeOpponentId: opponent.id }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(`Credentials created!\n\nEmail: ${data.email}\nPassword: ${data.plainPassword}\n\nSave this password - it will only be shown once!`);
+        fetchData();
+      } else {
+        const error = await response.json();
+        alert(error.error || 'Failed to set up credentials');
+      }
+    } catch (error) {
+      console.error('Setup credentials error:', error);
+      alert('Failed to set up credentials');
+    }
+  };
+
   const deleteOpponent = async (id) => {
     if (!confirm('Delete this fake opponent?')) return;
     try {
@@ -343,10 +365,25 @@ export default function AdminMatchups() {
                     <span>Win Rate: {opponent.winRate}%</span>
                     <span>Battles: {opponent.totalBattles}</span>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="mb-2">
+                    {opponent.hasCredentials ? (
+                      <span className="text-xs text-green-400">Login credentials set up</span>
+                    ) : (
+                      <span className="text-xs text-orange-400">No login credentials</span>
+                    )}
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    {!opponent.hasCredentials && (
+                      <button
+                        onClick={() => setupCredentials(opponent)}
+                        className="px-3 py-1 bg-green-600 rounded text-sm hover:bg-green-500"
+                      >
+                        Setup Credentials
+                      </button>
+                    )}
                     <button
                       onClick={() => toggleOpponentActive(opponent)}
-                      className="flex-1 px-3 py-1 bg-gray-700 rounded text-sm hover:bg-gray-600"
+                      className="px-3 py-1 bg-gray-700 rounded text-sm hover:bg-gray-600"
                     >
                       {opponent.isActive ? 'Deactivate' : 'Activate'}
                     </button>

@@ -2,12 +2,18 @@ import { db } from '../../../../lib/db';
 import { fakeOpponents, matchups } from '../../../../shared/schema';
 import { eq, and, or } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
+import { requireAdmin } from '../../../../lib/adminAuth';
 
-const IMPERSONATE_SECRET = process.env.NEXTAUTH_SECRET || 'impersonate-secret-key';
+const IMPERSONATE_SECRET = process.env.NEXTAUTH_SECRET;
 
-export default async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  if (!IMPERSONATE_SECRET) {
+    console.error('NEXTAUTH_SECRET not configured');
+    return res.status(500).json({ error: 'Server configuration error' });
   }
 
   try {
@@ -49,6 +55,7 @@ export default async function handler(req, res) {
       .update(fakeOpponents)
       .set({
         lastImpersonatedAt: new Date(),
+        lastImpersonatedBy: req.admin?.id || null,
         updatedAt: new Date(),
       })
       .where(eq(fakeOpponents.id, fakeOpponentId));
@@ -72,3 +79,5 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Failed to generate impersonation token' });
   }
 }
+
+export default requireAdmin(handler);
