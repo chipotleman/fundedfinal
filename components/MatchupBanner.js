@@ -81,17 +81,17 @@ export default function MatchupBanner({
         : 'bg-white border-gray-300 shadow-lg'
     } border rounded-xl mb-6 overflow-hidden`}>
       <div 
-        className="p-5 cursor-pointer"
+        className="p-3 cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="text-center mb-4">
-          <span className="text-3xl font-bold text-blue-500">VS</span>
+        <div className="text-center mb-2">
+          <span className="text-xl font-bold text-blue-500">VS</span>
         </div>
 
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-2">
           <div className="text-left">
-            <p className={`text-xs uppercase tracking-wide mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Your Balance</p>
-            <p className={`text-2xl font-bold ${isWinning ? 'text-green-500' : isLosing ? 'text-red-500' : isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            <p className={`text-[10px] uppercase tracking-wide ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Your Balance</p>
+            <p className={`text-lg font-bold ${isWinning ? 'text-green-500' : isLosing ? 'text-red-500' : isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               ${myBalanceNum.toLocaleString()}
             </p>
           </div>
@@ -101,66 +101,66 @@ export default function MatchupBanner({
               <img 
                 src={opponent.avatar} 
                 alt={opponent.username}
-                className="w-14 h-14 rounded-full border-2 border-blue-500 mb-1"
+                className="w-10 h-10 rounded-full border-2 border-blue-500"
               />
             ) : (
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xl font-bold text-white mb-1">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-sm font-bold text-white">
                 {opponent.username?.charAt(0)?.toUpperCase() || 'O'}
               </div>
             )}
-            <p className={`font-semibold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponent.username}</p>
+            <p className={`font-semibold text-xs mt-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponent.username}</p>
             {opponent.winRate && (
-              <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              <p className={`text-[10px] ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                 {parseFloat(opponent.winRate).toFixed(0)}% win rate
               </p>
             )}
           </div>
 
           <div className="text-right">
-            <p className={`text-xs uppercase tracking-wide mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Opponent</p>
-            <p className={`text-2xl font-bold ${isLosing ? 'text-green-500' : isWinning ? 'text-red-500' : isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+            <p className={`text-[10px] uppercase tracking-wide ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Opponent</p>
+            <p className={`text-lg font-bold ${isLosing ? 'text-green-500' : isWinning ? 'text-red-500' : isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               ${oppBalanceNum.toLocaleString()}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-2">
           <div className="text-left">
-            <p className="text-xl font-bold text-yellow-500">${winnerPayout.toLocaleString()}</p>
-            <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Winner takes all</p>
+            <p className="text-base font-bold text-yellow-500">${winnerPayout.toLocaleString()}</p>
+            <p className={`text-[10px] ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Winner takes all</p>
           </div>
 
-          <div className="flex items-center gap-2 text-right">
-            <p className={`text-xl font-bold ${timeRemaining && timeRemaining <= 0 ? 'text-red-500' : timeRemaining && timeRemaining < 3600000 ? 'text-red-500' : isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+          <div className="flex items-center gap-1 text-right">
+            <p className={`text-base font-bold ${timeRemaining && timeRemaining <= 0 ? 'text-red-500' : timeRemaining && timeRemaining < 3600000 ? 'text-red-500' : isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               {formatTimeRemaining(timeRemaining)}
             </p>
-            <span className={`transition-transform duration-200 text-lg ${isExpanded ? 'rotate-180' : ''} ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            <span className={`transition-transform duration-200 text-sm ${isExpanded ? 'rotate-180' : ''} ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
               &#x25BC;
             </span>
           </div>
         </div>
 
-        <div className={`pt-3 border-t ${isDarkMode ? 'border-gray-800/50' : 'border-gray-200'}`}>
+        <div className={`pt-2 border-t ${isDarkMode ? 'border-gray-800/50' : 'border-gray-200'}`}>
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {isWinning ? (
-                <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
               ) : isLosing ? (
-                <span className="w-5 h-5 flex items-center justify-center rounded-full bg-red-500">
-                  <span className="text-white text-xs font-bold">!</span>
+                <span className="w-4 h-4 flex items-center justify-center rounded-full bg-red-500">
+                  <span className="text-white text-[10px] font-bold">!</span>
                 </span>
               ) : (
-                <span className="w-5 h-5 flex items-center justify-center rounded-full bg-yellow-500">
-                  <span className="text-black text-xs font-bold">=</span>
+                <span className="w-4 h-4 flex items-center justify-center rounded-full bg-yellow-500">
+                  <span className="text-black text-[10px] font-bold">=</span>
                 </span>
               )}
-              <span className={`font-medium ${isWinning ? 'text-green-500' : isLosing ? 'text-red-500' : 'text-yellow-500'}`}>
+              <span className={`text-xs font-medium ${isWinning ? 'text-green-500' : isLosing ? 'text-red-500' : 'text-yellow-500'}`}>
                 {isTied ? 'Tied!' : isWinning ? 'You\'re winning!' : 'You\'re behind'}
               </span>
             </div>
-            <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
               {challengeLabel} Battle
             </span>
           </div>
