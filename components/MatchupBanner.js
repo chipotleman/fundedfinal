@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTheme } from '../contexts/ThemeContext';
 
 function formatTimeRemaining(ms) {
   if (!ms || ms <= 0) return 'Ended';
@@ -46,6 +47,8 @@ export default function MatchupBanner({
     return () => clearInterval(interval);
   }, [matchup?.endsAt]);
 
+  const { isDarkMode } = useTheme();
+
   if (!matchup || !opponent) return null;
 
   const myBalanceNum = parseFloat(myBalance || 0);
@@ -58,10 +61,14 @@ export default function MatchupBanner({
   const winnerPayout = parseFloat(matchup.winnerPayout || 0);
 
   return (
-    <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border border-gray-700 rounded-xl p-4 mb-6">
+    <div className={`${
+      isDarkMode 
+        ? 'bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border-gray-700' 
+        : 'bg-gradient-to-r from-gray-100 via-white to-gray-100 border-gray-300 shadow-lg'
+    } border rounded-xl p-4 mb-6`}>
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
-          <div className="text-2xl font-bold text-blue-400">VS</div>
+          <div className="text-2xl font-bold text-blue-500">VS</div>
           
           <div className="flex items-center gap-3">
             {opponent.avatar ? (
@@ -77,9 +84,9 @@ export default function MatchupBanner({
             )}
             
             <div>
-              <p className="text-white font-semibold">{opponent.username}</p>
+              <p className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponent.username}</p>
               {opponent.winRate && (
-                <p className="text-gray-400 text-xs">
+                <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                   {parseFloat(opponent.winRate).toFixed(0)}% win rate
                 </p>
               )}
@@ -89,17 +96,17 @@ export default function MatchupBanner({
 
         <div className="flex items-center gap-6 text-center">
           <div>
-            <p className="text-gray-400 text-xs uppercase mb-1">Your Balance</p>
-            <p className={`text-xl font-bold ${isWinning ? 'text-green-500' : isLosing ? 'text-red-500' : 'text-white'}`}>
+            <p className={`text-xs uppercase mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Your Balance</p>
+            <p className={`text-xl font-bold ${isWinning ? 'text-green-500' : isLosing ? 'text-red-500' : isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               ${myBalanceNum.toLocaleString()}
             </p>
           </div>
           
-          <div className="text-gray-600">vs</div>
+          <div className={isDarkMode ? 'text-gray-600' : 'text-gray-400'}>vs</div>
           
           <div>
-            <p className="text-gray-400 text-xs uppercase mb-1">Opponent</p>
-            <p className={`text-xl font-bold ${isLosing ? 'text-green-500' : isWinning ? 'text-red-500' : 'text-white'}`}>
+            <p className={`text-xs uppercase mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Opponent</p>
+            <p className={`text-xl font-bold ${isLosing ? 'text-green-500' : isWinning ? 'text-red-500' : isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               ${oppBalanceNum.toLocaleString()}
             </p>
           </div>
@@ -107,16 +114,16 @@ export default function MatchupBanner({
 
         <div className="flex items-center gap-6">
           <div className="text-center">
-            <p className="text-gray-400 text-xs uppercase mb-1">Prize Pool</p>
+            <p className={`text-xs uppercase mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Prize Pool</p>
             <p className="text-yellow-500 font-bold text-lg">
               ${winnerPayout.toLocaleString()}
             </p>
-            <p className="text-gray-500 text-xs">Winner takes all</p>
+            <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Winner takes all</p>
           </div>
 
           <div className="text-center min-w-[100px]">
-            <p className="text-gray-400 text-xs uppercase mb-1">Time Left</p>
-            <p className={`text-xl font-bold ${timeRemaining && timeRemaining < 3600000 ? 'text-red-500 animate-pulse' : 'text-white'}`}>
+            <p className={`text-xs uppercase mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Time Left</p>
+            <p className={`text-xl font-bold ${timeRemaining && timeRemaining < 3600000 ? 'text-red-500 animate-pulse' : isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               {formatTimeRemaining(timeRemaining)}
             </p>
           </div>
@@ -132,17 +139,17 @@ export default function MatchupBanner({
         </div>
       </div>
 
-      <div className="mt-3 pt-3 border-t border-gray-700">
+      <div className={`mt-3 pt-3 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-300'}`}>
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-2">
             <span className={`w-2 h-2 rounded-full ${
               isWinning ? 'bg-green-500' : isLosing ? 'bg-red-500' : 'bg-yellow-500'
             }`} />
-            <span className="text-gray-400">
+            <span className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>
               {isTied ? 'Tied' : isWinning ? 'You\'re winning!' : 'You\'re behind'}
             </span>
           </div>
-          <span className="text-gray-500">
+          <span className={isDarkMode ? 'text-gray-500' : 'text-gray-500'}>
             Challenge: {matchup.challengeType?.charAt(0).toUpperCase() + matchup.challengeType?.slice(1)} (${parseFloat(matchup.startingBalance).toLocaleString()})
           </span>
         </div>
