@@ -133,18 +133,12 @@ export default function Dashboard() {
   // Upcoming tab uses ONLY REST API data (scheduled games)
   
   // Convert inplay events to game format for Live tab
-  // FILTER: Only include games that have odds (otherwise show locked/unusable cards)
+  // Show all live games from SSE - odds may come from different fields
   const liveGamesFromInplay = useMemo(() => {
     return Object.values(mergedInplayEvents || {})
     .filter(event => {
-      // Only show games that have at least some odds data
-      const hasOdds = event.odds && (
-        event.odds.moneyline?.home || 
-        event.odds.moneyline?.away || 
-        event.odds.spread?.home || 
-        event.odds.total?.line
-      );
-      return hasOdds;
+      // Accept any event that has basic game info (teams or id)
+      return event && (event.id || event.homeTeam || event.awayTeam);
     })
     .map(event => {
       const homeTeam = event.homeTeam || event.stats?.[0]?.home || 'Home';
@@ -233,22 +227,7 @@ export default function Dashboard() {
       .replace(/university$/, '');
   };
   
-  // Get live games from REST API as a fallback when inplay SSE is unavailable
-  const liveGamesFromRestApi = useMemo(() => {
-    return apiGames
-      .filter(game => game.isLive && !game.isCompleted)
-      .map(game => ({ ...game, league: game.league || game.sportName, dataSource: 'Goalserve REST' }));
-  }, [apiGames]);
-  
-  // Use inplay SSE if available, otherwise fall back to REST API live games
-  const effectiveLiveGames = useMemo(() => {
-    if (liveGamesFromInplay.length > 0) {
-      return liveGamesFromInplay;
-    }
-    return liveGamesFromRestApi;
-  }, [liveGamesFromInplay, liveGamesFromRestApi]);
-  
-  // Get upcoming games from REST API (exclude any that are live in inplay or REST)
+  // Get upcoming games from REST API (exclude any that are live in inplay)
   const upcomingGamesFromApi = useMemo(() => {
     return apiGames
       .map(game => ({ ...game, league: game.league || game.sportName }))
@@ -268,15 +247,15 @@ export default function Dashboard() {
   
   // Combined for backward compatibility with existing code
   const gamesWithLiveData = useMemo(() => {
-    return [...effectiveLiveGames, ...upcomingGamesFromApi];
-  }, [effectiveLiveGames, upcomingGamesFromApi]);
+    return [...liveGamesFromInplay, ...upcomingGamesFromApi];
+  }, [liveGamesFromInplay, upcomingGamesFromApi]);
 
-  // Categorization with fallback for live games
+  // Simplified categorization - no merge logic needed
   const categorizedGames = useMemo(() => ({
-    liveGames: effectiveLiveGames,
+    liveGames: liveGamesFromInplay,
     upcomingGames: upcomingGamesFromApi,
     recentlyCompletedGames: []
-  }), [effectiveLiveGames, upcomingGamesFromApi]);
+  }), [liveGamesFromInplay, upcomingGamesFromApi]);
 
   useEffect(() => {
     setAllGames(gamesWithLiveData);
