@@ -132,83 +132,76 @@ export default function MatchupBanner({
             
             {/* Container 1: Battle Status */}
             <div 
-              className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${containerClass}`}
+              className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${containerClass} p-4`}
               onClick={() => setShowModal(true)}
             >
-              <div className="flex justify-center">
-                <div className={`flex items-center gap-2 px-4 py-1.5 rounded-b-lg ${
-                  isDarkMode ? 'bg-white/10 backdrop-blur-md border-x border-b border-white/10' : 'bg-gray-100 border border-gray-200'
-                }`}>
-                  <span className="text-sm">🎮</span>
-                  <span className={`text-xs font-bold uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    {durationLabel}
-                  </span>
+              <div className="flex items-center justify-between">
+                
+                {/* Left - User */}
+                <div className="flex flex-col items-center flex-1">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-green-500/30 mb-1.5 border-2 border-green-300/50">
+                    🐉
+                  </div>
+                  <span className={`text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Your Balance</span>
+                  <p className="text-lg md:text-2xl font-extrabold text-green-400 mb-1">
+                    ${myBalanceNum.toLocaleString()}
+                  </p>
+                  <p className={`text-[8px] md:text-[9px] uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                    Piks: <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{piksRemaining}</span> · <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatTimer(timeRemaining)}</span>
+                  </p>
                 </div>
-              </div>
 
-              <div className="p-3">
-                <div className="flex items-stretch gap-2">
+                {/* Center - Prize Pool */}
+                <div className="flex flex-col items-center flex-1">
+                  <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full mb-2 ${
+                    isDarkMode ? 'bg-white/10' : 'bg-gray-100'
+                  }`}>
+                    <span className="text-xs">🎮</span>
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                      {durationLabel}
+                    </span>
+                  </div>
+                  <span className="text-2xl md:text-3xl mb-0.5">🏆</span>
+                  <p className="text-2xl md:text-3xl font-black text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)] mb-1.5">
+                    ${winnerPayout.toLocaleString()}
+                  </p>
                   
-                  <div className={`flex flex-col items-center flex-1 py-2 md:py-3 px-2 rounded-xl ${
-                    isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'
+                  <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full shadow-lg text-[10px] md:text-xs ${
+                    isWinning 
+                      ? 'bg-green-500 text-white shadow-green-500/30' 
+                      : isLosing 
+                        ? 'bg-red-500 text-white shadow-red-500/30' 
+                        : 'bg-yellow-500 text-black shadow-yellow-500/30'
                   }`}>
-                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-green-500/30 mb-1.5 border-2 border-green-300/50">
-                      🐉
-                    </div>
-                    <span className={`text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Your Balance</span>
-                    <p className="text-lg md:text-2xl font-extrabold text-green-400 mb-1">
-                      ${myBalanceNum.toLocaleString()}
-                    </p>
-                    <p className={`text-[8px] md:text-[9px] uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                      Piks: <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{piksRemaining}</span> · <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatTimer(timeRemaining)}</span>
-                    </p>
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className="font-bold whitespace-nowrap">
+                      {isTied ? 'Tied!' : isWinning ? "You're winning!" : "You're behind"}
+                    </span>
                   </div>
+                </div>
 
-                  <div className="flex flex-col items-center justify-center flex-1 px-2 py-2 md:py-3">
-                    <span className="text-2xl md:text-3xl mb-0.5">🏆</span>
-                    <span className={`text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Prize Pool</span>
-                    <p className="text-2xl md:text-3xl font-black text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)] mb-1.5">
-                      ${winnerPayout.toLocaleString()}
-                    </p>
-                    
-                    <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full shadow-lg text-[10px] md:text-xs ${
-                      isWinning 
-                        ? 'bg-green-500 text-white shadow-green-500/30' 
-                        : isLosing 
-                          ? 'bg-red-500 text-white shadow-red-500/30' 
-                          : 'bg-yellow-500 text-black shadow-yellow-500/30'
-                    }`}>
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <span className="font-bold whitespace-nowrap">
-                        {isTied ? 'Tied!' : isWinning ? "You're winning!" : "You're behind"}
-                      </span>
+                {/* Right - Opponent */}
+                <div className="flex flex-col items-center flex-1">
+                  {opponent.avatar ? (
+                    <img 
+                      src={opponent.avatar} 
+                      alt={opponent.username}
+                      className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-red-300/50 shadow-lg shadow-red-500/30 mb-1.5"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-red-500/30 mb-1.5 border-2 border-red-300/50">
+                      🦅
                     </div>
-                  </div>
-
-                  <div className={`flex flex-col items-center flex-1 py-2 md:py-3 px-2 rounded-xl ${
-                    isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'
-                  }`}>
-                    {opponent.avatar ? (
-                      <img 
-                        src={opponent.avatar} 
-                        alt={opponent.username}
-                        className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-red-300/50 shadow-lg shadow-red-500/30 mb-1.5"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-red-500/30 mb-1.5 border-2 border-red-300/50">
-                        🦅
-                      </div>
-                    )}
-                    <span className={`text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Opponent</span>
-                    <p className="text-lg md:text-2xl font-extrabold text-red-400 mb-1">
-                      ${oppBalanceNum.toLocaleString()}
-                    </p>
-                    <p className={`text-[8px] md:text-[9px] uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                      Piks: <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{oppPiksRemaining}</span> · <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatTimer(timeRemaining)}</span>
-                    </p>
-                  </div>
+                  )}
+                  <span className={`text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Opponent</span>
+                  <p className="text-lg md:text-2xl font-extrabold text-red-400 mb-1">
+                    ${oppBalanceNum.toLocaleString()}
+                  </p>
+                  <p className={`text-[8px] md:text-[9px] uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                    Piks: <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{oppPiksRemaining}</span> · <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatTimer(timeRemaining)}</span>
+                  </p>
                 </div>
               </div>
             </div>
