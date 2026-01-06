@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 
 function formatTimeRemaining(ms) {
@@ -26,6 +26,30 @@ export default function BattleDetailsPopup({
   const [activeTab, setActiveTab] = useState('your');
   const [timeRemaining, setTimeRemaining] = useState(null);
   const { isDarkMode } = useTheme();
+  
+  const cachedDataRef = useRef({
+    matchup: null,
+    opponent: null,
+    myBalance: 0,
+    opponentBalance: 0,
+    myBets: [],
+    opponentBets: [],
+    canSeeOpponentBets: false
+  });
+
+  useEffect(() => {
+    if (isOpen && matchup && opponent) {
+      cachedDataRef.current = {
+        matchup,
+        opponent,
+        myBalance,
+        opponentBalance,
+        myBets,
+        opponentBets,
+        canSeeOpponentBets
+      };
+    }
+  }, [isOpen, matchup, opponent, myBalance, opponentBalance, myBets, opponentBets, canSeeOpponentBets]);
 
   useEffect(() => {
     if (isOpen) {
@@ -50,29 +74,42 @@ export default function BattleDetailsPopup({
     };
   }, [isOpen]);
 
+  const displayData = (matchup && opponent) ? {
+    matchup,
+    opponent,
+    myBalance,
+    opponentBalance,
+    myBets,
+    opponentBets,
+    canSeeOpponentBets
+  } : cachedDataRef.current;
+
   useEffect(() => {
-    if (!matchup?.endsAt) return;
+    if (!displayData.matchup?.endsAt) return;
     const updateTime = () => {
-      const remaining = new Date(matchup.endsAt).getTime() - Date.now();
+      const remaining = new Date(displayData.matchup.endsAt).getTime() - Date.now();
       setTimeRemaining(remaining);
     };
     updateTime();
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
-  }, [matchup?.endsAt]);
+  }, [displayData.matchup?.endsAt]);
 
-  if (!isOpen || !matchup || !opponent) return null;
+  if (!isOpen) return null;
+  
+  if (!displayData.matchup || !displayData.opponent) return null;
 
-  const myBalanceNum = parseFloat(myBalance || 0);
-  const oppBalanceNum = parseFloat(opponentBalance || 0);
+  const myBalanceNum = parseFloat(displayData.myBalance || 0);
+  const oppBalanceNum = parseFloat(displayData.opponentBalance || 0);
   const isWinning = myBalanceNum > oppBalanceNum;
   const isLosing = myBalanceNum < oppBalanceNum;
-  const winnerPayout = parseFloat(matchup.winnerPayout || 0);
+  const winnerPayout = parseFloat(displayData.matchup.winnerPayout || 0);
 
-  const myPendingBets = myBets.filter(b => b.status === 'pending');
-  const mySettledBets = myBets.filter(b => b.status !== 'pending');
-  const oppPendingBets = opponentBets.filter(b => b.status === 'pending');
-  const oppSettledBets = opponentBets.filter(b => b.status !== 'pending');
+  const currentMyBets = displayData.myBets || [];
+  const currentOpponentBets = displayData.opponentBets || [];
+  const currentCanSeeOpponentBets = displayData.canSeeOpponentBets;
+  const currentOpponent = displayData.opponent;
+  const currentMatchup = displayData.matchup;
 
   const renderBetCard = (bet, index) => (
     <div 
@@ -163,10 +200,10 @@ export default function BattleDetailsPopup({
             <div className="text-2xl font-bold text-blue-500">VS</div>
             
             <div className="text-center flex-1">
-              {opponent.avatar ? (
+              {currentOpponent.avatar ? (
                 <img 
-                  src={opponent.avatar} 
-                  alt={opponent.username}
+                  src={currentOpponent.avatar} 
+                  alt={currentOpponent.username}
                   className={`w-16 h-16 mx-auto rounded-full mb-2 ${
                     isLosing ? 'ring-2 ring-green-400' : ''
                   }`}
@@ -177,10 +214,10 @@ export default function BattleDetailsPopup({
                   isWinning ? 'bg-gradient-to-br from-gray-600 to-gray-700' :
                   'bg-gradient-to-br from-blue-500 to-purple-600'
                 }`}>
-                  {opponent.username?.charAt(0)?.toUpperCase() || 'O'}
+                  {currentOpponent.username?.charAt(0)?.toUpperCase() || 'O'}
                 </div>
               )}
-              <p className={`font-semibold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponent.username}</p>
+              <p className={`font-semibold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{currentOpponent.username}</p>
               <p className={`text-xl font-bold ${isLosing ? 'text-green-500' : isWinning ? 'text-red-500' : isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 ${oppBalanceNum.toLocaleString()}
               </p>
@@ -204,7 +241,7 @@ export default function BattleDetailsPopup({
                   : isDarkMode ? 'bg-[#1a1a1a] text-gray-400 hover:bg-[#222]' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
               }`}
             >
-              Your Bets ({myBets.length})
+              Your Bets ({currentMyBets.length})
             </button>
             <button
               onClick={() => setActiveTab('opponent')}
@@ -214,7 +251,7 @@ export default function BattleDetailsPopup({
                   : isDarkMode ? 'bg-[#1a1a1a] text-gray-400 hover:bg-[#222]' : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
               }`}
             >
-              Opponent ({opponentBets.length})
+              Opponent ({currentOpponentBets.length})
             </button>
             <button
               onClick={() => setActiveTab('rules')}
@@ -231,29 +268,29 @@ export default function BattleDetailsPopup({
           <div className="max-h-64 overflow-y-auto space-y-2">
             {activeTab === 'your' && (
               <>
-                {myBets.length === 0 ? (
+                {currentMyBets.length === 0 ? (
                   <p className={`text-center py-8 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
                     You haven't placed any bets yet
                   </p>
                 ) : (
-                  myBets.map((bet, i) => renderBetCard(bet, i))
+                  currentMyBets.map((bet, i) => renderBetCard(bet, i))
                 )}
               </>
             )}
 
             {activeTab === 'opponent' && (
               <>
-                {!canSeeOpponentBets ? (
+                {!currentCanSeeOpponentBets ? (
                   <div className={`text-center py-8 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
                     <span className="text-3xl mb-2 block">🔒</span>
                     <p>Place a bet to unlock opponent's picks</p>
                   </div>
-                ) : opponentBets.length === 0 ? (
+                ) : currentOpponentBets.length === 0 ? (
                   <p className={`text-center py-8 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>
                     Opponent hasn't placed any bets yet
                   </p>
                 ) : (
-                  opponentBets.map((bet, i) => renderBetCard(bet, i))
+                  currentOpponentBets.map((bet, i) => renderBetCard(bet, i))
                 )}
               </>
             )}
@@ -262,11 +299,11 @@ export default function BattleDetailsPopup({
               <div className={`space-y-3 text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                 <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-[#111111]' : 'bg-gray-100'}`}>
                   <p className="font-medium text-blue-500">Starting Balance</p>
-                  <p>${parseFloat(matchup.startingBalance || 0).toLocaleString()}</p>
+                  <p>${parseFloat(currentMatchup.startingBalance || 0).toLocaleString()}</p>
                 </div>
                 <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-[#111111]' : 'bg-gray-100'}`}>
                   <p className="font-medium text-blue-500">Duration</p>
-                  <p>{matchup.duration || 'N/A'}</p>
+                  <p>{currentMatchup.duration || 'N/A'}</p>
                 </div>
                 <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-[#111111]' : 'bg-gray-100'}`}>
                   <p className="font-medium text-blue-500">Winner Determination</p>
