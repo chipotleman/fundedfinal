@@ -97,26 +97,9 @@ export default function MatchupBanner({
             </p>
           </div>
 
-          {/* Center - VS, Opponent Avatar, Prize */}
+          {/* Center - VS and Prize */}
           <div className="flex flex-col items-center flex-shrink-0 px-2">
-            <span className="text-2xl font-bold text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)] mb-1">VS</span>
-            <div className="relative">
-              {opponent.avatar ? (
-                <img 
-                  src={opponent.avatar} 
-                  alt={opponent.username}
-                  className="w-10 h-10 rounded-full border-2 border-blue-400"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-base font-bold text-white border-2 border-blue-400">
-                  {opponent.username?.charAt(0)?.toUpperCase() || 'O'}
-                </div>
-              )}
-            </div>
-            <p className={`font-semibold text-xs mt-0.5 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponent.username}</p>
-            <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${isDarkMode ? 'bg-gray-700/50 text-gray-300' : 'bg-gray-200 text-gray-600'}`}>
-              {opponent.winRate ? `${parseFloat(opponent.winRate).toFixed(0)}% win rate` : 'New player'}
-            </span>
+            <span className="text-2xl font-bold text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">VS</span>
             <div className="flex items-center gap-1 mt-1">
               <span className="text-base">🏆</span>
               <p className="text-lg font-bold text-yellow-400">${winnerPayout.toLocaleString()}</p>
