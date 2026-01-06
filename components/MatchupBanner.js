@@ -75,83 +75,97 @@ export default function MatchupBanner({
 
   const challengeLabel = matchup.challengeType?.charAt(0).toUpperCase() + matchup.challengeType?.slice(1);
 
+  const minPicks = 20;
+  const piksRemaining = Math.max(0, minPicks - myBetsCount);
+  const oppPiksRemaining = Math.max(0, minPicks - opponentBets.length);
+
   return (
     <div className={`${
       isDarkMode 
-        ? 'bg-gradient-to-b from-[#1a1a2e] to-[#0a0a0a] border-gray-700/50' 
+        ? 'bg-gradient-to-br from-[#1a1a3e] via-[#151528] to-[#0a0a15] border-gray-700/30' 
         : 'bg-white border-gray-300 shadow-lg'
     } border rounded-2xl mb-6 overflow-hidden`}>
       <div 
         className="p-4 cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <div className="flex items-start justify-between mb-2">
+        {/* Header - Battle Type */}
+        <div className="flex justify-center mb-4">
+          <div className={`flex items-center gap-2 px-4 py-1.5 rounded-full ${
+            isDarkMode ? 'bg-white/10 border border-white/20' : 'bg-gray-100 border border-gray-200'
+          }`}>
+            <span className="text-base">🎮</span>
+            <span className={`text-xs font-semibold uppercase tracking-wide ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+              {challengeLabel} Battle
+            </span>
+            <span className={`transition-transform duration-200 text-xs ${isExpanded ? 'rotate-180' : ''} ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+              ▼
+            </span>
+          </div>
+        </div>
+
+        {/* Main content - 3 columns */}
+        <div className="flex items-center justify-between mb-4">
           {/* Left side - User */}
           <div className="flex flex-col items-center flex-1">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-base font-bold text-white border-2 border-green-400 mb-1">
+            <div className="w-14 h-14 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-xl font-bold text-white shadow-lg shadow-green-500/30 mb-2">
               Y
             </div>
-            <span className="text-[10px] uppercase tracking-wide text-green-400 font-medium mb-0.5">Your Balance</span>
-            <p className="text-2xl font-bold text-green-400">
+            <span className={`text-[10px] uppercase tracking-wider font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Your Balance</span>
+            <p className="text-2xl font-bold text-green-400 mb-1">
               ${myBalanceNum.toLocaleString()}
             </p>
+            <span className={`text-[10px] uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+              Piks Remaining: <span className="font-bold text-white">{piksRemaining}</span>
+            </span>
           </div>
 
-          {/* Center - VS and Prize */}
-          <div className="flex flex-col items-center flex-shrink-0 px-2">
-            <span className="text-xl font-bold text-blue-400 drop-shadow-[0_0_10px_rgba(59,130,246,0.5)]">VS</span>
-            <span className="text-[9px] uppercase tracking-wide text-yellow-400/80 font-medium mt-1">Prize Pool</span>
-            <div className="flex items-center gap-1">
-              <span className="text-xl">🏆</span>
-              <p className="text-3xl font-bold text-yellow-400 drop-shadow-[0_0_8px_rgba(234,179,8,0.4)]">${winnerPayout.toLocaleString()}</p>
-            </div>
+          {/* Center - Prize Pool */}
+          <div className="flex flex-col items-center flex-shrink-0 px-4">
+            <span className="text-4xl mb-1">🏆</span>
+            <span className={`text-[10px] uppercase tracking-wider font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Prize Pool</span>
+            <p className="text-4xl font-bold text-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,0.4)]">
+              ${winnerPayout.toLocaleString()}
+            </p>
           </div>
 
           {/* Right side - Opponent */}
           <div className="flex flex-col items-center flex-1">
-            <div className="relative">
-              {opponent.avatar ? (
-                <img 
-                  src={opponent.avatar} 
-                  alt={opponent.username}
-                  className="w-10 h-10 rounded-full border-2 border-red-400 mb-1"
-                />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-rose-600 flex items-center justify-center text-base font-bold text-white border-2 border-red-400 mb-1">
-                  {opponent.username?.charAt(0)?.toUpperCase() || 'O'}
-                </div>
-              )}
-            </div>
-            <span className="text-[10px] uppercase tracking-wide text-red-400 font-medium mb-0.5">Opponent</span>
-            <p className="text-2xl font-bold text-red-400">
+            {opponent.avatar ? (
+              <img 
+                src={opponent.avatar} 
+                alt={opponent.username}
+                className="w-14 h-14 rounded-full border-2 border-red-400 shadow-lg shadow-red-500/30 mb-2"
+              />
+            ) : (
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center text-xl font-bold text-white shadow-lg shadow-red-500/30 mb-2">
+                {opponent.username?.charAt(0)?.toUpperCase() || 'O'}
+              </div>
+            )}
+            <span className={`text-[10px] uppercase tracking-wider font-medium mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Opponent</span>
+            <p className="text-2xl font-bold text-red-400 mb-1">
               ${oppBalanceNum.toLocaleString()}
             </p>
+            <span className={`text-[10px] uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+              Piks Remaining: <span className="font-bold text-white">{oppPiksRemaining}</span>
+            </span>
           </div>
         </div>
 
-        <div className={`pt-3 border-t flex items-center justify-between ${isDarkMode ? 'border-gray-700/50' : 'border-gray-200'}`}>
-          <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full ${
+        {/* Status pill - centered */}
+        <div className="flex justify-center">
+          <div className={`flex items-center gap-2 px-5 py-2 rounded-full ${
             isWinning 
-              ? 'bg-green-500/20 border border-green-500/50' 
+              ? 'bg-green-500 text-white' 
               : isLosing 
-                ? 'bg-red-500/20 border border-red-500/50' 
-                : 'bg-yellow-500/20 border border-yellow-500/50'
+                ? 'bg-red-500 text-white' 
+                : 'bg-yellow-500 text-black'
           }`}>
-            <svg className={`w-4 h-4 ${isWinning ? 'text-green-400' : isLosing ? 'text-red-400' : 'text-yellow-400'}`} fill="currentColor" viewBox="0 0 20 20">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
             </svg>
-            <span className={`text-xs font-medium ${isWinning ? 'text-green-400' : isLosing ? 'text-red-400' : 'text-yellow-400'}`}>
+            <span className="text-sm font-semibold">
               {isTied ? 'Tied!' : isWinning ? "You're winning!" : "You're behind"}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            <span className="text-base">🎮</span>
-            <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              {challengeLabel} Battle
-            </span>
-            <span className={`transition-transform duration-200 text-xs ml-1 ${isExpanded ? 'rotate-180' : ''} ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-              ▼
             </span>
           </div>
         </div>
