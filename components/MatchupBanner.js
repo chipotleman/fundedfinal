@@ -61,10 +61,12 @@ export default function MatchupBanner({
   const handleScroll = () => {
     if (scrollRef.current) {
       const scrollLeft = scrollRef.current.scrollLeft;
-      const containerWidth = scrollRef.current.firstChild?.offsetWidth || 1;
+      const scrollContainer = scrollRef.current.firstChild;
+      const firstSlide = scrollContainer?.firstChild;
+      const slideWidth = firstSlide?.offsetWidth || 1;
       const gap = 12;
-      const newSlide = Math.round(scrollLeft / (containerWidth + gap));
-      setCurrentSlide(Math.min(newSlide, totalSlides - 1));
+      const newSlide = Math.round(scrollLeft / (slideWidth + gap));
+      setCurrentSlide(Math.max(0, Math.min(newSlide, totalSlides - 1)));
     }
   };
 
