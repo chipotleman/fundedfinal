@@ -60,6 +60,8 @@ export default function ImagesPage() {
       if (res.ok) {
         setMessage({ type: 'success', text: `Ad Slot ${slotNumber} saved successfully` });
         fetchSlots();
+      } else if (res.status === 403) {
+        setMessage({ type: 'error', text: 'You do not have permission to modify ad slots' });
       } else {
         const data = await res.json();
         setMessage({ type: 'error', text: data.error || 'Failed to save' });
@@ -87,7 +89,7 @@ export default function ImagesPage() {
 
   if (loading) {
     return (
-      <AdminLayout title="Images" requiredPermission="settings">
+      <AdminLayout title="Images" requiredPermission="settings:write">
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
         </div>
@@ -96,7 +98,7 @@ export default function ImagesPage() {
   }
 
   return (
-    <AdminLayout title="Images" requiredPermission="settings">
+    <AdminLayout title="Images" requiredPermission="settings:write">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
