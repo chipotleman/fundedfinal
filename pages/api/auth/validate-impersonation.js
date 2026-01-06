@@ -1,7 +1,8 @@
 import { db } from '../../../lib/db';
-import { fakeOpponents } from '../../../shared/schema';
+import { fakeOpponents, users } from '../../../shared/schema';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 
 export default async function handler(req, res) {
   console.log('[Validate Impersonation] Received request');
@@ -73,12 +74,9 @@ export default async function handler(req, res) {
     }
 
     const tempPassword = `impersonate_${fakeOpponentId}_${Date.now()}`;
-    
-    const bcrypt = require('bcryptjs');
     const hashedTempPassword = await bcrypt.hash(tempPassword, 10);
     
     console.log('[Validate Impersonation] Updating user password for userId:', userId);
-    const { users } = require('../../../shared/schema');
     await db
       .update(users)
       .set({ password: hashedTempPassword, updatedAt: new Date() })
