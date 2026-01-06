@@ -4,17 +4,19 @@ import { eq, and, or } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 import { requireAdmin } from '../../../../lib/adminAuth';
 
-const IMPERSONATE_SECRET = process.env.NEXTAUTH_SECRET;
-
 async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const IMPERSONATE_SECRET = process.env.NEXTAUTH_SECRET;
+  
   if (!IMPERSONATE_SECRET) {
-    console.error('NEXTAUTH_SECRET not configured');
-    return res.status(500).json({ error: 'Server configuration error' });
+    console.error('[Impersonate] NEXTAUTH_SECRET not configured');
+    return res.status(500).json({ error: 'Server configuration error - NEXTAUTH_SECRET not set' });
   }
+  
+  console.log('[Impersonate] Starting impersonation request');
 
   try {
     const { fakeOpponentId, matchupId } = req.body;

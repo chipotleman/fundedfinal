@@ -3,12 +3,15 @@ import { fakeOpponents } from '../../../shared/schema';
 import { eq } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 
-const IMPERSONATE_SECRET = process.env.NEXTAUTH_SECRET;
-
 export default async function handler(req, res) {
+  console.log('[Validate Impersonation] Received request');
+  
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+
+  const IMPERSONATE_SECRET = process.env.NEXTAUTH_SECRET;
+  console.log('[Validate Impersonation] NEXTAUTH_SECRET exists:', !!IMPERSONATE_SECRET);
 
   if (!IMPERSONATE_SECRET) {
     console.error('[Validate Impersonation] NEXTAUTH_SECRET not configured');
