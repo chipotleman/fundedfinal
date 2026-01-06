@@ -111,91 +111,81 @@ export default function MatchupBanner({
       </div>
 
       <div 
-        className="p-5 pt-4 cursor-pointer"
+        className="p-3 pt-3 cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        {/* Main content - 3 columns with dividers */}
-        <div className="flex items-stretch">
+        {/* Main content - 3 columns */}
+        <div className="flex items-stretch gap-2">
           
           {/* Left side - User */}
-          <div className={`flex flex-col items-center flex-1 py-4 px-3 rounded-2xl ${
+          <div className={`flex flex-col items-center flex-1 py-3 px-2 rounded-xl ${
             isDarkMode ? 'bg-gradient-to-b from-blue-900/20 to-purple-900/20' : 'bg-blue-50'
           }`}>
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-2xl font-bold text-white shadow-xl shadow-green-500/40 mb-3 border-2 border-green-300/50">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-lg text-white shadow-lg shadow-green-500/30 mb-2 border-2 border-green-300/50">
               🐉
             </div>
-            <span className={`text-xs uppercase tracking-widest font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Your Balance</span>
-            <p className="text-3xl font-extrabold text-green-400 mb-3">
+            <span className={`text-[10px] uppercase tracking-wider font-semibold mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Your Balance</span>
+            <p className="text-xl font-extrabold text-green-400 mb-2">
               ${myBalanceNum.toLocaleString()}
             </p>
-            <div className="space-y-1 text-center">
-              <p className={`text-xs uppercase tracking-wide ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                Piks Remaining: <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{piksRemaining}</span>
-              </p>
-              <p className={`text-xs uppercase tracking-wide ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                Timer: <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatTimer(timeRemaining)}</span>
-              </p>
-            </div>
+            <p className={`text-[9px] uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+              Piks: <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{piksRemaining}</span> · <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatTimer(timeRemaining)}</span>
+            </p>
           </div>
 
           {/* Center - Prize Pool */}
-          <div className="flex flex-col items-center justify-center flex-1 px-4 py-4">
-            <span className="text-5xl mb-2">🏆</span>
-            <span className={`text-xs uppercase tracking-widest font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Prize Pool</span>
-            <p className="text-5xl font-black text-yellow-400 drop-shadow-[0_0_20px_rgba(250,204,21,0.5)] mb-4">
+          <div className="flex flex-col items-center justify-center flex-1 px-2 py-3">
+            <span className="text-3xl mb-1">🏆</span>
+            <span className={`text-[10px] uppercase tracking-wider font-semibold mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Prize Pool</span>
+            <p className="text-3xl font-black text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)] mb-2">
               ${winnerPayout.toLocaleString()}
             </p>
             
             {/* Status pill */}
-            <div className={`flex items-center gap-2 px-5 py-2.5 rounded-full shadow-lg ${
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full shadow-lg text-xs ${
               isWinning 
                 ? 'bg-green-500 text-white shadow-green-500/30' 
                 : isLosing 
                   ? 'bg-red-500 text-white shadow-red-500/30' 
                   : 'bg-yellow-500 text-black shadow-yellow-500/30'
             }`}>
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-              <span className="text-sm font-bold">
+              <span className="font-bold whitespace-nowrap">
                 {isTied ? 'Tied!' : isWinning ? "You're winning!" : "You're behind"}
               </span>
             </div>
           </div>
 
           {/* Right side - Opponent */}
-          <div className={`flex flex-col items-center flex-1 py-4 px-3 rounded-2xl ${
+          <div className={`flex flex-col items-center flex-1 py-3 px-2 rounded-xl ${
             isDarkMode ? 'bg-gradient-to-b from-rose-900/20 to-orange-900/20' : 'bg-red-50'
           }`}>
             {opponent.avatar ? (
               <img 
                 src={opponent.avatar} 
                 alt={opponent.username}
-                className="w-16 h-16 rounded-full border-2 border-red-300/50 shadow-xl shadow-red-500/40 mb-3"
+                className="w-12 h-12 rounded-full border-2 border-red-300/50 shadow-lg shadow-red-500/30 mb-2"
               />
             ) : (
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center text-2xl font-bold text-white shadow-xl shadow-red-500/40 mb-3 border-2 border-red-300/50">
+              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center text-lg text-white shadow-lg shadow-red-500/30 mb-2 border-2 border-red-300/50">
                 🦅
               </div>
             )}
-            <span className={`text-xs uppercase tracking-widest font-semibold mb-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Opponent</span>
-            <p className="text-3xl font-extrabold text-red-400 mb-3">
+            <span className={`text-[10px] uppercase tracking-wider font-semibold mb-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Opponent</span>
+            <p className="text-xl font-extrabold text-red-400 mb-2">
               ${oppBalanceNum.toLocaleString()}
             </p>
-            <div className="space-y-1 text-center">
-              <p className={`text-xs uppercase tracking-wide ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                Piks Remaining: <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{oppPiksRemaining}</span>
-              </p>
-              <p className={`text-xs uppercase tracking-wide ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                Timer: <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatTimer(timeRemaining)}</span>
-              </p>
-            </div>
+            <p className={`text-[9px] uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+              Piks: <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{oppPiksRemaining}</span> · <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatTimer(timeRemaining)}</span>
+            </p>
           </div>
         </div>
 
         {/* Expand indicator */}
-        <div className="flex justify-center mt-3">
-          <span className={`transition-transform duration-200 text-sm ${isExpanded ? 'rotate-180' : ''} ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+        <div className="flex justify-center mt-2">
+          <span className={`transition-transform duration-200 text-xs ${isExpanded ? 'rotate-180' : ''} ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
             ▼
           </span>
         </div>
