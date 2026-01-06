@@ -20,7 +20,7 @@ export default function Dashboard() {
   const { isDarkMode } = useTheme();
   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
   const { apiGames: contextApiGames, inplayEvents: contextInplayEvents, loading: gamesLoading, error: gamesError, lastUpdated } = useGames();
-  const { matchup, opponent, myBalance: matchupBalance, opponentBalance, opponentBets, canSeeOpponentBets, hasActiveMatchup, refresh: refreshMatchup } = useMatchup();
+  const { matchup, opponent, myBalance: matchupBalance, opponentBalance, myBets, opponentBets, canSeeOpponentBets, hasActiveMatchup, refresh: refreshMatchup } = useMatchup();
   const [selectedSport, setSelectedSport] = useState('All Sports');
   const [selectedTab, setSelectedTab] = useState('live');
   const [games, setGames] = useState([]);
@@ -394,6 +394,7 @@ export default function Dashboard() {
             opponentBets={opponentBets}
             canSeeBets={canSeeOpponentBets}
             onRefreshOpponentBets={refreshMatchup}
+            myBetsCount={myBets?.length || 0}
           />
         ) : user && (
           <div className="mb-6">
