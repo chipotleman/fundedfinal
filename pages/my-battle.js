@@ -270,58 +270,82 @@ export default function MyBattle() {
         ) : (
           <div className="mb-8">
             <div 
-              className="bg-white/5 backdrop-blur-xl border-white/10 hover:bg-white/10 border rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer p-4 h-[140px] md:h-[180px]"
+              className="rounded-2xl overflow-hidden cursor-pointer h-[180px] md:h-[220px] relative group"
               onClick={() => router.push('/battle')}
+              style={{
+                background: 'linear-gradient(135deg, #0a1628 0%, #1a2744 30%, #0f1e36 60%, #0a1628 100%)',
+              }}
             >
-              <div className="flex items-center justify-between h-full">
+              {/* Stadium lights effect */}
+              <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute top-0 left-1/4 w-32 h-32 bg-green-500/20 rounded-full blur-3xl" />
+                <div className="absolute top-0 right-1/4 w-32 h-32 bg-yellow-500/15 rounded-full blur-3xl" />
+                <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-green-900/30 to-transparent" />
+                {/* Floating sports balls */}
+                <div className="absolute top-4 left-8 text-2xl animate-bounce" style={{ animationDuration: '3s' }}>🏀</div>
+                <div className="absolute top-8 right-12 text-xl animate-bounce" style={{ animationDuration: '2.5s', animationDelay: '0.5s' }}>⚽</div>
+                <div className="absolute bottom-6 left-4 text-lg animate-bounce" style={{ animationDuration: '2.8s', animationDelay: '1s' }}>🏈</div>
+                <div className="absolute bottom-4 right-6 text-2xl animate-bounce" style={{ animationDuration: '3.2s', animationDelay: '0.3s' }}>⚽</div>
+              </div>
+
+              {/* Header */}
+              <div className="absolute top-2 left-0 right-0 text-center z-10">
+                <h2 className="text-lg md:text-2xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-yellow-300 to-green-400 drop-shadow-[0_2px_10px_rgba(74,222,128,0.5)] tracking-tight">
+                  4 PIKS TO RUN IT UP!
+                </h2>
+              </div>
+
+              <div className="relative z-10 flex items-center justify-between h-full px-4 pt-6">
                 
-                {/* Left - User */}
+                {/* Left - Dragon Avatar */}
                 <div className="flex flex-col items-center flex-1">
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-green-500/30 mb-1.5 border-2 border-green-300/50 overflow-hidden">
-                    {userProfile?.avatar ? (
-                      <img src={userProfile.avatar} alt="You" className="w-full h-full object-cover" />
-                    ) : (
-                      '🐉'
-                    )}
+                  <div className="relative mb-1">
+                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-green-400 via-green-500 to-green-700 flex items-center justify-center text-2xl md:text-3xl shadow-[0_0_30px_rgba(74,222,128,0.6)] border-2 border-green-300/70 overflow-hidden">
+                      {userProfile?.avatar ? (
+                        <img src={userProfile.avatar} alt="You" className="w-full h-full object-cover" />
+                      ) : (
+                        '🐉'
+                      )}
+                    </div>
+                    <div className="absolute -inset-1 rounded-full border-2 border-green-400/50 animate-ping" style={{ animationDuration: '2s' }} />
                   </div>
-                  <span className="text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 text-gray-400">Your Balance</span>
-                  <p className="text-lg md:text-2xl font-extrabold text-green-400 mb-1">
+                  <span className="text-[9px] md:text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">Your Balance</span>
+                  <p className="text-xl md:text-2xl font-black text-green-400 drop-shadow-[0_0_10px_rgba(74,222,128,0.5)]">
                     $5,000
                   </p>
-                  <p className="text-[11px] md:text-xs uppercase tracking-wide text-gray-400">
+                  <p className="text-[10px] md:text-xs uppercase tracking-wide text-gray-400">
                     Piks: <span className="font-bold text-white">4</span> · <span className="font-bold text-white">24:00:00</span>
                   </p>
                 </div>
 
-                {/* Center - Prize */}
+                {/* Center - Trophy & CTA */}
                 <div className="flex flex-col items-center flex-1">
-                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full mb-2 bg-white/10">
-                    <span className="text-[10px]">🎮</span>
-                    <span className="text-[9px] font-bold uppercase tracking-wide whitespace-nowrap text-white">
-                      1V1 BATTLE
-                    </span>
-                  </div>
-                  <span className="text-2xl md:text-3xl mb-0.5">🏆</span>
-                  <p className="text-2xl md:text-3xl font-black text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)] mb-1.5">
-                    up to $5,000
+                  <div className="text-4xl md:text-5xl mb-1 drop-shadow-[0_0_20px_rgba(250,204,21,0.8)]">🏆</div>
+                  <p className="text-sm md:text-base font-black text-white uppercase tracking-wide mb-0.5">1V1 PIKS BATTLE</p>
+                  <p className="text-lg md:text-xl font-black mb-2">
+                    <span className="text-green-400">WIN</span>
+                    <span className="text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]"> up to $5,000!</span>
                   </p>
                   
-                  <div className="px-3 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-blue-500 shadow-lg text-[10px] md:text-xs text-white font-bold">
-                    Start a Battle
-                  </div>
+                  <button className="relative px-6 py-2 md:px-8 md:py-2.5 rounded-lg bg-gradient-to-r from-green-500 via-green-400 to-green-500 text-black font-black text-sm md:text-base uppercase tracking-wide shadow-[0_0_20px_rgba(74,222,128,0.5)] group-hover:shadow-[0_0_30px_rgba(74,222,128,0.7)] transition-all group-hover:scale-105 border-2 border-green-300/50">
+                    <span className="relative z-10">Start a Battle</span>
+                    <div className="absolute inset-0 bg-gradient-to-t from-green-600/30 to-transparent rounded-lg" />
+                  </button>
                 </div>
 
-                {/* Right - Opponent Placeholder */}
+                {/* Right - Mystery Opponent */}
                 <div className="flex flex-col items-center flex-1">
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-gray-500/30 mb-1.5 border-2 border-dashed border-gray-400/50">
-                    ?
+                  <div className="relative mb-1">
+                    <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 flex items-center justify-center text-2xl md:text-3xl shadow-[0_0_20px_rgba(100,116,139,0.4)] border-2 border-dashed border-slate-400/50">
+                      <span className="text-slate-300 font-black text-xl md:text-2xl">?</span>
+                    </div>
                   </div>
-                  <span className="text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 text-gray-400">Opponent</span>
-                  <p className="text-lg md:text-2xl font-extrabold text-gray-500 mb-1">
+                  <span className="text-[9px] md:text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-0.5">Opponent</span>
+                  <p className="text-xl md:text-2xl font-black text-gray-500">
                     $---
                   </p>
-                  <p className="text-[11px] md:text-xs uppercase tracking-wide text-gray-400">
-                    Piks: <span className="font-bold text-white/50">--</span> · <span className="font-bold text-white/50">--:--:--</span>
+                  <p className="text-[10px] md:text-xs uppercase tracking-wide text-gray-500">
+                    Piks: <span className="font-bold text-gray-600">--</span> · <span className="font-bold text-gray-600">--:--:--</span>
                   </p>
                 </div>
               </div>
