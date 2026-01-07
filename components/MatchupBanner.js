@@ -285,9 +285,12 @@ export default function MatchupBanner({
               </div>
               <div className="relative z-10 p-4 min-h-[140px] md:min-h-[180px] flex flex-col">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">🏊</span>
-                    <h3 className="text-white font-bold text-sm md:text-base">PIK POOL</h3>
+                  <div className="flex items-center">
+                    <img 
+                      src="/attached_assets/Copy_of_Untitled_Design_1767752489668.png" 
+                      alt="Piks Pool" 
+                      className="h-8 md:h-10 w-auto object-contain"
+                    />
                   </div>
                   <div className="px-2 py-0.5 bg-white/20 rounded-full">
                     <span className="text-white text-[10px] font-semibold">${availablePool ? parseFloat(availablePool.buyIn).toFixed(0) : '25'} BUY-IN</span>
