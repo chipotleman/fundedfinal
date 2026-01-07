@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import TapSurface from './TapSurface';
 
 export default function PiksPoolPopup({ isOpen, onClose, pool }) {
   useEffect(() => {
@@ -117,12 +116,12 @@ export default function PiksPoolPopup({ isOpen, onClose, pool }) {
           </div>
 
           <div className="flex flex-col gap-3">
-            <TapSurface
-              onTap={onClose}
-              className="w-full py-4 bg-white/25 hover:bg-white/35 active:bg-white/40 text-white font-bold text-lg rounded-xl shadow-lg transition-colors text-center backdrop-blur-sm"
+            <button
+              onClick={onClose}
+              className="w-full py-4 bg-white/25 hover:bg-white/35 active:bg-white/40 active:scale-95 text-white font-bold text-lg rounded-xl shadow-lg transition-all text-center backdrop-blur-sm"
             >
               Join Pool - ${buyIn.toFixed(0)}
-            </TapSurface>
+            </button>
             <button
               onClick={onClose}
               className="text-white/60 text-sm hover:text-white/80 transition-colors"
