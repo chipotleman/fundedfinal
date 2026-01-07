@@ -328,7 +328,7 @@ export default function MatchupBanner({
                   style={{
                     bottom: 0,
                     height: '100%',
-                    transform: `translateY(${(1 - holdProgress) * 100}%)`,
+                    transform: `translateY(${75 - (holdProgress * 75)}%)`,
                   }}
                 >
                   {/* Water body - solid gradient fill */}
