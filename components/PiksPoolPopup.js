@@ -1,9 +1,19 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 
-export default function PiksPoolPopup({ isOpen, onClose, pool }) {
+export default function PiksPoolPopup({ isOpen, onClose, pool, onJoinSuccess }) {
+  const [isJoining, setIsJoining] = useState(false);
+  const [error, setError] = useState(null);
+  const [showDepositPrompt, setShowDepositPrompt] = useState(false);
+  const [neededAmount, setNeededAmount] = useState(0);
+  const router = useRouter();
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      setError(null);
+      setShowDepositPrompt(false);
+      setIsJoining(false);
     } else {
       document.body.style.overflow = 'unset';
     }
@@ -18,8 +28,6 @@ export default function PiksPoolPopup({ isOpen, onClose, pool }) {
   const maxPlayers = pool?.maxPlayers || 25;
   const currentPlayers = pool?.currentPlayers || 0;
   const prizePool = pool ? parseFloat(pool.maxPrizePool || pool.prizePool) : 562.50;
-  const platformFee = 0.10;
-  const winnerPayout = prizePool * (1 - platformFee);
 
   const rules = [
     { icon: '⏱️', title: '1-Day Run It Up', desc: 'You have exactly 24 hours from when the challenge starts' },
@@ -27,6 +35,53 @@ export default function PiksPoolPopup({ isOpen, onClose, pool }) {
     { icon: '📈', title: 'Highest Balance Wins', desc: 'Player with the highest balance at the end wins' },
     { icon: '🏆', title: 'Winner Takes All', desc: 'Top pikker takes the whole pool' },
   ];
+
+  const handleJoin = async () => {
+    if (!pool?.id) {
+      setError('No pool available');
+      return;
+    }
+
+    setIsJoining(true);
+    setError(null);
+
+    try {
+      const res = await fetch('/api/pools/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ poolId: pool.id }),
+      });
+
+      const data = await res.json();
+
+      if (res.status === 402 && data.code === 'INSUFFICIENT_BALANCE') {
+        setNeededAmount(data.needed);
+        setShowDepositPrompt(true);
+        setIsJoining(false);
+        return;
+      }
+
+      if (!res.ok) {
+        setError(data.error || 'Failed to join pool');
+        setIsJoining(false);
+        return;
+      }
+
+      if (onJoinSuccess) {
+        onJoinSuccess(data);
+      }
+      onClose();
+    } catch (err) {
+      console.error('Error joining pool:', err);
+      setError('Something went wrong. Please try again.');
+      setIsJoining(false);
+    }
+  };
+
+  const handleDeposit = () => {
+    onClose();
+    router.push('/deposit?amount=' + Math.ceil(neededAmount));
+  };
 
   return (
     <div 
@@ -80,7 +135,7 @@ export default function PiksPoolPopup({ isOpen, onClose, pool }) {
             </div>
             
             <p className="text-5xl font-black text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)] mb-1">
-              ${winnerPayout.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              ${prizePool.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
             <p className="text-white/70 text-sm">Winner Takes All</p>
           </div>
@@ -100,28 +155,52 @@ export default function PiksPoolPopup({ isOpen, onClose, pool }) {
             </div>
           </div>
 
-          <div className="bg-white/10 rounded-2xl p-4 mb-6">
-            <h3 className="text-white font-bold text-sm uppercase tracking-wide mb-3 text-center">How It Works</h3>
-            <div className="space-y-3">
-              {rules.map((rule, i) => (
-                <div key={i} className="flex items-start gap-3">
-                  <span className="text-xl flex-shrink-0">{rule.icon}</span>
-                  <div>
-                    <p className="text-white font-semibold text-sm">{rule.title}</p>
-                    <p className="text-white/70 text-xs">{rule.desc}</p>
-                  </div>
-                </div>
-              ))}
+          {showDepositPrompt ? (
+            <div className="bg-red-500/20 rounded-2xl p-4 mb-6 text-center">
+              <p className="text-white font-semibold mb-2">Insufficient Balance</p>
+              <p className="text-white/70 text-sm mb-4">
+                You need ${neededAmount.toFixed(2)} more to join this pool.
+              </p>
+              <button
+                onClick={handleDeposit}
+                className="w-full py-3 bg-yellow-400 hover:bg-yellow-300 text-black font-bold rounded-xl transition-colors"
+              >
+                Deposit ${Math.ceil(neededAmount)}
+              </button>
             </div>
-          </div>
+          ) : (
+            <div className="bg-white/10 rounded-2xl p-4 mb-6">
+              <h3 className="text-white font-bold text-sm uppercase tracking-wide mb-3 text-center">How It Works</h3>
+              <div className="space-y-3">
+                {rules.map((rule, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <span className="text-xl flex-shrink-0">{rule.icon}</span>
+                    <div>
+                      <p className="text-white font-semibold text-sm">{rule.title}</p>
+                      <p className="text-white/70 text-xs">{rule.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div className="bg-red-500/20 text-red-200 text-sm text-center p-3 rounded-xl mb-4">
+              {error}
+            </div>
+          )}
 
           <div className="flex flex-col gap-3">
-            <button
-              onClick={onClose}
-              className="w-full py-4 bg-white/25 hover:bg-white/35 active:bg-white/40 active:scale-95 text-white font-bold text-lg rounded-xl shadow-lg transition-all text-center backdrop-blur-sm"
-            >
-              Join Pool - ${buyIn.toFixed(0)}
-            </button>
+            {!showDepositPrompt && (
+              <button
+                onClick={handleJoin}
+                disabled={isJoining}
+                className="w-full py-4 bg-white/25 hover:bg-white/35 active:bg-white/40 active:scale-95 text-white font-bold text-lg rounded-xl shadow-lg transition-all text-center backdrop-blur-sm disabled:opacity-50"
+              >
+                {isJoining ? 'Joining...' : `Join Pool - $${buyIn.toFixed(0)}`}
+              </button>
+            )}
             <button
               onClick={onClose}
               className="text-white/60 text-sm no-hover-effect"
