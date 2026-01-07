@@ -437,7 +437,7 @@ export default function MatchupBanner({
                   50% { transform: translateY(-10px) scale(1.1); opacity: 0.5; }
                 }
                 .wave-crest {
-                  animation: waveSlide 4s linear infinite;
+                  animation: waveSlide 10s linear infinite;
                 }
                 @keyframes waveSlide {
                   0% { transform: translateX(0); }
