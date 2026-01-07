@@ -284,20 +284,21 @@ export default function MatchupBanner({
                 </svg>
               </div>
               <div className="relative z-10 p-4 h-[140px] md:h-[180px] flex flex-col overflow-hidden">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex flex-col">
-                    <span className="text-white/70 text-[10px] uppercase tracking-wide">Prize Pool</span>
-                    <span className="text-white text-2xl md:text-3xl font-black drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
-                      ${availablePool ? parseFloat(availablePool.maxPrizePool || availablePool.prizePool).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '562.50'}
-                    </span>
-                  </div>
-                  <div className="px-2 py-0.5 bg-white/20 rounded-full">
-                    <span className="text-white text-[10px] font-semibold">${availablePool ? parseFloat(availablePool.buyIn).toFixed(0) : '25'} BUY-IN</span>
+                <div className="absolute top-3 right-3 bg-yellow-400 text-black px-3 py-1 rounded-md shadow-lg transform rotate-3" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%, 5% 50%)' }}>
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs font-black">${availablePool ? parseFloat(availablePool.buyIn).toFixed(0) : '25'}</span>
+                    <span className="text-[8px] font-bold uppercase">Entry</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-center flex-1">
-                  <div className="px-6 py-2.5 bg-white/25 hover:bg-white/35 rounded-xl transition-colors shadow-lg">
-                    <span className="text-white text-base md:text-lg font-bold tracking-wide">JOIN THE POOL</span>
+                <div className="flex flex-col mb-1">
+                  <span className="text-white/70 text-[10px] uppercase tracking-wide">Prize Pool</span>
+                  <span className="text-white text-2xl md:text-3xl font-black drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                    ${availablePool ? parseFloat(availablePool.maxPrizePool || availablePool.prizePool).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '562.50'}
+                  </span>
+                </div>
+                <div className="flex items-center justify-center flex-1 -mt-1">
+                  <div className="px-6 py-2 bg-white/25 hover:bg-white/35 rounded-xl transition-colors shadow-lg">
+                    <span className="text-white text-sm md:text-base font-bold tracking-wide">JOIN THE POOL</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
