@@ -292,7 +292,7 @@ export default function MatchupBanner({
                 </div>
                 <div className="flex flex-col mb-1">
                   <span className="text-white/70 text-[10px] uppercase tracking-wide">Prize Pool</span>
-                  <span className="text-white text-base md:text-lg font-black drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                  <span className="text-white text-sm md:text-base font-black drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
                     ${availablePool ? parseFloat(availablePool.maxPrizePool || availablePool.prizePool).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '562.50'}
                   </span>
                 </div>
