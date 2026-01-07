@@ -186,44 +186,46 @@ export default function PoolContainer({ isDarkMode }) {
             />
           ))}
         </div>
-        <div 
-          className="absolute left-0 right-0"
-          style={{
-            bottom: 0,
-            height: '100%',
-            transform: `translateY(${86 - (holdProgress * 86)}%)`,
-            willChange: 'transform',
-          }}
-        >
+        {!myPoolData && (
           <div 
-            className="absolute inset-0" 
+            className="absolute left-0 right-0"
             style={{
-              background: 'linear-gradient(to top, #0ea5e9 0%, rgba(103, 232, 249, 0.8) 70%, transparent 100%)'
+              bottom: 0,
+              height: '100%',
+              transform: `translateY(${86 - (holdProgress * 86)}%)`,
+              willChange: 'transform',
             }}
-          />
-          <div className="absolute top-0 left-0 right-0 h-[30px]" style={{ transform: 'translateY(-50%)' }}>
-            <svg 
-              className="w-[200%] h-full pool-wave-crest" 
-              viewBox="0 0 2880 30" 
-              preserveAspectRatio="none"
-              style={{ filter: 'blur(1px)' }}
-            >
-              <path 
-                fill="none"
-                stroke="rgba(255, 255, 255, 0.7)"
-                strokeWidth="4"
-                strokeLinecap="round"
-                d="M0,15 C60,8 120,22 180,15 C240,8 300,22 360,15 C420,8 480,22 540,15 C600,8 660,22 720,15 C780,8 840,22 900,15 C960,8 1020,22 1080,15 C1140,8 1200,22 1260,15 C1320,8 1380,22 1440,15 C1500,8 1560,22 1620,15 C1680,8 1740,22 1800,15 C1860,8 1920,22 1980,15 C2040,8 2100,22 2160,15 C2220,8 2280,22 2340,15 C2400,8 2460,22 2520,15 C2580,8 2640,22 2700,15 C2760,8 2820,22 2880,15"
-              />
-            </svg>
+          >
+            <div 
+              className="absolute inset-0" 
+              style={{
+                background: 'linear-gradient(to top, #0ea5e9 0%, rgba(103, 232, 249, 0.8) 70%, transparent 100%)'
+              }}
+            />
+            <div className="absolute top-0 left-0 right-0 h-[30px]" style={{ transform: 'translateY(-50%)' }}>
+              <svg 
+                className="w-[200%] h-full pool-wave-crest" 
+                viewBox="0 0 2880 30" 
+                preserveAspectRatio="none"
+                style={{ filter: 'blur(1px)' }}
+              >
+                <path 
+                  fill="none"
+                  stroke="rgba(255, 255, 255, 0.7)"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  d="M0,15 C60,8 120,22 180,15 C240,8 300,22 360,15 C420,8 480,22 540,15 C600,8 660,22 720,15 C780,8 840,22 900,15 C960,8 1020,22 1080,15 C1140,8 1200,22 1260,15 C1320,8 1380,22 1440,15 C1500,8 1560,22 1620,15 C1680,8 1740,22 1800,15 C1860,8 1920,22 1980,15 C2040,8 2100,22 2160,15 C2220,8 2280,22 2340,15 C2400,8 2460,22 2520,15 C2580,8 2640,22 2700,15 C2760,8 2820,22 2880,15"
+                />
+              </svg>
+            </div>
+            <div 
+              className="absolute top-0 left-0 right-0 h-[20px]" 
+              style={{ 
+                background: 'linear-gradient(to bottom, rgba(255,255,255,0.3), transparent)'
+              }} 
+            />
           </div>
-          <div 
-            className="absolute top-0 left-0 right-0 h-[20px]" 
-            style={{ 
-              background: 'linear-gradient(to bottom, rgba(255,255,255,0.3), transparent)'
-            }} 
-          />
-        </div>
+        )}
       </div>
       
       {myPoolData ? (
