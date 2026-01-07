@@ -293,7 +293,7 @@ export default function MyBattle() {
                   </p>
                 </div>
 
-                {/* Center - Prize */}
+                {/* Center - Prize Pool */}
                 <div className="flex flex-col items-center flex-1">
                   <div className="flex items-center gap-1 px-2 py-0.5 rounded-full mb-2 bg-white/10">
                     <span className="text-[10px]">🎮</span>
@@ -303,25 +303,30 @@ export default function MyBattle() {
                   </div>
                   <span className="text-2xl md:text-3xl mb-0.5">🏆</span>
                   <p className="text-2xl md:text-3xl font-black text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)] mb-1.5">
-                    up to $5,000
+                    $9,000
                   </p>
                   
-                  <div className="px-3 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-blue-500 shadow-lg text-[10px] md:text-xs text-white font-bold">
-                    Start a Battle
+                  <div className="flex items-center gap-1 px-2.5 py-1 rounded-full shadow-lg text-[10px] md:text-xs bg-green-500 text-white shadow-green-500/30">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span className="font-bold whitespace-nowrap">
+                      $10 Free for Your First Battle
+                    </span>
                   </div>
                 </div>
 
-                {/* Right - Opponent Placeholder */}
+                {/* Right - Opponent */}
                 <div className="flex flex-col items-center flex-1">
                   <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-gray-500/30 mb-1.5 border-2 border-dashed border-gray-400/50">
                     ?
                   </div>
                   <span className="text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 text-gray-400">Opponent</span>
-                  <p className="text-lg md:text-2xl font-extrabold text-gray-500 mb-1">
-                    $---
+                  <p className="text-lg md:text-2xl font-extrabold text-red-400 mb-1">
+                    $5,000
                   </p>
                   <p className="text-[11px] md:text-xs uppercase tracking-wide text-gray-400">
-                    Piks: <span className="font-bold text-white/50">--</span> · <span className="font-bold text-white/50">--:--:--</span>
+                    Piks: <span className="font-bold text-white">4</span> · <span className="font-bold text-white">24:00:00</span>
                   </p>
                 </div>
               </div>
