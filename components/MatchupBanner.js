@@ -328,14 +328,14 @@ export default function MatchupBanner({
                   style={{
                     bottom: 0,
                     height: '100%',
-                    transform: `translateY(${70 - (holdProgress * 70)}%)`,
+                    transform: `translateY(${81 - (holdProgress * 81)}%)`,
                   }}
                 >
-                  {/* Water body - brighter blue gradient */}
+                  {/* Water body - solid gradient fill with soft top edge */}
                   <div 
                     className="absolute inset-0" 
                     style={{
-                      background: 'linear-gradient(to top, #22d3ee 0%, rgba(165, 243, 252, 0.85) 70%, transparent 100%)'
+                      background: 'linear-gradient(to top, #0ea5e9 0%, rgba(103, 232, 249, 0.8) 70%, transparent 100%)'
                     }}
                   />
                   
@@ -356,6 +356,14 @@ export default function MatchupBanner({
                       />
                     </svg>
                   </div>
+                  
+                  {/* Soft glow under the crest */}
+                  <div 
+                    className="absolute top-0 left-0 right-0 h-[20px]" 
+                    style={{ 
+                      background: 'linear-gradient(to bottom, rgba(255,255,255,0.3), transparent)'
+                    }} 
+                  />
                 </div>
               </div>
               <div className="relative z-10 p-4 h-[140px] md:h-[180px] flex flex-col overflow-hidden">
