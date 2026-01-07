@@ -331,8 +331,8 @@ export default function MatchupBanner({
                     transform: `translateY(${(1 - holdProgress) * 100}%)`,
                   }}
                 >
-                  {/* Deep water gradient */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-cyan-400/80 via-cyan-300/60 to-cyan-200/40" />
+                  {/* Deep water gradient - seamless blend */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0ea5e9] via-cyan-300/70 to-cyan-200/50" />
                   
                   {/* Back wave layer - slower, more transparent */}
                   <div className="absolute top-0 left-0 right-0 h-[60px]" style={{ transform: 'translateY(-70%)' }}>
