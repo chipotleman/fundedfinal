@@ -454,11 +454,6 @@ export default function Dashboard() {
             >
               Upcoming {categorizedGames.upcomingGames.length > 0 && `(${categorizedGames.upcomingGames.length})`}
             </TapSurface>
-            {lastUpdated && (
-              <span className="text-xs" style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>
-                Updated: {lastUpdated.toLocaleTimeString()}
-              </span>
-            )}
           </div>
           <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
             {sports.map((sport) => (
