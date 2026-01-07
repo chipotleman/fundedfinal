@@ -284,13 +284,8 @@ export default function MatchupBanner({
                 </svg>
               </div>
               <div className="relative z-10 p-4 h-[140px] md:h-[180px] flex flex-col overflow-hidden">
-                <img 
-                  src="/pikslogotransparent.png" 
-                  alt="Piks Pool" 
-                  className="absolute h-32 md:h-40 w-auto object-contain pointer-events-none"
-                  style={{ left: '-10px', top: '-10px' }}
-                />
-                <div className="flex items-center justify-end mb-3">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-white font-black text-lg md:text-xl tracking-wide">PIKS PRIZE</h3>
                   <div className="px-2 py-0.5 bg-white/20 rounded-full">
                     <span className="text-white text-[10px] font-semibold">${availablePool ? parseFloat(availablePool.buyIn).toFixed(0) : '25'} BUY-IN</span>
                   </div>
