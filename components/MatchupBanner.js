@@ -297,7 +297,7 @@ export default function MatchupBanner({
                   <div className="flex flex-col">
                     <span className="text-white/70 text-[10px] uppercase tracking-wide mb-1">Prize Pool</span>
                     <span className="text-white text-2xl md:text-3xl font-black">
-                      ${availablePool ? parseFloat(availablePool.calculatedPrizePool || availablePool.prizePool).toLocaleString() : '562.50'}
+                      ${availablePool ? parseFloat(availablePool.calculatedPrizePool || availablePool.prizePool).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '562.50'}
                     </span>
                     <span className="text-white/60 text-[10px]">Winner takes all</span>
                   </div>
