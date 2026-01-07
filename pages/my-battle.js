@@ -3,6 +3,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
+import FireBattleContainer from '../components/FireBattleContainer';
 import { useBetSlip } from '../contexts/BetSlipContext';
 
 export default function MyBattle() {
@@ -269,68 +270,7 @@ export default function MyBattle() {
           </div>
         ) : (
           <div className="mb-8">
-            <div 
-              className="bg-white/5 backdrop-blur-xl border-white/10 hover:bg-white/10 border rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer p-4 h-[140px] md:h-[180px]"
-              onClick={() => router.push('/battle')}
-            >
-              <div className="flex items-center justify-between h-full">
-                
-                {/* Left - User */}
-                <div className="flex flex-col items-center flex-1">
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-green-500/30 mb-1.5 border-2 border-green-300/50 overflow-hidden">
-                    {userProfile?.avatar ? (
-                      <img src={userProfile.avatar} alt="You" className="w-full h-full object-cover" />
-                    ) : (
-                      '🐉'
-                    )}
-                  </div>
-                  <span className="text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 text-gray-400">Your Balance</span>
-                  <p className="text-lg md:text-2xl font-extrabold text-green-400 mb-1">
-                    $5,000
-                  </p>
-                  <p className="text-[11px] md:text-xs uppercase tracking-wide text-gray-400">
-                    Piks: <span className="font-bold text-white">4</span> · <span className="font-bold text-white">24:00:00</span>
-                  </p>
-                </div>
-
-                {/* Center - Prize Pool */}
-                <div className="flex flex-col items-center flex-1">
-                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full mb-2 bg-white/10">
-                    <span className="text-[10px]">🎮</span>
-                    <span className="text-[9px] font-bold uppercase tracking-wide whitespace-nowrap text-white">
-                      1V1 BATTLE
-                    </span>
-                  </div>
-                  <span className="text-2xl md:text-3xl mb-0.5">🏆</span>
-                  <p className="text-2xl md:text-3xl font-black text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)] mb-1.5">
-                    $9,000
-                  </p>
-                  
-                  <div className="flex items-center gap-1 px-2.5 py-1 rounded-full shadow-lg text-[10px] md:text-xs bg-green-500 text-white shadow-green-500/30">
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                    <span className="font-bold whitespace-nowrap">
-                      $10 Free for Your First Battle
-                    </span>
-                  </div>
-                </div>
-
-                {/* Right - Opponent */}
-                <div className="flex flex-col items-center flex-1">
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-gray-500/30 mb-1.5 border-2 border-dashed border-gray-400/50">
-                    ?
-                  </div>
-                  <span className="text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 text-gray-400">Opponent</span>
-                  <p className="text-lg md:text-2xl font-extrabold text-red-400 mb-1">
-                    $5,000
-                  </p>
-                  <p className="text-[11px] md:text-xs uppercase tracking-wide text-gray-400">
-                    Piks: <span className="font-bold text-white">4</span> · <span className="font-bold text-white">24:00:00</span>
-                  </p>
-                </div>
-              </div>
-            </div>
+            <FireBattleContainer isDarkMode={true} />
           </div>
         )}
 
