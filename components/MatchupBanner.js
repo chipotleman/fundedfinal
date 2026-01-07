@@ -177,10 +177,10 @@ export default function MatchupBanner({
             {/* Container 1: Battle Status */}
             <div 
               data-slide-index="0"
-              className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${containerClass} p-4`}
+              className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${containerClass} p-4 h-[140px] md:h-[180px]`}
               onClick={() => setShowModal(true)}
             >
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between h-full">
                 
                 {/* Left - User */}
                 <div className="flex flex-col items-center flex-1">
@@ -283,16 +283,14 @@ export default function MatchupBanner({
                   </path>
                 </svg>
               </div>
-              <div className="relative z-10 p-4 min-h-[140px] md:min-h-[180px] flex flex-col">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center">
-                    <img 
-                      src="/pikslogotransparent.png" 
-                      alt="Piks Pool" 
-                      className="h-32 md:h-40 w-auto object-contain"
-                      style={{ marginLeft: '-18px', marginTop: '-10px' }}
-                    />
-                  </div>
+              <div className="relative z-10 p-4 h-[140px] md:h-[180px] flex flex-col overflow-hidden">
+                <img 
+                  src="/pikslogotransparent.png" 
+                  alt="Piks Pool" 
+                  className="absolute h-32 md:h-40 w-auto object-contain pointer-events-none"
+                  style={{ left: '-10px', top: '-10px' }}
+                />
+                <div className="flex items-center justify-end mb-3">
                   <div className="px-2 py-0.5 bg-white/20 rounded-full">
                     <span className="text-white text-[10px] font-semibold">${availablePool ? parseFloat(availablePool.buyIn).toFixed(0) : '25'} BUY-IN</span>
                   </div>
@@ -357,7 +355,7 @@ export default function MatchupBanner({
 
             {/* Container 3: Promo Placeholder */}
             <div data-slide-index="2" className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${containerClass}`}>
-              <div className="h-full flex flex-col items-center justify-center p-6 min-h-[140px] md:min-h-[180px]">
+              <div className="h-[140px] md:h-[180px] flex flex-col items-center justify-center p-6">
                 <span className="text-3xl md:text-4xl mb-2 md:mb-3">🏆</span>
                 <h3 className={`text-base md:text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Leaderboard</h3>
                 <p className={`text-xs md:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Top players this week</p>
@@ -366,7 +364,7 @@ export default function MatchupBanner({
 
             {/* Container 4: Promo Placeholder */}
             <div data-slide-index="3" className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${containerClass}`}>
-              <div className="h-full flex flex-col items-center justify-center p-6 min-h-[140px] md:min-h-[180px]">
+              <div className="h-[140px] md:h-[180px] flex flex-col items-center justify-center p-6">
                 <span className="text-3xl md:text-4xl mb-2 md:mb-3">💎</span>
                 <h3 className={`text-base md:text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>VIP Program</h3>
                 <p className={`text-xs md:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Exclusive benefits await</p>
