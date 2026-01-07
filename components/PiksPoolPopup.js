@@ -124,7 +124,7 @@ export default function PiksPoolPopup({ isOpen, onClose, pool }) {
             </button>
             <button
               onClick={onClose}
-              className="text-white/60 text-sm"
+              className="text-white/60 text-sm no-hover-effect"
             >
               Maybe Later
             </button>
