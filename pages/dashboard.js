@@ -398,26 +398,64 @@ export default function Dashboard() {
           />
         ) : user && (
           <div className="mb-6">
-            <div 
-              className="glass-card p-4 flex items-center justify-between cursor-pointer hover:border-blue-500/50 transition-all"
-              onClick={() => router.push('/battle')}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </div>
-                <div>
-                  <h3 className="text-white font-semibold">1v1 Battle Mode</h3>
-                  <p className="text-gray-400 text-sm">Challenge another player and compete for the pot</p>
+            <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/20 p-4 sm:p-6">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-green-400 font-semibold text-xs sm:text-sm uppercase tracking-wide">No Active Battle</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                  <span className="text-gray-400 font-mono text-sm">--:--:--</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-blue-400 font-medium text-sm">Find Opponent</span>
-                <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
+
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 items-center">
+                <div className="text-center">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 rounded-full bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center text-xl sm:text-2xl">
+                    {user?.image ? (
+                      <img src={user.image} alt="You" className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      '👤'
+                    )}
+                  </div>
+                  <p className="text-white font-bold text-sm sm:text-base truncate">{user?.name || 'You'}</p>
+                  <p className="text-lg sm:text-2xl font-black text-gray-500">$---</p>
+                </div>
+
+                <div className="text-center">
+                  <div className="w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-2 rounded-full bg-gradient-to-br from-green-500/30 to-blue-500/30 border-2 border-dashed border-green-500/50 flex items-center justify-center">
+                    <span className="text-2xl sm:text-4xl">⚔️</span>
+                  </div>
+                  <p className="text-white font-bold text-xs sm:text-sm">VS</p>
+                </div>
+
+                <div className="text-center">
+                  <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 rounded-full bg-gradient-to-br from-gray-600 to-gray-700 border-2 border-dashed border-gray-500 flex items-center justify-center text-xl sm:text-2xl">
+                    <span className="text-gray-400">?</span>
+                  </div>
+                  <p className="text-gray-500 font-bold text-sm sm:text-base">Waiting...</p>
+                  <p className="text-lg sm:text-2xl font-black text-gray-500">$---</p>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-4 border-t border-white/10">
+                <div className="text-center py-2 sm:py-4">
+                  <h3 className="text-lg sm:text-xl font-bold text-white mb-1 sm:mb-2">Ready to Compete?</h3>
+                  <p className="text-gray-400 text-xs sm:text-sm mb-2 sm:mb-3">
+                    Challenge another player head-to-head. Winner takes 90% of the combined pot!
+                  </p>
+                  <div className="flex justify-center gap-3 sm:gap-4 text-xs text-gray-500">
+                    <span>⚡ 30 min - 1 week</span>
+                    <span>🏆 Real competition</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4">
+                <button
+                  onClick={() => router.push('/battle')}
+                  className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-400 hover:to-blue-400 text-black font-bold py-3 sm:py-4 rounded-xl transition-all text-base sm:text-lg"
+                >
+                  Start a Battle
+                </button>
               </div>
             </div>
           </div>
