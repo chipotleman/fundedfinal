@@ -22,10 +22,10 @@ export default function PiksPoolPopup({ isOpen, onClose, pool }) {
   const winnerPayout = prizePool * (1 - platformFee);
 
   const rules = [
-    { icon: '🚀', title: '3-Day Run It Up', desc: 'Race to grow your balance in just 3 days' },
+    { icon: '⏱️', title: '1-Day Run It Up', desc: 'You have exactly 24 hours from when the challenge starts' },
     { icon: '💵', title: 'Starting Balance', desc: 'Everyone starts with $1,000' },
-    { icon: '📈', title: 'Highest Balance Wins', desc: 'Player with the highest balance at the end takes the pot' },
-    { icon: '🏆', title: 'Winner Takes All', desc: `Top player wins ${((1 - platformFee) * 100).toFixed(0)}% of the prize pool` },
+    { icon: '📈', title: 'Highest Balance Wins', desc: 'Player with the highest balance at the end wins' },
+    { icon: '🏆', title: 'Winner Takes All', desc: 'Top pikker takes the whole pool' },
   ];
 
   return (
