@@ -347,10 +347,10 @@ export default function MatchupBanner({
                     }}
                   />
                   
-                  {/* Single wave crest - stroke only, no fill */}
-                  <div className="absolute top-0 left-0 right-0 h-[30px]" style={{ transform: 'translateY(-50%)' }}>
+                  {/* Single wave crest with sailboat - both move together */}
+                  <div className="absolute top-0 left-0 right-0 h-[30px] wave-crest" style={{ width: '200%' }}>
                     <svg 
-                      className="w-[200%] h-full wave-crest" 
+                      className="w-full h-full" 
                       viewBox="0 0 2880 30" 
                       preserveAspectRatio="none"
                       style={{ filter: 'blur(1px)' }}
@@ -363,22 +363,22 @@ export default function MatchupBanner({
                         d="M0,15 C60,8 120,22 180,15 C240,8 300,22 360,15 C420,8 480,22 540,15 C600,8 660,22 720,15 C780,8 840,22 900,15 C960,8 1020,22 1080,15 C1140,8 1200,22 1260,15 C1320,8 1380,22 1440,15 C1500,8 1560,22 1620,15 C1680,8 1740,22 1800,15 C1860,8 1920,22 1980,15 C2040,8 2100,22 2160,15 C2220,8 2280,22 2340,15 C2400,8 2460,22 2520,15 C2580,8 2640,22 2700,15 C2760,8 2820,22 2880,15"
                       />
                     </svg>
-                  </div>
-                  
-                  {/* Little sailboat floating on the water */}
-                  <div 
-                    className="absolute top-0 left-0 sailboat"
-                    style={{ transform: 'translateY(-85%)' }}
-                  >
-                    <svg width="24" height="28" viewBox="0 0 24 28" fill="none">
-                      {/* Sail */}
-                      <path d="M12,2 L12,18 L4,18 Z" fill="rgba(255,255,255,0.9)" />
-                      <path d="M12,5 L12,18 L18,18 Z" fill="rgba(255,255,255,0.7)" />
-                      {/* Mast */}
-                      <line x1="12" y1="2" x2="12" y2="20" stroke="rgba(139,90,43,0.9)" strokeWidth="1.5" />
-                      {/* Hull */}
-                      <path d="M3,20 Q4,24 12,24 Q20,24 21,20 Z" fill="rgba(139,90,43,0.9)" />
-                    </svg>
+                    
+                    {/* Little sailboat floating on the water - positioned within the wave layer */}
+                    <div 
+                      className="absolute sailboat-bob"
+                      style={{ left: '70%', top: '50%' }}
+                    >
+                      <svg width="24" height="28" viewBox="0 0 24 28" fill="none">
+                        {/* Sail */}
+                        <path d="M12,2 L12,18 L4,18 Z" fill="rgba(255,255,255,0.9)" />
+                        <path d="M12,5 L12,18 L18,18 Z" fill="rgba(255,255,255,0.7)" />
+                        {/* Mast */}
+                        <line x1="12" y1="2" x2="12" y2="20" stroke="rgba(139,90,43,0.9)" strokeWidth="1.5" />
+                        {/* Hull */}
+                        <path d="M3,20 Q4,24 12,24 Q20,24 21,20 Z" fill="rgba(139,90,43,0.9)" />
+                      </svg>
+                    </div>
                   </div>
                   
                   {/* Soft glow under the crest */}
@@ -470,19 +470,15 @@ export default function MatchupBanner({
                   animation: waveSlide 10s linear infinite;
                 }
                 @keyframes waveSlide {
-                  0% { transform: translateX(0); }
-                  100% { transform: translateX(-50%); }
+                  0% { transform: translateY(-50%) translateX(0); }
+                  100% { transform: translateY(-50%) translateX(-50%); }
                 }
-                .sailboat {
-                  animation: sailAcross 15s linear infinite, bobbing 2s ease-in-out infinite;
-                }
-                @keyframes sailAcross {
-                  0% { left: -30px; }
-                  100% { left: calc(100% + 30px); }
+                .sailboat-bob {
+                  animation: bobbing 2.5s ease-in-out infinite;
                 }
                 @keyframes bobbing {
-                  0%, 100% { transform: translateY(-85%) rotate(-2deg); }
-                  50% { transform: translateY(-90%) rotate(2deg); }
+                  0%, 100% { transform: translateY(-100%) rotate(-2deg); }
+                  50% { transform: translateY(-105%) rotate(2deg); }
                 }
               `}</style>
             </div>
