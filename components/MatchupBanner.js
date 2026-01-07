@@ -58,8 +58,8 @@ export default function MatchupBanner({
   const fetchPoolData = async () => {
     try {
       const [availableRes, myPoolRes] = await Promise.all([
-        fetch('/api/pools/available'),
-        fetch('/api/pools/my-pool')
+        fetch('/api/pools/available', { credentials: 'include' }),
+        fetch('/api/pools/my-pool', { credentials: 'include' })
       ]);
       
       const availableData = await availableRes.json();

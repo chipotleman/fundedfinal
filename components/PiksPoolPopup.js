@@ -49,6 +49,7 @@ export default function PiksPoolPopup({ isOpen, onClose, pool, onJoinSuccess }) 
       const res = await fetch('/api/pools/join', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ poolId: pool.id }),
       });
 
