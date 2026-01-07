@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import PiksPoolPopup from './PiksPoolPopup';
 
 function formatTimeRemaining(ms) {
   if (!ms || ms <= 0) return 'Ended';
@@ -29,6 +30,7 @@ export default function PoolContainer({ isDarkMode }) {
   const [poolTimeRemaining, setPoolTimeRemaining] = useState(null);
   const [holdProgress, setHoldProgress] = useState(0);
   const [isHolding, setIsHolding] = useState(false);
+  const [showPoolPopup, setShowPoolPopup] = useState(false);
   
   const holdStartRef = useRef(null);
   const animationFrameRef = useRef(null);
@@ -94,7 +96,9 @@ export default function PoolContainer({ isDarkMode }) {
       setHoldProgress(progress);
       
       if (progress >= 1) {
-        handleJoin();
+        setIsHolding(false);
+        setHoldProgress(0);
+        setShowPoolPopup(true);
         return;
       }
       
@@ -128,30 +132,8 @@ export default function PoolContainer({ isDarkMode }) {
     animationFrameRef.current = requestAnimationFrame(animateRelease);
   };
 
-  const handleJoin = async () => {
-    if (!availablePool) return;
-    
-    try {
-      const res = await fetch('/api/pools/join', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ poolId: availablePool.id }),
-      });
-      
-      if (res.ok) {
-        fetchPoolData();
-        setHoldProgress(0);
-      } else {
-        const data = await res.json();
-        alert(data.error || 'Failed to join pool');
-        setHoldProgress(0);
-      }
-    } catch (err) {
-      console.error('Error joining pool:', err);
-      setHoldProgress(0);
-    }
-    setIsHolding(false);
+  const handleJoinSuccess = () => {
+    fetchPoolData();
   };
 
   useEffect(() => {
@@ -363,6 +345,13 @@ export default function PoolContainer({ isDarkMode }) {
           to { transform: translateX(-50%); }
         }
       `}</style>
+      
+      <PiksPoolPopup 
+        isOpen={showPoolPopup}
+        onClose={() => setShowPoolPopup(false)}
+        pool={availablePool}
+        onJoinSuccess={handleJoinSuccess}
+      />
     </div>
   );
 }
