@@ -41,7 +41,11 @@ export default function MatchupBanner({
   const [showModal, setShowModal] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [availablePool, setAvailablePool] = useState(null);
+  const [holdProgress, setHoldProgress] = useState(0);
+  const [isHolding, setIsHolding] = useState(false);
   const scrollRef = useRef(null);
+  const holdIntervalRef = useRef(null);
+  const holdStartRef = useRef(null);
   const router = useRouter();
   const { isDarkMode } = useTheme();
 
@@ -60,6 +64,48 @@ export default function MatchupBanner({
       }
     };
     fetchPool();
+  }, []);
+
+  // Hold-to-join handlers
+  const HOLD_DURATION = 1500; // 1.5 seconds to complete
+
+  const startHold = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsHolding(true);
+    holdStartRef.current = Date.now();
+    
+    holdIntervalRef.current = setInterval(() => {
+      const elapsed = Date.now() - holdStartRef.current;
+      const progress = Math.min(elapsed / HOLD_DURATION, 1);
+      setHoldProgress(progress);
+      
+      if (progress >= 1) {
+        clearInterval(holdIntervalRef.current);
+        setIsHolding(false);
+        setHoldProgress(0);
+        router.push('/pools');
+      }
+    }, 16); // ~60fps
+  };
+
+  const endHold = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (holdIntervalRef.current) {
+      clearInterval(holdIntervalRef.current);
+    }
+    setIsHolding(false);
+    setHoldProgress(0);
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (holdIntervalRef.current) {
+        clearInterval(holdIntervalRef.current);
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -258,8 +304,35 @@ export default function MatchupBanner({
               style={{
                 background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 25%, #0369a1 50%, #075985 75%, #0c4a6e 100%)',
               }}
-              onClick={() => router.push('/pools')}
             >
+              {/* Rising water fill animation */}
+              <div 
+                className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-cyan-300/60 via-cyan-400/40 to-transparent transition-all duration-100 ease-out"
+                style={{
+                  height: `${holdProgress * 100}%`,
+                  opacity: holdProgress > 0 ? 1 : 0,
+                }}
+              >
+                {/* Animated wave on top of rising water */}
+                <svg 
+                  className="absolute top-0 left-0 right-0 w-full" 
+                  viewBox="0 0 1440 30" 
+                  preserveAspectRatio="none"
+                  style={{ transform: 'translateY(-50%)' }}
+                >
+                  <path 
+                    fill="rgba(103, 232, 249, 0.5)" 
+                    d="M0,15 Q180,0 360,15 T720,15 T1080,15 T1440,15 L1440,30 L0,30 Z"
+                  >
+                    <animate 
+                      attributeName="d" 
+                      dur="1s" 
+                      repeatCount="indefinite" 
+                      values="M0,15 Q180,0 360,15 T720,15 T1080,15 T1440,15 L1440,30 L0,30 Z;M0,15 Q180,30 360,15 T720,15 T1080,15 T1440,15 L1440,30 L0,30 Z;M0,15 Q180,0 360,15 T720,15 T1080,15 T1440,15 L1440,30 L0,30 Z" 
+                    />
+                  </path>
+                </svg>
+              </div>
               <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute inset-0 opacity-30">
                   {[...Array(8)].map((_, i) => (
@@ -297,8 +370,26 @@ export default function MatchupBanner({
                   </span>
                 </div>
                 <div className="flex items-center justify-center -mt-4 md:mt-[10px]">
-                  <div className="px-6 py-2 bg-white/25 hover:bg-white/35 rounded-xl transition-colors shadow-lg">
-                    <span className="text-white text-sm md:text-base font-bold tracking-wide">JOIN THE POOL</span>
+                  <div 
+                    className="relative px-6 py-2 bg-white/25 hover:bg-white/35 rounded-xl transition-colors shadow-lg overflow-hidden select-none"
+                    onMouseDown={startHold}
+                    onMouseUp={endHold}
+                    onMouseLeave={endHold}
+                    onTouchStart={startHold}
+                    onTouchEnd={endHold}
+                    onTouchCancel={endHold}
+                  >
+                    {/* Button fill animation */}
+                    <div 
+                      className="absolute inset-0 bg-gradient-to-r from-cyan-300 to-white transition-all duration-100 ease-out"
+                      style={{
+                        width: `${holdProgress * 100}%`,
+                        opacity: 0.6,
+                      }}
+                    />
+                    <span className="relative text-white text-sm md:text-base font-bold tracking-wide">
+                      {isHolding ? 'JOINING...' : 'HOLD TO JOIN'}
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between mt-auto pt-2">
