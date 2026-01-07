@@ -296,7 +296,7 @@ export default function MatchupBanner({
                     ${availablePool ? parseFloat(availablePool.maxPrizePool || availablePool.prizePool).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '562.50'}
                   </span>
                 </div>
-                <div className="flex items-center justify-center flex-1 -mt-1">
+                <div className="flex items-center justify-center flex-1 -mt-3 md:-mt-1">
                   <div className="px-6 py-2 bg-white/25 hover:bg-white/35 rounded-xl transition-colors shadow-lg">
                     <span className="text-white text-sm md:text-base font-bold tracking-wide">JOIN THE POOL</span>
                   </div>
