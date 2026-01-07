@@ -289,7 +289,8 @@ export default function MatchupBanner({
                     <img 
                       src="/pikslogotransparent.png" 
                       alt="Piks Pool" 
-                      className="h-16 md:h-20 w-auto object-contain -ml-2"
+                      className="h-32 md:h-40 w-auto object-contain"
+                      style={{ marginLeft: '-18px', marginTop: '-10px' }}
                     />
                   </div>
                   <div className="px-2 py-0.5 bg-white/20 rounded-full">
