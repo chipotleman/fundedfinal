@@ -301,7 +301,7 @@ export default function MatchupBanner({
                     <span className="text-white text-sm md:text-base font-bold tracking-wide">JOIN THE POOL</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between mt-auto">
                   <span className="text-white/60 text-[10px]">Winner takes all</span>
                   <div className="flex items-center gap-2">
                     <div className="flex -space-x-2">
