@@ -674,3 +674,76 @@ export type FakeOpponent = typeof fakeOpponents.$inferSelect;
 export type InsertFakeOpponent = typeof fakeOpponents.$inferInsert;
 export type FakeOpponentBet = typeof fakeOpponentBets.$inferSelect;
 export type InsertFakeOpponentBet = typeof fakeOpponentBets.$inferInsert;
+
+// Pik Pools - Multi-player betting competitions
+export const pikPools = pgTable("pik_pools", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 255 }).notNull(),
+  buyIn: decimal("buy_in", { precision: 10, scale: 2 }).notNull(), // Entry fee (e.g., $25)
+  startingBalance: decimal("starting_balance", { precision: 10, scale: 2 }).default('1000').notNull(),
+  minPlayers: integer("min_players").default(5).notNull(),
+  maxPlayers: integer("max_players").default(25).notNull(),
+  currentPlayers: integer("current_players").default(0).notNull(),
+  platformFeePercent: decimal("platform_fee_percent", { precision: 5, scale: 2 }).default('10').notNull(), // 10%
+  prizePool: decimal("prize_pool", { precision: 12, scale: 2 }).default('0').notNull(), // Total collected after fee
+  durationMinutes: integer("duration_minutes").default(1440).notNull(), // Default 24 hours
+  durationType: varchar("duration_type", { length: 50 }).default('1_day'),
+  status: varchar("status", { length: 50 }).default('open').notNull(), // open, filling, active, completed, cancelled
+  startsAt: timestamp("starts_at"),
+  endsAt: timestamp("ends_at"),
+  winnerId: varchar("winner_id"),
+  winnerPayout: decimal("winner_payout", { precision: 12, scale: 2 }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  statusIdx: index("pik_pools_status_idx").on(table.status),
+  startsAtIdx: index("pik_pools_starts_at_idx").on(table.startsAt),
+}));
+
+// Pool Participants
+export const poolParticipants = pgTable("pool_participants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  poolId: varchar("pool_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  balance: decimal("balance", { precision: 10, scale: 2 }).notNull(), // Current balance in pool
+  finalBalance: decimal("final_balance", { precision: 10, scale: 2 }),
+  placement: integer("placement"), // Final rank (1st, 2nd, etc.)
+  joinedAt: timestamp("joined_at").defaultNow().notNull(),
+}, (table) => ({
+  poolIdIdx: index("pool_participants_pool_id_idx").on(table.poolId),
+  userIdIdx: index("pool_participants_user_id_idx").on(table.userId),
+  poolUserIdx: index("pool_participants_pool_user_idx").on(table.poolId, table.userId),
+}));
+
+// Pool Bets - Bets made within a pool competition
+export const poolBets = pgTable("pool_bets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  poolId: varchar("pool_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  matchupName: varchar("matchup_name", { length: 255 }),
+  marketType: varchar("market_type", { length: 100 }),
+  selection: varchar("selection", { length: 255 }),
+  odds: varchar("odds", { length: 20 }),
+  stake: decimal("stake", { precision: 10, scale: 2 }),
+  potentialPayout: decimal("potential_payout", { precision: 10, scale: 2 }),
+  status: varchar("status", { length: 50 }).default('pending'), // pending, won, lost, push
+  pnl: decimal("pnl", { precision: 10, scale: 2 }),
+  balanceBefore: decimal("balance_before", { precision: 10, scale: 2 }),
+  balanceAfter: decimal("balance_after", { precision: 10, scale: 2 }),
+  legs: jsonb("legs"),
+  homeTeamFull: varchar("home_team_full", { length: 255 }),
+  awayTeamFull: varchar("away_team_full", { length: 255 }),
+  placedAt: timestamp("placed_at").defaultNow().notNull(),
+  settledAt: timestamp("settled_at"),
+}, (table) => ({
+  poolIdIdx: index("pool_bets_pool_id_idx").on(table.poolId),
+  userIdIdx: index("pool_bets_user_id_idx").on(table.userId),
+  statusIdx: index("pool_bets_status_idx").on(table.status),
+}));
+
+export type PikPool = typeof pikPools.$inferSelect;
+export type InsertPikPool = typeof pikPools.$inferInsert;
+export type PoolParticipant = typeof poolParticipants.$inferSelect;
+export type InsertPoolParticipant = typeof poolParticipants.$inferInsert;
+export type PoolBet = typeof poolBets.$inferSelect;
+export type InsertPoolBet = typeof poolBets.$inferInsert;
