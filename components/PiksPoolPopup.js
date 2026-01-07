@@ -31,7 +31,7 @@ export default function PiksPoolPopup({ isOpen, onClose, pool }) {
 
   return (
     <div 
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[100] flex items-start justify-center pt-4 px-4 overflow-y-auto"
       onClick={onClose}
     >
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
