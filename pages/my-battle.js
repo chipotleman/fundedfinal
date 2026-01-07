@@ -269,63 +269,61 @@ export default function MyBattle() {
           </div>
         ) : (
           <div className="mb-8">
-            <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/20 p-6 mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-green-400 font-semibold text-sm uppercase tracking-wide">No Active Battle</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-                  <span className="text-gray-400 font-mono">--:--:--</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4 items-center">
-                <div className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center text-2xl">
+            <div 
+              className="bg-white/5 backdrop-blur-xl border-white/10 hover:bg-white/10 border rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer p-4 h-[140px] md:h-[180px]"
+              onClick={() => router.push('/battle')}
+            >
+              <div className="flex items-center justify-between h-full">
+                
+                {/* Left - User */}
+                <div className="flex flex-col items-center flex-1">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-green-500/30 mb-1.5 border-2 border-green-300/50">
                     {userProfile?.avatar ? (
                       <img src={userProfile.avatar} alt="You" className="w-full h-full rounded-full object-cover" />
                     ) : (
                       '👤'
                     )}
                   </div>
-                  <p className="text-white font-bold">{userProfile?.username || 'You'}</p>
-                  <p className="text-2xl font-black text-gray-500">$---</p>
-                </div>
-
-                <div className="text-center">
-                  <div className="w-20 h-20 mx-auto mb-2 rounded-full bg-gradient-to-br from-green-500/30 to-blue-500/30 border-2 border-dashed border-green-500/50 flex items-center justify-center">
-                    <span className="text-4xl">⚔️</span>
-                  </div>
-                  <p className="text-white font-bold text-sm">VS</p>
-                </div>
-
-                <div className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-gradient-to-br from-gray-600 to-gray-700 border-2 border-dashed border-gray-500 flex items-center justify-center text-2xl">
-                    <span className="text-gray-400">?</span>
-                  </div>
-                  <p className="text-gray-500 font-bold">Waiting...</p>
-                  <p className="text-2xl font-black text-gray-500">$---</p>
-                </div>
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-white/10">
-                <div className="text-center py-6">
-                  <h3 className="text-xl font-bold text-white mb-2">Ready to Compete?</h3>
-                  <p className="text-gray-400 text-sm mb-4">
-                    Challenge another player head-to-head. Winner takes 90% of the combined pot!
+                  <span className="text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 text-gray-400">Your Balance</span>
+                  <p className="text-lg md:text-2xl font-extrabold text-gray-500 mb-1">
+                    $---
                   </p>
-                  <div className="flex justify-center gap-4 text-sm text-gray-500">
-                    <span>⚡ 30 min to 1 week battles</span>
-                    <span>🏆 Real competition</span>
+                  <p className="text-[11px] md:text-xs uppercase tracking-wide text-gray-500">
+                    Ready to battle
+                  </p>
+                </div>
+
+                {/* Center - Start Battle CTA */}
+                <div className="flex flex-col items-center flex-1">
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full mb-2 bg-white/10">
+                    <span className="text-[10px]">⚔️</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wide whitespace-nowrap text-white">
+                      1V1 BATTLE
+                    </span>
+                  </div>
+                  <span className="text-2xl md:text-3xl mb-0.5">🏆</span>
+                  <p className="text-sm md:text-base font-bold mb-1.5 text-white">
+                    Winner takes 90%
+                  </p>
+                  
+                  <div className="px-3 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-blue-500 shadow-lg text-[10px] md:text-xs text-black font-bold">
+                    Start a Battle
                   </div>
                 </div>
-              </div>
 
-              <div className="mt-6 flex gap-4">
-                <Link href="/battle" className="flex-1">
-                  <button className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-400 hover:to-blue-400 text-black font-bold py-4 rounded-xl transition-all text-lg">
-                    Start a Battle
-                  </button>
-                </Link>
+                {/* Right - Opponent Placeholder */}
+                <div className="flex flex-col items-center flex-1">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-gray-500/30 mb-1.5 border-2 border-dashed border-gray-400">
+                    ?
+                  </div>
+                  <span className="text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 text-gray-400">Opponent</span>
+                  <p className="text-lg md:text-2xl font-extrabold text-gray-500 mb-1">
+                    $---
+                  </p>
+                  <p className="text-[11px] md:text-xs uppercase tracking-wide text-gray-500">
+                    Waiting...
+                  </p>
+                </div>
               </div>
             </div>
           </div>

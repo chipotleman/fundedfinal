@@ -5,6 +5,7 @@ import BetSlip from '../components/BetSlip';
 import TapSurface from '../components/TapSurface';
 import LiveGameTimer from '../components/LiveGameTimer';
 import MatchupBanner from '../components/MatchupBanner';
+import PoolContainer from '../components/PoolContainer';
 import { inferLeague } from '../lib/leagueInference';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -398,64 +399,77 @@ export default function Dashboard() {
           />
         ) : user && (
           <div className="mb-6">
-            <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/20 p-4 sm:p-6">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-green-400 font-semibold text-xs sm:text-sm uppercase tracking-wide">No Active Battle</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-                  <span className="text-gray-400 font-mono text-sm">--:--:--</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-2 sm:gap-4 items-center">
-                <div className="text-center">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 rounded-full bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center text-xl sm:text-2xl">
-                    {user?.image ? (
-                      <img src={user.image} alt="You" className="w-full h-full rounded-full object-cover" />
-                    ) : (
-                      '👤'
-                    )}
-                  </div>
-                  <p className="text-white font-bold text-sm sm:text-base truncate">{user?.name || 'You'}</p>
-                  <p className="text-lg sm:text-2xl font-black text-gray-500">$---</p>
-                </div>
-
-                <div className="text-center">
-                  <div className="w-14 h-14 sm:w-20 sm:h-20 mx-auto mb-2 rounded-full bg-gradient-to-br from-green-500/30 to-blue-500/30 border-2 border-dashed border-green-500/50 flex items-center justify-center">
-                    <span className="text-2xl sm:text-4xl">⚔️</span>
-                  </div>
-                  <p className="text-white font-bold text-xs sm:text-sm">VS</p>
-                </div>
-
-                <div className="text-center">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-2 rounded-full bg-gradient-to-br from-gray-600 to-gray-700 border-2 border-dashed border-gray-500 flex items-center justify-center text-xl sm:text-2xl">
-                    <span className="text-gray-400">?</span>
-                  </div>
-                  <p className="text-gray-500 font-bold text-sm sm:text-base">Waiting...</p>
-                  <p className="text-lg sm:text-2xl font-black text-gray-500">$---</p>
-                </div>
-              </div>
-
-              <div className="mt-4 pt-4 border-t border-white/10">
-                <div className="text-center py-2 sm:py-4">
-                  <h3 className="text-lg sm:text-xl font-bold text-white mb-1 sm:mb-2">Ready to Compete?</h3>
-                  <p className="text-gray-400 text-xs sm:text-sm mb-2 sm:mb-3">
-                    Challenge another player head-to-head. Winner takes 90% of the combined pot!
-                  </p>
-                  <div className="flex justify-center gap-3 sm:gap-4 text-xs text-gray-500">
-                    <span>⚡ 30 min - 1 week</span>
-                    <span>🏆 Real competition</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-4">
-                <button
+            <div className="overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <div className="flex gap-3" style={{ minWidth: 'max-content' }}>
+                
+                {/* Container 1: Start a Battle (same dimensions as active matchup) */}
+                <div 
+                  className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${
+                    isDarkMode 
+                      ? 'bg-white/5 backdrop-blur-xl border-white/10 hover:bg-white/10' 
+                      : 'bg-white/80 backdrop-blur-xl border-gray-200 hover:bg-white'
+                  } border rounded-2xl overflow-hidden transition-all duration-200 cursor-pointer p-4 h-[140px] md:h-[180px]`}
                   onClick={() => router.push('/battle')}
-                  className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-400 hover:to-blue-400 text-black font-bold py-3 sm:py-4 rounded-xl transition-all text-base sm:text-lg"
                 >
-                  Start a Battle
-                </button>
+                  <div className="flex items-center justify-between h-full">
+                    
+                    {/* Left - User */}
+                    <div className="flex flex-col items-center flex-1">
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-green-500/30 mb-1.5 border-2 border-green-300/50">
+                        {user?.image ? (
+                          <img src={user.image} alt="You" className="w-full h-full rounded-full object-cover" />
+                        ) : (
+                          '👤'
+                        )}
+                      </div>
+                      <span className={`text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Your Balance</span>
+                      <p className="text-lg md:text-2xl font-extrabold text-gray-500 mb-1">
+                        $---
+                      </p>
+                      <p className={`text-[11px] md:text-xs uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                        Ready to battle
+                      </p>
+                    </div>
+
+                    {/* Center - Start Battle CTA */}
+                    <div className="flex flex-col items-center flex-1">
+                      <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full mb-2 ${
+                        isDarkMode ? 'bg-white/10' : 'bg-gray-100'
+                      }`}>
+                        <span className="text-[10px]">⚔️</span>
+                        <span className={`text-[9px] font-bold uppercase tracking-wide whitespace-nowrap ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          1V1 BATTLE
+                        </span>
+                      </div>
+                      <span className="text-2xl md:text-3xl mb-0.5">🏆</span>
+                      <p className={`text-sm md:text-base font-bold mb-1.5 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        Winner takes 90%
+                      </p>
+                      
+                      <div className="px-3 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-blue-500 shadow-lg text-[10px] md:text-xs text-black font-bold">
+                        Start a Battle
+                      </div>
+                    </div>
+
+                    {/* Right - Opponent Placeholder */}
+                    <div className="flex flex-col items-center flex-1">
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-gray-500/30 mb-1.5 border-2 border-dashed border-gray-400">
+                        ?
+                      </div>
+                      <span className={`text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Opponent</span>
+                      <p className="text-lg md:text-2xl font-extrabold text-gray-500 mb-1">
+                        $---
+                      </p>
+                      <p className={`text-[11px] md:text-xs uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                        Waiting...
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Container 2: Pik Pool (same as MatchupBanner pool container) */}
+                <PoolContainer isDarkMode={isDarkMode} />
+
               </div>
             </div>
           </div>
