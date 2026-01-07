@@ -1,8 +1,8 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { matchups, matchupQueue, fakeOpponents, profiles, userChallenges } from '../../../shared/schema';
-import { eq, and, ne } from 'drizzle-orm';
+import { matchups, matchupQueue, fakeOpponents, profiles, userChallenges, poolParticipants, pikPools } from '../../../shared/schema';
+import { eq, and, ne, or, inArray } from 'drizzle-orm';
 
 const DURATION_CONFIGS = {
   '30_min': { minutes: 30, label: '30 Minutes' },
@@ -58,6 +58,29 @@ export default async function handler(req, res) {
         challengeType = challengeData?.challengeType || challengeType;
       }
 
+      const [activePoolParticipation] = await db
+        .select({
+          participant: poolParticipants,
+          pool: pikPools,
+        })
+        .from(poolParticipants)
+        .innerJoin(pikPools, eq(poolParticipants.poolId, pikPools.id))
+        .where(
+          and(
+            eq(poolParticipants.userId, userId),
+            inArray(pikPools.status, ["open", "filling", "active"])
+          )
+        )
+        .limit(1);
+
+      if (activePoolParticipation) {
+        return res.status(409).json({
+          error: 'You are already in an active pool',
+          code: 'ACTIVE_CHALLENGE_EXISTS',
+          challengeType: 'pool',
+        });
+      }
+
       const [existingQueue] = await db
         .select()
         .from(matchupQueue)
@@ -74,8 +97,11 @@ export default async function handler(req, res) {
         .select()
         .from(matchups)
         .where(and(
-          eq(matchups.user1Id, userId),
-          eq(matchups.status, 'active')
+          or(
+            eq(matchups.user1Id, userId),
+            eq(matchups.user2Id, userId)
+          ),
+          inArray(matchups.status, ['waiting', 'matched', 'active'])
         ));
 
       if (existingMatchup) {

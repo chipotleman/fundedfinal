@@ -40,6 +40,13 @@ None documented yet.
 - **Database Schema**: Comprehensive schema including users, profiles, bets, challenges, admin, withdrawals, analytics, cappers, matchups, and pik pools.
 - **Bet Autograding System**: AutoGrader polls `/api/bets/grade` every 60 seconds, matches pending bets to completed games, supports various bet types (moneyline, spreads, totals, parlays), and updates user bankroll.
 - **API Architecture**: RESTful API routes for core functionalities.
+- **Context-Specific Balance System**: Users can only be in ONE active challenge at a time (either 1v1 or pool, not both). Balance displayed reflects the active challenge:
+  - **No active challenge**: Uses profile.bankroll
+  - **Active 1v1**: Uses matchup.user1Balance or user2Balance (depending on which user they are)
+  - **Active Pool**: Uses poolParticipants.balance
+  - Pool statuses `open`, `filling`, and `active` all count as "active" for mutual exclusivity checks.
+  - Bets placed during a challenge only affect that challenge's balance and are stored in the appropriate table (poolBets for pools, userBets for regular/1v1).
+  - API: `/api/user/active-challenge` returns user's current challenge context and balance.
 
 ### External Dependencies
 - **Authentication**: NextAuth.js v4

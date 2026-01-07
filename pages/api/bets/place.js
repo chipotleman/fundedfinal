@@ -1,5 +1,5 @@
 import { db } from '../../../lib/db';
-import { userBets, profiles, fakeOpponents, fakeOpponentBets, matchups } from '../../../shared/schema';
+import { userBets, profiles, fakeOpponents, fakeOpponentBets, matchups, poolParticipants, pikPools, poolBets } from '../../../shared/schema';
 import { eq, and, or, inArray } from 'drizzle-orm';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
@@ -58,7 +58,54 @@ export default async function handler(req, res) {
       return res.status(404).json({ error: 'User profile not found' });
     }
 
-    let currentBankroll = parseFloat(userProfile.bankroll) || 0;
+    let activeChallenge = null;
+    let challengeType = null;
+    let currentBankroll = 0;
+
+    const [userActiveMatchup] = await db
+      .select()
+      .from(matchups)
+      .where(
+        and(
+          or(
+            eq(matchups.user1Id, userId),
+            eq(matchups.user2Id, userId)
+          ),
+          inArray(matchups.status, ['active'])
+        )
+      )
+      .limit(1);
+
+    if (userActiveMatchup) {
+      challengeType = '1v1';
+      activeChallenge = userActiveMatchup;
+      const isUser1 = userActiveMatchup.user1Id === userId;
+      currentBankroll = parseFloat(isUser1 ? userActiveMatchup.user1Balance : userActiveMatchup.user2Balance) || 0;
+    } else {
+      const [poolParticipation] = await db
+        .select({
+          participant: poolParticipants,
+          pool: pikPools,
+        })
+        .from(poolParticipants)
+        .innerJoin(pikPools, eq(poolParticipants.poolId, pikPools.id))
+        .where(
+          and(
+            eq(poolParticipants.userId, userId),
+            inArray(pikPools.status, ['open', 'filling', 'active'])
+          )
+        )
+        .limit(1);
+
+      if (poolParticipation) {
+        challengeType = 'pool';
+        activeChallenge = poolParticipation;
+        currentBankroll = parseFloat(poolParticipation.participant.balance) || 0;
+      } else {
+        currentBankroll = parseFloat(userProfile.bankroll) || 0;
+      }
+    }
+
     let totalStake = 0;
 
     if (betType === 'parlay' && parlayStake > 0) {
@@ -103,7 +150,6 @@ export default async function handler(req, res) {
         gameId: b.gameId
       }));
 
-      // Use different table for fake opponents
       if (isFakeOpponent && activeMatchup) {
         const fakeParlayBet = {
           matchupId: activeMatchup.id,
@@ -120,6 +166,24 @@ export default async function handler(req, res) {
         const [insertedParlay] = await db.insert(fakeOpponentBets).values(fakeParlayBet).returning();
         insertedBets.push(insertedParlay);
         console.log('[Place Bet] Fake opponent parlay saved to fakeOpponentBets:', insertedParlay.id);
+      } else if (challengeType === 'pool' && activeChallenge) {
+        const poolBet = {
+          poolId: activeChallenge.pool.id,
+          userId,
+          matchupName: `${bets.length}-Leg Parlay`,
+          marketType: 'parlay',
+          selection: bets.map(b => b.selection).join(', '),
+          odds: americanOdds.toString(),
+          stake: parlayStake.toString(),
+          potentialPayout: potentialPayout.toFixed(2),
+          status: 'pending',
+          balanceBefore: currentBankroll.toFixed(2),
+          balanceAfter: (currentBankroll - parlayStake).toFixed(2),
+          legs: legsData,
+        };
+        const [insertedParlay] = await db.insert(poolBets).values(poolBet).returning();
+        insertedBets.push(insertedParlay);
+        console.log('[Place Bet] Pool parlay saved to poolBets:', insertedParlay.id);
       } else {
         const parlayBet = {
           userId,
@@ -144,7 +208,6 @@ export default async function handler(req, res) {
         const oddsValue = typeof bet.odds === 'object' ? bet.odds.odds || bet.odds.value || 0 : bet.odds;
         const potentialPayout = calculatePayout(oddsValue, bet.stake);
 
-        // Use different table for fake opponents
         if (isFakeOpponent && activeMatchup) {
           const fakeBet = {
             matchupId: activeMatchup.id,
@@ -162,6 +225,25 @@ export default async function handler(req, res) {
           const [insertedBet] = await db.insert(fakeOpponentBets).values(fakeBet).returning();
           insertedBets.push(insertedBet);
           console.log('[Place Bet] Fake opponent bet saved to fakeOpponentBets:', insertedBet.id);
+        } else if (challengeType === 'pool' && activeChallenge) {
+          const poolBet = {
+            poolId: activeChallenge.pool.id,
+            userId,
+            matchupName: bet.matchup,
+            marketType: bet.betType,
+            selection: bet.selection,
+            odds: oddsValue.toString(),
+            stake: bet.stake.toString(),
+            potentialPayout: potentialPayout.toFixed(2),
+            status: 'pending',
+            balanceBefore: currentBankroll.toFixed(2),
+            balanceAfter: (currentBankroll - bet.stake).toFixed(2),
+            homeTeamFull: bet.homeTeamFull,
+            awayTeamFull: bet.awayTeamFull,
+          };
+          const [insertedBet] = await db.insert(poolBets).values(poolBet).returning();
+          insertedBets.push(insertedBet);
+          console.log('[Place Bet] Pool bet saved:', insertedBet.id);
         } else {
           const newBet = {
             userId,
@@ -185,18 +267,6 @@ export default async function handler(req, res) {
 
     const newBankroll = currentBankroll - totalStake;
     
-    // Update profile bankroll
-    await db
-      .update(profiles)
-      .set({ 
-        bankroll: newBankroll.toFixed(2),
-        totalBets: (userProfile.totalBets || 0) + insertedBets.length,
-        lastBetDate: new Date(),
-        updatedAt: new Date()
-      })
-      .where(eq(profiles.id, userId));
-
-    // Also update matchup balance for fake opponents
     if (isFakeOpponent && activeMatchup) {
       const currentMatchupBalance = parseFloat(activeMatchup.user2Balance || activeMatchup.startingBalance || '0');
       const newMatchupBalance = currentMatchupBalance - totalStake;
@@ -208,11 +278,49 @@ export default async function handler(req, res) {
         })
         .where(eq(matchups.id, activeMatchup.id));
       console.log('[Place Bet] Updated matchup user2Balance:', newMatchupBalance.toFixed(2));
+    } else if (challengeType === '1v1' && activeChallenge) {
+      const isUser1 = activeChallenge.user1Id === userId;
+      await db
+        .update(matchups)
+        .set({ 
+          ...(isUser1 ? { user1Balance: newBankroll.toFixed(2) } : { user2Balance: newBankroll.toFixed(2) }),
+          updatedAt: new Date()
+        })
+        .where(eq(matchups.id, activeChallenge.id));
+      console.log('[Place Bet] Updated 1v1 balance for user:', newBankroll.toFixed(2));
+    } else if (challengeType === 'pool' && activeChallenge) {
+      await db
+        .update(poolParticipants)
+        .set({
+          balance: newBankroll.toFixed(2),
+        })
+        .where(eq(poolParticipants.id, activeChallenge.participant.id));
+      console.log('[Place Bet] Updated pool participant balance:', newBankroll.toFixed(2));
+    } else {
+      await db
+        .update(profiles)
+        .set({ 
+          bankroll: newBankroll.toFixed(2),
+          totalBets: (userProfile.totalBets || 0) + insertedBets.length,
+          lastBetDate: new Date(),
+          updatedAt: new Date()
+        })
+        .where(eq(profiles.id, userId));
     }
+
+    await db
+      .update(profiles)
+      .set({ 
+        totalBets: (userProfile.totalBets || 0) + insertedBets.length,
+        lastBetDate: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(profiles.id, userId));
 
     return res.status(200).json({ 
       success: true, 
       newBankroll,
+      challengeType: challengeType || 'none',
       betsPlaced: insertedBets.length,
       bets: insertedBets
     });

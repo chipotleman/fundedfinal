@@ -1,8 +1,8 @@
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "../../../lib/auth";
 import { db } from "../../../lib/db";
-import { pikPools, poolParticipants, profiles } from "../../../shared/schema";
-import { eq, and } from "drizzle-orm";
+import { pikPools, poolParticipants, profiles, matchups } from "../../../shared/schema";
+import { eq, and, or, inArray } from "drizzle-orm";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -20,6 +20,51 @@ export default async function handler(req, res) {
 
     if (!poolId) {
       return res.status(400).json({ error: "Pool ID required" });
+    }
+
+    const [activeMatchup] = await db
+      .select()
+      .from(matchups)
+      .where(
+        and(
+          or(
+            eq(matchups.user1Id, userId),
+            eq(matchups.user2Id, userId)
+          ),
+          inArray(matchups.status, ["waiting", "matched", "active"])
+        )
+      )
+      .limit(1);
+
+    if (activeMatchup) {
+      return res.status(409).json({
+        error: "You are already in an active 1v1 battle",
+        code: "ACTIVE_CHALLENGE_EXISTS",
+        challengeType: "1v1",
+      });
+    }
+
+    const [existingPoolParticipation] = await db
+      .select({
+        participant: poolParticipants,
+        pool: pikPools,
+      })
+      .from(poolParticipants)
+      .innerJoin(pikPools, eq(poolParticipants.poolId, pikPools.id))
+      .where(
+        and(
+          eq(poolParticipants.userId, userId),
+          inArray(pikPools.status, ["open", "filling", "active"])
+        )
+      )
+      .limit(1);
+
+    if (existingPoolParticipation) {
+      return res.status(409).json({
+        error: "You are already in an active pool",
+        code: "ACTIVE_CHALLENGE_EXISTS",
+        challengeType: "pool",
+      });
     }
 
     const [pool] = await db
