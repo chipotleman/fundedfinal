@@ -305,34 +305,6 @@ export default function MatchupBanner({
                 background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 25%, #0369a1 50%, #075985 75%, #0c4a6e 100%)',
               }}
             >
-              {/* Rising water fill animation */}
-              <div 
-                className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-cyan-300/60 via-cyan-400/40 to-transparent transition-all duration-100 ease-out"
-                style={{
-                  height: `${holdProgress * 100}%`,
-                  opacity: holdProgress > 0 ? 1 : 0,
-                }}
-              >
-                {/* Animated wave on top of rising water */}
-                <svg 
-                  className="absolute top-0 left-0 right-0 w-full" 
-                  viewBox="0 0 1440 30" 
-                  preserveAspectRatio="none"
-                  style={{ transform: 'translateY(-50%)' }}
-                >
-                  <path 
-                    fill="rgba(103, 232, 249, 0.5)" 
-                    d="M0,15 Q180,0 360,15 T720,15 T1080,15 T1440,15 L1440,30 L0,30 Z"
-                  >
-                    <animate 
-                      attributeName="d" 
-                      dur="1s" 
-                      repeatCount="indefinite" 
-                      values="M0,15 Q180,0 360,15 T720,15 T1080,15 T1440,15 L1440,30 L0,30 Z;M0,15 Q180,30 360,15 T720,15 T1080,15 T1440,15 L1440,30 L0,30 Z;M0,15 Q180,0 360,15 T720,15 T1080,15 T1440,15 L1440,30 L0,30 Z" 
-                    />
-                  </path>
-                </svg>
-              </div>
               <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute inset-0 opacity-30">
                   {[...Array(8)].map((_, i) => (
@@ -350,11 +322,26 @@ export default function MatchupBanner({
                     />
                   ))}
                 </div>
-                <svg className="absolute bottom-0 left-0 right-0 opacity-20" viewBox="0 0 1440 120" preserveAspectRatio="none">
-                  <path fill="white" d="M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,58.7C960,64,1056,64,1152,58.7C1248,53,1344,43,1392,37.3L1440,32L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z">
-                    <animate attributeName="d" dur="4s" repeatCount="indefinite" values="M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,58.7C960,64,1056,64,1152,58.7C1248,53,1344,43,1392,37.3L1440,32L1440,120L0,120Z;M0,32L48,42.7C96,53,192,75,288,80C384,85,480,75,576,64C672,53,768,43,864,48C960,53,1056,75,1152,80C1248,85,1344,75,1392,69.3L1440,64L1440,120L0,120Z;M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,58.7C960,64,1056,64,1152,58.7C1248,53,1344,43,1392,37.3L1440,32L1440,120L0,120Z" />
-                  </path>
-                </svg>
+                {/* Rising water with wave - this container moves up based on holdProgress */}
+                <div 
+                  className="absolute left-0 right-0 transition-transform duration-100 ease-out"
+                  style={{
+                    bottom: 0,
+                    height: '100%',
+                    transform: `translateY(${(1 - holdProgress) * 100}%)`,
+                  }}
+                >
+                  {/* Water fill below the wave */}
+                  <div 
+                    className="absolute inset-0 bg-gradient-to-t from-cyan-300/70 via-cyan-400/50 to-cyan-500/30"
+                  />
+                  {/* Animated wave on top */}
+                  <svg className="absolute top-0 left-0 right-0 w-full" style={{ transform: 'translateY(-50%)' }} viewBox="0 0 1440 120" preserveAspectRatio="none">
+                    <path fill="rgba(103, 232, 249, 0.6)" d="M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,58.7C960,64,1056,64,1152,58.7C1248,53,1344,43,1392,37.3L1440,32L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z">
+                      <animate attributeName="d" dur="2s" repeatCount="indefinite" values="M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,58.7C960,64,1056,64,1152,58.7C1248,53,1344,43,1392,37.3L1440,32L1440,120L0,120Z;M0,32L48,42.7C96,53,192,75,288,80C384,85,480,75,576,64C672,53,768,43,864,48C960,53,1056,75,1152,80C1248,85,1344,75,1392,69.3L1440,64L1440,120L0,120Z;M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,58.7C960,64,1056,64,1152,58.7C1248,53,1344,43,1392,37.3L1440,32L1440,120L0,120Z" />
+                    </path>
+                  </svg>
+                </div>
               </div>
               <div className="relative z-10 p-4 h-[140px] md:h-[180px] flex flex-col overflow-hidden">
                 <div className="absolute top-3 right-3 bg-yellow-400 text-black px-3 py-1 rounded-md shadow-lg transform rotate-3" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%, 5% 50%)' }}>
