@@ -331,31 +331,39 @@ export default function MatchupBanner({
                     transform: `translateY(${86 - (holdProgress * 86)}%)`,
                   }}
                 >
-                  {/* Water body - soft gradient with no hard edge */}
+                  {/* Water body - solid gradient fill with soft top edge */}
                   <div 
                     className="absolute inset-0" 
                     style={{
-                      background: 'linear-gradient(to top, #0ea5e9 0%, rgba(103, 232, 249, 0.7) 50%, rgba(103, 232, 249, 0.3) 80%, transparent 100%)'
+                      background: 'linear-gradient(to top, #0ea5e9 0%, rgba(103, 232, 249, 0.8) 70%, transparent 100%)'
                     }}
                   />
                   
-                  {/* Choppy wave crest - irregular stroke pattern */}
-                  <div className="absolute top-0 left-0 right-0 h-[40px]" style={{ transform: 'translateY(-50%)' }}>
+                  {/* Single wave crest - stroke only, no fill */}
+                  <div className="absolute top-0 left-0 right-0 h-[30px]" style={{ transform: 'translateY(-50%)' }}>
                     <svg 
                       className="w-[200%] h-full wave-crest" 
-                      viewBox="0 0 2880 40" 
+                      viewBox="0 0 2880 30" 
                       preserveAspectRatio="none"
-                      style={{ filter: 'blur(0.5px)' }}
+                      style={{ filter: 'blur(1px)' }}
                     >
                       <path 
                         fill="none"
-                        stroke="rgba(255, 255, 255, 0.5)"
-                        strokeWidth="3"
+                        stroke="rgba(255, 255, 255, 0.7)"
+                        strokeWidth="4"
                         strokeLinecap="round"
-                        d="M0,20 C40,12 70,28 120,18 C160,10 200,26 260,20 C300,14 350,28 400,16 C450,8 500,30 560,22 C600,14 660,26 720,18 C780,10 820,30 880,20 C940,12 980,28 1040,16 C1100,8 1140,30 1200,22 C1260,14 1300,26 1360,18 C1420,10 1460,30 1520,20 C1580,12 1620,28 1680,16 C1740,8 1780,30 1840,22 C1900,14 1940,26 2000,18 C2060,10 2100,30 2160,20 C2220,12 2260,28 2320,16 C2380,8 2420,30 2480,22 C2540,14 2580,26 2640,18 C2700,10 2760,28 2820,20 C2860,14 2880,22 2880,20"
+                        d="M0,15 C60,8 120,22 180,15 C240,8 300,22 360,15 C420,8 480,22 540,15 C600,8 660,22 720,15 C780,8 840,22 900,15 C960,8 1020,22 1080,15 C1140,8 1200,22 1260,15 C1320,8 1380,22 1440,15 C1500,8 1560,22 1620,15 C1680,8 1740,22 1800,15 C1860,8 1920,22 1980,15 C2040,8 2100,22 2160,15 C2220,8 2280,22 2340,15 C2400,8 2460,22 2520,15 C2580,8 2640,22 2700,15 C2760,8 2820,22 2880,15"
                       />
                     </svg>
                   </div>
+                  
+                  {/* Soft glow under the crest */}
+                  <div 
+                    className="absolute top-0 left-0 right-0 h-[20px]" 
+                    style={{ 
+                      background: 'linear-gradient(to bottom, rgba(255,255,255,0.3), transparent)'
+                    }} 
+                  />
                 </div>
               </div>
               <div className="relative z-10 p-4 h-[140px] md:h-[180px] flex flex-col overflow-hidden">
