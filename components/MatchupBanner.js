@@ -290,7 +290,7 @@ export default function MatchupBanner({
                     onClick={(e) => { e.stopPropagation(); setShowPoolInfoModal(true); }}
                     className="flex items-center gap-1.5 hover:bg-white/10 px-2 py-1 rounded-lg transition-colors"
                   >
-                    <span className="text-white/80">❓</span>
+                    <span className="w-5 h-5 rounded-full bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center text-white/90 text-xs font-bold">?</span>
                     <span className="text-white font-medium text-xs md:text-sm underline underline-offset-2">HOW DO POOLS WORK?</span>
                   </button>
                   <div className="px-2 py-0.5 bg-white/20 rounded-full">
@@ -301,7 +301,7 @@ export default function MatchupBanner({
                   <div className="flex flex-col">
                     <span className="text-white/70 text-[10px] uppercase tracking-wide mb-1">Prize Pool</span>
                     <span className="text-white text-2xl md:text-3xl font-black">
-                      ${availablePool ? parseFloat(availablePool.calculatedPrizePool || availablePool.prizePool).toLocaleString() : '562.50'}
+                      ${availablePool ? (parseFloat(availablePool.buyIn) * (availablePool.maxPlayers || 25)).toLocaleString() : '625'}
                     </span>
                     <span className="text-white/60 text-[10px]">Winner takes all</span>
                   </div>
