@@ -287,7 +287,7 @@ export default function MatchupBanner({
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center">
                     <img 
-                      src="/piks-pool-logo.png" 
+                      src="/pikslogotransparent.png" 
                       alt="Piks Pool" 
                       className="h-8 md:h-10 w-auto object-contain"
                     />
