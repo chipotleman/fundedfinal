@@ -23,10 +23,10 @@ export default function PiksPoolPopup({ isOpen, onClose, pool }) {
   const winnerPayout = prizePool * (1 - platformFee);
 
   const rules = [
+    { icon: '🚀', title: '3-Day Run It Up', desc: 'Race to grow your balance in just 3 days' },
     { icon: '💵', title: 'Starting Balance', desc: 'Everyone starts with $1,000' },
-    { icon: '🎯', title: 'Goal', desc: 'Grow your balance the most to win' },
+    { icon: '📈', title: 'Highest Balance Wins', desc: 'Player with the highest balance at the end takes the pot' },
     { icon: '🏆', title: 'Winner Takes All', desc: `Top player wins ${((1 - platformFee) * 100).toFixed(0)}% of the prize pool` },
-    { icon: '📊', title: 'Betting Rules', desc: '1-5% of balance per pick, max 5 active bets' },
   ];
 
   return (
@@ -119,7 +119,7 @@ export default function PiksPoolPopup({ isOpen, onClose, pool }) {
           <div className="flex flex-col gap-3">
             <TapSurface
               onTap={onClose}
-              className="w-full py-4 bg-white text-sky-700 font-bold text-lg rounded-xl shadow-lg hover:bg-white/90 transition-colors text-center"
+              className="w-full py-4 bg-white/25 hover:bg-white/35 active:bg-white/40 text-white font-bold text-lg rounded-xl shadow-lg transition-colors text-center backdrop-blur-sm"
             >
               Join Pool - ${buyIn.toFixed(0)}
             </TapSurface>
