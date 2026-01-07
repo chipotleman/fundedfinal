@@ -68,6 +68,7 @@ export default function MatchupBanner({
 
   // Hold-to-join handlers
   const HOLD_DURATION = 1500; // 1.5 seconds to complete
+  const animationFrameRef = useRef(null);
 
   const startHold = (e) => {
     e.preventDefault();
@@ -75,35 +76,41 @@ export default function MatchupBanner({
     setIsHolding(true);
     holdStartRef.current = Date.now();
     
-    holdIntervalRef.current = setInterval(() => {
+    const animate = () => {
       const elapsed = Date.now() - holdStartRef.current;
       const progress = Math.min(elapsed / HOLD_DURATION, 1);
       setHoldProgress(progress);
       
       if (progress >= 1) {
-        clearInterval(holdIntervalRef.current);
         setIsHolding(false);
         setHoldProgress(0);
         router.push('/pools');
+      } else {
+        animationFrameRef.current = requestAnimationFrame(animate);
       }
-    }, 16); // ~60fps
+    };
+    
+    animationFrameRef.current = requestAnimationFrame(animate);
   };
 
   const endHold = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (holdIntervalRef.current) {
-      clearInterval(holdIntervalRef.current);
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
     }
     setIsHolding(false);
+    // Smooth reset
     setHoldProgress(0);
   };
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (holdIntervalRef.current) {
-        clearInterval(holdIntervalRef.current);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
     };
   }, []);
@@ -324,11 +331,12 @@ export default function MatchupBanner({
                 </div>
                 {/* Rising water - this container moves up based on holdProgress */}
                 <div 
-                  className="absolute left-0 right-0 transition-transform duration-75 ease-out"
+                  className="absolute left-0 right-0"
                   style={{
                     bottom: 0,
                     height: '100%',
                     transform: `translateY(${86 - (holdProgress * 86)}%)`,
+                    willChange: 'transform',
                   }}
                 >
                   {/* Water body - solid gradient fill with soft top edge */}
@@ -381,23 +389,24 @@ export default function MatchupBanner({
                 </div>
                 <div className="flex items-center justify-center -mt-4 md:mt-[10px]">
                   <div 
-                    className="relative px-6 py-2 bg-white/25 hover:bg-white/35 rounded-xl transition-colors shadow-lg overflow-hidden select-none"
+                    className="relative px-6 py-2 bg-white/25 active:bg-white/40 rounded-xl shadow-lg overflow-hidden select-none cursor-pointer active:scale-95 transition-transform duration-150"
                     onMouseDown={startHold}
                     onMouseUp={endHold}
                     onMouseLeave={endHold}
                     onTouchStart={startHold}
                     onTouchEnd={endHold}
                     onTouchCancel={endHold}
+                    style={{ touchAction: 'none' }}
                   >
                     {/* Button fill animation */}
                     <div 
-                      className="absolute inset-0 bg-gradient-to-r from-cyan-300 to-white transition-all duration-100 ease-out"
+                      className="absolute inset-0 bg-gradient-to-r from-cyan-300 to-white"
                       style={{
                         width: `${holdProgress * 100}%`,
                         opacity: 0.6,
                       }}
                     />
-                    <span className="relative text-white text-sm md:text-base font-bold tracking-wide">
+                    <span className="relative text-white text-sm md:text-base font-bold tracking-wide pointer-events-none">
                       {isHolding ? 'JOINING...' : 'HOLD TO JOIN'}
                     </span>
                   </div>
