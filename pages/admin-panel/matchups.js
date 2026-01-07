@@ -21,6 +21,8 @@ export default function AdminMatchups() {
   const [showBetModal, setShowBetModal] = useState(false);
   const [showOpponentModal, setShowOpponentModal] = useState(false);
   const [fakeBets, setFakeBets] = useState([]);
+  const [usersWithChallenges, setUsersWithChallenges] = useState([]);
+  const [resetLoading, setResetLoading] = useState(null);
 
   const [newOpponent, setNewOpponent] = useState({
     username: '',
@@ -67,9 +69,10 @@ export default function AdminMatchups() {
     setLoading(true);
     try {
       const headers = getAuthHeaders();
-      const [matchupsRes, opponentsRes] = await Promise.all([
+      const [matchupsRes, opponentsRes, challengesRes] = await Promise.all([
         fetch('/api/admin-panel/matchups', { headers }),
         fetch('/api/admin-panel/matchups/fake-opponents', { headers }),
+        fetch('/api/admin/reset-user-challenge', { headers }),
       ]);
 
       if (matchupsRes.ok) {
@@ -81,11 +84,38 @@ export default function AdminMatchups() {
         const data = await opponentsRes.json();
         setFakeOpponents(data);
       }
+
+      if (challengesRes.ok) {
+        const data = await challengesRes.json();
+        setUsersWithChallenges(data.users || []);
+      }
     } catch (error) {
       console.error('Fetch error:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleResetAction = async (userId, action, matchupId = null, poolId = null) => {
+    setResetLoading(`${userId}-${action}`);
+    try {
+      const res = await fetch('/api/admin/reset-user-challenge', {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ userId, action, matchupId, poolId }),
+      });
+
+      if (res.ok) {
+        fetchData();
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to perform action');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Failed to perform action');
+    }
+    setResetLoading(null);
   };
 
   const fetchBetsForMatchup = async (matchupId) => {
@@ -301,7 +331,7 @@ export default function AdminMatchups() {
         <p className="text-gray-400 mt-1">Manage battles and fake opponents</p>
       </div>
 
-        <div className="flex gap-4 mb-6">
+        <div className="flex gap-4 mb-6 flex-wrap">
           <button
             onClick={() => setActiveTab('matchups')}
             className={`px-4 py-2 rounded ${activeTab === 'matchups' ? 'bg-blue-600' : 'bg-gray-700'}`}
@@ -313,6 +343,12 @@ export default function AdminMatchups() {
             className={`px-4 py-2 rounded ${activeTab === 'opponents' ? 'bg-blue-600' : 'bg-gray-700'}`}
           >
             Fake Opponents
+          </button>
+          <button
+            onClick={() => setActiveTab('reset')}
+            className={`px-4 py-2 rounded ${activeTab === 'reset' ? 'bg-purple-600' : 'bg-gray-700'}`}
+          >
+            Reset User Challenges
           </button>
         </div>
 
@@ -456,6 +492,116 @@ export default function AdminMatchups() {
                   No fake opponents created. Add one to start matching with users.
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'reset' && (
+          <div>
+            <p className="text-gray-400 mb-4">
+              Reset users from 1v1 matchups, queues, or pools for testing purposes. Only users with active challenges are shown.
+            </p>
+
+            {usersWithChallenges.length === 0 ? (
+              <div className="bg-gray-800 rounded-lg p-8 text-center">
+                <p className="text-gray-500">No users are currently in active challenges or pools.</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {usersWithChallenges.map((user) => (
+                  <div key={user.id} className="bg-gray-800 rounded-lg p-4">
+                    <div className="flex justify-between items-start flex-wrap gap-4 mb-3">
+                      <div>
+                        <h3 className="text-white font-semibold">{user.username || 'No username'}</h3>
+                        <p className="text-gray-400 text-sm">{user.email}</p>
+                        <p className="text-gray-600 text-xs">ID: {user.id}</p>
+                      </div>
+                      <button
+                        onClick={() => handleResetAction(user.id, 'reset_all')}
+                        disabled={resetLoading === `${user.id}-reset_all`}
+                        className="px-4 py-2 bg-red-600 rounded text-sm hover:bg-red-500 disabled:opacity-50"
+                      >
+                        {resetLoading === `${user.id}-reset_all` ? 'Resetting...' : 'Reset All'}
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      {user.queueEntry && (
+                        <div className="flex justify-between items-center p-3 bg-blue-900/30 rounded">
+                          <div>
+                            <span className="text-blue-400 font-semibold">In Queue</span>
+                            <span className="text-gray-400 ml-2 text-sm">
+                              {user.queueEntry.challengeType?.toUpperCase()} - {user.queueEntry.durationType}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => handleResetAction(user.id, 'leave_queue')}
+                            disabled={resetLoading === `${user.id}-leave_queue`}
+                            className="px-3 py-1 bg-yellow-600 rounded text-sm hover:bg-yellow-500 disabled:opacity-50"
+                          >
+                            {resetLoading === `${user.id}-leave_queue` ? '...' : 'Remove from Queue'}
+                          </button>
+                        </div>
+                      )}
+
+                      {user.matchup && (
+                        <div className="flex justify-between items-center p-3 bg-purple-900/30 rounded">
+                          <div>
+                            <span className="text-purple-400 font-semibold">1v1 Matchup</span>
+                            <span className="text-gray-400 ml-2 text-sm">
+                              Status: {user.matchup.status} | {user.matchup.challengeType?.toUpperCase()}
+                            </span>
+                            <span className="text-gray-500 ml-2 text-xs">
+                              Balance: ${user.matchup.user1Id === user.id 
+                                ? parseFloat(user.matchup.user1Balance || 0).toFixed(2)
+                                : parseFloat(user.matchup.user2Balance || 0).toFixed(2)}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => handleResetAction(user.id, 'cancel_matchup', user.matchup.id)}
+                            disabled={resetLoading === `${user.id}-cancel_matchup`}
+                            className="px-3 py-1 bg-red-600 rounded text-sm hover:bg-red-500 disabled:opacity-50"
+                          >
+                            {resetLoading === `${user.id}-cancel_matchup` ? '...' : 'Cancel Matchup'}
+                          </button>
+                        </div>
+                      )}
+
+                      {user.pool && (
+                        <div className="flex justify-between items-center p-3 bg-green-900/30 rounded">
+                          <div>
+                            <span className="text-green-400 font-semibold">Pik Pool</span>
+                            <span className="text-gray-400 ml-2 text-sm">
+                              {user.pool.name} | Status: {user.pool.status}
+                            </span>
+                            <span className="text-gray-500 ml-2 text-xs">
+                              Balance: ${parseFloat(user.poolParticipant?.balance || 0).toFixed(2)} | 
+                              Players: {user.pool.currentPlayers}/{user.pool.maxPlayers}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => handleResetAction(user.id, 'leave_pool', null, user.pool.id)}
+                            disabled={resetLoading === `${user.id}-leave_pool`}
+                            className="px-3 py-1 bg-green-600 rounded text-sm hover:bg-green-500 disabled:opacity-50"
+                          >
+                            {resetLoading === `${user.id}-leave_pool` ? '...' : 'Remove from Pool'}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-6 p-4 bg-gray-800 rounded-lg">
+              <h3 className="text-white font-semibold mb-2">Quick Actions Guide</h3>
+              <ul className="text-gray-400 text-sm space-y-1">
+                <li><span className="text-yellow-400">Remove from Queue</span> - User was waiting for 1v1 match, puts them back to pre-challenge state</li>
+                <li><span className="text-red-400">Cancel Matchup</span> - Ends an active or pending 1v1 battle</li>
+                <li><span className="text-green-400">Remove from Pool</span> - Takes user out of a Pik Pool competition</li>
+                <li><span className="text-red-400">Reset All</span> - Clears all challenges for that user at once</li>
+              </ul>
             </div>
           </div>
         )}

@@ -1,5 +1,3 @@
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { 
   matchups, 
@@ -11,12 +9,26 @@ import {
 } from '../../../shared/schema';
 import { eq, and, or, inArray } from 'drizzle-orm';
 
-const ADMIN_EMAILS = ['mathewbaldwin13@yahoo.com'];
+function verifyAdminToken(req) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+  try {
+    const token = authHeader.replace('Bearer ', '');
+    const decoded = JSON.parse(Buffer.from(token, 'base64').toString());
+    if (decoded.exp && decoded.exp < Date.now()) {
+      return null;
+    }
+    return decoded;
+  } catch {
+    return null;
+  }
+}
 
 export default async function handler(req, res) {
-  const session = await getServerSession(req, res, authOptions);
-  
-  if (!session || !ADMIN_EMAILS.includes(session.user.email)) {
+  const admin = verifyAdminToken(req);
+  if (!admin) {
     return res.status(403).json({ error: 'Unauthorized' });
   }
 
