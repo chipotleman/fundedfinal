@@ -25,13 +25,23 @@ function formatTimeRemaining(ms) {
 }
 
 export default function PoolContainer({ isDarkMode }) {
+  const getInitialPoolState = () => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const cached = localStorage.getItem('poolContainerState');
+      if (cached) {
+        return JSON.parse(cached);
+      }
+    } catch (e) {}
+    return null;
+  };
+
   const [availablePool, setAvailablePool] = useState(null);
-  const [myPoolData, setMyPoolData] = useState(null);
+  const [myPoolData, setMyPoolData] = useState(getInitialPoolState);
   const [poolTimeRemaining, setPoolTimeRemaining] = useState(null);
   const [holdProgress, setHoldProgress] = useState(0);
   const [isHolding, setIsHolding] = useState(false);
   const [showPoolPopup, setShowPoolPopup] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   
   const holdStartRef = useRef(null);
   const animationFrameRef = useRef(null);
@@ -56,13 +66,17 @@ export default function PoolContainer({ isDarkMode }) {
       const myPoolDataRes = await myPoolRes.json();
       if (myPoolDataRes.hasActivePool) {
         setMyPoolData(myPoolDataRes);
+        try {
+          localStorage.setItem('poolContainerState', JSON.stringify(myPoolDataRes));
+        } catch (e) {}
       } else {
         setMyPoolData(null);
+        try {
+          localStorage.removeItem('poolContainerState');
+        } catch (e) {}
       }
     } catch (err) {
       console.error('Error fetching pool:', err);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -173,7 +187,7 @@ export default function PoolContainer({ isDarkMode }) {
             />
           ))}
         </div>
-        {!isLoading && !myPoolData && (
+        {!myPoolData && (
           <div 
             className="absolute left-0 right-0"
             style={{
@@ -215,12 +229,7 @@ export default function PoolContainer({ isDarkMode }) {
         )}
       </div>
       
-      {isLoading ? (
-        <div className="relative z-10 p-4 h-[140px] md:h-[180px] flex flex-col items-center justify-center">
-          <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin mb-2"></div>
-          <span className="text-white/60 text-xs">Loading pool...</span>
-        </div>
-      ) : myPoolData ? (
+      {myPoolData ? (
         <div className="relative z-10 p-4 h-[140px] md:h-[180px] flex flex-col overflow-hidden">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
