@@ -87,49 +87,54 @@ export default function FireBattleContainer({ isDarkMode }) {
   return (
     <>
       <style jsx global>{`
-        @keyframes fire-float {
-          0%, 100% { transform: translateY(0) scale(1); opacity: 0.6; }
-          50% { transform: translateY(-15px) scale(1.1); opacity: 0.9; }
-        }
         @keyframes ember-rise {
           0% { transform: translateY(0) scale(1); opacity: 1; }
           100% { transform: translateY(-80px) scale(0.3); opacity: 0; }
         }
-        @keyframes flame-dance {
-          0%, 100% { transform: scaleY(1) scaleX(1); }
-          25% { transform: scaleY(1.1) scaleX(0.95); }
-          50% { transform: scaleY(0.95) scaleX(1.05); }
-          75% { transform: scaleY(1.05) scaleX(0.98); }
+        @keyframes flame-flicker-1 {
+          0%, 100% { transform: scaleY(1) scaleX(1) translateX(0); }
+          20% { transform: scaleY(1.15) scaleX(0.9) translateX(-2px); }
+          40% { transform: scaleY(0.9) scaleX(1.1) translateX(3px); }
+          60% { transform: scaleY(1.1) scaleX(0.95) translateX(-1px); }
+          80% { transform: scaleY(0.95) scaleX(1.05) translateX(2px); }
         }
-        .fire-crest {
-          animation: fire-wave-crest 10s linear infinite;
+        @keyframes flame-flicker-2 {
+          0%, 100% { transform: scaleY(1) scaleX(1) translateX(0); }
+          25% { transform: scaleY(1.2) scaleX(0.85) translateX(2px); }
+          50% { transform: scaleY(0.85) scaleX(1.15) translateX(-3px); }
+          75% { transform: scaleY(1.1) scaleX(0.9) translateX(1px); }
         }
-        @keyframes fire-wave-crest {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
+        @keyframes flame-flicker-3 {
+          0%, 100% { transform: scaleY(1) scaleX(1) translateX(0); }
+          33% { transform: scaleY(1.25) scaleX(0.8) translateX(-2px); }
+          66% { transform: scaleY(0.8) scaleX(1.2) translateX(2px); }
         }
+        .flame-layer-1 { animation: flame-flicker-1 0.4s ease-in-out infinite; }
+        .flame-layer-2 { animation: flame-flicker-2 0.5s ease-in-out infinite; }
+        .flame-layer-3 { animation: flame-flicker-3 0.6s ease-in-out infinite; }
       `}</style>
       
       <div 
         className="w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 relative h-[140px] md:h-[180px]"
         style={{
-          background: 'linear-gradient(135deg, #f97316 0%, #ea580c 25%, #dc2626 50%, #b91c1c 75%, #991b1b 100%)',
+          background: 'linear-gradient(180deg, #1a0a00 0%, #2d1106 30%, #4a1c0a 60%, #6b2710 100%)',
         }}
       >
         <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute inset-0 opacity-40">
-            {[...Array(12)].map((_, i) => (
+          <div className="absolute inset-0">
+            {[...Array(15)].map((_, i) => (
               <div
                 key={`ember-${i}`}
                 className="absolute rounded-full"
                 style={{
-                  width: `${4 + (i % 4) * 2}px`,
-                  height: `${4 + (i % 4) * 2}px`,
-                  left: `${5 + (i * 8)}%`,
-                  bottom: `${10 + (i * 5) % 30}%`,
-                  background: i % 2 === 0 ? '#fbbf24' : '#fb923c',
-                  animation: `ember-rise ${2 + (i % 3)}s ease-out infinite`,
-                  animationDelay: `${i * 0.2}s`,
+                  width: `${3 + (i % 3) * 2}px`,
+                  height: `${3 + (i % 3) * 2}px`,
+                  left: `${3 + (i * 6.5)}%`,
+                  bottom: `${5 + (i * 4) % 25}%`,
+                  background: i % 3 === 0 ? '#fde047' : i % 3 === 1 ? '#fb923c' : '#f97316',
+                  boxShadow: i % 3 === 0 ? '0 0 6px #fde047' : '0 0 4px #fb923c',
+                  animation: `ember-rise ${1.5 + (i % 4) * 0.5}s ease-out infinite`,
+                  animationDelay: `${i * 0.15}s`,
                 }}
               />
             ))}
@@ -140,36 +145,60 @@ export default function FireBattleContainer({ isDarkMode }) {
             style={{
               bottom: 0,
               height: '100%',
-              transform: `translateY(${86 - (holdProgress * 86)}%)`,
+              transform: `translateY(${88 - (holdProgress * 88)}%)`,
               willChange: 'transform',
             }}
           >
+            <div className="absolute inset-0 flex justify-center items-end">
+              {[...Array(20)].map((_, i) => {
+                const height = 60 + (Math.sin(i * 0.8) * 25) + (i % 3) * 15;
+                const width = 30 + (i % 4) * 8;
+                const offset = i * 5 - 2;
+                const flickerClass = i % 3 === 0 ? 'flame-layer-1' : i % 3 === 1 ? 'flame-layer-2' : 'flame-layer-3';
+                const delay = (i * 0.05) % 0.3;
+                
+                return (
+                  <div
+                    key={`flame-${i}`}
+                    className={`absolute ${flickerClass}`}
+                    style={{
+                      left: `${offset}%`,
+                      bottom: 0,
+                      width: `${width}px`,
+                      height: `${height}%`,
+                      background: `linear-gradient(to top, 
+                        #dc2626 0%, 
+                        #ea580c 20%, 
+                        #f97316 40%, 
+                        #fb923c 60%, 
+                        #fbbf24 80%, 
+                        #fde047 95%,
+                        transparent 100%)`,
+                      borderRadius: '50% 50% 20% 20% / 80% 80% 20% 20%',
+                      filter: 'blur(3px)',
+                      opacity: 0.85,
+                      animationDelay: `${delay}s`,
+                      transformOrigin: 'bottom center',
+                    }}
+                  />
+                );
+              })}
+            </div>
+            
             <div 
               className="absolute inset-0" 
               style={{
-                background: 'linear-gradient(to top, #f97316 0%, rgba(251, 191, 36, 0.8) 50%, rgba(253, 224, 71, 0.4) 80%, transparent 100%)'
+                background: 'linear-gradient(to top, #b91c1c 0%, #dc2626 20%, #ea580c 40%, rgba(251, 146, 60, 0.6) 70%, transparent 100%)',
+                mixBlendMode: 'screen',
               }}
             />
-            <div className="absolute top-0 left-0 right-0 h-[30px]" style={{ transform: 'translateY(-50%)' }}>
-              <svg 
-                className="w-[200%] h-full fire-crest" 
-                viewBox="0 0 2880 30" 
-                preserveAspectRatio="none"
-                style={{ filter: 'blur(2px)' }}
-              >
-                <path 
-                  fill="none"
-                  stroke="rgba(253, 224, 71, 0.8)"
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                  d="M0,15 C40,5 80,25 120,15 C160,5 200,25 240,15 C280,5 320,25 360,15 C400,5 440,25 480,15 C520,5 560,25 600,15 C640,5 680,25 720,15 C760,5 800,25 840,15 C880,5 920,25 960,15 C1000,5 1040,25 1080,15 C1120,5 1160,25 1200,15 C1240,5 1280,25 1320,15 C1360,5 1400,25 1440,15 C1480,5 1520,25 1560,15 C1600,5 1640,25 1680,15 C1720,5 1760,25 1800,15 C1840,5 1880,25 1920,15 C1960,5 2000,25 2040,15 C2080,5 2120,25 2160,15 C2200,5 2240,25 2280,15 C2320,5 2360,25 2400,15 C2440,5 2480,25 2520,15 C2560,5 2600,25 2640,15 C2680,5 2720,25 2760,15 C2800,5 2840,25 2880,15"
-                />
-              </svg>
-            </div>
+            
             <div 
-              className="absolute top-0 left-0 right-0 h-[20px]" 
+              className="absolute bottom-0 left-0 right-0 h-[40%]" 
               style={{ 
-                background: 'linear-gradient(to bottom, rgba(253,224,71,0.5), transparent)'
+                background: 'linear-gradient(to top, #fde047 0%, #fbbf24 30%, #f97316 60%, transparent 100%)',
+                opacity: 0.7,
+                filter: 'blur(8px)',
               }} 
             />
           </div>
