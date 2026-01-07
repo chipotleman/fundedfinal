@@ -328,11 +328,16 @@ export default function MatchupBanner({
                   style={{
                     bottom: 0,
                     height: '100%',
-                    transform: `translateY(${75 - (holdProgress * 75)}%)`,
+                    transform: `translateY(${78 - (holdProgress * 78)}%)`,
                   }}
                 >
-                  {/* Water body - solid gradient fill */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0ea5e9] via-cyan-300/80 to-cyan-200/60" />
+                  {/* Water body - solid gradient fill with soft top edge */}
+                  <div 
+                    className="absolute inset-0" 
+                    style={{
+                      background: 'linear-gradient(to top, #0ea5e9 0%, rgba(103, 232, 249, 0.8) 70%, transparent 100%)'
+                    }}
+                  />
                   
                   {/* Single wave crest - stroke only, no fill */}
                   <div className="absolute top-0 left-0 right-0 h-[30px]" style={{ transform: 'translateY(-50%)' }}>
