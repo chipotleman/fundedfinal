@@ -39,6 +39,7 @@ export default function MatchupBanner({
 }) {
   const [timeRemaining, setTimeRemaining] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showPoolInfoModal, setShowPoolInfoModal] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [availablePool, setAvailablePool] = useState(null);
   const scrollRef = useRef(null);
@@ -285,10 +286,13 @@ export default function MatchupBanner({
               </div>
               <div className="relative z-10 p-4 min-h-[140px] md:min-h-[180px] flex flex-col">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">🏊</span>
-                    <h3 className="text-white font-bold text-sm md:text-base">PIK POOL</h3>
-                  </div>
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); setShowPoolInfoModal(true); }}
+                    className="flex items-center gap-1.5 hover:bg-white/10 px-2 py-1 rounded-lg transition-colors"
+                  >
+                    <span className="text-white/80">❓</span>
+                    <span className="text-white font-medium text-xs md:text-sm underline underline-offset-2">HOW DO POOLS WORK?</span>
+                  </button>
                   <div className="px-2 py-0.5 bg-white/20 rounded-full">
                     <span className="text-white text-[10px] font-semibold">${availablePool ? parseFloat(availablePool.buyIn).toFixed(0) : '25'} BUY-IN</span>
                   </div>
@@ -509,6 +513,107 @@ export default function MatchupBanner({
                 )}
               </div>
             </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPoolInfoModal && (
+        <div 
+          className="fixed inset-0 z-50 overflow-y-auto"
+          onClick={() => setShowPoolInfoModal(false)}
+        >
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
+          <div className="flex min-h-full items-start justify-center p-4 pt-4 md:pt-8">
+            <div 
+              className={`relative w-full max-w-lg ${
+                isDarkMode ? 'bg-[#111] border-gray-800' : 'bg-white border-gray-200'
+              } border rounded-2xl overflow-hidden`}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                onClick={() => setShowPoolInfoModal(false)}
+                className={`absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full ${
+                  isDarkMode ? 'bg-white/10 hover:bg-white/20 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                } transition-colors z-10`}
+              >
+                ✕
+              </button>
+
+              <div className="p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-2xl">
+                    🏊
+                  </div>
+                  <div>
+                    <h2 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>How Pik Pools Work</h2>
+                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Multi-player betting competitions</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-white/5' : 'bg-gray-50'}`}>
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">👥</span>
+                      <div>
+                        <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Join a Pool</h3>
+                        <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Pay the buy-in to enter. Pools have 5-25 players competing for the prize pot.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-white/5' : 'bg-gray-50'}`}>
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">💰</span>
+                      <div>
+                        <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Everyone Starts Equal</h3>
+                        <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Each player gets $1,000 in virtual chips to bet with during the pool duration.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-white/5' : 'bg-gray-50'}`}>
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">🎯</span>
+                      <div>
+                        <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Make Your Picks</h3>
+                        <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          Place bets on games during the pool window. Grow your bankroll to beat other players.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-white/5' : 'bg-gray-50'}`}>
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">🏆</span>
+                      <div>
+                        <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Winner Takes All</h3>
+                        <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                          The player with the highest balance when time expires wins 90% of the prize pot!
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={`p-3 rounded-xl border ${isDarkMode ? 'bg-cyan-500/10 border-cyan-500/30' : 'bg-cyan-50 border-cyan-200'}`}>
+                    <p className={`text-sm text-center ${isDarkMode ? 'text-cyan-300' : 'text-cyan-700'}`}>
+                      <span className="font-semibold">Example:</span> 25 players × $25 buy-in = $625 pot → Winner gets $562.50
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => { setShowPoolInfoModal(false); router.push('/pools'); }}
+                  className="w-full mt-6 py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 transition-all"
+                >
+                  Browse Available Pools
+                </button>
+              </div>
             </div>
           </div>
         </div>
