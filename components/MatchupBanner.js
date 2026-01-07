@@ -68,17 +68,28 @@ export default function MatchupBanner({
 
   // Hold-to-join handlers
   const HOLD_DURATION = 1500; // 1.5 seconds to complete
+  const RELEASE_DURATION = 800; // 0.8 seconds to drain back
   const animationFrameRef = useRef(null);
+  const releaseStartRef = useRef(null);
+  const releaseFromRef = useRef(0);
 
   const startHold = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    
+    // Cancel any ongoing release animation
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    
     setIsHolding(true);
     holdStartRef.current = Date.now();
+    const startFrom = holdProgress; // Continue from current position
     
     const animate = () => {
       const elapsed = Date.now() - holdStartRef.current;
-      const progress = Math.min(elapsed / HOLD_DURATION, 1);
+      // Account for starting from a partial fill
+      const progress = Math.min(startFrom + (elapsed / HOLD_DURATION) * (1 - startFrom), 1);
       setHoldProgress(progress);
       
       if (progress >= 1) {
@@ -102,8 +113,30 @@ export default function MatchupBanner({
       cancelAnimationFrame(animationFrameRef.current);
     }
     setIsHolding(false);
-    // Smooth reset
-    setHoldProgress(0);
+    
+    // Animate water draining back down
+    releaseStartRef.current = Date.now();
+    releaseFromRef.current = holdProgress;
+    
+    const animateDrain = () => {
+      const elapsed = Date.now() - releaseStartRef.current;
+      const t = Math.min(elapsed / RELEASE_DURATION, 1);
+      // Ease-out cubic for smooth wave-like motion
+      const eased = 1 - Math.pow(1 - t, 3);
+      const newProgress = releaseFromRef.current * (1 - eased);
+      
+      setHoldProgress(newProgress);
+      
+      if (t < 1) {
+        animationFrameRef.current = requestAnimationFrame(animateDrain);
+      } else {
+        setHoldProgress(0);
+      }
+    };
+    
+    if (releaseFromRef.current > 0) {
+      animationFrameRef.current = requestAnimationFrame(animateDrain);
+    }
   };
 
   // Cleanup on unmount
