@@ -284,60 +284,54 @@ export default function MatchupBanner({
                 </svg>
               </div>
               <div className="relative z-10 p-4 h-[140px] md:h-[180px] flex flex-col overflow-hidden">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-white font-black text-lg md:text-xl tracking-wide">PIKS PRIZE</h3>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex flex-col">
+                    <span className="text-white/70 text-[10px] uppercase tracking-wide">Prize Pool</span>
+                    <span className="text-white text-2xl md:text-3xl font-black drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                      ${availablePool ? parseFloat(availablePool.maxPrizePool || availablePool.prizePool).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '562.50'}
+                    </span>
+                  </div>
                   <div className="px-2 py-0.5 bg-white/20 rounded-full">
                     <span className="text-white text-[10px] font-semibold">${availablePool ? parseFloat(availablePool.buyIn).toFixed(0) : '25'} BUY-IN</span>
                   </div>
                 </div>
-                <div className="flex items-center justify-between flex-1">
-                  <div className="flex flex-col">
-                    <span className="text-white/70 text-[10px] uppercase tracking-wide mb-1">Prize Pool</span>
-                    <span className="text-white text-2xl md:text-3xl font-black">
-                      ${availablePool ? parseFloat(availablePool.maxPrizePool || availablePool.prizePool).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '562.50'}
-                    </span>
-                    <span className="text-white/60 text-[10px]">Winner takes all</span>
+                <div className="flex items-center justify-center flex-1">
+                  <div className="px-6 py-2.5 bg-white/25 hover:bg-white/35 rounded-xl transition-colors shadow-lg">
+                    <span className="text-white text-base md:text-lg font-bold tracking-wide">JOIN THE POOL</span>
                   </div>
-                  <div className="flex flex-col items-center">
-                    <div className="flex -space-x-2 mb-1">
-                      {(availablePool?.participants || []).slice(0, 5).map((p, i) => (
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-white/60 text-[10px]">Winner takes all</span>
+                  <div className="flex items-center gap-2">
+                    <div className="flex -space-x-2">
+                      {(availablePool?.participants || []).slice(0, 3).map((p, i) => (
                         <div 
                           key={p.odId || i} 
-                          className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-cyan-300 to-blue-500 border-2 border-white/30 flex items-center justify-center text-xs overflow-hidden"
+                          className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-300 to-blue-500 border-2 border-white/30 flex items-center justify-center text-[10px] overflow-hidden"
                         >
                           {p.avatar ? (
                             <img src={p.avatar} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            ['🐉', '🦅', '🐺', '🦁', '🐯'][i] || '👤'
+                            ['🐉', '🦅', '🐺'][i] || '👤'
                           )}
                         </div>
                       ))}
                       {(!availablePool || availablePool.participants?.length === 0) && [...Array(3)].map((_, i) => (
                         <div 
                           key={`placeholder-${i}`} 
-                          className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-cyan-300 to-blue-500 border-2 border-white/30 flex items-center justify-center text-xs"
+                          className="w-6 h-6 rounded-full bg-gradient-to-br from-cyan-300 to-blue-500 border-2 border-white/30 flex items-center justify-center text-[10px]"
                         >
                           {['🐉', '🦅', '🐺'][i]}
                         </div>
                       ))}
-                      {availablePool && availablePool.spotsRemaining > 0 && (
-                        <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center">
-                          <span className="text-white text-[10px] font-bold">+{availablePool.spotsRemaining}</span>
-                        </div>
-                      )}
                     </div>
                     <span className="text-white/70 text-[10px]">
                       {availablePool ? `${availablePool.currentPlayers}/${availablePool.maxPlayers}` : '0/25'} Players
                     </span>
                   </div>
-                  <div className="flex flex-col items-end">
-                    <span className="text-white/70 text-[10px] uppercase tracking-wide mb-1">
-                      {availablePool?.status === 'filling' ? 'Almost Full!' : 'Starts When Full'}
-                    </span>
-                    <div className="px-3 py-1.5 bg-white/20 rounded-lg hover:bg-white/30 transition-colors">
-                      <span className="text-white text-sm font-bold">JOIN NOW</span>
-                    </div>
-                  </div>
+                  <span className="text-white/70 text-[10px]">
+                    {availablePool?.status === 'filling' ? 'Almost Full!' : 'Starts When Full'}
+                  </span>
                 </div>
               </div>
               <style jsx>{`
