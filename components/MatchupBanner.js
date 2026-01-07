@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useTheme } from '../contexts/ThemeContext';
+import PiksPoolPopup from './PiksPoolPopup';
 
 function formatTimeRemaining(ms) {
   if (!ms || ms <= 0) return 'Ended';
@@ -43,6 +44,7 @@ export default function MatchupBanner({
   const [availablePool, setAvailablePool] = useState(null);
   const [holdProgress, setHoldProgress] = useState(0);
   const [isHolding, setIsHolding] = useState(false);
+  const [showPoolPopup, setShowPoolPopup] = useState(false);
   const scrollRef = useRef(null);
   const holdIntervalRef = useRef(null);
   const holdStartRef = useRef(null);
@@ -95,7 +97,7 @@ export default function MatchupBanner({
       if (progress >= 1) {
         setIsHolding(false);
         setHoldProgress(0);
-        router.push('/pools');
+        setShowPoolPopup(true);
       } else {
         animationFrameRef.current = requestAnimationFrame(animate);
       }
@@ -655,6 +657,12 @@ export default function MatchupBanner({
           </div>
         </div>
       )}
+      
+      <PiksPoolPopup 
+        isOpen={showPoolPopup} 
+        onClose={() => setShowPoolPopup(false)} 
+        pool={availablePool}
+      />
     </>
   );
 }
