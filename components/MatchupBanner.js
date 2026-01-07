@@ -365,6 +365,22 @@ export default function MatchupBanner({
                     </svg>
                   </div>
                   
+                  {/* Little sailboat floating on the water */}
+                  <div 
+                    className="absolute top-0 left-0 sailboat"
+                    style={{ transform: 'translateY(-85%)' }}
+                  >
+                    <svg width="24" height="28" viewBox="0 0 24 28" fill="none">
+                      {/* Sail */}
+                      <path d="M12,2 L12,18 L4,18 Z" fill="rgba(255,255,255,0.9)" />
+                      <path d="M12,5 L12,18 L18,18 Z" fill="rgba(255,255,255,0.7)" />
+                      {/* Mast */}
+                      <line x1="12" y1="2" x2="12" y2="20" stroke="rgba(139,90,43,0.9)" strokeWidth="1.5" />
+                      {/* Hull */}
+                      <path d="M3,20 Q4,24 12,24 Q20,24 21,20 Z" fill="rgba(139,90,43,0.9)" />
+                    </svg>
+                  </div>
+                  
                   {/* Soft glow under the crest */}
                   <div 
                     className="absolute top-0 left-0 right-0 h-[20px]" 
@@ -456,6 +472,17 @@ export default function MatchupBanner({
                 @keyframes waveSlide {
                   0% { transform: translateX(0); }
                   100% { transform: translateX(-50%); }
+                }
+                .sailboat {
+                  animation: sailAcross 15s linear infinite, bobbing 2s ease-in-out infinite;
+                }
+                @keyframes sailAcross {
+                  0% { left: -30px; }
+                  100% { left: calc(100% + 30px); }
+                }
+                @keyframes bobbing {
+                  0%, 100% { transform: translateY(-85%) rotate(-2deg); }
+                  50% { transform: translateY(-90%) rotate(2deg); }
                 }
               `}</style>
             </div>
