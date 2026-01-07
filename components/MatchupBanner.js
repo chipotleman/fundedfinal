@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/router';
 import { useTheme } from '../contexts/ThemeContext';
 
 function formatTimeRemaining(ms) {
@@ -39,10 +40,27 @@ export default function MatchupBanner({
   const [timeRemaining, setTimeRemaining] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [availablePool, setAvailablePool] = useState(null);
   const scrollRef = useRef(null);
+  const router = useRouter();
   const { isDarkMode } = useTheme();
 
   const totalSlides = 4;
+
+  useEffect(() => {
+    const fetchPool = async () => {
+      try {
+        const res = await fetch('/api/pools/available');
+        const data = await res.json();
+        if (data.pools && data.pools.length > 0) {
+          setAvailablePool(data.pools[0]);
+        }
+      } catch (err) {
+        console.error('Error fetching pool:', err);
+      }
+    };
+    fetchPool();
+  }, []);
 
   useEffect(() => {
     if (!matchup?.endsAt) return;
@@ -233,13 +251,104 @@ export default function MatchupBanner({
               </div>
             </div>
 
-            {/* Container 2: Promo Placeholder */}
-            <div data-slide-index="1" className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${containerClass}`}>
-              <div className="h-full flex flex-col items-center justify-center p-6 min-h-[140px] md:min-h-[180px]">
-                <span className="text-3xl md:text-4xl mb-2 md:mb-3">🎁</span>
-                <h3 className={`text-base md:text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Coming Soon</h3>
-                <p className={`text-xs md:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Special promotions & rewards</p>
+            {/* Container 2: Pik Pool */}
+            <div 
+              data-slide-index="1" 
+              className="w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 relative"
+              style={{
+                background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 25%, #0369a1 50%, #075985 75%, #0c4a6e 100%)',
+              }}
+              onClick={() => router.push('/pools')}
+            >
+              <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute inset-0 opacity-30">
+                  {[...Array(8)].map((_, i) => (
+                    <div
+                      key={`bubble-${i}`}
+                      className="absolute rounded-full bg-white/20"
+                      style={{
+                        width: `${20 + (i * 5)}px`,
+                        height: `${20 + (i * 5)}px`,
+                        left: `${10 + (i * 11)}%`,
+                        top: `${20 + (i * 8) % 60}%`,
+                        animation: `float ${3 + (i % 3)}s ease-in-out infinite`,
+                        animationDelay: `${i * 0.3}s`,
+                      }}
+                    />
+                  ))}
+                </div>
+                <svg className="absolute bottom-0 left-0 right-0 opacity-20" viewBox="0 0 1440 120" preserveAspectRatio="none">
+                  <path fill="white" d="M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,58.7C960,64,1056,64,1152,58.7C1248,53,1344,43,1392,37.3L1440,32L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z">
+                    <animate attributeName="d" dur="4s" repeatCount="indefinite" values="M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,58.7C960,64,1056,64,1152,58.7C1248,53,1344,43,1392,37.3L1440,32L1440,120L0,120Z;M0,32L48,42.7C96,53,192,75,288,80C384,85,480,75,576,64C672,53,768,43,864,48C960,53,1056,75,1152,80C1248,85,1344,75,1392,69.3L1440,64L1440,120L0,120Z;M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,58.7C960,64,1056,64,1152,58.7C1248,53,1344,43,1392,37.3L1440,32L1440,120L0,120Z" />
+                  </path>
+                </svg>
               </div>
+              <div className="relative z-10 p-4 min-h-[140px] md:min-h-[180px] flex flex-col">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">🏊</span>
+                    <h3 className="text-white font-bold text-sm md:text-base">PIK POOL</h3>
+                  </div>
+                  <div className="px-2 py-0.5 bg-white/20 rounded-full">
+                    <span className="text-white text-[10px] font-semibold">${availablePool ? parseFloat(availablePool.buyIn).toFixed(0) : '25'} BUY-IN</span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between flex-1">
+                  <div className="flex flex-col">
+                    <span className="text-white/70 text-[10px] uppercase tracking-wide mb-1">Prize Pool</span>
+                    <span className="text-white text-2xl md:text-3xl font-black">
+                      ${availablePool ? parseFloat(availablePool.calculatedPrizePool || availablePool.prizePool).toLocaleString() : '562.50'}
+                    </span>
+                    <span className="text-white/60 text-[10px]">Winner takes all</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <div className="flex -space-x-2 mb-1">
+                      {(availablePool?.participants || []).slice(0, 5).map((p, i) => (
+                        <div 
+                          key={p.odId || i} 
+                          className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-cyan-300 to-blue-500 border-2 border-white/30 flex items-center justify-center text-xs overflow-hidden"
+                        >
+                          {p.avatar ? (
+                            <img src={p.avatar} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            ['🐉', '🦅', '🐺', '🦁', '🐯'][i] || '👤'
+                          )}
+                        </div>
+                      ))}
+                      {(!availablePool || availablePool.participants?.length === 0) && [...Array(3)].map((_, i) => (
+                        <div 
+                          key={`placeholder-${i}`} 
+                          className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-cyan-300 to-blue-500 border-2 border-white/30 flex items-center justify-center text-xs"
+                        >
+                          {['🐉', '🦅', '🐺'][i]}
+                        </div>
+                      ))}
+                      {availablePool && availablePool.spotsRemaining > 0 && (
+                        <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-white/20 border-2 border-white/30 flex items-center justify-center">
+                          <span className="text-white text-[10px] font-bold">+{availablePool.spotsRemaining}</span>
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-white/70 text-[10px]">
+                      {availablePool ? `${availablePool.currentPlayers}/${availablePool.maxPlayers}` : '0/25'} Players
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span className="text-white/70 text-[10px] uppercase tracking-wide mb-1">
+                      {availablePool?.status === 'filling' ? 'Almost Full!' : 'Starts When Full'}
+                    </span>
+                    <div className="px-3 py-1.5 bg-white/20 rounded-lg hover:bg-white/30 transition-colors">
+                      <span className="text-white text-sm font-bold">JOIN NOW</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <style jsx>{`
+                @keyframes float {
+                  0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
+                  50% { transform: translateY(-10px) scale(1.1); opacity: 0.5; }
+                }
+              `}</style>
             </div>
 
             {/* Container 3: Promo Placeholder */}
