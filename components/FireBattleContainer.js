@@ -102,19 +102,37 @@ export default function FireBattleContainer({ isDarkMode }) {
             opacity: 1; 
           }
           50% {
-            transform: translateY(-40px) translateX(5px) scale(0.8);
-            opacity: 0.8;
+            transform: translateY(-60px) translateX(8px) scale(0.7);
+            opacity: 0.7;
           }
           100% { 
-            transform: translateY(-100px) translateX(-3px) scale(0.2); 
+            transform: translateY(-140px) translateX(-5px) scale(0.1); 
             opacity: 0; 
           }
         }
         @keyframes flame-sway {
-          0%, 100% { transform: skewX(-2deg) scaleX(1); }
-          25% { transform: skewX(3deg) scaleX(0.95); }
-          50% { transform: skewX(-3deg) scaleX(1.05); }
-          75% { transform: skewX(2deg) scaleX(0.98); }
+          0%, 100% { transform: skewX(-3deg) scaleX(1); }
+          25% { transform: skewX(4deg) scaleX(0.92); }
+          50% { transform: skewX(-4deg) scaleX(1.08); }
+          75% { transform: skewX(3deg) scaleX(0.96); }
+        }
+        @keyframes smoke-rise {
+          0% { 
+            transform: translateY(0) translateX(0) scale(1) rotate(0deg); 
+            opacity: 0.4; 
+          }
+          50% {
+            transform: translateY(-80px) translateX(15px) scale(1.8) rotate(10deg);
+            opacity: 0.2;
+          }
+          100% { 
+            transform: translateY(-180px) translateX(-10px) scale(3) rotate(-5deg); 
+            opacity: 0; 
+          }
+        }
+        @keyframes smoke-drift {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(20px); }
         }
       `}</style>
       
@@ -162,19 +180,37 @@ export default function FireBattleContainer({ isDarkMode }) {
 
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute inset-0 pointer-events-none">
-            {[...Array(18)].map((_, i) => (
+            {[...Array(12)].map((_, i) => (
+              <div
+                key={`smoke-${i}`}
+                className="absolute rounded-full"
+                style={{
+                  width: `${15 + (i % 4) * 10}px`,
+                  height: `${15 + (i % 4) * 10}px`,
+                  left: `${8 + (i * 7.5)}%`,
+                  bottom: `${20 + (i * 5) % 30}%`,
+                  background: 'radial-gradient(circle, rgba(80,80,80,0.5) 0%, rgba(60,60,60,0.3) 40%, transparent 70%)',
+                  filter: 'blur(4px)',
+                  animation: `smoke-rise ${3 + (i % 3)}s ease-out infinite, smoke-drift ${4 + (i % 2)}s ease-in-out infinite`,
+                  animationDelay: `${i * 0.25}s`,
+                }}
+              />
+            ))}
+          </div>
+          <div className="absolute inset-0 pointer-events-none">
+            {[...Array(20)].map((_, i) => (
               <div
                 key={`ember-${i}`}
                 className="absolute rounded-full"
                 style={{
                   width: `${2 + (i % 4)}px`,
                   height: `${2 + (i % 4)}px`,
-                  left: `${5 + (i * 5.5)}%`,
-                  bottom: `${8 + (i * 3) % 20}%`,
+                  left: `${3 + (i * 5)}%`,
+                  bottom: `${5 + (i * 3) % 25}%`,
                   background: i % 3 === 0 ? '#fef08a' : i % 3 === 1 ? '#fbbf24' : '#fb923c',
-                  boxShadow: `0 0 ${4 + (i % 3) * 2}px ${i % 3 === 0 ? '#fef08a' : '#fbbf24'}`,
-                  animation: `ember-float ${2 + (i % 3) * 0.7}s ease-out infinite`,
-                  animationDelay: `${i * 0.12}s`,
+                  boxShadow: `0 0 ${6 + (i % 3) * 3}px ${i % 3 === 0 ? '#fef08a' : '#fbbf24'}`,
+                  animation: `ember-float ${1.5 + (i % 4) * 0.5}s ease-out infinite`,
+                  animationDelay: `${i * 0.1}s`,
                 }}
               />
             ))}
@@ -196,10 +232,10 @@ export default function FireBattleContainer({ isDarkMode }) {
                 animation: 'flame-sway 0.8s ease-in-out infinite',
               }}
             >
-              {[...Array(12)].map((_, i) => {
-                const baseHeight = 50 + (i % 4) * 20;
-                const width = 60 + (i % 3) * 30;
-                const left = i * 8.5 - 2;
+              {[...Array(14)].map((_, i) => {
+                const baseHeight = 70 + (i % 5) * 25;
+                const width = 70 + (i % 4) * 25;
+                const left = i * 7.5 - 3;
                 
                 return (
                   <div
@@ -245,10 +281,10 @@ export default function FireBattleContainer({ isDarkMode }) {
                 animation: 'flame-sway 0.6s ease-in-out infinite reverse',
               }}
             >
-              {[...Array(8)].map((_, i) => {
-                const baseHeight = 35 + (i % 3) * 15;
-                const width = 80 + (i % 4) * 25;
-                const left = i * 12.5;
+              {[...Array(10)].map((_, i) => {
+                const baseHeight = 50 + (i % 4) * 20;
+                const width = 90 + (i % 4) * 20;
+                const left = i * 10;
                 
                 return (
                   <div
