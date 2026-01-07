@@ -331,11 +331,11 @@ export default function MatchupBanner({
                     transform: `translateY(${90 - (holdProgress * 90)}%)`,
                   }}
                 >
-                  {/* Water body - solid gradient fill with soft top edge */}
+                  {/* Water body - brighter blue gradient */}
                   <div 
                     className="absolute inset-0" 
                     style={{
-                      background: 'linear-gradient(to top, #0ea5e9 0%, rgba(103, 232, 249, 0.8) 70%, transparent 100%)'
+                      background: 'linear-gradient(to top, #22d3ee 0%, rgba(165, 243, 252, 0.85) 70%, transparent 100%)'
                     }}
                   />
                   
