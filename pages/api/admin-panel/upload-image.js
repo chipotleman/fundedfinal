@@ -132,15 +132,24 @@ export default async function handler(req, res) {
     }
 
     const publicSearchPaths = process.env.PUBLIC_OBJECT_SEARCH_PATHS || '';
+    const bucketId = process.env.DEFAULT_OBJECT_STORAGE_BUCKET_ID || '';
     const paths = publicSearchPaths.split(',').map(p => p.trim()).filter(p => p);
     
-    if (paths.length === 0) {
-      return res.status(500).json({ error: 'Object storage not configured' });
+    console.log('Upload request - paths found:', paths.length, 'bucketId exists:', !!bucketId);
+    
+    if (paths.length === 0 && !bucketId) {
+      console.log('Object storage NOT configured - returning error');
+      return res.status(500).json({ error: 'Object storage not configured. Please ensure object storage is set up for this project.' });
     }
-
-    const basePath = paths[0];
-    const pathParts = basePath.split('/').filter(p => p);
-    const bucketName = pathParts[0];
+    
+    let bucketName;
+    if (paths.length > 0) {
+      const basePath = paths[0];
+      const pathParts = basePath.split('/').filter(p => p);
+      bucketName = pathParts[0];
+    } else {
+      bucketName = bucketId;
+    }
     
     const fileId = randomUUID();
     const ext = name.split('.').pop() || 'jpg';
