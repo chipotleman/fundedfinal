@@ -322,7 +322,7 @@ export default function MatchupBanner({
                     />
                   ))}
                 </div>
-                {/* Rising water with layered waves - this container moves up based on holdProgress */}
+                {/* Rising water - this container moves up based on holdProgress */}
                 <div 
                   className="absolute left-0 right-0 transition-transform duration-75 ease-out"
                   style={{
@@ -331,79 +331,32 @@ export default function MatchupBanner({
                     transform: `translateY(${(1 - holdProgress) * 100}%)`,
                   }}
                 >
-                  {/* Deep water gradient - seamless blend */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0ea5e9] via-cyan-300/70 to-cyan-200/50" />
+                  {/* Water body - solid gradient fill */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0ea5e9] via-cyan-300/80 to-cyan-200/60" />
                   
-                  {/* Back wave layer - slower, more transparent */}
-                  <div 
-                    className="absolute top-0 left-0 right-0 h-[60px]" 
-                    style={{ 
-                      transform: 'translateY(-70%)',
-                      maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%)',
-                      WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%)'
-                    }}
-                  >
+                  {/* Single wave crest - stroke only, no fill */}
+                  <div className="absolute top-0 left-0 right-0 h-[30px]" style={{ transform: 'translateY(-50%)' }}>
                     <svg 
-                      className="w-[200%] h-full wave-back" 
-                      viewBox="0 0 2880 60" 
+                      className="w-[200%] h-full wave-crest" 
+                      viewBox="0 0 2880 30" 
                       preserveAspectRatio="none"
+                      style={{ filter: 'blur(1px)' }}
                     >
                       <path 
-                        fill="rgba(165, 243, 252, 0.25)" 
-                        d="M0,30 C120,45 240,15 360,30 C480,45 600,15 720,30 C840,45 960,15 1080,30 C1200,45 1320,15 1440,30 C1560,45 1680,15 1800,30 C1920,45 2040,15 2160,30 C2280,45 2400,15 2520,30 C2640,45 2760,15 2880,30 L2880,60 L0,60 Z"
+                        fill="none"
+                        stroke="rgba(255, 255, 255, 0.7)"
+                        strokeWidth="4"
+                        strokeLinecap="round"
+                        d="M0,15 C60,8 120,22 180,15 C240,8 300,22 360,15 C420,8 480,22 540,15 C600,8 660,22 720,15 C780,8 840,22 900,15 C960,8 1020,22 1080,15 C1140,8 1200,22 1260,15 C1320,8 1380,22 1440,15 C1500,8 1560,22 1620,15 C1680,8 1740,22 1800,15 C1860,8 1920,22 1980,15 C2040,8 2100,22 2160,15 C2220,8 2280,22 2340,15 C2400,8 2460,22 2520,15 C2580,8 2640,22 2700,15 C2760,8 2820,22 2880,15"
                       />
                     </svg>
                   </div>
                   
-                  {/* Middle wave layer */}
+                  {/* Soft glow under the crest */}
                   <div 
-                    className="absolute top-0 left-0 right-0 h-[50px]" 
+                    className="absolute top-0 left-0 right-0 h-[20px]" 
                     style={{ 
-                      transform: 'translateY(-60%)',
-                      maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%)',
-                      WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%)'
-                    }}
-                  >
-                    <svg 
-                      className="w-[200%] h-full wave-mid" 
-                      viewBox="0 0 2880 50" 
-                      preserveAspectRatio="none"
-                    >
-                      <path 
-                        fill="rgba(103, 232, 249, 0.3)" 
-                        d="M0,25 C100,40 200,10 300,25 C400,40 500,10 600,25 C700,40 800,10 900,25 C1000,40 1100,10 1200,25 C1300,40 1400,10 1500,25 C1600,40 1700,10 1800,25 C1900,40 2000,10 2100,25 C2200,40 2300,10 2400,25 C2500,40 2600,10 2700,25 C2800,40 2880,10 2880,25 L2880,50 L0,50 Z"
-                      />
-                    </svg>
-                  </div>
-                  
-                  {/* Front wave layer - fastest, most opaque */}
-                  <div 
-                    className="absolute top-0 left-0 right-0 h-[40px]" 
-                    style={{ 
-                      transform: 'translateY(-50%)',
-                      maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%)',
-                      WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%)'
-                    }}
-                  >
-                    <svg 
-                      className="w-[200%] h-full wave-front" 
-                      viewBox="0 0 2880 40" 
-                      preserveAspectRatio="none"
-                    >
-                      <path 
-                        fill="rgba(34, 211, 238, 0.4)" 
-                        d="M0,20 C80,32 160,8 240,20 C320,32 400,8 480,20 C560,32 640,8 720,20 C800,32 880,8 960,20 C1040,32 1120,8 1200,20 C1280,32 1360,8 1440,20 C1520,32 1600,8 1680,20 C1760,32 1840,8 1920,20 C2000,32 2080,8 2160,20 C2240,32 2320,8 2400,20 C2480,32 2560,8 2640,20 C2720,32 2800,8 2880,20 L2880,40 L0,40 Z"
-                      />
-                    </svg>
-                  </div>
-                  
-                  {/* Foam/highlight on surface */}
-                  <div 
-                    className="absolute top-0 left-0 right-0 h-[8px]" 
-                    style={{ 
-                      transform: 'translateY(-100%)',
-                      background: 'linear-gradient(to bottom, rgba(255,255,255,0.6), transparent)',
-                      filter: 'blur(2px)'
+                      background: 'linear-gradient(to bottom, rgba(255,255,255,0.3), transparent)'
                     }} 
                   />
                 </div>
@@ -483,24 +436,10 @@ export default function MatchupBanner({
                   0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
                   50% { transform: translateY(-10px) scale(1.1); opacity: 0.5; }
                 }
-                .wave-back {
-                  animation: waveSlideBack 8s linear infinite;
+                .wave-crest {
+                  animation: waveSlide 4s linear infinite;
                 }
-                .wave-mid {
-                  animation: waveSlideMid 5s linear infinite;
-                }
-                .wave-front {
-                  animation: waveSlideFront 3s linear infinite;
-                }
-                @keyframes waveSlideBack {
-                  0% { transform: translateX(0); }
-                  100% { transform: translateX(-50%); }
-                }
-                @keyframes waveSlideMid {
-                  0% { transform: translateX(-50%); }
-                  100% { transform: translateX(0); }
-                }
-                @keyframes waveSlideFront {
+                @keyframes waveSlide {
                   0% { transform: translateX(0); }
                   100% { transform: translateX(-50%); }
                 }
