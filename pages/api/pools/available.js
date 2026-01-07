@@ -59,12 +59,18 @@ export default async function handler(req, res) {
         const totalCollected = parseFloat(pool.buyIn) * pool.currentPlayers;
         const platformFee = totalCollected * (parseFloat(pool.platformFeePercent) / 100);
         const calculatedPrizePool = totalCollected - platformFee;
+        
+        // Calculate max prize when pool is full
+        const maxTotalCollected = parseFloat(pool.buyIn) * pool.maxPlayers;
+        const maxPlatformFee = maxTotalCollected * (parseFloat(pool.platformFeePercent) / 100);
+        const maxPrizePool = maxTotalCollected - maxPlatformFee;
 
         return {
           ...pool,
           participants,
           isJoined,
           calculatedPrizePool: calculatedPrizePool.toFixed(2),
+          maxPrizePool: maxPrizePool.toFixed(2),
           spotsRemaining: pool.maxPlayers - pool.currentPlayers,
         };
       })
