@@ -335,42 +335,63 @@ export default function MatchupBanner({
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0ea5e9] via-cyan-300/70 to-cyan-200/50" />
                   
                   {/* Back wave layer - slower, more transparent */}
-                  <div className="absolute top-0 left-0 right-0 h-[60px]" style={{ transform: 'translateY(-70%)' }}>
+                  <div 
+                    className="absolute top-0 left-0 right-0 h-[60px]" 
+                    style={{ 
+                      transform: 'translateY(-70%)',
+                      maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%)',
+                      WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%)'
+                    }}
+                  >
                     <svg 
                       className="w-[200%] h-full wave-back" 
                       viewBox="0 0 2880 60" 
                       preserveAspectRatio="none"
                     >
                       <path 
-                        fill="rgba(165, 243, 252, 0.4)" 
+                        fill="rgba(165, 243, 252, 0.25)" 
                         d="M0,30 C120,45 240,15 360,30 C480,45 600,15 720,30 C840,45 960,15 1080,30 C1200,45 1320,15 1440,30 C1560,45 1680,15 1800,30 C1920,45 2040,15 2160,30 C2280,45 2400,15 2520,30 C2640,45 2760,15 2880,30 L2880,60 L0,60 Z"
                       />
                     </svg>
                   </div>
                   
                   {/* Middle wave layer */}
-                  <div className="absolute top-0 left-0 right-0 h-[50px]" style={{ transform: 'translateY(-60%)' }}>
+                  <div 
+                    className="absolute top-0 left-0 right-0 h-[50px]" 
+                    style={{ 
+                      transform: 'translateY(-60%)',
+                      maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%)',
+                      WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%)'
+                    }}
+                  >
                     <svg 
                       className="w-[200%] h-full wave-mid" 
                       viewBox="0 0 2880 50" 
                       preserveAspectRatio="none"
                     >
                       <path 
-                        fill="rgba(103, 232, 249, 0.5)" 
+                        fill="rgba(103, 232, 249, 0.3)" 
                         d="M0,25 C100,40 200,10 300,25 C400,40 500,10 600,25 C700,40 800,10 900,25 C1000,40 1100,10 1200,25 C1300,40 1400,10 1500,25 C1600,40 1700,10 1800,25 C1900,40 2000,10 2100,25 C2200,40 2300,10 2400,25 C2500,40 2600,10 2700,25 C2800,40 2880,10 2880,25 L2880,50 L0,50 Z"
                       />
                     </svg>
                   </div>
                   
                   {/* Front wave layer - fastest, most opaque */}
-                  <div className="absolute top-0 left-0 right-0 h-[40px]" style={{ transform: 'translateY(-50%)' }}>
+                  <div 
+                    className="absolute top-0 left-0 right-0 h-[40px]" 
+                    style={{ 
+                      transform: 'translateY(-50%)',
+                      maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%)',
+                      WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 80%)'
+                    }}
+                  >
                     <svg 
                       className="w-[200%] h-full wave-front" 
                       viewBox="0 0 2880 40" 
                       preserveAspectRatio="none"
                     >
                       <path 
-                        fill="rgba(34, 211, 238, 0.6)" 
+                        fill="rgba(34, 211, 238, 0.4)" 
                         d="M0,20 C80,32 160,8 240,20 C320,32 400,8 480,20 C560,32 640,8 720,20 C800,32 880,8 960,20 C1040,32 1120,8 1200,20 C1280,32 1360,8 1440,20 C1520,32 1600,8 1680,20 C1760,32 1840,8 1920,20 C2000,32 2080,8 2160,20 C2240,32 2320,8 2400,20 C2480,32 2560,8 2640,20 C2720,32 2800,8 2880,20 L2880,40 L0,40 Z"
                       />
                     </svg>
