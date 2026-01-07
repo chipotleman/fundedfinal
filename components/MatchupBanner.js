@@ -24,19 +24,6 @@ function formatTimeRemaining(ms) {
   return `${seconds}s`;
 }
 
-/**
- * AD CONTAINER IMAGE SIZES:
- * - Mobile: 343px x 140px (full viewport width minus 32px padding)
- * - Desktop: 864px x 180px
- * 
- * Recommended: Use 864x180 images for best quality on all devices.
- * Images will be scaled to fit and cover the container.
- * 
- * Props for ad containers:
- * - adSlot1: { image: 'url', mobileImage: 'url', link: 'url', alt: 'text' } - Second container
- * - adSlot2: { image: 'url', mobileImage: 'url', link: 'url', alt: 'text' } - Third container  
- * - adSlot3: { image: 'url', mobileImage: 'url', link: 'url', alt: 'text' } - Fourth container
- */
 export default function MatchupBanner({ 
   matchup, 
   opponent, 
@@ -47,10 +34,7 @@ export default function MatchupBanner({
   onRefreshOpponentBets,
   myBetsCount = 0,
   myWins = 0,
-  myLosses = 0,
-  adSlot1 = null,
-  adSlot2 = null,
-  adSlot3 = null
+  myLosses = 0
 }) {
   const [timeRemaining, setTimeRemaining] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -249,79 +233,31 @@ export default function MatchupBanner({
               </div>
             </div>
 
-            {/* Container 2: Ad Slot 1 (864x180 recommended) */}
-            <div data-slide-index="1" className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${containerClass} overflow-hidden`}>
-              {adSlot1?.image ? (
-                adSlot1.link ? (
-                  <a href={adSlot1.link} target="_blank" rel="noopener noreferrer" className="block h-full">
-                    <picture>
-                      {adSlot1.mobileImage && <source media="(max-width: 767px)" srcSet={adSlot1.mobileImage} />}
-                      <img src={adSlot1.image} alt={adSlot1.alt || 'Promotion'} className="w-full h-full object-cover min-h-[140px] md:min-h-[180px]" />
-                    </picture>
-                  </a>
-                ) : (
-                  <picture>
-                    {adSlot1.mobileImage && <source media="(max-width: 767px)" srcSet={adSlot1.mobileImage} />}
-                    <img src={adSlot1.image} alt={adSlot1.alt || 'Promotion'} className="w-full h-full object-cover min-h-[140px] md:min-h-[180px]" />
-                  </picture>
-                )
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center p-6 min-h-[140px] md:min-h-[180px]">
-                  <span className="text-3xl md:text-4xl mb-2 md:mb-3">🎁</span>
-                  <h3 className={`text-base md:text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Coming Soon</h3>
-                  <p className={`text-xs md:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Special promotions & rewards</p>
-                </div>
-              )}
+            {/* Container 2: Promo Placeholder */}
+            <div data-slide-index="1" className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${containerClass}`}>
+              <div className="h-full flex flex-col items-center justify-center p-6 min-h-[140px] md:min-h-[180px]">
+                <span className="text-3xl md:text-4xl mb-2 md:mb-3">🎁</span>
+                <h3 className={`text-base md:text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Coming Soon</h3>
+                <p className={`text-xs md:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Special promotions & rewards</p>
+              </div>
             </div>
 
-            {/* Container 3: Ad Slot 2 (864x180 recommended) */}
-            <div data-slide-index="2" className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${containerClass} overflow-hidden`}>
-              {adSlot2?.image ? (
-                adSlot2.link ? (
-                  <a href={adSlot2.link} target="_blank" rel="noopener noreferrer" className="block h-full">
-                    <picture>
-                      {adSlot2.mobileImage && <source media="(max-width: 767px)" srcSet={adSlot2.mobileImage} />}
-                      <img src={adSlot2.image} alt={adSlot2.alt || 'Promotion'} className="w-full h-full object-cover min-h-[140px] md:min-h-[180px]" />
-                    </picture>
-                  </a>
-                ) : (
-                  <picture>
-                    {adSlot2.mobileImage && <source media="(max-width: 767px)" srcSet={adSlot2.mobileImage} />}
-                    <img src={adSlot2.image} alt={adSlot2.alt || 'Promotion'} className="w-full h-full object-cover min-h-[140px] md:min-h-[180px]" />
-                  </picture>
-                )
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center p-6 min-h-[140px] md:min-h-[180px]">
-                  <span className="text-3xl md:text-4xl mb-2 md:mb-3">🏆</span>
-                  <h3 className={`text-base md:text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Leaderboard</h3>
-                  <p className={`text-xs md:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Top players this week</p>
-                </div>
-              )}
+            {/* Container 3: Promo Placeholder */}
+            <div data-slide-index="2" className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${containerClass}`}>
+              <div className="h-full flex flex-col items-center justify-center p-6 min-h-[140px] md:min-h-[180px]">
+                <span className="text-3xl md:text-4xl mb-2 md:mb-3">🏆</span>
+                <h3 className={`text-base md:text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Leaderboard</h3>
+                <p className={`text-xs md:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Top players this week</p>
+              </div>
             </div>
 
-            {/* Container 4: Ad Slot 3 (864x180 recommended) */}
-            <div data-slide-index="3" className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${containerClass} overflow-hidden`}>
-              {adSlot3?.image ? (
-                adSlot3.link ? (
-                  <a href={adSlot3.link} target="_blank" rel="noopener noreferrer" className="block h-full">
-                    <picture>
-                      {adSlot3.mobileImage && <source media="(max-width: 767px)" srcSet={adSlot3.mobileImage} />}
-                      <img src={adSlot3.image} alt={adSlot3.alt || 'Promotion'} className="w-full h-full object-cover min-h-[140px] md:min-h-[180px]" />
-                    </picture>
-                  </a>
-                ) : (
-                  <picture>
-                    {adSlot3.mobileImage && <source media="(max-width: 767px)" srcSet={adSlot3.mobileImage} />}
-                    <img src={adSlot3.image} alt={adSlot3.alt || 'Promotion'} className="w-full h-full object-cover min-h-[140px] md:min-h-[180px]" />
-                  </picture>
-                )
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center p-6 min-h-[140px] md:min-h-[180px]">
-                  <span className="text-3xl md:text-4xl mb-2 md:mb-3">💎</span>
-                  <h3 className={`text-base md:text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>VIP Program</h3>
-                  <p className={`text-xs md:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Exclusive benefits await</p>
-                </div>
-              )}
+            {/* Container 4: Promo Placeholder */}
+            <div data-slide-index="3" className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${containerClass}`}>
+              <div className="h-full flex flex-col items-center justify-center p-6 min-h-[140px] md:min-h-[180px]">
+                <span className="text-3xl md:text-4xl mb-2 md:mb-3">💎</span>
+                <h3 className={`text-base md:text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>VIP Program</h3>
+                <p className={`text-xs md:text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Exclusive benefits await</p>
+              </div>
             </div>
 
           </div>

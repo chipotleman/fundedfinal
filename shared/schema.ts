@@ -621,20 +621,6 @@ export const discordJobs = pgTable("discord_jobs", {
   scheduledForIdx: index("discord_jobs_scheduled_for_idx").on(table.scheduledFor),
 }));
 
-// Ad slots for banner carousel
-export const adSlots = pgTable("ad_slots", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  slotNumber: integer("slot_number").notNull().unique(), // 1, 2, or 3
-  imageUrl: text("image_url"), // Desktop image (864x180 recommended)
-  mobileImageUrl: text("mobile_image_url"), // Mobile image (343x140 recommended)
-  linkUrl: text("link_url"),
-  altText: varchar("alt_text", { length: 255 }),
-  isActive: boolean("is_active").default(true),
-  updatedBy: varchar("updated_by"), // Admin user ID who last updated
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
@@ -688,5 +674,3 @@ export type FakeOpponent = typeof fakeOpponents.$inferSelect;
 export type InsertFakeOpponent = typeof fakeOpponents.$inferInsert;
 export type FakeOpponentBet = typeof fakeOpponentBets.$inferSelect;
 export type InsertFakeOpponentBet = typeof fakeOpponentBets.$inferInsert;
-export type AdSlot = typeof adSlots.$inferSelect;
-export type InsertAdSlot = typeof adSlots.$inferInsert;

@@ -29,22 +29,6 @@ export default function Dashboard() {
   const [bankroll, setBankroll] = useState(10000);
   const [pnl, setPnl] = useState(0);
   const [expandedGames, setExpandedGames] = useState({});
-  const [adSlots, setAdSlots] = useState({});
-
-  useEffect(() => {
-    const fetchAdSlots = async () => {
-      try {
-        const res = await fetch('/api/ad-slots');
-        if (res.ok) {
-          const data = await res.json();
-          setAdSlots(data.slots || {});
-        }
-      } catch (error) {
-        console.error('Error fetching ad slots:', error);
-      }
-    };
-    fetchAdSlots();
-  }, []);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -411,9 +395,6 @@ export default function Dashboard() {
             canSeeBets={canSeeOpponentBets}
             onRefreshOpponentBets={refreshMatchup}
             myBetsCount={myBets?.length || 0}
-            adSlot1={adSlots.slot1}
-            adSlot2={adSlots.slot2}
-            adSlot3={adSlots.slot3}
           />
         ) : user && (
           <div className="mb-6">
