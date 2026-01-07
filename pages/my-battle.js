@@ -268,13 +268,66 @@ export default function MyBattle() {
             </div>
           </div>
         ) : (
-          <div className="bg-slate-800/50 rounded-2xl border border-slate-700 p-8 text-center mb-8">
-            <p className="text-gray-400 mb-4">You're not currently in a battle</p>
-            <Link href="/battle">
-              <button className="bg-green-500 hover:bg-green-600 text-black font-bold py-3 px-8 rounded-xl transition-all">
-                Find a Battle
-              </button>
-            </Link>
+          <div className="mb-8">
+            <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/20 p-6 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-green-400 font-semibold text-sm uppercase tracking-wide">No Active Battle</span>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                  <span className="text-gray-400 font-mono">--:--:--</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4 items-center">
+                <div className="text-center">
+                  <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center text-2xl">
+                    {userProfile?.avatar ? (
+                      <img src={userProfile.avatar} alt="You" className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      '👤'
+                    )}
+                  </div>
+                  <p className="text-white font-bold">{userProfile?.username || 'You'}</p>
+                  <p className="text-2xl font-black text-gray-500">$---</p>
+                </div>
+
+                <div className="text-center">
+                  <div className="w-20 h-20 mx-auto mb-2 rounded-full bg-gradient-to-br from-green-500/30 to-blue-500/30 border-2 border-dashed border-green-500/50 flex items-center justify-center">
+                    <span className="text-4xl">⚔️</span>
+                  </div>
+                  <p className="text-white font-bold text-sm">VS</p>
+                </div>
+
+                <div className="text-center">
+                  <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-gradient-to-br from-gray-600 to-gray-700 border-2 border-dashed border-gray-500 flex items-center justify-center text-2xl">
+                    <span className="text-gray-400">?</span>
+                  </div>
+                  <p className="text-gray-500 font-bold">Waiting...</p>
+                  <p className="text-2xl font-black text-gray-500">$---</p>
+                </div>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-white/10">
+                <div className="text-center py-6">
+                  <h3 className="text-xl font-bold text-white mb-2">Ready to Compete?</h3>
+                  <p className="text-gray-400 text-sm mb-4">
+                    Challenge another player head-to-head. Winner takes 90% of the combined pot!
+                  </p>
+                  <div className="flex justify-center gap-4 text-sm text-gray-500">
+                    <span>⚡ 30 min to 1 week battles</span>
+                    <span>🏆 Real competition</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 flex gap-4">
+                <Link href="/battle" className="flex-1">
+                  <button className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-400 hover:to-blue-400 text-black font-bold py-4 rounded-xl transition-all text-lg">
+                    Start a Battle
+                  </button>
+                </Link>
+              </div>
+            </div>
           </div>
         )}
 
