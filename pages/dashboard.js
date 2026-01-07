@@ -402,7 +402,7 @@ export default function Dashboard() {
             <div className="overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               <div className="flex gap-3" style={{ minWidth: 'max-content' }}>
                 
-                {/* Container 1: Start a Battle (same dimensions as active matchup) */}
+                {/* Container 1: Start a Battle (matches active matchup appearance) */}
                 <div 
                   className={`w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 ${
                     isDarkMode 
@@ -415,53 +415,53 @@ export default function Dashboard() {
                     
                     {/* Left - User */}
                     <div className="flex flex-col items-center flex-1">
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-green-500/30 mb-1.5 border-2 border-green-300/50">
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-green-500/30 mb-1.5 border-2 border-green-300/50 overflow-hidden">
                         {user?.image ? (
-                          <img src={user.image} alt="You" className="w-full h-full rounded-full object-cover" />
+                          <img src={user.image} alt="You" className="w-full h-full object-cover" />
                         ) : (
-                          '👤'
+                          '🐉'
                         )}
                       </div>
                       <span className={`text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Your Balance</span>
-                      <p className="text-lg md:text-2xl font-extrabold text-gray-500 mb-1">
-                        $---
+                      <p className="text-lg md:text-2xl font-extrabold text-green-400 mb-1">
+                        $5,000
                       </p>
-                      <p className={`text-[11px] md:text-xs uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                        Ready to battle
+                      <p className={`text-[11px] md:text-xs uppercase tracking-wide ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Piks: <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>4</span> · <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>24:00:00</span>
                       </p>
                     </div>
 
-                    {/* Center - Start Battle CTA */}
+                    {/* Center - Prize */}
                     <div className="flex flex-col items-center flex-1">
                       <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full mb-2 ${
                         isDarkMode ? 'bg-white/10' : 'bg-gray-100'
                       }`}>
-                        <span className="text-[10px]">⚔️</span>
+                        <span className="text-[10px]">🎮</span>
                         <span className={`text-[9px] font-bold uppercase tracking-wide whitespace-nowrap ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                           1V1 BATTLE
                         </span>
                       </div>
                       <span className="text-2xl md:text-3xl mb-0.5">🏆</span>
-                      <p className={`text-sm md:text-base font-bold mb-1.5 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                        Winner takes 90%
+                      <p className="text-2xl md:text-3xl font-black text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)] mb-1.5">
+                        up to $5,000
                       </p>
                       
-                      <div className="px-3 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-blue-500 shadow-lg text-[10px] md:text-xs text-black font-bold">
+                      <div className="px-3 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-blue-500 shadow-lg text-[10px] md:text-xs text-white font-bold">
                         Start a Battle
                       </div>
                     </div>
 
                     {/* Right - Opponent Placeholder */}
                     <div className="flex flex-col items-center flex-1">
-                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-gray-500/30 mb-1.5 border-2 border-dashed border-gray-400">
+                      <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-gray-500/30 mb-1.5 border-2 border-dashed border-gray-400/50">
                         ?
                       </div>
                       <span className={`text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Opponent</span>
                       <p className="text-lg md:text-2xl font-extrabold text-gray-500 mb-1">
                         $---
                       </p>
-                      <p className={`text-[11px] md:text-xs uppercase tracking-wide ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-                        Waiting...
+                      <p className={`text-[11px] md:text-xs uppercase tracking-wide ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        Piks: <span className={`font-bold ${isDarkMode ? 'text-white/50' : 'text-gray-400'}`}>--</span> · <span className={`font-bold ${isDarkMode ? 'text-white/50' : 'text-gray-400'}`}>--:--:--</span>
                       </p>
                     </div>
                   </div>

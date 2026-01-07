@@ -277,51 +277,51 @@ export default function MyBattle() {
                 
                 {/* Left - User */}
                 <div className="flex flex-col items-center flex-1">
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-green-500/30 mb-1.5 border-2 border-green-300/50">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-green-500/30 mb-1.5 border-2 border-green-300/50 overflow-hidden">
                     {userProfile?.avatar ? (
-                      <img src={userProfile.avatar} alt="You" className="w-full h-full rounded-full object-cover" />
+                      <img src={userProfile.avatar} alt="You" className="w-full h-full object-cover" />
                     ) : (
-                      '👤'
+                      '🐉'
                     )}
                   </div>
                   <span className="text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 text-gray-400">Your Balance</span>
-                  <p className="text-lg md:text-2xl font-extrabold text-gray-500 mb-1">
-                    $---
+                  <p className="text-lg md:text-2xl font-extrabold text-green-400 mb-1">
+                    $5,000
                   </p>
-                  <p className="text-[11px] md:text-xs uppercase tracking-wide text-gray-500">
-                    Ready to battle
+                  <p className="text-[11px] md:text-xs uppercase tracking-wide text-gray-400">
+                    Piks: <span className="font-bold text-white">4</span> · <span className="font-bold text-white">24:00:00</span>
                   </p>
                 </div>
 
-                {/* Center - Start Battle CTA */}
+                {/* Center - Prize */}
                 <div className="flex flex-col items-center flex-1">
                   <div className="flex items-center gap-1 px-2 py-0.5 rounded-full mb-2 bg-white/10">
-                    <span className="text-[10px]">⚔️</span>
+                    <span className="text-[10px]">🎮</span>
                     <span className="text-[9px] font-bold uppercase tracking-wide whitespace-nowrap text-white">
                       1V1 BATTLE
                     </span>
                   </div>
                   <span className="text-2xl md:text-3xl mb-0.5">🏆</span>
-                  <p className="text-sm md:text-base font-bold mb-1.5 text-white">
-                    Winner takes 90%
+                  <p className="text-2xl md:text-3xl font-black text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)] mb-1.5">
+                    up to $5,000
                   </p>
                   
-                  <div className="px-3 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-blue-500 shadow-lg text-[10px] md:text-xs text-black font-bold">
+                  <div className="px-3 py-1.5 rounded-full bg-gradient-to-r from-green-500 to-blue-500 shadow-lg text-[10px] md:text-xs text-white font-bold">
                     Start a Battle
                   </div>
                 </div>
 
                 {/* Right - Opponent Placeholder */}
                 <div className="flex flex-col items-center flex-1">
-                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-gray-500/30 mb-1.5 border-2 border-dashed border-gray-400">
+                  <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center text-base md:text-lg text-white shadow-lg shadow-gray-500/30 mb-1.5 border-2 border-dashed border-gray-400/50">
                     ?
                   </div>
                   <span className="text-[9px] md:text-[10px] uppercase tracking-wider font-semibold mb-0.5 text-gray-400">Opponent</span>
                   <p className="text-lg md:text-2xl font-extrabold text-gray-500 mb-1">
                     $---
                   </p>
-                  <p className="text-[11px] md:text-xs uppercase tracking-wide text-gray-500">
-                    Waiting...
+                  <p className="text-[11px] md:text-xs uppercase tracking-wide text-gray-400">
+                    Piks: <span className="font-bold text-white/50">--</span> · <span className="font-bold text-white/50">--:--:--</span>
                   </p>
                 </div>
               </div>
