@@ -191,9 +191,7 @@ export default function PoolContainer({ isDarkMode }) {
           style={{
             bottom: 0,
             height: '100%',
-            transform: myPoolData 
-              ? 'translateY(40%)' 
-              : `translateY(${86 - (holdProgress * 86)}%)`,
+            transform: `translateY(${86 - (holdProgress * 86)}%)`,
             willChange: 'transform',
           }}
         >
@@ -205,7 +203,7 @@ export default function PoolContainer({ isDarkMode }) {
           />
           <div className="absolute top-0 left-0 right-0 h-[30px]" style={{ transform: 'translateY(-50%)' }}>
             <svg 
-              className="w-[200%] h-full wave-crest" 
+              className="w-[200%] h-full pool-wave-crest" 
               viewBox="0 0 2880 30" 
               preserveAspectRatio="none"
               style={{ filter: 'blur(1px)' }}
@@ -355,10 +353,10 @@ export default function PoolContainer({ isDarkMode }) {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-10px); }
         }
-        .wave-crest {
-          animation: wave-shift 3s linear infinite;
+        .pool-wave-crest {
+          animation: pool-wave-shift 10s linear infinite;
         }
-        @keyframes wave-shift {
+        @keyframes pool-wave-shift {
           from { transform: translateX(0); }
           to { transform: translateX(-50%); }
         }
