@@ -179,12 +179,14 @@ export default function FireBattleContainer({ isDarkMode }) {
             <div className="flex flex-col items-center flex-1">
               <div className="flex flex-col items-center h-[90px] md:h-[110px]">
                 <div 
-                  className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center border-2 border-yellow-400 shadow-lg overflow-hidden"
+                  className="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 border-yellow-400 shadow-lg overflow-hidden"
                   style={{ animation: 'battle-glow 2s ease-in-out infinite' }}
                 >
-                  <svg className="w-8 h-8 md:w-10 md:h-10 text-white/90" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-                  </svg>
+                  <img 
+                    src="https://api.dicebear.com/7.x/avataaars/svg?seed=player1&backgroundColor=b6e3f4"
+                    alt="Your avatar"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
                 <span className="text-white/80 text-[9px] md:text-xs mt-1 uppercase tracking-wide">You</span>
                 <div 
@@ -224,11 +226,11 @@ export default function FireBattleContainer({ isDarkMode }) {
                 >
                   <span className="text-white text-lg md:text-2xl font-bold">?</span>
                 </div>
-                <div className="flex flex-col items-center mt-1">
-                  <svg className="w-3 h-3 md:w-4 md:h-4 text-yellow-400 animate-bounce" viewBox="0 0 24 24" fill="currentColor">
+                <div className="flex flex-col items-center mt-0.5">
+                  <svg className="w-4 h-4 md:w-5 md:h-5 text-yellow-400 animate-bounce" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z" transform="rotate(-90 12 12)"/>
                   </svg>
-                  <span className="text-yellow-400 text-[8px] md:text-[10px] font-bold uppercase tracking-wide text-center leading-tight">
+                  <span className="text-yellow-400 text-[10px] md:text-xs font-bold uppercase tracking-wide text-center leading-tight">
                     Battle<br/>Real Players
                   </span>
                 </div>
