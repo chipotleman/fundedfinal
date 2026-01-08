@@ -224,19 +224,13 @@ export default function FireBattleContainer({ isDarkMode }) {
                 >
                   <span className="text-white text-lg md:text-2xl font-bold">?</span>
                 </div>
-                <span className="text-white/80 text-[9px] md:text-xs mt-1 uppercase tracking-wide">Opponent</span>
-                <div 
-                  className="mt-1 px-3 py-1 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5"
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(185, 28, 28, 0.3) 100%)',
-                    border: '1px solid rgba(248, 113, 113, 0.5)',
-                    backdropFilter: 'blur(8px)',
-                    boxShadow: '0 4px 15px rgba(185, 28, 28, 0.2), inset 0 1px 0 rgba(255,255,255,0.2)',
-                    color: '#f87171',
-                  }}
-                >
-                  <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
-                  247 online
+                <div className="flex flex-col items-center mt-1">
+                  <svg className="w-3 h-3 md:w-4 md:h-4 text-yellow-400 animate-bounce" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z" transform="rotate(-90 12 12)"/>
+                  </svg>
+                  <span className="text-yellow-400 text-[8px] md:text-[10px] font-bold uppercase tracking-wide text-center leading-tight">
+                    Battle<br/>Real Players
+                  </span>
                 </div>
               </div>
             </div>
