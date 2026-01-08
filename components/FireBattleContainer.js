@@ -225,9 +225,18 @@ export default function FireBattleContainer({ isDarkMode }) {
                   <span className="text-white text-lg md:text-2xl font-bold">?</span>
                 </div>
                 <span className="text-white/80 text-[9px] md:text-xs mt-1 uppercase tracking-wide">Opponent</span>
-                <div className="flex items-center gap-1 mt-1">
-                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                  <span className="text-green-400 text-[10px] md:text-xs font-medium">247 online</span>
+                <div 
+                  className="mt-1 px-3 py-1 rounded-lg text-xs md:text-sm font-bold flex items-center gap-1.5"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.15) 100%)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
+                    backdropFilter: 'blur(8px)',
+                    boxShadow: '0 4px 15px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255,255,255,0.2)',
+                    color: 'rgba(255, 255, 255, 0.9)',
+                  }}
+                >
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse"></div>
+                  247 online
                 </div>
               </div>
             </div>
