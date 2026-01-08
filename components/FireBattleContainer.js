@@ -188,26 +188,21 @@ export default function FireBattleContainer({ isDarkMode }) {
                 <span className="text-white text-lg md:text-2xl font-bold">?</span>
               </div>
               <span className="text-white/80 text-[9px] md:text-xs mt-1 uppercase tracking-wide">You</span>
-              <span className="text-green-400 text-xs md:text-sm font-bold">$5,000</span>
+              <span className="text-green-400 text-xs md:text-sm font-bold">FREE $10</span>
             </div>
 
-            <div className="flex flex-col items-center flex-1 -mt-2">
-              <div className="relative">
-                <div 
-                  className="text-2xl md:text-4xl font-black text-transparent bg-clip-text"
-                  style={{ 
-                    backgroundImage: 'linear-gradient(180deg, #fde047 0%, #f59e0b 50%, #d97706 100%)',
-                    animation: 'vs-pulse 1.5s ease-in-out infinite',
-                    WebkitBackgroundClip: 'text',
-                  }}
-                >
-                  VS
-                </div>
+            <div className="flex flex-col items-center justify-center flex-1">
+              <div 
+                className="text-3xl md:text-5xl font-black text-transparent bg-clip-text"
+                style={{ 
+                  backgroundImage: 'linear-gradient(180deg, #fde047 0%, #f59e0b 50%, #d97706 100%)',
+                  animation: 'vs-pulse 1.5s ease-in-out infinite',
+                  WebkitBackgroundClip: 'text',
+                }}
+              >
+                VS
               </div>
-              <div className="text-center mt-1">
-                <div className="text-white text-[10px] md:text-xs font-bold uppercase tracking-wider">1v1 Battle</div>
-                <div className="text-yellow-400 text-sm md:text-xl font-black">WIN $9,000</div>
-              </div>
+              <div className="text-white/60 text-[9px] md:text-xs font-medium uppercase tracking-wider mt-1">1v1 Battle</div>
             </div>
 
             <div className="flex flex-col items-center flex-1">
