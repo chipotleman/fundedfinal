@@ -179,14 +179,17 @@ export default function FireBattleContainer({ isDarkMode }) {
             <div className="flex flex-col items-center flex-1">
               <div className="flex flex-col items-center h-[90px] md:h-[110px]">
                 <div 
-                  className="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 border-yellow-400 shadow-lg overflow-hidden"
+                  className="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 border-yellow-400 shadow-lg overflow-hidden bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center"
                   style={{ animation: 'battle-glow 2s ease-in-out infinite' }}
                 >
-                  <img 
-                    src="https://api.dicebear.com/7.x/avataaars/svg?seed=player1&backgroundColor=b6e3f4"
-                    alt="Your avatar"
-                    className="w-full h-full object-cover"
-                  />
+                  <div className="relative">
+                    <svg className="w-10 h-10 md:w-12 md:h-12 text-white" viewBox="0 0 24 24" fill="currentColor">
+                      <circle cx="12" cy="8" r="4" fill="currentColor"/>
+                      <path d="M12 14c-4 0-8 2-8 4v2h16v-2c0-2-4-4-8-4z"/>
+                    </svg>
+                    <div className="absolute top-1 left-1 md:top-1.5 md:left-1.5 text-[8px] md:text-[10px] font-black text-green-300">$</div>
+                    <div className="absolute top-1 right-1.5 md:top-1.5 md:right-2 text-[8px] md:text-[10px] font-black text-green-300">$</div>
+                  </div>
                 </div>
                 <span className="text-white/80 text-[9px] md:text-xs mt-1 uppercase tracking-wide">You</span>
                 <div 
