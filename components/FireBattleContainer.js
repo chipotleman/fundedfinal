@@ -4,24 +4,15 @@ import { useRouter } from 'next/router';
 export default function FireBattleContainer({ isDarkMode }) {
   const [holdProgress, setHoldProgress] = useState(0);
   const [isHolding, setIsHolding] = useState(false);
-  const [turbulenceSeed, setTurbulenceSeed] = useState(1);
   const router = useRouter();
   
   const holdStartRef = useRef(null);
   const animationFrameRef = useRef(null);
   const releaseStartRef = useRef(null);
   const releaseFromRef = useRef(0);
-  const turbulenceRef = useRef(null);
 
   const HOLD_DURATION = 1500;
   const RELEASE_DURATION = 800;
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setTurbulenceSeed(prev => (prev % 5) + 1);
-    }, 100);
-    return () => clearInterval(interval);
-  }, []);
 
   const startHold = (e) => {
     e.preventDefault();
@@ -96,293 +87,143 @@ export default function FireBattleContainer({ isDarkMode }) {
   return (
     <>
       <style jsx global>{`
-        @keyframes ember-float {
-          0% { 
-            transform: translateY(0) translateX(0) scale(1); 
-            opacity: 1; 
-          }
-          50% {
-            transform: translateY(-60px) translateX(8px) scale(0.7);
-            opacity: 0.7;
-          }
-          100% { 
-            transform: translateY(-140px) translateX(-5px) scale(0.1); 
-            opacity: 0; 
-          }
+        @keyframes battle-pulse {
+          0%, 100% { opacity: 0.6; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.05); }
         }
-        @keyframes flame-sway {
-          0%, 100% { transform: skewX(-3deg) scaleX(1); }
-          25% { transform: skewX(4deg) scaleX(0.92); }
-          50% { transform: skewX(-4deg) scaleX(1.08); }
-          75% { transform: skewX(3deg) scaleX(0.96); }
+        @keyframes battle-glow {
+          0%, 100% { box-shadow: 0 0 20px rgba(251, 146, 60, 0.5); }
+          50% { box-shadow: 0 0 40px rgba(251, 146, 60, 0.8); }
         }
-        @keyframes smoke-rise {
-          0% { 
-            transform: translateY(0) translateX(0) scale(1) rotate(0deg); 
-            opacity: 0.4; 
-          }
-          50% {
-            transform: translateY(-80px) translateX(15px) scale(1.8) rotate(10deg);
-            opacity: 0.2;
-          }
-          100% { 
-            transform: translateY(-180px) translateX(-10px) scale(3) rotate(-5deg); 
-            opacity: 0; 
-          }
+        @keyframes fire-flicker {
+          0%, 100% { opacity: 0.8; transform: scaleY(1) translateY(0); }
+          25% { opacity: 1; transform: scaleY(1.1) translateY(-2px); }
+          50% { opacity: 0.9; transform: scaleY(0.95) translateY(1px); }
+          75% { opacity: 1; transform: scaleY(1.05) translateY(-1px); }
         }
-        @keyframes smoke-drift {
-          0%, 100% { transform: translateX(0); }
-          50% { transform: translateX(20px); }
+        @keyframes vs-pulse {
+          0%, 100% { transform: scale(1); text-shadow: 0 0 20px rgba(255,200,0,0.8); }
+          50% { transform: scale(1.1); text-shadow: 0 0 40px rgba(255,200,0,1); }
         }
       `}</style>
       
       <div 
         className="w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 relative h-[140px] md:h-[180px]"
         style={{
-          background: 'linear-gradient(180deg, #0f0502 0%, #1a0804 40%, #2a0f08 100%)',
+          background: 'linear-gradient(135deg, #1a0a05 0%, #2d1408 25%, #4a1a0a 50%, #3d1206 75%, #1a0805 100%)',
+          border: '2px solid rgba(251, 146, 60, 0.3)',
         }}
       >
-        <svg width="0" height="0" style={{ position: 'absolute' }}>
-          <defs>
-            <filter id="fire-turbulence" x="-50%" y="-50%" width="200%" height="200%">
-              <feTurbulence 
-                type="fractalNoise" 
-                baseFrequency="0.015 0.08" 
-                numOctaves="3" 
-                seed={turbulenceSeed}
-                result="noise"
-              />
-              <feDisplacementMap 
-                in="SourceGraphic" 
-                in2="noise" 
-                scale="25" 
-                xChannelSelector="R" 
-                yChannelSelector="G"
-              />
-            </filter>
-            <linearGradient id="flame-gradient-main" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#7f1d1d" />
-              <stop offset="15%" stopColor="#dc2626" />
-              <stop offset="35%" stopColor="#ea580c" />
-              <stop offset="55%" stopColor="#f97316" />
-              <stop offset="75%" stopColor="#fbbf24" />
-              <stop offset="90%" stopColor="#fde047" />
-              <stop offset="100%" stopColor="#fef9c3" stopOpacity="0.8" />
-            </linearGradient>
-            <linearGradient id="flame-gradient-bright" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stopColor="#f97316" />
-              <stop offset="40%" stopColor="#fbbf24" />
-              <stop offset="70%" stopColor="#fde047" />
-              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.9" />
-            </linearGradient>
-          </defs>
-        </svg>
+        <div 
+          className="absolute inset-0 opacity-30"
+          style={{
+            background: 'radial-gradient(ellipse at center bottom, rgba(251, 146, 60, 0.4) 0%, transparent 60%)',
+          }}
+        />
+        
+        <div className="absolute bottom-0 left-0 right-0 h-[40px] overflow-hidden">
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={`fire-${i}`}
+              className="absolute bottom-0"
+              style={{
+                left: `${i * 5}%`,
+                width: '30px',
+                height: `${20 + (i % 4) * 8}px`,
+                background: `linear-gradient(to top, #dc2626 0%, #f97316 40%, #fbbf24 70%, transparent 100%)`,
+                borderRadius: '50% 50% 0 0',
+                filter: 'blur(2px)',
+                animation: `fire-flicker ${0.3 + (i % 3) * 0.1}s ease-in-out infinite`,
+                animationDelay: `${i * 0.05}s`,
+                transformOrigin: 'bottom center',
+              }}
+            />
+          ))}
+        </div>
 
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none">
-            {[...Array(12)].map((_, i) => (
-              <div
-                key={`smoke-${i}`}
-                className="absolute rounded-full"
-                style={{
-                  width: `${15 + (i % 4) * 10}px`,
-                  height: `${15 + (i % 4) * 10}px`,
-                  left: `${8 + (i * 7.5)}%`,
-                  bottom: `${20 + (i * 5) % 30}%`,
-                  background: 'radial-gradient(circle, rgba(80,80,80,0.5) 0%, rgba(60,60,60,0.3) 40%, transparent 70%)',
-                  filter: 'blur(4px)',
-                  animation: `smoke-rise ${3 + (i % 3)}s ease-out infinite, smoke-drift ${4 + (i % 2)}s ease-in-out infinite`,
-                  animationDelay: `${i * 0.25}s`,
-                }}
-              />
-            ))}
-          </div>
-          <div className="absolute inset-0 pointer-events-none">
-            {[...Array(20)].map((_, i) => (
-              <div
-                key={`ember-${i}`}
-                className="absolute rounded-full"
-                style={{
-                  width: `${2 + (i % 4)}px`,
-                  height: `${2 + (i % 4)}px`,
-                  left: `${3 + (i * 5)}%`,
-                  bottom: `${5 + (i * 3) % 25}%`,
-                  background: i % 3 === 0 ? '#fef08a' : i % 3 === 1 ? '#fbbf24' : '#fb923c',
-                  boxShadow: `0 0 ${6 + (i % 3) * 3}px ${i % 3 === 0 ? '#fef08a' : '#fbbf24'}`,
-                  animation: `ember-float ${1.5 + (i % 4) * 0.5}s ease-out infinite`,
-                  animationDelay: `${i * 0.1}s`,
-                }}
-              />
-            ))}
-          </div>
-          
-          <div 
-            className="absolute left-0 right-0"
-            style={{
-              bottom: 0,
-              height: '120%',
-              transform: `translateY(${90 - (holdProgress * 90)}%)`,
-              willChange: 'transform',
-            }}
-          >
-            <div 
-              className="absolute inset-0"
-              style={{
-                filter: 'url(#fire-turbulence)',
-                animation: 'flame-sway 0.8s ease-in-out infinite',
-              }}
-            >
-              {[...Array(14)].map((_, i) => {
-                const baseHeight = 70 + (i % 5) * 25;
-                const width = 70 + (i % 4) * 25;
-                const left = i * 7.5 - 3;
-                
-                return (
-                  <div
-                    key={`flame-tongue-${i}`}
-                    className="absolute"
-                    style={{
-                      left: `${left}%`,
-                      bottom: 0,
-                      width: `${width}px`,
-                      height: `${baseHeight}%`,
-                      background: 'url(#flame-gradient-main)',
-                      background: `linear-gradient(to top, 
-                        #7f1d1d 0%, 
-                        #dc2626 15%, 
-                        #ea580c 30%, 
-                        #f97316 50%, 
-                        #fbbf24 70%, 
-                        #fde047 85%,
-                        rgba(254, 249, 195, 0.6) 95%,
-                        transparent 100%)`,
-                      clipPath: `polygon(
-                        ${20 + (i % 3) * 5}% 100%, 
-                        0% ${60 - (i % 4) * 5}%, 
-                        ${15 + (i % 2) * 10}% ${30 - (i % 3) * 5}%, 
-                        ${40 + (i % 3) * 5}% ${5 + (i % 2) * 3}%, 
-                        ${60 - (i % 2) * 5}% ${8 + (i % 3) * 4}%, 
-                        ${85 - (i % 3) * 5}% ${35 - (i % 2) * 8}%, 
-                        100% ${55 + (i % 4) * 5}%, 
-                        ${80 - (i % 2) * 5}% 100%
-                      )`,
-                      opacity: 0.9,
-                      transformOrigin: 'bottom center',
-                    }}
-                  />
-                );
-              })}
+        <div className="relative z-10 h-full flex items-center px-3 md:px-6">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex flex-col items-center flex-1">
+              <div 
+                className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center border-2 border-yellow-400 shadow-lg"
+                style={{ animation: 'battle-glow 2s ease-in-out infinite' }}
+              >
+                <span className="text-white text-lg md:text-2xl font-bold">?</span>
+              </div>
+              <span className="text-white/80 text-[9px] md:text-xs mt-1 uppercase tracking-wide">You</span>
+              <span className="text-green-400 text-xs md:text-sm font-bold">$5,000</span>
             </div>
-            
-            <div 
-              className="absolute inset-0"
-              style={{
-                filter: 'url(#fire-turbulence) blur(4px)',
-                animation: 'flame-sway 0.6s ease-in-out infinite reverse',
-              }}
-            >
-              {[...Array(10)].map((_, i) => {
-                const baseHeight = 50 + (i % 4) * 20;
-                const width = 90 + (i % 4) * 20;
-                const left = i * 10;
-                
-                return (
-                  <div
-                    key={`flame-inner-${i}`}
-                    className="absolute"
-                    style={{
-                      left: `${left}%`,
-                      bottom: 0,
-                      width: `${width}px`,
-                      height: `${baseHeight}%`,
-                      background: `linear-gradient(to top, 
-                        #f97316 0%, 
-                        #fbbf24 30%, 
-                        #fde047 60%,
-                        #fef9c3 85%,
-                        transparent 100%)`,
-                      clipPath: `polygon(
-                        30% 100%, 
-                        5% 50%, 
-                        25% 20%, 
-                        50% 0%, 
-                        75% 15%, 
-                        95% 45%, 
-                        70% 100%
-                      )`,
-                      opacity: 0.7,
-                      transformOrigin: 'bottom center',
-                    }}
-                  />
-                );
-              })}
+
+            <div className="flex flex-col items-center flex-1 -mt-2">
+              <div className="relative">
+                <div 
+                  className="text-2xl md:text-4xl font-black text-transparent bg-clip-text"
+                  style={{ 
+                    backgroundImage: 'linear-gradient(180deg, #fde047 0%, #f59e0b 50%, #d97706 100%)',
+                    animation: 'vs-pulse 1.5s ease-in-out infinite',
+                    WebkitBackgroundClip: 'text',
+                  }}
+                >
+                  VS
+                </div>
+              </div>
+              <div className="text-center mt-1">
+                <div className="text-white text-[10px] md:text-xs font-bold uppercase tracking-wider">1v1 Battle</div>
+                <div className="text-yellow-400 text-sm md:text-xl font-black">WIN $9,000</div>
+              </div>
             </div>
-            
-            <div 
-              className="absolute bottom-0 left-0 right-0 h-[50%]" 
-              style={{ 
-                background: 'linear-gradient(to top, #fde047 0%, #fbbf24 20%, #f97316 50%, transparent 100%)',
-                opacity: 0.5,
-                filter: 'blur(15px)',
-              }} 
-            />
-            
-            <div 
-              className="absolute bottom-0 left-0 right-0 h-[25%]" 
-              style={{ 
-                background: 'linear-gradient(to top, #ffffff 0%, #fef9c3 40%, transparent 100%)',
-                opacity: 0.4,
-                filter: 'blur(8px)',
-              }} 
-            />
+
+            <div className="flex flex-col items-center flex-1">
+              <div 
+                className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-red-600 to-red-900 flex items-center justify-center border-2 border-red-400 shadow-lg"
+                style={{ animation: 'battle-pulse 2s ease-in-out infinite' }}
+              >
+                <span className="text-white text-lg md:text-2xl font-bold">?</span>
+              </div>
+              <span className="text-white/80 text-[9px] md:text-xs mt-1 uppercase tracking-wide">Opponent</span>
+              <span className="text-white/50 text-xs md:text-sm font-bold">$---</span>
+            </div>
           </div>
         </div>
-        
-        <div className="relative z-10 p-4 h-[140px] md:h-[180px] flex flex-col overflow-hidden">
-          <div className="absolute top-3 right-3 bg-yellow-400 text-black px-3 py-1 rounded-md shadow-lg transform rotate-3" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%, 5% 50%)' }}>
-            <div className="flex items-center gap-1">
-              <span className="text-xs font-black">$10</span>
-              <span className="text-[8px] font-bold uppercase">Free</span>
-            </div>
-          </div>
-          
-          <div className="flex flex-col mb-1">
-            <span className="text-white/70 text-[10px] uppercase tracking-wide">1v1 Battle</span>
-            <span className="text-white text-lg md:text-4xl font-black drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
-              Piks Fire Off
-            </span>
-          </div>
-          
-          <div className="flex items-center justify-center -mt-4 md:mt-[10px]">
+
+        <div className="absolute bottom-2 md:bottom-3 left-1/2 -translate-x-1/2 z-20">
+          <div 
+            className="relative px-4 md:px-8 py-1.5 md:py-2 rounded-full overflow-hidden select-none cursor-pointer active:scale-95 transition-transform duration-150"
+            style={{
+              background: 'linear-gradient(180deg, #f97316 0%, #ea580c 50%, #c2410c 100%)',
+              border: '2px solid #fbbf24',
+              boxShadow: '0 0 20px rgba(251, 146, 60, 0.5), inset 0 1px 0 rgba(255,255,255,0.3)',
+            }}
+            onMouseDown={startHold}
+            onMouseUp={endHold}
+            onMouseLeave={endHold}
+            onTouchStart={startHold}
+            onTouchEnd={endHold}
+            onTouchCancel={endHold}
+          >
             <div 
-              className="relative px-6 py-2 bg-white/25 active:bg-white/40 rounded-xl shadow-lg overflow-hidden select-none cursor-pointer active:scale-95 transition-transform duration-150"
-              onMouseDown={startHold}
-              onMouseUp={endHold}
-              onMouseLeave={endHold}
-              onTouchStart={startHold}
-              onTouchEnd={endHold}
-              onTouchCancel={endHold}
-              style={{ touchAction: 'none' }}
-            >
-              <div 
-                className="absolute inset-0 bg-gradient-to-r from-yellow-300 to-orange-400"
-                style={{
-                  width: `${holdProgress * 100}%`,
-                  opacity: 0.6,
-                }}
-              />
-              <span className="relative text-white text-sm md:text-base font-bold tracking-wide pointer-events-none">
-                {isHolding ? 'IGNITING...' : 'HOLD TO START'}
-              </span>
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-between mt-auto pt-2">
-            <span className="text-white/60 text-[10px]">Winner takes 90%</span>
+              className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-yellow-300"
+              style={{
+                width: `${holdProgress * 100}%`,
+                opacity: 0.5,
+              }}
+            />
             <div className="flex items-center gap-2">
-              <span className="text-white/60 text-[10px]">Up to $9,000</span>
+              <svg className="w-3 h-3 md:w-4 md:h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+              </svg>
+              <span className="relative text-white text-xs md:text-sm font-bold tracking-wide pointer-events-none uppercase">
+                {isHolding ? 'Finding Match...' : 'Start Battle'}
+              </span>
+              <svg className="w-3 h-3 md:w-4 md:h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+              </svg>
             </div>
           </div>
+        </div>
+
+        <div className="absolute top-2 right-2 md:top-3 md:right-3 bg-green-500 text-white px-2 py-0.5 rounded-md text-[8px] md:text-[10px] font-bold uppercase shadow-lg">
+          Free Entry
         </div>
       </div>
     </>
