@@ -179,16 +179,10 @@ export default function FireBattleContainer({ isDarkMode }) {
             <div className="flex flex-col items-center flex-1">
               <div className="flex flex-col items-center h-[90px] md:h-[110px]">
                 <div 
-                  className="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 border-yellow-400 shadow-lg overflow-hidden bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center"
+                  className="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 border-yellow-400 shadow-lg bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center"
                   style={{ animation: 'battle-glow 2s ease-in-out infinite' }}
                 >
-                  <svg className="w-8 h-8 md:w-10 md:h-10" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="6" r="3.5" fill="#fcd34d" stroke="#f59e0b" strokeWidth="0.5"/>
-                    <path d="M12 10c-3 0-6 1.5-6 4v3h12v-3c0-2.5-3-4-6-4z" fill="#7c3aed"/>
-                    <path d="M8 5l-3-3M16 5l3-3" stroke="#fcd34d" strokeWidth="1.5" strokeLinecap="round"/>
-                    <path d="M5 2l2 2M19 2l-2 2" stroke="#fcd34d" strokeWidth="1.5" strokeLinecap="round"/>
-                    <rect x="10" y="13" width="4" height="4" rx="0.5" fill="#fcd34d"/>
-                  </svg>
+                  <span className="text-2xl md:text-3xl">🐍</span>
                 </div>
                 <span className="text-white/80 text-[9px] md:text-xs mt-1 uppercase tracking-wide">You</span>
                 <div 
