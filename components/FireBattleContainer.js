@@ -98,14 +98,10 @@ export default function FireBattleContainer({ isDarkMode }) {
         @keyframes ember-float {
           0% { 
             transform: translateY(0) translateX(0) scale(1); 
-            opacity: 1; 
-          }
-          50% {
-            transform: translateY(-50px) translateX(8px) scale(0.8);
-            opacity: 0.8;
+            opacity: 0.9; 
           }
           100% { 
-            transform: translateY(-120px) translateX(-5px) scale(0.2); 
+            transform: translateY(-160px) translateX(10px) scale(0.3); 
             opacity: 0; 
           }
         }
@@ -143,7 +139,7 @@ export default function FireBattleContainer({ isDarkMode }) {
           }}
         />
         
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
           {[...Array(10)].map((_, i) => (
             <div
               key={`smoke-${i}`}
@@ -155,24 +151,24 @@ export default function FireBattleContainer({ isDarkMode }) {
                 bottom: `${5 + (i * 4) % 20}%`,
                 background: 'radial-gradient(circle, rgba(100,100,100,0.4) 0%, rgba(70,70,70,0.2) 50%, transparent 70%)',
                 filter: 'blur(6px)',
-                animation: `smoke-rise ${3.5 + (i % 3) * 0.8}s ease-out infinite`,
+                animation: `smoke-rise ${3.5 + (i % 3) * 0.8}s linear infinite`,
                 animationDelay: `${i * 0.3}s`,
               }}
             />
           ))}
-          {[...Array(18)].map((_, i) => (
+          {[...Array(25)].map((_, i) => (
             <div
               key={`ember-${i}`}
               className="absolute rounded-full"
               style={{
                 width: `${2 + (i % 3) * 2}px`,
                 height: `${2 + (i % 3) * 2}px`,
-                left: `${3 + (i * 5.5)}%`,
-                bottom: `${8 + (i * 3) % 25}%`,
+                left: `${2 + (i * 4)}%`,
+                bottom: `-5%`,
                 background: i % 3 === 0 ? '#fef08a' : i % 3 === 1 ? '#fbbf24' : '#fb923c',
                 boxShadow: `0 0 ${6 + (i % 3) * 3}px ${i % 3 === 0 ? '#fef08a' : '#fbbf24'}`,
-                animation: `ember-float ${2 + (i % 4) * 0.6}s ease-out infinite`,
-                animationDelay: `${i * 0.15}s`,
+                animation: `ember-float ${2.5 + (i % 5) * 0.4}s linear infinite`,
+                animationDelay: `${(i * 0.12)}s`,
               }}
             />
           ))}
@@ -181,24 +177,28 @@ export default function FireBattleContainer({ isDarkMode }) {
         <div className="relative z-10 h-full flex items-center px-3 md:px-6">
           <div className="flex items-center justify-between w-full">
             <div className="flex flex-col items-center flex-1">
-              <div 
-                className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center border-2 border-yellow-400 shadow-lg"
-                style={{ animation: 'battle-glow 2s ease-in-out infinite' }}
-              >
-                <span className="text-white text-lg md:text-2xl font-bold">?</span>
-              </div>
-              <span className="text-white/80 text-[9px] md:text-xs mt-1 uppercase tracking-wide">You</span>
-              <div 
-                className="mt-1 px-3 py-1 rounded-lg text-xs md:text-sm font-bold"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(74, 222, 128, 0.2) 0%, rgba(34, 197, 94, 0.3) 100%)',
-                  border: '1px solid rgba(74, 222, 128, 0.5)',
-                  backdropFilter: 'blur(8px)',
-                  boxShadow: '0 4px 15px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255,255,255,0.2)',
-                  color: '#4ade80',
-                }}
-              >
-                FREE $10
+              <div className="flex flex-col items-center h-[90px] md:h-[110px]">
+                <div 
+                  className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center border-2 border-yellow-400 shadow-lg overflow-hidden"
+                  style={{ animation: 'battle-glow 2s ease-in-out infinite' }}
+                >
+                  <svg className="w-8 h-8 md:w-10 md:h-10 text-white/90" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                  </svg>
+                </div>
+                <span className="text-white/80 text-[9px] md:text-xs mt-1 uppercase tracking-wide">You</span>
+                <div 
+                  className="mt-1 px-3 py-1 rounded-lg text-xs md:text-sm font-bold"
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(74, 222, 128, 0.2) 0%, rgba(34, 197, 94, 0.3) 100%)',
+                    border: '1px solid rgba(74, 222, 128, 0.5)',
+                    backdropFilter: 'blur(8px)',
+                    boxShadow: '0 4px 15px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255,255,255,0.2)',
+                    color: '#4ade80',
+                  }}
+                >
+                  FREE $10
+                </div>
               </div>
             </div>
 
@@ -217,14 +217,19 @@ export default function FireBattleContainer({ isDarkMode }) {
             </div>
 
             <div className="flex flex-col items-center flex-1">
-              <div 
-                className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-red-600 to-red-900 flex items-center justify-center border-2 border-red-400 shadow-lg"
-                style={{ animation: 'battle-pulse 2s ease-in-out infinite' }}
-              >
-                <span className="text-white text-lg md:text-2xl font-bold">?</span>
+              <div className="flex flex-col items-center h-[90px] md:h-[110px]">
+                <div 
+                  className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-red-600 to-red-900 flex items-center justify-center border-2 border-red-400 shadow-lg"
+                  style={{ animation: 'battle-pulse 2s ease-in-out infinite' }}
+                >
+                  <span className="text-white text-lg md:text-2xl font-bold">?</span>
+                </div>
+                <span className="text-white/80 text-[9px] md:text-xs mt-1 uppercase tracking-wide">Opponent</span>
+                <div className="flex items-center gap-1 mt-1">
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                  <span className="text-green-400 text-[10px] md:text-xs font-medium">247 online</span>
+                </div>
               </div>
-              <span className="text-white/80 text-[9px] md:text-xs mt-1 uppercase tracking-wide">Opponent</span>
-              <span className="text-white/50 text-xs md:text-sm font-bold">$---</span>
             </div>
           </div>
         </div>
