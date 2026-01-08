@@ -188,7 +188,18 @@ export default function FireBattleContainer({ isDarkMode }) {
                 <span className="text-white text-lg md:text-2xl font-bold">?</span>
               </div>
               <span className="text-white/80 text-[9px] md:text-xs mt-1 uppercase tracking-wide">You</span>
-              <span className="text-green-400 text-xs md:text-sm font-bold">FREE $10</span>
+              <div 
+                className="mt-1 px-3 py-1 rounded-lg text-xs md:text-sm font-bold"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(74, 222, 128, 0.2) 0%, rgba(34, 197, 94, 0.3) 100%)',
+                  border: '1px solid rgba(74, 222, 128, 0.5)',
+                  backdropFilter: 'blur(8px)',
+                  boxShadow: '0 4px 15px rgba(34, 197, 94, 0.2), inset 0 1px 0 rgba(255,255,255,0.2)',
+                  color: '#4ade80',
+                }}
+              >
+                FREE $10
+              </div>
             </div>
 
             <div className="flex flex-col items-center justify-center flex-1">
@@ -218,45 +229,6 @@ export default function FireBattleContainer({ isDarkMode }) {
           </div>
         </div>
 
-        <div className="absolute bottom-2 md:bottom-3 left-1/2 -translate-x-1/2 z-20">
-          <div 
-            className="relative px-4 md:px-8 py-1.5 md:py-2 rounded-full overflow-hidden select-none cursor-pointer active:scale-95 transition-transform duration-150"
-            style={{
-              background: 'linear-gradient(180deg, #f97316 0%, #ea580c 50%, #c2410c 100%)',
-              border: '2px solid #fbbf24',
-              boxShadow: '0 0 20px rgba(251, 146, 60, 0.5), inset 0 1px 0 rgba(255,255,255,0.3)',
-            }}
-            onMouseDown={startHold}
-            onMouseUp={endHold}
-            onMouseLeave={endHold}
-            onTouchStart={startHold}
-            onTouchEnd={endHold}
-            onTouchCancel={endHold}
-          >
-            <div 
-              className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-yellow-300"
-              style={{
-                width: `${holdProgress * 100}%`,
-                opacity: 0.5,
-              }}
-            />
-            <div className="flex items-center gap-2">
-              <svg className="w-3 h-3 md:w-4 md:h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-              </svg>
-              <span className="relative text-white text-xs md:text-sm font-bold tracking-wide pointer-events-none uppercase">
-                {isHolding ? 'Finding Match...' : 'Start Battle'}
-              </span>
-              <svg className="w-3 h-3 md:w-4 md:h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <div className="absolute top-2 right-2 md:top-3 md:right-3 bg-green-500 text-white px-2 py-0.5 rounded-md text-[8px] md:text-[10px] font-bold uppercase shadow-lg">
-          Free Entry
-        </div>
       </div>
     </>
   );
