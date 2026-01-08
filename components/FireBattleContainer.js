@@ -95,11 +95,33 @@ export default function FireBattleContainer({ isDarkMode }) {
           0%, 100% { box-shadow: 0 0 20px rgba(251, 146, 60, 0.5); }
           50% { box-shadow: 0 0 40px rgba(251, 146, 60, 0.8); }
         }
-        @keyframes fire-flicker {
-          0%, 100% { opacity: 0.8; transform: scaleY(1) translateY(0); }
-          25% { opacity: 1; transform: scaleY(1.1) translateY(-2px); }
-          50% { opacity: 0.9; transform: scaleY(0.95) translateY(1px); }
-          75% { opacity: 1; transform: scaleY(1.05) translateY(-1px); }
+        @keyframes ember-float {
+          0% { 
+            transform: translateY(0) translateX(0) scale(1); 
+            opacity: 1; 
+          }
+          50% {
+            transform: translateY(-50px) translateX(8px) scale(0.8);
+            opacity: 0.8;
+          }
+          100% { 
+            transform: translateY(-120px) translateX(-5px) scale(0.2); 
+            opacity: 0; 
+          }
+        }
+        @keyframes smoke-rise {
+          0% { 
+            transform: translateY(0) translateX(0) scale(1) rotate(0deg); 
+            opacity: 0.35; 
+          }
+          50% {
+            transform: translateY(-60px) translateX(12px) scale(1.6) rotate(8deg);
+            opacity: 0.2;
+          }
+          100% { 
+            transform: translateY(-140px) translateX(-8px) scale(2.5) rotate(-5deg); 
+            opacity: 0; 
+          }
         }
         @keyframes vs-pulse {
           0%, 100% { transform: scale(1); text-shadow: 0 0 20px rgba(255,200,0,0.8); }
@@ -121,21 +143,36 @@ export default function FireBattleContainer({ isDarkMode }) {
           }}
         />
         
-        <div className="absolute bottom-0 left-0 right-0 h-[40px] overflow-hidden">
-          {[...Array(20)].map((_, i) => (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {[...Array(10)].map((_, i) => (
             <div
-              key={`fire-${i}`}
-              className="absolute bottom-0"
+              key={`smoke-${i}`}
+              className="absolute rounded-full"
               style={{
-                left: `${i * 5}%`,
-                width: '30px',
-                height: `${20 + (i % 4) * 8}px`,
-                background: `linear-gradient(to top, #dc2626 0%, #f97316 40%, #fbbf24 70%, transparent 100%)`,
-                borderRadius: '50% 50% 0 0',
-                filter: 'blur(2px)',
-                animation: `fire-flicker ${0.3 + (i % 3) * 0.1}s ease-in-out infinite`,
-                animationDelay: `${i * 0.05}s`,
-                transformOrigin: 'bottom center',
+                width: `${20 + (i % 4) * 12}px`,
+                height: `${20 + (i % 4) * 12}px`,
+                left: `${5 + (i * 9.5)}%`,
+                bottom: `${5 + (i * 4) % 20}%`,
+                background: 'radial-gradient(circle, rgba(100,100,100,0.4) 0%, rgba(70,70,70,0.2) 50%, transparent 70%)',
+                filter: 'blur(6px)',
+                animation: `smoke-rise ${3.5 + (i % 3) * 0.8}s ease-out infinite`,
+                animationDelay: `${i * 0.3}s`,
+              }}
+            />
+          ))}
+          {[...Array(18)].map((_, i) => (
+            <div
+              key={`ember-${i}`}
+              className="absolute rounded-full"
+              style={{
+                width: `${2 + (i % 3) * 2}px`,
+                height: `${2 + (i % 3) * 2}px`,
+                left: `${3 + (i * 5.5)}%`,
+                bottom: `${8 + (i * 3) % 25}%`,
+                background: i % 3 === 0 ? '#fef08a' : i % 3 === 1 ? '#fbbf24' : '#fb923c',
+                boxShadow: `0 0 ${6 + (i % 3) * 3}px ${i % 3 === 0 ? '#fef08a' : '#fbbf24'}`,
+                animation: `ember-float ${2 + (i % 4) * 0.6}s ease-out infinite`,
+                animationDelay: `${i * 0.15}s`,
               }}
             />
           ))}
