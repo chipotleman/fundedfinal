@@ -142,8 +142,8 @@ export default function FireBattleContainer({ isDarkMode }) {
           }
         }
         @keyframes vs-pulse {
-          0%, 100% { transform: scale(1); text-shadow: 0 0 20px rgba(139,92,246,0.8); }
-          50% { transform: scale(1.1); text-shadow: 0 0 40px rgba(167,139,250,1); }
+          0%, 100% { transform: scale(1); text-shadow: 0 0 20px rgba(250,204,21,0.8); }
+          50% { transform: scale(1.1); text-shadow: 0 0 40px rgba(253,224,71,1); }
         }
       `}</style>
       
@@ -226,14 +226,14 @@ export default function FireBattleContainer({ isDarkMode }) {
               <div 
                 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text"
                 style={{ 
-                  backgroundImage: 'linear-gradient(180deg, #e0e7ff 0%, #a78bfa 50%, #7c3aed 100%)',
+                  backgroundImage: 'linear-gradient(180deg, #fef08a 0%, #facc15 50%, #eab308 100%)',
                   animation: 'vs-pulse 1.5s ease-in-out infinite',
                   WebkitBackgroundClip: 'text',
                 }}
               >
                 VS
               </div>
-              <div className="text-white/60 text-[9px] md:text-xs font-medium uppercase tracking-wider mt-1">1v1 Battle</div>
+              <div className="text-yellow-400 text-[9px] md:text-xs font-bold uppercase tracking-wider mt-1">1v1 Battle</div>
             </div>
 
             <div className="flex flex-col items-center flex-1">
@@ -253,10 +253,10 @@ export default function FireBattleContainer({ isDarkMode }) {
                   )}
                 </div>
                 <div className="flex flex-col items-center mt-0.5">
-                  <svg className="w-4 h-4 md:w-5 md:h-5 text-violet-300 animate-bounce" viewBox="0 0 24 24" fill="currentColor">
+                  <svg className="w-4 h-4 md:w-5 md:h-5 text-yellow-400 animate-bounce" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z" transform="rotate(-90 12 12)"/>
                   </svg>
-                  <span className="text-violet-300 text-[10px] md:text-xs font-bold uppercase tracking-wide text-center leading-tight">
+                  <span className="text-yellow-400 text-[10px] md:text-xs font-bold uppercase tracking-wide text-center leading-tight">
                     Battle<br/>Real Players
                   </span>
                 </div>
