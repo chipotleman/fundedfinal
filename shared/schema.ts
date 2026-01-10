@@ -747,3 +747,16 @@ export type PoolParticipant = typeof poolParticipants.$inferSelect;
 export type InsertPoolParticipant = typeof poolParticipants.$inferInsert;
 export type PoolBet = typeof poolBets.$inferSelect;
 export type InsertPoolBet = typeof poolBets.$inferInsert;
+
+// Battle Avatar Library - Stores opponent avatars for cycling display
+export const battleAvatarLibrary = pgTable("battle_avatar_library", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  url: varchar("url", { length: 500 }).notNull(),
+  label: varchar("label", { length: 100 }),
+  isActive: boolean("is_active").default(true),
+  weight: integer("weight").default(1),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type BattleAvatar = typeof battleAvatarLibrary.$inferSelect;
+export type InsertBattleAvatar = typeof battleAvatarLibrary.$inferInsert;

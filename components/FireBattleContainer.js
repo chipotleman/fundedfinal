@@ -1,10 +1,32 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
+const PLACEHOLDER_AVATARS = [
+  '🦁', '🐯', '🦊', '🐺', '🦅', '🐉', '🦈', '🐻', '🦇', '🐍',
+  '🦂', '🦎', '🐊', '🦍', '🐘', '🦏', '🐃', '🐎', '🦌', '🐗'
+];
+
 export default function FireBattleContainer({ isDarkMode }) {
   const [holdProgress, setHoldProgress] = useState(0);
   const [isHolding, setIsHolding] = useState(false);
+  const [currentAvatarIndex, setCurrentAvatarIndex] = useState(0);
+  const [uploadedAvatars, setUploadedAvatars] = useState([]);
   const router = useRouter();
+  
+  useEffect(() => {
+    fetch('/api/admin/battle-avatars')
+      .then(res => res.ok ? res.json() : { avatars: [] })
+      .then(data => setUploadedAvatars(data.avatars || []))
+      .catch(() => {});
+  }, []);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const avatarList = uploadedAvatars.length > 0 ? uploadedAvatars : PLACEHOLDER_AVATARS;
+      setCurrentAvatarIndex(prev => (prev + 1) % avatarList.length);
+    }, 600);
+    return () => clearInterval(interval);
+  }, [uploadedAvatars]);
   
   const holdStartRef = useRef(null);
   const animationFrameRef = useRef(null);
@@ -217,10 +239,18 @@ export default function FireBattleContainer({ isDarkMode }) {
             <div className="flex flex-col items-center flex-1">
               <div className="flex flex-col items-center h-[90px] md:h-[110px]">
                 <div 
-                  className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-red-600 to-red-900 flex items-center justify-center border-2 border-red-400 shadow-lg"
+                  className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-red-600 to-red-900 flex items-center justify-center border-2 border-red-400 shadow-lg overflow-hidden"
                   style={{ animation: 'battle-pulse 2s ease-in-out infinite' }}
                 >
-                  <span className="text-white text-lg md:text-2xl font-bold">?</span>
+                  {uploadedAvatars.length > 0 ? (
+                    <img 
+                      src={uploadedAvatars[currentAvatarIndex]} 
+                      alt="" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-2xl md:text-3xl">{PLACEHOLDER_AVATARS[currentAvatarIndex]}</span>
+                  )}
                 </div>
                 <div className="flex flex-col items-center mt-0.5">
                   <svg className="w-4 h-4 md:w-5 md:h-5 text-yellow-400 animate-bounce" viewBox="0 0 24 24" fill="currentColor">
