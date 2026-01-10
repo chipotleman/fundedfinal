@@ -1,19 +1,37 @@
 import { db } from '../../../lib/db';
-import { battleAvatarLibrary } from '../../../shared/schema';
+import { battleAvatarLibrary, profiles, fakeOpponents } from '../../../shared/schema';
 import { eq } from 'drizzle-orm';
 import { verifyAdminAuth } from '../../../lib/adminAuth';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
     try {
-      const avatars = await db
+      const mockUserAvatars = await db
+        .select({ avatar: profiles.avatar })
+        .from(profiles)
+        .innerJoin(fakeOpponents, eq(profiles.id, fakeOpponents.id))
+        .where(eq(profiles.isFakeAccount, true));
+      
+      const mockAvatarUrls = mockUserAvatars
+        .map(m => m.avatar)
+        .filter(a => a && a.trim());
+
+      if (mockAvatarUrls.length > 0) {
+        return res.status(200).json({ 
+          avatars: mockAvatarUrls,
+          source: 'mock_users'
+        });
+      }
+
+      const legacyAvatars = await db
         .select()
         .from(battleAvatarLibrary)
         .where(eq(battleAvatarLibrary.isActive, true));
       
       return res.status(200).json({ 
-        avatars: avatars.map(a => a.url),
-        full: avatars 
+        avatars: legacyAvatars.map(a => a.url),
+        full: legacyAvatars,
+        source: 'legacy'
       });
     } catch (error) {
       console.error('Error fetching battle avatars:', error);
