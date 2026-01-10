@@ -322,13 +322,13 @@ export default function PoolContainer({ isDarkMode }) {
                   opacity: 0.6,
                 }}
               />
-              <span className="relative text-white text-sm md:text-base font-bold tracking-wide pointer-events-none">
+              <span className="relative text-sm md:text-base font-bold tracking-wide pointer-events-none" style={{ color: '#ffffff' }}>
                 {isHolding ? 'JOINING...' : 'HOLD TO JOIN'}
               </span>
             </div>
           </div>
           <div className="flex items-center justify-between mt-auto pt-2">
-            <span className="text-white/60 text-[10px]">Winner takes all</span>
+            <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.6)' }}>Winner takes all</span>
             <div className="flex items-center gap-2">
               <div className="flex -space-x-2">
                 {(availablePool?.participants || []).slice(0, 3).map((p, i) => (
@@ -350,7 +350,7 @@ export default function PoolContainer({ isDarkMode }) {
                   </>
                 )}
               </div>
-              <span className="text-white/80 text-[10px] font-medium">
+              <span className="text-[10px] font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>
                 {availablePool ? `${availablePool.currentPlayers}/${availablePool.maxPlayers}` : '0/25'} joined
               </span>
             </div>
