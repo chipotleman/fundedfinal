@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { matchups, matchupQueue, fakeOpponents } from '../../../shared/schema';
+import { matchups, matchupQueue, fakeOpponents, profiles, users } from '../../../shared/schema';
 import { eq, and } from 'drizzle-orm';
 
 const DURATION_CONFIGS = {
@@ -39,18 +39,32 @@ export default async function handler(req, res) {
     }
 
     const activeFakeOpponents = await db
-      .select()
+      .select({
+        fo: fakeOpponents,
+        profile: profiles,
+        user: users,
+      })
       .from(fakeOpponents)
+      .innerJoin(profiles, eq(profiles.id, fakeOpponents.id))
+      .innerJoin(users, eq(users.id, fakeOpponents.id))
       .where(eq(fakeOpponents.isActive, true));
 
-    if (activeFakeOpponents.length === 0) {
+    const validFakeOpponents = activeFakeOpponents.filter(row => 
+      row.fo.userId && 
+      row.fo.displayName && 
+      row.fo.id === row.fo.userId &&
+      row.profile.isFakeAccount === true &&
+      row.user.id === row.fo.id
+    );
+
+    if (validFakeOpponents.length === 0) {
       return res.status(503).json({ 
         error: 'No opponents available', 
         message: 'Please try again later' 
       });
     }
 
-    const randomFake = activeFakeOpponents[Math.floor(Math.random() * activeFakeOpponents.length)];
+    const randomFake = validFakeOpponents[Math.floor(Math.random() * validFakeOpponents.length)].fo;
     const startingBalance = parseFloat(queueEntry.startingBalance) || 5000;
     const potSize = startingBalance * 2;
     const platformFee = potSize * PLATFORM_FEE_PERCENT;
