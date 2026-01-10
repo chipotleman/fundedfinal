@@ -43,6 +43,7 @@ export default function PoolContainer({ isDarkMode }) {
   const [holdProgress, setHoldProgress] = useState(0);
   const [isHolding, setIsHolding] = useState(false);
   const [showPoolPopup, setShowPoolPopup] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
   
   const holdStartRef = useRef(null);
   const animationFrameRef = useRef(null);
@@ -83,6 +84,13 @@ export default function PoolContainer({ isDarkMode }) {
 
   useEffect(() => {
     fetchPoolData();
+  }, []);
+
+  useEffect(() => {
+    const checkDesktop = () => setIsDesktop(window.innerWidth >= 768);
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop);
+    return () => window.removeEventListener('resize', checkDesktop);
   }, []);
 
   useEffect(() => {
@@ -194,7 +202,7 @@ export default function PoolContainer({ isDarkMode }) {
             style={{
               bottom: 0,
               height: '100%',
-              transform: `translateY(${86 - (holdProgress * 86)}%)`,
+              transform: `translateY(${isDesktop ? (76 - (holdProgress * 76)) : (86 - (holdProgress * 86))}%)`,
               willChange: 'transform',
             }}
           >
