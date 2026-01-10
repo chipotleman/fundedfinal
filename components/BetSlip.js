@@ -401,34 +401,32 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                       zIndex: 0,
                     }}
                   />
-                  <button
+                  <div
+                    role="tab"
+                    tabIndex={0}
                     onClick={() => setBetType('single')}
-                    className="flex-1 py-2 text-sm font-bold rounded-md transition-all relative"
+                    onKeyDown={(e) => e.key === 'Enter' && setBetType('single')}
+                    className="flex-1 py-2 text-sm font-bold rounded-md transition-all relative text-center cursor-pointer select-none"
                     style={{
-                      background: 'transparent',
-                      backgroundColor: 'transparent',
-                      WebkitAppearance: 'none',
-                      border: 'none',
                       color: betType === 'single' ? '#ffffff' : '#9ca3af',
                       zIndex: 1,
                     }}
                   >
                     Straight
-                  </button>
-                  <button
+                  </div>
+                  <div
+                    role="tab"
+                    tabIndex={0}
                     onClick={() => setBetType('parlay')}
-                    className="flex-1 py-2 text-sm font-bold rounded-md transition-all relative"
+                    onKeyDown={(e) => e.key === 'Enter' && setBetType('parlay')}
+                    className="flex-1 py-2 text-sm font-bold rounded-md transition-all relative text-center cursor-pointer select-none"
                     style={{
-                      background: 'transparent',
-                      backgroundColor: 'transparent',
-                      WebkitAppearance: 'none',
-                      border: 'none',
                       color: betType === 'parlay' ? '#ffffff' : '#9ca3af',
                       zIndex: 1,
                     }}
                   >
                     Parlay
-                  </button>
+                  </div>
                 </div>
                 {betType === 'parlay' && calculateParlayOdds() && (
                   <div className="mt-3 bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/50 rounded-lg p-3">
