@@ -170,7 +170,7 @@ export default function PiksPoolPopup({ isOpen, onClose, pool, onJoinSuccess }) 
               </button>
             </div>
           ) : (
-            <div className="bg-white/10 rounded-2xl p-4 mb-6">
+            <div className="rounded-2xl p-4 mb-6" style={{ backgroundColor: 'rgba(0,50,80,0.5)' }}>
               <h3 className="font-bold text-sm uppercase tracking-wide mb-3 text-center" style={{ color: '#ffffff' }}>How It Works</h3>
               <div className="space-y-3">
                 {rules.map((rule, i) => (
@@ -197,8 +197,8 @@ export default function PiksPoolPopup({ isOpen, onClose, pool, onJoinSuccess }) 
               <button
                 onClick={handleJoin}
                 disabled={isJoining}
-                className="w-full py-4 bg-white/25 hover:bg-white/35 active:bg-white/40 active:scale-95 font-bold text-lg rounded-xl shadow-lg transition-all text-center backdrop-blur-sm disabled:opacity-50"
-                style={{ color: '#ffffff' }}
+                className="w-full py-4 active:scale-95 font-bold text-lg rounded-xl shadow-lg transition-all text-center backdrop-blur-sm disabled:opacity-50"
+                style={{ backgroundColor: 'rgba(0,50,80,0.6)', color: '#ffffff' }}
               >
                 {isJoining ? 'Joining...' : `Join Pool - $${buyIn.toFixed(0)}`}
               </button>
