@@ -29,6 +29,13 @@ function generateRandomStats() {
   return { wins, losses, winRate: parseFloat(winRate) };
 }
 
+function generateRandomAvatarUrl(index) {
+  const seed = `user${Date.now()}_${index}_${Math.random().toString(36).substr(2, 6)}`;
+  const styles = ['adventurer', 'avataaars', 'big-ears', 'bottts', 'lorelei', 'micah', 'miniavs', 'notionists', 'personas', 'pixel-art'];
+  const style = styles[index % styles.length];
+  return `https://api.dicebear.com/7.x/${style}/svg?seed=${seed}`;
+}
+
 export default async function handler(req, res) {
   const auth = await verifyAdminAuth(req);
   if (!auth.valid) {
@@ -58,17 +65,17 @@ export default async function handler(req, res) {
 
   if (req.method === 'POST') {
     try {
-      const { avatarUrls } = req.body;
+      const { count = 50, avatarUrls } = req.body;
+      const numToCreate = Math.min(Math.max(1, parseInt(count) || 50), 100);
 
-      if (!avatarUrls || !Array.isArray(avatarUrls) || avatarUrls.length === 0) {
-        return res.status(400).json({ error: 'Avatar URLs required' });
-      }
+      const urlsToUse = avatarUrls && Array.isArray(avatarUrls) && avatarUrls.length > 0
+        ? avatarUrls.filter(u => u && typeof u === 'string')
+        : Array.from({ length: numToCreate }, (_, i) => generateRandomAvatarUrl(i));
 
       const created = [];
       
-      for (let i = 0; i < avatarUrls.length; i++) {
-        const avatarUrl = avatarUrls[i];
-        if (!avatarUrl || typeof avatarUrl !== 'string') continue;
+      for (let i = 0; i < urlsToUse.length; i++) {
+        const avatarUrl = urlsToUse[i];
 
         const username = generateUsername(i);
         const stats = generateRandomStats();

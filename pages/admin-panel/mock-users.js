@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import AdminLayout from '../../components/admin-panel/AdminLayout';
 
 export default function MockUsersPage() {
   const [mockUsers, setMockUsers] = useState([]);
-  const [mockUserUrls, setMockUserUrls] = useState('');
-  const [creatingMockUsers, setCreatingMockUsers] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [cleaningUp, setCleaningUp] = useState(false);
+  const [count, setCount] = useState(50);
+  const fileInputRef = useRef(null);
 
   const getAuthHeaders = () => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('admin_token') : null;
@@ -34,20 +36,17 @@ export default function MockUsersPage() {
     }
   };
 
-  const handleCreateMockUsers = async () => {
-    if (!mockUserUrls.trim()) return;
-    setCreatingMockUsers(true);
+  const handleGenerateRandom = async () => {
+    setCreating(true);
     try {
-      const avatarUrls = mockUserUrls.split('\n').map(u => u.trim()).filter(u => u);
       const res = await fetch('/api/admin/mock-users', {
         method: 'POST',
         headers: getAuthHeaders(),
-        body: JSON.stringify({ avatarUrls }),
+        body: JSON.stringify({ count }),
       });
       if (res.ok) {
         const data = await res.json();
-        alert(`Created ${data.created.length} mock users!`);
-        setMockUserUrls('');
+        alert(`Created ${data.created.length} mock users with random avatars!`);
         await fetchMockUsers();
       } else if (res.status === 401) {
         alert('Please log in to the admin panel first.');
@@ -58,7 +57,72 @@ export default function MockUsersPage() {
     } catch (error) {
       console.error('Error creating mock users:', error);
     }
-    setCreatingMockUsers(false);
+    setCreating(false);
+  };
+
+  const handleFileUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    setUploading(true);
+    const uploadedUrls = [];
+
+    for (const file of files) {
+      try {
+        const urlRes = await fetch('/api/uploads/request-url', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({
+            filename: file.name,
+            contentType: file.type,
+            folder: 'mock-avatars',
+          }),
+        });
+
+        if (!urlRes.ok) {
+          console.error('Failed to get upload URL for', file.name);
+          continue;
+        }
+
+        const { uploadUrl, objectKey, publicUrl } = await urlRes.json();
+
+        const uploadRes = await fetch(uploadUrl, {
+          method: 'PUT',
+          headers: { 'Content-Type': file.type },
+          body: file,
+        });
+
+        if (uploadRes.ok) {
+          uploadedUrls.push(publicUrl);
+        } else {
+          console.error('Failed to upload', file.name);
+        }
+      } catch (err) {
+        console.error('Upload error for', file.name, err);
+      }
+    }
+
+    if (uploadedUrls.length > 0) {
+      try {
+        const res = await fetch('/api/admin/mock-users', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ avatarUrls: uploadedUrls }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          alert(`Created ${data.created.length} mock users from uploaded images!`);
+          await fetchMockUsers();
+        }
+      } catch (error) {
+        console.error('Error creating mock users from uploads:', error);
+      }
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    setUploading(false);
   };
 
   const handleDeleteMockUser = async (userId) => {
@@ -105,30 +169,62 @@ export default function MockUsersPage() {
         <p className="text-gray-400">Create and manage fake opponent accounts for 1v1 matchmaking.</p>
       </div>
 
-      <div className="glass-card p-6 mb-6">
-        <h2 className="text-xl font-semibold text-white mb-4">Create Mock Users</h2>
-        <p className="text-gray-400 text-sm mb-4">
-          Paste profile picture URLs (one per line) to create mock users. Each URL creates one fake account with a random username and stats.
-        </p>
-        
-        <textarea
-          value={mockUserUrls}
-          onChange={(e) => setMockUserUrls(e.target.value)}
-          placeholder="https://example.com/profile1.png&#10;https://example.com/profile2.png&#10;(paste up to 50 URLs)"
-          className="w-full min-h-[150px] bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-y mb-4"
-        />
-        
-        <div className="flex items-center gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="glass-card p-6">
+          <h2 className="text-xl font-semibold text-white mb-4">Generate Random Avatars</h2>
+          <p className="text-gray-400 text-sm mb-4">
+            Automatically create mock users with diverse randomly generated profile pictures.
+          </p>
+          
+          <div className="flex items-center gap-4 mb-4">
+            <label className="text-gray-300 text-sm">Number to create:</label>
+            <input
+              type="number"
+              min="1"
+              max="100"
+              value={count}
+              onChange={(e) => setCount(Math.min(100, Math.max(1, parseInt(e.target.value) || 1)))}
+              className="w-20 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-center focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+          </div>
+          
           <button
-            onClick={handleCreateMockUsers}
-            disabled={creatingMockUsers || !mockUserUrls.trim()}
-            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleGenerateRandom}
+            disabled={creating}
+            className="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {creatingMockUsers ? 'Creating...' : 'Create Mock Users'}
+            {creating ? 'Creating...' : `Generate ${count} Random Mock Users`}
           </button>
-          <span className="text-gray-500 text-sm">
-            {mockUserUrls.trim() ? `${mockUserUrls.split('\n').filter(u => u.trim()).length} URLs entered` : ''}
-          </span>
+        </div>
+
+        <div className="glass-card p-6">
+          <h2 className="text-xl font-semibold text-white mb-4">Upload Custom Avatars</h2>
+          <p className="text-gray-400 text-sm mb-4">
+            Upload your own images from your computer. Each image creates one mock user.
+          </p>
+          
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            accept="image/*"
+            multiple
+            className="hidden"
+            id="avatar-upload"
+          />
+          
+          <label
+            htmlFor="avatar-upload"
+            className={`w-full flex flex-col items-center justify-center px-6 py-8 border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:border-purple-500/50 transition-colors ${uploading ? 'opacity-50 pointer-events-none' : ''}`}
+          >
+            <svg className="w-12 h-12 text-gray-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span className="text-gray-400 text-sm text-center">
+              {uploading ? 'Uploading...' : 'Click to select images or drag & drop'}
+            </span>
+            <span className="text-gray-500 text-xs mt-1">Supports JPG, PNG, GIF, WebP</span>
+          </label>
         </div>
       </div>
 
@@ -161,7 +257,7 @@ export default function MockUsersPage() {
           </div>
         ) : mockUsers.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            No mock users yet. Create some above!
+            No mock users yet. Generate some above!
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
