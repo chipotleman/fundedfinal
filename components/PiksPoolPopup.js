@@ -128,17 +128,17 @@ export default function PiksPoolPopup({ isOpen, onClose, pool, onJoinSuccess }) 
           <div className="text-center mb-6">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full mb-3">
               <span className="text-lg">🌊</span>
-              <span className="text-white text-sm font-bold uppercase tracking-wider">Piks Pool</span>
+              <span className="text-sm font-bold uppercase tracking-wider" style={{ color: '#ffffff' }}>Piks Pool</span>
             </div>
             
             <div className="flex items-center justify-center gap-2 mb-2">
               <span className="text-4xl">🏆</span>
             </div>
             
-            <p className="text-5xl font-black text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.4)] mb-1">
+            <p className="text-5xl font-black mb-1" style={{ color: '#ffffff', textShadow: '0 0 20px rgba(255,255,255,0.4)' }}>
               ${prizePool.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
-            <p className="text-white/70 text-sm">Winner Takes All</p>
+            <p className="text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>Winner Takes All</p>
           </div>
 
           <div className="flex justify-center gap-6 mb-6">
@@ -146,13 +146,13 @@ export default function PiksPoolPopup({ isOpen, onClose, pool, onJoinSuccess }) 
               <div className="bg-yellow-400 text-black px-4 py-2 rounded-xl shadow-lg mb-1">
                 <span className="text-xl font-black">${buyIn.toFixed(0)}</span>
               </div>
-              <p className="text-white/60 text-xs uppercase">Entry Fee</p>
+              <p className="text-xs uppercase" style={{ color: 'rgba(255,255,255,0.6)' }}>Entry Fee</p>
             </div>
             <div className="text-center">
-              <div className="bg-white/20 text-white px-4 py-2 rounded-xl mb-1">
-                <span className="text-xl font-black">{currentPlayers}/{maxPlayers}</span>
+              <div className="px-4 py-2 rounded-xl mb-1" style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}>
+                <span className="text-xl font-black" style={{ color: '#ffffff' }}>{currentPlayers}/{maxPlayers}</span>
               </div>
-              <p className="text-white/60 text-xs uppercase">Players</p>
+              <p className="text-xs uppercase" style={{ color: 'rgba(255,255,255,0.6)' }}>Players</p>
             </div>
           </div>
 
