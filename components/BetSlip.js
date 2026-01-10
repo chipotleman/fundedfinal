@@ -391,12 +391,20 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
             {/* Mode Toggle */}
             {bets.length >= 2 && (
               <div className="px-4 py-3" style={{ borderBottomWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#000000' }}>
-                <div className="flex rounded-lg p-1" style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6' }}>
+                <div className="flex rounded-lg p-1 relative" style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6' }}>
+                  <div 
+                    className="absolute top-1 bottom-1 rounded-md transition-all duration-200"
+                    style={{
+                      backgroundColor: '#2563eb',
+                      width: 'calc(50% - 4px)',
+                      left: betType === 'single' ? '4px' : 'calc(50% + 0px)',
+                    }}
+                  />
                   <button
                     onClick={() => setBetType('single')}
-                    className="flex-1 py-2 text-sm font-bold rounded-md transition-all"
+                    className="flex-1 py-2 text-sm font-bold rounded-md transition-all relative z-10"
                     style={{
-                      backgroundColor: betType === 'single' ? '#2563eb' : 'transparent',
+                      backgroundColor: 'transparent',
                       color: betType === 'single' ? '#ffffff' : '#9ca3af'
                     }}
                   >
@@ -404,9 +412,9 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                   </button>
                   <button
                     onClick={() => setBetType('parlay')}
-                    className="flex-1 py-2 text-sm font-bold rounded-md transition-all"
+                    className="flex-1 py-2 text-sm font-bold rounded-md transition-all relative z-10"
                     style={{
-                      backgroundColor: betType === 'parlay' ? '#2563eb' : 'transparent',
+                      backgroundColor: 'transparent',
                       color: betType === 'parlay' ? '#ffffff' : '#9ca3af'
                     }}
                   >
