@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import PiksPoolPopup from './PiksPoolPopup';
 
 function formatTimeRemaining(ms) {
@@ -365,12 +366,15 @@ export default function PoolContainer({ isDarkMode }) {
         }
       `}</style>
       
-      <PiksPoolPopup 
-        isOpen={showPoolPopup}
-        onClose={() => setShowPoolPopup(false)}
-        pool={availablePool}
-        onJoinSuccess={handleJoinSuccess}
-      />
+      {typeof window !== 'undefined' && createPortal(
+        <PiksPoolPopup 
+          isOpen={showPoolPopup}
+          onClose={() => setShowPoolPopup(false)}
+          pool={availablePool}
+          onJoinSuccess={handleJoinSuccess}
+        />,
+        document.body
+      )}
     </div>
   );
 }
