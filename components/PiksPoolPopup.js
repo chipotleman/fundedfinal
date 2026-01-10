@@ -171,14 +171,14 @@ export default function PiksPoolPopup({ isOpen, onClose, pool, onJoinSuccess }) 
             </div>
           ) : (
             <div className="bg-white/10 rounded-2xl p-4 mb-6">
-              <h3 className="text-white font-bold text-sm uppercase tracking-wide mb-3 text-center">How It Works</h3>
+              <h3 className="font-bold text-sm uppercase tracking-wide mb-3 text-center" style={{ color: '#ffffff' }}>How It Works</h3>
               <div className="space-y-3">
                 {rules.map((rule, i) => (
                   <div key={i} className="flex items-start gap-3">
                     <span className="text-xl flex-shrink-0">{rule.icon}</span>
                     <div>
-                      <p className="text-white font-semibold text-sm">{rule.title}</p>
-                      <p className="text-white/70 text-xs">{rule.desc}</p>
+                      <p className="font-semibold text-sm" style={{ color: '#ffffff' }}>{rule.title}</p>
+                      <p className="text-xs" style={{ color: 'rgba(255,255,255,0.7)' }}>{rule.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -197,14 +197,16 @@ export default function PiksPoolPopup({ isOpen, onClose, pool, onJoinSuccess }) 
               <button
                 onClick={handleJoin}
                 disabled={isJoining}
-                className="w-full py-4 bg-white/25 hover:bg-white/35 active:bg-white/40 active:scale-95 text-white font-bold text-lg rounded-xl shadow-lg transition-all text-center backdrop-blur-sm disabled:opacity-50"
+                className="w-full py-4 bg-white/25 hover:bg-white/35 active:bg-white/40 active:scale-95 font-bold text-lg rounded-xl shadow-lg transition-all text-center backdrop-blur-sm disabled:opacity-50"
+                style={{ color: '#ffffff' }}
               >
                 {isJoining ? 'Joining...' : `Join Pool - $${buyIn.toFixed(0)}`}
               </button>
             )}
             <button
               onClick={onClose}
-              className="text-white/60 text-sm no-hover-effect"
+              className="text-sm no-hover-effect"
+              style={{ color: 'rgba(255,255,255,0.6)' }}
             >
               Maybe Later
             </button>
