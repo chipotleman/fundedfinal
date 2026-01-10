@@ -27,12 +27,12 @@ None documented yet.
 - **Challenge Rules**: 20 picks min, 1-5% risk/pick, 10% max daily loss, 15% max drawdown, 20% profit target (Phase 1 & 2). 10% pick cashout fee. Same-game parlays allowed.
 - **Global Popups**: Challenge, How-It-Works, Demo, Auth, Session Summary.
 - **Session Summary**: Displays session stats upon sign out.
-- **Admin Panel**: Dashboard, user/bet/staff management with roles/permissions, analytics, withdrawal management.
+- **Admin Panel**: Dashboard, user/bet/staff management with roles/permissions, analytics, withdrawal management. Includes bulk mock user generator (paste avatar URLs to create fake accounts) and PATCH cleanup endpoint for data integrity.
 - **Withdrawal System**: Payment method-specific forms, history, status flows, user cancellation, admin approval.
 - **User Tracking & Analytics**: Tracks user interactions, session metrics, page views, demo bets, unplaced bets.
 - **Education Marketplace**: Verified cappers sell picks and Discord access via subscription products; includes review system and performance stats.
-- **1v1 Matchmaking System**: Users compete head-to-head for a prize pot (winner takes 90% of combined pot). Configurable durations, hidden opponent bets until user places their own, admin-controlled fake opponents. Opponent avatars cycle every 0.6s from admin-uploaded images (fallback to animal emojis).
-- **User Profiles**: Customizable profiles with username, avatar, bio, battle stats, and public profile pages.
+- **1v1 Matchmaking System**: Users compete head-to-head for a prize pot (winner takes 90% of combined pot). Configurable durations, hidden opponent bets until user places their own, admin-controlled fake opponents. Opponent avatars cycle every 0.6s from admin-uploaded images (fallback to animal emojis). Fake opponents must have valid entries in users, profiles, AND fakeOpponents tables with matching IDs.
+- **User Profiles**: Customizable profiles with username (2-100 chars), avatar (upload or URL), bio (max 500 chars), battle stats, and public profile pages. Avatar uploads use Replit Object Storage with presigned URLs.
 - **Pik Pool System**: Multi-player betting competitions (5-25 players) for a prize pool (winner takes 90%). Configurable buy-ins and durations.
 
 #### System Design Choices
