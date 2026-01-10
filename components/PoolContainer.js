@@ -257,8 +257,27 @@ export default function PoolContainer({ isDarkMode }) {
             </div>
           </div>
           
-          <div className="flex-1 overflow-y-auto space-y-1">
-            {myPoolData.leaderboard?.slice(0, 5).map((player, i) => (
+          <div className="flex-1 overflow-hidden space-y-1" style={{ maxHeight: '72px' }}>
+            {(() => {
+              const realPlayers = myPoolData.leaderboard || [];
+              const currentCount = myPoolData.pool?.currentPlayers || realPlayers.length;
+              const displayPlayers = [...realPlayers];
+              
+              // Fill with placeholders if currentPlayers > actual leaderboard entries
+              for (let i = realPlayers.length; i < currentCount && displayPlayers.length < 3; i++) {
+                displayPlayers.push({
+                  rank: i + 1,
+                  odId: `placeholder-${i}`,
+                  username: `Player ${i + 1}`,
+                  avatar: null,
+                  balance: 1000,
+                  isCurrentUser: false,
+                  isPlaceholder: true,
+                });
+              }
+              
+              return displayPlayers.slice(0, 3);
+            })().map((player, i) => (
               <div 
                 key={player.odId || i}
                 className={`flex items-center justify-between px-3 py-1.5 rounded-lg ${
