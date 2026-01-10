@@ -248,12 +248,12 @@ export default function PoolContainer({ isDarkMode }) {
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-white/70 text-[10px] uppercase">Balance</span>
-              <span className="text-white text-lg font-black">${myPoolData.userBalance?.toLocaleString()}</span>
+              <span className="text-[10px] uppercase" style={{ color: 'rgba(255,255,255,0.7)' }}>Balance</span>
+              <span className="text-lg font-black" style={{ color: '#ffffff' }}>${myPoolData.userBalance?.toLocaleString()}</span>
             </div>
             <div className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded-lg">
               <span className="text-[10px]">⏱️</span>
-              <span className="text-white text-xs font-bold">{formatTimeRemaining(poolTimeRemaining)}</span>
+              <span className="text-xs font-bold" style={{ color: '#ffffff' }}>{formatTimeRemaining(poolTimeRemaining)}</span>
             </div>
           </div>
           
