@@ -114,8 +114,8 @@ export default function FireBattleContainer({ isDarkMode }) {
           50% { opacity: 1; transform: scale(1.05); }
         }
         @keyframes battle-glow {
-          0%, 100% { box-shadow: 0 0 20px rgba(251, 146, 60, 0.5); }
-          50% { box-shadow: 0 0 40px rgba(251, 146, 60, 0.8); }
+          0%, 100% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.5); }
+          50% { box-shadow: 0 0 40px rgba(139, 92, 246, 0.8); }
         }
         @keyframes ember-float {
           0% { 
@@ -142,22 +142,22 @@ export default function FireBattleContainer({ isDarkMode }) {
           }
         }
         @keyframes vs-pulse {
-          0%, 100% { transform: scale(1); text-shadow: 0 0 20px rgba(255,200,0,0.8); }
-          50% { transform: scale(1.1); text-shadow: 0 0 40px rgba(255,200,0,1); }
+          0%, 100% { transform: scale(1); text-shadow: 0 0 20px rgba(139,92,246,0.8); }
+          50% { transform: scale(1.1); text-shadow: 0 0 40px rgba(167,139,250,1); }
         }
       `}</style>
       
       <div 
         className="w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 relative h-[140px] md:h-[180px]"
         style={{
-          background: 'linear-gradient(135deg, #1a0a05 0%, #2d1408 25%, #4a1a0a 50%, #3d1206 75%, #1a0805 100%)',
-          border: '2px solid rgba(251, 146, 60, 0.3)',
+          background: 'linear-gradient(135deg, #0a0515 0%, #1a103d 25%, #2d1b69 50%, #1e1450 75%, #0d0820 100%)',
+          border: '2px solid rgba(139, 92, 246, 0.3)',
         }}
       >
         <div 
           className="absolute inset-0 opacity-30"
           style={{
-            background: 'radial-gradient(ellipse at center bottom, rgba(251, 146, 60, 0.4) 0%, transparent 60%)',
+            background: 'radial-gradient(ellipse at center bottom, rgba(139, 92, 246, 0.4) 0%, transparent 60%)',
           }}
         />
         
@@ -187,8 +187,8 @@ export default function FireBattleContainer({ isDarkMode }) {
                 height: `${2 + (i % 3) * 2}px`,
                 left: `${2 + (i * 4)}%`,
                 bottom: `-5%`,
-                background: i % 3 === 0 ? '#fef08a' : i % 3 === 1 ? '#fbbf24' : '#fb923c',
-                boxShadow: `0 0 ${6 + (i % 3) * 3}px ${i % 3 === 0 ? '#fef08a' : '#fbbf24'}`,
+                background: i % 3 === 0 ? '#c4b5fd' : i % 3 === 1 ? '#a78bfa' : '#8b5cf6',
+                boxShadow: `0 0 ${6 + (i % 3) * 3}px ${i % 3 === 0 ? '#c4b5fd' : '#a78bfa'}`,
                 animation: `ember-float ${2.5 + (i % 5) * 0.4}s linear infinite`,
                 animationDelay: `${(i * 0.12)}s`,
               }}
@@ -226,7 +226,7 @@ export default function FireBattleContainer({ isDarkMode }) {
               <div 
                 className="text-3xl md:text-5xl font-black text-transparent bg-clip-text"
                 style={{ 
-                  backgroundImage: 'linear-gradient(180deg, #fde047 0%, #f59e0b 50%, #d97706 100%)',
+                  backgroundImage: 'linear-gradient(180deg, #e0e7ff 0%, #a78bfa 50%, #7c3aed 100%)',
                   animation: 'vs-pulse 1.5s ease-in-out infinite',
                   WebkitBackgroundClip: 'text',
                 }}
@@ -239,7 +239,7 @@ export default function FireBattleContainer({ isDarkMode }) {
             <div className="flex flex-col items-center flex-1">
               <div className="flex flex-col items-center h-[90px] md:h-[110px]">
                 <div 
-                  className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-red-600 to-red-900 flex items-center justify-center border-2 border-red-400 shadow-lg overflow-hidden"
+                  className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-violet-600 to-indigo-900 flex items-center justify-center border-2 border-violet-400 shadow-lg overflow-hidden"
                   style={{ animation: 'battle-pulse 2s ease-in-out infinite' }}
                 >
                   {uploadedAvatars.length > 0 ? (
@@ -253,10 +253,10 @@ export default function FireBattleContainer({ isDarkMode }) {
                   )}
                 </div>
                 <div className="flex flex-col items-center mt-0.5">
-                  <svg className="w-4 h-4 md:w-5 md:h-5 text-yellow-400 animate-bounce" viewBox="0 0 24 24" fill="currentColor">
+                  <svg className="w-4 h-4 md:w-5 md:h-5 text-violet-300 animate-bounce" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z" transform="rotate(-90 12 12)"/>
                   </svg>
-                  <span className="text-yellow-400 text-[10px] md:text-xs font-bold uppercase tracking-wide text-center leading-tight">
+                  <span className="text-violet-300 text-[10px] md:text-xs font-bold uppercase tracking-wide text-center leading-tight">
                     Battle<br/>Real Players
                   </span>
                 </div>
