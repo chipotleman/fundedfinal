@@ -1,6 +1,7 @@
 import { db } from '../../../lib/db';
 import { battleAvatarLibrary } from '../../../shared/schema';
 import { eq } from 'drizzle-orm';
+import { verifyAdminAuth } from '../../../lib/adminAuth';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -21,6 +22,11 @@ export default async function handler(req, res) {
   }
   
   if (req.method === 'POST') {
+    const auth = await verifyAdminAuth(req);
+    if (!auth.valid) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
     try {
       const { urls, label } = req.body;
       
@@ -47,6 +53,11 @@ export default async function handler(req, res) {
   }
   
   if (req.method === 'DELETE') {
+    const auth = await verifyAdminAuth(req);
+    if (!auth.valid) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
     try {
       const { id } = req.body;
       
