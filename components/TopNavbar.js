@@ -537,11 +537,18 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
                       </button>
                     </div>
                   ) : (
-                    <div className="snake-border-container relative">
+                    <div className={isDarkMode ? "snake-border-container relative" : "relative"}>
                       <button
                         onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
                         className="relative font-bold px-3 py-2 rounded-lg text-sm z-10 flex items-center space-x-2"
-                        style={{ backgroundColor: isDarkMode ? '#000000' : '#f3f4f6', color: isDarkMode ? '#ffffff' : '#111827' }}
+                        style={{ 
+                          backgroundColor: isDarkMode ? '#000000' : 'rgba(255,255,255,0.7)', 
+                          color: isDarkMode ? '#ffffff' : '#111827',
+                          backdropFilter: isDarkMode ? 'none' : 'blur(10px)',
+                          WebkitBackdropFilter: isDarkMode ? 'none' : 'blur(10px)',
+                          boxShadow: isDarkMode ? 'none' : '0 4px 15px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08)',
+                          border: isDarkMode ? 'none' : '1px solid rgba(255,255,255,0.5)'
+                        }}
                       >
                         <svg className="w-4 h-4" style={{ color: isDarkMode ? '#ffffff' : '#111827' }} fill="currentColor" viewBox="0 0 20 20">
                           <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
