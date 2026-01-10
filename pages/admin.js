@@ -11,6 +11,7 @@ export default function AdminPanel() {
   const [mockUsers, setMockUsers] = useState([]);
   const [mockUserUrls, setMockUserUrls] = useState('');
   const [creatingMockUsers, setCreatingMockUsers] = useState(false);
+  const [activeTab, setActiveTab] = useState('avatars');
   const { data: session } = useSession();
   const router = useRouter();
   const adminEmail = 'mathewbaldwin13@yahoo.com';
@@ -172,6 +173,57 @@ export default function AdminPanel() {
       <div style={{ maxWidth: '800px', margin: '0 auto', marginTop: '20px' }}>
         
         <div style={{
+          display: 'flex',
+          gap: '10px',
+          marginBottom: '20px',
+          borderBottom: '1px solid #333',
+          paddingBottom: '15px'
+        }}>
+          <button
+            onClick={() => setActiveTab('avatars')}
+            style={{
+              padding: '10px 20px',
+              borderRadius: '8px',
+              border: 'none',
+              background: activeTab === 'avatars' ? 'linear-gradient(135deg, #a020f0, #7c3aed)' : '#222',
+              color: '#fff',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+          >
+            Battle Avatars
+          </button>
+          <button
+            onClick={() => setActiveTab('mockUsers')}
+            style={{
+              padding: '10px 20px',
+              borderRadius: '8px',
+              border: 'none',
+              background: activeTab === 'mockUsers' ? 'linear-gradient(135deg, #22c55e, #16a34a)' : '#222',
+              color: '#fff',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+          >
+            Mock Users
+          </button>
+          <button
+            onClick={() => setActiveTab('evaluations')}
+            style={{
+              padding: '10px 20px',
+              borderRadius: '8px',
+              border: 'none',
+              background: activeTab === 'evaluations' ? 'linear-gradient(135deg, #3b82f6, #2563eb)' : '#222',
+              color: '#fff',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+          >
+            Evaluations
+          </button>
+        </div>
+        
+        {activeTab === 'avatars' && <div style={{
           backgroundColor: '#111',
           padding: '20px',
           borderRadius: '12px',
@@ -290,9 +342,9 @@ export default function AdminPanel() {
               </div>
             </div>
           )}
-        </div>
+        </div>}
 
-        <div style={{
+        {activeTab === 'mockUsers' && <div style={{
           backgroundColor: '#111',
           padding: '20px',
           borderRadius: '12px',
@@ -413,9 +465,9 @@ export default function AdminPanel() {
               </div>
             </div>
           )}
-        </div>
+        </div>}
         
-        {evaluations.map(evaluation => (
+        {activeTab === 'evaluations' && evaluations.map(evaluation => (
           <div key={evaluation.id} style={{
             backgroundColor: '#111',
             padding: '15px',
