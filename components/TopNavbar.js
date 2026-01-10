@@ -537,17 +537,13 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
                       </button>
                     </div>
                   ) : (
-                    <div className={isDarkMode ? "snake-border-container relative" : "relative"}>
+                    <div className="snake-border-container relative">
                       <button
                         onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
                         className="relative font-bold px-3 py-2 rounded-lg text-sm z-10 flex items-center space-x-2"
                         style={{ 
-                          backgroundColor: isDarkMode ? '#000000' : 'rgba(255,255,255,0.7)', 
-                          color: isDarkMode ? '#ffffff' : '#111827',
-                          backdropFilter: isDarkMode ? 'none' : 'blur(10px)',
-                          WebkitBackdropFilter: isDarkMode ? 'none' : 'blur(10px)',
-                          boxShadow: isDarkMode ? 'none' : '0 4px 15px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08)',
-                          border: isDarkMode ? 'none' : '1px solid rgba(255,255,255,0.5)'
+                          backgroundColor: isDarkMode ? '#000000' : '#ffffff', 
+                          color: isDarkMode ? '#ffffff' : '#111827'
                         }}
                       >
                         <svg className="w-4 h-4" style={{ color: isDarkMode ? '#ffffff' : '#111827' }} fill="currentColor" viewBox="0 0 20 20">
@@ -773,7 +769,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
           position: relative;
           border-radius: 8px;
           padding: 2px;
-          background: #111111;
+          background: ${isDarkMode ? '#111111' : '#e5e7eb'};
           overflow: hidden;
         }
         
@@ -800,7 +796,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
           content: '';
           position: absolute;
           inset: 2px;
-          background: #000000;
+          background: ${isDarkMode ? '#000000' : '#ffffff'};
           border-radius: 6px;
         }
         
