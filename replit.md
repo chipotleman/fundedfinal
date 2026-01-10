@@ -31,7 +31,7 @@ None documented yet.
 - **Withdrawal System**: Payment method-specific forms, history, status flows, user cancellation, admin approval.
 - **User Tracking & Analytics**: Tracks user interactions, session metrics, page views, demo bets, unplaced bets.
 - **Education Marketplace**: Verified cappers sell picks and Discord access via subscription products; includes review system and performance stats.
-- **1v1 Matchmaking System**: Users compete head-to-head for a prize pot (winner takes 90% of combined pot). Configurable durations, hidden opponent bets until user places their own, admin-controlled fake opponents.
+- **1v1 Matchmaking System**: Users compete head-to-head for a prize pot (winner takes 90% of combined pot). Configurable durations, hidden opponent bets until user places their own, admin-controlled fake opponents. Opponent avatars cycle every 0.6s from admin-uploaded images (fallback to animal emojis).
 - **User Profiles**: Customizable profiles with username, avatar, bio, battle stats, and public profile pages.
 - **Pik Pool System**: Multi-player betting competitions (5-25 players) for a prize pool (winner takes 90%). Configurable buy-ins and durations.
 
