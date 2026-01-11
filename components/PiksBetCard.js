@@ -526,15 +526,17 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {} }
 
         {isOpen && !isParlay && (
           <div className="mb-3">
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-xs uppercase" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>Game</span>
-              {isLiveGame && typeof currentHomeScore === 'number' && (
-                <div className="flex items-center gap-1">
-                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
-                  <span className="text-red-500 text-xs font-medium">LIVE</span>
-                </div>
-              )}
-            </div>
+            {isLiveGame && typeof currentHomeScore === 'number' ? (
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                <span className="text-red-500 text-xs font-medium">LIVE</span>
+                {(liveData.time || liveData.period || liveData.quarter) && (
+                  <span className="text-red-500/70 text-xs">{liveData.time || liveData.period || liveData.quarter}</span>
+                )}
+              </div>
+            ) : (
+              <div className="text-xs uppercase mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>Game</div>
+            )}
             {isLiveGame && typeof currentHomeScore === 'number' ? (
               <div className="space-y-1">
                 <div className="flex justify-between items-center">
