@@ -140,9 +140,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
           const data = JSON.parse(pendingLogin);
           if (data.redirect === 'betslip' && Date.now() - data.timestamp < 300000) {
             localStorage.removeItem('betslip_pending_login');
-            setTimeout(() => {
-              window.dispatchEvent(new CustomEvent('openBetSlip'));
-            }, 300);
+            window.dispatchEvent(new CustomEvent('openBetSlip'));
           } else {
             localStorage.removeItem('betslip_pending_login');
           }

@@ -20,7 +20,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
   const { data: session } = useSession();
   const isLoggedIn = !!session?.user;
   const { isDarkMode } = useTheme();
-  const { betSlip: bets, removeBet, updateStake, clearBetSlip } = useBetSlip();
+  const { betSlip: bets, removeBet, updateStake, clearBetSlip, setShowBetSlip } = useBetSlip();
   const { apiGames, inplayEvents } = useGames();
   const { refresh: refreshMatchup } = useMatchup();
   const [isPlacing, setIsPlacing] = useState(false);
@@ -685,10 +685,8 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                     className="no-hover-effect"
                     onClick={() => {
                       localStorage.setItem('betslip_pending_login', JSON.stringify({ redirect: 'betslip', timestamp: Date.now() }));
-                      onClose();
-                      setTimeout(() => {
-                        window.dispatchEvent(new CustomEvent('openAuthPopup'));
-                      }, 100);
+                      setShowBetSlip(false);
+                      window.dispatchEvent(new CustomEvent('openAuthPopup'));
                     }}
                     style={{
                       display: 'block',
