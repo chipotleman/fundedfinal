@@ -382,8 +382,8 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
   return (
     <div className={`relative rounded-2xl overflow-hidden mx-2 sm:mx-0 ${getCardBorder()}`} style={getCardStyle()}>
       <div className="px-4 pt-0 pb-0 bg-transparent">
-        <div className="flex items-center justify-between -mt-3">
-          <img src="/pikslogotransparent.png" alt="Piks" className="h-32 object-contain -ml-[38px]" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
+        <div className="flex items-center justify-between -mt-2">
+          <img src="/pikslogotransparent.png" alt="Piks" className="h-20 object-contain -ml-[24px]" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
           
           {isWon ? (
             <div className="flex-1 flex justify-end" style={{ marginRight: -27, marginTop: -13 }}>
@@ -430,7 +430,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
         </div>
       </div>
 
-      <div className="px-4 pt-0 pb-3 -mt-6">
+      <div className="px-4 pt-0 pb-3 -mt-3">
 
         <div 
           className={`flex justify-between items-start mb-2 ${isParlay && isSettled ? 'cursor-pointer' : ''}`}

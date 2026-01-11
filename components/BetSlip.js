@@ -271,6 +271,9 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
           });
         } else {
           const firstBet = bets[0];
+          const live = liveScores[firstBet.gameId] || liveScores[firstBet.matchup] || {};
+          const currentAwayScore = live.awayScore ?? firstBet.awayScore;
+          const currentHomeScore = live.homeScore ?? firstBet.homeScore;
           setCurrentReceipt({
             id: placedBet.id,
             gameId: firstBet.gameId,
@@ -280,17 +283,17 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
             odds: parseInt(placedBet.odds),
             stake: parseFloat(placedBet.stake),
             status: 'open',
-            isLive: !!firstBet.isLive,
+            isLive: live.isLive || !!firstBet.isLive,
             awayTeam: firstBet.awayTeam,
             homeTeam: firstBet.homeTeam,
             awayTeamFull: firstBet.awayTeamFull,
             homeTeamFull: firstBet.homeTeamFull,
-            awayScore: firstBet.awayScore || 0,
-            homeScore: firstBet.homeScore || 0,
-            currentAwayScore: firstBet.awayScore,
-            currentHomeScore: firstBet.homeScore,
+            awayScore: currentAwayScore,
+            homeScore: currentHomeScore,
+            currentAwayScore: currentAwayScore,
+            currentHomeScore: currentHomeScore,
             gameStart: firstBet.gameStart,
-            gameTime: firstBet.gameTime
+            gameTime: live.time || firstBet.gameTime
           });
         }
         setShowReceipt(true);
@@ -773,7 +776,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
           }}
         >
           <div 
-            className="relative w-full max-w-md max-h-[85vh] overflow-y-auto"
+            className="relative w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
             <button
