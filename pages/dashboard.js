@@ -139,6 +139,16 @@ export default function Dashboard() {
   const liveGamesFromInplay = useMemo(() => {
     return Object.values(mergedInplayEvents || {})
     .filter(event => {
+      // Only show games that are actually live (not 'not_started' or 'ended')
+      const isActuallyLive = event.status === 'live' || 
+        (event.status && event.status.toLowerCase().includes('progress')) ||
+        (event.status && event.status.toLowerCase().includes('q')) ||
+        (event.status && event.status.toLowerCase().includes('half'));
+      
+      if (!isActuallyLive) {
+        return false;
+      }
+      
       // Only show games that have at least some odds data
       const hasOdds = event.odds && (
         event.odds.moneyline?.home || 
