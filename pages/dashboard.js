@@ -230,7 +230,24 @@ export default function Dashboard() {
       .replace(/university$/, '');
   };
   
-  // Get upcoming games from REST API (exclude any that are live in inplay)
+  // Get live games from REST API that aren't already in inplay
+  const liveGamesFromApi = useMemo(() => {
+    return apiGames
+      .map(game => ({ ...game, league: game.league || game.sportName }))
+      .filter(game => {
+        if (!game.isLive || game.isCompleted) return false;
+        const isInInplay = liveGamesFromInplay.some(inplay => {
+          const home1 = normalizeTeamName(game.homeTeamFull || game.homeTeam);
+          const away1 = normalizeTeamName(game.awayTeamFull || game.awayTeam);
+          const home2 = normalizeTeamName(inplay.homeTeamFull || inplay.homeTeam);
+          const away2 = normalizeTeamName(inplay.awayTeamFull || inplay.awayTeam);
+          return (home1 === home2 && away1 === away2) || (home1 === away2 && away1 === home2);
+        });
+        return !isInInplay;
+      });
+  }, [apiGames, liveGamesFromInplay]);
+  
+  // Get upcoming games from REST API (exclude any that are live in inplay or already live)
   const upcomingGamesFromApi = useMemo(() => {
     return apiGames
       .map(game => ({ ...game, league: game.league || game.sportName }))
@@ -248,17 +265,22 @@ export default function Dashboard() {
       });
   }, [apiGames, liveGamesFromInplay]);
   
+  // Combine inplay live games with REST API live games (fallback when inplay not available)
+  const allLiveGames = useMemo(() => {
+    return [...liveGamesFromInplay, ...liveGamesFromApi];
+  }, [liveGamesFromInplay, liveGamesFromApi]);
+  
   // Combined for backward compatibility with existing code
   const gamesWithLiveData = useMemo(() => {
-    return [...liveGamesFromInplay, ...upcomingGamesFromApi];
-  }, [liveGamesFromInplay, upcomingGamesFromApi]);
+    return [...allLiveGames, ...upcomingGamesFromApi];
+  }, [allLiveGames, upcomingGamesFromApi]);
 
-  // Simplified categorization - no merge logic needed
+  // Simplified categorization - include REST API live games as fallback
   const categorizedGames = useMemo(() => ({
-    liveGames: liveGamesFromInplay,
+    liveGames: allLiveGames,
     upcomingGames: upcomingGamesFromApi,
     recentlyCompletedGames: []
-  }), [liveGamesFromInplay, upcomingGamesFromApi]);
+  }), [allLiveGames, upcomingGamesFromApi]);
 
   // Sport filter mappings
   const sportMappings = useMemo(() => ({
