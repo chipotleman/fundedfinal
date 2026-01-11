@@ -219,7 +219,7 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                   <div className="space-y-3">
                     {bet.legs.map((leg, index) => {
                       const isLegLive = !!leg.isLive;
-                      const hasLegLiveScores = isLegLive && typeof leg.awayScore === 'number' && leg.awayScore > 0;
+                      const hasLegLiveScores = isLegLive && (typeof leg.awayScore === 'number' || typeof leg.homeScore === 'number');
                       const gameTime = formatGameTime(leg.gameStart);
                       
                       return (
@@ -266,7 +266,8 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
               </div>
             ) : (() => {
               const isLive = !!bet.isLive;
-              const hasLiveScores = isLive && typeof bet.awayScore === 'number' && bet.awayScore > 0;
+              const hasLiveScores = isLive && (typeof bet.awayScore === 'number' || typeof bet.homeScore === 'number');
+              console.log('[BetReceipt] Straight bet display:', { isLive, hasLiveScores, awayScore: bet.awayScore, homeScore: bet.homeScore });
               
               return (
                 <div className="pt-1 mt-1">
