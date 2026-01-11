@@ -561,7 +561,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick, demoBetSlipCou
               {(betSlipCount > 0 || (demoBetSlipCount > 0 && !isLoggedIn)) && (
                 <button
                   onClick={isLoggedIn ? onBetSlipClick : onDemoBetSlipClick}
-                  className="relative font-bold py-2 sm:py-3 px-2 sm:px-6 rounded-lg flex items-center space-x-1 sm:space-x-2 text-sm sm:text-base"
+                  className="relative font-bold py-2 sm:py-3 px-2 sm:px-6 rounded-lg flex items-center space-x-1 sm:space-x-2 text-sm sm:text-base no-hover-effect"
                   style={{ backgroundColor: '#2563eb', marginRight: '50px', color: '#ffffff' }}
                 >
                   <svg className="w-4 h-4 sm:w-5 sm:h-5" style={{ fill: '#ffffff' }} viewBox="0 0 20 20">

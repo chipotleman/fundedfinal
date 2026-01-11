@@ -681,6 +681,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                   return (
                     <button
                       type="button"
+                      className="no-hover-effect"
                       onClick={() => {
                         console.log('Place button clicked', { canPlace, validation, totalStake, bankroll, isPlacing });
                         if (canPlace) {
@@ -702,7 +703,8 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                         cursor: canPlace ? 'pointer' : 'not-allowed',
                         border: 'none',
                         outline: 'none',
-                        WebkitTapHighlightColor: 'transparent'
+                        WebkitTapHighlightColor: 'transparent',
+                        transition: 'none'
                       }}
                     >
                       {isPlacing ? 'Placing...' : betType === 'parlay' ? `Place ${bets.length}-Leg Parlay` : `Place ${bets.length} Pik${bets.length > 1 ? 's' : ''}`}
