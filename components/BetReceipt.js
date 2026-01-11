@@ -1,85 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useGames } from '../contexts/GamesContext';
 
 export default function BetReceipt({ bet, isDemo = false, onClose }) {
-  const { apiGames, inplayEvents } = useGames();
-  
-  const liveScores = useMemo(() => {
-    const scoresMap = {};
-    
-    const normalizeTeam = (name) => {
-      if (!name) return '';
-      return name.toLowerCase().replace(/[^a-z0-9]/g, '');
-    };
-    
-    const addGameKeys = (game, scoreData) => {
-      if (game.id) scoresMap[game.id] = scoreData;
-      if (game.gameId) scoresMap[game.gameId] = scoreData;
-      
-      if (game.awayTeamFull && game.homeTeamFull) {
-        const fullMatchup = `${game.awayTeamFull} @ ${game.homeTeamFull}`;
-        scoresMap[fullMatchup] = scoreData;
-        scoresMap[fullMatchup.toLowerCase()] = scoreData;
-        const normalizedFull = `${normalizeTeam(game.awayTeamFull)}@${normalizeTeam(game.homeTeamFull)}`;
-        scoresMap[normalizedFull] = scoreData;
-      }
-      
-      if (game.awayTeam && game.homeTeam) {
-        const abbrMatchup = `${game.awayTeam} @ ${game.homeTeam}`;
-        scoresMap[abbrMatchup] = scoreData;
-        scoresMap[abbrMatchup.toLowerCase()] = scoreData;
-        const normalizedAbbr = `${normalizeTeam(game.awayTeam)}@${normalizeTeam(game.homeTeam)}`;
-        scoresMap[normalizedAbbr] = scoreData;
-      }
-    };
-    
-    Object.entries(inplayEvents || {}).forEach(([id, event]) => {
-      const scoreData = {
-        isLive: true,
-        awayScore: event.awayScore ?? 0,
-        homeScore: event.homeScore ?? 0,
-      };
-      scoresMap[id] = scoreData;
-      addGameKeys(event, scoreData);
-    });
-    
-    (apiGames || []).forEach(game => {
-      if (scoresMap[game.id]) return;
-      
-      const scoreData = {
-        isLive: game.isLive || game.status === 'IN_PROGRESS',
-        awayScore: game.scores?.away?.total ?? game.awayScore ?? 0,
-        homeScore: game.scores?.home?.total ?? game.homeScore ?? 0,
-      };
-      addGameKeys(game, scoreData);
-    });
-    
-    return scoresMap;
-  }, [apiGames, inplayEvents]);
-  
-  const findLiveScore = (gameId, matchup, awayTeam, homeTeam, awayTeamFull, homeTeamFull) => {
-    if (gameId && liveScores[gameId]) return liveScores[gameId];
-    if (matchup && liveScores[matchup]) return liveScores[matchup];
-    if (matchup && liveScores[matchup.toLowerCase()]) return liveScores[matchup.toLowerCase()];
-    
-    const normalizeTeam = (name) => name ? name.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
-    
-    if (awayTeamFull && homeTeamFull) {
-      const fullMatchup = `${awayTeamFull} @ ${homeTeamFull}`;
-      if (liveScores[fullMatchup]) return liveScores[fullMatchup];
-      const normalizedFull = `${normalizeTeam(awayTeamFull)}@${normalizeTeam(homeTeamFull)}`;
-      if (liveScores[normalizedFull]) return liveScores[normalizedFull];
-    }
-    
-    if (awayTeam && homeTeam) {
-      const abbrMatchup = `${awayTeam} @ ${homeTeam}`;
-      if (liveScores[abbrMatchup]) return liveScores[abbrMatchup];
-      const normalizedAbbr = `${normalizeTeam(awayTeam)}@${normalizeTeam(homeTeam)}`;
-      if (liveScores[normalizedAbbr]) return liveScores[normalizedAbbr];
-    }
-    
-    return null;
-  };
+  console.log('[BetReceipt] Received bet data:', JSON.stringify({ isLive: bet?.isLive, awayScore: bet?.awayScore, homeScore: bet?.homeScore, matchup: bet?.matchup }));
   const [isVisible, setIsVisible] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
 
@@ -149,14 +71,8 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
 
   const isParlay = bet.legs && Array.isArray(bet.legs) && bet.legs.length > 1;
   const hasAnyLiveLeg = isParlay 
-    ? bet.legs.some(leg => {
-        const legLive = findLiveScore(leg.gameId || leg.game_id, leg.matchup, leg.awayTeam, leg.homeTeam, leg.awayTeamFull, leg.homeTeamFull);
-        return legLive?.isLive || !!leg.isLive;
-      })
-    : (() => {
-        const singleLive = findLiveScore(bet.gameId || bet.game_id, bet.matchup, bet.awayTeam, bet.homeTeam, bet.awayTeamFull, bet.homeTeamFull);
-        return singleLive?.isLive || !!bet.isLive;
-      })();
+    ? bet.legs.some(leg => !!leg.isLive)
+    : !!bet.isLive;
 
   const getStatusColor = () => {
     if (isDemo) return 'orange';
@@ -302,10 +218,9 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                 {isExpanded && (
                   <div className="space-y-3">
                     {bet.legs.map((leg, index) => {
-                      const legLive = findLiveScore(leg.gameId || leg.game_id, leg.matchup, leg.awayTeam, leg.homeTeam, leg.awayTeamFull, leg.homeTeamFull) || {};
-                      const isLegLive = legLive.isLive || !!leg.isLive;
-                      const legAwayScore = legLive.awayScore ?? leg.awayScore ?? 0;
-                      const legHomeScore = legLive.homeScore ?? leg.homeScore ?? 0;
+                      const isLegLive = !!leg.isLive;
+                      const legAwayScore = leg.awayScore ?? 0;
+                      const legHomeScore = leg.homeScore ?? 0;
                       const gameTime = formatGameTime(leg.gameStart);
                       
                       return (
@@ -350,10 +265,9 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                 )}
               </div>
             ) : (() => {
-              const live = findLiveScore(bet.gameId || bet.game_id, bet.matchup, bet.awayTeam, bet.homeTeam, bet.awayTeamFull, bet.homeTeamFull) || {};
-              const isLive = live.isLive || !!bet.isLive;
-              const awayScore = live.awayScore ?? bet.awayScore ?? 0;
-              const homeScore = live.homeScore ?? bet.homeScore ?? 0;
+              const isLive = !!bet.isLive;
+              const awayScore = bet.awayScore ?? 0;
+              const homeScore = bet.homeScore ?? 0;
               
               return (
                 <div className="pt-1 mt-1">
