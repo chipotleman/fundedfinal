@@ -139,20 +139,6 @@ export default function Dashboard() {
   const liveGamesFromInplay = useMemo(() => {
     return Object.values(mergedInplayEvents || {})
     .filter(event => {
-      // Exclude games that are explicitly not started or ended
-      const statusLower = (event.status || '').toLowerCase();
-      const isNotStarted = statusLower === 'not_started' || 
-        statusLower === 'not started' ||
-        event.timeStatus === 0 || event.timeStatus === '0';
-      const isEnded = statusLower === 'ended' || 
-        statusLower === 'final' || 
-        statusLower === 'ft' ||
-        event.timeStatus === 3 || event.timeStatus === '3';
-      
-      if (isNotStarted || isEnded) {
-        return false;
-      }
-      
       // Only show games that have at least some odds data
       const hasOdds = event.odds && (
         event.odds.moneyline?.home || 

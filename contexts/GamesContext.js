@@ -151,12 +151,16 @@ export function GamesProvider({ children, initialInplayEvents = null }) {
     
     isMountedRef.current = true;
     
-    // Always fetch games via REST API for Upcoming tab
-    // apiGames is separate from inplayEvents and needed for upcoming games
-    fetchGames();
-    pollingIntervalRef.current = setInterval(fetchGames, 60000);
+    // If we have SSR data, skip initial fetch - SSE will handle updates
+    const hasSSRData = Object.keys(inplayEvents).length > 0;
     
-    // Connect SSE for live updates
+    if (!hasSSRData) {
+      // No SSR data - fetch games via REST API
+      fetchGames();
+      pollingIntervalRef.current = setInterval(fetchGames, 5000);
+    }
+    
+    // Connect SSE for live updates (this won't clear SSR data, just merges updates)
     connectSSE();
 
     return () => {
