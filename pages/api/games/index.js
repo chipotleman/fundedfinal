@@ -256,24 +256,30 @@ export default async function handler(req, res) {
             console.log(`[GAMES API] Adding live ${sportKey} game from scores: ID:${score.id} ${score.home_team} vs ${score.away_team}`);
             
             // Create a display-formatted game from the score data
+            // Use same field structure as convertGoalserveToDisplayFormat for consistency
             const sportInfo = SUPPORTED_SPORTS[sportKey];
+            const homeAbbr = score.home_team_abbr || score.home_team?.substring(0, 3).toUpperCase();
+            const awayAbbr = score.away_team_abbr || score.away_team?.substring(0, 3).toUpperCase();
+            
             const liveGame = {
               id: score.id,
+              gameId: score.id,
               sport: sportKey,
               sportName: sportInfo?.name || sportKey,
-              homeTeam: score.home_team,
-              awayTeam: score.away_team,
-              homeAbbr: score.home_team_abbr || score.home_team?.substring(0, 3).toUpperCase(),
-              awayAbbr: score.away_team_abbr || score.away_team?.substring(0, 3).toUpperCase(),
-              startTime: score.commence_time || new Date().toISOString(),
-              formattedTime: score.formatted_time || 'LIVE',
+              homeTeam: homeAbbr,  // Abbreviation to match formatted games
+              awayTeam: awayAbbr,  // Abbreviation to match formatted games
+              homeTeamFull: score.home_team,  // Full name for team matching
+              awayTeamFull: score.away_team,  // Full name for team matching
+              time: score.formatted_time || 'LIVE',
+              commenceTime: score.commence_time || new Date().toISOString(),
               isLive: true,
               isCompleted: score.isCompleted || false,
               status: score.status,
               scores: score.scores,
-              lines: null, // Odds will come from SSE inplay feed if available
+              lines: null, // Odds will come from schedule endpoint
               linesLocked: true, // Mark as locked until odds are available
-              allBookmakerOdds: []
+              allBookmakerOdds: {},
+              dataSource: 'Goalserve'
             };
             
             formattedGames.push(liveGame);
@@ -288,16 +294,58 @@ export default async function handler(req, res) {
     
     if (sportsWithLiveGames.size > 0) {
       console.log(`[GAMES API] Refreshing odds for live sports: ${Array.from(sportsWithLiveGames).join(', ')}`);
+      
+      // Helper function to normalize team names for matching
+      const normalizeTeamName = (name) => (name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      
       for (const sportKey of sportsWithLiveGames) {
         try {
           const freshOdds = await getOdds(sportKey);
           const freshFormatted = freshOdds.map(convertGoalserveToDisplayFormat);
           
+          console.log(`[GAMES API] Processing ${freshFormatted.length} games from fresh odds for ${sportKey}`);
+          
           freshFormatted.forEach(freshGame => {
-            const existingIdx = formattedGames.findIndex(g => g.id === freshGame.id);
+            // First try exact ID match
+            let existingIdx = formattedGames.findIndex(g => g.id === freshGame.id);
+            
+            // For football, also try team name matching (IDs differ between scores/schedule endpoints)
+            if (existingIdx < 0 && sportKey.includes('football')) {
+              // Use full team names for matching, not abbreviations
+              const freshHomeNorm = normalizeTeamName(freshGame.homeTeamFull || freshGame.homeTeam);
+              const freshAwayNorm = normalizeTeamName(freshGame.awayTeamFull || freshGame.awayTeam);
+              
+              // Debug: log what we're trying to match
+              console.log(`[GAMES API] Looking for match: "${freshHomeNorm}" vs "${freshAwayNorm}" (from schedule ID:${freshGame.id})`);
+              
+              // Get all live football games to match against
+              const liveFootballGames = formattedGames.filter(g => g.sport?.includes('football') && g.isLive);
+              if (liveFootballGames.length > 0) {
+                console.log(`[GAMES API] Live football games to match against:`, liveFootballGames.map(g => `${g.homeTeamFull}/${g.homeTeam} vs ${g.awayTeamFull}/${g.awayTeam}`));
+              }
+              
+              existingIdx = formattedGames.findIndex(g => {
+                if (!g.sport?.includes('football')) return false;
+                // Compare full team names (homeTeamFull/awayTeamFull)
+                const gHomeNorm = normalizeTeamName(g.homeTeamFull || g.homeTeam);
+                const gAwayNorm = normalizeTeamName(g.awayTeamFull || g.awayTeam);
+                // Match if both teams match (in either order due to possible home/away reversal)
+                return (gHomeNorm.includes(freshHomeNorm) || freshHomeNorm.includes(gHomeNorm)) &&
+                       (gAwayNorm.includes(freshAwayNorm) || freshAwayNorm.includes(gAwayNorm));
+              });
+              
+              if (existingIdx >= 0) {
+                console.log(`[GAMES API] Matched NFL game by team names: ${freshGame.homeTeamFull} vs ${freshGame.awayTeamFull}`);
+              }
+            }
+            
             if (existingIdx >= 0) {
               formattedGames[existingIdx].lines = freshGame.lines;
               formattedGames[existingIdx].allBookmakerOdds = freshGame.allBookmakerOdds;
+              // Unlock lines if we found odds
+              if (freshGame.lines) {
+                formattedGames[existingIdx].linesLocked = false;
+              }
             }
           });
         } catch (e) {
