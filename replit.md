@@ -67,6 +67,7 @@ None documented yet.
       7. SSE connects after hydration for live updates only
       8. Key files: `lib/goalserve-autostart.js`, `lib/goalserve-inplay.js`, `instrumentation.js`, `contexts/GamesContext.js`
     - **Dashboard Data Architecture**: Live tab uses Inplay SSE, Upcoming tab uses REST API, with no merging to prevent flickering.
+    - **NFL Live Odds Workaround**: NFL odds use schedule endpoint polling (30s interval) with `showodds=1` and today's date, bypassing IP-restricted inplay feeds. Implemented in `fetchNFLScheduleOdds()` in `lib/goalserve-inplay.js`.
     - **Odds Parsing**: Supports Moneyline, Spreads, Totals for various sports.
     - **Admin Odds View**: Full bookmaker comparison in admin panel.
     - **Historical Odds**: Downloadable historical odds pulls.
