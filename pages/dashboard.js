@@ -610,7 +610,10 @@ export default function Dashboard() {
                 const isExpanded = expandedGames[game.id];
                 const isLive = game.isLive || game.status === 'IN_PROGRESS';
                 const isFinal = game.isCompleted || game.status === 'FINAL';
-                const hasAnyLines = game.lines && (game.lines.moneyline || game.lines.spread || game.lines.total);
+                const hasMoneyline = game.lines?.moneyline?.home != null || game.lines?.moneyline?.away != null;
+                const hasSpread = game.lines?.spread?.home?.point != null || game.lines?.spread?.away?.point != null;
+                const hasTotal = game.lines?.total?.over?.point != null || game.lines?.total?.under?.point != null;
+                const hasAnyLines = hasMoneyline || hasSpread || hasTotal;
                 const linesLocked = game.linesLocked || isFinal || !hasAnyLines;
                 
                 return (
