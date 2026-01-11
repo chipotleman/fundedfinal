@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 
 export default function BetReceipt({ bet, isDemo = false, onClose }) {
-  console.log('[BetReceipt] Received bet data:', JSON.stringify({ isLive: bet?.isLive, awayScore: bet?.awayScore, homeScore: bet?.homeScore, matchup: bet?.matchup }));
+  console.log('[BetReceipt v2.0] Received bet:', { isLive: bet?.isLive, awayScore: bet?.awayScore, homeScore: bet?.homeScore });
   const [isVisible, setIsVisible] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
 
