@@ -6,10 +6,21 @@ export function useGames() {
   return useContext(GamesContext);
 }
 
-export function GamesProvider({ children }) {
+export function GamesProvider({ children, initialInplayEvents = null }) {
   const [apiGames, setApiGames] = useState([]);
-  const [inplayEvents, setInplayEvents] = useState({});
-  const [loading, setLoading] = useState(true);
+  // Initialize with SSR data if provided - this enables zero-delay rendering
+  const [inplayEvents, setInplayEvents] = useState(() => {
+    if (initialInplayEvents && Array.isArray(initialInplayEvents)) {
+      const eventsObj = {};
+      initialInplayEvents.forEach(evt => {
+        if (evt.id) eventsObj[evt.id] = evt;
+      });
+      return eventsObj;
+    }
+    return initialInplayEvents || {};
+  });
+  // If we have SSR data, we're not loading
+  const [loading, setLoading] = useState(!initialInplayEvents);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   
@@ -135,11 +146,21 @@ export function GamesProvider({ children }) {
   }, []);
 
   useEffect(() => {
+    // Only run client-side effects in browser (not during SSR)
+    if (typeof window === 'undefined') return;
+    
     isMountedRef.current = true;
     
-    fetchGames();
-    pollingIntervalRef.current = setInterval(fetchGames, 5000);
+    // If we have SSR data, skip initial fetch - SSE will handle updates
+    const hasSSRData = Object.keys(inplayEvents).length > 0;
     
+    if (!hasSSRData) {
+      // No SSR data - fetch games via REST API
+      fetchGames();
+      pollingIntervalRef.current = setInterval(fetchGames, 5000);
+    }
+    
+    // Connect SSE for live updates (this won't clear SSR data, just merges updates)
     connectSSE();
 
     return () => {
@@ -151,7 +172,7 @@ export function GamesProvider({ children }) {
         sseRef.current.close();
       }
     };
-  }, [fetchGames, connectSSE]);
+  }, [fetchGames, connectSSE]); // Note: inplayEvents intentionally excluded to avoid re-triggering
 
   const refetch = useCallback(() => {
     lastFetchTimeRef.current = 0;

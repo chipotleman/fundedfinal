@@ -44,27 +44,28 @@ async function handleInplayStream(req, res, sendEvent, sport, eventId) {
     timestamp: Date.now()
   });
 
-  let currentEvents = service.getEvents(sport);
+  // Use getEventsForSSR for trimmed, consistent payload (matches SSR schema)
+  let currentEvents = service.getEventsForSSR(sport);
   
   if (currentEvents.length === 0) {
     try {
       await service.fetchAllFeeds();
-      currentEvents = service.getEvents(sport);
+      currentEvents = service.getEventsForSSR(sport);
     } catch (e) {
       console.error('[Stream Inplay] Initial fetch error:', e.message);
       sendEvent({ type: 'error', message: e.message, timestamp: Date.now() });
     }
   }
   
-  if (currentEvents.length > 0) {
-    sendEvent({
-      type: 'initial',
-      source: 'inplay',
-      events: currentEvents,
-      count: currentEvents.length,
-      timestamp: Date.now()
-    });
-  }
+  // Send full snapshot as FIRST message - this enables instant hydration
+  // matching the SSR data already in the HTML
+  sendEvent({
+    type: 'initial',
+    source: 'inplay',
+    events: currentEvents,
+    count: currentEvents.length,
+    timestamp: Date.now()
+  });
 
   const unsubscribe = service.subscribe((event) => {
     if (eventId && event.event?.id !== eventId) {

@@ -283,7 +283,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
         <AuthProvider>
           <BetSlipProvider>
             <UserProfilesProvider>
-              <GamesProvider>
+              <GamesProvider initialInplayEvents={pageProps.initialInplayEvents}>
                 <MatchupProvider>
                 <AnalyticsTracker />
                 <AutoGrader />

@@ -25,8 +25,10 @@ export default function Dashboard() {
   const { matchup, opponent, myBalance: matchupBalance, opponentBalance, myBets, opponentBets, canSeeOpponentBets, hasActiveMatchup, refresh: refreshMatchup } = useMatchup();
   const [selectedSport, setSelectedSport] = useState('All Sports');
   const [selectedTab, setSelectedTab] = useState('live');
-  const [games, setGames] = useState([]);
-  const [allGames, setAllGames] = useState([]);
+  // Note: games/allGames are derived at render time via useMemo for SSR compatibility
+  // These state setters are kept for legacy compatibility but initial values come from SSR
+  const [gamesState, setGames] = useState([]);
+  const [allGamesState, setAllGames] = useState([]);
   const [loading, setLoading] = useState(false);
   const [bankroll, setBankroll] = useState(10000);
   const [pnl, setPnl] = useState(0);
@@ -263,54 +265,57 @@ export default function Dashboard() {
     recentlyCompletedGames: []
   }), [liveGamesFromInplay, upcomingGamesFromApi]);
 
-  useEffect(() => {
-    setAllGames(gamesWithLiveData);
-    
+  // Sport filter mappings
+  const sportMappings = useMemo(() => ({
+    'NBA': ['NBA', 'BASKETBALL', "WOMEN'S BASKETBALL"],
+    'NCAAB': ['NCAAB', 'BASKETBALL', "WOMEN'S BASKETBALL", "WOMEN'S NCAAB"],
+    'NFL': ['NFL', 'FOOTBALL'],
+    'NCAAF': ['NCAAF', 'FOOTBALL'],
+    'MLB': ['MLB', 'BASEBALL', 'COLLEGE BASEBALL'],
+    'NHL': ['NHL', 'HOCKEY'],
+    'Euro Basketball': ['EUROLEAGUE', 'TURKEY BASKETBALL', 'ITALY BASKETBALL', 'GREECE BASKETBALL', 'SPAIN BASKETBALL', 'FRANCE BASKETBALL', 'GERMANY BASKETBALL', 'EUROPEAN BASKETBALL', 'BASKETBALL'],
+    "Int'l Hockey": ['HOCKEY', 'NHL']
+  }), []);
+
+  // CRITICAL FOR SSR: Derive games at render time (not in useEffect)
+  // This ensures games are in the HTML during server render
+  const allGames = useMemo(() => gamesWithLiveData, [gamesWithLiveData]);
+  
+  const games = useMemo(() => {
     const liveGames = [...categorizedGames.liveGames, ...(categorizedGames.recentlyCompletedGames || [])];
     const upcomingGames = categorizedGames.upcomingGames || [];
     
-    // Sport filter helper
-    const sportMappings = {
-      'NBA': ['NBA', 'BASKETBALL', "WOMEN'S BASKETBALL"],
-      'NCAAB': ['NCAAB', 'BASKETBALL', "WOMEN'S BASKETBALL", "WOMEN'S NCAAB"],
-      'NFL': ['NFL', 'FOOTBALL'],
-      'NCAAF': ['NCAAF', 'FOOTBALL'],
-      'MLB': ['MLB', 'BASEBALL', 'COLLEGE BASEBALL'],
-      'NHL': ['NHL', 'HOCKEY'],
-      'Euro Basketball': ['EUROLEAGUE', 'TURKEY BASKETBALL', 'ITALY BASKETBALL', 'GREECE BASKETBALL', 'SPAIN BASKETBALL', 'FRANCE BASKETBALL', 'GERMANY BASKETBALL', 'EUROPEAN BASKETBALL', 'BASKETBALL'],
-      "Int'l Hockey": ['HOCKEY', 'NHL']
-    };
-    
-    const filterBySport = (games) => {
-      if (selectedSport === 'All Sports') return games;
+    const filterBySport = (gamesToFilter) => {
+      if (selectedSport === 'All Sports') return gamesToFilter;
       const validSportNames = sportMappings[selectedSport] || [selectedSport];
-      return games.filter(g => {
+      return gamesToFilter.filter(g => {
         const sportNameUpper = (g.sportName || '').toUpperCase();
         return validSportNames.some(name => sportNameUpper === name.toUpperCase());
       });
     };
     
-    // Get games for selected tab
     const primaryGames = selectedTab === 'live' ? liveGames : upcomingGames;
     const fallbackGames = selectedTab === 'live' ? upcomingGames : liveGames;
     
-    // Apply sport filter
     let filteredGames = filterBySport(primaryGames);
     
-    // ALWAYS show games - if primary tab is empty, use fallback
     if (filteredGames.length === 0) {
       filteredGames = filterBySport(fallbackGames);
     }
     
-    // If still empty after sport filter, show ALL games from both tabs
     if (filteredGames.length === 0 && selectedSport !== 'All Sports') {
       filteredGames = [...liveGames, ...upcomingGames];
     }
     
-    setGames(filteredGames);
-    // NEVER show loading - always display whatever games we have
+    return filteredGames;
+  }, [selectedSport, selectedTab, categorizedGames, sportMappings]);
+
+  // Legacy effect to update state for components that depend on it
+  useEffect(() => {
+    setAllGames(allGames);
+    setGames(games);
     setLoading(false);
-  }, [selectedSport, selectedTab, gamesWithLiveData, categorizedGames]);
+  }, [allGames, games]);
 
 
   const formatOdds = (odds) => {
@@ -872,4 +877,49 @@ export default function Dashboard() {
       `}</style>
     </div>
   );
+}
+
+// Server-side rendering for ZERO delay game loading
+// This fetches from the pre-warmed cache before HTML is sent to client
+export async function getServerSideProps() {
+  try {
+    // Import server-side modules
+    const { getInplayService } = require('../lib/goalserve-inplay');
+    const { waitForCache } = require('../lib/goalserve-autostart');
+    
+    // Wait for cache to be populated (up to 3 seconds)
+    // This ensures SSR has data if server has been running
+    await waitForCache(3000);
+    
+    const service = getInplayService();
+    
+    // Get all cached events - use SSR-safe version
+    let events = service.getEventsForSSR();
+    
+    // If still empty, try one direct fetch
+    if (events.length === 0) {
+      try {
+        await service.fetchAllFeeds();
+        events = service.getEventsForSSR();
+      } catch (e) {
+        // 403 errors expected in dev (IP whitelisting)
+        console.log('[Dashboard SSR] Cache fetch:', e.message);
+      }
+    }
+    
+    console.log(`[Dashboard SSR] Serving ${events.length} events embedded in HTML`);
+    
+    return {
+      props: {
+        initialInplayEvents: events,
+      },
+    };
+  } catch (error) {
+    console.error('[Dashboard SSR] Error:', error);
+    return {
+      props: {
+        initialInplayEvents: [],
+      },
+    };
+  }
 }
