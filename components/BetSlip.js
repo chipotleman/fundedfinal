@@ -287,6 +287,8 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
             homeTeamFull: firstBet.homeTeamFull,
             awayScore: firstBet.awayScore || 0,
             homeScore: firstBet.homeScore || 0,
+            currentAwayScore: firstBet.awayScore,
+            currentHomeScore: firstBet.homeScore,
             gameStart: firstBet.gameStart,
             gameTime: firstBet.gameTime
           });
