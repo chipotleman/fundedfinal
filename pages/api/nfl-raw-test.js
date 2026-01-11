@@ -1,19 +1,32 @@
 const API_KEY = process.env.GOALSERVE_API_KEY;
 
-const FEEDS = {
-  inplay: `http://inplay.goalserve.com/inplay/amfootball?withOdds=1&json=1&key=${API_KEY}`,
-  schedule: `http://www.goalserve.com/getfeed/${API_KEY}/football/nfl-shedule?showodds=1&json=1`,
-  scores: `http://www.goalserve.com/getfeed/${API_KEY}/football/nfl-scores?json=1`
-};
+function getTodayDate() {
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = now.getFullYear();
+  return `${day}.${month}.${year}`;
+}
+
+function getFeeds() {
+  const today = getTodayDate();
+  return {
+    inplay: `http://inplay.goalserve.com/inplay/amfootball?withOdds=1&json=1&key=${API_KEY}`,
+    schedule: `http://www.goalserve.com/getfeed/${API_KEY}/football/nfl-shedule?date1=${today}&date2=${today}&showodds=1&json=1`,
+    scores: `http://www.goalserve.com/getfeed/${API_KEY}/football/nfl-scores?json=1`
+  };
+}
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
   
   const { feed = 'inplay' } = req.query;
+  const today = getTodayDate();
+  const FEEDS = getFeeds();
   
   const feedUrl = FEEDS[feed];
   if (!feedUrl) {
-    return res.status(400).json({ error: 'Invalid feed. Use: inplay, schedule, or scores' });
+    return res.status(400).json({ error: 'Invalid feed. Use: inplay, schedule, or scores', today });
   }
 
   try {
@@ -119,6 +132,7 @@ export default async function handler(req, res) {
     return res.status(200).json({
       feed,
       feedUrl: feedUrl.replace(API_KEY, 'HIDDEN'),
+      queryDate: today,
       timestamp: new Date().toISOString(),
       responseStatus: response.status,
       rawTextLength: text.length,

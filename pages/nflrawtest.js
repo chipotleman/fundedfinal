@@ -99,6 +99,7 @@ export default function NFLRawTest() {
             <h2 style={{ marginBottom: '10px', color: '#3b82f6' }}>Summary</h2>
             <p><strong>Feed:</strong> {data.feed}</p>
             <p><strong>URL:</strong> {data.feedUrl}</p>
+            {data.queryDate && <p><strong>Query Date (DD.MM.YYYY):</strong> <span style={{ color: '#22c55e', fontWeight: 'bold' }}>{data.queryDate}</span></p>}
             <p><strong>Timestamp:</strong> {data.timestamp}</p>
             <p><strong>Response Status:</strong> {data.responseStatus}</p>
             <p><strong>Raw Text Length:</strong> {data.rawTextLength} bytes</p>
