@@ -57,6 +57,15 @@ None documented yet.
     - **Goalserve WebSocket**: Real-time scores and in-play odds, IP whitelisted for production. Development uses REST API fallback.
     - **Goalserve Inplay HTTP Feeds**: Alternative real-time data, also requires IP whitelisting and handles home/away reversal.
     - **Supported Sports**: NBA, NFL, NCAAB, NCAAF, MLB, NHL, Soccer, Euro Basketball, Int'l Hockey.
+    - **Zero-Delay SSR Architecture**: Live games render instantly (same moment as logo) via Server-Side Rendering:
+      1. Server starts → `instrumentation.js` triggers 24/7 polling via `goalserve-autostart.js`
+      2. Cache warms with live game data from Goalserve inplay feeds
+      3. Dashboard has `getServerSideProps` that calls `waitForCache()` then `getEventsForSSR()`
+      4. Trimmed game events embedded directly in HTML response
+      5. `GamesProvider` initializes with SSR data, skips client-side fetch if data exists
+      6. Dashboard derives games via `useMemo` at render time (not useEffect) for SSR compatibility
+      7. SSE connects after hydration for live updates only
+      8. Key files: `lib/goalserve-autostart.js`, `lib/goalserve-inplay.js`, `instrumentation.js`, `contexts/GamesContext.js`
     - **Dashboard Data Architecture**: Live tab uses Inplay SSE, Upcoming tab uses REST API, with no merging to prevent flickering.
     - **Odds Parsing**: Supports Moneyline, Spreads, Totals for various sports.
     - **Admin Odds View**: Full bookmaker comparison in admin panel.
