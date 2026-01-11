@@ -135,18 +135,13 @@ export default function Dashboard() {
   // Upcoming tab uses ONLY REST API data (scheduled games)
   
   // Convert inplay events to game format for Live tab
-  // FILTER: Only include games that have odds (otherwise show locked/unusable cards)
+  // Show ALL live games - games without odds will have locked buttons
   const liveGamesFromInplay = useMemo(() => {
     return Object.values(mergedInplayEvents || {})
     .filter(event => {
-      // Only show games that have at least some odds data
-      const hasOdds = event.odds && (
-        event.odds.moneyline?.home || 
-        event.odds.moneyline?.away || 
-        event.odds.spread?.home || 
-        event.odds.total?.line
-      );
-      return hasOdds;
+      // Show all live events - even without odds (they'll show as locked)
+      // This ensures football games like Bills/Jags appear regardless of odds parsing
+      return event && event.id;
     })
     .map(event => {
       const homeTeam = event.homeTeam || event.stats?.[0]?.home || 'Home';
