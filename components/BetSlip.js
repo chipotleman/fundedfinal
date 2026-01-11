@@ -258,13 +258,13 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
               odds: typeof bet.odds === 'object' ? bet.odds.odds || bet.odds.value : bet.odds,
               matchup: bet.matchup,
               gameId: bet.gameId,
-              isLive: bet.isLive === true,
+              isLive: !!bet.isLive,
               homeTeam: bet.homeTeam,
               awayTeam: bet.awayTeam,
               homeTeamFull: bet.homeTeamFull,
               awayTeamFull: bet.awayTeamFull,
-              homeScore: bet.homeScore,
-              awayScore: bet.awayScore,
+              homeScore: bet.homeScore || 0,
+              awayScore: bet.awayScore || 0,
               gameStart: bet.gameStart,
               gameTime: bet.gameTime
             }))
@@ -280,13 +280,13 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
             odds: parseInt(placedBet.odds),
             stake: parseFloat(placedBet.stake),
             status: 'open',
-            isLive: firstBet.isLive,
+            isLive: !!firstBet.isLive,
             awayTeam: firstBet.awayTeam,
             homeTeam: firstBet.homeTeam,
             awayTeamFull: firstBet.awayTeamFull,
             homeTeamFull: firstBet.homeTeamFull,
-            awayScore: firstBet.awayScore,
-            homeScore: firstBet.homeScore,
+            awayScore: firstBet.awayScore || 0,
+            homeScore: firstBet.homeScore || 0,
             gameStart: firstBet.gameStart,
             gameTime: firstBet.gameTime
           });
