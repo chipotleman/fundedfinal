@@ -1,6 +1,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
+import { triggerHaptic } from '../utils/haptics';
 
 const BetSlipContext = createContext();
 
@@ -95,6 +96,7 @@ export const BetSlipProvider = ({ children }) => {
     if (existingBetIndex >= 0) {
       const removedBet = betSlip[existingBetIndex];
       setBetSlip(betSlip.filter(bet => bet.id !== betId));
+      triggerHaptic('tap');
       trackBetSlipEvent('bet_removed_toggle', {
         betId,
         matchup: removedBet.matchup,
@@ -139,6 +141,7 @@ export const BetSlipProvider = ({ children }) => {
       };
       
       setBetSlip([...filteredSlip, newBet]);
+      triggerHaptic('tap');
       trackBetSlipEvent('bet_added', {
         betId,
         matchup: newBet.matchup,
@@ -155,6 +158,7 @@ export const BetSlipProvider = ({ children }) => {
   const removeBet = (betId) => {
     const removedBet = betSlip.find(bet => bet.id === betId);
     setBetSlip(betSlip.filter(bet => bet.id !== betId));
+    triggerHaptic('tap');
     if (removedBet) {
       trackBetSlipEvent('bet_removed', {
         betId,
