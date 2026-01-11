@@ -67,6 +67,7 @@ None documented yet.
       7. SSE connects after hydration for live updates only
       8. Key files: `lib/goalserve-autostart.js`, `lib/goalserve-inplay.js`, `instrumentation.js`, `contexts/GamesContext.js`
     - **Dashboard Data Architecture**: Live tab uses Inplay SSE, Upcoming tab uses REST API, with no merging to prevent flickering.
+    - **Live Game Visibility**: All live events appear regardless of odds availability. Games without parsed odds display with locked betting buttons (`linesLocked = true` when `!hasAnyLines`), ensuring users see all live action even if odds temporarily unavailable.
     - **Odds Parsing**: Supports Moneyline, Spreads, Totals for various sports.
     - **Admin Odds View**: Full bookmaker comparison in admin panel.
     - **Historical Odds**: Downloadable historical odds pulls.
