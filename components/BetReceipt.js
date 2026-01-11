@@ -151,11 +151,11 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
   const hasAnyLiveLeg = isParlay 
     ? bet.legs.some(leg => {
         const legLive = findLiveScore(leg.gameId || leg.game_id, leg.matchup, leg.awayTeam, leg.homeTeam, leg.awayTeamFull, leg.homeTeamFull);
-        return legLive?.isLive || leg.isLive === true;
+        return legLive?.isLive || !!leg.isLive;
       })
     : (() => {
         const singleLive = findLiveScore(bet.gameId || bet.game_id, bet.matchup, bet.awayTeam, bet.homeTeam, bet.awayTeamFull, bet.homeTeamFull);
-        return singleLive?.isLive || bet.isLive === true;
+        return singleLive?.isLive || !!bet.isLive;
       })();
 
   const getStatusColor = () => {
@@ -303,7 +303,7 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                   <div className="space-y-3">
                     {bet.legs.map((leg, index) => {
                       const legLive = findLiveScore(leg.gameId || leg.game_id, leg.matchup, leg.awayTeam, leg.homeTeam, leg.awayTeamFull, leg.homeTeamFull) || {};
-                      const isLegLive = legLive.isLive || leg.isLive === true;
+                      const isLegLive = legLive.isLive || !!leg.isLive;
                       const legAwayScore = legLive.awayScore ?? leg.awayScore ?? 0;
                       const legHomeScore = legLive.homeScore ?? leg.homeScore ?? 0;
                       const gameTime = formatGameTime(leg.gameStart);
@@ -351,7 +351,7 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
               </div>
             ) : (() => {
               const live = findLiveScore(bet.gameId || bet.game_id, bet.matchup, bet.awayTeam, bet.homeTeam, bet.awayTeamFull, bet.homeTeamFull) || {};
-              const isLive = live.isLive || bet.isLive === true;
+              const isLive = live.isLive || !!bet.isLive;
               const awayScore = live.awayScore ?? bet.awayScore ?? 0;
               const homeScore = live.homeScore ?? bet.homeScore ?? 0;
               
