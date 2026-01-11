@@ -131,6 +131,22 @@ export const BetSlipProvider = ({ children }) => {
         return !isSameGameAndType;
       });
       
+      const capturedIsLive = !!(game.isLive || game.status === 'IN_PROGRESS');
+      const capturedAwayScore = game.awayScore ?? game.scores?.away?.total ?? 0;
+      const capturedHomeScore = game.homeScore ?? game.scores?.home?.total ?? 0;
+      
+      console.log('[BetSlipContext] Adding bet with game data:', JSON.stringify({
+        gameId: game.id,
+        isLive: capturedIsLive,
+        status: game.status,
+        awayScore: capturedAwayScore,
+        homeScore: capturedHomeScore,
+        gameAwayScore: game.awayScore,
+        gameHomeScore: game.homeScore,
+        scoresAway: game.scores?.away?.total,
+        scoresHome: game.scores?.home?.total
+      }));
+      
       const newBet = {
         id: betId,
         gameId: game.id,
@@ -139,13 +155,13 @@ export const BetSlipProvider = ({ children }) => {
         selection,
         odds: oddsValue,
         stake: 0,
-        isLive: game.isLive || game.status === 'IN_PROGRESS',
+        isLive: capturedIsLive,
         awayTeam: game.awayTeam,
         homeTeam: game.homeTeam,
         awayTeamFull: game.awayTeamFull || game.awayTeam,
         homeTeamFull: game.homeTeamFull || game.homeTeam,
-        awayScore: game.awayScore ?? game.scores?.away?.total ?? 0,
-        homeScore: game.homeScore ?? game.scores?.home?.total ?? 0,
+        awayScore: capturedAwayScore,
+        homeScore: capturedHomeScore,
         gameTime: game.time || '',
         gameStart: game.startTime || null,
         sportName: game.sportName || ''
