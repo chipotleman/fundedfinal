@@ -229,6 +229,16 @@ export default async function handler(req, res) {
     for (const [sportKey] of Object.entries(SUPPORTED_SPORTS)) {
       try {
         const scores = await getScores(sportKey);
+        
+        // Debug: Log NFL games specifically
+        if (sportKey.includes('football')) {
+          const liveNflGames = scores.filter(s => s.isLive);
+          if (liveNflGames.length > 0) {
+            console.log(`[GAMES API DEBUG] ${sportKey} has ${liveNflGames.length} live games:`, 
+              liveNflGames.map(g => `ID:${g.id} ${g.home_team} vs ${g.away_team} status:${g.status}`).join(', '));
+          }
+        }
+        
         scores.forEach(score => {
           const game = formattedGames.find(g => g.id === score.id);
           if (game) {
@@ -240,6 +250,12 @@ export default async function handler(req, res) {
               hasLiveGames = true;
               sportsWithLiveGames.add(sportKey);
             }
+          } else if (score.isLive && sportKey.includes('football')) {
+            // Debug: Log NFL games that couldn't be matched
+            console.log(`[GAMES API DEBUG] ${sportKey} live game NOT FOUND in formattedGames: ID:${score.id} ${score.home_team} vs ${score.away_team}`);
+            // Log all football game IDs in formattedGames for comparison
+            const footballGames = formattedGames.filter(g => g.sport.includes('football'));
+            console.log(`[GAMES API DEBUG] Available football IDs:`, footballGames.map(g => g.id).join(', '));
           }
         });
       } catch (e) {
