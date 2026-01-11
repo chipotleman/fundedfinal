@@ -2,11 +2,17 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import TapSurface from './TapSurface';
 
-export default function PiksBetCard({ bet, onCashOut, onShare }) {
+export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {} }) {
   const { isDarkMode } = useTheme();
   const [confirmingCashOut, setConfirmingCashOut] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const buttonRef = useRef(null);
+  
+  // Get real-time scores from liveScores prop if available
+  const liveData = liveScores[bet.gameId] || liveScores[bet.matchup] || {};
+  const currentHomeScore = liveData.homeScore ?? bet.currentHomeScore;
+  const currentAwayScore = liveData.awayScore ?? bet.currentAwayScore;
+  const isLiveGame = liveData.isLive || bet.isLive;
   
   const pikId = useMemo(() => {
     if (bet.pikId) return bet.pikId;
@@ -520,20 +526,24 @@ export default function PiksBetCard({ bet, onCashOut, onShare }) {
 
         {isOpen && !isParlay && (
           <div className="mb-3">
-            <div className="text-xs uppercase mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>Game</div>
-            {bet.isLive && typeof bet.currentHomeScore === 'number' ? (
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xs uppercase" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>Game</span>
+              {isLiveGame && typeof currentHomeScore === 'number' && (
+                <div className="flex items-center gap-1">
+                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                  <span className="text-red-500 text-xs font-medium">LIVE</span>
+                </div>
+              )}
+            </div>
+            {isLiveGame && typeof currentHomeScore === 'number' ? (
               <div className="space-y-1">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.awayTeamFull || bet.matchup?.split(' @ ')[0])}</span>
-                  <span className="text-white font-bold">{bet.currentAwayScore}</span>
+                  <span className="text-white font-bold">{currentAwayScore}</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.homeTeamFull || bet.matchup?.split(' @ ')[1])}</span>
-                  <span className="text-white font-bold">{bet.currentHomeScore}</span>
-                </div>
-                <div className="flex items-center gap-2 mt-1">
-                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
-                  <span className="text-red-500 text-xs font-medium">LIVE</span>
+                  <span className="text-white font-bold">{currentHomeScore}</span>
                 </div>
               </div>
             ) : (

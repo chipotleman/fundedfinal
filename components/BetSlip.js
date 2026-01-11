@@ -804,6 +804,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
             )}
             <PiksBetCard 
               bet={currentReceipt}
+              liveScores={liveScores}
               onCashOut={async (betId) => {
                 try {
                   const response = await fetch('/api/bets/cashout', {
