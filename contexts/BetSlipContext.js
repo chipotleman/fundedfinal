@@ -88,6 +88,17 @@ export const BetSlipProvider = ({ children }) => {
     localStorage.setItem('showBetSlip', JSON.stringify(showBetSlip));
   }, [showBetSlip]);
 
+  useEffect(() => {
+    const handleOpenBetSlip = () => {
+      setShowBetSlip(true);
+    };
+
+    window.addEventListener('openBetSlip', handleOpenBetSlip);
+    return () => {
+      window.removeEventListener('openBetSlip', handleOpenBetSlip);
+    };
+  }, []);
+
   const addToBetSlip = (game, betType, odds, selection) => {
     const betId = `${game.id}-${betType}-${selection}`;
     const existingBetIndex = betSlip.findIndex(bet => bet.id === betId);

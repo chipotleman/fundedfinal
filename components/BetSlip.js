@@ -684,7 +684,11 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                     type="button"
                     className="no-hover-effect"
                     onClick={() => {
-                      window.dispatchEvent(new CustomEvent('openAuthPopup'));
+                      localStorage.setItem('betslip_pending_login', JSON.stringify({ redirect: 'betslip', timestamp: Date.now() }));
+                      onClose();
+                      setTimeout(() => {
+                        window.dispatchEvent(new CustomEvent('openAuthPopup'));
+                      }, 100);
                     }}
                     style={{
                       display: 'block',

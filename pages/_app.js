@@ -133,6 +133,27 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
   }, [justAuthenticated]);
 
   useEffect(() => {
+    if (isLoggedIn && typeof window !== 'undefined') {
+      const pendingLogin = localStorage.getItem('betslip_pending_login');
+      if (pendingLogin) {
+        try {
+          const data = JSON.parse(pendingLogin);
+          if (data.redirect === 'betslip' && Date.now() - data.timestamp < 300000) {
+            localStorage.removeItem('betslip_pending_login');
+            setTimeout(() => {
+              window.dispatchEvent(new CustomEvent('openBetSlip'));
+            }, 300);
+          } else {
+            localStorage.removeItem('betslip_pending_login');
+          }
+        } catch (e) {
+          localStorage.removeItem('betslip_pending_login');
+        }
+      }
+    }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       const betaAccess = localStorage.getItem('beta_access');
       if (betaAccess === 'true') {
