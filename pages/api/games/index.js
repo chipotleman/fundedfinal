@@ -6,6 +6,7 @@ import {
   clearCache,
   SUPPORTED_SPORTS 
 } from '../../../lib/goalserve';
+import { getNflOdds } from '../../../lib/odds-api';
 
 let globalCache = null;
 let globalCacheTimestamp = null;
@@ -300,8 +301,16 @@ export default async function handler(req, res) {
       
       for (const sportKey of sportsWithLiveGames) {
         try {
-          const freshOdds = await getOdds(sportKey);
-          const freshFormatted = freshOdds.map(convertGoalserveToDisplayFormat);
+          let freshFormatted = [];
+          
+          // Use The Odds API for NFL (Goalserve doesn't provide NFL live odds)
+          if (sportKey === 'americanfootball_nfl') {
+            console.log(`[GAMES API] Using The Odds API for NFL odds...`);
+            freshFormatted = await getNflOdds();
+          } else {
+            const freshOdds = await getOdds(sportKey);
+            freshFormatted = freshOdds.map(convertGoalserveToDisplayFormat);
+          }
           
           console.log(`[GAMES API] Processing ${freshFormatted.length} games from fresh odds for ${sportKey}`);
           
@@ -309,27 +318,15 @@ export default async function handler(req, res) {
             // First try exact ID match
             let existingIdx = formattedGames.findIndex(g => g.id === freshGame.id);
             
-            // For football, also try team name matching (IDs differ between scores/schedule endpoints)
-            if (existingIdx < 0 && sportKey.includes('football')) {
-              // Use full team names for matching, not abbreviations
+            // For football/NFL, use team name matching (IDs differ between sources)
+            if (existingIdx < 0 && (sportKey.includes('football') || sportKey.includes('nfl'))) {
               const freshHomeNorm = normalizeTeamName(freshGame.homeTeamFull || freshGame.homeTeam);
               const freshAwayNorm = normalizeTeamName(freshGame.awayTeamFull || freshGame.awayTeam);
               
-              // Debug: log what we're trying to match
-              console.log(`[GAMES API] Looking for match: "${freshHomeNorm}" vs "${freshAwayNorm}" (from schedule ID:${freshGame.id})`);
-              
-              // Get all live football games to match against
-              const liveFootballGames = formattedGames.filter(g => g.sport?.includes('football') && g.isLive);
-              if (liveFootballGames.length > 0) {
-                console.log(`[GAMES API] Live football games to match against:`, liveFootballGames.map(g => `${g.homeTeamFull}/${g.homeTeam} vs ${g.awayTeamFull}/${g.awayTeam}`));
-              }
-              
               existingIdx = formattedGames.findIndex(g => {
-                if (!g.sport?.includes('football')) return false;
-                // Compare full team names (homeTeamFull/awayTeamFull)
+                if (!g.sport?.includes('football') && !g.sport?.includes('nfl')) return false;
                 const gHomeNorm = normalizeTeamName(g.homeTeamFull || g.homeTeam);
                 const gAwayNorm = normalizeTeamName(g.awayTeamFull || g.awayTeam);
-                // Match if both teams match (in either order due to possible home/away reversal)
                 return (gHomeNorm.includes(freshHomeNorm) || freshHomeNorm.includes(gHomeNorm)) &&
                        (gAwayNorm.includes(freshAwayNorm) || freshAwayNorm.includes(gAwayNorm));
               });
@@ -342,7 +339,7 @@ export default async function handler(req, res) {
             if (existingIdx >= 0) {
               formattedGames[existingIdx].lines = freshGame.lines;
               formattedGames[existingIdx].allBookmakerOdds = freshGame.allBookmakerOdds;
-              // Unlock lines if we found odds
+              formattedGames[existingIdx].dataSource = freshGame.dataSource || 'Goalserve';
               if (freshGame.lines) {
                 formattedGames[existingIdx].linesLocked = false;
               }
