@@ -1,5 +1,5 @@
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../../lib/auth';
+import { authOptions } from '../auth/[...nextauth]';
 import { db } from '../../../lib/db';
 import { profiles } from '../../../shared/schema';
 import { eq } from 'drizzle-orm';

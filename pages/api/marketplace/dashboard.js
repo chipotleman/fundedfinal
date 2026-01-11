@@ -1,5 +1,5 @@
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../../../lib/auth';
+import { authOptions } from '../auth/[...nextauth]';
 import { db } from '../../../lib/db';
 import { cappers, capperProducts, capperSubscriptions, capperReviews, capperPerformance } from '../../../shared/schema';
 import { eq, and, desc, gte, sql } from 'drizzle-orm';
