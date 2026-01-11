@@ -265,9 +265,9 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                 )}
               </div>
             ) : (() => {
-              const isLive = !!bet.isLive;
-              const hasLiveScores = isLive && (typeof bet.awayScore === 'number' || typeof bet.homeScore === 'number');
-              console.log('[BetReceipt] Straight bet display:', { isLive, hasLiveScores, awayScore: bet.awayScore, homeScore: bet.homeScore });
+              const isLive = bet.isLive === true;
+              const hasScores = typeof bet.homeScore === 'number' && typeof bet.awayScore === 'number';
+              const showLiveDisplay = isLive || hasScores;
               
               return (
                 <div className="pt-1 mt-1">
@@ -283,20 +283,22 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
 
                   <div className="mt-1 bg-slate-800/50 rounded p-2">
                     <div className="text-gray-400 text-[10px] uppercase mb-1">Game</div>
-                    {hasLiveScores ? (
+                    {showLiveDisplay ? (
                       <div className="space-y-1">
-                        <div className="flex justify-between items-center">
-                          <span className="text-white text-sm font-medium">{bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0]}</span>
-                          <span className="text-white font-bold">{bet.awayScore}</span>
-                        </div>
                         <div className="flex justify-between items-center">
                           <span className="text-white text-sm font-medium">{bet.homeTeamFull || bet.homeTeam || bet.matchup?.split(' @ ')[1]}</span>
                           <span className="text-white font-bold">{bet.homeScore}</span>
                         </div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
-                          <span className="text-red-500 text-xs font-medium">LIVE</span>
+                        <div className="flex justify-between items-center">
+                          <span className="text-white text-sm font-medium">{bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0]}</span>
+                          <span className="text-white font-bold">{bet.awayScore}</span>
                         </div>
+                        {isLive && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
+                            <span className="text-red-500 text-xs font-medium">LIVE</span>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <>
