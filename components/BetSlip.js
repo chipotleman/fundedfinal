@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import ReactDOM from 'react-dom';
+import { useSession } from 'next-auth/react';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useGames } from '../contexts/GamesContext';
@@ -16,6 +17,8 @@ const capitalizeLeagueId = (text) => {
 };
 
 export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user;
   const { isDarkMode } = useTheme();
   const { betSlip: bets, removeBet, updateStake, clearBetSlip } = useBetSlip();
   const { apiGames, inplayEvents } = useGames();
@@ -664,19 +667,47 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                   </div>
                 </div>
 
-                {totalStake > bankroll && (
+                {isLoggedIn && totalStake > bankroll && (
                   <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 mb-3">
                     <p className="text-red-400 text-sm">Insufficient balance: ${bankroll.toFixed(2)}</p>
                   </div>
                 )}
 
-                {validation.belowMinimum && (
+                {isLoggedIn && validation.belowMinimum && (
                   <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 mb-3">
                     <p className="text-red-400 text-sm">Minimum bet: ${minBetAmount}</p>
                   </div>
                 )}
 
-                {(() => {
+                {!isLoggedIn ? (
+                  <button
+                    type="button"
+                    className="no-hover-effect"
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('openAuthPopup'));
+                    }}
+                    style={{
+                      display: 'block',
+                      width: '100%',
+                      padding: '16px 0',
+                      borderRadius: '12px',
+                      fontSize: '18px',
+                      fontWeight: 'bold',
+                      textAlign: 'center',
+                      appearance: 'none',
+                      WebkitAppearance: 'none',
+                      backgroundColor: '#2563eb',
+                      color: '#ffffff',
+                      cursor: 'pointer',
+                      border: 'none',
+                      outline: 'none',
+                      WebkitTapHighlightColor: 'transparent',
+                      transition: 'none'
+                    }}
+                  >
+                    Sign In to Place Bets
+                  </button>
+                ) : (() => {
                   const canPlace = validation.isValid && totalStake <= bankroll && !isPlacing && totalStake > 0;
                   return (
                     <button
