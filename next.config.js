@@ -38,6 +38,9 @@ const withPWA = require('next-pwa')({
 
 const nextConfig = {
   reactStrictMode: true,
+  experimental: {
+    instrumentationHook: true,
+  },
   allowedDevOrigins: [
     '*.replit.dev',
     '*.janeway.replit.dev', 

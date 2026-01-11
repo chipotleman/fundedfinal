@@ -1,6 +1,8 @@
 import { getInplayService } from '../../../lib/goalserve-inplay';
+import { initializeGoalservePolling } from '../../../lib/goalserve-autostart';
 
 export default async function handler(req, res) {
+  initializeGoalservePolling();
   const service = getInplayService();
   const { sport, action, live } = req.query;
 

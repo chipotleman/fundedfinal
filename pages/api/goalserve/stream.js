@@ -1,4 +1,5 @@
 const { getInplayService } = require('../../../lib/goalserve-inplay');
+const { initializeGoalservePolling } = require('../../../lib/goalserve-autostart');
 
 export const config = {
   api: {
@@ -33,12 +34,8 @@ export default async function handler(req, res) {
 }
 
 async function handleInplayStream(req, res, sendEvent, sport, eventId) {
+  initializeGoalservePolling();
   const service = getInplayService();
-  
-  if (!service.isPolling) {
-    const targetSports = sport ? [sport] : ['basketball', 'hockey', 'amfootball', 'baseball'];
-    service.startPolling(targetSports);
-  }
 
   sendEvent({
     type: 'connected',
