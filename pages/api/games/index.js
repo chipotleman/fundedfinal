@@ -250,12 +250,35 @@ export default async function handler(req, res) {
               hasLiveGames = true;
               sportsWithLiveGames.add(sportKey);
             }
-          } else if (score.isLive && sportKey.includes('football')) {
-            // Debug: Log NFL games that couldn't be matched
-            console.log(`[GAMES API DEBUG] ${sportKey} live game NOT FOUND in formattedGames: ID:${score.id} ${score.home_team} vs ${score.away_team}`);
-            // Log all football game IDs in formattedGames for comparison
-            const footballGames = formattedGames.filter(g => g.sport.includes('football'));
-            console.log(`[GAMES API DEBUG] Available football IDs:`, footballGames.map(g => g.id).join(', '));
+          } else if (score.isLive) {
+            // Live game exists in scores but NOT in schedule/odds data
+            // ADD it to formattedGames so it appears on the dashboard
+            console.log(`[GAMES API] Adding live ${sportKey} game from scores: ID:${score.id} ${score.home_team} vs ${score.away_team}`);
+            
+            // Create a display-formatted game from the score data
+            const sportInfo = SUPPORTED_SPORTS[sportKey];
+            const liveGame = {
+              id: score.id,
+              sport: sportKey,
+              sportName: sportInfo?.name || sportKey,
+              homeTeam: score.home_team,
+              awayTeam: score.away_team,
+              homeAbbr: score.home_team_abbr || score.home_team?.substring(0, 3).toUpperCase(),
+              awayAbbr: score.away_team_abbr || score.away_team?.substring(0, 3).toUpperCase(),
+              startTime: score.commence_time || new Date().toISOString(),
+              formattedTime: score.formatted_time || 'LIVE',
+              isLive: true,
+              isCompleted: score.isCompleted || false,
+              status: score.status,
+              scores: score.scores,
+              lines: null, // Odds will come from SSE inplay feed if available
+              linesLocked: true, // Mark as locked until odds are available
+              allBookmakerOdds: []
+            };
+            
+            formattedGames.push(liveGame);
+            hasLiveGames = true;
+            sportsWithLiveGames.add(sportKey);
           }
         });
       } catch (e) {
