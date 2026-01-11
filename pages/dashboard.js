@@ -139,29 +139,17 @@ export default function Dashboard() {
   const liveGamesFromInplay = useMemo(() => {
     return Object.values(mergedInplayEvents || {})
     .filter(event => {
-      // Only show games that are actually live (not 'not_started' or 'ended')
+      // Exclude games that are explicitly not started or ended
       const statusLower = (event.status || '').toLowerCase();
-      const isActuallyLive = statusLower === 'live' || 
-        statusLower === 'in_progress' ||
-        statusLower.includes('progress') ||
-        statusLower.includes('q1') || statusLower.includes('q2') || 
-        statusLower.includes('q3') || statusLower.includes('q4') ||
-        statusLower.includes('p1') || statusLower.includes('p2') || statusLower.includes('p3') ||
-        statusLower.includes('half') ||
-        statusLower.includes('ot') || statusLower.includes('overtime') ||
-        event.timeStatus === 1 || event.timeStatus === '1';
+      const isNotStarted = statusLower === 'not_started' || 
+        statusLower === 'not started' ||
+        event.timeStatus === 0 || event.timeStatus === '0';
+      const isEnded = statusLower === 'ended' || 
+        statusLower === 'final' || 
+        statusLower === 'ft' ||
+        event.timeStatus === 3 || event.timeStatus === '3';
       
-      // Also exclude explicitly not-started or ended games
-      const isNotStartedOrEnded = statusLower === 'not_started' || 
-        statusLower === 'ended' || 
-        statusLower === 'final' ||
-        event.timeStatus === 0 || event.timeStatus === 3;
-      
-      if (isNotStartedOrEnded) {
-        return false;
-      }
-      
-      if (!isActuallyLive) {
+      if (isNotStarted || isEnded) {
         return false;
       }
       
