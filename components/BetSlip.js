@@ -7,6 +7,7 @@ import { useMatchup } from '../contexts/MatchupContext';
 import ShareableBetSlip from './ShareableBetSlip';
 import PiksBetCard from './PiksBetCard';
 import CoinRain from './CoinRain';
+import haptic from '../utils/haptics';
 
 // Capitalize league identifiers like (w) -> (W), (m) -> (M)
 const capitalizeLeagueId = (text) => {
@@ -215,9 +216,13 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
 
       if (!response.ok) {
         console.error('Failed to place bets:', data.error);
+        haptic.error();
         setIsPlacing(false);
         return;
       }
+
+      // Trigger haptic feedback on successful bet placement
+      haptic.success();
 
       if (onBetPlaced && data.newBankroll !== undefined) {
         const bankrollValue = Number(data.newBankroll);

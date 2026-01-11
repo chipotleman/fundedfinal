@@ -5,6 +5,11 @@
  */
 
 export function triggerHaptic(pattern = 'tap') {
+  // Guard for non-browser contexts (SSR, tests)
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+    return false;
+  }
+
   const patterns = {
     tap: 50,
     success: [50, 30, 50],
