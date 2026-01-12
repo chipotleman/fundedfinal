@@ -93,36 +93,52 @@ export default async function handler(req, res) {
       for (const tournament of tournaments) {
         const weeks = Array.isArray(tournament?.week) ? tournament.week : [tournament?.week].filter(Boolean);
         for (const week of weeks) {
-          const matches = Array.isArray(week?.matches?.match) 
-            ? week.matches.match 
-            : [week?.matches?.match].filter(Boolean);
+          const matchDays = Array.isArray(week?.matches) ? week.matches : [week?.matches].filter(Boolean);
           
-          for (const match of matches) {
-            if (match?.hometeam && match?.odds) {
-              nflGames.push(match);
-              
-              const types = Array.isArray(match.odds.type) ? match.odds.type : [match.odds.type].filter(Boolean);
-              const bookmakerOdds = {};
-              
-              types.forEach(type => {
-                const bookmakers = Array.isArray(type?.bookmaker) ? type.bookmaker : [type?.bookmaker].filter(Boolean);
-                bookmakers.forEach(bm => {
-                  if (!bm) return;
-                  if (!bookmakerOdds[bm.name]) bookmakerOdds[bm.name] = {};
-                  bookmakerOdds[bm.name][type.value || type.name || 'unknown'] = Array.isArray(bm.odd) ? bm.odd : [bm.odd];
-                });
-              });
-              
-              oddsInfo.push({
-                matchup: `${match.awayteam?.name} @ ${match.hometeam?.name}`,
-                status: match.status || match.timer || 'scheduled',
-                time: match.time,
-                date: match.date,
-                bookmakers: Object.keys(bookmakerOdds),
-                bet365: bookmakerOdds['bet365'] || null,
-                bwin: bookmakerOdds['bwin'] || null,
-                allBookmakers: bookmakerOdds
-              });
+          for (const matchDay of matchDays) {
+            const matchList = Array.isArray(matchDay?.match) ? matchDay.match : [matchDay?.match].filter(Boolean);
+            
+            for (const match of matchList) {
+              if (match?.hometeam) {
+                nflGames.push(match);
+                
+                if (match?.odds) {
+                  const types = Array.isArray(match.odds.type) ? match.odds.type : [match.odds.type].filter(Boolean);
+                  const bookmakerOdds = {};
+                  
+                  types.forEach(type => {
+                    const bookmakers = Array.isArray(type?.bookmaker) ? type.bookmaker : [type?.bookmaker].filter(Boolean);
+                    bookmakers.forEach(bm => {
+                      if (!bm) return;
+                      if (!bookmakerOdds[bm.name]) bookmakerOdds[bm.name] = {};
+                      bookmakerOdds[bm.name][type.value || type.name || 'unknown'] = Array.isArray(bm.odd) ? bm.odd : [bm.odd];
+                    });
+                  });
+                  
+                  oddsInfo.push({
+                    matchup: `${match.awayteam?.name} @ ${match.hometeam?.name}`,
+                    contestID: match.contestID,
+                    status: match.status || 'scheduled',
+                    time: matchDay.date || match.formatted_date,
+                    datetime_utc: match.datetime_utc,
+                    bookmakers: Object.keys(bookmakerOdds),
+                    bet365: bookmakerOdds['bet365'] || null,
+                    bwin: bookmakerOdds['bwin'] || null,
+                    pinnacle: bookmakerOdds['Pinnacle'] || null,
+                    allBookmakers: bookmakerOdds
+                  });
+                } else {
+                  oddsInfo.push({
+                    matchup: `${match.awayteam?.name} @ ${match.hometeam?.name}`,
+                    contestID: match.contestID,
+                    status: match.status || 'scheduled',
+                    time: matchDay.date || match.formatted_date,
+                    datetime_utc: match.datetime_utc,
+                    bookmakers: [],
+                    noOdds: true
+                  });
+                }
+              }
             }
           }
         }
