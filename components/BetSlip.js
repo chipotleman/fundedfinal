@@ -779,19 +779,19 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
             className="relative w-full max-w-md"
             onClick={(e) => e.stopPropagation()}
           >
-            <button
+            <span
               onClick={() => {
                 setShowReceipt(false);
                 setCurrentReceipt(null);
                 setShowPikPlacedBadge(false);
                 onClose();
               }}
-              className="absolute -top-2 -right-2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-gray-800 border border-gray-600 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors"
+              className="absolute top-1 right-1 z-10 text-gray-500 hover:text-white cursor-pointer"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
-            </button>
+            </span>
             {showPikPlacedBadge && (
               <div className="absolute -top-12 left-1/2 -translate-x-1/2 text-center animate-badge-fade pointer-events-none">
                 <div className="inline-flex items-center gap-2 bg-green-500/20 text-green-400 px-4 py-2 rounded-full">
