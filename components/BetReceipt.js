@@ -165,15 +165,14 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                   <div className={`w-1.5 h-1.5 rounded-full ${colors.dot} ${isOpen ? 'animate-pulse' : ''}`}></div>
                   <span className={`font-bold ${colors.text}`}>{getStatusLabel()}</span>
                 </div>
-                <button
+                <span
                   onClick={handleClose}
-                  className="text-gray-500 hover:text-white transition-colors ml-2 p-0 bg-transparent border-0 outline-none"
-                  style={{ background: 'none', WebkitAppearance: 'none' }}
+                  className="text-gray-500 hover:text-white cursor-pointer ml-2"
                 >
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
-                </button>
+                </span>
               </div>
             </div>
 
