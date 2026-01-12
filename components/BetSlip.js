@@ -77,10 +77,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
         isLive: true,
         awayScore: event.awayScore ?? 0,
         homeScore: event.homeScore ?? 0,
-        time: event.displayClock || event.time || event.clock || '',
-        displayClock: event.displayClock || '',
-        period: event.timer?.q ? `Q${event.timer.q}` : event.period || '',
-        quarter: event.timer?.q || event.quarter || ''
+        time: event.time || event.clock || ''
       };
       scoresMap[id] = scoreData;
       addGameKeys(event, scoreData);
@@ -95,10 +92,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
         isLive: game.isLive || game.status === 'IN_PROGRESS',
         awayScore: game.scores?.away?.total ?? game.awayScore ?? 0,
         homeScore: game.scores?.home?.total ?? game.homeScore ?? 0,
-        time: game.time || game.formatted_time || '',
-        displayClock: game.timer || game.status || '',
-        period: game.status || '',
-        timer: game.timer || ''
+        time: game.time || game.formatted_time || ''
       };
       addGameKeys(game, scoreData);
     });

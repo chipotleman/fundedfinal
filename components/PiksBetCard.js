@@ -526,27 +526,15 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {} }
 
         {isOpen && !isParlay && (
           <div className="mb-3">
-            {isLiveGame && typeof currentHomeScore === 'number' ? (() => {
-              // Format timer: prefer liveData, fall back to stored bet data
-              const formatSingleBetTimer = () => {
-                if (liveData.displayClock) return liveData.displayClock;
-                if (liveData.time) return liveData.time;
-                const period = liveData.period || liveData.quarter || bet.period || bet.quarter || '';
-                const clock = liveData.clock || '';
-                if (period && clock) return `${period} ${clock}`;
-                return period || clock || bet.displayClock || bet.time || '';
-              };
-              const timerDisplay = formatSingleBetTimer();
-              return (
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
-                  <span className="text-red-500 text-xs font-medium">LIVE</span>
-                  {timerDisplay && (
-                    <span className="text-red-500/70 text-xs">{timerDisplay}</span>
-                  )}
-                </div>
-              );
-            })() : (
+            {isLiveGame && typeof currentHomeScore === 'number' ? (
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                <span className="text-red-500 text-xs font-medium">LIVE</span>
+                {(liveData.time || liveData.period || liveData.quarter) && (
+                  <span className="text-red-500/70 text-xs">{liveData.time || liveData.period || liveData.quarter}</span>
+                )}
+              </div>
+            ) : (
               <div className="text-xs uppercase mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>Game</div>
             )}
             {isLiveGame && typeof currentHomeScore === 'number' ? (
@@ -587,10 +575,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {} }
                 <span className="text-gray-400 text-xs uppercase">
                   {parlayLegs.legs.length} Games
                 </span>
-                {parlayLegs.legs.some(leg => {
-                  const legLiveData = liveScores[leg.gameId] || liveScores[leg.matchup] || {};
-                  return legLiveData.isLive === true || leg.isLive === true;
-                }) && (
+                {parlayLegs.legs.some(leg => leg.isLive) && (
                   <div className="flex items-center gap-1">
                     <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
                     <span className="text-red-500 text-xs font-medium">LIVE</span>
@@ -610,29 +595,11 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {} }
               <div className="mt-3 space-y-4">
                 {parlayLegs.legs.map((leg, index) => {
                   const legTeams = getTeamNamesForLeg(leg, index);
-                  
-                  // Get live data from liveScores prop (priority) or fall back to stored leg data
-                  const legLiveData = liveScores[leg.gameId] || liveScores[leg.matchup] || {};
-                  const isLegLive = legLiveData.isLive === true || leg.isLive === true;
-                  
-                  // Get real-time scores from liveScores if available
-                  const legHomeScore = legLiveData.homeScore ?? leg.homeScore;
-                  const legAwayScore = legLiveData.awayScore ?? leg.awayScore;
-                  
-                  // Format timer: prefer liveScores data, else fall back to stored leg data
-                  const formatLegTimer = () => {
-                    if (legLiveData.displayClock) return legLiveData.displayClock;
-                    if (legLiveData.time) return legLiveData.time;
-                    const period = legLiveData.period || legLiveData.quarter || leg.period || leg.quarter || '';
-                    const clock = legLiveData.clock || '';
-                    if (period && clock) return `${period} ${clock}`;
-                    return period || clock || leg.displayClock || leg.time || '';
-                  };
-                  const legTimerDisplay = formatLegTimer();
+                  const isLegLive = leg.isLive === true;
                   
                   const isLegCompleted = leg.isCompleted === true;
                   const legWon = leg.won === true;
-                  const hasScores = typeof legHomeScore === 'number' && typeof legAwayScore === 'number';
+                  const hasScores = typeof leg.homeScore === 'number' && typeof leg.awayScore === 'number';
                   
                   // Get full selection name
                   const getFullSelection = () => {
@@ -673,7 +640,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {} }
                         <div className="flex justify-between items-center">
                           <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{capitalizeLeagueId(leg.homeTeamFull || legTeams.homeTeam)}</span>
                           {(isLegLive || hasScores) ? (
-                            <span className="text-white font-bold">{legHomeScore}</span>
+                            <span className="text-white font-bold">{leg.homeScore}</span>
                           ) : (
                             <span className="text-gray-500 text-xs">-</span>
                           )}
@@ -681,7 +648,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {} }
                         <div className="flex justify-between items-center">
                           <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{capitalizeLeagueId(leg.awayTeamFull || legTeams.awayTeam)}</span>
                           {(isLegLive || hasScores) ? (
-                            <span className="text-white font-bold">{legAwayScore}</span>
+                            <span className="text-white font-bold">{leg.awayScore}</span>
                           ) : (
                             <span className="text-gray-500 text-xs">-</span>
                           )}
@@ -702,12 +669,9 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {} }
                         </div>
                       )}
                       {isLegLive && (
-                        <div className="flex items-center gap-1.5 mt-1">
+                        <div className="flex items-center gap-1 mt-1">
                           <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
                           <span className="text-red-500 text-xs font-medium">LIVE</span>
-                          {legTimerDisplay && (
-                            <span className="text-red-500/70 text-xs">{legTimerDisplay}</span>
-                          )}
                         </div>
                       )}
                     </div>

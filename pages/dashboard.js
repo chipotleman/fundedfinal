@@ -135,13 +135,18 @@ export default function Dashboard() {
   // Upcoming tab uses ONLY REST API data (scheduled games)
   
   // Convert inplay events to game format for Live tab
-  // Show ALL live games - games without odds will have locked buttons
+  // FILTER: Only include games that have odds (otherwise show locked/unusable cards)
   const liveGamesFromInplay = useMemo(() => {
     return Object.values(mergedInplayEvents || {})
     .filter(event => {
-      // Show all live events - even without odds (they'll show as locked)
-      // This ensures football games like Bills/Jags appear regardless of odds parsing
-      return event && event.id;
+      // Only show games that have at least some odds data
+      const hasOdds = event.odds && (
+        event.odds.moneyline?.home || 
+        event.odds.moneyline?.away || 
+        event.odds.spread?.home || 
+        event.odds.total?.line
+      );
+      return hasOdds;
     })
     .map(event => {
       const homeTeam = event.homeTeam || event.stats?.[0]?.home || 'Home';
@@ -230,24 +235,7 @@ export default function Dashboard() {
       .replace(/university$/, '');
   };
   
-  // Get live games from REST API that aren't already in inplay
-  const liveGamesFromApi = useMemo(() => {
-    return apiGames
-      .map(game => ({ ...game, league: game.league || game.sportName }))
-      .filter(game => {
-        if (!game.isLive || game.isCompleted) return false;
-        const isInInplay = liveGamesFromInplay.some(inplay => {
-          const home1 = normalizeTeamName(game.homeTeamFull || game.homeTeam);
-          const away1 = normalizeTeamName(game.awayTeamFull || game.awayTeam);
-          const home2 = normalizeTeamName(inplay.homeTeamFull || inplay.homeTeam);
-          const away2 = normalizeTeamName(inplay.awayTeamFull || inplay.awayTeam);
-          return (home1 === home2 && away1 === away2) || (home1 === away2 && away1 === home2);
-        });
-        return !isInInplay;
-      });
-  }, [apiGames, liveGamesFromInplay]);
-  
-  // Get upcoming games from REST API (exclude any that are live in inplay or already live)
+  // Get upcoming games from REST API (exclude any that are live in inplay)
   const upcomingGamesFromApi = useMemo(() => {
     return apiGames
       .map(game => ({ ...game, league: game.league || game.sportName }))
@@ -265,22 +253,17 @@ export default function Dashboard() {
       });
   }, [apiGames, liveGamesFromInplay]);
   
-  // Combine inplay live games with REST API live games (fallback when inplay not available)
-  const allLiveGames = useMemo(() => {
-    return [...liveGamesFromInplay, ...liveGamesFromApi];
-  }, [liveGamesFromInplay, liveGamesFromApi]);
-  
   // Combined for backward compatibility with existing code
   const gamesWithLiveData = useMemo(() => {
-    return [...allLiveGames, ...upcomingGamesFromApi];
-  }, [allLiveGames, upcomingGamesFromApi]);
+    return [...liveGamesFromInplay, ...upcomingGamesFromApi];
+  }, [liveGamesFromInplay, upcomingGamesFromApi]);
 
-  // Simplified categorization - include REST API live games as fallback
+  // Simplified categorization - no merge logic needed
   const categorizedGames = useMemo(() => ({
-    liveGames: allLiveGames,
+    liveGames: liveGamesFromInplay,
     upcomingGames: upcomingGamesFromApi,
     recentlyCompletedGames: []
-  }), [allLiveGames, upcomingGamesFromApi]);
+  }), [liveGamesFromInplay, upcomingGamesFromApi]);
 
   // Sport filter mappings
   const sportMappings = useMemo(() => ({
@@ -610,10 +593,7 @@ export default function Dashboard() {
                 const isExpanded = expandedGames[game.id];
                 const isLive = game.isLive || game.status === 'IN_PROGRESS';
                 const isFinal = game.isCompleted || game.status === 'FINAL';
-                const hasMoneyline = game.lines?.moneyline?.home != null || game.lines?.moneyline?.away != null;
-                const hasSpread = game.lines?.spread?.home?.point != null || game.lines?.spread?.away?.point != null;
-                const hasTotal = game.lines?.total?.over?.point != null || game.lines?.total?.under?.point != null;
-                const hasAnyLines = hasMoneyline || hasSpread || hasTotal;
+                const hasAnyLines = game.lines && (game.lines.moneyline || game.lines.spread || game.lines.total);
                 const linesLocked = game.linesLocked || isFinal || !hasAnyLines;
                 
                 return (

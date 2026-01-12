@@ -1,47 +1,9 @@
-import { useEffect, useState, useMemo, useContext } from 'react';
-import { GamesContext } from '../contexts/GamesContext';
+import { useEffect, useState, useMemo } from 'react';
 
 export default function BetReceipt({ bet, isDemo = false, onClose }) {
   console.log('[BetReceipt v2.0] Received bet:', { isLive: bet?.isLive, awayScore: bet?.awayScore, homeScore: bet?.homeScore });
   const [isVisible, setIsVisible] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
-  
-  // Use inplayEvents from GamesContext as the source of live scores
-  const { inplayEvents = {}, apiGames = [] } = useContext(GamesContext) || {};
-  
-  // Build liveScores lookup map from inplayEvents and apiGames
-  const liveScores = useMemo(() => {
-    const scores = {};
-    // First add from inplayEvents (real-time SSE data)
-    Object.values(inplayEvents).forEach(evt => {
-      if (evt.id) {
-        scores[evt.id] = evt;
-        // Also key by matchup string for fallback lookup
-        const matchup = `${evt.awayTeam || evt.away_team} @ ${evt.homeTeam || evt.home_team}`;
-        scores[matchup] = evt;
-      }
-    });
-    // Also add from apiGames for games with timer data
-    apiGames.forEach(game => {
-      if (game.isLive && game.id) {
-        const existing = scores[game.id];
-        if (!existing) {
-          scores[game.id] = {
-            isLive: game.isLive,
-            homeScore: game.scores?.home?.total,
-            awayScore: game.scores?.away?.total,
-            timer: game.timer,
-            status: game.status,
-            displayClock: game.timer,
-            period: game.status
-          };
-          const matchup = `${game.away_team} @ ${game.home_team}`;
-          scores[matchup] = scores[game.id];
-        }
-      }
-    });
-    return scores;
-  }, [inplayEvents, apiGames]);
 
   const pikId = useMemo(() => {
     return `${Date.now().toString().slice(-10)}${Math.floor(Math.random() * 100).toString().padStart(2, '0')}`;
@@ -109,14 +71,8 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
 
   const isParlay = bet.legs && Array.isArray(bet.legs) && bet.legs.length > 1;
   const hasAnyLiveLeg = isParlay 
-    ? bet.legs.some(leg => {
-        const legLiveData = liveScores[leg.gameId] || liveScores[leg.matchup] || {};
-        return legLiveData.isLive === true || !!leg.isLive;
-      })
-    : (() => {
-        const betLiveData = liveScores[bet.gameId] || liveScores[bet.matchup] || {};
-        return betLiveData.isLive === true || !!bet.isLive;
-      })();
+    ? bet.legs.some(leg => !!leg.isLive)
+    : !!bet.isLive;
 
   const getStatusColor = () => {
     if (isDemo) return 'orange';
@@ -262,22 +218,9 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                 {isExpanded && (
                   <div className="space-y-3">
                     {bet.legs.map((leg, index) => {
-                      const legLiveData = liveScores[leg.gameId] || liveScores[leg.matchup] || {};
-                      const isLegLive = legLiveData.isLive === true || !!leg.isLive;
-                      const legHomeScore = legLiveData.homeScore ?? leg.homeScore;
-                      const legAwayScore = legLiveData.awayScore ?? leg.awayScore;
-                      const hasLegLiveScores = isLegLive && (typeof legAwayScore === 'number' || typeof legHomeScore === 'number');
+                      const isLegLive = !!leg.isLive;
+                      const hasLegLiveScores = isLegLive && (typeof leg.awayScore === 'number' || typeof leg.homeScore === 'number');
                       const gameTime = formatGameTime(leg.gameStart);
-                      
-                      const formatLegTimer = () => {
-                        if (legLiveData.displayClock) return legLiveData.displayClock;
-                        if (legLiveData.time) return legLiveData.time;
-                        const period = legLiveData.period || legLiveData.quarter || leg.period || leg.quarter || '';
-                        const clock = legLiveData.clock || '';
-                        if (period && clock) return `${period} ${clock}`;
-                        return period || clock || leg.displayClock || leg.time || '';
-                      };
-                      const legTimerDisplay = formatLegTimer();
                       
                       return (
                         <div key={index} className="bg-slate-800/50 rounded p-2">
@@ -296,18 +239,15 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                             <div className="space-y-1">
                               <div className="flex justify-between items-center">
                                 <span className="text-white text-sm font-medium">{leg.awayTeamFull || leg.awayTeam || leg.matchup?.split(' @ ')[0]}</span>
-                                <span className="text-white font-bold">{legAwayScore}</span>
+                                <span className="text-white font-bold">{leg.awayScore}</span>
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-white text-sm font-medium">{leg.homeTeamFull || leg.homeTeam || leg.matchup?.split(' @ ')[1]}</span>
-                                <span className="text-white font-bold">{legHomeScore}</span>
+                                <span className="text-white font-bold">{leg.homeScore}</span>
                               </div>
-                              <div className="flex items-center gap-1.5 mt-1">
+                              <div className="flex items-center gap-2 mt-1">
                                 <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
                                 <span className="text-red-500 text-xs font-medium">LIVE</span>
-                                {legTimerDisplay && (
-                                  <span className="text-red-500/70 text-xs">{legTimerDisplay}</span>
-                                )}
                               </div>
                             </div>
                           ) : (
@@ -325,22 +265,9 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                 )}
               </div>
             ) : (() => {
-              const betLiveData = liveScores[bet.gameId] || liveScores[bet.matchup] || {};
-              const isLive = betLiveData.isLive === true || bet.isLive === true;
-              const liveHomeScore = betLiveData.homeScore ?? bet.homeScore;
-              const liveAwayScore = betLiveData.awayScore ?? bet.awayScore;
-              const hasScores = typeof liveHomeScore === 'number' && typeof liveAwayScore === 'number';
+              const isLive = bet.isLive === true;
+              const hasScores = typeof bet.homeScore === 'number' && typeof bet.awayScore === 'number';
               const showLiveDisplay = isLive || hasScores;
-              
-              const formatBetTimer = () => {
-                if (betLiveData.displayClock) return betLiveData.displayClock;
-                if (betLiveData.time) return betLiveData.time;
-                const period = betLiveData.period || betLiveData.quarter || bet.period || bet.quarter || '';
-                const clock = betLiveData.clock || '';
-                if (period && clock) return `${period} ${clock}`;
-                return period || clock || bet.displayClock || bet.time || '';
-              };
-              const betTimerDisplay = formatBetTimer();
               
               return (
                 <div className="pt-1 mt-1">
@@ -360,19 +287,16 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                       <div className="space-y-1">
                         <div className="flex justify-between items-center">
                           <span className="text-white text-sm font-medium">{bet.homeTeamFull || bet.homeTeam || bet.matchup?.split(' @ ')[1]}</span>
-                          <span className="text-white font-bold">{liveHomeScore}</span>
+                          <span className="text-white font-bold">{bet.homeScore}</span>
                         </div>
                         <div className="flex justify-between items-center">
                           <span className="text-white text-sm font-medium">{bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0]}</span>
-                          <span className="text-white font-bold">{liveAwayScore}</span>
+                          <span className="text-white font-bold">{bet.awayScore}</span>
                         </div>
                         {isLive && (
-                          <div className="flex items-center gap-1.5 mt-1">
+                          <div className="flex items-center gap-1 mt-1">
                             <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
                             <span className="text-red-500 text-xs font-medium">LIVE</span>
-                            {betTimerDisplay && (
-                              <span className="text-red-500/70 text-xs">{betTimerDisplay}</span>
-                            )}
                           </div>
                         )}
                       </div>
