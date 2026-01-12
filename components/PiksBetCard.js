@@ -597,6 +597,10 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {} }
                   const legTeams = getTeamNamesForLeg(leg, index);
                   const isLegLive = leg.isLive === true;
                   
+                  // Get live timer info from liveScores prop
+                  const legLiveData = liveScores[leg.gameId] || liveScores[leg.matchup] || {};
+                  const legTimerDisplay = legLiveData.time || legLiveData.displayClock || legLiveData.period || legLiveData.quarter || '';
+                  
                   const isLegCompleted = leg.isCompleted === true;
                   const legWon = leg.won === true;
                   const hasScores = typeof leg.homeScore === 'number' && typeof leg.awayScore === 'number';
@@ -669,9 +673,12 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {} }
                         </div>
                       )}
                       {isLegLive && (
-                        <div className="flex items-center gap-1 mt-1">
+                        <div className="flex items-center gap-1.5 mt-1">
                           <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></div>
                           <span className="text-red-500 text-xs font-medium">LIVE</span>
+                          {legTimerDisplay && (
+                            <span className="text-red-500/70 text-xs">{legTimerDisplay}</span>
+                          )}
                         </div>
                       )}
                     </div>

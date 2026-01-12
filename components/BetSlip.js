@@ -77,7 +77,10 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
         isLive: true,
         awayScore: event.awayScore ?? 0,
         homeScore: event.homeScore ?? 0,
-        time: event.time || event.clock || ''
+        time: event.displayClock || event.time || event.clock || '',
+        displayClock: event.displayClock || '',
+        period: event.timer?.q ? `Q${event.timer.q}` : event.period || '',
+        quarter: event.timer?.q || event.quarter || ''
       };
       scoresMap[id] = scoreData;
       addGameKeys(event, scoreData);
