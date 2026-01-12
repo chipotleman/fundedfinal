@@ -2,10 +2,10 @@ const API_KEY = process.env.GOALSERVE_API_KEY;
 
 function getTodayDate() {
   const now = new Date();
-  const day = String(now.getDate()).padStart(2, '0');
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const year = now.getFullYear();
-  return `${day}.${month}.${year}`;
+  const etOptions = { timeZone: 'America/New_York' };
+  const etDateStr = now.toLocaleDateString('en-US', etOptions);
+  const [month, day, year] = etDateStr.split('/');
+  return `${day.padStart(2, '0')}.${month.padStart(2, '0')}.${year}`;
 }
 
 function getFeeds() {
