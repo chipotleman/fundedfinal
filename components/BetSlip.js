@@ -95,7 +95,10 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
         isLive: game.isLive || game.status === 'IN_PROGRESS',
         awayScore: game.scores?.away?.total ?? game.awayScore ?? 0,
         homeScore: game.scores?.home?.total ?? game.homeScore ?? 0,
-        time: game.time || game.formatted_time || ''
+        time: game.time || game.formatted_time || '',
+        displayClock: game.timer || game.status || '',
+        period: game.status || '',
+        timer: game.timer || ''
       };
       addGameKeys(game, scoreData);
     });

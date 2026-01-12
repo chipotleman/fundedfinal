@@ -75,6 +75,11 @@ export default function BetHistory() {
         homeTeamFull: event.homeTeamFull || event.homeTeam,
         awayTeamFull: event.awayTeamFull || event.awayTeam,
         time: event.time || event.clock || '',
+        displayClock: event.displayClock || event.time || event.clock || '',
+        period: event.period || event.quarter || event.status || '',
+        quarter: event.quarter || event.period || '',
+        clock: event.clock || '',
+        timer: event.timer || event.time || '',
         scores: {
           home: { total: event.homeScore ?? 0 },
           away: { total: event.awayScore ?? 0 }
@@ -84,10 +89,16 @@ export default function BetHistory() {
       addGameKeys(event, gameData);
     });
     
-    // Then add API games
+    // Then add API games (add timer fields for live games)
     (apiGames || []).forEach(game => {
       if (gamesMap[game.id]) return; // Skip if we have inplay data
-      addGameKeys(game, game);
+      const enrichedGame = {
+        ...game,
+        displayClock: game.timer || game.status || '',
+        period: game.status || '',
+        timer: game.timer || ''
+      };
+      addGameKeys(enrichedGame, enrichedGame);
     });
     
     return gamesMap;
@@ -456,6 +467,7 @@ export default function BetHistory() {
                 <PiksBetCard 
                   key={bet.id}
                   bet={enrichedBet}
+                  liveScores={liveGames}
                   onCashOut={cashOutBet}
                   onShare={(bet) => setShareModalBet(bet)}
                 />

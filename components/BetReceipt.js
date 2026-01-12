@@ -6,7 +6,42 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
   const [isVisible, setIsVisible] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
   
-  const { liveScores = {} } = useContext(GamesContext) || {};
+  // Use inplayEvents from GamesContext as the source of live scores
+  const { inplayEvents = {}, apiGames = [] } = useContext(GamesContext) || {};
+  
+  // Build liveScores lookup map from inplayEvents and apiGames
+  const liveScores = useMemo(() => {
+    const scores = {};
+    // First add from inplayEvents (real-time SSE data)
+    Object.values(inplayEvents).forEach(evt => {
+      if (evt.id) {
+        scores[evt.id] = evt;
+        // Also key by matchup string for fallback lookup
+        const matchup = `${evt.awayTeam || evt.away_team} @ ${evt.homeTeam || evt.home_team}`;
+        scores[matchup] = evt;
+      }
+    });
+    // Also add from apiGames for games with timer data
+    apiGames.forEach(game => {
+      if (game.isLive && game.id) {
+        const existing = scores[game.id];
+        if (!existing) {
+          scores[game.id] = {
+            isLive: game.isLive,
+            homeScore: game.scores?.home?.total,
+            awayScore: game.scores?.away?.total,
+            timer: game.timer,
+            status: game.status,
+            displayClock: game.timer,
+            period: game.status
+          };
+          const matchup = `${game.away_team} @ ${game.home_team}`;
+          scores[matchup] = scores[game.id];
+        }
+      }
+    });
+    return scores;
+  }, [inplayEvents, apiGames]);
 
   const pikId = useMemo(() => {
     return `${Date.now().toString().slice(-10)}${Math.floor(Math.random() * 100).toString().padStart(2, '0')}`;
