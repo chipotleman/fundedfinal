@@ -167,10 +167,11 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                 </div>
                 <button
                   onClick={handleClose}
-                  className="w-5 h-5 flex items-center justify-center text-gray-500 hover:text-white transition-colors ml-2"
+                  className="text-gray-500 hover:text-white transition-colors ml-2 p-0 bg-transparent border-0 outline-none"
+                  style={{ background: 'none', WebkitAppearance: 'none' }}
                 >
-                  <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
