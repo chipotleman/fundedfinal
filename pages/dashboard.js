@@ -44,6 +44,16 @@ export default function Dashboard() {
     const SCROLL_TIME_KEY = 'piks_dashboard_scroll_time';
     const MAX_AGE_MS = 30 * 60 * 1000; // 30 minutes max age for saved position
     
+    // CRITICAL: Reset body styles immediately on mount in case iOS killed the page mid-freeze
+    // This ensures sticky elements work correctly on fresh page load
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+    document.body.style.overflowY = '';
+    isFrozenRef.current = false;
+    
     const saveScrollPosition = () => {
       const pos = window.scrollY || window.pageYOffset || 0;
       scrollPositionRef.current = pos;
