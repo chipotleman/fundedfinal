@@ -36,13 +36,12 @@ export default function Dashboard() {
   const scrollPositionRef = useRef(0);
   const isFrozenRef = useRef(false);
 
-  // Simple scroll position restoration for iOS/iPad
-  // Uses localStorage because iOS kills pages and clears sessionStorage
-  // NO body style manipulation - that breaks sticky headers
+  // Scroll position restoration for iOS/iPad app switching
+  // Uses localStorage (not sessionStorage) because iOS kills the page and clears sessionStorage
   useEffect(() => {
     const SCROLL_KEY = 'piks_dashboard_scroll';
     const SCROLL_TIME_KEY = 'piks_dashboard_scroll_time';
-    const MAX_AGE_MS = 30 * 60 * 1000; // 30 minutes max age
+    const MAX_AGE_MS = 30 * 60 * 1000; // 30 minutes max age for saved position
     
     const saveScrollPosition = () => {
       const pos = window.scrollY || window.pageYOffset || 0;
@@ -53,50 +52,76 @@ export default function Dashboard() {
       } catch (e) {}
     };
 
-    const restoreScrollPosition = () => {
+    const getSavedScrollPosition = () => {
       try {
         const savedPos = parseInt(localStorage.getItem(SCROLL_KEY) || '0', 10);
         const savedTime = parseInt(localStorage.getItem(SCROLL_TIME_KEY) || '0', 10);
+        // Only use saved position if it's recent enough
         if (savedPos > 0 && Date.now() - savedTime < MAX_AGE_MS) {
-          scrollPositionRef.current = savedPos;
-          window.scrollTo(0, savedPos);
+          return savedPos;
         }
+      } catch (e) {}
+      return 0;
+    };
+
+    const clearSavedScroll = () => {
+      try {
+        localStorage.removeItem(SCROLL_KEY);
+        localStorage.removeItem(SCROLL_TIME_KEY);
       } catch (e) {}
     };
 
-    // Restore on mount - with delays for iOS hydration
-    restoreScrollPosition();
-    setTimeout(restoreScrollPosition, 100);
-    setTimeout(restoreScrollPosition, 300);
-    setTimeout(restoreScrollPosition, 500);
+    // Restore scroll position immediately on mount
+    const restoreScrollPosition = () => {
+      const savedPos = getSavedScrollPosition();
+      if (savedPos > 0) {
+        scrollPositionRef.current = savedPos;
+        window.scrollTo(0, savedPos);
+        // Multiple attempts for iOS reliability
+        requestAnimationFrame(() => window.scrollTo(0, savedPos));
+        setTimeout(() => window.scrollTo(0, savedPos), 50);
+        setTimeout(() => window.scrollTo(0, savedPos), 100);
+        setTimeout(() => window.scrollTo(0, savedPos), 200);
+      }
+    };
 
-    // Track scroll continuously  
+    // Restore on mount
+    restoreScrollPosition();
+
+    // Track scroll continuously
     let scrollTimeout;
     const handleScroll = () => {
       clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(saveScrollPosition, 100);
     };
 
-    // Save before leaving, restore on return
+    // Save immediately before page hides (iOS may kill page right after)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
         saveScrollPosition();
-      } else {
+      } else if (document.visibilityState === 'visible') {
         restoreScrollPosition();
-        setTimeout(restoreScrollPosition, 100);
       }
     };
 
-    const handlePageHide = () => saveScrollPosition();
-    const handlePageShow = () => {
-      restoreScrollPosition();
-      setTimeout(restoreScrollPosition, 100);
+    const handlePageHide = () => {
+      saveScrollPosition();
     };
+
+    const handlePageShow = (e) => {
+      restoreScrollPosition();
+    };
+
+    // Window focus/blur for additional iOS coverage
+    const handleBlur = () => saveScrollPosition();
+    const handleFocus = () => restoreScrollPosition();
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('pagehide', handlePageHide);
     window.addEventListener('pageshow', handlePageShow);
     document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleBlur);
+    window.addEventListener('focus', handleFocus);
 
     return () => {
       clearTimeout(scrollTimeout);
@@ -104,6 +129,8 @@ export default function Dashboard() {
       window.removeEventListener('pagehide', handlePageHide);
       window.removeEventListener('pageshow', handlePageShow);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('focus', handleFocus);
     };
   }, []);
 
