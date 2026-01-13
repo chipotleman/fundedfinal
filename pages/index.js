@@ -989,40 +989,19 @@ export default function Dashboard() {
 }
 
 // Server-side rendering for ZERO delay game loading
-// This fetches from the pre-warmed cache before HTML is sent to client
+// Serve cached data instantly - never block on cache warming
 export async function getServerSideProps() {
   try {
-    // Import server-side modules
     const { getInplayService } = require('../lib/goalserve-inplay');
-    const { waitForCache, waitForScheduleCache, getScheduledGamesForSSR } = require('../lib/goalserve-autostart');
-    
-    // Wait for both caches to be populated in parallel
-    // Schedule cache takes ~16s for initial Goalserve API call, so wait up to 20s
-    await Promise.all([
-      waitForCache(3000),
-      waitForScheduleCache(20000)
-    ]);
+    const { getScheduledGamesForSSR } = require('../lib/goalserve-autostart');
     
     const service = getInplayService();
     
-    // Get all cached events - use SSR-safe version
-    let events = service.getEventsForSSR();
-    
-    // If still empty, try one direct fetch
-    if (events.length === 0) {
-      try {
-        await service.fetchAllFeeds();
-        events = service.getEventsForSSR();
-      } catch (e) {
-        // 403 errors expected in dev (IP whitelisting)
-        console.log('[Dashboard SSR] Cache fetch:', e.message);
-      }
-    }
-    
-    // Get scheduled/upcoming games from cache
+    // Get whatever is cached RIGHT NOW - no waiting
+    const events = service.getEventsForSSR();
     const scheduledGames = getScheduledGamesForSSR();
     
-    console.log(`[Dashboard SSR] Serving ${events.length} live events + ${scheduledGames.length} scheduled games embedded in HTML`);
+    console.log(`[Dashboard SSR] Serving ${events.length} live + ${scheduledGames.length} scheduled (instant)`);
     
     return {
       props: {
