@@ -115,11 +115,6 @@ export default function PoolContainer({ isDarkMode }) {
   };
 
   const startHold = (e) => {
-    triggerHaptic('tap');
-    
-    e.preventDefault();
-    e.stopPropagation();
-    
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
     }
@@ -146,6 +141,10 @@ export default function PoolContainer({ isDarkMode }) {
     
     animationFrameRef.current = requestAnimationFrame(animate);
   };
+  
+  const handleHoldClick = () => {
+    triggerHaptic('tap');
+  };
 
   const endHold = () => {
     if (!isHolding) return;
@@ -160,7 +159,6 @@ export default function PoolContainer({ isDarkMode }) {
     const completed = holdCompletedRef.current || elapsed >= HOLD_DURATION;
     
     if (completed) {
-      triggerHaptic('success');
       setHoldProgress(0);
       setShowPoolPopup(true);
       holdCompletedRef.current = false;
@@ -181,6 +179,13 @@ export default function PoolContainer({ isDarkMode }) {
     };
     
     animationFrameRef.current = requestAnimationFrame(animateRelease);
+  };
+  
+  const handleHoldComplete = () => {
+    const elapsed = holdStartRef.current ? Date.now() - holdStartRef.current : 0;
+    if (holdCompletedRef.current || elapsed >= HOLD_DURATION) {
+      triggerHaptic('success');
+    }
   };
 
   const handleJoinSuccess = () => {
@@ -358,13 +363,10 @@ export default function PoolContainer({ isDarkMode }) {
           <div className="flex items-center justify-center -mt-4 md:mt-[10px]">
             <div 
               className="relative px-6 py-2 bg-white/25 active:bg-white/40 rounded-xl shadow-lg overflow-hidden select-none cursor-pointer active:scale-95 transition-transform duration-150"
-              onMouseDown={startHold}
-              onMouseUp={endHold}
-              onMouseLeave={endHold}
-              onTouchStart={startHold}
-              onTouchEnd={endHold}
-              onTouchCancel={endHold}
-              style={{ touchAction: 'none' }}
+              onPointerDown={(e) => { handleHoldClick(); startHold(e); }}
+              onPointerUp={(e) => { handleHoldComplete(); endHold(); }}
+              onPointerLeave={endHold}
+              onPointerCancel={endHold}
             >
               <div 
                 className="absolute inset-0 bg-gradient-to-r from-cyan-300 to-white"
