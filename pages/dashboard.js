@@ -335,12 +335,12 @@ export default function Dashboard() {
       .replace(/university$/, '');
   };
   
-  // Get upcoming games from REST API (exclude any that are live in inplay)
+  // Get upcoming games from REST API (exclude any that are live in inplay or completed)
   const upcomingGamesFromApi = useMemo(() => {
-    return apiGames
+    const result = apiGames
       .map(game => ({ ...game, league: game.league || game.sportName }))
       .filter(game => {
-        // Exclude games that are already showing in inplay
+        // Exclude games that are already showing in inplay (live games from SSE)
         const isInInplay = liveGamesFromInplay.some(inplay => {
           const home1 = normalizeTeamName(game.homeTeamFull || game.homeTeam);
           const away1 = normalizeTeamName(game.awayTeamFull || game.awayTeam);
@@ -348,9 +348,11 @@ export default function Dashboard() {
           const away2 = normalizeTeamName(inplay.awayTeamFull || inplay.awayTeam);
           return (home1 === home2 && away1 === away2) || (home1 === away2 && away1 === home2);
         });
-        // Also exclude games marked as live or completed by REST API
-        return !isInInplay && !game.isLive && !game.isCompleted;
+        // Exclude games already in inplay feed, and exclude completed games
+        // Include all games that are NOT completed (live games from REST are ok since they'll be filtered by inplay check)
+        return !isInInplay && !game.isCompleted;
       });
+    return result;
   }, [apiGames, liveGamesFromInplay]);
   
   // Combined for backward compatibility with existing code
