@@ -34,25 +34,50 @@ export default function Dashboard() {
   const [pnl, setPnl] = useState(0);
   const [expandedGames, setExpandedGames] = useState({});
   const scrollPositionRef = useRef(0);
-  const isRestoringRef = useRef(false);
+  const isFrozenRef = useRef(false);
 
-  // Preserve scroll position when switching tabs/apps (especially important on mobile/iPad)
+  // Freeze-and-restore scroll position to prevent flash on iOS/iPad app switching
   useEffect(() => {
     const SCROLL_KEY = 'piks_dashboard_scroll';
+    let originalScrollRestoration = 'auto';
     
     const saveScrollPosition = () => {
       const pos = window.scrollY || window.pageYOffset || 0;
-      if (pos > 0) {
-        scrollPositionRef.current = pos;
-        try {
-          sessionStorage.setItem(SCROLL_KEY, String(pos));
-        } catch (e) {}
-      }
+      scrollPositionRef.current = pos;
+      try {
+        sessionStorage.setItem(SCROLL_KEY, String(pos));
+      } catch (e) {}
     };
 
-    const restoreScrollPosition = () => {
-      if (isRestoringRef.current) return;
-      isRestoringRef.current = true;
+    // Freeze the viewport - locks page visually in place while iOS takes snapshot
+    const freezeViewport = () => {
+      if (isFrozenRef.current) return;
+      
+      const scrollY = window.scrollY || window.pageYOffset || 0;
+      scrollPositionRef.current = scrollY;
+      try {
+        sessionStorage.setItem(SCROLL_KEY, String(scrollY));
+      } catch (e) {}
+      
+      // Temporarily disable browser scroll restoration during freeze
+      if ('scrollRestoration' in history) {
+        originalScrollRestoration = history.scrollRestoration;
+        history.scrollRestoration = 'manual';
+      }
+      
+      // Lock the body in place with fixed positioning
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.width = '100%';
+      document.body.style.overflowY = 'scroll';
+      isFrozenRef.current = true;
+    };
+
+    // Unfreeze and restore scroll position - happens before paint
+    const unfreezeViewport = () => {
+      if (!isFrozenRef.current) return;
       
       let savedPos = scrollPositionRef.current;
       if (!savedPos) {
@@ -61,69 +86,83 @@ export default function Dashboard() {
         } catch (e) {}
       }
       
+      // Remove the fixed positioning
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.width = '';
+      document.body.style.overflowY = '';
+      
+      // Immediately restore scroll position (sync, before paint)
       if (savedPos > 0) {
-        // Multiple restoration attempts for iOS reliability
-        const restore = () => window.scrollTo(0, savedPos);
-        restore();
-        requestAnimationFrame(restore);
-        setTimeout(restore, 50);
-        setTimeout(restore, 150);
-        setTimeout(() => { isRestoringRef.current = false; }, 200);
-      } else {
-        isRestoringRef.current = false;
+        window.scrollTo(0, savedPos);
       }
+      
+      // Restore original scroll restoration behavior
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = originalScrollRestoration;
+      }
+      
+      isFrozenRef.current = false;
     };
 
-    // Continuously save scroll position while scrolling
+    // Track scroll continuously
     let scrollTimeout;
     const handleScroll = () => {
+      if (isFrozenRef.current) return;
       clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(saveScrollPosition, 100);
+      scrollTimeout = setTimeout(saveScrollPosition, 50);
     };
 
-    // pageshow/pagehide are more reliable on iOS than visibilitychange
+    // iOS bfcache: pageshow/pagehide are most reliable
+    const handlePageHide = () => {
+      freezeViewport();
+    };
+
     const handlePageShow = (e) => {
-      if (e.persisted) {
-        restoreScrollPosition();
+      if (e.persisted || isFrozenRef.current) {
+        unfreezeViewport();
       }
     };
 
-    const handlePageHide = () => {
-      saveScrollPosition();
-    };
-
+    // Tab switching
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
-        saveScrollPosition();
+        freezeViewport();
       } else if (document.visibilityState === 'visible') {
-        restoreScrollPosition();
+        unfreezeViewport();
       }
     };
 
-    const handleBlur = () => saveScrollPosition();
-    const handleFocus = () => restoreScrollPosition();
-
-    // Restore on initial load if we have saved position
-    try {
-      const saved = parseInt(sessionStorage.getItem(SCROLL_KEY) || '0', 10);
-      if (saved > 0) {
-        scrollPositionRef.current = saved;
-        setTimeout(restoreScrollPosition, 100);
-      }
-    } catch (e) {}
+    // Window focus/blur
+    const handleBlur = () => freezeViewport();
+    const handleFocus = () => unfreezeViewport();
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    window.addEventListener('pageshow', handlePageShow);
     window.addEventListener('pagehide', handlePageHide);
+    window.addEventListener('pageshow', handlePageShow);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('blur', handleBlur);
     window.addEventListener('focus', handleFocus);
 
     return () => {
       clearTimeout(scrollTimeout);
+      // Clean up any frozen state
+      if (isFrozenRef.current) {
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.width = '';
+        document.body.style.overflowY = '';
+      }
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'auto';
+      }
       window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('pageshow', handlePageShow);
       window.removeEventListener('pagehide', handlePageHide);
+      window.removeEventListener('pageshow', handlePageShow);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('blur', handleBlur);
       window.removeEventListener('focus', handleFocus);
