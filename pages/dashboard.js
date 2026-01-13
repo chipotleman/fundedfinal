@@ -23,8 +23,7 @@ export default function Dashboard() {
   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
   const { apiGames: contextApiGames, inplayEvents: contextInplayEvents, loading: gamesLoading, error: gamesError, lastUpdated } = useGames();
   const { matchup, opponent, myBalance: matchupBalance, opponentBalance, myBets, opponentBets, canSeeOpponentBets, hasActiveMatchup, refresh: refreshMatchup } = useMatchup();
-  const [selectedSport, setSelectedSport] = useState('All Sports');
-  const [selectedTab, setSelectedTab] = useState('live');
+  const [selectedSport, setSelectedSport] = useState('Live');
   // Note: games/allGames are derived at render time via useMemo for SSR compatibility
   // These state setters are kept for legacy compatibility but initial values come from SSR
   const [gamesState, setGames] = useState([]);
@@ -285,27 +284,34 @@ export default function Dashboard() {
     const liveGames = [...categorizedGames.liveGames, ...(categorizedGames.recentlyCompletedGames || [])];
     const upcomingGames = categorizedGames.upcomingGames || [];
     
-    const filterBySport = (gamesToFilter) => {
-      if (selectedSport === 'All Sports') return gamesToFilter;
-      const validSportNames = sportMappings[selectedSport] || [selectedSport];
+    const filterBySport = (gamesToFilter, sport) => {
+      const validSportNames = sportMappings[sport] || [sport];
       return gamesToFilter.filter(g => {
         const sportNameUpper = (g.sportName || '').toUpperCase();
         return validSportNames.some(name => sportNameUpper === name.toUpperCase());
       });
     };
     
-    const primaryGames = selectedTab === 'live' ? liveGames : upcomingGames;
-    const fallbackGames = selectedTab === 'live' ? upcomingGames : liveGames;
+    const sortChronologically = (gamesToSort) => {
+      return [...gamesToSort].sort((a, b) => {
+        const isLiveA = a.isLive || a.status === 'IN_PROGRESS';
+        const isLiveB = b.isLive || b.status === 'IN_PROGRESS';
+        if (isLiveA && !isLiveB) return -1;
+        if (!isLiveA && isLiveB) return 1;
+        const timeA = a.startTime ? new Date(a.startTime).getTime() : 0;
+        const timeB = b.startTime ? new Date(b.startTime).getTime() : 0;
+        return timeA - timeB;
+      });
+    };
     
-    let filteredGames = filterBySport(primaryGames);
-    
-    // If no games in primary tab, check fallback tab for the same sport
-    if (filteredGames.length === 0) {
-      filteredGames = filterBySport(fallbackGames);
+    if (selectedSport === 'Live') {
+      return sortChronologically(liveGames);
     }
     
-    return filteredGames;
-  }, [selectedSport, selectedTab, categorizedGames, sportMappings]);
+    const sportLiveGames = filterBySport(liveGames, selectedSport);
+    const sportUpcomingGames = filterBySport(upcomingGames, selectedSport);
+    return sortChronologically([...sportLiveGames, ...sportUpcomingGames]);
+  }, [selectedSport, categorizedGames, sportMappings]);
 
   // Legacy effect to update state for components that depend on it
   useEffect(() => {
@@ -372,11 +378,7 @@ export default function Dashboard() {
   };
 
   const handleSportClick = (sport) => {
-    if (selectedSport === sport) {
-      setSelectedSport('All Sports');
-    } else {
-      setSelectedSport(sport);
-    }
+    setSelectedSport(sport);
   };
 
   return (
@@ -422,39 +424,38 @@ export default function Dashboard() {
             backgroundColor: isDarkMode ? '#000000' : '#f5f5f5',
           }}
         >
-          <div className="flex items-center gap-4 mb-3">
+          <div className="flex space-x-2 overflow-x-auto pb-1 scrollbar-hide">
             <TapSurface
-              onTap={() => setSelectedTab('live')}
-              isActive={selectedTab === 'live'}
+              onTap={() => handleSportClick('Live')}
+              isActive={selectedSport === 'Live'}
               activeColor="#dc2626"
-              inactiveColor={isDarkMode ? '#1a1a1a' : '#e5e7eb'}
+              inactiveColor="transparent"
               activeTextColor="#ffffff"
-              inactiveTextColor={isDarkMode ? '#9ca3af' : '#4b5563'}
-              style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}
+              inactiveTextColor={isDarkMode ? '#9ca3af' : '#6b7280'}
+              style={{
+                flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '10px 16px',
+                borderRadius: '9999px',
+                fontSize: '14px',
+                fontWeight: '600',
+                borderWidth: '1px',
+                borderStyle: 'solid',
+                borderColor: selectedSport === 'Live' ? '#dc2626' : (isDarkMode ? '#1f2937' : '#d1d5db')
+              }}
             >
               <span 
                 style={{
                   width: '8px',
                   height: '8px',
                   borderRadius: '50%',
-                  backgroundColor: selectedTab === 'live' ? '#ffffff' : (categorizedGames.liveGames.length > 0 ? '#ef4444' : '#6b7280')
+                  backgroundColor: selectedSport === 'Live' ? '#ffffff' : (categorizedGames.liveGames.length > 0 ? '#ef4444' : '#6b7280')
                 }}
               ></span>
-              Live {categorizedGames.liveGames.length > 0 && `(${categorizedGames.liveGames.length})`}
+              <span>Live {categorizedGames.liveGames.length > 0 && `(${categorizedGames.liveGames.length})`}</span>
             </TapSurface>
-            <TapSurface
-              onTap={() => setSelectedTab('upcoming')}
-              isActive={selectedTab === 'upcoming'}
-              activeColor="#2563eb"
-              inactiveColor={isDarkMode ? '#1a1a1a' : '#e5e7eb'}
-              activeTextColor="#ffffff"
-              inactiveTextColor={isDarkMode ? '#9ca3af' : '#4b5563'}
-              style={{ padding: '8px 16px', borderRadius: '8px', fontSize: '14px', fontWeight: '600' }}
-            >
-              Upcoming {categorizedGames.upcomingGames.length > 0 && `(${categorizedGames.upcomingGames.length})`}
-            </TapSurface>
-          </div>
-          <div className="flex space-x-2 overflow-x-auto pb-1 scrollbar-hide">
             {sports.map((sport) => (
               <TapSurface
                 key={sport}
@@ -578,9 +579,9 @@ export default function Dashboard() {
         <div>
           <div className="flex items-center justify-between mb-4 px-1">
             <div className="flex items-center gap-2">
-              <span className="text-xl">{selectedTab === 'live' ? '⚡' : '📅'}</span>
-              <h2 className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{selectedTab === 'live' ? 'Live Now' : 'Upcoming Games'}</h2>
-              {selectedTab === 'live' && <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>}
+              <span className="text-xl">{selectedSport === 'Live' ? '⚡' : getSportIcon(selectedSport)}</span>
+              <h2 className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{selectedSport === 'Live' ? 'Live Now' : getSportLabel(selectedSport)}</h2>
+              {selectedSport === 'Live' && <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>}
             </div>
           </div>
 
