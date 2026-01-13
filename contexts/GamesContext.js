@@ -6,8 +6,17 @@ export function useGames() {
   return useContext(GamesContext);
 }
 
-export function GamesProvider({ children, initialInplayEvents = null }) {
-  const [apiGames, setApiGames] = useState([]);
+export function GamesProvider({ children, initialInplayEvents = null, initialApiGames = null }) {
+  // Initialize apiGames with SSR data if provided - enables instant scheduled games
+  const [apiGames, setApiGames] = useState(() => {
+    if (initialApiGames && Array.isArray(initialApiGames)) {
+      return initialApiGames;
+    }
+    return [];
+  });
+  // Track if we have SSR data for scheduled games to skip initial fetch
+  const hasInitialApiGamesRef = React.useRef(initialApiGames && initialApiGames.length > 0);
+  
   // Initialize with SSR data if provided - this enables zero-delay rendering
   const [inplayEvents, setInplayEvents] = useState(() => {
     if (initialInplayEvents && Array.isArray(initialInplayEvents)) {
@@ -19,8 +28,8 @@ export function GamesProvider({ children, initialInplayEvents = null }) {
     }
     return initialInplayEvents || {};
   });
-  // If we have SSR data, we're not loading
-  const [loading, setLoading] = useState(!initialInplayEvents);
+  // If we have either SSR data, we're not loading
+  const [loading, setLoading] = useState(!initialInplayEvents && !initialApiGames);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
   
@@ -151,11 +160,18 @@ export function GamesProvider({ children, initialInplayEvents = null }) {
     
     isMountedRef.current = true;
     
-    // Always fetch upcoming games from REST API (needed even when we have SSR inplay data)
-    // This provides upcoming/scheduled games that aren't live yet
-    fetchGames();
+    // Only fetch immediately if we don't have SSR data for scheduled games
+    // If we have SSR data, skip the initial fetch to avoid delay
+    if (!hasInitialApiGamesRef.current) {
+      fetchGames();
+    } else {
+      // Mark as not loading since we have SSR data
+      setLoading(false);
+      setLastUpdated(new Date());
+    }
     
     // Poll for upcoming games at a slower rate (every 60 seconds)
+    // This refreshes the data after the initial SSR render
     pollingIntervalRef.current = setInterval(fetchGames, 60000);
     
     // Connect SSE for live updates (this won't clear SSR data, just merges updates)

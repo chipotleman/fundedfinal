@@ -22,6 +22,13 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
   const { data: session, status } = useSession();
   const { isDarkMode, toggleTheme } = useTheme();
   
+  // Prefetch dashboard for instant navigation
+  useEffect(() => {
+    router.prefetch('/dashboard');
+    router.prefetch('/my-battle');
+    router.prefetch('/leaderboard');
+  }, [router]);
+  
   // Measure and expose navbar height as CSS variable for sticky elements below
   useEffect(() => {
     const updateNavHeight = () => {

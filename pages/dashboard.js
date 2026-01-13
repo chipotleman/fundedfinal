@@ -994,11 +994,14 @@ export async function getServerSideProps() {
   try {
     // Import server-side modules
     const { getInplayService } = require('../lib/goalserve-inplay');
-    const { waitForCache } = require('../lib/goalserve-autostart');
+    const { waitForCache, waitForScheduleCache, getScheduledGamesForSSR } = require('../lib/goalserve-autostart');
     
-    // Wait for cache to be populated (up to 3 seconds)
-    // This ensures SSR has data if server has been running
-    await waitForCache(3000);
+    // Wait for both caches to be populated in parallel
+    // Schedule cache takes ~16s for initial Goalserve API call, so wait up to 20s
+    await Promise.all([
+      waitForCache(3000),
+      waitForScheduleCache(20000)
+    ]);
     
     const service = getInplayService();
     
@@ -1016,11 +1019,15 @@ export async function getServerSideProps() {
       }
     }
     
-    console.log(`[Dashboard SSR] Serving ${events.length} events embedded in HTML`);
+    // Get scheduled/upcoming games from cache
+    const scheduledGames = getScheduledGamesForSSR();
+    
+    console.log(`[Dashboard SSR] Serving ${events.length} live events + ${scheduledGames.length} scheduled games embedded in HTML`);
     
     return {
       props: {
         initialInplayEvents: events,
+        initialApiGames: scheduledGames,
       },
     };
   } catch (error) {
@@ -1028,6 +1035,7 @@ export async function getServerSideProps() {
     return {
       props: {
         initialInplayEvents: [],
+        initialApiGames: [],
       },
     };
   }
