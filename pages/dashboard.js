@@ -7,6 +7,7 @@ import LiveGameTimer from '../components/LiveGameTimer';
 import MatchupBanner from '../components/MatchupBanner';
 import PoolContainer from '../components/PoolContainer';
 import FireBattleContainer from '../components/FireBattleContainer';
+import Footer from '../components/Footer';
 import { inferLeague } from '../lib/leagueInference';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -854,6 +855,8 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      <Footer />
 
       <BetSlip
         bankroll={bankroll}
