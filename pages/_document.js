@@ -39,6 +39,37 @@ export default function Document() {
         <meta name="keywords" content="sports betting, funded betting, no risk betting, profit sharing" />
       </Head>
       <body>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+(function() {
+  try {
+    var SCROLL_KEY = 'piks_dashboard_scroll';
+    var SCROLL_TIME_KEY = 'piks_dashboard_scroll_time';
+    var FROZEN_KEY = 'piks_dashboard_frozen';
+    var MAX_AGE_MS = 30 * 60 * 1000;
+    
+    var savedPos = parseInt(localStorage.getItem(SCROLL_KEY) || '0', 10);
+    var savedTime = parseInt(localStorage.getItem(SCROLL_TIME_KEY) || '0', 10);
+    var isFresh = Date.now() - savedTime < MAX_AGE_MS;
+    
+    if (savedPos > 0 && isFresh && window.location.pathname === '/dashboard') {
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+      document.body.style.position = 'fixed';
+      document.body.style.top = '-' + savedPos + 'px';
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.width = '100%';
+      document.body.style.overflowY = 'scroll';
+      localStorage.setItem(FROZEN_KEY, 'true');
+    }
+  } catch (e) {}
+})();
+            `,
+          }}
+        />
         <Main />
         <NextScript />
       </body>
