@@ -415,8 +415,14 @@ export default function Dashboard() {
             </div>
           </div>
         )}
-        <div className="mb-4">
-          <div className="flex items-center gap-4 mb-4">
+        <div 
+          className="sticky z-40 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 mb-4"
+          style={{ 
+            top: 'var(--top-nav-height, 70px)',
+            backgroundColor: isDarkMode ? '#000000' : '#f5f5f5',
+          }}
+        >
+          <div className="flex items-center gap-4 mb-3">
             <TapSurface
               onTap={() => setSelectedTab('live')}
               isActive={selectedTab === 'live'}
@@ -448,7 +454,7 @@ export default function Dashboard() {
               Upcoming {categorizedGames.upcomingGames.length > 0 && `(${categorizedGames.upcomingGames.length})`}
             </TapSurface>
           </div>
-          <div className="flex space-x-2 overflow-x-auto pb-2 scrollbar-hide">
+          <div className="flex space-x-2 overflow-x-auto pb-1 scrollbar-hide">
             {sports.map((sport) => (
               <TapSurface
                 key={sport}

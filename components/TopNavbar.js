@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useSession, signOut } from 'next-auth/react';
@@ -17,9 +17,24 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
   const [themeColor, setThemeColor] = useState('green');
   const [userProfile, setUserProfile] = useState(null);
   const [hasActiveChallenge, setHasActiveChallenge] = useState(false);
+  const navRef = useRef(null);
   const router = useRouter();
   const { data: session, status } = useSession();
   const { isDarkMode, toggleTheme } = useTheme();
+  
+  // Measure and expose navbar height as CSS variable for sticky elements below
+  useEffect(() => {
+    const updateNavHeight = () => {
+      if (navRef.current) {
+        const height = navRef.current.offsetHeight;
+        document.documentElement.style.setProperty('--top-nav-height', `${height}px`);
+      }
+    };
+    
+    updateNavHeight();
+    window.addEventListener('resize', updateNavHeight);
+    return () => window.removeEventListener('resize', updateNavHeight);
+  }, []);
   
   // Derive isLoggedIn directly from session status for instant rendering
   const isLoggedIn = status === 'authenticated' || (typeof window !== 'undefined' && !!localStorage.getItem('current_user'));
@@ -422,7 +437,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
 
   return (
     <>
-      <nav className="sticky top-0 left-0 right-0 z-50" style={{ backgroundColor: isDarkMode ? '#000000' : '#ffffff' }}>
+      <nav ref={navRef} className="sticky top-0 left-0 right-0 z-50" style={{ backgroundColor: isDarkMode ? '#000000' : '#ffffff' }}>
         <div className="px-3 sm:px-6 h-[70px] sm:h-auto sm:py-1 sm:-mb-6 flex items-center">
           <div className="flex items-center justify-between w-full sm:justify-between min-h-[70px] sm:min-h-[48px] relative">
             {/* Logo - absolutely positioned on mobile to not affect bar height */}
