@@ -36,23 +36,13 @@ export default function Dashboard() {
   const scrollPositionRef = useRef(0);
   const isFrozenRef = useRef(false);
 
-  // Scroll position restoration for iOS/iPad app switching
-  // Uses localStorage (not sessionStorage) because iOS kills the page and clears sessionStorage
-  // Includes freeze/unfreeze to fix Safari sticky element behavior
+  // Simple scroll position restoration for iOS/iPad
+  // Uses localStorage because iOS kills pages and clears sessionStorage
+  // NO body style manipulation - that breaks sticky headers
   useEffect(() => {
     const SCROLL_KEY = 'piks_dashboard_scroll';
     const SCROLL_TIME_KEY = 'piks_dashboard_scroll_time';
-    const MAX_AGE_MS = 30 * 60 * 1000; // 30 minutes max age for saved position
-    
-    // CRITICAL: Reset body styles immediately on mount in case iOS killed the page mid-freeze
-    // This ensures sticky elements work correctly on fresh page load
-    document.body.style.position = '';
-    document.body.style.top = '';
-    document.body.style.left = '';
-    document.body.style.right = '';
-    document.body.style.width = '';
-    document.body.style.overflowY = '';
-    isFrozenRef.current = false;
+    const MAX_AGE_MS = 30 * 60 * 1000; // 30 minutes max age
     
     const saveScrollPosition = () => {
       const pos = window.scrollY || window.pageYOffset || 0;
@@ -63,108 +53,57 @@ export default function Dashboard() {
       } catch (e) {}
     };
 
-    const getSavedScrollPosition = () => {
+    const restoreScrollPosition = () => {
       try {
         const savedPos = parseInt(localStorage.getItem(SCROLL_KEY) || '0', 10);
         const savedTime = parseInt(localStorage.getItem(SCROLL_TIME_KEY) || '0', 10);
         if (savedPos > 0 && Date.now() - savedTime < MAX_AGE_MS) {
-          return savedPos;
+          scrollPositionRef.current = savedPos;
+          window.scrollTo(0, savedPos);
         }
       } catch (e) {}
-      return 0;
     };
 
-    // Freeze viewport - locks page visually for iOS snapshot
-    const freezeViewport = () => {
-      if (isFrozenRef.current) return;
-      const scrollY = window.scrollY || window.pageYOffset || 0;
-      scrollPositionRef.current = scrollY;
-      saveScrollPosition();
-      
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.left = '0';
-      document.body.style.right = '0';
-      document.body.style.width = '100%';
-      document.body.style.overflowY = 'scroll';
-      isFrozenRef.current = true;
-    };
+    // Restore on mount - with delays for iOS hydration
+    restoreScrollPosition();
+    setTimeout(restoreScrollPosition, 100);
+    setTimeout(restoreScrollPosition, 300);
+    setTimeout(restoreScrollPosition, 500);
 
-    // Unfreeze and restore - forces Safari to recalculate sticky elements
-    const unfreezeViewport = () => {
-      const wasFrozen = isFrozenRef.current;
-      
-      // Always reset body styles to fix sticky elements
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
-      document.body.style.width = '';
-      document.body.style.overflowY = '';
-      isFrozenRef.current = false;
-      
-      // Restore scroll position
-      const savedPos = wasFrozen ? scrollPositionRef.current : getSavedScrollPosition();
-      if (savedPos > 0) {
-        window.scrollTo(0, savedPos);
-        requestAnimationFrame(() => window.scrollTo(0, savedPos));
-        setTimeout(() => window.scrollTo(0, savedPos), 50);
-        setTimeout(() => window.scrollTo(0, savedPos), 100);
-      }
-    };
-
-    // Restore on initial mount
-    const savedPos = getSavedScrollPosition();
-    if (savedPos > 0) {
-      scrollPositionRef.current = savedPos;
-      window.scrollTo(0, savedPos);
-      requestAnimationFrame(() => window.scrollTo(0, savedPos));
-    }
-
-    // Track scroll continuously
+    // Track scroll continuously  
     let scrollTimeout;
     const handleScroll = () => {
-      if (isFrozenRef.current) return;
       clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(saveScrollPosition, 100);
     };
 
+    // Save before leaving, restore on return
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
-        freezeViewport();
-      } else if (document.visibilityState === 'visible') {
-        unfreezeViewport();
+        saveScrollPosition();
+      } else {
+        restoreScrollPosition();
+        setTimeout(restoreScrollPosition, 100);
       }
     };
 
-    const handlePageHide = () => freezeViewport();
-    const handlePageShow = () => unfreezeViewport();
-    const handleBlur = () => freezeViewport();
-    const handleFocus = () => unfreezeViewport();
+    const handlePageHide = () => saveScrollPosition();
+    const handlePageShow = () => {
+      restoreScrollPosition();
+      setTimeout(restoreScrollPosition, 100);
+    };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('pagehide', handlePageHide);
     window.addEventListener('pageshow', handlePageShow);
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('blur', handleBlur);
-    window.addEventListener('focus', handleFocus);
 
     return () => {
       clearTimeout(scrollTimeout);
-      if (isFrozenRef.current) {
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.left = '';
-        document.body.style.right = '';
-        document.body.style.width = '';
-        document.body.style.overflowY = '';
-      }
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('pagehide', handlePageHide);
       window.removeEventListener('pageshow', handlePageShow);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('blur', handleBlur);
-      window.removeEventListener('focus', handleFocus);
     };
   }, []);
 
