@@ -13,6 +13,7 @@ None documented yet.
 - **Mobile Navigation**: Standard hamburger menu with swipe gestures.
 - **Bet Slip**: Floating button, full-screen on mobile.
 - **Bet Receipt**: Professional display with auto-dismissal.
+- **Sticky Navigation**: TopNavbar stays fixed at top (z-50), exposes height via `--top-nav-height` CSS variable. Sports filter bar on dashboard uses `position: sticky` with `top: var(--top-nav-height)` to dock under header on scroll (z-40).
 
 #### Technical Implementations
 - **Framework**: Next.js 14.2.30
