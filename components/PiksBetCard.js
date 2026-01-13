@@ -389,48 +389,15 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {} }
     <div className={`relative rounded-2xl overflow-hidden mx-2 sm:mx-0 ${getCardBorder()}`} style={getCardStyle()}>
       <div className="px-4 pt-0 pb-0 bg-transparent">
         <div className="flex items-center justify-between -mt-2">
-          <img src="/pikslogotransparent.png" alt="Piks" className="h-20 object-contain -ml-[24px]" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
+          <img src="/pikslogotransparent.png" alt="Piks" className="h-24 object-contain -ml-[24px]" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
           
-          {isWon ? (
+          {isWon && (
             <div className="flex-1 flex justify-end" style={{ marginRight: -27, marginTop: -13 }}>
               <img 
                 src="/trophy-winner.png" 
                 alt="Winner" 
                 className="h-[72px] w-auto"
               />
-            </div>
-          ) : (
-            <div 
-              className="flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
-              style={{
-                backgroundColor: isOpen 
-                  ? (isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)') 
-                  : isCashedOut 
-                    ? 'rgba(233,118,43,0.2)' 
-                    : 'rgba(239,68,68,0.2)',
-                border: isOpen 
-                  ? (isDarkMode ? '1px solid rgba(255,255,255,0.3)' : '1px solid #374151') 
-                  : isCashedOut 
-                    ? '1px solid rgba(233,118,43,0.5)' 
-                    : '1px solid rgba(248,113,113,0.5)',
-                color: isOpen 
-                  ? (isDarkMode ? '#ffffff' : '#111827') 
-                  : isCashedOut 
-                    ? '#E9762B' 
-                    : '#fca5a5'
-              }}
-            >
-              <div 
-                className={`w-2 h-2 rounded-full ${isOpen ? 'animate-pulse' : ''}`}
-                style={{
-                  backgroundColor: isOpen 
-                    ? (isDarkMode ? '#ffffff' : '#374151') 
-                    : isCashedOut 
-                      ? '#E9762B' 
-                      : '#f87171'
-                }}
-              ></div>
-              <span>{isOpen ? 'OPEN' : isCashedOut ? 'CASHED OUT' : 'LOST'}</span>
             </div>
           )}
         </div>
