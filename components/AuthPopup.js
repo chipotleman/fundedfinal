@@ -122,7 +122,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
       style={{ opacity: isOpen ? 1 : 0, animation: 'none', transition: 'none', ...hiddenStyle }}
     >
       <div 
-        className="popup-content relative bg-black rounded-3xl max-w-md w-full my-auto border border-blue-500/50"
+        className="popup-content relative bg-black rounded-3xl max-w-md w-full my-auto border-2 border-blue-500/50"
         style={{ WebkitTapHighlightColor: 'transparent' }}
       >
         <button
