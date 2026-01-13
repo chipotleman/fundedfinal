@@ -19,8 +19,8 @@ export default function Footer() {
             House Rules
           </Link>
           <span style={{ color: isDarkMode ? '#4b5563' : '#9ca3af' }}>·</span>
-          <Link href="/responsible-gaming" className="text-sm underline" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>
-            Responsible Gaming
+          <Link href="/responsible-pikking" className="text-sm underline" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>
+            Responsible Pikking
           </Link>
         </div>
 
@@ -39,8 +39,8 @@ export default function Footer() {
         </div>
 
         <div className="mb-6">
-          <Link href="/betting-101" className="text-sm underline" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>
-            Sports Betting 101
+          <Link href="/pikking-101" className="text-sm underline" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>
+            Pikking 101
           </Link>
         </div>
 
@@ -48,22 +48,10 @@ export default function Footer() {
           © Piks, {currentYear}
         </p>
 
-        <p className="text-sm mb-6" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>
-          Persons under 21 are not permitted to engage in sports wagering.
-        </p>
-
-        <p className="text-sm mb-6" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>
-          If you or someone you know has a gambling problem, help is available. Call{' '}
-          <a href="tel:1-800-522-4700" className="underline" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>
-            1-800-522-4700
-          </a>{' '}
-          (National Council on Problem Gambling).
-        </p>
-
         <p className="text-sm" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>
           For customer support, please contact us at{' '}
-          <a href="mailto:support@piksbets.com" className="underline" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>
-            support@piksbets.com
+          <a href="mailto:help@thepiks.com" className="underline" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>
+            help@thepiks.com
           </a>
         </p>
       </div>
