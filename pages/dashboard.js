@@ -33,6 +33,56 @@ export default function Dashboard() {
   const [bankroll, setBankroll] = useState(10000);
   const [pnl, setPnl] = useState(0);
   const [expandedGames, setExpandedGames] = useState({});
+  const scrollPositionRef = useRef(0);
+
+  // Preserve scroll position when switching tabs/apps (especially important on mobile)
+  useEffect(() => {
+    const saveScrollPosition = () => {
+      scrollPositionRef.current = window.scrollY;
+    };
+
+    const restoreScrollPosition = () => {
+      if (document.visibilityState === 'visible' && scrollPositionRef.current > 0) {
+        // Use requestAnimationFrame to ensure DOM is ready
+        requestAnimationFrame(() => {
+          window.scrollTo(0, scrollPositionRef.current);
+        });
+      }
+    };
+
+    // Save on visibility change (tab switch, app switch)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        saveScrollPosition();
+      } else if (document.visibilityState === 'visible') {
+        restoreScrollPosition();
+      }
+    };
+
+    // Also save on blur (window loses focus)
+    const handleBlur = () => {
+      saveScrollPosition();
+    };
+
+    // Restore on focus
+    const handleFocus = () => {
+      if (scrollPositionRef.current > 0) {
+        requestAnimationFrame(() => {
+          window.scrollTo(0, scrollPositionRef.current);
+        });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('blur', handleBlur);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -603,7 +653,7 @@ export default function Dashboard() {
                 
                 return (
                   <div 
-                    key={`${game.id}-${game.scores?.home?.total}-${game.scores?.away?.total}`} 
+                    key={game.id} 
                     className="rounded-xl overflow-hidden" 
                     style={{ backgroundColor: isDarkMode ? '#111111' : '#ffffff', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : 'rgba(209, 213, 219, 1)' }}
                   >
