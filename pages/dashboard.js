@@ -66,28 +66,70 @@ export default function Dashboard() {
     };
 
     // Unfreeze the page (called after _document.js pre-freeze)
+    // Keeps page frozen and retries scrollTo until it succeeds before releasing
     const unfreezeViewport = () => {
       const wasFrozen = localStorage.getItem(FROZEN_KEY) === 'true';
       if (!wasFrozen) return;
       
       const savedPos = getSavedScrollPosition();
-      
-      // Remove fixed positioning
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
-      document.body.style.width = '';
-      document.body.style.overflowY = '';
-      
-      // Scroll to saved position immediately
-      if (savedPos > 0) {
-        window.scrollTo(0, savedPos);
+      if (savedPos <= 0) {
+        // No saved position, just clear
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.width = '';
+        document.body.style.overflowY = '';
+        localStorage.removeItem(FROZEN_KEY);
+        isFrozenRef.current = false;
+        return;
       }
       
-      // Clear frozen flag
-      localStorage.removeItem(FROZEN_KEY);
-      isFrozenRef.current = false;
+      let attempts = 0;
+      const maxAttempts = 20;
+      const tolerance = 5; // pixels
+      
+      const tryRestore = () => {
+        attempts++;
+        
+        // Temporarily remove fixed positioning to allow scroll
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.width = '';
+        document.body.style.overflowY = '';
+        
+        // Try to scroll
+        window.scrollTo(0, savedPos);
+        
+        // Check if it worked
+        const currentScroll = window.scrollY || window.pageYOffset || 0;
+        if (Math.abs(currentScroll - savedPos) <= tolerance) {
+          // Success - clear frozen flag
+          localStorage.removeItem(FROZEN_KEY);
+          isFrozenRef.current = false;
+          if ('scrollRestoration' in history) {
+            history.scrollRestoration = 'auto';
+          }
+        } else if (attempts < maxAttempts) {
+          // Failed - refreeze and retry
+          document.body.style.position = 'fixed';
+          document.body.style.top = `-${savedPos}px`;
+          document.body.style.left = '0';
+          document.body.style.right = '0';
+          document.body.style.width = '100%';
+          document.body.style.overflowY = 'scroll';
+          
+          requestAnimationFrame(tryRestore);
+        } else {
+          // Max attempts - give up and clear
+          localStorage.removeItem(FROZEN_KEY);
+          isFrozenRef.current = false;
+        }
+      };
+      
+      requestAnimationFrame(tryRestore);
     };
 
     // Freeze viewport before page hides
