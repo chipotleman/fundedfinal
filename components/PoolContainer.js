@@ -364,10 +364,11 @@ export default function PoolContainer({ isDarkMode }) {
             <button 
               type="button"
               className="relative px-6 py-2 bg-white/25 active:bg-white/40 rounded-xl shadow-lg overflow-hidden select-none cursor-pointer active:scale-95 transition-transform duration-150 border-none outline-none"
-              onPointerDown={(e) => { handleHoldClick(); startHold(e); }}
-              onPointerUp={(e) => { handleHoldComplete(); endHold(); }}
-              onPointerLeave={endHold}
-              onPointerCancel={endHold}
+              onTouchStart={(e) => { triggerHaptic('tap'); startHold(e); }}
+              onTouchEnd={(e) => { handleHoldComplete(); endHold(); }}
+              onMouseDown={(e) => { triggerHaptic('tap'); startHold(e); }}
+              onMouseUp={(e) => { handleHoldComplete(); endHold(); }}
+              onMouseLeave={endHold}
             >
               <div 
                 className="absolute inset-0 bg-gradient-to-r from-cyan-300 to-white pointer-events-none"
