@@ -50,11 +50,11 @@ export default function PoolContainer({ isDarkMode }) {
   const animationFrameRef = useRef(null);
   const releaseStartRef = useRef(null);
   const releaseFromRef = useRef(0);
-  const hapticTimeoutsRef = useRef([]);
-  const holdCompletedRef = useRef(false);
+  const hapticMilestonesRef = useRef(new Set());
 
   const HOLD_DURATION = 1500;
   const RELEASE_DURATION = 800;
+  const HAPTIC_MILESTONES = [0.25, 0.5, 0.75, 1];
 
   const fetchPoolData = async () => {
     try {
@@ -109,30 +109,43 @@ export default function PoolContainer({ isDarkMode }) {
     return () => clearInterval(interval);
   }, [myPoolData?.pool?.endsAt]);
 
-  const clearHapticTimeouts = () => {
-    hapticTimeoutsRef.current.forEach(t => clearTimeout(t));
-    hapticTimeoutsRef.current = [];
-  };
-
   const startHold = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
     }
-    clearHapticTimeouts();
     
     setIsHolding(true);
     holdStartRef.current = Date.now();
-    holdCompletedRef.current = false;
     const startFrom = holdProgress;
+    hapticMilestonesRef.current = new Set();
+    
+    // Initial tap haptic when hold starts
+    triggerHaptic('tap');
     
     const animate = () => {
       const elapsed = Date.now() - holdStartRef.current;
       const progress = Math.min(startFrom + (elapsed / HOLD_DURATION) * (1 - startFrom), 1);
       setHoldProgress(progress);
       
+      // Trigger haptic at each milestone
+      for (const milestone of HAPTIC_MILESTONES) {
+        if (progress >= milestone && !hapticMilestonesRef.current.has(milestone)) {
+          hapticMilestonesRef.current.add(milestone);
+          if (milestone < 1) {
+            triggerHaptic('tap');
+          }
+        }
+      }
+      
       if (progress >= 1) {
-        holdCompletedRef.current = true;
-        setHoldProgress(1);
+        setIsHolding(false);
+        setHoldProgress(0);
+        // Strong success haptic when pool is joined
+        triggerHaptic('success');
+        setShowPoolPopup(true);
         return;
       }
       
@@ -141,28 +154,13 @@ export default function PoolContainer({ isDarkMode }) {
     
     animationFrameRef.current = requestAnimationFrame(animate);
   };
-  
-  const handleHoldClick = () => {
-    triggerHaptic('tap');
-  };
 
   const endHold = () => {
     if (!isHolding) return;
     
     setIsHolding(false);
-    clearHapticTimeouts();
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
-    }
-    
-    const elapsed = holdStartRef.current ? Date.now() - holdStartRef.current : 0;
-    const completed = holdCompletedRef.current || elapsed >= HOLD_DURATION;
-    
-    if (completed) {
-      setHoldProgress(0);
-      setShowPoolPopup(true);
-      holdCompletedRef.current = false;
-      return;
     }
     
     releaseFromRef.current = holdProgress;
@@ -180,13 +178,6 @@ export default function PoolContainer({ isDarkMode }) {
     
     animationFrameRef.current = requestAnimationFrame(animateRelease);
   };
-  
-  const handleHoldComplete = () => {
-    const elapsed = holdStartRef.current ? Date.now() - holdStartRef.current : 0;
-    if (holdCompletedRef.current || elapsed >= HOLD_DURATION) {
-      triggerHaptic('success');
-    }
-  };
 
   const handleJoinSuccess = () => {
     fetchPoolData();
@@ -197,7 +188,6 @@ export default function PoolContainer({ isDarkMode }) {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
-      clearHapticTimeouts();
     };
   }, []);
 
@@ -361,17 +351,18 @@ export default function PoolContainer({ isDarkMode }) {
             </span>
           </div>
           <div className="flex items-center justify-center -mt-4 md:mt-[10px]">
-            <button 
-              type="button"
-              className="relative px-6 py-2 bg-white/25 active:bg-white/40 rounded-xl shadow-lg overflow-hidden select-none cursor-pointer active:scale-95 transition-transform duration-150 border-none outline-none"
-              onTouchStart={(e) => { triggerHaptic('tap'); startHold(e); }}
-              onTouchEnd={(e) => { handleHoldComplete(); endHold(); }}
-              onMouseDown={(e) => { triggerHaptic('tap'); startHold(e); }}
-              onMouseUp={(e) => { handleHoldComplete(); endHold(); }}
+            <div 
+              className="relative px-6 py-2 bg-white/25 active:bg-white/40 rounded-xl shadow-lg overflow-hidden select-none cursor-pointer active:scale-95 transition-transform duration-150"
+              onMouseDown={startHold}
+              onMouseUp={endHold}
               onMouseLeave={endHold}
+              onTouchStart={startHold}
+              onTouchEnd={endHold}
+              onTouchCancel={endHold}
+              style={{ touchAction: 'none' }}
             >
               <div 
-                className="absolute inset-0 bg-gradient-to-r from-cyan-300 to-white pointer-events-none"
+                className="absolute inset-0 bg-gradient-to-r from-cyan-300 to-white"
                 style={{
                   width: `${holdProgress * 100}%`,
                   opacity: 0.6,
@@ -380,7 +371,7 @@ export default function PoolContainer({ isDarkMode }) {
               <span className="relative text-sm md:text-base font-bold tracking-wide pointer-events-none" style={{ color: '#ffffff' }}>
                 {isHolding ? 'JOINING...' : 'HOLD TO JOIN'}
               </span>
-            </button>
+            </div>
           </div>
           <div className="flex items-center justify-between mt-auto pt-2">
             <span className="text-[10px]" style={{ color: 'rgba(255,255,255,0.6)' }}>Winner takes all</span>
