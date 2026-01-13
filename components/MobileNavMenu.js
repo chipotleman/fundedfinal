@@ -208,7 +208,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
               >
                 Bet History
               </Link>
-              {hasActiveChallenge ? (
+              {hasActiveChallenge && (
                 <Link
                   href="/my-battle"
                   onClick={onClose}
@@ -216,22 +216,6 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 >
                   My Battle
                 </Link>
-              ) : (
-                <button
-                  onClick={() => {
-                    onClose();
-                    const existingChallenge = localStorage.getItem('demo_challenge');
-                    const existingState = localStorage.getItem('demo_state');
-                    if (existingChallenge && existingState) {
-                      window.location.href = '/demo-dashboard';
-                    } else {
-                      window.dispatchEvent(new CustomEvent('openDemoPopup'));
-                    }
-                  }}
-                  className="block w-full text-left text-gray-300 font-light text-base uppercase tracking-wider py-3"
-                >
-                  Free Trial
-                </button>
               )}
               <Link
                 href="/leaderboard"
@@ -267,15 +251,6 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
             </div>
           ) : (
             <div className="space-y-4">
-              <button
-                onClick={() => {
-                  onClose();
-                  window.dispatchEvent(new CustomEvent('openDemoPopup'));
-                }}
-                className="block w-full text-left text-gray-300 font-light text-base uppercase tracking-wider py-3"
-              >
-                Free Trial
-              </button>
               <button 
                 onClick={() => {
                   onClose();
