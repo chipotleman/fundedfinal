@@ -487,14 +487,8 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                       Free Trial
                     </button>
                   )}
-                  <Link href="/waitlist" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
-                    Piks Card
-                  </Link>
                   <Link href="/leaderboard" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                     Leaderboard
-                  </Link>
-                  <Link href="/marketplace" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
-                    Marketplace
                   </Link>
                 </>
               ) : (
@@ -505,14 +499,8 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                   <button onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))} className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                     How It Works
                   </button>
-                  <Link href="/waitlist" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
-                    Piks Card
-                  </Link>
                   <Link href="/leaderboard" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                     Leaderboard
-                  </Link>
-                  <Link href="/marketplace" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
-                    Marketplace
                   </Link>
                 </>
               )}
@@ -623,17 +611,6 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
 
                           {/* Menu Items */}
                           <div className="py-1">
-                            <Link
-                              href="/promos"
-                              onClick={() => setShowUserMenu(false)}
-                              className="flex items-center space-x-3 px-4 py-3 hover:bg-[#1a1a1a] text-gray-300 hover:text-green-400 transition-colors"
-                            >
-                              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clipRule="evenodd" />
-                              </svg>
-                              <span className="font-medium">Promos</span>
-                            </Link>
-
                             <Link
                               href="/bet-history"
                               onClick={() => setShowUserMenu(false)}
