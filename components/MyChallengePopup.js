@@ -100,7 +100,7 @@ export default function MyChallengePopup({ isOpen, onClose }) {
 
   const handleGoToLab = () => {
     onClose();
-    router.push('/dashboard');
+    router.push('/');
   };
 
   const handleWithdraw = () => {

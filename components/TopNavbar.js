@@ -24,7 +24,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
   
   // Prefetch dashboard for instant navigation
   useEffect(() => {
-    router.prefetch('/dashboard');
+    router.prefetch('/');
     router.prefetch('/my-battle');
     router.prefetch('/leaderboard');
   }, [router]);
@@ -484,7 +484,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                 <>
                   <button onClick={() => {
                       if (hasActiveChallenge) {
-                        router.push('/dashboard');
+                        router.push('/');
                       } else {
                         window.dispatchEvent(new CustomEvent('openChallengePopup'));
                       }
@@ -633,7 +633,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                               onClick={() => {
                                 setShowUserMenu(false);
                                 if (hasActiveChallenge) {
-                                  router.push('/dashboard');
+                                  router.push('/');
                                 } else {
                                   window.dispatchEvent(new CustomEvent('openChallengePopup'));
                                 }

@@ -998,7 +998,7 @@ export default function WithdrawalPage() {
                 You need to earn profits in your challenge before you can withdraw. Keep betting and hit your targets!
               </p>
               <button
-                onClick={() => router.push('/dashboard')}
+                onClick={() => router.push('/')}
                 className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-3 px-8 rounded-xl transition-all"
               >
                 Go to The Lab

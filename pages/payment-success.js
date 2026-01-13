@@ -46,7 +46,7 @@ export default function PaymentSuccess() {
   };
 
   const handleBeginChallenge = () => {
-    router.push('/dashboard');
+    router.push('/');
   };
 
   const getThemeColors = () => {

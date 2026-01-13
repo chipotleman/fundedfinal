@@ -260,7 +260,7 @@ export default function MyBattle() {
               </div>
 
               <div className="mt-6 flex gap-4">
-                <Link href="/dashboard" className="flex-1">
+                <Link href="/" className="flex-1">
                   <button className="w-full bg-green-500 hover:bg-green-600 text-black font-bold py-3 rounded-xl transition-all">
                     Place Bets
                   </button>

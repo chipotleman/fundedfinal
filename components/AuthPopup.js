@@ -79,11 +79,11 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
         }
         
         onClose();
-        router.push('/dashboard');
+        router.push('/');
       } else {
         await login(email.trim(), password, rememberMe);
         onClose();
-        router.push('/dashboard');
+        router.push('/');
       }
     } catch (error) {
       console.error('Auth error:', error);

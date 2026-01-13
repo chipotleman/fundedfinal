@@ -1,14 +1,201 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
+import ChallengeOverview from '../components/ChallengeOverview';
 import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
-const HowItWorks = () => {
-  const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
+// Piks Card Module Component
+function ThunderCardModule() {
+  const { isDarkMode } = useTheme();
+  const [email, setEmail] = useState('');
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [savedEmail, setSavedEmail] = useState('');
+
+  const trackingSteps = [
+    { label: 'PLANNING', icon: '📋' },
+    { label: 'PRODUCTION', icon: '🔨' },
+    { label: 'SHIPPED', icon: '📦' },
+    { label: 'ARRIVED', icon: '🏠' }
+  ];
+
+  useEffect(() => {
+    const storedEmail = localStorage.getItem('piksCardWaitlistEmail');
+    if (storedEmail) {
+      setSavedEmail(storedEmail);
+      setIsSubmitted(true);
+    }
+  }, []);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (email) {
+      console.log('Piks Card waitlist signup:', email);
+      localStorage.setItem('piksCardWaitlistEmail', email);
+      setSavedEmail(email);
+      setIsSubmitted(true);
+    }
+  };
+
+  return (
+    <div className="text-center px-4 mb-8">
+      <div className="max-w-3xl mx-auto">
+        <div className="rounded-2xl overflow-hidden p-4 sm:p-6" style={{ background: isDarkMode ? 'linear-gradient(to bottom right, #0f172a, #581c87, #1e3a8a)' : 'linear-gradient(to bottom right, #f8fafc, #e0e7ff, #dbeafe)', borderWidth: 1, borderColor: isDarkMode ? 'rgba(168, 85, 247, 0.3)' : '#c7d2fe', boxShadow: isDarkMode ? 'none' : '0 4px 20px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.06)' }}>
+          {/* Card Image - Main Focus */}
+          <div className="flex justify-center mb-1">
+            <div className="relative transform hover:scale-105 transition-all duration-300">
+              <img 
+                src="/piks-card.png" 
+                alt="Piks Card" 
+                className="w-[400px] sm:w-[540px] drop-shadow-2xl"
+              />
+            </div>
+          </div>
+
+          {/* Title */}
+          <h2 className="text-3xl sm:text-4xl font-black mb-3" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+            Introducing the <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Piks Card</span>
+          </h2>
+          <p className="text-base mb-4 max-w-lg mx-auto" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+            The first prepaid bank card that gets funded directly from your betting profits. Use it anywhere.
+          </p>
+
+          {/* Sign Up Section */}
+          <div className="backdrop-blur-lg rounded-xl p-5 max-w-md mx-auto" style={{ backgroundColor: isDarkMode ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.8)', borderWidth: 1, borderColor: isDarkMode ? 'rgba(51, 65, 85, 0.5)' : '#d1d5db' }}>
+            {!isSubmitted ? (
+              <>
+                <div className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium mb-3" style={{ backgroundColor: isDarkMode ? 'rgba(147, 51, 234, 0.2)' : 'rgba(34, 197, 94, 0.2)', color: isDarkMode ? '#c4b5fd' : '#15803d' }}>
+                  🚀 Coming Soon
+                </div>
+                <h3 className="text-lg font-bold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>Get Early Access</h3>
+                <p className="text-sm mb-4" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>
+                  Join our waitlist for early access and special perks.
+                </p>
+                <form onSubmit={handleSubmit} className="space-y-3">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                    className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2"
+                    style={{ backgroundColor: isDarkMode ? '#1e293b' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? '#475569' : '#d1d5db', color: isDarkMode ? '#ffffff' : '#111827' }}
+                    required
+                  />
+                  <button
+                    type="submit"
+                    className="w-full bg-white hover:bg-gray-100 text-black font-bold py-3 px-6 rounded-lg transition-all shadow-lg hover:shadow-xl"
+                  >
+                    Join Waitlist
+                  </button>
+                </form>
+              </>
+            ) : (
+              <div className="text-center">
+                <h3 className="text-xl font-bold text-white mb-2">You're on the Waitlist!</h3>
+                <p className="text-gray-400 text-sm mb-6">
+                  {savedEmail && <span className="text-white">{savedEmail}</span>}
+                  {savedEmail ? ' - ' : ''}We'll notify you when production begins
+                </p>
+
+                {/* Tracking Steps */}
+                <div className="relative mb-6">
+                  {/* Progress Line */}
+                  <div className="absolute top-4 left-0 right-0 h-1 bg-gray-700 rounded-full mx-6"></div>
+
+                  {/* Steps */}
+                  <div className="flex justify-between relative">
+                    {trackingSteps.map((step, index) => (
+                      <div key={index} className="flex flex-col items-center z-10">
+                        <div 
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-all duration-500 ${
+                            index === 0 
+                              ? 'bg-white scale-110' 
+                              : 'bg-gray-700'
+                          }`}
+                        >
+                          {index === 0 ? (
+                            <span>{step.icon}</span>
+                          ) : (
+                            <span className="text-gray-500 text-xs">{index + 1}</span>
+                          )}
+                        </div>
+                        <span className={`mt-1 text-[10px] font-medium transition-colors duration-300 ${
+                          index === 0 ? 'text-white' : 'text-gray-500'
+                        }`}>
+                          {step.label}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Status Message */}
+                <p className="text-white font-medium text-sm">
+                  Your card is in the planning stage
+                </p>
+                <p className="text-gray-500 text-xs mt-1">
+                  Expected launch: Q1 2026
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Custom Video Player Component
+function CustomVideoPlayer() {
+  const [isMuted, setIsMuted] = useState(true);
+  const videoRef = useRef(null);
+
+  const toggleMute = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = !isMuted;
+      setIsMuted(!isMuted);
+    }
+  };
+
+  return (
+    <div className="relative md:aspect-[2.5/1] aspect-video bg-slate-800" style={{ minHeight: '240px', maxHeight: '380px' }}>
+      {/* Video Element with Autoplay */}
+      <video 
+        ref={videoRef}
+        controls
+        autoPlay
+        muted
+        playsInline
+        webkit-playsinline="true"
+        preload="auto"
+        className="w-full h-full object-cover"
+        style={{ 
+          objectFit: 'cover',
+          backgroundColor: '#1e293b'
+        }}
+      >
+        <source src="/latest-explainer-video.mov" type="video/mp4" />
+        <source src="/latest-explainer-video.mov" type="video/quicktime" />
+        Your browser does not support the video tag.
+      </video>
+    </div>
+  );
+}
+
+export default function Home() {
   const { user } = useAuth();
+  const { isDarkMode } = useTheme();
+  const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const [bankroll, setBankroll] = useState(10000);
+
+  // Force scroll to top when page loads (especially after beta landing)
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, []);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -28,177 +215,129 @@ const HowItWorks = () => {
     };
     fetchUserProfile();
   }, [user]);
-  const steps = [
-    {
-      number: "01",
-      title: "Choose Your Challenge",
-      description: "Select from multiple challenge tiers based on your skill level and starting bankroll amount.",
-      icon: (
-        <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-        </svg>
-      )
-    },
-    {
-      number: "02",
-      title: "Get Your Virtual Bankroll",
-      description: "Receive your virtual betting funds - no real money at risk. Start with amounts ranging from $100 to $25,000.",
-      icon: (
-        <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-        </svg>
-      )
-    },
-    {
-      number: "03",
-      title: "Place Your Bets",
-      description: "Bet on real games with real odds across NFL, NBA, MLB, NHL and more. All odds are pulled from live sportsbooks.",
-      icon: (
-        <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-        </svg>
-      )
-    },
-    {
-      number: "04",
-      title: "Hit Your Target",
-      description: "Reach your profit target to complete the challenge. Each tier has specific goals you need to achieve.",
-      icon: (
-        <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-        </svg>
-      )
-    },
-    {
-      number: "05",
-      title: "Get Paid Real Money",
-      description: "Complete your challenge and receive real cash payouts. Keep 80% of your profits - no strings attached.",
-      icon: (
-        <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
-        </svg>
-      )
-    }
-  ];
 
   return (
-    <div className="min-h-screen bg-black text-white">
-      <TopNavbar
+    <div className="min-h-screen w-full overflow-x-hidden" style={{scrollBehavior: 'smooth', backgroundColor: isDarkMode ? '#000000' : '#f9fafb'}}>
+      <TopNavbar 
         bankroll={user ? bankroll : null}
-        pnl={0}
+        pnl={user ? 0 : null}
         betSlipCount={betSlip.length}
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
 
-      <div className="pt-4 pb-16">
-        {/* Hero Section */}
-        <div className="max-w-6xl mx-auto px-6 pt-2 pb-8">
-          <div className="text-center mb-12">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-black text-white mb-6 leading-tight">
-            How It <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Works</span>
-          </h1>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Get funded to bet with virtual money, hit your targets, and earn real cash payouts. Here's exactly how the process works.
-          </p>
-        </div>
+      <div style={{overflowY: 'visible'}}>
+        {/* Main Video Section - No scrolling needed */}
+        <div className="relative flex items-center justify-center pt-2 pb-8 sm:min-h-screen">
+          {/* Background Pattern */}
+          <div className="absolute inset-0" style={{ backgroundColor: isDarkMode ? '#000000' : '#f9fafb' }}></div>
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22m36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
 
-        {/* Step-by-Step Process */}
-        <div className="space-y-16">
-          {steps.map((step, index) => (
-            <div key={index} className="relative">
-              {/* Connection Line */}
-              {index < steps.length - 1 && (
-                <div className="absolute left-1/2 top-32 w-px h-16 bg-gradient-to-b from-gray-600 to-transparent transform -translate-x-1/2 hidden lg:block"></div>
-              )}
+          <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
+            {/* Logo with matching glow effect */}
+            <div className="text-center mb-6 sm:mb-16 pt-2 sm:pt-0">
 
-              <div className={`flex flex-col lg:flex-row items-center gap-8 ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
-                {/* Content */}
-                <div className="flex-1 text-center lg:text-left">
-                  <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl mb-6 lg:mb-8">
-                    <div className="text-white">
-                      {step.icon}
-                    </div>
-                  </div>
-                  <div className="text-6xl lg:text-8xl font-black text-gray-800 mb-4">
-                    {step.number}
-                  </div>
-                  <h3 className="text-2xl lg:text-3xl font-bold text-white mb-4">
-                    {step.title}
-                  </h3>
-                  <p className="text-lg text-gray-300 leading-relaxed max-w-md mx-auto lg:mx-0">
-                    {step.description}
+
+              <h1 className="text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 leading-tight px-2" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+                Get <span style={{ color: '#2563eb' }} className="font-bold inline-block">Funded</span> to Bet
+              </h1>
+              <p className="text-base sm:text-lg md:text-xl max-w-3xl mx-auto leading-relaxed mb-4 sm:mb-6 px-4" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+                Watch how you can get funded up to <button onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))} className="font-bold transition-colors cursor-pointer" style={{ color: '#2563eb', textDecoration: 'none' }}>$100,000</button> to bet with and keep 90% of your profits
+              </p>
+            </div>
+
+            {/* Main Video Player */}
+            <div className="relative max-w-5xl mx-auto mb-8 px-4">
+              {/* Video container with prominent tracing border */}
+              <div className="relative">
+                {/* Prominent blue tracing border */}
+                <div className="absolute -inset-1 rounded-2xl p-[2px] animate-pulse" style={{ backgroundColor: '#2563eb' }}></div>
+
+                {/* Video container - more rectangular */}
+                <div className="relative bg-slate-900 rounded-2xl overflow-hidden" style={{ boxShadow: isDarkMode ? 'none' : '0 4px 20px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.06)' }}>
+                  <CustomVideoPlayer />
+                </div>
+              </div>
+            </div>
+
+            {/* Call to Action Below Video */}
+            <div className="text-center px-4 mb-8">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center mb-6 sm:mb-8">
+                <div 
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
+                  className="w-full sm:w-auto font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl text-base sm:text-lg shadow-2xl text-center"
+                  style={{ 
+                    backgroundColor: '#2563eb',
+                    color: '#ffffff',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    WebkitTapHighlightColor: 'transparent',
+                    WebkitTouchCallout: 'none',
+                    touchAction: 'manipulation',
+                    outline: 'none',
+                    border: 'none',
+                    boxShadow: 'none',
+                    transition: 'none'
+                  }}
+                >
+                  Start a Challenge
+                </div>
+                <div 
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))}
+                  className="w-full sm:w-auto font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl text-base sm:text-lg text-center"
+                  style={{
+                    backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
+                    color: isDarkMode ? '#ffffff' : '#111827',
+                    border: isDarkMode ? '1px solid #334155' : '1px solid #d1d5db',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    WebkitUserSelect: 'none',
+                    WebkitTapHighlightColor: 'transparent',
+                    WebkitTouchCallout: 'none',
+                    touchAction: 'manipulation',
+                    outline: 'none',
+                    boxShadow: 'none',
+                    transition: 'none'
+                  }}
+                >
+                  How It Works
+                </div>
+              </div>
+            </div>
+
+            {/* Compare Challenges */}
+            <div className="mb-12 px-4">
+              <div 
+                className="max-w-4xl mx-auto rounded-2xl p-6"
+                style={{
+                  backgroundColor: isDarkMode ? 'transparent' : '#ffffff',
+                  boxShadow: isDarkMode ? 'none' : '0 4px 20px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.06)'
+                }}
+              >
+                <div className="text-center mb-6">
+                  <h2 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+                    Compare <span style={{ color: isDarkMode ? undefined : '#111827' }} className={isDarkMode ? "bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent" : ""}>{isDarkMode ? 'Challenges' : <span style={{ color: '#111827' }}>Challenges</span>}</span>
+                  </h2>
+                  <p className="text-sm" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>
+                    See what's included at each level
                   </p>
                 </div>
-
-                {/* Visual Element */}
-                <div className="flex-1 flex justify-center">
-                  <div className="w-80 h-80 bg-black/50 backdrop-blur-lg rounded-2xl border border-gray-800 flex items-center justify-center">
-                    <div className="text-8xl opacity-20">
-                      {step.icon}
-                    </div>
-                  </div>
-                </div>
+                <ChallengeOverview />
               </div>
             </div>
-          ))}
-        </div>
 
-        {/* Key Benefits */}
-        <div className="mt-24 mb-16">
-          <h2 className="text-3xl font-bold text-white text-center mb-12">Key Benefits</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-black/90 backdrop-blur-lg rounded-xl p-6 border border-gray-800 text-center">
-              <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg flex items-center justify-center mb-4 mx-auto">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">No Risk</h3>
-              <p className="text-gray-400 text-sm">Never risk your own money. Bet with virtual funds provided by us.</p>
-            </div>
-
-            <div className="bg-black/90 backdrop-blur-lg rounded-xl p-6 border border-gray-800 text-center">
-              <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-500 rounded-lg flex items-center justify-center mb-4 mx-auto">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">Real Payouts</h3>
-              <p className="text-gray-400 text-sm">Earn real money when you complete challenges successfully.</p>
-            </div>
-
-            <div className="bg-black/90 backdrop-blur-lg rounded-xl p-6 border border-gray-800 text-center">
-              <div className="w-12 h-12 bg-gradient-to-r from-orange-400 to-red-500 rounded-lg flex items-center justify-center mb-4 mx-auto">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-bold text-white mb-2">All Sports</h3>
-              <p className="text-gray-400 text-sm">Bet on NFL, NBA, MLB, NHL and many other sports leagues.</p>
-            </div>
+            {/* Piks Card Coming Soon Module */}
+            <ThunderCardModule />
           </div>
         </div>
 
-        {/* Call to Action */}
-        <div className="text-center">
-          <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-gray-800">
-            <h2 className="text-3xl font-bold text-white mb-4">Ready to Get Started?</h2>
-            <p className="text-gray-300 text-lg mb-8 max-w-2xl mx-auto">
-              Join thousands of successful bettors who are earning real money with virtual betting challenges.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/auth" className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg">
-                Start a Challenge
-              </Link>
-              <Link href="/waitlist" className="bg-black hover:bg-gray-900 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-gray-700">
-                Join Piks Card Waitlist
-              </Link>
-            </div>
-          </div>
-        </div>
-        </div>
       </div>
 
+      {/* Bet Slip */}
       {showBetSlip && (
         <BetSlip
           bankroll={bankroll}
@@ -206,8 +345,7 @@ const HowItWorks = () => {
           onClose={() => setShowBetSlip(false)}
         />
       )}
+
     </div>
   );
 }
-
-export default HowItWorks;

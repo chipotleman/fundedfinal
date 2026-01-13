@@ -64,7 +64,7 @@ export default function BattlePage() {
   };
 
   const handleMatchFound = (matchup, opponent) => {
-    router.push('/dashboard');
+    router.push('/');
   };
 
   const handleCancel = () => {
@@ -92,7 +92,7 @@ export default function BattlePage() {
             </div>
           </div>
           <button
-            onClick={() => router.push('/dashboard')}
+            onClick={() => router.push('/')}
             className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
           >
             Go to Dashboard
@@ -229,7 +229,7 @@ export default function BattlePage() {
         </button>
 
         <button
-          onClick={() => router.push('/dashboard')}
+          onClick={() => router.push('/')}
           className="w-full mt-3 py-3 bg-gray-800 text-gray-400 rounded-xl hover:bg-gray-700 transition"
         >
           Cancel

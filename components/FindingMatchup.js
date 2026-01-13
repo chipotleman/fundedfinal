@@ -34,7 +34,7 @@ export default function FindingMatchup({ userId, profile, durationType = '1_day'
 
       if (!response.ok) {
         if (data.matchupId) {
-          router.push('/dashboard');
+          router.push('/');
           return;
         }
         throw new Error(data.error || 'Failed to queue for matchup');
@@ -49,7 +49,7 @@ export default function FindingMatchup({ userId, profile, durationType = '1_day'
           if (onMatchFound) {
             onMatchFound(data.matchup, data.opponent);
           } else {
-            router.push('/dashboard');
+            router.push('/');
           }
         }, 2000);
       }
@@ -73,7 +73,7 @@ export default function FindingMatchup({ userId, profile, durationType = '1_day'
           if (onMatchFound) {
             onMatchFound(data.matchup, data.opponent);
           } else {
-            router.push('/dashboard');
+            router.push('/');
           }
         }, 2000);
         return true;
@@ -108,7 +108,7 @@ export default function FindingMatchup({ userId, profile, durationType = '1_day'
         if (onMatchFound) {
           onMatchFound(data.matchup, data.opponent);
         } else {
-          router.push('/dashboard');
+          router.push('/');
         }
       }, 2000);
     } catch (err) {

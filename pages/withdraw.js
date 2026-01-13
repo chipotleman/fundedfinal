@@ -99,7 +99,7 @@ export default function Withdraw() {
     setTimeout(() => {
       alert(`Withdrawal request submitted! $${amount} will be sent to your ${selectedMethod} within the specified timeframe.`);
       setLoading(false);
-      router.push('/dashboard');
+      router.push('/');
     }, 2000);
   };
 

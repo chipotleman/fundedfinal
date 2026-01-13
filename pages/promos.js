@@ -350,7 +350,7 @@ export default function Promos() {
                 <h3 className="text-3xl font-bold text-white mb-4">Become a VIP Member</h3>
                 <p className="text-gray-300 mb-8 text-lg">Complete 3 challenges or maintain $100,000+ in funded profits</p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <Link href="/dashboard" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg">
+                  <Link href="/" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg">
                     Start Challenges
                   </Link>
                   <Link href="/rules" className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-600">

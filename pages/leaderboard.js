@@ -297,7 +297,7 @@ const Leaderboard = () => {
               <Link href="/auth" className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition-all text-sm sm:text-base">
                 Start Your Journey
               </Link>
-              <Link href="/dashboard" className="bg-[#1a1a1a] hover:bg-[#222] text-white font-bold py-3 px-6 rounded-xl transition-all text-sm sm:text-base border border-gray-700">
+              <Link href="/" className="bg-[#1a1a1a] hover:bg-[#222] text-white font-bold py-3 px-6 rounded-xl transition-all text-sm sm:text-base border border-gray-700">
                 View Dashboard
               </Link>
             </div>

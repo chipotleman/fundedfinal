@@ -171,7 +171,7 @@ export default function PublicProfile() {
       <div className="min-h-screen bg-black flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-white mb-4">Profile not found</h2>
-          <Link href="/dashboard">
+          <Link href="/">
             <button className="bg-green-500 hover:bg-green-600 text-black font-bold py-3 px-6 rounded-lg">
               Go to Dashboard
             </button>

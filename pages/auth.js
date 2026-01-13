@@ -154,7 +154,7 @@ export default function AuthPage() {
           if (returnTo === 'checkout') {
             router.push('/checkout-redirect');
           } else {
-            router.push('/dashboard');
+            router.push('/');
           }
         }, 1000);
       } else {
@@ -166,7 +166,7 @@ export default function AuthPage() {
         if (returnTo === 'checkout') {
           router.push('/checkout-redirect');
         } else {
-          router.push('/dashboard');
+          router.push('/');
         }
       }
     } catch (error) {
@@ -271,7 +271,7 @@ export default function AuthPage() {
       // Clear the purchased challenge from localStorage after successful save
       localStorage.removeItem('purchased_challenge');
 
-      router.push('/dashboard');
+      router.push('/');
     } catch (error) {
       console.log('Challenge start error:', error.message);
       setError('Failed to start challenge. Please try again.');
