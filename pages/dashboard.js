@@ -299,12 +299,9 @@ export default function Dashboard() {
     
     let filteredGames = filterBySport(primaryGames);
     
+    // If no games in primary tab, check fallback tab for the same sport
     if (filteredGames.length === 0) {
       filteredGames = filterBySport(fallbackGames);
-    }
-    
-    if (filteredGames.length === 0 && selectedSport !== 'All Sports') {
-      filteredGames = [...liveGames, ...upcomingGames];
     }
     
     return filteredGames;
