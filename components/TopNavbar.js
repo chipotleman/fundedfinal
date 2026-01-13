@@ -502,9 +502,9 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                 </>
               ) : (
                 <>
-                  <button onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))} className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+                  <Link href="/how-it-works" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                     How It Works
-                  </button>
+                  </Link>
                   <Link href="/leaderboard" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                     Leaderboard
                   </Link>

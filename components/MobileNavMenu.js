@@ -251,15 +251,13 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
             </div>
           ) : (
             <div className="space-y-4">
-              <button 
-                onClick={() => {
-                  onClose();
-                  window.dispatchEvent(new CustomEvent('openHowItWorks'));
-                }}
+              <Link
+                href="/how-it-works"
+                onClick={onClose}
                 className="block w-full text-left text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 How It Works
-              </button>
+              </Link>
               <Link
                 href="/leaderboard"
                 onClick={onClose}
