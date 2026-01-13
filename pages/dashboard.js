@@ -34,23 +34,64 @@ export default function Dashboard() {
   const [pnl, setPnl] = useState(0);
   const [expandedGames, setExpandedGames] = useState({});
   const scrollPositionRef = useRef(0);
+  const isRestoringRef = useRef(false);
 
-  // Preserve scroll position when switching tabs/apps (especially important on mobile)
+  // Preserve scroll position when switching tabs/apps (especially important on mobile/iPad)
   useEffect(() => {
+    const SCROLL_KEY = 'piks_dashboard_scroll';
+    
     const saveScrollPosition = () => {
-      scrollPositionRef.current = window.scrollY;
-    };
-
-    const restoreScrollPosition = () => {
-      if (document.visibilityState === 'visible' && scrollPositionRef.current > 0) {
-        // Use requestAnimationFrame to ensure DOM is ready
-        requestAnimationFrame(() => {
-          window.scrollTo(0, scrollPositionRef.current);
-        });
+      const pos = window.scrollY || window.pageYOffset || 0;
+      if (pos > 0) {
+        scrollPositionRef.current = pos;
+        try {
+          sessionStorage.setItem(SCROLL_KEY, String(pos));
+        } catch (e) {}
       }
     };
 
-    // Save on visibility change (tab switch, app switch)
+    const restoreScrollPosition = () => {
+      if (isRestoringRef.current) return;
+      isRestoringRef.current = true;
+      
+      let savedPos = scrollPositionRef.current;
+      if (!savedPos) {
+        try {
+          savedPos = parseInt(sessionStorage.getItem(SCROLL_KEY) || '0', 10);
+        } catch (e) {}
+      }
+      
+      if (savedPos > 0) {
+        // Multiple restoration attempts for iOS reliability
+        const restore = () => window.scrollTo(0, savedPos);
+        restore();
+        requestAnimationFrame(restore);
+        setTimeout(restore, 50);
+        setTimeout(restore, 150);
+        setTimeout(() => { isRestoringRef.current = false; }, 200);
+      } else {
+        isRestoringRef.current = false;
+      }
+    };
+
+    // Continuously save scroll position while scrolling
+    let scrollTimeout;
+    const handleScroll = () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(saveScrollPosition, 100);
+    };
+
+    // pageshow/pagehide are more reliable on iOS than visibilitychange
+    const handlePageShow = (e) => {
+      if (e.persisted) {
+        restoreScrollPosition();
+      }
+    };
+
+    const handlePageHide = () => {
+      saveScrollPosition();
+    };
+
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
         saveScrollPosition();
@@ -59,25 +100,30 @@ export default function Dashboard() {
       }
     };
 
-    // Also save on blur (window loses focus)
-    const handleBlur = () => {
-      saveScrollPosition();
-    };
+    const handleBlur = () => saveScrollPosition();
+    const handleFocus = () => restoreScrollPosition();
 
-    // Restore on focus
-    const handleFocus = () => {
-      if (scrollPositionRef.current > 0) {
-        requestAnimationFrame(() => {
-          window.scrollTo(0, scrollPositionRef.current);
-        });
+    // Restore on initial load if we have saved position
+    try {
+      const saved = parseInt(sessionStorage.getItem(SCROLL_KEY) || '0', 10);
+      if (saved > 0) {
+        scrollPositionRef.current = saved;
+        setTimeout(restoreScrollPosition, 100);
       }
-    };
+    } catch (e) {}
 
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('pageshow', handlePageShow);
+    window.addEventListener('pagehide', handlePageHide);
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('blur', handleBlur);
     window.addEventListener('focus', handleFocus);
 
     return () => {
+      clearTimeout(scrollTimeout);
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('pageshow', handlePageShow);
+      window.removeEventListener('pagehide', handlePageHide);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('blur', handleBlur);
       window.removeEventListener('focus', handleFocus);
