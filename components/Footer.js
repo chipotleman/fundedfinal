@@ -13,8 +13,8 @@ export default function Footer() {
         borderColor: isDarkMode ? '#1f2937' : '#e5e7eb'
       }}
     >
-      <div className="max-w-4xl mx-auto">
-        <div className="flex flex-wrap gap-x-4 gap-y-2 mb-4">
+      <div className="max-w-4xl mx-auto text-center">
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 mb-4">
           <Link href="/rules" className="text-sm underline" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>
             House Rules
           </Link>
@@ -24,7 +24,7 @@ export default function Footer() {
           </Link>
         </div>
 
-        <div className="flex flex-wrap gap-x-4 gap-y-2 mb-4">
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-2 mb-4">
           <Link href="/privacy" className="text-sm underline" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>
             Privacy Policy
           </Link>
