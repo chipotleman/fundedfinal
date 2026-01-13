@@ -38,6 +38,7 @@ export default function Dashboard() {
 
   // Scroll position restoration for iOS/iPad app switching
   // Uses localStorage (not sessionStorage) because iOS kills the page and clears sessionStorage
+  // Includes freeze/unfreeze to fix Safari sticky element behavior
   useEffect(() => {
     const SCROLL_KEY = 'piks_dashboard_scroll';
     const SCROLL_TIME_KEY = 'piks_dashboard_scroll_time';
@@ -56,7 +57,6 @@ export default function Dashboard() {
       try {
         const savedPos = parseInt(localStorage.getItem(SCROLL_KEY) || '0', 10);
         const savedTime = parseInt(localStorage.getItem(SCROLL_TIME_KEY) || '0', 10);
-        // Only use saved position if it's recent enough
         if (savedPos > 0 && Date.now() - savedTime < MAX_AGE_MS) {
           return savedPos;
         }
@@ -64,57 +64,73 @@ export default function Dashboard() {
       return 0;
     };
 
-    const clearSavedScroll = () => {
-      try {
-        localStorage.removeItem(SCROLL_KEY);
-        localStorage.removeItem(SCROLL_TIME_KEY);
-      } catch (e) {}
+    // Freeze viewport - locks page visually for iOS snapshot
+    const freezeViewport = () => {
+      if (isFrozenRef.current) return;
+      const scrollY = window.scrollY || window.pageYOffset || 0;
+      scrollPositionRef.current = scrollY;
+      saveScrollPosition();
+      
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.width = '100%';
+      document.body.style.overflowY = 'scroll';
+      isFrozenRef.current = true;
     };
 
-    // Restore scroll position immediately on mount
-    const restoreScrollPosition = () => {
-      const savedPos = getSavedScrollPosition();
+    // Unfreeze and restore - forces Safari to recalculate sticky elements
+    const unfreezeViewport = () => {
+      const wasFrozen = isFrozenRef.current;
+      
+      // Always reset body styles to fix sticky elements
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.width = '';
+      document.body.style.overflowY = '';
+      isFrozenRef.current = false;
+      
+      // Restore scroll position
+      const savedPos = wasFrozen ? scrollPositionRef.current : getSavedScrollPosition();
       if (savedPos > 0) {
-        scrollPositionRef.current = savedPos;
         window.scrollTo(0, savedPos);
-        // Multiple attempts for iOS reliability
         requestAnimationFrame(() => window.scrollTo(0, savedPos));
         setTimeout(() => window.scrollTo(0, savedPos), 50);
         setTimeout(() => window.scrollTo(0, savedPos), 100);
-        setTimeout(() => window.scrollTo(0, savedPos), 200);
       }
     };
 
-    // Restore on mount
-    restoreScrollPosition();
+    // Restore on initial mount
+    const savedPos = getSavedScrollPosition();
+    if (savedPos > 0) {
+      scrollPositionRef.current = savedPos;
+      window.scrollTo(0, savedPos);
+      requestAnimationFrame(() => window.scrollTo(0, savedPos));
+    }
 
     // Track scroll continuously
     let scrollTimeout;
     const handleScroll = () => {
+      if (isFrozenRef.current) return;
       clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(saveScrollPosition, 100);
     };
 
-    // Save immediately before page hides (iOS may kill page right after)
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
-        saveScrollPosition();
+        freezeViewport();
       } else if (document.visibilityState === 'visible') {
-        restoreScrollPosition();
+        unfreezeViewport();
       }
     };
 
-    const handlePageHide = () => {
-      saveScrollPosition();
-    };
-
-    const handlePageShow = (e) => {
-      restoreScrollPosition();
-    };
-
-    // Window focus/blur for additional iOS coverage
-    const handleBlur = () => saveScrollPosition();
-    const handleFocus = () => restoreScrollPosition();
+    const handlePageHide = () => freezeViewport();
+    const handlePageShow = () => unfreezeViewport();
+    const handleBlur = () => freezeViewport();
+    const handleFocus = () => unfreezeViewport();
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('pagehide', handlePageHide);
@@ -125,6 +141,14 @@ export default function Dashboard() {
 
     return () => {
       clearTimeout(scrollTimeout);
+      if (isFrozenRef.current) {
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        document.body.style.width = '';
+        document.body.style.overflowY = '';
+      }
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('pagehide', handlePageHide);
       window.removeEventListener('pageshow', handlePageShow);
