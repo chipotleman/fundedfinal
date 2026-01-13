@@ -139,6 +139,25 @@ export default function Dashboard() {
     const handleBlur = () => freezeViewport();
     const handleFocus = () => unfreezeViewport();
 
+    // Restore scroll position on initial page load (for full page reloads)
+    const restoreOnLoad = () => {
+      try {
+        const savedPos = parseInt(sessionStorage.getItem(SCROLL_KEY) || '0', 10);
+        if (savedPos > 0) {
+          scrollPositionRef.current = savedPos;
+          window.scrollTo(0, savedPos);
+          // Multiple attempts for iOS reliability
+          requestAnimationFrame(() => window.scrollTo(0, savedPos));
+          setTimeout(() => window.scrollTo(0, savedPos), 50);
+          setTimeout(() => window.scrollTo(0, savedPos), 100);
+        }
+      } catch (e) {}
+    };
+    
+    // Restore immediately and also after a short delay for iOS
+    restoreOnLoad();
+    setTimeout(restoreOnLoad, 0);
+
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('pagehide', handlePageHide);
     window.addEventListener('pageshow', handlePageShow);
