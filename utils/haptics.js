@@ -6,6 +6,11 @@
  * Note: iOS haptics require Safari 18+ on iOS 18+ (released September 2024)
  */
 
+let cachedWrapper = null;
+let cachedCheckbox = null;
+let cachedLabel = null;
+let cleanupTimeout = null;
+
 function isIOSSafari() {
   if (typeof navigator === 'undefined') return false;
   const ua = navigator.userAgent;
@@ -14,36 +19,62 @@ function isIOSSafari() {
   return isIOS && isSafari;
 }
 
+function ensureIOSHapticElement() {
+  if (cachedWrapper && cachedWrapper.parentNode) {
+    return true;
+  }
+  
+  try {
+    cachedWrapper = document.createElement('div');
+    cachedWrapper.setAttribute('aria-hidden', 'true');
+    cachedWrapper.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;pointer-events:none;';
+    
+    cachedCheckbox = document.createElement('input');
+    cachedCheckbox.type = 'checkbox';
+    cachedCheckbox.setAttribute('switch', '');
+    cachedCheckbox.id = 'ios-haptic-switch';
+    
+    cachedLabel = document.createElement('label');
+    cachedLabel.setAttribute('for', 'ios-haptic-switch');
+    
+    cachedWrapper.appendChild(cachedCheckbox);
+    cachedWrapper.appendChild(cachedLabel);
+    document.body.appendChild(cachedWrapper);
+    
+    return true;
+  } catch (e) {
+    console.warn('Failed to create iOS haptic element:', e);
+    return false;
+  }
+}
+
+function cleanupIOSHapticElement() {
+  if (cachedWrapper && cachedWrapper.parentNode) {
+    cachedWrapper.remove();
+  }
+  cachedWrapper = null;
+  cachedCheckbox = null;
+  cachedLabel = null;
+}
+
+function scheduleCleanup() {
+  if (cleanupTimeout) {
+    clearTimeout(cleanupTimeout);
+  }
+  cleanupTimeout = setTimeout(() => {
+    cleanupIOSHapticElement();
+    cleanupTimeout = null;
+  }, 5000);
+}
+
 function triggerIOSHaptic() {
   try {
-    const wrapper = document.createElement('div');
-    wrapper.setAttribute('aria-hidden', 'true');
-    wrapper.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;';
+    if (!ensureIOSHapticElement()) {
+      return false;
+    }
     
-    const checkbox = document.createElement('input');
-    checkbox.type = 'checkbox';
-    checkbox.setAttribute('switch', '');
-    const uniqueId = 'haptic-' + Math.random().toString(36).substring(2, 9);
-    checkbox.id = uniqueId;
-    
-    const label = document.createElement('label');
-    label.setAttribute('for', uniqueId);
-    
-    wrapper.appendChild(checkbox);
-    wrapper.appendChild(label);
-    document.body.appendChild(wrapper);
-    
-    // Use requestAnimationFrame to ensure DOM is ready
-    requestAnimationFrame(() => {
-      label.click();
-      
-      // Clean up after haptic triggers
-      setTimeout(() => {
-        if (wrapper.parentNode) {
-          wrapper.remove();
-        }
-      }, 50);
-    });
+    cachedLabel.click();
+    scheduleCleanup();
     
     return true;
   } catch (e) {
@@ -53,7 +84,6 @@ function triggerIOSHaptic() {
 }
 
 export function triggerHaptic(pattern = 'tap') {
-  // Guard for non-browser contexts (SSR, tests)
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     return false;
   }
@@ -67,16 +97,13 @@ export function triggerHaptic(pattern = 'tap') {
 
   const vibrationPattern = patterns[pattern] || patterns.tap;
 
-  // Check if iOS Safari - use switch workaround
   if (isIOSSafari()) {
     const hapticCount = Array.isArray(vibrationPattern) 
       ? Math.floor(vibrationPattern.length / 2) + 1 
       : 1;
     
-    // Trigger initial haptic
     triggerIOSHaptic();
     
-    // For patterns, trigger multiple times with delays
     if (hapticCount > 1 && Array.isArray(vibrationPattern)) {
       let delay = 0;
       for (let i = 0; i < hapticCount - 1; i++) {
@@ -88,20 +115,17 @@ export function triggerHaptic(pattern = 'tap') {
     return true;
   }
 
-  // Try Vibration API (Android, etc.)
   if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
     try {
       const result = navigator.vibrate(vibrationPattern);
       if (result) return true;
     } catch (e) {
-      // Vibration API failed
     }
   }
 
   return false;
 }
 
-// Convenience methods
 export const haptic = {
   tap: () => triggerHaptic('tap'),
   success: () => triggerHaptic('success'),
