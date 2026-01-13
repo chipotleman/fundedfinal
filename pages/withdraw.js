@@ -114,7 +114,7 @@ export default function Withdraw() {
                 type="text"
                 value={formData.accountHolderName}
                 onChange={(e) => handleInputChange('accountHolderName', e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Full name on account"
                 required
               />
@@ -125,7 +125,7 @@ export default function Withdraw() {
                 type="text"
                 value={formData.accountNumber}
                 onChange={(e) => handleInputChange('accountNumber', e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Account number"
                 required
               />
@@ -136,7 +136,7 @@ export default function Withdraw() {
                 type="text"
                 value={formData.routingNumber}
                 onChange={(e) => handleInputChange('routingNumber', e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="9-digit routing number"
                 required
               />
@@ -152,7 +152,7 @@ export default function Withdraw() {
                 type="text"
                 value={formData.cardHolderName}
                 onChange={(e) => handleInputChange('cardHolderName', e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Name on card"
                 required
               />
@@ -163,7 +163,7 @@ export default function Withdraw() {
                 type="text"
                 value={formData.cardNumber}
                 onChange={(e) => handleInputChange('cardNumber', e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="1234 5678 9012 3456"
                 required
               />
@@ -175,7 +175,7 @@ export default function Withdraw() {
                   type="text"
                   value={formData.expiryDate}
                   onChange={(e) => handleInputChange('expiryDate', e.target.value)}
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="MM/YY"
                   required
                 />
@@ -186,7 +186,7 @@ export default function Withdraw() {
                   type="text"
                   value={formData.cvv}
                   onChange={(e) => handleInputChange('cvv', e.target.value)}
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="123"
                   required
                 />
@@ -202,7 +202,7 @@ export default function Withdraw() {
               type="text"
               value={formData.venmoUsername}
               onChange={(e) => handleInputChange('venmoUsername', e.target.value)}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="@username"
               required
             />
@@ -216,7 +216,7 @@ export default function Withdraw() {
               type="text"
               value={formData.cashappTag}
               onChange={(e) => handleInputChange('cashappTag', e.target.value)}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="$cashtag"
               required
             />
@@ -230,7 +230,7 @@ export default function Withdraw() {
               type="email"
               value={formData.paypalEmail}
               onChange={(e) => handleInputChange('paypalEmail', e.target.value)}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="your@email.com"
               required
             />
@@ -279,7 +279,7 @@ export default function Withdraw() {
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg pl-8 pr-4 py-4 text-white text-xl focus:outline-none focus:ring-2 focus:ring-green-500"
+                className="w-full bg-slate-700 border border-slate-600 rounded-lg pl-8 pr-4 py-4 text-white text-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="0.00"
                 min="1"
                 max={bankroll}

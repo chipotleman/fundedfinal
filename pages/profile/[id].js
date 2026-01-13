@@ -232,7 +232,7 @@ export default function PublicProfile() {
                         type="text"
                         value={formData.username}
                         onChange={handleUsernameChange}
-                        className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         maxLength={20}
                       />
                       {usernameStatus.checking && (
@@ -250,7 +250,7 @@ export default function PublicProfile() {
                       <textarea
                         value={formData.bio}
                         onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                        className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-green-500"
+                        className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                         rows={3}
                         maxLength={200}
                         placeholder="Tell others about yourself..."

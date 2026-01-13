@@ -459,7 +459,7 @@ export default function WithdrawalPage() {
                     name="bankName"
                     value={formData.bankName}
                     onChange={handleFormChange}
-                    className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                    className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-blue-500"
                     placeholder="Enter bank name"
                   />
                 </div>
@@ -472,7 +472,7 @@ export default function WithdrawalPage() {
                       value={formData.routingNumber}
                       onChange={handleFormChange}
                       maxLength={9}
-                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-blue-500"
                       placeholder="9 digits"
                     />
                   </div>
@@ -483,7 +483,7 @@ export default function WithdrawalPage() {
                       name="accountNumber"
                       value={formData.accountNumber}
                       onChange={handleFormChange}
-                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-blue-500"
                       placeholder="Account number"
                     />
                   </div>
@@ -494,7 +494,7 @@ export default function WithdrawalPage() {
                     name="accountType"
                     value={formData.accountType}
                     onChange={handleFormChange}
-                    className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                    className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-blue-500"
                   >
                     <option value="checking">Checking</option>
                     <option value="savings">Savings</option>
@@ -513,7 +513,7 @@ export default function WithdrawalPage() {
                     value={formData.cardNumber}
                     onChange={handleFormChange}
                     maxLength={19}
-                    className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                    className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-blue-500"
                     placeholder="1234 5678 9012 3456"
                   />
                 </div>
@@ -526,7 +526,7 @@ export default function WithdrawalPage() {
                       value={formData.cardExpiry}
                       onChange={handleFormChange}
                       maxLength={5}
-                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-blue-500"
                       placeholder="MM/YY"
                     />
                   </div>
@@ -538,7 +538,7 @@ export default function WithdrawalPage() {
                       value={formData.cardCvv}
                       onChange={handleFormChange}
                       maxLength={4}
-                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-blue-500"
                       placeholder="123"
                     />
                   </div>
@@ -556,7 +556,7 @@ export default function WithdrawalPage() {
                     name="venmoUsername"
                     value={formData.venmoUsername}
                     onChange={handleFormChange}
-                    className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 pl-8 pr-4 text-white focus:outline-none focus:border-green-500"
+                    className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 pl-8 pr-4 text-white focus:outline-none focus:border-blue-500"
                     placeholder="username"
                   />
                 </div>
@@ -572,7 +572,7 @@ export default function WithdrawalPage() {
                     name="bankName"
                     value={formData.bankName}
                     onChange={handleFormChange}
-                    className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                    className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-blue-500"
                     placeholder="Enter bank name"
                   />
                 </div>
@@ -584,7 +584,7 @@ export default function WithdrawalPage() {
                       name="routingNumber"
                       value={formData.routingNumber}
                       onChange={handleFormChange}
-                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-blue-500"
                       placeholder="Routing number"
                     />
                   </div>
@@ -595,7 +595,7 @@ export default function WithdrawalPage() {
                       name="accountNumber"
                       value={formData.accountNumber}
                       onChange={handleFormChange}
-                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-blue-500"
                       placeholder="Account number"
                     />
                   </div>
@@ -607,7 +607,7 @@ export default function WithdrawalPage() {
                     name="swiftCode"
                     value={formData.swiftCode}
                     onChange={handleFormChange}
-                    className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                    className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-blue-500"
                     placeholder="SWIFT code"
                   />
                 </div>
@@ -623,7 +623,7 @@ export default function WithdrawalPage() {
                     name="street"
                     value={formData.street}
                     onChange={handleFormChange}
-                    className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                    className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-blue-500"
                     placeholder="123 Main Street"
                   />
                 </div>
@@ -635,7 +635,7 @@ export default function WithdrawalPage() {
                       name="city"
                       value={formData.city}
                       onChange={handleFormChange}
-                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-blue-500"
                       placeholder="City"
                     />
                   </div>
@@ -647,7 +647,7 @@ export default function WithdrawalPage() {
                       value={formData.state}
                       onChange={handleFormChange}
                       maxLength={2}
-                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-blue-500"
                       placeholder="CA"
                     />
                   </div>
@@ -659,7 +659,7 @@ export default function WithdrawalPage() {
                       value={formData.zip}
                       onChange={handleFormChange}
                       maxLength={10}
-                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-green-500"
+                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-blue-500"
                       placeholder="12345"
                     />
                   </div>
@@ -673,7 +673,7 @@ export default function WithdrawalPage() {
                   type="checkbox"
                   checked={saveMethod}
                   onChange={(e) => setSaveMethod(e.target.checked)}
-                  className="w-5 h-5 rounded bg-[#0a0a0a] border-gray-700 text-green-500 focus:ring-green-500"
+                  className="w-5 h-5 rounded bg-[#0a0a0a] border-gray-700 text-green-500 focus:ring-blue-500"
                 />
                 <span className="text-gray-300">Save this payment method for future use</span>
               </label>
@@ -682,7 +682,7 @@ export default function WithdrawalPage() {
                   type="text"
                   value={methodNickname}
                   onChange={(e) => setMethodNickname(e.target.value)}
-                  className="mt-3 w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-2 px-4 text-white text-sm focus:outline-none focus:border-green-500"
+                  className="mt-3 w-full bg-[#0a0a0a] border border-gray-800 rounded-lg py-2 px-4 text-white text-sm focus:outline-none focus:border-blue-500"
                   placeholder="Nickname (e.g., My Chase Account)"
                 />
               )}
@@ -1066,7 +1066,7 @@ export default function WithdrawalPage() {
                       onChange={(e) => setAmount(e.target.value)}
                       placeholder="0.00"
                       max={availableToWithdraw}
-                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-4 pl-10 pr-4 text-white text-xl font-bold focus:outline-none focus:border-green-500"
+                      className="w-full bg-[#0a0a0a] border border-gray-800 rounded-xl py-4 pl-10 pr-4 text-white text-xl font-bold focus:outline-none focus:border-blue-500"
                     />
                   </div>
                   <div className="flex justify-between mt-2 text-sm">

@@ -327,7 +327,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                                   updateBetStake(bet.id, e.target.value);
                                 }
                               }}
-                              className="w-full bg-[#1a1a1a] text-white font-bold text-base lg:text-lg pl-10 lg:pl-12 pr-4 lg:pr-6 py-3 lg:py-4 rounded-lg border border-gray-700 focus:border-green-500 focus:ring-2 focus:ring-green-500/20 focus:outline-none transition-all duration-200"
+                              className="w-full bg-[#1a1a1a] text-white font-bold text-base lg:text-lg pl-10 lg:pl-12 pr-4 lg:pr-6 py-3 lg:py-4 rounded-lg border border-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all duration-200"
                             />
                           </div>
                           {((betType === 'single' && bet.stake > 0) || (betType === 'parlay' && selectedBets[0]?.stake > 0)) && (
