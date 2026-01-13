@@ -50,11 +50,11 @@ export default function PoolContainer({ isDarkMode }) {
   const animationFrameRef = useRef(null);
   const releaseStartRef = useRef(null);
   const releaseFromRef = useRef(0);
-  const hapticMilestonesRef = useRef(new Set());
+  const hapticTimeoutsRef = useRef([]);
+  const holdCompletedRef = useRef(false);
 
   const HOLD_DURATION = 1500;
   const RELEASE_DURATION = 800;
-  const HAPTIC_MILESTONES = [0.25, 0.5, 0.75, 1];
 
   const fetchPoolData = async () => {
     try {
@@ -109,43 +109,35 @@ export default function PoolContainer({ isDarkMode }) {
     return () => clearInterval(interval);
   }, [myPoolData?.pool?.endsAt]);
 
+  const clearHapticTimeouts = () => {
+    hapticTimeoutsRef.current.forEach(t => clearTimeout(t));
+    hapticTimeoutsRef.current = [];
+  };
+
   const startHold = (e) => {
+    triggerHaptic('tap');
+    
     e.preventDefault();
     e.stopPropagation();
     
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
     }
+    clearHapticTimeouts();
     
     setIsHolding(true);
     holdStartRef.current = Date.now();
+    holdCompletedRef.current = false;
     const startFrom = holdProgress;
-    hapticMilestonesRef.current = new Set();
-    
-    // Initial tap haptic when hold starts
-    triggerHaptic('tap');
     
     const animate = () => {
       const elapsed = Date.now() - holdStartRef.current;
       const progress = Math.min(startFrom + (elapsed / HOLD_DURATION) * (1 - startFrom), 1);
       setHoldProgress(progress);
       
-      // Trigger haptic at each milestone
-      for (const milestone of HAPTIC_MILESTONES) {
-        if (progress >= milestone && !hapticMilestonesRef.current.has(milestone)) {
-          hapticMilestonesRef.current.add(milestone);
-          if (milestone < 1) {
-            triggerHaptic('tap');
-          }
-        }
-      }
-      
       if (progress >= 1) {
-        setIsHolding(false);
-        setHoldProgress(0);
-        // Strong success haptic when pool is joined
-        triggerHaptic('success');
-        setShowPoolPopup(true);
+        holdCompletedRef.current = true;
+        setHoldProgress(1);
         return;
       }
       
@@ -159,8 +151,20 @@ export default function PoolContainer({ isDarkMode }) {
     if (!isHolding) return;
     
     setIsHolding(false);
+    clearHapticTimeouts();
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
+    }
+    
+    const elapsed = holdStartRef.current ? Date.now() - holdStartRef.current : 0;
+    const completed = holdCompletedRef.current || elapsed >= HOLD_DURATION;
+    
+    if (completed) {
+      triggerHaptic('success');
+      setHoldProgress(0);
+      setShowPoolPopup(true);
+      holdCompletedRef.current = false;
+      return;
     }
     
     releaseFromRef.current = holdProgress;
@@ -188,6 +192,7 @@ export default function PoolContainer({ isDarkMode }) {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+      clearHapticTimeouts();
     };
   }, []);
 
