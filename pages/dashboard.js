@@ -390,7 +390,7 @@ export default function Dashboard() {
         onBetSlipClick={handleBetSlipClick}
       />
 
-      <div className="pt-4 sm:pt-6 lg:pt-8 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
+      <div className="pt-4 sm:pt-4 lg:pt-2 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
         {hasActiveMatchup && matchup && opponent ? (
           <MatchupBanner
             matchup={matchup}
