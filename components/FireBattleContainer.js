@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
 const PLACEHOLDER_AVATARS = [
@@ -7,8 +7,6 @@ const PLACEHOLDER_AVATARS = [
 ];
 
 export default function FireBattleContainer({ isDarkMode }) {
-  const [holdProgress, setHoldProgress] = useState(0);
-  const [isHolding, setIsHolding] = useState(false);
   const [currentAvatarIndex, setCurrentAvatarIndex] = useState(0);
   const [uploadedAvatars, setUploadedAvatars] = useState([]);
   const router = useRouter();
@@ -27,84 +25,6 @@ export default function FireBattleContainer({ isDarkMode }) {
     }, 600);
     return () => clearInterval(interval);
   }, [uploadedAvatars]);
-  
-  const holdStartRef = useRef(null);
-  const animationFrameRef = useRef(null);
-  const releaseStartRef = useRef(null);
-  const releaseFromRef = useRef(0);
-
-  const HOLD_DURATION = 1500;
-  const RELEASE_DURATION = 800;
-
-  const startHold = (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
-    
-    setIsHolding(true);
-    holdStartRef.current = Date.now();
-    const startFrom = holdProgress;
-    
-    const animate = () => {
-      const elapsed = Date.now() - holdStartRef.current;
-      const progress = Math.min(startFrom + (elapsed / HOLD_DURATION) * (1 - startFrom), 1);
-      setHoldProgress(progress);
-      
-      if (progress >= 1) {
-        setIsHolding(false);
-        setHoldProgress(0);
-        router.push('/battle');
-      } else {
-        animationFrameRef.current = requestAnimationFrame(animate);
-      }
-    };
-    
-    animationFrameRef.current = requestAnimationFrame(animate);
-  };
-
-  const endHold = (e) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
-    setIsHolding(false);
-    
-    releaseStartRef.current = Date.now();
-    releaseFromRef.current = holdProgress;
-    
-    const animateDrain = () => {
-      const elapsed = Date.now() - releaseStartRef.current;
-      const t = Math.min(elapsed / RELEASE_DURATION, 1);
-      const eased = 1 - Math.pow(1 - t, 3);
-      const newProgress = releaseFromRef.current * (1 - eased);
-      
-      setHoldProgress(newProgress);
-      
-      if (t < 1) {
-        animationFrameRef.current = requestAnimationFrame(animateDrain);
-      } else {
-        setHoldProgress(0);
-      }
-    };
-    
-    if (releaseFromRef.current > 0) {
-      animationFrameRef.current = requestAnimationFrame(animateDrain);
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-    };
-  }, []);
 
   return (
     <>
@@ -148,11 +68,12 @@ export default function FireBattleContainer({ isDarkMode }) {
       `}</style>
       
       <div 
-        className="w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 relative h-[140px] md:h-[180px]"
+        className="w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 relative h-[140px] md:h-[180px] hover:scale-[1.02] active:scale-[0.98]"
         style={{
           background: 'linear-gradient(135deg, #0a0515 0%, #1a103d 25%, #2d1b69 50%, #1e1450 75%, #0d0820 100%)',
           border: '2px solid rgba(139, 92, 246, 0.3)',
         }}
+        onClick={() => router.push('/battle')}
       >
         <div 
           className="absolute inset-0 opacity-30"
