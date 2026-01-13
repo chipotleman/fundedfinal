@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import PiksPoolPopup from './PiksPoolPopup';
+import { triggerHaptic } from '../utils/haptics';
 
 function formatTimeRemaining(ms) {
   if (!ms || ms <= 0) return 'Ended';
@@ -49,9 +50,11 @@ export default function PoolContainer({ isDarkMode }) {
   const animationFrameRef = useRef(null);
   const releaseStartRef = useRef(null);
   const releaseFromRef = useRef(0);
+  const hapticMilestonesRef = useRef(new Set());
 
   const HOLD_DURATION = 1500;
   const RELEASE_DURATION = 800;
+  const HAPTIC_MILESTONES = [0.25, 0.5, 0.75, 1];
 
   const fetchPoolData = async () => {
     try {
@@ -117,15 +120,31 @@ export default function PoolContainer({ isDarkMode }) {
     setIsHolding(true);
     holdStartRef.current = Date.now();
     const startFrom = holdProgress;
+    hapticMilestonesRef.current = new Set();
+    
+    // Initial tap haptic when hold starts
+    triggerHaptic('tap');
     
     const animate = () => {
       const elapsed = Date.now() - holdStartRef.current;
       const progress = Math.min(startFrom + (elapsed / HOLD_DURATION) * (1 - startFrom), 1);
       setHoldProgress(progress);
       
+      // Trigger haptic at each milestone
+      for (const milestone of HAPTIC_MILESTONES) {
+        if (progress >= milestone && !hapticMilestonesRef.current.has(milestone)) {
+          hapticMilestonesRef.current.add(milestone);
+          if (milestone < 1) {
+            triggerHaptic('tap');
+          }
+        }
+      }
+      
       if (progress >= 1) {
         setIsHolding(false);
         setHoldProgress(0);
+        // Strong success haptic when pool is joined
+        triggerHaptic('success');
         setShowPoolPopup(true);
         return;
       }
