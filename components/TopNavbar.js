@@ -35,6 +35,47 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
     window.addEventListener('resize', updateNavHeight);
     return () => window.removeEventListener('resize', updateNavHeight);
   }, []);
+
+  // iOS Safari sticky fix: Force recalculation of sticky positioning after app resume
+  // Safari caches layout and stops honoring sticky after background/resume cycle
+  useEffect(() => {
+    const forceStickyRefresh = () => {
+      if (!navRef.current) return;
+      // Temporarily remove sticky, force reflow, then restore
+      navRef.current.style.position = 'static';
+      // Force reflow by reading offsetHeight
+      void navRef.current.offsetHeight;
+      // Clear inline style to let CSS class take over again
+      navRef.current.style.position = '';
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        // Small delay to let Safari finish resuming
+        setTimeout(forceStickyRefresh, 50);
+        setTimeout(forceStickyRefresh, 150);
+      }
+    };
+
+    const handlePageShow = () => {
+      setTimeout(forceStickyRefresh, 50);
+      setTimeout(forceStickyRefresh, 150);
+    };
+
+    const handleFocus = () => {
+      setTimeout(forceStickyRefresh, 50);
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pageshow', handlePageShow);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pageshow', handlePageShow);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
   
   // Derive isLoggedIn directly from session status for instant rendering
   const isLoggedIn = status === 'authenticated' || (typeof window !== 'undefined' && !!localStorage.getItem('current_user'));
