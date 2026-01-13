@@ -12,15 +12,17 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
   const [showBalanceModal, setShowBalanceModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
   const [themeColor, setThemeColor] = useState('green');
   const [userProfile, setUserProfile] = useState(null);
   const [hasActiveChallenge, setHasActiveChallenge] = useState(false);
   const router = useRouter();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const { isDarkMode, toggleTheme } = useTheme();
+  
+  // Derive isLoggedIn directly from session status for instant rendering
+  const isLoggedIn = status === 'authenticated' || (typeof window !== 'undefined' && !!localStorage.getItem('current_user'));
 
   // Get theme color from purchased challenge
   useEffect(() => {
@@ -150,7 +152,6 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
       // Check NextAuth session first
       if (session?.user) {
         setCurrentUser(session.user);
-        setIsLoggedIn(true);
         localStorage.setItem('current_user', JSON.stringify(session.user));
         
         // Fetch user profile to check for active challenge
@@ -176,7 +177,6 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
           const parsedUser = JSON.parse(storedUser);
           if (parsedUser && parsedUser.id) {
             setCurrentUser(parsedUser);
-            setIsLoggedIn(true);
             return;
           }
         } catch (error) {
@@ -185,7 +185,6 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
         }
       }
 
-      setIsLoggedIn(false);
       setCurrentUser(null);
       setUserProfile(null);
       setHasActiveChallenge(false);
