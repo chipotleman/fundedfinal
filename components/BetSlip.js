@@ -112,13 +112,18 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
     setExpandedBets(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // Swipe-to-delete handlers
+  // Swipe-to-delete handlers - FanDuel style with two-step process
+  const REVEAL_WIDTH = 100; // Width to reveal delete button
+  const PARTIAL_THRESHOLD = 50; // Swipe past this to snap open
+  const FULL_DELETE_THRESHOLD = 200; // Swipe past this to delete immediately
+  
   const handleTouchStart = (betId, e) => {
     const touch = e.touches[0];
+    const currentOffset = swipeStates[betId]?.offset || 0;
     swipeRefs.current[betId] = {
       startX: touch.clientX,
       startY: touch.clientY,
-      currentX: touch.clientX,
+      initialOffset: currentOffset,
       isSwiping: false
     };
   };
@@ -129,21 +134,26 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
     const deltaX = touch.clientX - swipeRefs.current[betId].startX;
     const deltaY = Math.abs(touch.clientY - swipeRefs.current[betId].startY);
     
-    // Only swipe left, and only if horizontal movement is greater than vertical
-    if (deltaX < 0 && Math.abs(deltaX) > deltaY) {
+    // Only swipe if horizontal movement is greater than vertical
+    if (Math.abs(deltaX) > deltaY) {
       swipeRefs.current[betId].isSwiping = true;
-      const swipeAmount = Math.min(Math.abs(deltaX), 100); // Max 100px
-      setSwipeStates(prev => ({ ...prev, [betId]: swipeAmount }));
+      const initialOffset = swipeRefs.current[betId].initialOffset || 0;
+      // Calculate new offset (negative deltaX means swipe left = positive offset)
+      let newOffset = initialOffset - deltaX;
+      // Clamp between 0 and max swipe distance
+      newOffset = Math.max(0, Math.min(newOffset, FULL_DELETE_THRESHOLD + 50));
+      setSwipeStates(prev => ({ ...prev, [betId]: { offset: newOffset, isOpen: prev[betId]?.isOpen || false } }));
     }
   };
 
   const handleTouchEnd = (betId) => {
     if (!swipeRefs.current[betId]) return;
-    const swipeAmount = swipeStates[betId] || 0;
+    const state = swipeStates[betId] || { offset: 0, isOpen: false };
+    const swipeAmount = state.offset;
     
-    if (swipeAmount > 60) {
-      // Swipe threshold reached - delete the bet
-      setSwipeStates(prev => ({ ...prev, [betId]: 100 }));
+    if (swipeAmount >= FULL_DELETE_THRESHOLD) {
+      // Full swipe - delete immediately
+      setSwipeStates(prev => ({ ...prev, [betId]: { offset: FULL_DELETE_THRESHOLD + 50, isOpen: true } }));
       setTimeout(() => {
         removeBet(betId);
         setSwipeStates(prev => {
@@ -152,11 +162,34 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
           return newState;
         });
       }, 150);
+    } else if (swipeAmount >= PARTIAL_THRESHOLD) {
+      // Partial swipe - snap open to reveal delete button
+      setSwipeStates(prev => ({ ...prev, [betId]: { offset: REVEAL_WIDTH, isOpen: true } }));
     } else {
-      // Reset swipe
-      setSwipeStates(prev => ({ ...prev, [betId]: 0 }));
+      // Not enough swipe - snap closed
+      setSwipeStates(prev => ({ ...prev, [betId]: { offset: 0, isOpen: false } }));
     }
     delete swipeRefs.current[betId];
+  };
+  
+  // Handle tap on delete button when revealed
+  const handleDeleteTap = (betId) => {
+    setSwipeStates(prev => ({ ...prev, [betId]: { offset: REVEAL_WIDTH + 50, isOpen: true } }));
+    setTimeout(() => {
+      removeBet(betId);
+      setSwipeStates(prev => {
+        const newState = { ...prev };
+        delete newState[betId];
+        return newState;
+      });
+    }, 150);
+  };
+  
+  // Close any open swipe when tapping elsewhere
+  const closeSwipe = (betId) => {
+    if (swipeStates[betId]?.isOpen) {
+      setSwipeStates(prev => ({ ...prev, [betId]: { offset: 0, isOpen: false } }));
+    }
   };
 
   const calculateParlayOdds = () => {
@@ -559,19 +592,21 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                     {bets.map((bet, index) => {
                       const isLive = bet.isLive || liveScores[bet.gameId]?.isLive || liveScores[bet.matchup]?.isLive;
                       const matchupDisplay = bet.matchup || (bet.awayTeam && bet.homeTeam ? `${bet.awayTeamFull || bet.awayTeam} v ${bet.homeTeamFull || bet.homeTeam}` : '');
-                      const swipeOffset = swipeStates[bet.id] || 0;
+                      const swipeState = swipeStates[bet.id] || { offset: 0, isOpen: false };
+                      const swipeOffset = swipeState.offset;
                       const isFirst = index === 0;
                       const isLast = index === bets.length - 1;
                       
                       return (
                         <div key={bet.id} className="relative overflow-hidden">
-                          {/* Delete background revealed on swipe */}
-                          <div 
-                            className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-end px-4 transition-opacity"
+                          {/* Delete button revealed on swipe - clickable */}
+                          <button 
+                            onClick={() => handleDeleteTap(bet.id)}
+                            className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-center transition-opacity cursor-pointer"
                             style={{ width: '100px', opacity: swipeOffset > 0 ? 1 : 0 }}
                           >
                             <span className="text-white font-bold text-sm">Delete</span>
-                          </div>
+                          </button>
                           
                           {/* Swipeable content - NO padding on row, padding goes inside content */}
                           <div 
@@ -685,7 +720,8 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                   {bets.map((bet) => {
                     const isExpanded = expandedBets[bet.id] !== false;
                     const isCollapsible = bets.length > 1;
-                    const swipeOffset = swipeStates[bet.id] || 0;
+                    const swipeState = swipeStates[bet.id] || { offset: 0, isOpen: false };
+                    const swipeOffset = swipeState.offset;
                     
                     // Get live data
                     const normalizeTeam = (name) => name ? name.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
@@ -702,13 +738,14 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                     
                     return (
                       <div key={bet.id} className="relative rounded-xl overflow-hidden">
-                        {/* Delete background revealed on swipe */}
-                        <div 
-                          className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-end px-4 rounded-r-xl transition-opacity"
+                        {/* Delete button revealed on swipe - clickable */}
+                        <button 
+                          onClick={() => handleDeleteTap(bet.id)}
+                          className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-center rounded-r-xl transition-opacity cursor-pointer"
                           style={{ width: '100px', opacity: swipeOffset > 0 ? 1 : 0 }}
                         >
                           <span className="text-white font-bold text-sm">Delete</span>
-                        </div>
+                        </button>
                         
                         {/* Swipeable card */}
                         <div 
