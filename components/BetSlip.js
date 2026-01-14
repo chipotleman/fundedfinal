@@ -569,23 +569,48 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                           className={`px-4 py-3 flex items-center justify-between ${isCollapsible ? 'cursor-pointer' : ''}`}
                           onClick={() => isCollapsible && toggleBetExpanded(bet.id)}
                         >
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
                             {isCollapsible && (
-                              <svg className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? '' : '-rotate-90'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className={`w-4 h-4 text-gray-400 transition-transform flex-shrink-0 ${isExpanded ? '' : '-rotate-90'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                               </svg>
                             )}
-                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                            <span className="text-xs font-bold uppercase text-blue-500">{bet.betType || 'Spread'}</span>
+                            <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0"></div>
+                            <span className="text-xs font-bold uppercase text-blue-500 flex-shrink-0">{bet.betType || 'Spread'}</span>
+                            {/* Show LIVE indicator and team when collapsed */}
+                            {!isExpanded && (
+                              <>
+                                {isLive && (
+                                  <span className="flex items-center gap-1 flex-shrink-0 ml-1">
+                                    <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+                                    <span className="text-red-500 text-[10px] font-bold">LIVE</span>
+                                  </span>
+                                )}
+                                <span className="text-gray-400 text-xs truncate ml-1">
+                                  {capitalizeLeagueId(bet.selection)}
+                                </span>
+                              </>
+                            )}
                           </div>
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); removeBet(bet.id); }} 
-                            className="text-gray-500 hover:text-gray-300 transition-colors"
-                          >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {/* Show odds when collapsed */}
+                            {!isExpanded && (
+                              <span className={`font-bold text-sm ${
+                                bet.oddsMoved === 'up' ? 'text-green-400' : 
+                                bet.oddsMoved === 'down' ? 'text-red-400' : 'text-blue-400'
+                              }`}>
+                                {formatOdds(bet.odds)}
+                              </span>
+                            )}
+                            <button 
+                              onClick={(e) => { e.stopPropagation(); removeBet(bet.id); }} 
+                              className="text-gray-500 hover:text-gray-300 transition-colors"
+                            >
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
                         
                         {/* Expandable Content */}
