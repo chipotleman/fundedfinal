@@ -635,8 +635,8 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                   </button>
                 </div>
               ) : (
-                /* Standard Single Bets View - Matching Reference Theme with Swipe-to-Delete */
-                <div className="p-4 space-y-4">
+                /* Standard Single Bets View - Matching Parlay Theme with Swipe-to-Delete */
+                <div className="px-4 pt-2 pb-4 divide-y divide-gray-800/30">
                   {bets.map((bet) => {
                     const isExpanded = expandedBets[bet.id] !== false;
                     const isCollapsible = bets.length > 1;
@@ -656,18 +656,18 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                     const gameTime = live.time || bet.gameTime || 'Upcoming';
                     
                     return (
-                      <div key={bet.id} className="relative rounded-xl overflow-hidden">
+                      <div key={bet.id} className="relative overflow-hidden">
                         {/* Delete background revealed on swipe */}
                         <div 
-                          className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-end px-4 rounded-r-xl transition-opacity"
+                          className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-end px-4 transition-opacity"
                           style={{ width: '100px', opacity: swipeOffset > 0 ? 1 : 0 }}
                         >
                           <span className="text-white font-bold text-sm">Delete</span>
                         </div>
                         
-                        {/* Swipeable card */}
+                        {/* Swipeable card - matching parlay black theme */}
                         <div 
-                          className="bg-slate-900/40 border border-gray-800/50 rounded-xl relative transition-transform"
+                          className="bg-black py-3 relative transition-transform"
                           style={{ transform: `translateX(-${swipeOffset}px)` }}
                           onTouchStart={(e) => handleTouchStart(bet.id, e)}
                           onTouchMove={(e) => handleTouchMove(bet.id, e)}
@@ -675,7 +675,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                         >
                           {/* Collapsible Header */}
                           <div 
-                            className={`px-4 py-3 flex items-center justify-between ${isCollapsible ? 'cursor-pointer' : ''}`}
+                            className={`flex items-center justify-between ${isCollapsible ? 'cursor-pointer' : ''}`}
                             onClick={() => isCollapsible && toggleBetExpanded(bet.id)}
                           >
                             <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -728,7 +728,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                           
                           {/* Expandable Content */}
                           {isExpanded && (
-                            <div className="px-4 pb-4">
+                            <div className="pt-2">
                               {/* Selection & Odds Row */}
                               <div className="flex justify-between items-start mb-3">
                                 <div className="flex-1">
@@ -740,15 +740,15 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                                   {bet.oddsMoved === 'up' && <span className="text-green-500 text-sm">▲</span>}
                                   <span className={`font-bold text-xl ${
                                     bet.oddsMoved === 'up' ? 'text-green-400' : 
-                                    bet.oddsMoved === 'down' ? 'text-red-400' : 'text-blue-400'
+                                    bet.oddsMoved === 'down' ? 'text-red-400' : 'text-white'
                                   }`}>
                                     {formatOdds(bet.odds)}
                                   </span>
                                 </div>
                               </div>
                               
-                              {/* Game Info Box */}
-                              <div className="bg-slate-800/60 rounded-lg p-3 border border-gray-700/30">
+                              {/* Game Info Box - matching parlay theme */}
+                              <div className="bg-gray-900/50 rounded-lg p-3 border border-gray-800/50">
                                 <div className="text-gray-500 text-[10px] uppercase mb-2 tracking-wide">Game</div>
                                 <div className="space-y-1.5">
                                   <div className="flex justify-between items-center">
@@ -781,7 +781,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                                       type="number"
                                       value={bet.stake || ''}
                                       onChange={(e) => updateStake(bet.id, e.target.value)}
-                                      className="w-full pl-8 pr-3 py-3 rounded-lg text-base focus:outline-none focus:ring-1 focus:ring-blue-500 bg-slate-800/80 border border-gray-700/50 text-white placeholder-gray-500"
+                                      className="w-full pl-8 pr-3 py-3 rounded-lg text-base focus:outline-none focus:ring-1 focus:ring-blue-500 bg-gray-900/50 border border-gray-800/50 text-white placeholder-gray-500"
                                       placeholder={`Min $${minBetAmount}`}
                                     />
                                   </div>
