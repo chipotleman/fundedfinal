@@ -578,9 +578,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                             className="py-3 flex items-center gap-3 relative transition-transform"
                             style={{ 
                               transform: `translateX(-${swipeOffset}px)`, 
-                              backgroundColor: isDarkMode ? '#000000' : '#ffffff',
-                              borderBottomWidth: isLast ? 0 : 1,
-                              borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : 'rgba(209, 213, 219, 0.5)'
+                              backgroundColor: isDarkMode ? '#000000' : '#ffffff'
                             }}
                             onTouchStart={(e) => handleTouchStart(bet.id, e)}
                             onTouchMove={(e) => handleTouchMove(bet.id, e)}
