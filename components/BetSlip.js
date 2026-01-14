@@ -141,6 +141,11 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
+      // Force scroll context refresh to fix sticky header after closing
+      // This triggers a reflow that re-establishes sticky positioning
+      requestAnimationFrame(() => {
+        window.dispatchEvent(new Event('scroll'));
+      });
     }
     return () => {
       document.body.style.overflow = '';
