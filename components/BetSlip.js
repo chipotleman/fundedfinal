@@ -587,16 +587,18 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                             onTouchEnd={() => handleTouchEnd(bet.id)}
                           >
                             {/* Connector column with line and circle */}
-                            <div className="flex flex-col items-center relative" style={{ width: '16px' }}>
-                              {/* Line from top to circle (for non-first items) */}
+                            <div className="flex-shrink-0 self-stretch flex flex-col items-center justify-center relative" style={{ width: '16px' }}>
+                              {/* Line from top edge to circle center (for non-first items) */}
                               {!isFirst && (
                                 <div 
-                                  className="absolute"
                                   style={{ 
+                                    position: 'absolute',
                                     width: '2px', 
-                                    height: '50%',
                                     top: 0,
-                                    backgroundColor: isDarkMode ? 'rgba(107, 114, 128, 0.5)' : 'rgba(156, 163, 175, 0.6)'
+                                    bottom: '50%',
+                                    left: '50%',
+                                    transform: 'translateX(-50%)',
+                                    backgroundColor: isDarkMode ? 'rgba(107, 114, 128, 0.6)' : 'rgba(156, 163, 175, 0.7)'
                                   }}
                                 />
                               )}
@@ -619,15 +621,17 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                                 </svg>
                               </button>
                               
-                              {/* Line from circle to bottom (for non-last items) */}
+                              {/* Line from circle center to bottom edge (for non-last items) */}
                               {!isLast && (
                                 <div 
-                                  className="absolute"
                                   style={{ 
+                                    position: 'absolute',
                                     width: '2px', 
-                                    height: '50%',
+                                    top: '50%',
                                     bottom: 0,
-                                    backgroundColor: isDarkMode ? 'rgba(107, 114, 128, 0.5)' : 'rgba(156, 163, 175, 0.6)'
+                                    left: '50%',
+                                    transform: 'translateX(-50%)',
+                                    backgroundColor: isDarkMode ? 'rgba(107, 114, 128, 0.6)' : 'rgba(156, 163, 175, 0.7)'
                                   }}
                                 />
                               )}
