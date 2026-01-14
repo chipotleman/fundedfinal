@@ -137,6 +137,8 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
 
   // Track scroll position to restore after bet slip closes
   const savedScrollRef = useRef(0);
+  // Track if this component set body overflow (to avoid clearing other modals' overflow)
+  const didSetOverflowRef = useRef(false);
   
   useEffect(() => {
     // Simple overflow lock - no position:fixed which breaks iOS Safari touch events
@@ -144,13 +146,23 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
       // Save current scroll position before locking overflow
       savedScrollRef.current = window.scrollY || window.pageYOffset || 0;
       document.body.style.overflow = 'hidden';
+      didSetOverflowRef.current = true;
     } else {
-      document.body.style.overflow = '';
-      // Reset receipt state when bet slip closes to prevent stale state on next open
+      // Only clear body overflow if WE set it (avoid breaking other modals)
+      if (didSetOverflowRef.current) {
+        document.body.style.overflow = '';
+        didSetOverflowRef.current = false;
+      }
+      
+      // Reset ALL modal-related state when bet slip closes to prevent stale overlays
+      // These overlays with high z-index can block the docking header
       setShowReceipt(false);
       setCurrentReceipt(null);
       setShowPikPlacedBadge(false);
       setShowCoinRain(false);
+      setShowShareModal(false);
+      setSelectedWinningBet(null);
+      
       // Restore scroll position and force refresh for sticky header
       const savedPos = savedScrollRef.current;
       requestAnimationFrame(() => {
@@ -163,7 +175,11 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
       });
     }
     return () => {
-      document.body.style.overflow = '';
+      // Cleanup on unmount - only clear if we set it
+      if (didSetOverflowRef.current) {
+        document.body.style.overflow = '';
+        didSetOverflowRef.current = false;
+      }
     };
   }, [isOpen]);
 
