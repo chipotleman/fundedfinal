@@ -573,7 +573,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                           
                           {/* Swipeable content */}
                           <div 
-                            className="py-3 flex items-start gap-3 bg-black relative transition-transform"
+                            className="py-3 flex items-center gap-3 bg-black relative transition-transform"
                             style={{ transform: `translateX(-${swipeOffset}px)` }}
                             onTouchStart={(e) => handleTouchStart(bet.id, e)}
                             onTouchMove={(e) => handleTouchMove(bet.id, e)}
