@@ -466,14 +466,6 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                     Parlay
                   </div>
                 </div>
-                {betType === 'parlay' && calculateParlayOdds() && (
-                  <div className="mt-3 bg-gradient-to-r from-purple-600/20 to-blue-600/20 border border-purple-500/50 rounded-lg p-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-purple-300 text-sm font-medium">{bets.length}-Leg Parlay</span>
-                      <span className="text-white font-bold text-lg">{formatOdds(calculateParlayOdds())}</span>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
 
@@ -486,7 +478,55 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                   <p className="text-gray-400 font-medium text-lg mb-2">Your bet slip is empty</p>
                   <p className="text-gray-600">Click on odds to add picks</p>
                 </div>
+              ) : betType === 'parlay' && bets.length >= 2 ? (
+                /* Compact Parlay View - All legs in one container */
+                <div className="p-4">
+                  <div className="bg-slate-900/50 rounded-lg overflow-hidden">
+                    {/* Parlay Header */}
+                    <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottomWidth: 1, borderColor: 'rgba(55, 65, 81, 0.3)' }}>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-400 text-sm">{bets.length} SELECTIONS</span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-blue-400 font-bold text-lg">{formatOdds(calculateParlayOdds())}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Compact Legs List */}
+                    <div className="divide-y divide-gray-800/50">
+                      {bets.map((bet, index) => (
+                        <div key={bet.id} className="px-4 py-3 flex items-start gap-3">
+                          {/* Remove Button */}
+                          <button 
+                            onClick={() => removeBet(bet.id)}
+                            className="flex-shrink-0 w-6 h-6 rounded-full border border-red-500/50 bg-red-500/10 flex items-center justify-center hover:bg-red-500/30 transition-colors mt-0.5"
+                            aria-label={`Remove ${bet.selection}`}
+                          >
+                            <svg className="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                            </svg>
+                          </button>
+                          
+                          {/* Leg Info */}
+                          <div className="flex-1 min-w-0">
+                            <div className="text-white font-semibold text-sm">{capitalizeLeagueId(bet.selection)}</div>
+                            <div className="text-gray-500 text-xs uppercase mt-0.5">{bet.betType || 'Spread'}</div>
+                          </div>
+                          
+                          {/* Odds */}
+                          <div className={`flex-shrink-0 font-bold text-sm ${
+                            bet.oddsMoved === 'up' ? 'text-green-400' : 
+                            bet.oddsMoved === 'down' ? 'text-red-400' : 'text-blue-400'
+                          }`}>
+                            {formatOdds(bet.odds)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               ) : (
+                /* Standard Single Bets View */
                 <div className="p-4 space-y-3">
                   {bets.map((bet) => {
                     const isExpanded = expandedBets[bet.id] !== false;
