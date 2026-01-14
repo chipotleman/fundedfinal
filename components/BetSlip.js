@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useSession } from 'next-auth/react';
 import { useBetSlip } from '../contexts/BetSlipContext';
@@ -135,15 +135,30 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
     return () => setMounted(false);
   }, []);
 
+  // Track scroll position to restore after bet slip closes
+  const savedScrollRef = useRef(0);
+  
   useEffect(() => {
     // Simple overflow lock - no position:fixed which breaks iOS Safari touch events
     if (isOpen) {
+      // Save current scroll position before locking overflow
+      savedScrollRef.current = window.scrollY || window.pageYOffset || 0;
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
-      // Force scroll context refresh to fix sticky header after closing
-      // This triggers a reflow that re-establishes sticky positioning
+      // Reset receipt state when bet slip closes to prevent stale state on next open
+      setShowReceipt(false);
+      setCurrentReceipt(null);
+      setShowPikPlacedBadge(false);
+      setShowCoinRain(false);
+      // Restore scroll position and force refresh for sticky header
+      const savedPos = savedScrollRef.current;
       requestAnimationFrame(() => {
+        // Restore scroll position if we were scrolled down
+        if (savedPos > 0) {
+          window.scrollTo(0, savedPos);
+        }
+        // Always dispatch scroll event to refresh sticky positioning
         window.dispatchEvent(new Event('scroll'));
       });
     }
