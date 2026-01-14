@@ -543,171 +543,119 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                   </button>
                 </div>
               ) : (
-                /* Standard Single Bets View */
-                <div className="p-4 space-y-3">
+                /* Standard Single Bets View - Matching Reference Theme */
+                <div className="p-4 space-y-4">
                   {bets.map((bet) => {
                     const isExpanded = expandedBets[bet.id] !== false;
                     const isCollapsible = bets.length > 1;
                     
-                    let borderColor = 'border-blue-500/50';
-                    let flashClass = '';
-                    if (bet.oddsMoved === 'up') {
-                      borderColor = 'border-green-500';
-                      flashClass = 'animate-pulse bg-green-500/10';
-                    } else if (bet.oddsMoved === 'down') {
-                      borderColor = 'border-red-500';
-                      flashClass = 'animate-pulse bg-red-500/10';
-                    }
+                    // Get live data
+                    const normalizeTeam = (name) => name ? name.toLowerCase().replace(/[^a-z0-9]/g, '') : '';
+                    const fullMatchup = bet.awayTeamFull && bet.homeTeamFull ? `${bet.awayTeamFull} @ ${bet.homeTeamFull}` : null;
+                    const abbrMatchup = bet.awayTeam && bet.homeTeam ? `${bet.awayTeam} @ ${bet.homeTeam}` : null;
+                    const normalizedMatchup = bet.matchup ? `${normalizeTeam(bet.matchup.split(' @ ')[0])}@${normalizeTeam(bet.matchup.split(' @ ')[1])}` : null;
+                    const live = liveScores[bet.gameId] || liveScores[bet.matchup] || liveScores[bet.matchup?.toLowerCase()] ||
+                      (fullMatchup && liveScores[fullMatchup]) || (abbrMatchup && liveScores[abbrMatchup]) ||
+                      (normalizedMatchup && liveScores[normalizedMatchup]) || {};
+                    const isLive = live.isLive || bet.isLive;
+                    const awayScore = live.awayScore ?? bet.awayScore ?? null;
+                    const homeScore = live.homeScore ?? bet.homeScore ?? null;
+                    const gameTime = live.time || bet.gameTime || 'Upcoming';
                     
                     return (
-                      <div key={bet.id} className={`bg-black rounded-lg border ${borderColor} overflow-hidden transition-all duration-300 ${flashClass}`}>
+                      <div key={bet.id} className="bg-slate-900/40 rounded-xl border border-gray-800/50 overflow-hidden">
                         {/* Collapsible Header */}
                         <div 
-                          className={`bg-slate-900/80 px-4 py-2 flex items-center justify-between ${isCollapsible ? 'cursor-pointer hover:bg-slate-800/80' : ''}`}
+                          className={`px-4 py-3 flex items-center justify-between ${isCollapsible ? 'cursor-pointer' : ''}`}
                           onClick={() => isCollapsible && toggleBetExpanded(bet.id)}
                         >
-                          <div className="flex items-center gap-2 flex-1">
+                          <div className="flex items-center gap-2">
                             {isCollapsible && (
-                              <svg className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? '' : '-rotate-90'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                               </svg>
                             )}
-                            <div className={`w-2 h-2 rounded-full ${
-                              bet.oddsMoved === 'up' ? 'bg-green-400' : 
-                              bet.oddsMoved === 'down' ? 'bg-red-400' : 'bg-blue-400 animate-pulse'
-                            }`}></div>
-                            <span className={`text-xs font-bold uppercase ${
-                              bet.oddsMoved === 'up' ? 'text-green-400' : 
-                              bet.oddsMoved === 'down' ? 'text-red-400' : 'text-blue-400'
-                            }`}>{bet.betType || 'Spread'}</span>
-                            {!isExpanded && (
-                              <span className="text-gray-300 text-xs ml-2 truncate">{capitalizeLeagueId(bet.selection)}</span>
-                            )}
+                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                            <span className="text-xs font-bold uppercase text-blue-500">{bet.betType || 'Spread'}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            {!isExpanded && (
-                              <span className={`font-bold text-sm ${
-                                bet.oddsMoved === 'up' ? 'text-green-400' : 
-                                bet.oddsMoved === 'down' ? 'text-red-400' : 'text-blue-400'
-                              }`}>{formatOdds(bet.odds)}</span>
-                            )}
-                            <button onClick={(e) => { e.stopPropagation(); removeBet(bet.id); }} className="text-gray-500 hover:text-red-400">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          </div>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); removeBet(bet.id); }} 
+                            className="text-gray-500 hover:text-gray-300 transition-colors"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
                         </div>
                         
                         {/* Expandable Content */}
                         {isExpanded && (
-                          <>
-                            {/* Selection & Odds */}
-                            <div className="px-4 py-3">
-                              <div className="flex justify-between items-start mb-2">
-                                <div className="flex-1">
-                                  <div className="text-white font-bold text-base">{capitalizeLeagueId(bet.selection)}</div>
-                                  <div className="text-gray-400 text-xs uppercase mt-0.5">{bet.betType}</div>
-                                </div>
-                                <div className={`font-bold text-xl flex items-center gap-1 ${
+                          <div className="px-4 pb-4">
+                            {/* Selection & Odds Row */}
+                            <div className="flex justify-between items-start mb-3">
+                              <div className="flex-1">
+                                <div className="text-white font-bold text-lg leading-tight">{capitalizeLeagueId(bet.selection)}</div>
+                                <div className="text-gray-500 text-xs uppercase mt-0.5">{bet.betType}</div>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                {bet.oddsMoved === 'down' && <span className="text-red-500 text-sm">▼</span>}
+                                {bet.oddsMoved === 'up' && <span className="text-green-500 text-sm">▲</span>}
+                                <span className={`font-bold text-xl ${
                                   bet.oddsMoved === 'up' ? 'text-green-400' : 
                                   bet.oddsMoved === 'down' ? 'text-red-400' : 'text-blue-400'
                                 }`}>
-                                  {bet.oddsMoved === 'up' && <span className="text-sm">▲</span>}
-                                  {bet.oddsMoved === 'down' && <span className="text-sm">▼</span>}
                                   {formatOdds(bet.odds)}
-                                </div>
+                                </span>
                               </div>
-                              
-                              {/* Live Game Info */}
-                              {(() => {
-                                // Normalize team names for matching
-                                const normalizeTeam = (name) => {
-                                  if (!name) return '';
-                                  return name.toLowerCase().replace(/[^a-z0-9]/g, '');
-                                };
-                                
-                                // Try multiple matching strategies
-                                const fullMatchup = bet.awayTeamFull && bet.homeTeamFull 
-                                  ? `${bet.awayTeamFull} @ ${bet.homeTeamFull}` 
-                                  : null;
-                                const abbrMatchup = bet.awayTeam && bet.homeTeam 
-                                  ? `${bet.awayTeam} @ ${bet.homeTeam}` 
-                                  : null;
-                                const normalizedMatchup = bet.matchup 
-                                  ? `${normalizeTeam(bet.matchup.split(' @ ')[0])}@${normalizeTeam(bet.matchup.split(' @ ')[1])}`
-                                  : null;
-                                
-                                const live = liveScores[bet.gameId] || 
-                                  liveScores[bet.matchup] || 
-                                  liveScores[bet.matchup?.toLowerCase()] ||
-                                  (fullMatchup && liveScores[fullMatchup]) ||
-                                  (fullMatchup && liveScores[fullMatchup.toLowerCase()]) ||
-                                  (abbrMatchup && liveScores[abbrMatchup]) ||
-                                  (abbrMatchup && liveScores[abbrMatchup.toLowerCase()]) ||
-                                  (normalizedMatchup && liveScores[normalizedMatchup]) ||
-                                  {};
-                                const isLive = live.isLive || bet.isLive;
-                                const awayScore = live.awayScore ?? bet.awayScore ?? 0;
-                                const homeScore = live.homeScore ?? bet.homeScore ?? 0;
-                                const gameTime = live.time || bet.gameTime || 'Upcoming';
-                                
-                                return (
-                                  <div className="bg-slate-800/50 rounded-lg p-3 mt-2">
-                                    <div className="text-gray-500 text-[10px] uppercase mb-1">Game</div>
-                                    <div className="space-y-1">
-                                      <div className="flex justify-between items-center">
-                                        <span className="text-white text-sm font-medium">{capitalizeLeagueId(bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0])}</span>
-                                        {isLive && <span className="text-white font-bold">{awayScore}</span>}
-                                      </div>
-                                      <div className="flex justify-between items-center">
-                                        <span className="text-white text-sm font-medium">{capitalizeLeagueId(bet.homeTeamFull || bet.homeTeam || bet.matchup?.split(' @ ')[1])}</span>
-                                        {isLive && <span className="text-white font-bold">{homeScore}</span>}
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center gap-2 mt-2">
-                                      {isLive ? (
-                                        <>
-                                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
-                                          <span className="text-red-500 text-xs font-medium">LIVE</span>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <div className="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
-                                          <span className="text-gray-400 text-xs">{gameTime}</span>
-                                        </>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })()}
                             </div>
                             
-                            {/* Stake Input - Only for straight bets */}
+                            {/* Game Info Box */}
+                            <div className="bg-slate-800/60 rounded-lg p-3 border border-gray-700/30">
+                              <div className="text-gray-500 text-[10px] uppercase mb-2 tracking-wide">Game</div>
+                              <div className="space-y-1.5">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-white text-sm">{capitalizeLeagueId(bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0] || 'Away')}</span>
+                                  {awayScore !== null && <span className="text-white font-bold text-sm">{awayScore}</span>}
+                                </div>
+                                <div className="flex justify-between items-center">
+                                  <span className="text-white text-sm">{capitalizeLeagueId(bet.homeTeamFull || bet.homeTeam || bet.matchup?.split(' @ ')[1] || 'Home')}</span>
+                                  {homeScore !== null && <span className="text-white font-bold text-sm">{homeScore}</span>}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1.5 mt-2">
+                                {isLive ? (
+                                  <>
+                                    <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                                    <span className="text-red-500 text-xs font-medium">LIVE</span>
+                                  </>
+                                ) : (
+                                  <span className="text-gray-500 text-xs">{gameTime}</span>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Stake Input */}
                             {betType === 'single' && (
-                              <div className="px-4 pb-3 pt-3" style={{ borderTopWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#000000' }}>
-                                <div className="flex items-center gap-3">
-                                  <div className="relative flex-1">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: isDarkMode ? '#6b7280' : '#111827' }}>$</span>
-                                    <input
-                                      type="number"
-                                      value={bet.stake || ''}
-                                      onChange={(e) => updateStake(bet.id, e.target.value)}
-                                      className="w-full pl-8 pr-3 py-3 rounded-lg text-base focus:outline-none focus:border-blue-500"
-                                      style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? '#374151' : '#000000', color: isDarkMode ? '#ffffff' : '#111827' }}
-                                      placeholder={`Min $${minBetAmount}`}
-                                    />
-                                  </div>
-                                  <div className="text-right min-w-[80px]">
-                                    <div className="text-gray-500 text-[10px] uppercase">To Win</div>
-                                    <div className="text-green-400 font-bold text-lg">
-                                      ${bet.stake ? (calculatePayout(bet.odds, bet.stake) - bet.stake).toFixed(2) : '0.00'}
-                                    </div>
+                              <div className="flex items-center gap-3 mt-4">
+                                <div className="relative flex-1">
+                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">$</span>
+                                  <input
+                                    type="number"
+                                    value={bet.stake || ''}
+                                    onChange={(e) => updateStake(bet.id, e.target.value)}
+                                    className="w-full pl-8 pr-3 py-3 rounded-lg text-base focus:outline-none focus:ring-1 focus:ring-blue-500 bg-slate-800/80 border border-gray-700/50 text-white placeholder-gray-500"
+                                    placeholder={`Min $${minBetAmount}`}
+                                  />
+                                </div>
+                                <div className="text-right min-w-[70px]">
+                                  <div className="text-gray-500 text-[10px] uppercase tracking-wide">To Win</div>
+                                  <div className="text-green-400 font-bold text-lg">
+                                    ${bet.stake ? (calculatePayout(bet.odds, bet.stake) - bet.stake).toFixed(2) : '0.00'}
                                   </div>
                                 </div>
                               </div>
                             )}
-                          </>
+                          </div>
                         )}
                       </div>
                     );
