@@ -34,11 +34,15 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
     const updateNavHeight = () => {
       if (navRef.current) {
         const height = navRef.current.offsetHeight;
-        document.documentElement.style.setProperty('--top-nav-height', `${height}px`);
+        // Only update if height is valid (> 0) to prevent race condition
+        if (height > 0) {
+          document.documentElement.style.setProperty('--top-nav-height', `${height}px`);
+        }
       }
     };
     
-    updateNavHeight();
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(updateNavHeight);
     window.addEventListener('resize', updateNavHeight);
     return () => window.removeEventListener('resize', updateNavHeight);
   }, []);
@@ -444,7 +448,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
 
   return (
     <>
-      <nav ref={navRef} className="sticky top-0 left-0 right-0 z-50" style={{ backgroundColor: isDarkMode ? '#000000' : '#ffffff' }}>
+      <nav ref={navRef} className="fixed top-0 left-0 right-0 z-50" style={{ backgroundColor: isDarkMode ? '#000000' : '#ffffff' }}>
         <div className="px-3 sm:px-6 h-[70px] sm:h-auto sm:py-1 sm:-mb-6 flex items-center">
           <div className="flex items-center justify-between w-full sm:justify-between min-h-[70px] sm:min-h-[48px] relative">
             {/* Logo - absolutely positioned on mobile to not affect bar height */}

@@ -141,16 +141,6 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = '';
-      // Force layout recalculation to fix sticky header after closing on iOS
-      // Toggling transform forces the browser to re-render sticky elements
-      requestAnimationFrame(() => {
-        document.body.style.transform = 'translateZ(0)';
-        requestAnimationFrame(() => {
-          document.body.style.transform = '';
-          window.scrollBy(0, 1);
-          window.scrollBy(0, -1);
-        });
-      });
     }
     return () => {
       document.body.style.overflow = '';
