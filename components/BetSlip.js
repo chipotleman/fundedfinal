@@ -480,50 +480,67 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                 </div>
               ) : betType === 'parlay' && bets.length >= 2 ? (
                 /* Compact Parlay View - All legs in one container */
-                <div className="p-4">
-                  <div className="bg-slate-900/50 rounded-lg overflow-hidden">
-                    {/* Parlay Header */}
-                    <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottomWidth: 1, borderColor: 'rgba(55, 65, 81, 0.3)' }}>
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-400 text-sm">{bets.length} SELECTIONS</span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-blue-400 font-bold text-lg">{formatOdds(calculateParlayOdds())}</span>
-                      </div>
-                    </div>
-                    
-                    {/* Compact Legs List */}
-                    <div className="divide-y divide-gray-800/50">
-                      {bets.map((bet, index) => (
-                        <div key={bet.id} className="px-4 py-3 flex items-start gap-3">
+                <div className="px-4 pt-2 pb-4">
+                  {/* Compact Legs List */}
+                  <div className="divide-y divide-gray-800/30">
+                    {bets.map((bet) => {
+                      const isLive = bet.isLive || liveScores[bet.gameId]?.isLive || liveScores[bet.matchup]?.isLive;
+                      const matchupDisplay = bet.matchup || (bet.awayTeam && bet.homeTeam ? `${bet.awayTeamFull || bet.awayTeam} v ${bet.homeTeamFull || bet.homeTeam}` : '');
+                      
+                      return (
+                        <div key={bet.id} className="py-3 flex items-start gap-3">
                           {/* Remove Button */}
                           <button 
                             onClick={() => removeBet(bet.id)}
-                            className="flex-shrink-0 w-6 h-6 rounded-full border border-red-500/50 bg-red-500/10 flex items-center justify-center hover:bg-red-500/30 transition-colors mt-0.5"
+                            className="flex-shrink-0 w-5 h-5 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors mt-1"
                             aria-label={`Remove ${bet.selection}`}
                           >
-                            <svg className="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                            <svg className="w-2.5 h-2.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" />
                             </svg>
                           </button>
                           
                           {/* Leg Info */}
                           <div className="flex-1 min-w-0">
-                            <div className="text-white font-semibold text-sm">{capitalizeLeagueId(bet.selection)}</div>
+                            <div className="text-white font-bold text-sm leading-tight">{capitalizeLeagueId(bet.selection)}</div>
                             <div className="text-gray-500 text-xs uppercase mt-0.5">{bet.betType || 'Spread'}</div>
+                            {/* Live Badge + Matchup */}
+                            <div className="flex items-center gap-1.5 mt-1">
+                              {isLive && (
+                                <span className="px-1.5 py-0.5 text-[10px] font-bold text-red-500 bg-red-500/10 border border-red-500/30 rounded">LIVE</span>
+                              )}
+                              {matchupDisplay && (
+                                <span className="text-gray-500 text-xs truncate">{capitalizeLeagueId(matchupDisplay)}</span>
+                              )}
+                            </div>
                           </div>
                           
-                          {/* Odds */}
-                          <div className={`flex-shrink-0 font-bold text-sm ${
-                            bet.oddsMoved === 'up' ? 'text-green-400' : 
-                            bet.oddsMoved === 'down' ? 'text-red-400' : 'text-blue-400'
-                          }`}>
-                            {formatOdds(bet.odds)}
+                          {/* Odds with movement indicator */}
+                          <div className="flex-shrink-0 flex items-center gap-1">
+                            {bet.oddsMoved === 'down' && <span className="text-red-500 text-xs">▼</span>}
+                            {bet.oddsMoved === 'up' && <span className="text-green-500 text-xs">▲</span>}
+                            <span className={`font-bold text-sm ${
+                              bet.oddsMoved === 'up' ? 'text-green-400' : 
+                              bet.oddsMoved === 'down' ? 'text-red-400' : 'text-white'
+                            }`}>
+                              {formatOdds(bet.odds)}
+                            </span>
                           </div>
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })}
                   </div>
+                  
+                  {/* Remove All Selections */}
+                  <button 
+                    onClick={() => bets.forEach(bet => removeBet(bet.id))}
+                    className="w-full mt-3 py-2.5 flex items-center justify-center gap-2 text-red-500 hover:text-red-400 transition-colors border-t border-gray-800/50"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    <span className="text-sm font-medium">Remove all selections</span>
+                  </button>
                 </div>
               ) : (
                 /* Standard Single Bets View */
