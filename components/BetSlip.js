@@ -208,10 +208,14 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
         belowMinimum: parlayStake > 0 && parlayStake < minBetAmount
       };
     } else {
+      // For single bets, only validate bets that have stakes entered
+      // Bets without stakes are allowed - they just won't be placed
+      const betsWithStakes = bets.filter(bet => bet.stake > 0);
       const betsWithLowStakes = bets.filter(bet => bet.stake > 0 && bet.stake < minBetAmount);
+      const validBetsWithStakes = betsWithStakes.filter(bet => bet.stake >= minBetAmount);
       return {
-        isValid: bets.every(bet => bet.stake >= minBetAmount),
-        hasStakes: bets.every(bet => bet.stake > 0),
+        isValid: betsWithLowStakes.length === 0 && validBetsWithStakes.length > 0,
+        hasStakes: betsWithStakes.length > 0,
         belowMinimum: betsWithLowStakes.length > 0
       };
     }
@@ -224,12 +228,22 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
     setIsPlacing(true);
 
     try {
+      // For single bets, only send bets that have valid stakes
+      const betsToPlace = betType === 'single' 
+        ? bets.filter(b => b.stake && parseFloat(b.stake) >= minBetAmount)
+        : bets;
+      
+      if (betsToPlace.length === 0) {
+        setIsPlacing(false);
+        return;
+      }
+
       const response = await fetch('/api/bets/place', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          bets,
+          bets: betsToPlace,
           betType,
           parlayStake: betType === 'parlay' ? parlayStake : 0
         })
@@ -266,13 +280,13 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
         if (betType === 'parlay' && parlayStake > 0) {
           setCurrentReceipt({
             id: placedBet.id,
-            matchup: placedBet.matchupName || `${bets.length}-Leg Parlay`,
+            matchup: placedBet.matchupName || `${betsToPlace.length}-Leg Parlay`,
             selection: placedBet.selection,
             betType: 'parlay',
             odds: parseInt(placedBet.odds),
             stake: parseFloat(placedBet.stake),
             status: 'open',
-            legs: bets.map(bet => ({
+            legs: betsToPlace.map(bet => ({
               selection: bet.selection,
               betType: bet.betType,
               odds: typeof bet.odds === 'object' ? bet.odds.odds || bet.odds.value : bet.odds,
@@ -290,7 +304,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
             }))
           });
         } else {
-          const firstBet = bets[0];
+          const firstBet = betsToPlace[0];
           const live = liveScores[firstBet.gameId] || liveScores[firstBet.matchup] || {};
           const currentAwayScore = live.awayScore ?? firstBet.awayScore;
           const currentHomeScore = live.homeScore ?? firstBet.homeScore;
@@ -328,11 +342,21 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
       setShowCoinRain(true);
 
       setTimeout(() => {
-        const winningBet = bets[0];
+        const winningBet = betsToPlace[0];
         if (winningBet && winningBet.stake > 0) {
           setSelectedWinningBet(winningBet);
         }
-        clearBetSlip();
+        
+        // For single bets, only remove the bets that were placed (have stakes)
+        // Keep bets without stakes in the slip
+        if (betType === 'single' && bets.length > betsToPlace.length) {
+          // Remove only the placed bets
+          const placedBetIds = betsToPlace.map(b => b.id);
+          placedBetIds.forEach(id => removeBet(id));
+        } else {
+          // Clear all bets (parlay or all single bets had stakes)
+          clearBetSlip();
+        }
         setIsPlacing(false);
       }, 500);
     } catch (error) {
@@ -770,13 +794,17 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                     Sign In to Place Bets
                   </button>
                 ) : (() => {
-                  const canPlace = validation.isValid && totalStake <= bankroll && !isPlacing && totalStake > 0;
+                  // For straight bets, only count bets that have stakes entered
+                  const betsWithStakes = betType === 'single' ? bets.filter(b => b.stake && parseFloat(b.stake) >= minBetAmount) : bets;
+                  const placeBetCount = betType === 'single' ? betsWithStakes.length : bets.length;
+                  const canPlace = validation.isValid && totalStake <= bankroll && !isPlacing && totalStake > 0 && placeBetCount > 0;
+                  
                   return (
                     <button
                       type="button"
                       className="no-hover-effect"
                       onClick={() => {
-                        console.log('Place button clicked', { canPlace, validation, totalStake, bankroll, isPlacing });
+                        console.log('Place button clicked', { canPlace, validation, totalStake, bankroll, isPlacing, placeBetCount });
                         if (canPlace) {
                           placeBets();
                         }
@@ -800,7 +828,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                         transition: 'none'
                       }}
                     >
-                      {isPlacing ? 'Placing...' : betType === 'parlay' ? `Place ${bets.length}-Leg Parlay` : `Place ${bets.length} Pik${bets.length > 1 ? 's' : ''}`}
+                      {isPlacing ? 'Placing...' : betType === 'parlay' ? `Place ${bets.length}-Leg Parlay` : `Place ${placeBetCount} Pik${placeBetCount !== 1 ? 's' : ''}`}
                     </button>
                   );
                 })()}
