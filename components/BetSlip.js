@@ -555,27 +555,13 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                 /* Compact Parlay View - All legs in one container */
                 <div className="px-4 pt-2 pb-4">
                   {/* Compact Legs List with Swipe-to-Delete and Connecting Line */}
-                  <div className="relative">
-                    {/* Single continuous vertical spine - positioned to run between all circles */}
-                    {bets.length > 1 && (
-                      <div 
-                        style={{ 
-                          position: 'absolute',
-                          left: '7px',
-                          top: '32px',
-                          bottom: '32px',
-                          width: '2px',
-                          backgroundColor: isDarkMode ? 'rgba(107, 114, 128, 0.6)' : 'rgba(156, 163, 175, 0.7)',
-                          zIndex: 1,
-                          pointerEvents: 'none'
-                        }}
-                      />
-                    )}
-                    
+                  <div>
                     {bets.map((bet, index) => {
                       const isLive = bet.isLive || liveScores[bet.gameId]?.isLive || liveScores[bet.matchup]?.isLive;
                       const matchupDisplay = bet.matchup || (bet.awayTeam && bet.homeTeam ? `${bet.awayTeamFull || bet.awayTeam} v ${bet.homeTeamFull || bet.homeTeam}` : '');
                       const swipeOffset = swipeStates[bet.id] || 0;
+                      const isFirst = index === 0;
+                      const isLast = index === bets.length - 1;
                       
                       return (
                         <div key={bet.id} className="relative overflow-hidden">
@@ -587,9 +573,9 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                             <span className="text-white font-bold text-sm">Delete</span>
                           </div>
                           
-                          {/* Swipeable content */}
+                          {/* Swipeable content - NO padding on row, padding goes inside content */}
                           <div 
-                            className="py-3 flex items-center gap-3 relative transition-transform"
+                            className="flex relative transition-transform"
                             style={{ 
                               transform: `translateX(-${swipeOffset}px)`, 
                               backgroundColor: isDarkMode ? '#000000' : '#ffffff'
@@ -598,49 +584,83 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                             onTouchMove={(e) => handleTouchMove(bet.id, e)}
                             onTouchEnd={() => handleTouchEnd(bet.id)}
                           >
-                            {/* Red minus circle - sits on top of the spine */}
-                            <button 
-                              onClick={() => removeBet(bet.id)}
-                              className="flex-shrink-0 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors relative z-10"
-                              style={{ 
-                                width: '16px', 
-                                height: '16px', 
-                                minWidth: '16px', 
-                                minHeight: '16px',
-                                backgroundColor: isDarkMode ? '#000000' : '#ffffff'
-                              }}
-                              aria-label={`Remove ${bet.selection}`}
-                            >
-                              <svg style={{ width: '8px', height: '8px' }} className="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M20 12H4" />
-                              </svg>
-                            </button>
-                            
-                            {/* Leg Info */}
-                            <div className="flex-1 min-w-0">
-                              <div className="font-bold text-sm leading-tight" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.selection)}</div>
-                              <div className="text-xs uppercase mt-0.5" style={{ color: '#6b7280' }}>{bet.betType || 'Spread'}</div>
-                              {/* Live Badge + Matchup */}
-                              <div className="flex items-center gap-1.5 mt-1">
-                                {isLive && (
-                                  <span className="px-1.5 py-0.5 text-[10px] font-bold text-red-500 bg-red-500/10 border border-red-500/30 rounded">LIVE</span>
+                            {/* Connector column - full height, no padding */}
+                            <div className="flex-shrink-0 flex flex-col items-center" style={{ width: '16px' }}>
+                              {/* Top segment - connects from previous circle */}
+                              <div 
+                                className="flex-1 flex items-center justify-center"
+                                style={{ width: '16px' }}
+                              >
+                                {!isFirst && (
+                                  <div style={{ 
+                                    width: '2px', 
+                                    height: '100%',
+                                    backgroundColor: isDarkMode ? 'rgba(107, 114, 128, 0.6)' : 'rgba(156, 163, 175, 0.7)'
+                                  }} />
                                 )}
-                                {matchupDisplay && (
-                                  <span className="text-xs truncate" style={{ color: '#6b7280' }}>{capitalizeLeagueId(matchupDisplay)}</span>
+                              </div>
+                              
+                              {/* Red minus circle */}
+                              <button 
+                                onClick={() => removeBet(bet.id)}
+                                className="flex-shrink-0 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors"
+                                style={{ 
+                                  width: '16px', 
+                                  height: '16px', 
+                                  minWidth: '16px', 
+                                  minHeight: '16px',
+                                  backgroundColor: isDarkMode ? '#000000' : '#ffffff'
+                                }}
+                                aria-label={`Remove ${bet.selection}`}
+                              >
+                                <svg style={{ width: '8px', height: '8px' }} className="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M20 12H4" />
+                                </svg>
+                              </button>
+                              
+                              {/* Bottom segment - connects to next circle */}
+                              <div 
+                                className="flex-1 flex items-center justify-center"
+                                style={{ width: '16px' }}
+                              >
+                                {!isLast && (
+                                  <div style={{ 
+                                    width: '2px', 
+                                    height: '100%',
+                                    backgroundColor: isDarkMode ? 'rgba(107, 114, 128, 0.6)' : 'rgba(156, 163, 175, 0.7)'
+                                  }} />
                                 )}
                               </div>
                             </div>
                             
-                            {/* Odds with movement indicator */}
-                            <div className="flex-shrink-0 flex items-center gap-1">
-                              {bet.oddsMoved === 'down' && <span className="text-red-500 text-xs">▼</span>}
-                              {bet.oddsMoved === 'up' && <span className="text-green-500 text-xs">▲</span>}
-                              <span className={`font-bold text-sm ${
-                                bet.oddsMoved === 'up' ? 'text-green-400' : 
-                                bet.oddsMoved === 'down' ? 'text-red-400' : ''
-                              }`} style={{ color: bet.oddsMoved === 'up' ? undefined : bet.oddsMoved === 'down' ? undefined : (isDarkMode ? '#ffffff' : '#111827') }}>
-                                {formatOdds(bet.odds)}
-                              </span>
+                            {/* Content column - has the padding */}
+                            <div className="flex-1 flex items-center gap-3 py-3 min-w-0">
+                              {/* Leg Info */}
+                              <div className="flex-1 min-w-0">
+                                <div className="font-bold text-sm leading-tight" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.selection)}</div>
+                                <div className="text-xs uppercase mt-0.5" style={{ color: '#6b7280' }}>{bet.betType || 'Spread'}</div>
+                                {/* Live Badge + Matchup */}
+                                <div className="flex items-center gap-1.5 mt-1">
+                                  {isLive && (
+                                    <span className="px-1.5 py-0.5 text-[10px] font-bold text-red-500 bg-red-500/10 border border-red-500/30 rounded">LIVE</span>
+                                  )}
+                                  {matchupDisplay && (
+                                    <span className="text-xs truncate" style={{ color: '#6b7280' }}>{capitalizeLeagueId(matchupDisplay)}</span>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {/* Odds with movement indicator */}
+                              <div className="flex-shrink-0 flex items-center gap-1">
+                                {bet.oddsMoved === 'down' && <span className="text-red-500 text-xs">▼</span>}
+                                {bet.oddsMoved === 'up' && <span className="text-green-500 text-xs">▲</span>}
+                                <span className={`font-bold text-sm ${
+                                  bet.oddsMoved === 'up' ? 'text-green-400' : 
+                                  bet.oddsMoved === 'down' ? 'text-red-400' : ''
+                                }`} style={{ color: bet.oddsMoved === 'up' ? undefined : bet.oddsMoved === 'down' ? undefined : (isDarkMode ? '#ffffff' : '#111827') }}>
+                                  {formatOdds(bet.odds)}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
