@@ -137,23 +137,14 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
 
   // Track scroll position to restore after bet slip closes
   const savedScrollRef = useRef(0);
-  // Track if this component set body overflow (to avoid clearing other modals' overflow)
-  const didSetOverflowRef = useRef(false);
   
   useEffect(() => {
-    // Simple overflow lock - no position:fixed which breaks iOS Safari touch events
+    // DO NOT set body.style.overflow = 'hidden' - this breaks sticky positioning
+    // The bet slip overlay (z-[98] backdrop) handles blocking background interaction
     if (isOpen) {
-      // Save current scroll position before locking overflow
+      // Save current scroll position
       savedScrollRef.current = window.scrollY || window.pageYOffset || 0;
-      document.body.style.overflow = 'hidden';
-      didSetOverflowRef.current = true;
     } else {
-      // Only clear body overflow if WE set it (avoid breaking other modals)
-      if (didSetOverflowRef.current) {
-        document.body.style.overflow = '';
-        didSetOverflowRef.current = false;
-      }
-      
       // Reset ALL modal-related state when bet slip closes to prevent stale overlays
       // These overlays with high z-index can block the docking header
       setShowReceipt(false);
@@ -174,13 +165,6 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
         window.dispatchEvent(new Event('scroll'));
       });
     }
-    return () => {
-      // Cleanup on unmount - only clear if we set it
-      if (didSetOverflowRef.current) {
-        document.body.style.overflow = '';
-        didSetOverflowRef.current = false;
-      }
-    };
   }, [isOpen]);
 
   const userChallenge = 'basic';
@@ -404,15 +388,20 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
 
       {isOpen && (
         <>
+          {/* Backdrop - blocks clicks but NOT body scroll (preserves sticky positioning) */}
           <div 
             className="fixed inset-0 z-[98] hidden md:block"
             style={{ backgroundColor: isDarkMode ? '#000000' : 'rgba(0,0,0,0.5)' }}
             onClick={onClose}
           />
           
+          {/* Bet slip panel - uses overscroll-behavior to contain scroll within panel */}
           <div 
             className="fixed inset-0 md:inset-auto md:top-0 md:right-0 md:bottom-0 md:w-[420px] z-[99] flex flex-col" 
-            style={{ backgroundColor: isDarkMode ? '#000000' : '#ffffff' }}
+            style={{ 
+              backgroundColor: isDarkMode ? '#000000' : '#ffffff',
+              overscrollBehavior: 'contain'
+            }}
             onTouchStart={() => {}}
           >
             {/* Header with Piks branding - matches TopNavbar structure */}
