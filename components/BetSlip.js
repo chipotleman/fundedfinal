@@ -555,13 +555,27 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                 /* Compact Parlay View - All legs in one container */
                 <div className="px-4 pt-2 pb-4">
                   {/* Compact Legs List with Swipe-to-Delete and Connecting Line */}
-                  <div>
+                  <div className="relative">
+                    {/* Single continuous vertical spine - positioned to run between all circles */}
+                    {bets.length > 1 && (
+                      <div 
+                        style={{ 
+                          position: 'absolute',
+                          left: '7px',
+                          top: '32px',
+                          bottom: '32px',
+                          width: '2px',
+                          backgroundColor: isDarkMode ? 'rgba(107, 114, 128, 0.6)' : 'rgba(156, 163, 175, 0.7)',
+                          zIndex: 1,
+                          pointerEvents: 'none'
+                        }}
+                      />
+                    )}
+                    
                     {bets.map((bet, index) => {
                       const isLive = bet.isLive || liveScores[bet.gameId]?.isLive || liveScores[bet.matchup]?.isLive;
                       const matchupDisplay = bet.matchup || (bet.awayTeam && bet.homeTeam ? `${bet.awayTeamFull || bet.awayTeam} v ${bet.homeTeamFull || bet.homeTeam}` : '');
                       const swipeOffset = swipeStates[bet.id] || 0;
-                      const isFirst = index === 0;
-                      const isLast = index === bets.length - 1;
                       
                       return (
                         <div key={bet.id} className="relative overflow-hidden">
@@ -584,56 +598,23 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                             onTouchMove={(e) => handleTouchMove(bet.id, e)}
                             onTouchEnd={() => handleTouchEnd(bet.id)}
                           >
-                            {/* Connector column with line and circle */}
-                            <div className="flex-shrink-0 self-stretch flex flex-col items-center justify-center relative" style={{ width: '16px' }}>
-                              {/* Line from top edge to circle center (for non-first items) */}
-                              {!isFirst && (
-                                <div 
-                                  style={{ 
-                                    position: 'absolute',
-                                    width: '2px', 
-                                    top: 0,
-                                    bottom: '50%',
-                                    left: '50%',
-                                    transform: 'translateX(-50%)',
-                                    backgroundColor: isDarkMode ? 'rgba(107, 114, 128, 0.6)' : 'rgba(156, 163, 175, 0.7)'
-                                  }}
-                                />
-                              )}
-                              
-                              {/* Red minus circle */}
-                              <button 
-                                onClick={() => removeBet(bet.id)}
-                                className="flex-shrink-0 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors relative z-10"
-                                style={{ 
-                                  width: '16px', 
-                                  height: '16px', 
-                                  minWidth: '16px', 
-                                  minHeight: '16px',
-                                  backgroundColor: isDarkMode ? '#000000' : '#ffffff'
-                                }}
-                                aria-label={`Remove ${bet.selection}`}
-                              >
-                                <svg style={{ width: '8px', height: '8px' }} className="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M20 12H4" />
-                                </svg>
-                              </button>
-                              
-                              {/* Line from circle center to bottom edge (for non-last items) */}
-                              {!isLast && (
-                                <div 
-                                  style={{ 
-                                    position: 'absolute',
-                                    width: '2px', 
-                                    top: '50%',
-                                    bottom: 0,
-                                    left: '50%',
-                                    transform: 'translateX(-50%)',
-                                    backgroundColor: isDarkMode ? 'rgba(107, 114, 128, 0.6)' : 'rgba(156, 163, 175, 0.7)'
-                                  }}
-                                />
-                              )}
-                            </div>
+                            {/* Red minus circle - sits on top of the spine */}
+                            <button 
+                              onClick={() => removeBet(bet.id)}
+                              className="flex-shrink-0 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors relative z-10"
+                              style={{ 
+                                width: '16px', 
+                                height: '16px', 
+                                minWidth: '16px', 
+                                minHeight: '16px',
+                                backgroundColor: isDarkMode ? '#000000' : '#ffffff'
+                              }}
+                              aria-label={`Remove ${bet.selection}`}
+                            >
+                              <svg style={{ width: '8px', height: '8px' }} className="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M20 12H4" />
+                              </svg>
+                            </button>
                             
                             {/* Leg Info */}
                             <div className="flex-1 min-w-0">
