@@ -633,8 +633,8 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                               </div>
                             </div>
                             
-                            {/* Content column - has the padding */}
-                            <div className="flex-1 flex items-center gap-3 py-3 min-w-0">
+                            {/* Content column - has the padding and left margin for spacing from circles */}
+                            <div className="flex-1 flex items-center gap-3 py-3 pl-3 min-w-0">
                               {/* Leg Info */}
                               <div className="flex-1 min-w-0">
                                 <div className="font-bold text-sm leading-tight" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.selection)}</div>
