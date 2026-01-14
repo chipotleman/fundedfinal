@@ -554,73 +554,90 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
               ) : betType === 'parlay' && bets.length >= 2 ? (
                 /* Compact Parlay View - All legs in one container */
                 <div className="px-4 pt-2 pb-4">
-                  {/* Compact Legs List with Swipe-to-Delete */}
-                  <div className="divide-y divide-gray-800/30">
-                    {bets.map((bet) => {
-                      const isLive = bet.isLive || liveScores[bet.gameId]?.isLive || liveScores[bet.matchup]?.isLive;
-                      const matchupDisplay = bet.matchup || (bet.awayTeam && bet.homeTeam ? `${bet.awayTeamFull || bet.awayTeam} v ${bet.homeTeamFull || bet.homeTeam}` : '');
-                      const swipeOffset = swipeStates[bet.id] || 0;
-                      
-                      return (
-                        <div key={bet.id} className="relative overflow-hidden">
-                          {/* Delete background revealed on swipe */}
-                          <div 
-                            className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-end px-4 transition-opacity"
-                            style={{ width: '100px', opacity: swipeOffset > 0 ? 1 : 0 }}
-                          >
-                            <span className="text-white font-bold text-sm">Delete</span>
-                          </div>
-                          
-                          {/* Swipeable content */}
-                          <div 
-                            className="py-3 flex items-center gap-3 bg-black relative transition-transform"
-                            style={{ transform: `translateX(-${swipeOffset}px)` }}
-                            onTouchStart={(e) => handleTouchStart(bet.id, e)}
-                            onTouchMove={(e) => handleTouchMove(bet.id, e)}
-                            onTouchEnd={() => handleTouchEnd(bet.id)}
-                          >
-                            {/* Remove Button - matches arrow height (16px) */}
-                            <button 
-                              onClick={() => removeBet(bet.id)}
-                              className="flex-shrink-0 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors"
-                              style={{ width: '16px', height: '16px', minWidth: '16px', minHeight: '16px' }}
-                              aria-label={`Remove ${bet.selection}`}
+                  {/* Compact Legs List with Swipe-to-Delete and Connecting Line */}
+                  <div className="relative">
+                    {/* Vertical connecting line - positioned to run through center of circles */}
+                    {bets.length > 1 && (
+                      <div 
+                        className="absolute bg-gray-600/50"
+                        style={{ 
+                          left: '7px',
+                          top: '24px',
+                          bottom: '24px',
+                          width: '1px'
+                        }}
+                      />
+                    )}
+                    
+                    <div className="divide-y divide-gray-800/30">
+                      {bets.map((bet, index) => {
+                        const isLive = bet.isLive || liveScores[bet.gameId]?.isLive || liveScores[bet.matchup]?.isLive;
+                        const matchupDisplay = bet.matchup || (bet.awayTeam && bet.homeTeam ? `${bet.awayTeamFull || bet.awayTeam} v ${bet.homeTeamFull || bet.homeTeam}` : '');
+                        const swipeOffset = swipeStates[bet.id] || 0;
+                        const isFirst = index === 0;
+                        const isLast = index === bets.length - 1;
+                        
+                        return (
+                          <div key={bet.id} className="relative overflow-hidden">
+                            {/* Delete background revealed on swipe */}
+                            <div 
+                              className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-end px-4 transition-opacity"
+                              style={{ width: '100px', opacity: swipeOffset > 0 ? 1 : 0 }}
                             >
-                              <svg style={{ width: '8px', height: '8px' }} className="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M20 12H4" />
-                              </svg>
-                            </button>
+                              <span className="text-white font-bold text-sm">Delete</span>
+                            </div>
                             
-                            {/* Leg Info */}
-                            <div className="flex-1 min-w-0">
-                              <div className="text-white font-bold text-sm leading-tight">{capitalizeLeagueId(bet.selection)}</div>
-                              <div className="text-gray-500 text-xs uppercase mt-0.5">{bet.betType || 'Spread'}</div>
-                              {/* Live Badge + Matchup */}
-                              <div className="flex items-center gap-1.5 mt-1">
-                                {isLive && (
-                                  <span className="px-1.5 py-0.5 text-[10px] font-bold text-red-500 bg-red-500/10 border border-red-500/30 rounded">LIVE</span>
-                                )}
-                                {matchupDisplay && (
-                                  <span className="text-gray-500 text-xs truncate">{capitalizeLeagueId(matchupDisplay)}</span>
-                                )}
+                            {/* Swipeable content */}
+                            <div 
+                              className="py-3 flex items-center gap-3 bg-black relative transition-transform"
+                              style={{ transform: `translateX(-${swipeOffset}px)` }}
+                              onTouchStart={(e) => handleTouchStart(bet.id, e)}
+                              onTouchMove={(e) => handleTouchMove(bet.id, e)}
+                              onTouchEnd={() => handleTouchEnd(bet.id)}
+                            >
+                              {/* Remove Button - matches arrow height (16px) with z-index to cover line */}
+                              <button 
+                                onClick={() => removeBet(bet.id)}
+                                className="flex-shrink-0 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors bg-black relative z-10"
+                                style={{ width: '16px', height: '16px', minWidth: '16px', minHeight: '16px' }}
+                                aria-label={`Remove ${bet.selection}`}
+                              >
+                                <svg style={{ width: '8px', height: '8px' }} className="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M20 12H4" />
+                                </svg>
+                              </button>
+                              
+                              {/* Leg Info */}
+                              <div className="flex-1 min-w-0">
+                                <div className="text-white font-bold text-sm leading-tight">{capitalizeLeagueId(bet.selection)}</div>
+                                <div className="text-gray-500 text-xs uppercase mt-0.5">{bet.betType || 'Spread'}</div>
+                                {/* Live Badge + Matchup */}
+                                <div className="flex items-center gap-1.5 mt-1">
+                                  {isLive && (
+                                    <span className="px-1.5 py-0.5 text-[10px] font-bold text-red-500 bg-red-500/10 border border-red-500/30 rounded">LIVE</span>
+                                  )}
+                                  {matchupDisplay && (
+                                    <span className="text-gray-500 text-xs truncate">{capitalizeLeagueId(matchupDisplay)}</span>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              {/* Odds with movement indicator */}
+                              <div className="flex-shrink-0 flex items-center gap-1">
+                                {bet.oddsMoved === 'down' && <span className="text-red-500 text-xs">▼</span>}
+                                {bet.oddsMoved === 'up' && <span className="text-green-500 text-xs">▲</span>}
+                                <span className={`font-bold text-sm ${
+                                  bet.oddsMoved === 'up' ? 'text-green-400' : 
+                                  bet.oddsMoved === 'down' ? 'text-red-400' : 'text-white'
+                                }`}>
+                                  {formatOdds(bet.odds)}
+                                </span>
                               </div>
                             </div>
-                            
-                            {/* Odds with movement indicator */}
-                            <div className="flex-shrink-0 flex items-center gap-1">
-                              {bet.oddsMoved === 'down' && <span className="text-red-500 text-xs">▼</span>}
-                              {bet.oddsMoved === 'up' && <span className="text-green-500 text-xs">▲</span>}
-                              <span className={`font-bold text-sm ${
-                                bet.oddsMoved === 'up' ? 'text-green-400' : 
-                                bet.oddsMoved === 'down' ? 'text-red-400' : 'text-white'
-                              }`}>
-                                {formatOdds(bet.odds)}
-                              </span>
-                            </div>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
                   
                   {/* Remove All Selections */}
