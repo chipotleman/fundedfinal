@@ -937,7 +937,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                       transition: 'none'
                     }}
                   >
-                    Sign In to Place Bets
+                    Sign In to Place Piks
                   </button>
                 ) : (() => {
                   // For straight bets, only count bets that have stakes entered
