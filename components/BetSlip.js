@@ -579,14 +579,14 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                             onTouchMove={(e) => handleTouchMove(bet.id, e)}
                             onTouchEnd={() => handleTouchEnd(bet.id)}
                           >
-                            {/* Remove Button */}
+                            {/* Remove Button - 75% smaller */}
                             <button 
                               onClick={() => removeBet(bet.id)}
-                              className="flex-shrink-0 w-5 h-5 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors mt-1"
+                              className="flex-shrink-0 w-3 h-3 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors mt-1"
                               aria-label={`Remove ${bet.selection}`}
                             >
-                              <svg className="w-2.5 h-2.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" />
+                              <svg className="w-1.5 h-1.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M20 12H4" />
                               </svg>
                             </button>
                             
@@ -678,14 +678,14 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                             onClick={() => isCollapsible && toggleBetExpanded(bet.id)}
                           >
                             <div className="flex items-center gap-2 flex-1 min-w-0">
-                              {/* Red minus button to remove */}
+                              {/* Red minus button to remove - 75% smaller */}
                               <button 
                                 onClick={(e) => { e.stopPropagation(); removeBet(bet.id); }}
-                                className="flex-shrink-0 w-5 h-5 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors"
+                                className="flex-shrink-0 w-3 h-3 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors"
                                 aria-label={`Remove ${bet.selection}`}
                               >
-                                <svg className="w-2.5 h-2.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M20 12H4" />
+                                <svg className="w-1.5 h-1.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M20 12H4" />
                                 </svg>
                               </button>
                               
@@ -711,7 +711,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                                 </>
                               )}
                             </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="flex items-center flex-shrink-0">
                               {/* Show odds when collapsed */}
                               {!isExpanded && (
                                 <span className={`font-bold text-sm ${
@@ -721,14 +721,6 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                                   {formatOdds(bet.odds)}
                                 </span>
                               )}
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); removeBet(bet.id); }} 
-                                className="text-gray-500 hover:text-gray-300 transition-colors"
-                              >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                              </button>
                             </div>
                           </div>
                           
