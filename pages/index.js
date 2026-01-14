@@ -505,7 +505,7 @@ export default function Dashboard() {
             onRefreshOpponentBets={refreshMatchup}
             myBetsCount={myBets?.length || 0}
           />
-        ) : user && (
+        ) : (
           <div className="mb-6">
             <div className="overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               <div className="flex gap-3" style={{ minWidth: 'max-content' }}>
