@@ -42,13 +42,6 @@ button:focus-within,
   --card-gradient: linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
   --glass-bg: rgba(255, 255, 255, 0.08);
   --glass-border: rgba(255, 255, 255, 0.12);
-  --top-nav-height: 70px;
-}
-
-@media (min-width: 640px) {
-  :root {
-    --top-nav-height: 48px;
-  }
 }
 
 /* Light Theme Styles */
@@ -174,10 +167,7 @@ html {
 
 body {
   margin: 0;
-  padding-top: var(--top-nav-height, 70px);
-  padding-left: 0;
-  padding-right: 0;
-  padding-bottom: 0;
+  padding: 0;
   background: #000000;
   color: #ffffff;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -212,9 +202,7 @@ body {
 /* Fix mobile spacing */
 @media (max-width: 768px) {
   html, body {
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    padding-bottom: 0 !important;
+    padding: 0 !important;
     margin: 0 !important;
   }
 }
