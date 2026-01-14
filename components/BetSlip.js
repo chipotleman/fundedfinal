@@ -555,61 +555,62 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                 /* Compact Parlay View - All legs in one container */
                 <div className="px-4 pt-2 pb-4">
                   {/* Compact Legs List with Swipe-to-Delete and Connecting Line */}
-                  <div className="relative pl-5">
-                    {/* Vertical connecting line - positioned to run through center of circles */}
-                    {bets.length > 1 && (
-                      <div 
-                        className="absolute"
-                        style={{ 
-                          left: '7px',
-                          top: '24px',
-                          bottom: '24px',
-                          width: '2px',
-                          backgroundColor: isDarkMode ? 'rgba(107, 114, 128, 0.5)' : 'rgba(156, 163, 175, 0.6)',
-                          zIndex: 5,
-                          pointerEvents: 'none'
-                        }}
-                      />
-                    )}
-                    
-                    <div style={{ borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : 'rgba(209, 213, 219, 0.5)' }}>
-                      {bets.map((bet, index) => {
-                        const isLive = bet.isLive || liveScores[bet.gameId]?.isLive || liveScores[bet.matchup]?.isLive;
-                        const matchupDisplay = bet.matchup || (bet.awayTeam && bet.homeTeam ? `${bet.awayTeamFull || bet.awayTeam} v ${bet.homeTeamFull || bet.homeTeam}` : '');
-                        const swipeOffset = swipeStates[bet.id] || 0;
-                        const isFirst = index === 0;
-                        const isLast = index === bets.length - 1;
-                        
-                        return (
-                          <div key={bet.id} className="relative overflow-hidden" style={{ borderBottomWidth: isLast ? 0 : 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : 'rgba(209, 213, 219, 0.5)' }}>
-                            {/* Delete background revealed on swipe */}
-                            <div 
-                              className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-end px-4 transition-opacity"
-                              style={{ width: '100px', opacity: swipeOffset > 0 ? 1 : 0 }}
-                            >
-                              <span className="text-white font-bold text-sm">Delete</span>
-                            </div>
-                            
-                            {/* Swipeable content - transparent background to show line */}
-                            <div 
-                              className="py-3 flex items-center gap-3 relative transition-transform"
-                              style={{ transform: `translateX(-${swipeOffset}px)`, backgroundColor: isDarkMode ? '#000000' : '#ffffff' }}
-                              onTouchStart={(e) => handleTouchStart(bet.id, e)}
-                              onTouchMove={(e) => handleTouchMove(bet.id, e)}
-                              onTouchEnd={() => handleTouchEnd(bet.id)}
-                            >
-                              {/* Remove Button - positioned absolutely to align with vertical line */}
+                  <div>
+                    {bets.map((bet, index) => {
+                      const isLive = bet.isLive || liveScores[bet.gameId]?.isLive || liveScores[bet.matchup]?.isLive;
+                      const matchupDisplay = bet.matchup || (bet.awayTeam && bet.homeTeam ? `${bet.awayTeamFull || bet.awayTeam} v ${bet.homeTeamFull || bet.homeTeam}` : '');
+                      const swipeOffset = swipeStates[bet.id] || 0;
+                      const isFirst = index === 0;
+                      const isLast = index === bets.length - 1;
+                      
+                      return (
+                        <div key={bet.id} className="relative overflow-hidden">
+                          {/* Delete background revealed on swipe */}
+                          <div 
+                            className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-end px-4 transition-opacity"
+                            style={{ width: '100px', opacity: swipeOffset > 0 ? 1 : 0 }}
+                          >
+                            <span className="text-white font-bold text-sm">Delete</span>
+                          </div>
+                          
+                          {/* Swipeable content */}
+                          <div 
+                            className="py-3 flex items-center gap-3 relative transition-transform"
+                            style={{ 
+                              transform: `translateX(-${swipeOffset}px)`, 
+                              backgroundColor: isDarkMode ? '#000000' : '#ffffff',
+                              borderBottomWidth: isLast ? 0 : 1,
+                              borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : 'rgba(209, 213, 219, 0.5)'
+                            }}
+                            onTouchStart={(e) => handleTouchStart(bet.id, e)}
+                            onTouchMove={(e) => handleTouchMove(bet.id, e)}
+                            onTouchEnd={() => handleTouchEnd(bet.id)}
+                          >
+                            {/* Connector column with line and circle */}
+                            <div className="flex flex-col items-center relative" style={{ width: '16px' }}>
+                              {/* Line from top to circle (for non-first items) */}
+                              {!isFirst && (
+                                <div 
+                                  className="absolute"
+                                  style={{ 
+                                    width: '2px', 
+                                    height: '50%',
+                                    top: 0,
+                                    backgroundColor: isDarkMode ? 'rgba(107, 114, 128, 0.5)' : 'rgba(156, 163, 175, 0.6)'
+                                  }}
+                                />
+                              )}
+                              
+                              {/* Red minus circle */}
                               <button 
                                 onClick={() => removeBet(bet.id)}
-                                className="absolute flex-shrink-0 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors"
+                                className="flex-shrink-0 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors relative z-10"
                                 style={{ 
                                   width: '16px', 
                                   height: '16px', 
                                   minWidth: '16px', 
                                   minHeight: '16px',
-                                  left: '-13px',
-                                  backgroundColor: isDarkMode ? '#000000' : '#ffffff',
-                                  zIndex: 10
+                                  backgroundColor: isDarkMode ? '#000000' : '#ffffff'
                                 }}
                                 aria-label={`Remove ${bet.selection}`}
                               >
@@ -618,37 +619,50 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                                 </svg>
                               </button>
                               
-                              {/* Leg Info */}
-                              <div className="flex-1 min-w-0">
-                                <div className="font-bold text-sm leading-tight" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.selection)}</div>
-                                <div className="text-xs uppercase mt-0.5" style={{ color: isDarkMode ? '#6b7280' : '#6b7280' }}>{bet.betType || 'Spread'}</div>
-                                {/* Live Badge + Matchup */}
-                                <div className="flex items-center gap-1.5 mt-1">
-                                  {isLive && (
-                                    <span className="px-1.5 py-0.5 text-[10px] font-bold text-red-500 bg-red-500/10 border border-red-500/30 rounded">LIVE</span>
-                                  )}
-                                  {matchupDisplay && (
-                                    <span className="text-xs truncate" style={{ color: isDarkMode ? '#6b7280' : '#6b7280' }}>{capitalizeLeagueId(matchupDisplay)}</span>
-                                  )}
-                                </div>
-                              </div>
-                              
-                              {/* Odds with movement indicator */}
-                              <div className="flex-shrink-0 flex items-center gap-1">
-                                {bet.oddsMoved === 'down' && <span className="text-red-500 text-xs">▼</span>}
-                                {bet.oddsMoved === 'up' && <span className="text-green-500 text-xs">▲</span>}
-                                <span className={`font-bold text-sm ${
-                                  bet.oddsMoved === 'up' ? 'text-green-400' : 
-                                  bet.oddsMoved === 'down' ? 'text-red-400' : ''
-                                }`} style={{ color: bet.oddsMoved === 'up' ? undefined : bet.oddsMoved === 'down' ? undefined : (isDarkMode ? '#ffffff' : '#111827') }}>
-                                  {formatOdds(bet.odds)}
-                                </span>
+                              {/* Line from circle to bottom (for non-last items) */}
+                              {!isLast && (
+                                <div 
+                                  className="absolute"
+                                  style={{ 
+                                    width: '2px', 
+                                    height: '50%',
+                                    bottom: 0,
+                                    backgroundColor: isDarkMode ? 'rgba(107, 114, 128, 0.5)' : 'rgba(156, 163, 175, 0.6)'
+                                  }}
+                                />
+                              )}
+                            </div>
+                            
+                            {/* Leg Info */}
+                            <div className="flex-1 min-w-0">
+                              <div className="font-bold text-sm leading-tight" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.selection)}</div>
+                              <div className="text-xs uppercase mt-0.5" style={{ color: '#6b7280' }}>{bet.betType || 'Spread'}</div>
+                              {/* Live Badge + Matchup */}
+                              <div className="flex items-center gap-1.5 mt-1">
+                                {isLive && (
+                                  <span className="px-1.5 py-0.5 text-[10px] font-bold text-red-500 bg-red-500/10 border border-red-500/30 rounded">LIVE</span>
+                                )}
+                                {matchupDisplay && (
+                                  <span className="text-xs truncate" style={{ color: '#6b7280' }}>{capitalizeLeagueId(matchupDisplay)}</span>
+                                )}
                               </div>
                             </div>
+                            
+                            {/* Odds with movement indicator */}
+                            <div className="flex-shrink-0 flex items-center gap-1">
+                              {bet.oddsMoved === 'down' && <span className="text-red-500 text-xs">▼</span>}
+                              {bet.oddsMoved === 'up' && <span className="text-green-500 text-xs">▲</span>}
+                              <span className={`font-bold text-sm ${
+                                bet.oddsMoved === 'up' ? 'text-green-400' : 
+                                bet.oddsMoved === 'down' ? 'text-red-400' : ''
+                              }`} style={{ color: bet.oddsMoved === 'up' ? undefined : bet.oddsMoved === 'down' ? undefined : (isDarkMode ? '#ffffff' : '#111827') }}>
+                                {formatOdds(bet.odds)}
+                              </span>
+                            </div>
                           </div>
-                        );
-                      })}
-                    </div>
+                        </div>
+                      );
+                    })}
                   </div>
                   
                   {/* Remove All Selections */}
