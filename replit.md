@@ -13,7 +13,8 @@ None documented yet.
 - **Mobile Navigation**: Standard hamburger menu with swipe gestures.
 - **Bet Slip**: Floating button, full-screen on mobile.
 - **Bet Receipt**: Professional display with auto-dismissal.
-- **Sticky Navigation**: TopNavbar stays fixed at top (z-50), exposes height via `--top-nav-height` CSS variable. Sports filter bar on dashboard uses `position: sticky` with `top: var(--top-nav-height)` to dock under header on scroll (z-40).
+- **Sticky Navigation**: TopNavbar stays fixed at top (z-50), exposes height via `--top-nav-height` CSS variable.
+- **Docking Header**: The combined sticky header that appears when scrolling on the dashboard. Consists of the logo, hamburger menu, and sports filter pills all docking together at the top. This is distinct from the regular TopNavbar - the Docking Header specifically refers to the scrolling behavior where these elements stay visible as the user scrolls down. Uses `position: sticky` with `top: var(--top-nav-height)` (z-40).
 - **Unified Sports Filter**: Single row of filter pills with "Live" as the first option (red styling), followed by sport categories. No separate Live/Upcoming tabs - each sport shows all games (live first, then upcoming). Games are always sorted chronologically.
 
 #### Technical Implementations
