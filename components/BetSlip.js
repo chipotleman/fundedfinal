@@ -582,7 +582,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                             {/* Remove Button - 75% smaller */}
                             <button 
                               onClick={() => removeBet(bet.id)}
-                              className="flex-shrink-0 w-3 h-3 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors mt-1"
+                              className="flex-shrink-0 w-2 h-2 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors mt-1"
                               aria-label={`Remove ${bet.selection}`}
                             >
                               <svg className="w-1.5 h-1.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -681,7 +681,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                               {/* Red minus button to remove - 75% smaller */}
                               <button 
                                 onClick={(e) => { e.stopPropagation(); removeBet(bet.id); }}
-                                className="flex-shrink-0 w-3 h-3 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors"
+                                className="flex-shrink-0 w-2 h-2 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors"
                                 aria-label={`Remove ${bet.selection}`}
                               >
                                 <svg className="w-1.5 h-1.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
