@@ -599,9 +599,17 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                       
                       return (
                         <div key={bet.id} className="relative overflow-hidden">
-                          {/* Delete button revealed on swipe - clickable, extends with swipe */}
+                          {/* Delete button revealed on swipe - clickable, extends with swipe, also swipeable */}
                           <button 
-                            onClick={() => handleDeleteTap(bet.id)}
+                            onClick={() => {
+                              // Only trigger delete if not currently swiping
+                              if (!swipeRefs.current[bet.id]?.isSwiping) {
+                                handleDeleteTap(bet.id);
+                              }
+                            }}
+                            onTouchStart={(e) => handleTouchStart(bet.id, e)}
+                            onTouchMove={(e) => handleTouchMove(bet.id, e)}
+                            onTouchEnd={() => handleTouchEnd(bet.id)}
                             className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-center cursor-pointer"
                             style={{ 
                               width: `${Math.max(swipeOffset, swipeState.isOpen ? REVEAL_WIDTH : 0)}px`, 
@@ -742,9 +750,17 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                     
                     return (
                       <div key={bet.id} className="relative rounded-xl overflow-hidden">
-                        {/* Delete button revealed on swipe - clickable, extends with swipe */}
+                        {/* Delete button revealed on swipe - clickable, extends with swipe, also swipeable */}
                         <button 
-                          onClick={() => handleDeleteTap(bet.id)}
+                          onClick={() => {
+                            // Only trigger delete if not currently swiping
+                            if (!swipeRefs.current[bet.id]?.isSwiping) {
+                              handleDeleteTap(bet.id);
+                            }
+                          }}
+                          onTouchStart={(e) => handleTouchStart(bet.id, e)}
+                          onTouchMove={(e) => handleTouchMove(bet.id, e)}
+                          onTouchEnd={() => handleTouchEnd(bet.id)}
                           className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-center rounded-r-xl cursor-pointer"
                           style={{ 
                             width: `${Math.max(swipeOffset, swipeState.isOpen ? REVEAL_WIDTH : 0)}px`, 
