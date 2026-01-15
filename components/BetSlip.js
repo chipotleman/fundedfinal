@@ -870,23 +870,24 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                                 </div>
                               </div>
                               
-                              {/* Game Info Box - thinner with LIVE at top */}
-                              <div className="rounded-lg p-3" style={{ backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.4)' : '#f1f5f9', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : '#e2e8f0' }}>
-                                {/* LIVE badge or game time at top */}
-                                <div className="flex items-center gap-1.5 mb-2">
-                                  {isLive ? (
-                                    <>
-                                      <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
-                                      <span className="text-red-500 text-[10px] font-bold uppercase tracking-wide">LIVE</span>
-                                    </>
-                                  ) : (
-                                    <span className="text-gray-500 text-[10px] uppercase tracking-wide">{gameTime}</span>
-                                  )}
-                                </div>
-                                <div className="space-y-1">
+                              {/* Game Info Box - compact with LIVE at top right */}
+                              <div className="rounded-lg px-3 py-2" style={{ backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.4)' : '#f1f5f9', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : '#e2e8f0' }}>
+                                {/* Teams with LIVE/time in top right */}
+                                <div className="space-y-0.5">
                                   <div className="flex justify-between items-center">
                                     <span className="text-sm" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0] || 'Away')}</span>
-                                    {awayScore !== null && <span className="font-bold text-sm" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{awayScore}</span>}
+                                    <div className="flex items-center gap-2">
+                                      {awayScore !== null && <span className="font-bold text-sm" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{awayScore}</span>}
+                                      {/* LIVE badge or game time - top right */}
+                                      {isLive ? (
+                                        <div className="flex items-center gap-1">
+                                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                                          <span className="text-red-500 text-[10px] font-bold">LIVE</span>
+                                        </div>
+                                      ) : (
+                                        <span className="text-gray-500 text-[10px]">{gameTime}</span>
+                                      )}
+                                    </div>
                                   </div>
                                   <div className="flex justify-between items-center">
                                     <span className="text-sm" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.homeTeamFull || bet.homeTeam || bet.matchup?.split(' @ ')[1] || 'Home')}</span>
