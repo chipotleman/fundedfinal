@@ -599,24 +599,21 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                       
                       return (
                         <div key={bet.id} className="relative overflow-hidden">
-                          {/* Delete button revealed on swipe - positioned behind content */}
+                          {/* Delete button revealed on swipe - clickable */}
                           <button 
                             onClick={() => handleDeleteTap(bet.id)}
-                            className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-center cursor-pointer"
-                            style={{ width: '100px', zIndex: 1 }}
+                            className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-center transition-opacity cursor-pointer"
+                            style={{ width: '100px', opacity: swipeOffset > 0 ? 1 : 0 }}
                           >
                             <span className="text-white font-bold text-sm">Delete</span>
                           </button>
                           
                           {/* Swipeable content - NO padding on row, padding goes inside content */}
                           <div 
-                            className="flex relative"
+                            className="flex relative transition-transform"
                             style={{ 
                               transform: `translateX(-${swipeOffset}px)`, 
-                              backgroundColor: isDarkMode ? '#000000' : '#ffffff',
-                              zIndex: 2,
-                              willChange: 'transform',
-                              transition: swipeState.isOpen || swipeOffset === 0 ? 'transform 0.2s ease-out' : 'none'
+                              backgroundColor: isDarkMode ? '#000000' : '#ffffff'
                             }}
                             onTouchStart={(e) => handleTouchStart(bet.id, e)}
                             onTouchMove={(e) => handleTouchMove(bet.id, e)}
@@ -741,26 +738,23 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                     
                     return (
                       <div key={bet.id} className="relative rounded-xl overflow-hidden">
-                        {/* Delete button revealed on swipe - positioned behind content */}
+                        {/* Delete button revealed on swipe - clickable */}
                         <button 
                           onClick={() => handleDeleteTap(bet.id)}
-                          className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-center rounded-r-xl cursor-pointer"
-                          style={{ width: '100px', zIndex: 1 }}
+                          className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-center rounded-r-xl transition-opacity cursor-pointer"
+                          style={{ width: '100px', opacity: swipeOffset > 0 ? 1 : 0 }}
                         >
                           <span className="text-white font-bold text-sm">Delete</span>
                         </button>
                         
                         {/* Swipeable card */}
                         <div 
-                          className="rounded-xl relative"
+                          className="rounded-xl relative transition-transform"
                           style={{ 
                             transform: `translateX(-${swipeOffset}px)`,
                             backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.4)' : '#f8fafc',
                             borderWidth: 1,
-                            borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#e2e8f0',
-                            zIndex: 2,
-                            willChange: 'transform',
-                            transition: swipeState.isOpen || swipeOffset === 0 ? 'transform 0.2s ease-out' : 'none'
+                            borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#e2e8f0'
                           }}
                           onTouchStart={(e) => handleTouchStart(bet.id, e)}
                           onTouchMove={(e) => handleTouchMove(bet.id, e)}
