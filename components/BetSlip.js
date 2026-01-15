@@ -599,8 +599,8 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                       
                       return (
                         <div key={bet.id} className="relative overflow-hidden">
-                          {/* Delete button revealed on swipe - clickable, extends with swipe, also swipeable */}
-                          <button 
+                          {/* Delete area revealed on swipe - clickable, extends with swipe, also swipeable */}
+                          <div 
                             onClick={() => {
                               // Only trigger delete if not currently swiping
                               if (!swipeRefs.current[bet.id]?.isSwiping) {
@@ -610,7 +610,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                             onTouchStart={(e) => handleTouchStart(bet.id, e)}
                             onTouchMove={(e) => handleTouchMove(bet.id, e)}
                             onTouchEnd={() => handleTouchEnd(bet.id)}
-                            className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-center cursor-pointer outline-none border-none"
+                            className="absolute inset-y-0 right-0 flex items-center justify-center cursor-pointer"
                             style={{ 
                               width: `${Math.max(swipeOffset, swipeState.isOpen ? REVEAL_WIDTH : 0)}px`, 
                               opacity: swipeOffset > 0 ? 1 : 0,
@@ -619,11 +619,11 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                               WebkitUserSelect: 'none',
                               userSelect: 'none',
                               touchAction: 'pan-x',
-                              background: '#dc2626'
+                              backgroundColor: '#dc2626'
                             }}
                           >
-                            <span className="text-white font-bold text-sm">Delete</span>
-                          </button>
+                            <span className="text-white font-bold text-sm select-none">Delete</span>
+                          </div>
                           
                           {/* Swipeable content - NO padding on row, padding goes inside content */}
                           <div 
@@ -756,8 +756,8 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                     
                     return (
                       <div key={bet.id} className="relative rounded-xl overflow-hidden">
-                        {/* Delete button revealed on swipe - clickable, extends with swipe, also swipeable */}
-                        <button 
+                        {/* Delete area revealed on swipe - clickable, extends with swipe, also swipeable */}
+                        <div 
                           onClick={() => {
                             // Only trigger delete if not currently swiping
                             if (!swipeRefs.current[bet.id]?.isSwiping) {
@@ -767,7 +767,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                           onTouchStart={(e) => handleTouchStart(bet.id, e)}
                           onTouchMove={(e) => handleTouchMove(bet.id, e)}
                           onTouchEnd={() => handleTouchEnd(bet.id)}
-                          className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-center rounded-r-xl cursor-pointer outline-none border-none"
+                          className="absolute inset-y-0 right-0 flex items-center justify-center rounded-r-xl cursor-pointer"
                           style={{ 
                             width: `${Math.max(swipeOffset, swipeState.isOpen ? REVEAL_WIDTH : 0)}px`, 
                             opacity: swipeOffset > 0 ? 1 : 0,
@@ -776,11 +776,11 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                             WebkitUserSelect: 'none',
                             userSelect: 'none',
                             touchAction: 'pan-x',
-                            background: '#dc2626'
+                            backgroundColor: '#dc2626'
                           }}
                         >
-                          <span className="text-white font-bold text-sm">Delete</span>
-                        </button>
+                          <span className="text-white font-bold text-sm select-none">Delete</span>
+                        </div>
                         
                         {/* Swipeable card */}
                         <div 
