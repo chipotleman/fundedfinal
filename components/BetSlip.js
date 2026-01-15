@@ -610,12 +610,16 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                             onTouchStart={(e) => handleTouchStart(bet.id, e)}
                             onTouchMove={(e) => handleTouchMove(bet.id, e)}
                             onTouchEnd={() => handleTouchEnd(bet.id)}
-                            className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-center cursor-pointer"
+                            className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-center cursor-pointer outline-none border-none"
                             style={{ 
                               width: `${Math.max(swipeOffset, swipeState.isOpen ? REVEAL_WIDTH : 0)}px`, 
                               opacity: swipeOffset > 0 ? 1 : 0,
                               WebkitTapHighlightColor: 'transparent',
-                              touchAction: 'pan-x'
+                              WebkitTouchCallout: 'none',
+                              WebkitUserSelect: 'none',
+                              userSelect: 'none',
+                              touchAction: 'pan-x',
+                              background: '#dc2626'
                             }}
                           >
                             <span className="text-white font-bold text-sm">Delete</span>
@@ -763,12 +767,16 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                           onTouchStart={(e) => handleTouchStart(bet.id, e)}
                           onTouchMove={(e) => handleTouchMove(bet.id, e)}
                           onTouchEnd={() => handleTouchEnd(bet.id)}
-                          className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-center rounded-r-xl cursor-pointer"
+                          className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-center rounded-r-xl cursor-pointer outline-none border-none"
                           style={{ 
                             width: `${Math.max(swipeOffset, swipeState.isOpen ? REVEAL_WIDTH : 0)}px`, 
                             opacity: swipeOffset > 0 ? 1 : 0,
                             WebkitTapHighlightColor: 'transparent',
-                            touchAction: 'pan-x'
+                            WebkitTouchCallout: 'none',
+                            WebkitUserSelect: 'none',
+                            userSelect: 'none',
+                            touchAction: 'pan-x',
+                            background: '#dc2626'
                           }}
                         >
                           <span className="text-white font-bold text-sm">Delete</span>
