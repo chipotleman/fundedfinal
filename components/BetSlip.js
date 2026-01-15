@@ -599,11 +599,14 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                       
                       return (
                         <div key={bet.id} className="relative overflow-hidden">
-                          {/* Delete button revealed on swipe - clickable */}
+                          {/* Delete button revealed on swipe - clickable, extends with swipe */}
                           <button 
                             onClick={() => handleDeleteTap(bet.id)}
-                            className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-center transition-opacity cursor-pointer"
-                            style={{ width: '100px', opacity: swipeOffset > 0 ? 1 : 0 }}
+                            className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-center cursor-pointer"
+                            style={{ 
+                              width: `${Math.max(swipeOffset, swipeState.isOpen ? REVEAL_WIDTH : 0)}px`, 
+                              opacity: swipeOffset > 0 ? 1 : 0 
+                            }}
                           >
                             <span className="text-white font-bold text-sm">Delete</span>
                           </button>
@@ -739,11 +742,14 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                     
                     return (
                       <div key={bet.id} className="relative rounded-xl overflow-hidden">
-                        {/* Delete button revealed on swipe - clickable */}
+                        {/* Delete button revealed on swipe - clickable, extends with swipe */}
                         <button 
                           onClick={() => handleDeleteTap(bet.id)}
-                          className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-center rounded-r-xl transition-opacity cursor-pointer"
-                          style={{ width: '100px', opacity: swipeOffset > 0 ? 1 : 0 }}
+                          className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-center rounded-r-xl cursor-pointer"
+                          style={{ 
+                            width: `${Math.max(swipeOffset, swipeState.isOpen ? REVEAL_WIDTH : 0)}px`, 
+                            opacity: swipeOffset > 0 ? 1 : 0 
+                          }}
                         >
                           <span className="text-white font-bold text-sm">Delete</span>
                         </button>
