@@ -821,19 +821,18 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                               )}
                               <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0"></div>
                               <span className="text-xs font-bold uppercase text-blue-500 flex-shrink-0">{bet.betType || 'Spread'}</span>
-                              {/* Show LIVE indicator and team when collapsed */}
+                              {/* Show LIVE indicator when collapsed OR expanded */}
+                              {isLive && (
+                                <span className="flex items-center gap-1 flex-shrink-0 ml-1">
+                                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+                                  <span className="text-red-500 text-[10px] font-bold">LIVE</span>
+                                </span>
+                              )}
+                              {/* Show team when collapsed */}
                               {!isExpanded && (
-                                <>
-                                  {isLive && (
-                                    <span className="flex items-center gap-1 flex-shrink-0 ml-1">
-                                      <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
-                                      <span className="text-red-500 text-[10px] font-bold">LIVE</span>
-                                    </span>
-                                  )}
-                                  <span className="text-xs truncate ml-1" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>
-                                    {capitalizeLeagueId(bet.selection)}
-                                  </span>
-                                </>
+                                <span className="text-xs truncate ml-1" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>
+                                  {capitalizeLeagueId(bet.selection)}
+                                </span>
                               )}
                             </div>
                             <div className="flex items-center flex-shrink-0">
@@ -870,23 +869,15 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                                 </div>
                               </div>
                               
-                              {/* Game Info Box - compact with LIVE at top right */}
+                              {/* Game Info Box - compact, LIVE is on header row */}
                               <div className="rounded-lg px-3 py-2" style={{ backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.4)' : '#f1f5f9', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : '#e2e8f0' }}>
-                                {/* Teams with LIVE/time in top right */}
                                 <div className="space-y-0.5">
                                   <div className="flex justify-between items-center">
                                     <span className="text-sm" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0] || 'Away')}</span>
                                     <div className="flex items-center gap-2">
                                       {awayScore !== null && <span className="font-bold text-sm" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{awayScore}</span>}
-                                      {/* LIVE badge or game time - top right */}
-                                      {isLive ? (
-                                        <div className="flex items-center gap-1">
-                                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
-                                          <span className="text-red-500 text-[10px] font-bold">LIVE</span>
-                                        </div>
-                                      ) : (
-                                        <span className="text-gray-500 text-[10px]">{gameTime}</span>
-                                      )}
+                                      {/* Game time only - LIVE is on header */}
+                                      {!isLive && <span className="text-gray-500 text-[10px]">{gameTime}</span>}
                                     </div>
                                   </div>
                                   <div className="flex justify-between items-center">
