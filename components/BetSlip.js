@@ -610,10 +610,11 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                           
                           {/* Swipeable content - NO padding on row, padding goes inside content */}
                           <div 
-                            className="flex relative transition-transform"
+                            className="flex relative"
                             style={{ 
                               transform: `translateX(-${swipeOffset}px)`, 
-                              backgroundColor: isDarkMode ? '#000000' : '#ffffff'
+                              backgroundColor: isDarkMode ? '#000000' : '#ffffff',
+                              transition: swipeRefs.current[bet.id] ? 'none' : 'transform 0.2s ease-out'
                             }}
                             onTouchStart={(e) => handleTouchStart(bet.id, e)}
                             onTouchMove={(e) => handleTouchMove(bet.id, e)}
@@ -668,8 +669,8 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                               </div>
                             </div>
                             
-                            {/* Content column - has the padding and left margin for spacing from circles */}
-                            <div className="flex-1 flex items-center gap-3 py-3 pl-3 min-w-0">
+                            {/* Content column - has the padding and spacing from circles and delete button */}
+                            <div className="flex-1 flex items-center gap-3 py-3 pl-3 pr-4 min-w-0">
                               {/* Leg Info */}
                               <div className="flex-1 min-w-0">
                                 <div className="font-bold text-sm leading-tight" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.selection)}</div>
@@ -749,12 +750,13 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                         
                         {/* Swipeable card */}
                         <div 
-                          className="rounded-xl relative transition-transform"
+                          className="rounded-xl relative"
                           style={{ 
                             transform: `translateX(-${swipeOffset}px)`,
                             backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.4)' : '#f8fafc',
                             borderWidth: 1,
-                            borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#e2e8f0'
+                            borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#e2e8f0',
+                            transition: swipeRefs.current[bet.id] ? 'none' : 'transform 0.2s ease-out'
                           }}
                           onTouchStart={(e) => handleTouchStart(bet.id, e)}
                           onTouchMove={(e) => handleTouchMove(bet.id, e)}
