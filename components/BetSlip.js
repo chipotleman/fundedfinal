@@ -613,7 +613,9 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                             className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-center cursor-pointer"
                             style={{ 
                               width: `${Math.max(swipeOffset, swipeState.isOpen ? REVEAL_WIDTH : 0)}px`, 
-                              opacity: swipeOffset > 0 ? 1 : 0 
+                              opacity: swipeOffset > 0 ? 1 : 0,
+                              WebkitTapHighlightColor: 'transparent',
+                              touchAction: 'pan-x'
                             }}
                           >
                             <span className="text-white font-bold text-sm">Delete</span>
@@ -764,7 +766,9 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                           className="absolute inset-y-0 right-0 bg-red-600 flex items-center justify-center rounded-r-xl cursor-pointer"
                           style={{ 
                             width: `${Math.max(swipeOffset, swipeState.isOpen ? REVEAL_WIDTH : 0)}px`, 
-                            opacity: swipeOffset > 0 ? 1 : 0 
+                            opacity: swipeOffset > 0 ? 1 : 0,
+                            WebkitTapHighlightColor: 'transparent',
+                            touchAction: 'pan-x'
                           }}
                         >
                           <span className="text-white font-bold text-sm">Delete</span>
