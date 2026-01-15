@@ -782,14 +782,14 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                           <span className="text-white font-bold text-sm select-none">Delete</span>
                         </div>
                         
-                        {/* Swipeable card */}
+                        {/* Swipeable card - matches parlay theme */}
                         <div 
                           className="rounded-xl relative"
                           style={{ 
                             transform: `translateX(-${swipeOffset}px)`,
-                            backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.4)' : '#f8fafc',
+                            backgroundColor: isDarkMode ? '#000000' : '#ffffff',
                             borderWidth: 1,
-                            borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#e2e8f0',
+                            borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : '#e2e8f0',
                             transition: swipeRefs.current[bet.id] ? 'none' : 'transform 0.2s ease-out'
                           }}
                           onTouchStart={(e) => handleTouchStart(bet.id, e)}
@@ -870,10 +870,20 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                                 </div>
                               </div>
                               
-                              {/* Game Info Box */}
-                              <div className="rounded-lg p-3" style={{ backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.6)' : '#f1f5f9', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : '#e2e8f0' }}>
-                                <div className="text-[10px] uppercase mb-2 tracking-wide" style={{ color: isDarkMode ? '#6b7280' : '#6b7280' }}>Game</div>
-                                <div className="space-y-1.5">
+                              {/* Game Info Box - thinner with LIVE at top */}
+                              <div className="rounded-lg p-3" style={{ backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.4)' : '#f1f5f9', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : '#e2e8f0' }}>
+                                {/* LIVE badge or game time at top */}
+                                <div className="flex items-center gap-1.5 mb-2">
+                                  {isLive ? (
+                                    <>
+                                      <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                                      <span className="text-red-500 text-[10px] font-bold uppercase tracking-wide">LIVE</span>
+                                    </>
+                                  ) : (
+                                    <span className="text-gray-500 text-[10px] uppercase tracking-wide">{gameTime}</span>
+                                  )}
+                                </div>
+                                <div className="space-y-1">
                                   <div className="flex justify-between items-center">
                                     <span className="text-sm" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0] || 'Away')}</span>
                                     {awayScore !== null && <span className="font-bold text-sm" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{awayScore}</span>}
@@ -882,16 +892,6 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                                     <span className="text-sm" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.homeTeamFull || bet.homeTeam || bet.matchup?.split(' @ ')[1] || 'Home')}</span>
                                     {homeScore !== null && <span className="font-bold text-sm" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{homeScore}</span>}
                                   </div>
-                                </div>
-                                <div className="flex items-center gap-1.5 mt-2">
-                                  {isLive ? (
-                                    <>
-                                      <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
-                                      <span className="text-red-500 text-xs font-medium">LIVE</span>
-                                    </>
-                                  ) : (
-                                    <span className="text-gray-500 text-xs">{gameTime}</span>
-                                  )}
                                 </div>
                               </div>
                               
