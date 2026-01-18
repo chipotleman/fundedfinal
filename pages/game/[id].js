@@ -47,21 +47,58 @@ export default function GameDetail() {
               String(e.id).toLowerCase() === originalId.toLowerCase()
             );
             if (foundEvent) {
+              // Map sport name to sport_key format for field visualization
+              const sportToKey = {
+                'hockey': 'icehockey',
+                'ice hockey': 'icehockey',
+                'icehockey': 'icehockey',
+                'icehockey_nhl': 'icehockey',
+                'basketball': 'basketball_nba',
+                'nba': 'basketball_nba',
+                'ncaab': 'basketball_ncaab',
+                'football': 'americanfootball_nfl',
+                'nfl': 'americanfootball_nfl',
+                'ncaaf': 'americanfootball_ncaaf',
+                'amfootball': 'americanfootball_nfl',
+                'americanfootball': 'americanfootball_nfl',
+                'soccer': 'soccer',
+                'baseball': 'baseball_mlb',
+                'mlb': 'baseball_mlb'
+              };
+              const sportKey = sportToKey[foundEvent.sport?.toLowerCase()] || foundEvent.sport || 'basketball_nba';
+              
+              // Normalize sportName for display
+              const sportDisplayNames = {
+                'hockey': 'Hockey',
+                'icehockey': 'Hockey',
+                'basketball': 'Basketball',
+                'nba': 'Basketball',
+                'ncaab': 'Basketball',
+                'amfootball': 'Football',
+                'americanfootball': 'Football',
+                'nfl': 'Football',
+                'ncaaf': 'Football',
+                'soccer': 'Soccer',
+                'baseball': 'Baseball',
+                'mlb': 'Baseball'
+              };
+              const displaySportName = sportDisplayNames[foundEvent.sport?.toLowerCase()] || foundEvent.sport || 'Basketball';
+              
               const formattedGame = {
                 id: foundEvent.id,
                 gameId: foundEvent.id,
-                sport_key: foundEvent.sport_key || 'basketball_nba',
-                sportName: foundEvent.sport_title || foundEvent.sport || 'Basketball',
-                homeTeam: foundEvent.home_team_abbr || foundEvent.home_team?.name || foundEvent.team1,
-                awayTeam: foundEvent.away_team_abbr || foundEvent.away_team?.name || foundEvent.team2,
-                homeTeamFull: foundEvent.home_team?.name || foundEvent.team1 || foundEvent.homeTeam,
-                awayTeamFull: foundEvent.away_team?.name || foundEvent.team2 || foundEvent.awayTeam,
+                sport_key: sportKey,
+                sportName: displaySportName,
+                homeTeam: foundEvent.homeTeam,
+                awayTeam: foundEvent.awayTeam,
+                homeTeamFull: foundEvent.homeTeam,
+                awayTeamFull: foundEvent.awayTeam,
                 time: foundEvent.time || 'LIVE',
                 status: 'IN_PROGRESS',
                 isLive: true,
                 scores: {
-                  home: { total: foundEvent.home_score || foundEvent.team1_score || 0 },
-                  away: { total: foundEvent.away_score || foundEvent.team2_score || 0 }
+                  home: { total: foundEvent.homeScore || 0 },
+                  away: { total: foundEvent.awayScore || 0 }
                 },
                 lines: foundEvent.odds ? {
                   moneyline: {
@@ -73,8 +110,10 @@ export default function GameDetail() {
                 } : null,
                 ballPosition: foundEvent.xy || foundEvent.ballPosition,
                 possession: foundEvent.possession,
-                displayClock: foundEvent.elapsed || foundEvent.timer,
-                period: foundEvent.period
+                displayClock: foundEvent.timer || foundEvent.elapsed,
+                period: foundEvent.period || foundEvent.quarter,
+                league: foundEvent.league,
+                leagueName: foundEvent.leagueName
               };
               setGame(formattedGame);
               setLoading(false);
