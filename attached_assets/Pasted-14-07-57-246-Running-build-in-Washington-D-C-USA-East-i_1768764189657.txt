@@ -1,0 +1,304 @@
+14:07:57.246 Running build in Washington, D.C., USA (East) – iad1 (Secure Compute)
+14:07:57.246 Build machine configuration: 4 cores, 8 GB
+14:07:57.396 Cloning github.com/chipotleman/fundedfinal (Branch: main, Commit: fe8a47d)
+14:08:07.395 Cloning completed: 9.999s
+14:08:07.498 Restored build cache from previous deployment (Hp8bAUgGCYJwtcmyMYmGSipZ7JBd)
+14:08:07.804 Running "vercel build"
+14:08:08.689 Vercel CLI 50.4.4
+14:08:08.994 Installing dependencies...
+14:08:10.346 
+14:08:10.346 up to date in 1s
+14:08:10.347 
+14:08:10.347 158 packages are looking for funding
+14:08:10.347   run `npm fund` for details
+14:08:10.376 Detected Next.js version: 14.2.35
+14:08:10.380 Running "npm run build"
+14:08:10.485 
+14:08:10.485 > fundedfinal@1.0.0 build
+14:08:10.485 > next build
+14:08:10.485 
+14:08:11.675   ▲ Next.js 14.2.35
+14:08:11.675   - Environments: .env.local
+14:08:11.675   - Experiments (use with caution):
+14:08:11.675     · instrumentationHook
+14:08:11.675 
+14:08:11.736    Creating an optimized production build ...
+14:08:12.277 > [PWA] Compile server
+14:08:12.279 > [PWA] Compile server
+14:08:12.280 > [PWA] Compile client (static)
+14:08:12.280 > [PWA] Auto register service worker with: /vercel/path0/node_modules/next-pwa/register.js
+14:08:12.281 > [PWA] Service worker: /vercel/path0/public/sw.js
+14:08:12.281 > [PWA]   url: /sw.js
+14:08:12.281 > [PWA]   scope: /
+14:08:12.319 > [PWA] Fallback to precache routes when fetch failed from cache or network:
+14:08:12.319 > [PWA]   document (page): /offline
+14:08:19.715  ⚠ Compiled with warnings
+14:08:19.715 
+14:08:19.715 ./pages/api/challenges/[id].js
+14:08:19.715 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+14:08:19.715 
+14:08:19.715 Import trace for requested module:
+14:08:19.715 ./pages/api/challenges/[id].js
+14:08:19.715 
+14:08:19.715 ./pages/api/challenges/active.js
+14:08:19.715 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+14:08:19.715 
+14:08:19.715 Import trace for requested module:
+14:08:19.715 ./pages/api/challenges/active.js
+14:08:19.715 
+14:08:19.715 ./pages/api/marketplace/become-capper.js
+14:08:19.715 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+14:08:19.715 
+14:08:19.715 Import trace for requested module:
+14:08:19.716 ./pages/api/marketplace/become-capper.js
+14:08:19.716 
+14:08:19.716 ./pages/api/marketplace/dashboard.js
+14:08:19.716 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+14:08:19.716 
+14:08:19.716 Import trace for requested module:
+14:08:19.716 ./pages/api/marketplace/dashboard.js
+14:08:19.716 
+14:08:19.716 ./pages/api/marketplace/my-subscriptions.js
+14:08:19.716 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+14:08:19.716 
+14:08:19.716 Import trace for requested module:
+14:08:19.716 ./pages/api/marketplace/my-subscriptions.js
+14:08:19.716 
+14:08:19.716 ./pages/api/marketplace/products.js
+14:08:19.716 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+14:08:19.716 
+14:08:19.716 Import trace for requested module:
+14:08:19.717 ./pages/api/marketplace/products.js
+14:08:19.717 
+14:08:19.717 ./pages/api/marketplace/reviews.js
+14:08:19.717 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+14:08:19.717 
+14:08:19.717 Import trace for requested module:
+14:08:19.717 ./pages/api/marketplace/reviews.js
+14:08:19.717 
+14:08:19.717 ./pages/api/marketplace/subscribe.js
+14:08:19.717 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+14:08:19.717 
+14:08:19.717 Import trace for requested module:
+14:08:19.717 ./pages/api/marketplace/subscribe.js
+14:08:19.717 
+14:08:19.717 ./pages/api/pools/available.js
+14:08:19.717 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+14:08:19.717 
+14:08:19.717 Import trace for requested module:
+14:08:19.717 ./pages/api/pools/available.js
+14:08:19.718 
+14:08:19.718 ./pages/api/pools/current.js
+14:08:19.718 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+14:08:19.718 
+14:08:19.718 Import trace for requested module:
+14:08:19.718 ./pages/api/pools/current.js
+14:08:19.718 
+14:08:19.718 ./pages/api/profile/avatar.js
+14:08:19.718 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+14:08:19.718 
+14:08:19.718 Import trace for requested module:
+14:08:19.718 ./pages/api/profile/avatar.js
+14:08:19.718 
+14:08:19.718 ./pages/api/user/profile.js
+14:08:19.718 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+14:08:19.718 
+14:08:19.718 Import trace for requested module:
+14:08:19.718 ./pages/api/user/profile.js
+14:08:19.718 
+14:08:19.719    Linting and checking validity of types ...
+14:08:23.593    Collecting page data ...
+14:08:25.664    Generating static pages (0/67) ...
+14:08:25.965    Generating static pages (16/67) 
+14:08:26.376    Generating static pages (33/67) 
+14:08:26.984    Generating static pages (50/67) 
+14:08:27.465  ✓ Generating static pages (67/67)
+14:08:35.848    Finalizing page optimization ...
+14:08:35.848    Collecting build traces ...
+14:08:38.247 
+14:08:38.260 Route (app)                                      Size     First Load JS
+14:08:38.260 ┌ ƒ /api/admin/settleSingleBet                   0 B                0 B
+14:08:38.260 ├ ƒ /api/adminSettle                             0 B                0 B
+14:08:38.260 ├ ○ /api/cron                                    0 B                0 B
+14:08:38.260 ├ ƒ /api/manualSettle                            0 B                0 B
+14:08:38.260 ├ ƒ /api/placeBet                                0 B                0 B
+14:08:38.261 └ ƒ /api/settleBets                              0 B                0 B
+14:08:38.261 + First Load JS shared by all                    0 B
+14:08:38.262 
+14:08:38.262 Route (pages)                                    Size     First Load JS
+14:08:38.262 ┌ ƒ /                                            22.4 kB         226 kB
+14:08:38.262 ├   /_app                                        0 B             134 kB
+14:08:38.262 ├ ○ /404                                         182 B           134 kB
+14:08:38.263 ├ ○ /admin                                       2.94 kB         136 kB
+14:08:38.263 ├ ○ /admin-panel                                 1.86 kB         139 kB
+14:08:38.263 ├ ○ /admin-panel/analytics                       2.66 kB         140 kB
+14:08:38.263 ├ ○ /admin-panel/bets                            2.46 kB         140 kB
+14:08:38.263 ├ ○ /admin-panel/challenges                      2.35 kB         139 kB
+14:08:38.263 ├ ○ /admin-panel/games                           4.07 kB         141 kB
+14:08:38.263 ├ ○ /admin-panel/login                           2.24 kB         136 kB
+14:08:38.263 ├ ○ /admin-panel/marketplace                     2.58 kB         140 kB
+14:08:38.264 ├ ○ /admin-panel/matchups                        4.93 kB         142 kB
+14:08:38.264 ├ ○ /admin-panel/mock-users                      2.9 kB          140 kB
+14:08:38.264 ├ ○ /admin-panel/payments                        2.14 kB         139 kB
+14:08:38.265 ├ ○ /admin-panel/settings                        2.26 kB         139 kB
+14:08:38.265 ├ ○ /admin-panel/staff                           3.39 kB         140 kB
+14:08:38.265 ├ ○ /admin-panel/users                           5.06 kB         142 kB
+14:08:38.265 ├ ○ /admin-panel/withdrawals                     3.79 kB         141 kB
+14:08:38.265 ├ ○ /admin-settle                                1.14 kB         135 kB
+14:08:38.265 ├ ○ /adminBets                                   1.86 kB         135 kB
+14:08:38.265 ├ ƒ /api/admin-panel/analytics                   0 B             134 kB
+14:08:38.265 ├ ƒ /api/admin-panel/auth                        0 B             134 kB
+14:08:38.265 ├ ƒ /api/admin-panel/battles                     0 B             134 kB
+14:08:38.265 ├ ƒ /api/admin-panel/battles/impersonate         0 B             134 kB
+14:08:38.265 ├ ƒ /api/admin-panel/bets                        0 B             134 kB
+14:08:38.265 ├ ƒ /api/admin-panel/challenges                  0 B             134 kB
+14:08:38.265 ├ ƒ /api/admin-panel/marketplace                 0 B             134 kB
+14:08:38.265 ├ ƒ /api/admin-panel/matchups                    0 B             134 kB
+14:08:38.265 ├ ƒ /api/admin-panel/matchups/fake-bets          0 B             134 kB
+14:08:38.265 ├ ƒ /api/admin-panel/matchups/fake-opponents     0 B             134 kB
+14:08:38.265 ├ ƒ /api/admin-panel/matchups/setup-credentials  0 B             134 kB
+14:08:38.265 ├ ƒ /api/admin-panel/odds-history                0 B             134 kB
+14:08:38.265 ├ ƒ /api/admin-panel/payments                    0 B             134 kB
+14:08:38.265 ├ ƒ /api/admin-panel/seed                        0 B             134 kB
+14:08:38.265 ├ ƒ /api/admin-panel/settings                    0 B             134 kB
+14:08:38.265 ├ ƒ /api/admin-panel/staff                       0 B             134 kB
+14:08:38.265 ├ ƒ /api/admin-panel/stats                       0 B             134 kB
+14:08:38.265 ├ ƒ /api/admin-panel/user-activity               0 B             134 kB
+14:08:38.265 ├ ƒ /api/admin-panel/users                       0 B             134 kB
+14:08:38.265 ├ ƒ /api/admin-panel/users/grant-challenge       0 B             134 kB
+14:08:38.266 ├ ƒ /api/admin-panel/users/reset-password        0 B             134 kB
+14:08:38.266 ├ ƒ /api/admin-panel/withdrawals                 0 B             134 kB
+14:08:38.266 ├ ƒ /api/admin/battle-avatars                    0 B             134 kB
+14:08:38.266 ├ ƒ /api/admin/mock-users                        0 B             134 kB
+14:08:38.266 ├ ƒ /api/admin/reset-user-challenge              0 B             134 kB
+14:08:38.266 ├ ƒ /api/analytics/demo-bet                      0 B             134 kB
+14:08:38.266 ├ ƒ /api/analytics/events                        0 B             134 kB
+14:08:38.266 ├ ƒ /api/analytics/page-view                     0 B             134 kB
+14:08:38.266 ├ ƒ /api/analytics/session                       0 B             134 kB
+14:08:38.266 ├ ƒ /api/analytics/unplaced-bet                  0 B             134 kB
+14:08:38.266 ├ ƒ /api/auth/[...nextauth]                      0 B             134 kB
+14:08:38.266 ├ ƒ /api/auth/signup                             0 B             134 kB
+14:08:38.266 ├ ƒ /api/auth/validate-impersonation             0 B             134 kB
+14:08:38.266 ├ ƒ /api/bets/cashout                            0 B             134 kB
+14:08:38.266 ├ ƒ /api/bets/grade                              0 B             134 kB
+14:08:38.266 ├ ƒ /api/bets/history                            0 B             134 kB
+14:08:38.266 ├ ƒ /api/bets/place                              0 B             134 kB
+14:08:38.266 ├ ƒ /api/challenges/[id]                         0 B             134 kB
+14:08:38.266 ├ ƒ /api/challenges/active                       0 B             134 kB
+14:08:38.266 ├ ƒ /api/checkout_sessions                       0 B             134 kB
+14:08:38.266 ├ ƒ /api/fanbasis-checkout                       0 B             134 kB
+14:08:38.266 ├ ƒ /api/fanbasis-embedded-checkout              0 B             134 kB
+14:08:38.266 ├ ƒ /api/fanbasis-webhook                        0 B             134 kB
+14:08:38.266 ├ ƒ /api/fanbasis/create-session                 0 B             134 kB
+14:08:38.266 ├ ƒ /api/fetch-slates                            0 B             134 kB
+14:08:38.266 ├ ƒ /api/fetch-team-logo                         0 B             134 kB
+14:08:38.267 ├ ƒ /api/games                                   0 B             134 kB
+14:08:38.267 ├ ƒ /api/games/[id]                              0 B             134 kB
+14:08:38.267 ├ ƒ /api/games/nba                               0 B             134 kB
+14:08:38.267 ├ ƒ /api/goalserve/check-ip                      0 B             134 kB
+14:08:38.267 ├ ƒ /api/goalserve/games                         0 B             134 kB
+14:08:38.267 ├ ƒ /api/goalserve/inplay                        0 B             134 kB
+14:08:38.267 ├ ƒ /api/goalserve/live                          0 B             134 kB
+14:08:38.267 ├ ƒ /api/goalserve/odds                          0 B             134 kB
+14:08:38.267 ├ ƒ /api/goalserve/playbyplay                    0 B             134 kB
+14:08:38.267 ├ ƒ /api/goalserve/stream                        0 B             134 kB
+14:08:38.267 ├ ƒ /api/goalserve/test-access                   0 B             134 kB
+14:08:38.267 ├ ƒ /api/goalserve/test-ws-auth                  0 B             134 kB
+14:08:38.267 ├ ƒ /api/goalserve/test-ws-connect               0 B             134 kB
+14:08:38.267 ├ ƒ /api/goalserve/ws-live                       0 B             134 kB
+14:08:38.267 ├ ƒ /api/goalserve/ws-status                     0 B             134 kB
+14:08:38.267 ├ ƒ /api/marketplace/become-capper               0 B             134 kB
+14:08:38.267 ├ ƒ /api/marketplace/capper/[slug]               0 B             134 kB
+14:08:38.267 ├ ƒ /api/marketplace/cappers                     0 B             134 kB
+14:08:38.267 ├ ƒ /api/marketplace/dashboard                   0 B             134 kB
+14:08:38.267 ├ ƒ /api/marketplace/my-subscriptions            0 B             134 kB
+14:08:38.267 ├ ƒ /api/marketplace/products                    0 B             134 kB
+14:08:38.267 ├ ƒ /api/marketplace/reviews                     0 B             134 kB
+14:08:38.267 ├ ƒ /api/marketplace/subscribe                   0 B             134 kB
+14:08:38.267 ├ ƒ /api/matchups/[id]                           0 B             134 kB
+14:08:38.267 ├ ƒ /api/matchups/assign-opponent                0 B             134 kB
+14:08:38.267 ├ ƒ /api/matchups/current                        0 B             134 kB
+14:08:38.268 ├ ƒ /api/matchups/queue                          0 B             134 kB
+14:08:38.268 ├ ƒ /api/matchups/resolve                        0 B             134 kB
+14:08:38.268 ├ ƒ /api/mock-auto-settle                        0 B             134 kB
+14:08:38.268 ├ ƒ /api/payment-methods                         0 B             134 kB
+14:08:38.268 ├ ƒ /api/payment-methods/[id]                    0 B             134 kB
+14:08:38.268 ├ ƒ /api/pools/available                         0 B             134 kB
+14:08:38.268 ├ ƒ /api/pools/current                           0 B             134 kB
+14:08:38.268 ├ ƒ /api/pools/join                              0 B             134 kB
+14:08:38.268 ├ ƒ /api/pools/my-pool                           0 B             134 kB
+14:08:38.268 ├ ƒ /api/profile/avatar                          0 B             134 kB
+14:08:38.268 ├ ƒ /api/profiles/[id]                           0 B             134 kB
+14:08:38.268 ├ ƒ /api/profiles/battle-history                 0 B             134 kB
+14:08:38.268 ├ ƒ /api/profiles/check-username                 0 B             134 kB
+14:08:38.268 ├ ƒ /api/profiles/update                         0 B             134 kB
+14:08:38.268 ├ ƒ /api/stripe-webhook                          0 B             134 kB
+14:08:38.268 ├ ƒ /api/update-pnl                              0 B             134 kB
+14:08:38.268 ├ ƒ /api/uploads/request-url                     0 B             134 kB
+14:08:38.268 ├ ƒ /api/user/active-challenge                   0 B             134 kB
+14:08:38.268 ├ ƒ /api/user/profile                            0 B             134 kB
+14:08:38.268 ├ ƒ /api/withdrawals                             0 B             134 kB
+14:08:38.268 ├ ƒ /api/withdrawals/[id]                        0 B             134 kB
+14:08:38.268 ├ ○ /auth                                        5.11 kB         208 kB
+14:08:38.269 ├ ○ /auth/callback                               563 B           134 kB
+14:08:38.269 ├ ○ /battle                                      3.61 kB         147 kB
+14:08:38.269 ├ ○ /bet-history                                 3.18 kB         206 kB
+14:08:38.269 ├ ○ /capper/[id]                                 3.48 kB         207 kB
+14:08:38.269 ├ ○ /checkout                                    2.53 kB         136 kB
+14:08:38.269 ├ ○ /checkout-design                             4.56 kB         138 kB
+14:08:38.269 ├ ○ /checkout-redirect                           1.16 kB         135 kB
+14:08:38.269 ├ ƒ /dashboard                                   251 B           134 kB
+14:08:38.269 ├ ○ /data-privacy                                1.68 kB         145 kB
+14:08:38.269 ├ ○ /debug/api                                   3.55 kB         137 kB
+14:08:38.269 ├ ○ /demo                                        3.76 kB         147 kB
+14:08:38.269 ├ ○ /demo-dashboard                              10.1 kB         154 kB
+14:08:38.269 ├ ○ /fake-login                                  1.27 kB         135 kB
+14:08:38.269 ├ ○ /game/[id]                                   9.41 kB         143 kB
+14:08:38.269 ├ ○ /how-it-works                                4.83 kB         208 kB
+14:08:38.269 ├ ○ /instagram-strategy                          4.47 kB         148 kB
+14:08:38.269 ├ ○ /leaderboard                                 4.03 kB         207 kB
+14:08:38.269 ├ ○ /leaguenametest                              4.31 kB         138 kB
+14:08:38.269 ├ ○ /login                                       553 B           134 kB
+14:08:38.269 ├ ○ /marketplace                                 2.79 kB         136 kB
+14:08:38.269 ├ ○ /marketplace/[slug]                          3.51 kB         137 kB
+14:08:38.269 ├ ○ /marketplace/become-capper                   3.01 kB         137 kB
+14:08:38.269 ├ ○ /marketplace/dashboard                       4.27 kB         138 kB
+14:08:38.270 ├ ○ /marketplace/my-subscriptions                3.11 kB         137 kB
+14:08:38.270 ├ ○ /my-battle                                   5.2 kB          149 kB
+14:08:38.270 ├ ○ /offline                                     543 B           134 kB
+14:08:38.270 ├ ○ /packages                                    2.79 kB         206 kB
+14:08:38.270 ├ ○ /payment-success                             1.5 kB          135 kB
+14:08:38.270 ├ ○ /pikking-101                                 2.02 kB         145 kB
+14:08:38.270 ├ ○ /pricing                                     674 B           134 kB
+14:08:38.270 ├ ○ /privacy                                     1.63 kB         145 kB
+14:08:38.270 ├ ○ /profile                                     2.68 kB         146 kB
+14:08:38.270 ├ ○ /profile/[id]                                3.11 kB         147 kB
+14:08:38.270 ├ ○ /promos                                      2.94 kB         206 kB
+14:08:38.270 ├ ○ /responsible-pikking                         1.62 kB         145 kB
+14:08:38.270 ├ ○ /rules                                       1.52 kB         145 kB
+14:08:38.270 ├ ○ /settings                                    1.68 kB         145 kB
+14:08:38.270 ├ ○ /terms                                       1.82 kB         145 kB
+14:08:38.270 ├ ○ /test                                        358 B           134 kB
+14:08:38.270 ├ ○ /waitlist                                    2.1 kB          205 kB
+14:08:38.270 ├ ○ /withdraw                                    2.73 kB         136 kB
+14:08:38.270 └ ○ /withdrawal                                  6.76 kB         150 kB
+14:08:38.270 + First Load JS shared by all                    150 kB
+14:08:38.270   ├ chunks/framework-9651f24559de936b.js         44.9 kB
+14:08:38.270   ├ chunks/main-702eb2755f0689a7.js              36.3 kB
+14:08:38.270   ├ chunks/pages/_app-84edcf9e06676a89.js        50.8 kB
+14:08:38.270   ├ css/5dd288cb3bcc88e5.css                     16.7 kB
+14:08:38.271   └ other shared chunks (total)                  1.54 kB
+14:08:38.272 
+14:08:38.272 ○  (Static)   prerendered as static content
+14:08:38.272 ƒ  (Dynamic)  server-rendered on demand
+14:08:38.272 
+14:08:38.458 Traced Next.js server files in: 29.015ms
+14:08:38.983 Created all serverless functions in: 524.873ms
+14:08:38.993 Collected static files (public/, static/, .next/static): 6.113ms
+14:08:39.153 Build Completed in /vercel/output [30s]
+14:08:39.291 Deploying outputs...
+14:08:48.017 Deployment completed
+14:08:48.800 Creating build cache...
+14:08:57.500 Created build cache: 8.700s
+14:08:57.501 Uploading build cache [171.51 MB]
+14:08:59.983 Build cache uploaded: 2.482s
