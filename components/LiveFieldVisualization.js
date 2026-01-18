@@ -142,27 +142,46 @@ function Ball({ x, y, sport }) {
 export default function LiveFieldVisualization({ 
   game, 
   ballPosition,
+  possession,
   className = '' 
 }) {
   const sportType = useMemo(() => getSportType(game?.sport_key), [game?.sport_key]);
   const dimensions = FIELD_DIMENSIONS[sportType];
   
+  // Determine possession zone when exact coordinates aren't available
+  // If home team has possession, puck is in away zone (right side)
+  // If away team has possession, puck is in home zone (left side)
+  const hasExactPosition = useMemo(() => {
+    const coords = parseCoordinates(ballPosition);
+    return coords !== null;
+  }, [ballPosition]);
+  
   const ballCoords = useMemo(() => {
     const coords = parseCoordinates(ballPosition);
-    if (!coords) {
-      return { x: dimensions.width / 2, y: dimensions.height / 2 };
+    if (coords) {
+      const normalized = normalizeCoordinates(coords, sportType, dimensions);
+      if (normalized) {
+        return { 
+          x: Math.max(15, Math.min(dimensions.width - 15, normalized.x)), 
+          y: Math.max(15, Math.min(dimensions.height - 15, normalized.y)),
+          isZoneBased: false
+        };
+      }
     }
     
-    const normalized = normalizeCoordinates(coords, sportType, dimensions);
-    if (!normalized) {
-      return { x: dimensions.width / 2, y: dimensions.height / 2 };
+    // Fall back to zone-based positioning using possession
+    const centerY = dimensions.height / 2;
+    if (possession === 'home') {
+      // Home team has possession - puck is in offensive zone (right side)
+      return { x: dimensions.width * 0.75, y: centerY, isZoneBased: true };
+    } else if (possession === 'away') {
+      // Away team has possession - puck is in defensive zone (left side)
+      return { x: dimensions.width * 0.25, y: centerY, isZoneBased: true };
     }
     
-    return { 
-      x: Math.max(15, Math.min(dimensions.width - 15, normalized.x)), 
-      y: Math.max(15, Math.min(dimensions.height - 15, normalized.y)) 
-    };
-  }, [ballPosition, dimensions, sportType]);
+    // No position or possession data - center ice
+    return { x: dimensions.width / 2, y: centerY, isZoneBased: true };
+  }, [ballPosition, possession, dimensions, sportType]);
 
   const FieldComponent = useMemo(() => {
     switch (sportType) {

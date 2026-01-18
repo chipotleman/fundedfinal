@@ -47,6 +47,17 @@ export default function LiveGameTracker({ gameId, sport = 'basketball_nba', init
     if (poss?.away) return initialData?.away_team || 'Away';
     return null;
   };
+  
+  // Get possession as simple 'home' or 'away' string for zone-based positioning
+  const getPossessionString = () => {
+    const poss = gameData?.possession;
+    if (!poss) return null;
+    
+    if (typeof poss === 'string') return poss;
+    if (poss?.home) return 'home';
+    if (poss?.away) return 'away';
+    return null;
+  };
 
   // Use ballPosition from real-time event, fall back to initialData
   const ballPosition = gameData?.ballPosition || initialData?.ballPosition || null;
@@ -75,10 +86,10 @@ export default function LiveGameTracker({ gameId, sport = 'basketball_nba', init
           game={{ 
             sport_key: sport,
             homeTeam: initialData?.home_team,
-            awayTeam: initialData?.away_team,
-            possession: gameData?.possession || initialData?.possession
+            awayTeam: initialData?.away_team
           }}
           ballPosition={ballPosition}
+          possession={getPossessionString()}
           className="rounded-lg overflow-hidden border border-white/20"
         />
 
