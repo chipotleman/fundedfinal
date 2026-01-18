@@ -9,11 +9,25 @@ export default function GameDetail() {
   const { id, demo } = router.query;
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [showTracker, setShowTracker] = useState(true);
   const [activeTab, setActiveTab] = useState('Popular');
   const { betSlip, addToBetSlip, isBetInSlip, showBetSlip, setShowBetSlip } = useBetSlip();
 
   const betTabs = ['Popular', 'Live SGP', 'Spread', 'Total', 'Moneyline'];
+
+  useEffect(() => {
+    if (!id) return;
+    
+    const timeoutId = setTimeout(() => {
+      if (loading) {
+        setLoadingTimeout(true);
+        setLoading(false);
+      }
+    }, 8000);
+    
+    return () => clearTimeout(timeoutId);
+  }, [id, loading]);
 
   useEffect(() => {
     if (!id) return;
@@ -64,11 +78,12 @@ export default function GameDetail() {
           }
         }
         
-        const response = await fetch('/api/games');
+        const response = await fetch(`/api/games/${encodeURIComponent(id)}`);
         if (response.ok) {
           const data = await response.json();
-          const foundGame = data.games?.find(g => String(g.id) === String(id));
-          setGame(foundGame);
+          if (data.game) {
+            setGame(data.game);
+          }
         }
       } catch (error) {
         console.error('Error fetching game:', error);
@@ -138,7 +153,33 @@ export default function GameDetail() {
     
     return (
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-4">
-        {isInplayGame ? (
+        {loadingTimeout ? (
+          <>
+            <div className="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center mb-4">
+              <svg className="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-xl font-bold mb-2 text-center">Loading Taking Too Long</p>
+            <p className="text-gray-500 text-sm text-center mb-6 max-w-sm">
+              The game data is still loading. Please wait a moment and try refreshing.
+            </p>
+            <div className="flex gap-3">
+              <button 
+                onClick={() => window.location.reload()}
+                className="bg-blue-600 px-6 py-3 rounded-lg font-semibold"
+              >
+                Refresh
+              </button>
+              <button 
+                onClick={() => router.back()}
+                className="bg-gray-700 px-6 py-3 rounded-lg font-semibold"
+              >
+                Go Back
+              </button>
+            </div>
+          </>
+        ) : isInplayGame ? (
           <>
             <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mb-4">
               <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,18 +195,24 @@ export default function GameDetail() {
             <p className="text-gray-500 text-sm text-center mb-6 max-w-sm">
               Live game data requires IP whitelisting in production. Please try again or check back later.
             </p>
+            <button 
+              onClick={() => router.back()}
+              className="bg-green-600 px-6 py-3 rounded-lg font-semibold"
+            >
+              Go Back
+            </button>
           </>
         ) : (
           <>
             <p className="text-xl mb-4">Game not found</p>
+            <button 
+              onClick={() => router.back()}
+              className="bg-green-600 px-6 py-3 rounded-lg font-semibold"
+            >
+              Go Back
+            </button>
           </>
         )}
-        <button 
-          onClick={() => router.back()}
-          className="bg-green-600 px-6 py-3 rounded-lg font-semibold"
-        >
-          Go Back
-        </button>
       </div>
     );
   }
