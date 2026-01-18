@@ -1,8 +1,8 @@
-import { getGoalserveInplayService } from '../../../lib/goalserve-inplay';
+import { getInplayService } from '../../../lib/goalserve-inplay';
 
 export default async function handler(req, res) {
   try {
-    const service = getGoalserveInplayService();
+    const service = getInplayService();
     const { eventId, sport = 'hockey' } = req.query;
     
     const normalizedEvents = service.getEventsForSSR(sport) || [];
