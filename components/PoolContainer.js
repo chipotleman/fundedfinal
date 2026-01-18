@@ -221,7 +221,7 @@ export default function PoolContainer({ isDarkMode }) {
             style={{
               bottom: 0,
               height: '100%',
-              transform: `translateY(${isDesktop ? (61 - (holdProgress * 61)) : (86 - (holdProgress * 86))}%)`,
+              transform: `translateY(${isDesktop ? (76 - (holdProgress * 76)) : (86 - (holdProgress * 86))}%)`,
               willChange: 'transform',
             }}
           >
