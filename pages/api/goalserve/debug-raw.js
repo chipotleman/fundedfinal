@@ -1,10 +1,18 @@
 import { getInplayService } from '../../../lib/goalserve-inplay';
+import { initializeGoalservePolling, getGoalserveStatus } from '../../../lib/goalserve-autostart';
 
 export default async function handler(req, res) {
   try {
+    initializeGoalservePolling();
+    
     const service = getInplayService();
     const { eventId, sport = 'hockey' } = req.query;
     
+    const serviceStatus = service.getStatus();
+    const autostartStatus = getGoalserveStatus();
+    
+    const allEvents = service.getEvents();
+    const sportEvents = service.getEvents(sport);
     const normalizedEvents = service.getEventsForSSR(sport) || [];
     
     const specificNormalized = eventId 
@@ -42,12 +50,14 @@ export default async function handler(req, res) {
         infoXy: rawEvent.info?.xy,
         extraXy: rawEvent.extra?.xy,
         statsXy: rawEvent.stats?.xy,
+        infoBallPos: rawEvent.info?.ball_pos,
+        extraBallPos: rawEvent.extra?.ball_pos,
+        directBallPos: rawEvent.ball_pos,
         directX: rawEvent.x,
         directY: rawEvent.y,
         infoX: rawEvent.info?.x,
         infoY: rawEvent.info?.y,
-        extraX: rawEvent.extra?.x,
-        extraY: rawEvent.extra?.y
+        infoState: rawEvent.info?.state
       },
       
       possessionFields: {
@@ -60,16 +70,37 @@ export default async function handler(req, res) {
         statsPossession: rawEvent.stats?.possession,
         statsAttack: rawEvent.stats?.attack,
         infoPossessionTeam: rawEvent.info?.possession_team,
-        extraPossessionTeam: rawEvent.extra?.possession_team
+        extraPossessionTeam: rawEvent.extra?.possession_team,
+        teamInfoHomeServe: rawEvent.team_info?.home?.Serve,
+        teamInfoAwayServe: rawEvent.team_info?.away?.Serve
       }
     } : null;
     
     res.json({
-      sport,
+      serviceStatus: {
+        isPolling: serviceStatus.isPolling,
+        pollInterval: serviceStatus.pollInterval,
+        subscriberCount: serviceStatus.subscriberCount,
+        eventCount: serviceStatus.eventCount,
+        lastUpdate: serviceStatus.lastUpdate,
+        cachedSports: serviceStatus.cachedSports,
+        errors: serviceStatus.errors,
+        supportedSports: serviceStatus.supportedSports
+      },
+      autostartStatus,
+      
+      queriedSport: sport,
       eventIdQueried: eventId || 'first available',
+      
+      allEventsCount: allEvents.length,
+      sportEventsCount: sportEvents.length,
+      normalizedEventsCount: normalizedEvents.length,
+      
+      allEventIds: allEvents.slice(0, 10).map(e => ({ id: e.id, sport: e.sport, homeTeam: e.homeTeam, awayTeam: e.awayTeam })),
+      
       eventIdFound: specificNormalized?.id || 'none',
-      totalEvents: normalizedEvents.length,
       serviceHasRawEvents: typeof service.getRawEvent === 'function',
+      rawEventsCount: Object.keys(service.rawEvents || {}).length,
       
       normalized: specificNormalized ? {
         id: specificNormalized.id,
