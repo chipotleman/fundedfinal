@@ -521,7 +521,7 @@ export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
                 </div>
                 <div className="flex items-center gap-1.5 bg-blue-500/20 border border-blue-500/50 px-2.5 py-1 rounded-full">
                   <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                  <span className="text-blue-400 text-xs font-bold">{bets.length} PICK{bets.length !== 1 ? 'S' : ''}</span>
+                  <span className="text-blue-400 text-xs font-bold">{bets.length} PIK{bets.length !== 1 ? 'S' : ''}</span>
                 </div>
                 <button onClick={onClose} className="text-gray-400 hover:text-white p-1">
                   <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
