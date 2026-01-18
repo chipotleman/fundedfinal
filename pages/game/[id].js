@@ -40,7 +40,12 @@ export default function GameDetail() {
           const inplayResponse = await fetch('/api/goalserve/inplay');
           if (inplayResponse.ok) {
             const inplayData = await inplayResponse.json();
-            const foundEvent = inplayData.events?.find(e => String(e.id) === String(id));
+            const originalId = String(id).replace(/^inplay_/, '');
+            const foundEvent = inplayData.events?.find(e => 
+              String(e.id) === String(id) || 
+              String(e.id) === originalId ||
+              String(e.id).toLowerCase() === originalId.toLowerCase()
+            );
             if (foundEvent) {
               const formattedGame = {
                 id: foundEvent.id,
