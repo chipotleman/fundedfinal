@@ -20,6 +20,50 @@ export default function GameDetail() {
 
     const fetchGame = async () => {
       try {
+        const isInplayGame = String(id).startsWith('inplay_');
+        
+        if (isInplayGame) {
+          const inplayResponse = await fetch('/api/goalserve/inplay');
+          if (inplayResponse.ok) {
+            const inplayData = await inplayResponse.json();
+            const foundEvent = inplayData.events?.find(e => String(e.id) === String(id));
+            if (foundEvent) {
+              const formattedGame = {
+                id: foundEvent.id,
+                gameId: foundEvent.id,
+                sport_key: foundEvent.sport_key || 'basketball_nba',
+                sportName: foundEvent.sport_title || foundEvent.sport || 'Basketball',
+                homeTeam: foundEvent.home_team_abbr || foundEvent.home_team?.name || foundEvent.team1,
+                awayTeam: foundEvent.away_team_abbr || foundEvent.away_team?.name || foundEvent.team2,
+                homeTeamFull: foundEvent.home_team?.name || foundEvent.team1 || foundEvent.homeTeam,
+                awayTeamFull: foundEvent.away_team?.name || foundEvent.team2 || foundEvent.awayTeam,
+                time: foundEvent.time || 'LIVE',
+                status: 'IN_PROGRESS',
+                isLive: true,
+                scores: {
+                  home: { total: foundEvent.home_score || foundEvent.team1_score || 0 },
+                  away: { total: foundEvent.away_score || foundEvent.team2_score || 0 }
+                },
+                lines: foundEvent.odds ? {
+                  moneyline: {
+                    home: foundEvent.odds.moneyline?.home || null,
+                    away: foundEvent.odds.moneyline?.away || null
+                  },
+                  spread: foundEvent.odds.spread || null,
+                  total: foundEvent.odds.total || null
+                } : null,
+                ballPosition: foundEvent.xy || foundEvent.ballPosition,
+                possession: foundEvent.possession,
+                displayClock: foundEvent.elapsed || foundEvent.timer,
+                period: foundEvent.period
+              };
+              setGame(formattedGame);
+              setLoading(false);
+              return;
+            }
+          }
+        }
+        
         const response = await fetch('/api/games');
         if (response.ok) {
           const data = await response.json();
@@ -34,7 +78,8 @@ export default function GameDetail() {
     };
 
     fetchGame();
-    const interval = setInterval(fetchGame, 30000);
+    const isInplay = String(id).startsWith('inplay_');
+    const interval = setInterval(fetchGame, isInplay ? 5000 : 30000);
     return () => clearInterval(interval);
   }, [id]);
 
@@ -75,9 +120,46 @@ export default function GameDetail() {
   }
 
   if (!game) {
+    const isInplayGame = String(id || '').startsWith('inplay_');
+    
+    let gameInfoFromUrl = null;
+    if (isInplayGame) {
+      const parts = String(id).split('_');
+      const teamsMatch = parts.slice(2).join(' ').replace(/_/g, ' ');
+      const vsIndex = teamsMatch.toLowerCase().indexOf(' vs ');
+      if (vsIndex > 0) {
+        gameInfoFromUrl = {
+          team1: teamsMatch.substring(0, vsIndex).replace(/\b\w/g, c => c.toUpperCase()),
+          team2: teamsMatch.substring(vsIndex + 4).replace(/\b\w/g, c => c.toUpperCase()),
+          sport: parts[1] || 'Sport'
+        };
+      }
+    }
+    
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
-        <p className="text-xl mb-4">Game not found</p>
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-4">
+        {isInplayGame ? (
+          <>
+            <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mb-4">
+              <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-xl font-bold mb-2 text-center">Live Game Data Unavailable</p>
+            {gameInfoFromUrl && (
+              <p className="text-gray-400 text-center mb-2">
+                {gameInfoFromUrl.team1} vs {gameInfoFromUrl.team2}
+              </p>
+            )}
+            <p className="text-gray-500 text-sm text-center mb-6 max-w-sm">
+              Live game data requires IP whitelisting in production. Please try again or check back later.
+            </p>
+          </>
+        ) : (
+          <>
+            <p className="text-xl mb-4">Game not found</p>
+          </>
+        )}
         <button 
           onClick={() => router.back()}
           className="bg-green-600 px-6 py-3 rounded-lg font-semibold"
