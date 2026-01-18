@@ -1,55 +1,38 @@
 import { useState, useEffect } from 'react';
-import { useLiveGame } from '../hooks/useGoalserveLive';
+import { useLiveEvent } from '../hooks/useGoalserveLive';
+import LiveFieldVisualization from './LiveFieldVisualization';
 
 export default function LiveGameTracker({ gameId, sport = 'basketball_nba', initialData = null }) {
-  const { score, odds, position, isConnected, error } = useLiveGame(gameId, { autoConnect: true });
+  const { event, isConnected, error } = useLiveEvent(gameId, { autoConnect: true });
   
   const [gameData, setGameData] = useState(initialData);
 
   useEffect(() => {
-    if (score) {
+    if (event) {
       setGameData(prev => ({
         ...prev,
-        homeScore: score.homeScore,
-        awayScore: score.awayScore,
-        status: score.status,
-        timer: score.timer,
-        period: score.period,
-        possession: score.possession
+        homeScore: event.team1?.score || 0,
+        awayScore: event.team2?.score || 0,
+        status: event.stateCode,
+        timer: event.elapsedTime,
+        period: event.period,
+        possession: {
+          home: event.stats?.possession?.home || false,
+          away: event.stats?.possession?.away || false
+        },
+        ballPosition: event.ballPosition
       }));
     }
-  }, [score]);
+  }, [event]);
 
-  const isBasketball = sport.includes('basketball');
-  const isFootball = sport.includes('football');
-  const isHockey = sport.includes('hockey');
-  const isBaseball = sport.includes('baseball');
-
-  const getCourtDimensions = () => {
-    if (isBasketball) return { width: 94, height: 50, unit: 'ft' };
-    if (isFootball) return { width: 120, height: 53.3, unit: 'yd' };
-    if (isHockey) return { width: 200, height: 85, unit: 'ft' };
-    if (isBaseball) return { width: 325, height: 325, unit: 'ft' };
-    return { width: 100, height: 50, unit: 'units' };
+  const getPossessionTeam = () => {
+    if (gameData?.possession?.home) return initialData?.home_team || 'Home';
+    if (gameData?.possession?.away) return initialData?.away_team || 'Away';
+    return null;
   };
 
-  const court = getCourtDimensions();
-
-  const getBallPosition = () => {
-    if (!position) return { left: '50%', top: '50%' };
-    const x = Math.max(0, Math.min(100, (position.x / court.width) * 100));
-    const y = Math.max(0, Math.min(100, (position.y / court.height) * 100));
-    return { left: `${x}%`, top: `${y}%` };
-  };
-
-  const getStateColor = () => {
-    if (!position?.state) return 'bg-gray-500';
-    const state = position.state.toLowerCase();
-    if (state.includes('attack') || state.includes('shot')) return 'bg-red-500';
-    if (state.includes('dangerous')) return 'bg-orange-500';
-    if (state.includes('possession')) return 'bg-blue-500';
-    return 'bg-gray-500';
-  };
+  const ballPosition = gameData?.ballPosition || null;
+  const possessionTeam = getPossessionTeam();
 
   return (
     <div className="bg-black/40 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden">
@@ -84,84 +67,62 @@ export default function LiveGameTracker({ gameId, sport = 'basketball_nba', init
           </div>
         </div>
 
-        {position && (
-          <div 
-            className="relative w-full rounded-lg overflow-hidden border border-white/20"
-            style={{ 
-              aspectRatio: `${court.width}/${court.height}`,
-              background: isBasketball 
-                ? 'linear-gradient(to right, #8B4513, #A0522D)' 
-                : isFootball 
-                ? 'linear-gradient(to right, #228B22, #32CD32)'
-                : isHockey
-                ? 'linear-gradient(to right, #87CEEB, #ADD8E6)'
-                : '#333'
-            }}
-          >
-            {isBasketball && (
-              <>
-                <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/30" />
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 rounded-full border-2 border-white/30" />
-                <div className="absolute left-2 top-1/2 -translate-y-1/2 w-16 h-16 border-2 border-white/30 rounded-full" />
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 w-16 h-16 border-2 border-white/30 rounded-full" />
-              </>
-            )}
-            
-            {isFootball && (
-              <>
-                {[10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110].map(yard => (
-                  <div 
-                    key={yard} 
-                    className="absolute top-0 bottom-0 w-px bg-white/30"
-                    style={{ left: `${(yard / 120) * 100}%` }}
-                  />
-                ))}
-              </>
-            )}
+        <LiveFieldVisualization 
+          game={{ 
+            sport_key: sport,
+            homeTeam: initialData?.home_team,
+            awayTeam: initialData?.away_team,
+            possession: gameData?.possession
+          }}
+          ballPosition={ballPosition}
+          className="rounded-lg overflow-hidden border border-white/20"
+        />
 
-            <div 
-              className={`absolute w-4 h-4 rounded-full ${getStateColor()} shadow-lg transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300`}
-              style={getBallPosition()}
-            >
-              <div className="absolute inset-0 rounded-full animate-ping opacity-50" style={{ backgroundColor: 'inherit' }} />
-            </div>
-
-            {position.state && (
-              <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 rounded text-xs text-white">
-                {position.state}
-              </div>
-            )}
+        {possessionTeam && (
+          <div className="mt-3 text-center">
+            <span className="text-white/60 text-sm">
+              <span className="text-white font-medium">{possessionTeam}</span>
+              {' '}In Possession
+            </span>
           </div>
         )}
 
-        {odds && (
+        {event?.comments?.[0] && (
+          <div className="mt-2 text-center">
+            <span className="bg-blue-500/20 text-blue-400 text-xs px-2 py-1 rounded">
+              {event.comments[0].text || event.comments[0]}
+            </span>
+          </div>
+        )}
+
+        {event?.odds && event.odds.length > 0 && (
           <div className="mt-4 grid grid-cols-3 gap-2 text-center">
             <div className="bg-white/5 rounded-lg p-2">
               <div className="text-white/50 text-xs">Home ML</div>
               <div className="text-green-400 font-mono">
-                {odds.markets?.moneyline?.home || '-'}
+                {event.odds[0]?.home || '-'}
               </div>
             </div>
             <div className="bg-white/5 rounded-lg p-2">
               <div className="text-white/50 text-xs">Total</div>
               <div className="text-white font-mono">
-                {odds.markets?.total?.line || '-'}
+                {event.odds[0]?.total || '-'}
               </div>
             </div>
             <div className="bg-white/5 rounded-lg p-2">
               <div className="text-white/50 text-xs">Away ML</div>
               <div className="text-green-400 font-mono">
-                {odds.markets?.moneyline?.away || '-'}
+                {event.odds[0]?.away || '-'}
               </div>
             </div>
           </div>
         )}
       </div>
 
-      {position?.timestamp && (
+      {event?.timestamp && (
         <div className="px-4 py-2 border-t border-white/10 text-center">
           <span className="text-white/40 text-xs">
-            Last update: {new Date(position.timestamp).toLocaleTimeString()}
+            Last update: {new Date(event.timestamp).toLocaleTimeString()}
           </span>
         </div>
       )}
