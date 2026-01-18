@@ -9,29 +9,47 @@ export default function LiveGameTracker({ gameId, sport = 'basketball_nba', init
 
   useEffect(() => {
     if (event) {
+      // Handle both formats: normalized (homeScore/awayScore) and raw (team1/team2)
+      const homeScore = event.homeScore ?? event.team1?.score ?? 0;
+      const awayScore = event.awayScore ?? event.team2?.score ?? 0;
+      
+      // Possession can be string 'home'/'away' or object {home: bool, away: bool}
+      let possession = event.possession || event.stats?.possession;
+      if (typeof possession === 'string') {
+        possession = { home: possession === 'home', away: possession === 'away' };
+      }
+      
       setGameData(prev => ({
         ...prev,
-        homeScore: event.team1?.score || 0,
-        awayScore: event.team2?.score || 0,
-        status: event.stateCode,
-        timer: event.elapsedTime,
+        homeScore,
+        awayScore,
+        status: event.stateCode || event.status,
+        timer: event.timer || event.elapsedTime,
+        displayClock: event.displayClock,
         period: event.period,
-        possession: {
-          home: event.stats?.possession?.home || false,
-          away: event.stats?.possession?.away || false
-        },
-        ballPosition: event.ballPosition
+        possession: possession || { home: false, away: false },
+        ballPosition: event.xy || event.ballPosition
       }));
     }
   }, [event]);
 
   const getPossessionTeam = () => {
-    if (gameData?.possession?.home) return initialData?.home_team || 'Home';
-    if (gameData?.possession?.away) return initialData?.away_team || 'Away';
+    const poss = gameData?.possession;
+    if (!poss) return null;
+    
+    // Handle both object format {home: true, away: false} and string format 'home'/'away'
+    if (typeof poss === 'string') {
+      if (poss === 'home') return initialData?.home_team || 'Home';
+      if (poss === 'away') return initialData?.away_team || 'Away';
+      return null;
+    }
+    if (poss?.home) return initialData?.home_team || 'Home';
+    if (poss?.away) return initialData?.away_team || 'Away';
     return null;
   };
 
-  const ballPosition = gameData?.ballPosition || null;
+  // Use ballPosition from real-time event, fall back to initialData
+  const ballPosition = gameData?.ballPosition || initialData?.ballPosition || null;
   const possessionTeam = getPossessionTeam();
 
   return (
@@ -43,36 +61,22 @@ export default function LiveGameTracker({ gameId, sport = 'basketball_nba', init
             {isConnected ? 'LIVE' : error || 'Connecting...'}
           </span>
         </div>
-        {gameData?.timer && (
+        {(gameData?.timer || initialData?.displayClock) && (
           <span className="text-white font-mono text-sm">
-            {gameData.period && `Q${gameData.period} `}{gameData.timer}
+            {gameData?.displayClock || initialData?.displayClock || 
+              ((gameData?.period || initialData?.period) && `${gameData?.period || initialData?.period} `) + 
+              (gameData?.timer || '')}
           </span>
         )}
       </div>
 
       <div className="p-4">
-        <div className="flex justify-between items-center mb-4">
-          <div className="text-center flex-1">
-            <div className="text-white/70 text-sm mb-1">{initialData?.home_team || 'Home'}</div>
-            <div className="text-white text-3xl font-bold">
-              {gameData?.homeScore ?? initialData?.home_score ?? 0}
-            </div>
-          </div>
-          <div className="text-white/50 text-lg px-4">vs</div>
-          <div className="text-center flex-1">
-            <div className="text-white/70 text-sm mb-1">{initialData?.away_team || 'Away'}</div>
-            <div className="text-white text-3xl font-bold">
-              {gameData?.awayScore ?? initialData?.away_score ?? 0}
-            </div>
-          </div>
-        </div>
-
         <LiveFieldVisualization 
           game={{ 
             sport_key: sport,
             homeTeam: initialData?.home_team,
             awayTeam: initialData?.away_team,
-            possession: gameData?.possession
+            possession: gameData?.possession || initialData?.possession
           }}
           ballPosition={ballPosition}
           className="rounded-lg overflow-hidden border border-white/20"

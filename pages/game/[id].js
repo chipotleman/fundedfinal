@@ -108,9 +108,9 @@ export default function GameDetail() {
                   spread: foundEvent.odds.spread || null,
                   total: foundEvent.odds.total || null
                 } : null,
-                ballPosition: foundEvent.xy || foundEvent.ballPosition,
+                ballPosition: foundEvent.xy,
                 possession: foundEvent.possession,
-                displayClock: foundEvent.timer || foundEvent.elapsed,
+                displayClock: foundEvent.displayClock || foundEvent.timer || foundEvent.elapsed,
                 period: foundEvent.period || foundEvent.quarter,
                 league: foundEvent.league,
                 leagueName: foundEvent.leagueName
@@ -377,7 +377,11 @@ export default function GameDetail() {
                   home_team: game.homeTeamFull || game.homeTeam,
                   away_team: game.awayTeamFull || game.awayTeam,
                   home_score: game.scores?.home?.total || 0,
-                  away_score: game.scores?.away?.total || 0
+                  away_score: game.scores?.away?.total || 0,
+                  ballPosition: game.ballPosition,
+                  possession: game.possession,
+                  displayClock: game.displayClock,
+                  period: game.period
                 }}
               />
             </div>
