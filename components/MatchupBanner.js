@@ -498,8 +498,8 @@ export default function MatchupBanner({
                     </div>
                   </div>
                   <div className="flex flex-col mb-1">
-                    <span className="text-white/70 text-[10px] uppercase tracking-wide">Prize Pool</span>
-                    <span className="text-white text-lg md:text-4xl font-black drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                    <span className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.7)' }}>Prize Pool</span>
+                    <span className="text-lg md:text-4xl font-black drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]" style={{ color: '#ffffff' }}>
                       ${availablePool ? parseFloat(availablePool.maxPrizePool || availablePool.prizePool).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '562.50'}
                     </span>
                   </div>
@@ -521,7 +521,7 @@ export default function MatchupBanner({
                           opacity: 0.6,
                         }}
                       />
-                      <span className="relative text-white text-sm md:text-base font-bold tracking-wide pointer-events-none">
+                      <span className="relative text-sm md:text-base font-bold tracking-wide pointer-events-none" style={{ color: '#ffffff' }}>
                         {isHolding ? 'JOINING...' : 'HOLD TO JOIN'}
                       </span>
                     </div>
