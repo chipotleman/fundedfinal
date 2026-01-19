@@ -1,0 +1,771 @@
+1989-e1e46aec7f335121.js:1 Logo loaded successfully
+thepiks.com/:1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 46
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+inplay_hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: the server responded with a status of 404 ()
+inplay_hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: the server responded with a status of 404 ()
+inplay_hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: the server responded with a status of 404 ()
+inplay_hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: the server responded with a status of 404 ()
+inplay_hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: the server responded with a status of 404 ()
+inplay_hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: the server responded with a status of 404 ()
+_app-84edcf9e06676a89.js:1 [BetSlipContext] Adding bet with game data: {"gameId":"hockey_cardiff_devils_vs_guildford_flames","isLive":true,"status":"IN_PROGRESS","awayScore":3,"homeScore":3,"scoresAway":3,"scoresHome":3}
+_app-84edcf9e06676a89.js:1 [BetSlipContext] Adding bet with game data: {"gameId":"hockey_cardiff_devils_vs_guildford_flames","isLive":true,"status":"IN_PROGRESS","awayScore":3,"homeScore":3,"scoresAway":3,"scoresHome":3}
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+_app-84edcf9e06676a89.js:1 [BetSlipContext] Adding bet with game data: {"gameId":"hockey_cardiff_devils_vs_guildford_flames","isLive":true,"status":"IN_PROGRESS","awayScore":3,"homeScore":3,"scoresAway":3,"scoresHome":3}
+_app-84edcf9e06676a89.js:1 [BetSlipContext] Adding bet with game data: {"gameId":"hockey_cardiff_devils_vs_guildford_flames","isLive":true,"status":"IN_PROGRESS","awayScore":3,"homeScore":3,"scoresAway":3,"scoresHome":3}
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+inplay_hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: the server responded with a status of 404 ()
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+inplay_hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: the server responded with a status of 404 ()
+grade:1  Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED
+_app-84edcf9e06676a89.js:1 [AutoGrader] Error: TypeError: Failed to fetch
+    at e (_app-84edcf9e06676a89.js:1:202648)
+e @ _app-84edcf9e06676a89.js:1
+/api/games:1  Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED
+_app-84edcf9e06676a89.js:1 [GamesContext] Error fetching games: TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:27658
+(anonymous) @ _app-84edcf9e06676a89.js:1
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 44
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 38
+inplay_hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: the server responded with a status of 404 ()
+grade:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [AutoGrader] Error: TypeError: Failed to fetch
+    at e (_app-84edcf9e06676a89.js:1:202648)
+e @ _app-84edcf9e06676a89.js:1
+/api/games:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [GamesContext] Error fetching games: TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:27658
+(anonymous) @ _app-84edcf9e06676a89.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 37
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 37
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 37
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 30
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+inplay_hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: the server responded with a status of 404 ()
+grade:1  Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED
+_app-84edcf9e06676a89.js:1 [AutoGrader] Error: TypeError: Failed to fetch
+    at e (_app-84edcf9e06676a89.js:1:202648)
+e @ _app-84edcf9e06676a89.js:1
+/api/games:1  Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED
+_app-84edcf9e06676a89.js:1 [GamesContext] Error fetching games: TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:27658
+(anonymous) @ _app-84edcf9e06676a89.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_IO_SUSPENDED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 18
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 28
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 28
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 28
+grade:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [AutoGrader] Error: TypeError: Failed to fetch
+    at e (_app-84edcf9e06676a89.js:1:202648)
+e @ _app-84edcf9e06676a89.js:1
+/api/games:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [GamesContext] Error fetching games: TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:27658
+(anonymous) @ _app-84edcf9e06676a89.js:1
+/api/analytics/session:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:201585
+inplay:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+[id]-0aac3eee0a2935ec.js:1 Error fetching game: TypeError: Failed to fetch
+    at e ([id]-0aac3eee0a2935ec.js:1:22226)
+e @ [id]-0aac3eee0a2935ec.js:1
+/api/matchups/current:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 Fetch matchup error: TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:29806
+(anonymous) @ _app-84edcf9e06676a89.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 23
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 31
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 27
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 27
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 26
+inplay_hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: the server responded with a status of 404 ()
+grade:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [AutoGrader] Error: TypeError: Failed to fetch
+    at e (_app-84edcf9e06676a89.js:1:202648)
+e @ _app-84edcf9e06676a89.js:1
+/api/games:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [GamesContext] Error fetching games: TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:27658
+(anonymous) @ _app-84edcf9e06676a89.js:1
+/api/matchups/current:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 Fetch matchup error: TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:29806
+(anonymous) @ _app-84edcf9e06676a89.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 20
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 17
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 17
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 20
+inplay_hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: the server responded with a status of 404 ()
+grade:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [AutoGrader] Error: TypeError: Failed to fetch
+    at e (_app-84edcf9e06676a89.js:1:202648)
+e @ _app-84edcf9e06676a89.js:1
+/api/games:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [GamesContext] Error fetching games: TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:27658
+(anonymous) @ _app-84edcf9e06676a89.js:1
+/api/matchups/current:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 Fetch matchup error: TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:29806
+(anonymous) @ _app-84edcf9e06676a89.js:1
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 20
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 16
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 16
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 11
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 20
+inplay_hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: the server responded with a status of 404 ()
+grade:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [AutoGrader] Error: TypeError: Failed to fetch
+    at e (_app-84edcf9e06676a89.js:1:202648)
+e @ _app-84edcf9e06676a89.js:1
+/api/games:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [GamesContext] Error fetching games: TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:27658
+(anonymous) @ _app-84edcf9e06676a89.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 9
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 21
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 21
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 21
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 21
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 21
+inplay_hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: the server responded with a status of 404 ()
+grade:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [AutoGrader] Error: TypeError: Failed to fetch
+    at e (_app-84edcf9e06676a89.js:1:202648)
+e @ _app-84edcf9e06676a89.js:1
+/api/games:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [GamesContext] Error fetching games: TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:27658
+(anonymous) @ _app-84edcf9e06676a89.js:1
+/api/matchups/current:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 Fetch matchup error: TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:29806
+(anonymous) @ _app-84edcf9e06676a89.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 8
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 20
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 20
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 20
+inplay_hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: the server responded with a status of 404 ()
+inplay_hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: the server responded with a status of 404 ()
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 22
+inplay_hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: the server responded with a status of 404 ()
+grade:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [AutoGrader] Error: TypeError: Failed to fetch
+    at e (_app-84edcf9e06676a89.js:1:202648)
+e @ _app-84edcf9e06676a89.js:1
+/api/games:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [GamesContext] Error fetching games: TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:27658
+(anonymous) @ _app-84edcf9e06676a89.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 22
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 27
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 27
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 27
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+inplay_hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: the server responded with a status of 404 ()
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 26
+grade:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [AutoGrader] Error: TypeError: Failed to fetch
+    at e (_app-84edcf9e06676a89.js:1:202648)
+e @ _app-84edcf9e06676a89.js:1
+/api/games:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [GamesContext] Error fetching games: TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:27658
+(anonymous) @ _app-84edcf9e06676a89.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 26
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 5
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 26
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 26
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 26
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 26
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+inplay_hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: the server responded with a status of 404 ()
+/api/bets/grade:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [AutoGrader] Error: TypeError: Failed to fetch
+    at e (_app-84edcf9e06676a89.js:1:202648)
+e @ _app-84edcf9e06676a89.js:1
+/api/games:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [GamesContext] Error fetching games: TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:27658
+(anonymous) @ _app-84edcf9e06676a89.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 26
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 26
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 26
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 26
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 9
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/bets/grade:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [AutoGrader] Error: TypeError: Failed to fetch
+    at e (_app-84edcf9e06676a89.js:1:202648)
+e @ _app-84edcf9e06676a89.js:1
+/api/analytics/session:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:201585
+inplay:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+[id]-0aac3eee0a2935ec.js:1 Error fetching game: TypeError: Failed to fetch
+    at e ([id]-0aac3eee0a2935ec.js:1:22226)
+e @ [id]-0aac3eee0a2935ec.js:1
+/api/matchups/current:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 Fetch matchup error: TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:29806
+(anonymous) @ _app-84edcf9e06676a89.js:1
+/api/games:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [GamesContext] Error fetching games: TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:27658
+(anonymous) @ _app-84edcf9e06676a89.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 29
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+/api/bets/grade:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [AutoGrader] Error: TypeError: Failed to fetch
+    at e (_app-84edcf9e06676a89.js:1:202648)
+e @ _app-84edcf9e06676a89.js:1
+inplay:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+[id]-0aac3eee0a2935ec.js:1 Error fetching game: TypeError: Failed to fetch
+    at e ([id]-0aac3eee0a2935ec.js:1:22226)
+e @ [id]-0aac3eee0a2935ec.js:1
+/api/analytics/session:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:201585
+/api/games:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 [GamesContext] Error fetching games: TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:27658
+(anonymous) @ _app-84edcf9e06676a89.js:1
+/api/matchups/current:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+_app-84edcf9e06676a89.js:1 Fetch matchup error: TypeError: Failed to fetch
+    at _app-84edcf9e06676a89.js:1:29806
+(anonymous) @ _app-84edcf9e06676a89.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 3
+/api/goalserve/stream:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event
+l.onerror @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+/api/goalserve/stream?eventId=hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: net::ERR_NETWORK_CHANGED
+inplay_hockey_cardiff_devils_vs_guildford_flames:1  Failed to load resource: the server responded with a status of 404 ()
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: Object
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+[id]-0aac3eee0a2935ec.js:1  GET https://thepiks.com/api/games/inplay_hockey_cardiff_devils_vs_guildford_flames 404 (Not Found)
+e @ [id]-0aac3eee0a2935ec.js:1
+[id]-0aac3eee0a2935ec.js:1  GET https://thepiks.com/api/games/inplay_hockey_cardiff_devils_vs_guildford_flames 404 (Not Found)
+e @ [id]-0aac3eee0a2935ec.js:1
+[id]-0aac3eee0a2935ec.js:1  GET https://thepiks.com/api/games/inplay_hockey_cardiff_devils_vs_guildford_flames 404 (Not Found)
+e @ [id]-0aac3eee0a2935ec.js:1
+[id]-0aac3eee0a2935ec.js:1  GET https://thepiks.com/api/games/inplay_hockey_cardiff_devils_vs_guildford_flames 404 (Not Found)
+e @ [id]-0aac3eee0a2935ec.js:1
+[id]-0aac3eee0a2935ec.js:1  GET https://thepiks.com/api/games/inplay_hockey_cardiff_devils_vs_guildford_flames 404 (Not Found)
+e @ [id]-0aac3eee0a2935ec.js:1
+[id]-0aac3eee0a2935ec.js:1  GET https://thepiks.com/api/games/inplay_hockey_cardiff_devils_vs_guildford_flames 404 (Not Found)
+e @ [id]-0aac3eee0a2935ec.js:1
+[id]-0aac3eee0a2935ec.js:1  GET https://thepiks.com/api/games/inplay_hockey_cardiff_devils_vs_guildford_flames 404 (Not Found)
+e @ [id]-0aac3eee0a2935ec.js:1
+[id]-0aac3eee0a2935ec.js:1  GET https://thepiks.com/api/games/inplay_hockey_cardiff_devils_vs_guildford_flames 404 (Not Found)
+e @ [id]-0aac3eee0a2935ec.js:1
+[id]-0aac3eee0a2935ec.js:1  GET https://thepiks.com/api/games/inplay_hockey_cardiff_devils_vs_guildford_flames 404 (Not Found)
+e @ [id]-0aac3eee0a2935ec.js:1
+[id]-0aac3eee0a2935ec.js:1  GET https://thepiks.com/api/games/inplay_hockey_cardiff_devils_vs_guildford_flames 404 (Not Found)
+e @ [id]-0aac3eee0a2935ec.js:1
+[id]-0aac3eee0a2935ec.js:1  GET https://thepiks.com/api/games/inplay_hockey_cardiff_devils_vs_guildford_flames 404 (Not Found)
+e @ [id]-0aac3eee0a2935ec.js:1
+[id]-0aac3eee0a2935ec.js:1  GET https://thepiks.com/api/games/inplay_hockey_cardiff_devils_vs_guildford_flames 404 (Not Found)
+e @ [id]-0aac3eee0a2935ec.js:1
+[id]-0aac3eee0a2935ec.js:1  GET https://thepiks.com/api/games/inplay_hockey_cardiff_devils_vs_guildford_flames 404 (Not Found)
+e @ [id]-0aac3eee0a2935ec.js:1
+[id]-0aac3eee0a2935ec.js:1  GET https://thepiks.com/api/games/inplay_hockey_cardiff_devils_vs_guildford_flames 404 (Not Found)
+e @ [id]-0aac3eee0a2935ec.js:1
+[id]-0aac3eee0a2935ec.js:1  GET https://thepiks.com/api/games/inplay_hockey_cardiff_devils_vs_guildford_flames 404 (Not Found)
+e @ [id]-0aac3eee0a2935ec.js:1
+[id]-0aac3eee0a2935ec.js:1  GET https://thepiks.com/api/games/inplay_hockey_cardiff_devils_vs_guildford_flames 404 (Not Found)
+e @ [id]-0aac3eee0a2935ec.js:1
+[id]-0aac3eee0a2935ec.js:1  GET https://thepiks.com/api/games/inplay_hockey_cardiff_devils_vs_guildford_flames 404 (Not Found)
+e @ [id]-0aac3eee0a2935ec.js:1
+[id]-0aac3eee0a2935ec.js:1  GET https://thepiks.com/api/games/inplay_hockey_cardiff_devils_vs_guildford_flames 404 (Not Found)
+e @ [id]-0aac3eee0a2935ec.js:1
+[id]-0aac3eee0a2935ec.js:1  GET https://thepiks.com/api/games/inplay_hockey_cardiff_devils_vs_guildford_flames 404 (Not Found)
+e @ [id]-0aac3eee0a2935ec.js:1
