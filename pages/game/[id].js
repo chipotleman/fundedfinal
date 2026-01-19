@@ -139,7 +139,8 @@ export default function GameDetail() {
 
     fetchGame();
     const isInplay = String(id).startsWith('inplay_');
-    const interval = setInterval(fetchGame, isInplay ? 5000 : 30000);
+    // Use 2 second polling for inplay games to match SSE polling speed
+    const interval = setInterval(fetchGame, isInplay ? 2000 : 30000);
     return () => clearInterval(interval);
   }, [id]);
 
