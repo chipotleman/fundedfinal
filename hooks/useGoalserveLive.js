@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 
 const REST_POLLING_INTERVAL = 30000; // 30 seconds
 
@@ -322,68 +322,75 @@ export function useLiveEvent(eventId, options = {}) {
     eventId 
   });
 
-  // Find event with flexible ID matching
-  let event = events[eventId] || null;
-  
-  // If not found by exact ID, try fuzzy matching
-  if (!event && eventId) {
+  // Find event with flexible ID matching - useMemo ensures React detects changes
+  const event = useMemo(() => {
+    // Try exact match first
+    if (events[eventId]) return events[eventId];
+    if (!eventId) return null;
+    
     const strippedId = String(eventId).replace(/^inplay_/, '');
     const normalizedId = strippedId.toLowerCase();
     
-    // Try various ID formats
-    event = events[strippedId] || null;
+    // Try stripped ID
+    if (events[strippedId]) return events[strippedId];
     
-    if (!event) {
-      // Search through all events for a match
-      const allEvents = Object.values(events);
-      event = allEvents.find(e => {
-        const eId = String(e.id || '').toLowerCase();
-        const eGameId = String(e.gameId || '').toLowerCase();
-        
-        // Match by exact ID, stripped ID, or case-insensitive
-        return eId === normalizedId || 
-               eGameId === normalizedId ||
-               eId === String(eventId).toLowerCase() ||
-               eGameId === String(eventId).toLowerCase();
-      }) || null;
+    // Search through all events for a match
+    const allEvents = Object.values(events);
+    let found = allEvents.find(e => {
+      const eId = String(e.id || '').toLowerCase();
+      const eGameId = String(e.gameId || '').toLowerCase();
       
-      // Also try matching by team names if ID matching fails
-      if (!event && strippedId.includes('_vs_')) {
-        const vsIndex = strippedId.indexOf('_vs_');
-        const beforeVs = strippedId.substring(0, vsIndex);
-        const afterVs = strippedId.substring(vsIndex + 4);
-        
-        // Extract team names (remove sport prefix)
-        const sportPrefixes = ['basketball_', 'hockey_', 'amfootball_', 'baseball_', 'soccer_'];
-        let team1Part = beforeVs;
-        for (const prefix of sportPrefixes) {
-          if (team1Part.startsWith(prefix)) {
-            team1Part = team1Part.substring(prefix.length);
-            break;
-          }
+      // Match by exact ID, stripped ID, or case-insensitive
+      return eId === normalizedId || 
+             eGameId === normalizedId ||
+             eId === String(eventId).toLowerCase() ||
+             eGameId === String(eventId).toLowerCase();
+    }) || null;
+    
+    // Also try matching by team names if ID matching fails
+    if (!found && strippedId.includes('_vs_')) {
+      const vsIndex = strippedId.indexOf('_vs_');
+      const beforeVs = strippedId.substring(0, vsIndex);
+      const afterVs = strippedId.substring(vsIndex + 4);
+      
+      // Extract team names (remove sport prefix)
+      const sportPrefixes = ['basketball_', 'hockey_', 'amfootball_', 'baseball_', 'soccer_'];
+      let team1Part = beforeVs;
+      for (const prefix of sportPrefixes) {
+        if (team1Part.startsWith(prefix)) {
+          team1Part = team1Part.substring(prefix.length);
+          break;
         }
-        
-        const normalizeTeam = (name) => name.replace(/_/g, ' ').toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
-        const team1 = normalizeTeam(team1Part);
-        const team2 = normalizeTeam(afterVs);
-        
-        event = allEvents.find(e => {
-          const home = normalizeTeam(e.homeTeam || e.homeTeamFull || '');
-          const away = normalizeTeam(e.awayTeam || e.awayTeamFull || '');
-          return (home.includes(team1) || team1.includes(home) || 
-                  home.includes(team2) || team2.includes(home)) &&
-                 (away.includes(team1) || team1.includes(away) ||
-                  away.includes(team2) || team2.includes(away));
-        }) || null;
       }
+      
+      const normalizeTeam = (name) => name.replace(/_/g, ' ').toLowerCase().replace(/[^a-z0-9 ]/g, '').trim();
+      const team1 = normalizeTeam(team1Part);
+      const team2 = normalizeTeam(afterVs);
+      
+      found = allEvents.find(e => {
+        const home = normalizeTeam(e.homeTeam || e.homeTeamFull || '');
+        const away = normalizeTeam(e.awayTeam || e.awayTeamFull || '');
+        return (home.includes(team1) || team1.includes(home) || 
+                home.includes(team2) || team2.includes(home)) &&
+               (away.includes(team1) || team1.includes(away) ||
+                away.includes(team2) || team2.includes(away));
+      }) || null;
     }
-  }
+    
+    return found;
+  }, [events, eventId]);
+
+  // Extract derived values with useMemo for proper change detection  
+  const possession = useMemo(() => event?.possession, [event?.possession]);
+  const ballPosition = useMemo(() => event?.xy || event?.ballPosition, [event?.xy, event?.ballPosition]);
 
   return {
     event,
     isConnected,
     lastUpdate,
     error,
+    possession,
+    ballPosition,
     team1: event?.team1,
     team2: event?.team2,
     score: event ? `${event.team1?.score || 0}-${event.team2?.score || 0}` : null,
