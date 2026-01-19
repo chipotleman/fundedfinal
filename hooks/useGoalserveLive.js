@@ -322,6 +322,13 @@ export function useLiveEvent(eventId, options = {}) {
     eventId 
   });
 
+  // Create a unique key based on events object to ensure useMemo recalculates
+  const eventsKey = useMemo(() => {
+    const entries = Object.entries(events);
+    // Create a hash of event IDs and their possession values to detect changes
+    return entries.map(([id, e]) => `${id}:${e.possession || ''}`).join('|');
+  }, [events]);
+
   // Find event with flexible ID matching - useMemo ensures React detects changes
   const event = useMemo(() => {
     // Try exact match first
@@ -378,7 +385,7 @@ export function useLiveEvent(eventId, options = {}) {
     }
     
     return found;
-  }, [events, eventId]);
+  }, [events, eventId, eventsKey]);
 
   // Extract derived values with useMemo for proper change detection  
   const possession = useMemo(() => event?.possession, [event?.possession]);

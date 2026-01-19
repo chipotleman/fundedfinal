@@ -1,15 +1,17 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useLiveEvent } from '../hooks/useGoalserveLive';
 import LiveFieldVisualization from './LiveFieldVisualization';
 
 export default function LiveGameTracker({ gameId, sport = 'basketball_nba', initialData = null }) {
-  const { event, isConnected, error, possession: livePossession, ballPosition: liveBallPosition } = useLiveEvent(gameId, { autoConnect: true });
+  const { event, isConnected, error, possession: livePossession, ballPosition: liveBallPosition, lastUpdate } = useLiveEvent(gameId, { autoConnect: true });
   
   const [gameData, setGameData] = useState(initialData);
+  const [currentPossession, setCurrentPossession] = useState(initialData?.possession || null);
+  const lastPossessionRef = useRef(null);
 
+  // Update game data when event changes
   useEffect(() => {
     if (event) {
-      // Handle both formats: normalized (homeScore/awayScore) and raw (team1/team2)
       const homeScore = event.homeScore ?? event.team1?.score ?? 0;
       const awayScore = event.awayScore ?? event.team2?.score ?? 0;
       
@@ -26,20 +28,37 @@ export default function LiveGameTracker({ gameId, sport = 'basketball_nba', init
     }
   }, [event]);
   
-  // Use live possession directly from hook - this updates in real-time
-  const currentPossession = useMemo(() => {
-    // Prefer live possession from SSE, fall back to initial data
-    let poss = livePossession || event?.possession || event?.stats?.possession || initialData?.possession;
+  // Separate effect for possession updates - track more aggressively
+  useEffect(() => {
+    // Get possession from multiple sources
+    let newPoss = livePossession || event?.possession || event?.stats?.possession;
     
     // Normalize to 'home'/'away' string
-    if (typeof poss === 'object' && poss !== null) {
-      if (poss.home) return 'home';
-      if (poss.away) return 'away';
-      return null;
+    if (typeof newPoss === 'object' && newPoss !== null) {
+      if (newPoss.home) newPoss = 'home';
+      else if (newPoss.away) newPoss = 'away';
+      else newPoss = null;
     }
     
-    return poss || null;
-  }, [livePossession, event?.possession, event?.stats?.possession, initialData?.possession]);
+    // Only update if possession actually changed
+    if (newPoss && newPoss !== lastPossessionRef.current) {
+      lastPossessionRef.current = newPoss;
+      setCurrentPossession(newPoss);
+    }
+  }, [livePossession, event?.possession, event?.stats?.possession, lastUpdate]);
+
+  // Also poll for initial possession if not set
+  useEffect(() => {
+    if (!currentPossession && initialData?.possession) {
+      let poss = initialData.possession;
+      if (typeof poss === 'object' && poss !== null) {
+        if (poss.home) poss = 'home';
+        else if (poss.away) poss = 'away';
+        else poss = null;
+      }
+      if (poss) setCurrentPossession(poss);
+    }
+  }, [currentPossession, initialData?.possession]);
 
   // Get team name for display based on currentPossession
   const possessionTeam = useMemo(() => {
