@@ -16,18 +16,6 @@ export default function LiveGameTracker({ gameId, sport = 'basketball_nba', init
       // Possession can be string 'home'/'away' or object {home: bool, away: bool}
       let possession = event.possession || event.stats?.possession;
       
-      // Debug: Log possession and position data for hockey games
-      if (sport?.includes('hockey') && !window._hockeyPossLogged) {
-        window._hockeyPossLogged = true;
-        console.log('[Hockey Event Debug]', {
-          possession: event.possession,
-          xy: event.xy,
-          ballPosition: event.ballPosition,
-          stats: event.stats,
-          raw: event.raw ? Object.keys(event.raw) : 'none'
-        });
-      }
-      
       if (typeof possession === 'string') {
         possession = { home: possession === 'home', away: possession === 'away' };
       }
