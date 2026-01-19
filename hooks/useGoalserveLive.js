@@ -202,6 +202,19 @@ export function useGoalserveLive(options = {}) {
                 });
               }
               break;
+            
+            case 'snapshot':
+              // Handle periodic snapshot updates (sent every 1 second for instant updates)
+              if (data.events && Array.isArray(data.events)) {
+                setEvents(prev => {
+                  const updated = { ...prev };
+                  data.events.forEach(evt => {
+                    if (evt.id) updated[evt.id] = evt;
+                  });
+                  return updated;
+                });
+              }
+              break;
               
             default:
               console.log('[Goalserve Live] Unknown event type:', data.type);
