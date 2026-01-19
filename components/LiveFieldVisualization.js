@@ -148,14 +148,6 @@ export default function LiveFieldVisualization({
   const sportType = useMemo(() => getSportType(game?.sport_key), [game?.sport_key]);
   const dimensions = FIELD_DIMENSIONS[sportType];
   
-  // Determine possession zone when exact coordinates aren't available
-  // If home team has possession, puck is in away zone (right side)
-  // If away team has possession, puck is in home zone (left side)
-  const hasExactPosition = useMemo(() => {
-    const coords = parseCoordinates(ballPosition);
-    return coords !== null;
-  }, [ballPosition]);
-  
   const ballCoords = useMemo(() => {
     const coords = parseCoordinates(ballPosition);
     if (coords) {
@@ -182,6 +174,9 @@ export default function LiveFieldVisualization({
     // No position or possession data - center ice
     return { x: dimensions.width / 2, y: centerY, isZoneBased: true };
   }, [ballPosition, possession, dimensions, sportType]);
+  
+  // Check if we have real position data
+  const hasRealData = ballPosition || possession;
 
   const FieldComponent = useMemo(() => {
     switch (sportType) {
