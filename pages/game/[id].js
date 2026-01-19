@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useBetSlip } from '../../contexts/BetSlipContext';
 import LiveGameTracker from '../../components/LiveGameTracker';
+import GameEventsFeed from '../../components/GameEventsFeed';
 
 export default function GameDetail() {
   const router = useRouter();
@@ -369,7 +370,7 @@ export default function GameDetail() {
           </div>
 
           {showTracker && isLive && (
-            <div className="px-4 pb-4">
+            <div className="px-4 pb-4 space-y-4">
               <LiveGameTracker 
                 gameId={game.id} 
                 sport={game.sport_key || 'basketball_nba'}
@@ -383,6 +384,10 @@ export default function GameDetail() {
                   displayClock: game.displayClock,
                   period: game.period
                 }}
+              />
+              <GameEventsFeed 
+                gameId={game.id}
+                sport={game.sport_key || 'basketball_nba'}
               />
             </div>
           )}
