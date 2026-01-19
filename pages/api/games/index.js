@@ -207,34 +207,48 @@ export default async function handler(req, res) {
     const nonLiveScheduled = scheduledGames.filter(g => !liveEventIds.has(g.id) && !g.isLive);
     
     // Convert live events to game format
-    const liveGames = liveEvents.map(event => ({
-      id: event.id,
-      gameId: event.id,
-      sport: event.sport,
-      sportName: event.leagueName || event.sport,
-      homeTeam: event.homeTeam?.abbr || event.homeTeam?.name,
-      awayTeam: event.awayTeam?.abbr || event.awayTeam?.name,
-      homeTeamFull: event.homeTeam?.name,
-      awayTeamFull: event.awayTeam?.name,
-      time: event.displayClock || 'Live',
-      commenceTime: event.startTime,
-      status: event.status || 'inplay',
-      isLive: true,
-      isCompleted: false,
-      scores: {
-        home: event.homeTeam?.score,
-        away: event.awayTeam?.score
-      },
-      lines: event.odds ? {
-        moneyline: event.odds.moneyline || null,
-        spread: event.odds.spread || null,
-        total: event.odds.total || null
-      } : null,
-      dataSource: 'Goalserve-Inplay'
-    }));
+    // Handle both string and object formats for team names
+    const liveGames = liveEvents.map(event => {
+      // homeTeam/awayTeam can be strings (from normalizeEvent) or objects
+      const homeTeamName = typeof event.homeTeam === 'string' 
+        ? event.homeTeam 
+        : (event.homeTeam?.abbr || event.homeTeam?.name || '');
+      const awayTeamName = typeof event.awayTeam === 'string' 
+        ? event.awayTeam 
+        : (event.awayTeam?.abbr || event.awayTeam?.name || '');
+      
+      return {
+        id: event.id,
+        gameId: event.id,
+        sport: event.sport,
+        sportName: event.leagueName || event.league || event.sport,
+        homeTeam: homeTeamName,
+        awayTeam: awayTeamName,
+        homeTeamFull: homeTeamName,
+        awayTeamFull: awayTeamName,
+        time: event.displayClock || 'Live',
+        commenceTime: event.startTime,
+        status: event.status || 'inplay',
+        isLive: true,
+        isCompleted: false,
+        scores: {
+          home: event.homeScore ?? event.homeTeam?.score ?? 0,
+          away: event.awayScore ?? event.awayTeam?.score ?? 0
+        },
+        lines: event.odds ? {
+          moneyline: event.odds.moneyline || null,
+          spread: event.odds.spread || null,
+          total: event.odds.total || null
+        } : null,
+        dataSource: 'Goalserve-Inplay'
+      };
+    });
     
-    const allGames = [...liveGames, ...nonLiveScheduled];
-    const hasLiveGames = liveGames.length > 0;
+    // Filter out invalid games (no team names = untitled)
+    const validLiveGames = liveGames.filter(g => g.homeTeam && g.awayTeam);
+    
+    const allGames = [...validLiveGames, ...nonLiveScheduled];
+    const hasLiveGames = validLiveGames.length > 0;
     
     // Group by sport
     const bySport = {};
