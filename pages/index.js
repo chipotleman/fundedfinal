@@ -171,7 +171,7 @@ export default function Dashboard() {
     setShowBetSlip(!showBetSlip);
   };
 
-  const sports = ['NBA', 'NFL', 'NCAAB', 'NCAAF', 'MLB', 'NHL', 'Esports', 'Euro Basketball', "Int'l Hockey"];
+  const sports = ['NBA', 'NFL', 'NCAAB', 'NCAAF', 'MLB', 'NHL', 'Euro Basketball', "Int'l Hockey"];
 
   // Helper to get short team name for buttons, avoiding ambiguous names
   const getShortTeamName = (teamName, otherTeamName) => {
@@ -375,7 +375,6 @@ export default function Dashboard() {
     'NCAAF': ['NCAAF', 'FOOTBALL'],
     'MLB': ['MLB', 'BASEBALL', 'COLLEGE BASEBALL'],
     'NHL': ['NHL', 'HOCKEY'],
-    'Esports': ['ESPORTS', 'EGAMING', 'EBASKETBALL', 'ESOCCER', 'EFOOTBALL', 'CS:GO', 'DOTA', 'LOL', 'VALORANT'],
     'Euro Basketball': ['EUROLEAGUE', 'TURKEY BASKETBALL', 'ITALY BASKETBALL', 'GREECE BASKETBALL', 'SPAIN BASKETBALL', 'FRANCE BASKETBALL', 'GERMANY BASKETBALL', 'EUROPEAN BASKETBALL', 'BASKETBALL'],
     "Int'l Hockey": ['HOCKEY', 'NHL']
   }), []);
@@ -463,7 +462,6 @@ export default function Dashboard() {
       'MLB': '⚾',
       'NHL': '🏒',
       'Soccer': '⚽',
-      'Esports': '🎮',
       'Euro Basketball': '🏀',
       "Int'l Hockey": '🏒'
     };
@@ -477,8 +475,7 @@ export default function Dashboard() {
       'NBA': 'Basketball',
       'NCAAB': 'College Basketball',
       'MLB': 'Baseball',
-      'NHL': 'Hockey',
-      'Esports': 'Esports'
+      'NHL': 'Hockey'
     };
     return labels[sport] || sport;
   };

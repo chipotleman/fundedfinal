@@ -37,14 +37,6 @@ None documented yet.
 - **1v1 Matchmaking System**: Users compete head-to-head for a prize pot (winner takes 90% of combined pot). Configurable durations, hidden opponent bets until user places their own, admin-controlled fake opponents. Opponent avatars cycle every 0.6s from admin-uploaded images (fallback to animal emojis). Fake opponents must have valid entries in users, profiles, AND fakeOpponents tables with matching IDs.
 - **User Profiles**: Customizable profiles with username (2-100 chars), avatar (upload or URL), bio (max 500 chars), battle stats, and public profile pages. Avatar uploads use Replit Object Storage with presigned URLs.
 - **Pik Pool System**: Multi-player betting competitions (5-25 players) for a prize pool (winner takes 90%). Configurable buy-ins and durations.
-- **Live Game Feed Widget**: Bet365-style in-play game visualization with sport-specific field renderings:
-  - **Sport-Specific Fields**: Basketball court (94x50ft), hockey rink (200x85ft), soccer field (105x68m), football field (120x53.3yd) - SVG components in `components/fields/`
-  - **Ball Position Tracking**: LiveFieldVisualization component with smart coordinate normalization handling 3 formats - percentage (0-100), normalized integer (0-1000), or absolute units (feet/yards)
-  - **Possession Indicators**: Shows which team has the ball with visual indicators
-  - **Game Status Display**: Live scores, period/quarter, game clock, and latest play commentary
-  - **Component Files**: `components/LiveFieldVisualization.js`, `components/LiveGameTracker.js`, `components/GameDetailModal.js`, `components/fields/*.js`
-  - **Data Flow**: Uses `useLiveEvent` hook from `hooks/useGoalserveLive.js` which connects to Goalserve WebSocket (production IP whitelisted) or REST fallback (development)
-  - **Ball Position Data**: Available as `ballPosition: data.xy` from Goalserve, auto-detects format and normalizes to SVG viewBox coordinates
 
 #### System Design Choices
 - **Authentication Flow**: Beta access -> NextAuth.js -> JWT session -> User profile -> Challenge selection/purchase -> Data persistence.
@@ -66,7 +58,7 @@ None documented yet.
 - **Sports Data**: Goalserve API (primary source)
     - **Goalserve REST API**: Main data source for games and odds (bet365 primary), with 30-second caching. Handles home/away team reversal internally.
     - **Goalserve WebSocket**: Real-time scores and in-play odds, IP whitelisted for production. Development uses REST API fallback.
-    - **Goalserve Inplay HTTP Feeds**: Alternative real-time data, also requires IP whitelisting and handles home/away reversal. Polling interval configurable via `GOALSERVE_POLL_INTERVAL_MS` env var (default: 2000ms = 2 seconds for snappy updates).
+    - **Goalserve Inplay HTTP Feeds**: Alternative real-time data, also requires IP whitelisting and handles home/away reversal.
     - **Supported Sports**: NBA, NFL, NCAAB, NCAAF, MLB, NHL, Soccer, Euro Basketball, Int'l Hockey.
     - **Zero-Delay SSR Architecture**: Both live AND scheduled games render instantly via Server-Side Rendering:
       1. Server starts → `instrumentation.js` triggers 24/7 polling via `goalserve-autostart.js`

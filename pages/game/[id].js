@@ -3,14 +3,12 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useBetSlip } from '../../contexts/BetSlipContext';
 import LiveGameTracker from '../../components/LiveGameTracker';
-import GameEventsFeed from '../../components/GameEventsFeed';
 
 export default function GameDetail() {
   const router = useRouter();
   const { id, demo } = router.query;
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [showTracker, setShowTracker] = useState(true);
   const [activeTab, setActiveTab] = useState('Popular');
   const { betSlip, addToBetSlip, isBetInSlip, showBetSlip, setShowBetSlip } = useBetSlip();
@@ -19,116 +17,14 @@ export default function GameDetail() {
 
   useEffect(() => {
     if (!id) return;
-    
-    const timeoutId = setTimeout(() => {
-      if (loading) {
-        setLoadingTimeout(true);
-        setLoading(false);
-      }
-    }, 8000);
-    
-    return () => clearTimeout(timeoutId);
-  }, [id, loading]);
-
-  useEffect(() => {
-    if (!id) return;
 
     const fetchGame = async () => {
       try {
-        const isInplayGame = String(id).startsWith('inplay_');
-        
-        if (isInplayGame) {
-          const inplayResponse = await fetch('/api/goalserve/inplay');
-          if (inplayResponse.ok) {
-            const inplayData = await inplayResponse.json();
-            const originalId = String(id).replace(/^inplay_/, '');
-            const foundEvent = inplayData.events?.find(e => 
-              String(e.id) === String(id) || 
-              String(e.id) === originalId ||
-              String(e.id).toLowerCase() === originalId.toLowerCase()
-            );
-            if (foundEvent) {
-              // Map sport name to sport_key format for field visualization
-              const sportToKey = {
-                'hockey': 'icehockey',
-                'ice hockey': 'icehockey',
-                'icehockey': 'icehockey',
-                'icehockey_nhl': 'icehockey',
-                'basketball': 'basketball_nba',
-                'nba': 'basketball_nba',
-                'ncaab': 'basketball_ncaab',
-                'football': 'americanfootball_nfl',
-                'nfl': 'americanfootball_nfl',
-                'ncaaf': 'americanfootball_ncaaf',
-                'amfootball': 'americanfootball_nfl',
-                'americanfootball': 'americanfootball_nfl',
-                'soccer': 'soccer',
-                'baseball': 'baseball_mlb',
-                'mlb': 'baseball_mlb'
-              };
-              const sportKey = sportToKey[foundEvent.sport?.toLowerCase()] || foundEvent.sport || 'basketball_nba';
-              
-              // Normalize sportName for display
-              const sportDisplayNames = {
-                'hockey': 'Hockey',
-                'icehockey': 'Hockey',
-                'basketball': 'Basketball',
-                'nba': 'Basketball',
-                'ncaab': 'Basketball',
-                'amfootball': 'Football',
-                'americanfootball': 'Football',
-                'nfl': 'Football',
-                'ncaaf': 'Football',
-                'soccer': 'Soccer',
-                'baseball': 'Baseball',
-                'mlb': 'Baseball'
-              };
-              const displaySportName = sportDisplayNames[foundEvent.sport?.toLowerCase()] || foundEvent.sport || 'Basketball';
-              
-              const formattedGame = {
-                id: foundEvent.id,
-                gameId: foundEvent.id,
-                sport_key: sportKey,
-                sportName: displaySportName,
-                homeTeam: foundEvent.homeTeam,
-                awayTeam: foundEvent.awayTeam,
-                homeTeamFull: foundEvent.homeTeam,
-                awayTeamFull: foundEvent.awayTeam,
-                time: foundEvent.time || 'LIVE',
-                status: 'IN_PROGRESS',
-                isLive: true,
-                scores: {
-                  home: { total: foundEvent.homeScore || 0 },
-                  away: { total: foundEvent.awayScore || 0 }
-                },
-                lines: foundEvent.odds ? {
-                  moneyline: {
-                    home: foundEvent.odds.moneyline?.home || null,
-                    away: foundEvent.odds.moneyline?.away || null
-                  },
-                  spread: foundEvent.odds.spread || null,
-                  total: foundEvent.odds.total || null
-                } : null,
-                ballPosition: foundEvent.xy,
-                possession: foundEvent.possession,
-                displayClock: foundEvent.displayClock || foundEvent.timer || foundEvent.elapsed,
-                period: foundEvent.period || foundEvent.quarter,
-                league: foundEvent.league,
-                leagueName: foundEvent.leagueName
-              };
-              setGame(formattedGame);
-              setLoading(false);
-              return;
-            }
-          }
-        }
-        
-        const response = await fetch(`/api/games/${encodeURIComponent(id)}`);
+        const response = await fetch('/api/games');
         if (response.ok) {
           const data = await response.json();
-          if (data.game) {
-            setGame(data.game);
-          }
+          const foundGame = data.games?.find(g => String(g.id) === String(id));
+          setGame(foundGame);
         }
       } catch (error) {
         console.error('Error fetching game:', error);
@@ -138,9 +34,7 @@ export default function GameDetail() {
     };
 
     fetchGame();
-    const isInplay = String(id).startsWith('inplay_');
-    // Use 2 second polling for inplay games to match SSE polling speed
-    const interval = setInterval(fetchGame, isInplay ? 2000 : 30000);
+    const interval = setInterval(fetchGame, 30000);
     return () => clearInterval(interval);
   }, [id]);
 
@@ -181,84 +75,15 @@ export default function GameDetail() {
   }
 
   if (!game) {
-    const isInplayGame = String(id || '').startsWith('inplay_');
-    
-    let gameInfoFromUrl = null;
-    if (isInplayGame) {
-      const parts = String(id).split('_');
-      const teamsMatch = parts.slice(2).join(' ').replace(/_/g, ' ');
-      const vsIndex = teamsMatch.toLowerCase().indexOf(' vs ');
-      if (vsIndex > 0) {
-        gameInfoFromUrl = {
-          team1: teamsMatch.substring(0, vsIndex).replace(/\b\w/g, c => c.toUpperCase()),
-          team2: teamsMatch.substring(vsIndex + 4).replace(/\b\w/g, c => c.toUpperCase()),
-          sport: parts[1] || 'Sport'
-        };
-      }
-    }
-    
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center px-4">
-        {loadingTimeout ? (
-          <>
-            <div className="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center mb-4">
-              <svg className="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <p className="text-xl font-bold mb-2 text-center">Loading Taking Too Long</p>
-            <p className="text-gray-500 text-sm text-center mb-6 max-w-sm">
-              The game data is still loading. Please wait a moment and try refreshing.
-            </p>
-            <div className="flex gap-3">
-              <button 
-                onClick={() => window.location.reload()}
-                className="bg-blue-600 px-6 py-3 rounded-lg font-semibold"
-              >
-                Refresh
-              </button>
-              <button 
-                onClick={() => router.back()}
-                className="bg-gray-700 px-6 py-3 rounded-lg font-semibold"
-              >
-                Go Back
-              </button>
-            </div>
-          </>
-        ) : isInplayGame ? (
-          <>
-            <div className="w-16 h-16 rounded-full bg-red-500/20 flex items-center justify-center mb-4">
-              <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <p className="text-xl font-bold mb-2 text-center">Live Game Data Unavailable</p>
-            {gameInfoFromUrl && (
-              <p className="text-gray-400 text-center mb-2">
-                {gameInfoFromUrl.team1} vs {gameInfoFromUrl.team2}
-              </p>
-            )}
-            <p className="text-gray-500 text-sm text-center mb-6 max-w-sm">
-              Live game data requires IP whitelisting in production. Please try again or check back later.
-            </p>
-            <button 
-              onClick={() => router.back()}
-              className="bg-green-600 px-6 py-3 rounded-lg font-semibold"
-            >
-              Go Back
-            </button>
-          </>
-        ) : (
-          <>
-            <p className="text-xl mb-4">Game not found</p>
-            <button 
-              onClick={() => router.back()}
-              className="bg-green-600 px-6 py-3 rounded-lg font-semibold"
-            >
-              Go Back
-            </button>
-          </>
-        )}
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
+        <p className="text-xl mb-4">Game not found</p>
+        <button 
+          onClick={() => router.back()}
+          className="bg-green-600 px-6 py-3 rounded-lg font-semibold"
+        >
+          Go Back
+        </button>
       </div>
     );
   }
@@ -371,7 +196,7 @@ export default function GameDetail() {
           </div>
 
           {showTracker && isLive && (
-            <div className="px-4 pb-4 space-y-4">
+            <div className="px-4 pb-4">
               <LiveGameTracker 
                 gameId={game.id} 
                 sport={game.sport_key || 'basketball_nba'}
@@ -379,16 +204,8 @@ export default function GameDetail() {
                   home_team: game.homeTeamFull || game.homeTeam,
                   away_team: game.awayTeamFull || game.awayTeam,
                   home_score: game.scores?.home?.total || 0,
-                  away_score: game.scores?.away?.total || 0,
-                  ballPosition: game.ballPosition,
-                  possession: game.possession,
-                  displayClock: game.displayClock,
-                  period: game.period
+                  away_score: game.scores?.away?.total || 0
                 }}
-              />
-              <GameEventsFeed 
-                gameId={game.id}
-                sport={game.sport_key || 'basketball_nba'}
               />
             </div>
           )}

@@ -79,19 +79,6 @@ async function handleInplayStream(req, res, sendEvent, sport, eventId) {
     sendEvent({ ...event, source: 'inplay' });
   });
 
-  // Send full snapshot every 500ms for sub-1-second updates
-  // This ensures clients always have fresh data even if change detection misses something
-  const snapshotInterval = setInterval(() => {
-    const freshEvents = service.getEventsForSSR(sport);
-    sendEvent({
-      type: 'snapshot',
-      source: 'inplay',
-      events: freshEvents,
-      count: freshEvents.length,
-      timestamp: Date.now()
-    });
-  }, 500);
-
   const heartbeatInterval = setInterval(() => {
     const status = service.getStatus();
     sendEvent({ 
@@ -104,13 +91,11 @@ async function handleInplayStream(req, res, sendEvent, sport, eventId) {
   }, 30000);
 
   req.on('close', () => {
-    clearInterval(snapshotInterval);
     clearInterval(heartbeatInterval);
     unsubscribe();
   });
 
   req.on('error', () => {
-    clearInterval(snapshotInterval);
     clearInterval(heartbeatInterval);
     unsubscribe();
   });

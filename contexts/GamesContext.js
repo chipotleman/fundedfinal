@@ -35,17 +35,14 @@ export function GamesProvider({ children, initialInplayEvents = null, initialApi
   
   const pollingIntervalRef = useRef(null);
   const sseRef = useRef(null);
-  // Use longer interval for /api/games since SSE provides live data in real-time
-  // /api/games is only needed for scheduled games and odds updates
-  const currentIntervalRef = useRef(30000);
+  const currentIntervalRef = useRef(5000);
   const lastFetchTimeRef = useRef(0);
   const isMountedRef = useRef(true);
 
   const fetchGames = useCallback(async () => {
     try {
       const now = Date.now();
-      // Allow fetches every 2 seconds minimum for responsive updates
-      if (now - lastFetchTimeRef.current < 2000) {
+      if (now - lastFetchTimeRef.current < 3000) {
         return;
       }
       
@@ -58,9 +55,7 @@ export function GamesProvider({ children, initialInplayEvents = null, initialApi
           setLastUpdated(new Date());
           lastFetchTimeRef.current = Date.now();
           
-          // Use 30s interval for /api/games - SSE provides real-time live updates
-          // /api/games is mainly for scheduled games and initial odds
-          const recommendedInterval = Math.max(data.polling?.recommendedInterval || 30000, 10000);
+          const recommendedInterval = data.polling?.recommendedInterval || 60000;
           if (recommendedInterval !== currentIntervalRef.current) {
             currentIntervalRef.current = recommendedInterval;
             if (pollingIntervalRef.current) {
