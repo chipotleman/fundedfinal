@@ -203,8 +203,26 @@ export default async function handler(req, res) {
     
     // Merge live events with scheduled games
     // Live events take priority (fresher data)
+    // Use both ID matching AND team name matching to prevent duplicates when IDs differ
     const liveEventIds = new Set(liveEvents.map(e => e.id));
-    const nonLiveScheduled = scheduledGames.filter(g => !liveEventIds.has(g.id) && !g.isLive);
+    
+    // Create a set of live game signatures for fallback matching (home+away teams)
+    const liveGameSignatures = new Set(liveEvents.map(e => {
+      const homeTeam = typeof e.homeTeam === 'string' ? e.homeTeam : (e.homeTeam?.name || e.homeTeam?.abbr || '');
+      const awayTeam = typeof e.awayTeam === 'string' ? e.awayTeam : (e.awayTeam?.name || e.awayTeam?.abbr || '');
+      return `${homeTeam.toLowerCase().trim()}|${awayTeam.toLowerCase().trim()}`;
+    }));
+    
+    const nonLiveScheduled = scheduledGames.filter(g => {
+      // Already excluded by ID match
+      if (liveEventIds.has(g.id)) return false;
+      // Already marked as live
+      if (g.isLive) return false;
+      // Check team name signature to catch duplicates with different IDs
+      const signature = `${(g.homeTeam || '').toLowerCase().trim()}|${(g.awayTeam || '').toLowerCase().trim()}`;
+      if (liveGameSignatures.has(signature)) return false;
+      return true;
+    });
     
     // Convert live events to game format
     // Handle both string and object formats for team names
