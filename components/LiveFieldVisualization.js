@@ -187,6 +187,12 @@ export default function LiveFieldVisualization({
     }
   }, [sportType]);
 
+  const possessionTeam = useMemo(() => {
+    if (possession === 'home') return game?.homeTeam || 'Home';
+    if (possession === 'away') return game?.awayTeam || 'Away';
+    return null;
+  }, [possession, game]);
+
   return (
     <div className={`relative w-full ${className}`}>
       <div className="relative">
@@ -199,6 +205,28 @@ export default function LiveFieldVisualization({
         >
           <Ball x={ballCoords.x} y={ballCoords.y} sport={sportType} />
         </svg>
+        
+        {possessionTeam && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
+            <div className="flex items-center gap-2 bg-black/80 backdrop-blur-sm px-3 py-1.5 rounded-full border border-gray-700">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+              </span>
+              <span className="text-xs font-medium text-white">
+                {possessionTeam} <span className="text-gray-400">has possession</span>
+              </span>
+            </div>
+          </div>
+        )}
+        
+        {!hasRealData && (
+          <div className="absolute top-2 right-2">
+            <div className="bg-black/60 backdrop-blur-sm px-2 py-1 rounded text-[10px] text-gray-400">
+              No tracking data
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
