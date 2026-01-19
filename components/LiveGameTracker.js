@@ -16,6 +16,13 @@ export default function LiveGameTracker({ gameId, sport = 'basketball_nba', init
       // Possession can be string 'home'/'away' or object {home: bool, away: bool}
       let possession = event.possession || event.stats?.possession;
       
+      // Debug: Log all event data for live games (once per sport type)
+      const debugKey = `_${sport}EventLogged`;
+      if (!window[debugKey]) {
+        window[debugKey] = true;
+        console.log(`[${sport} Event Debug]`, JSON.stringify(event, null, 2));
+      }
+      
       if (typeof possession === 'string') {
         possession = { home: possession === 'home', away: possession === 'away' };
       }

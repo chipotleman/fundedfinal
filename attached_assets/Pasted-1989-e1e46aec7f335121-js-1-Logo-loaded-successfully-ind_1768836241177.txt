@@ -1,0 +1,107 @@
+1989-e1e46aec7f335121.js:1 Logo loaded successfully
+(index):1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: {isPolling: true, pollInterval: 1000, subscriberCount: 1, eventCount: 0, lastUpdate: null, …}
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: {isPolling: true, pollInterval: 1000, subscriberCount: 3, eventCount: 15, lastUpdate: '2026-01-19T15:19:03.988Z', …}
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 15
+[id]-ca61f6edff33e2e7.js:1 [Hockey Event Debug] {possession: null, xy: null, ballPosition: undefined, stats: undefined, raw: 'none'}ballPosition: undefinedpossession: nullraw: "none"stats: undefinedxy: null[[Prototype]]: Object
+[id]-ca61f6edff33e2e7.js:1  GET https://thepiks.com/api/games/inplay_hockey_arlan_kokshetau_vs_hk_aktobe 404 (Not Found)
+e @ [id]-ca61f6edff33e2e7.js:1
+setInterval
+(anonymous) @ [id]-ca61f6edff33e2e7.js:1
+uU @ framework-9651f24559de936b.js:1
+oV @ framework-9651f24559de936b.js:1
+o @ framework-9651f24559de936b.js:1
+x @ framework-9651f24559de936b.js:1
+T @ framework-9651f24559de936b.js:1
+[id]-ca61f6edff33e2e7.js:1  GET https://thepiks.com/api/games/inplay_hockey_arlan_kokshetau_vs_hk_aktobe 404 (Not Found)
+e @ [id]-ca61f6edff33e2e7.js:1
+setInterval
+(anonymous) @ [id]-ca61f6edff33e2e7.js:1
+uU @ framework-9651f24559de936b.js:1
+oV @ framework-9651f24559de936b.js:1
+o @ framework-9651f24559de936b.js:1
+x @ framework-9651f24559de936b.js:1
+T @ framework-9651f24559de936b.js:1
+[id]-ca61f6edff33e2e7.js:1  GET https://thepiks.com/api/games/inplay_hockey_arlan_kokshetau_vs_hk_aktobe 404 (Not Found)
+e @ [id]-ca61f6edff33e2e7.js:1
+setInterval
+(anonymous) @ [id]-ca61f6edff33e2e7.js:1
+uU @ framework-9651f24559de936b.js:1
+oV @ framework-9651f24559de936b.js:1
+o @ framework-9651f24559de936b.js:1
+x @ framework-9651f24559de936b.js:1
+T @ framework-9651f24559de936b.js:1
+[id]-ca61f6edff33e2e7.js:1  GET https://thepiks.com/api/games/inplay_hockey_arlan_kokshetau_vs_hk_aktobe 404 (Not Found)
+e @ [id]-ca61f6edff33e2e7.js:1
+setInterval
+(anonymous) @ [id]-ca61f6edff33e2e7.js:1
+uU @ framework-9651f24559de936b.js:1
+oV @ framework-9651f24559de936b.js:1
+o @ framework-9651f24559de936b.js:1
+x @ framework-9651f24559de936b.js:1
+T @ framework-9651f24559de936b.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] SSE error: Event {isTrusted: true, type: 'error', target: EventSource, currentTarget: EventSource, eventPhase: 2, …}
+(anonymous) @ index-2a100baa67843631.js:1
+index-2a100baa67843631.js:1 [Goalserve Live] Reconnecting in 1000ms...
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: {isPolling: true, pollInterval: 1000, subscriberCount: 2, eventCount: 15, lastUpdate: '2026-01-19T15:22:05.609Z', …}
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 15
+[id]-ca61f6edff33e2e7.js:1  GET https://thepiks.com/api/games/inplay_hockey_arlan_kokshetau_vs_hk_aktobe 404 (Not Found)
+e @ [id]-ca61f6edff33e2e7.js:1
+setInterval
+(anonymous) @ [id]-ca61f6edff33e2e7.js:1
+uU @ framework-9651f24559de936b.js:1
+oV @ framework-9651f24559de936b.js:1
+o @ framework-9651f24559de936b.js:1
+x @ framework-9651f24559de936b.js:1
+T @ framework-9651f24559de936b.js:1
+1989-e1e46aec7f335121.js:1 Logo loaded successfully
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: {isPolling: true, pollInterval: 1000, subscriberCount: 0, eventCount: 0, lastUpdate: null, …}
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+[id]-ca61f6edff33e2e7.js:1  GET https://thepiks.com/api/games/inplay_basketball_cherkaski_mavpy_vs_kharkivski_sokoly 404 (Not Found)
+e @ [id]-ca61f6edff33e2e7.js:1
+await in e
+(anonymous) @ [id]-ca61f6edff33e2e7.js:1
+uU @ framework-9651f24559de936b.js:1
+oV @ framework-9651f24559de936b.js:1
+o @ framework-9651f24559de936b.js:1
+x @ framework-9651f24559de936b.js:1
+T @ framework-9651f24559de936b.js:1
+1989-e1e46aec7f335121.js:1 Logo loaded successfully
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: {isPolling: true, pollInterval: 1000, subscriberCount: 1, eventCount: 14, lastUpdate: '2026-01-19T15:23:01.711Z', …}
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 14
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: {isPolling: true, pollInterval: 1000, subscriberCount: 0, eventCount: 0, lastUpdate: null, …}
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+[id]-ca61f6edff33e2e7.js:1  GET https://thepiks.com/api/games/inplay_basketball_cherkaski_mavpy_vs_kharkivski_sokoly 404 (Not Found)
+e @ [id]-ca61f6edff33e2e7.js:1
+setInterval
+(anonymous) @ [id]-ca61f6edff33e2e7.js:1
+uU @ framework-9651f24559de936b.js:1
+oV @ framework-9651f24559de936b.js:1
+o @ framework-9651f24559de936b.js:1
+x @ framework-9651f24559de936b.js:1
+T @ framework-9651f24559de936b.js:1
+[id]-ca61f6edff33e2e7.js:1  GET https://thepiks.com/api/games/inplay_basketball_cherkaski_mavpy_vs_kharkivski_sokoly 404 (Not Found)
+e @ [id]-ca61f6edff33e2e7.js:1
+setInterval
+(anonymous) @ [id]-ca61f6edff33e2e7.js:1
+uU @ framework-9651f24559de936b.js:1
+oV @ framework-9651f24559de936b.js:1
+o @ framework-9651f24559de936b.js:1
+x @ framework-9651f24559de936b.js:1
+T @ framework-9651f24559de936b.js:1
+[id]-ca61f6edff33e2e7.js:1  GET https://thepiks.com/api/games/inplay_basketball_cherkaski_mavpy_vs_kharkivski_sokoly 404 (Not Found)
+e @ [id]-ca61f6edff33e2e7.js:1
+setInterval
+(anonymous) @ [id]-ca61f6edff33e2e7.js:1
+uU @ framework-9651f24559de936b.js:1
+oV @ framework-9651f24559de936b.js:1
+o @ framework-9651f24559de936b.js:1
+x @ framework-9651f24559de936b.js:1
+T @ framework-9651f24559de936b.js:1
