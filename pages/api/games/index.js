@@ -6,12 +6,11 @@ import {
   clearCache,
   SUPPORTED_SPORTS 
 } from '../../../lib/goalserve';
+import { getCachedGames, getScheduleCacheStatus } from '../../../lib/schedule-cache';
+import { getInplayService } from '../../../lib/goalserve-inplay';
 
-let globalCache = null;
-let globalCacheTimestamp = null;
-
-const LIVE_GAMES_CACHE_DURATION = 5 * 1000;
-const NO_LIVE_GAMES_CACHE_DURATION = 30 * 1000;
+// Use schedule cache for instant responses - no more 100+ second waits
+const CACHE_FALLBACK_DURATION = 60 * 1000;
 
 function getGoalserveStatus() {
   return {
@@ -193,133 +192,100 @@ export default async function handler(req, res) {
       return res.status(200).json(response);
     }
 
-    const cacheDuration = getAdaptiveCacheDuration();
-    if (globalCache && globalCacheTimestamp && (now - globalCacheTimestamp) < cacheDuration && refresh !== 'true') {
-      const clonedGames = globalCache.games.map(game => ({ ...game, lines: game.lines ? { ...game.lines } : null }));
-      const response = {
-        games: clonedGames,
-        bySport: globalCache.bySport,
-        count: globalCache.games.length,
-        fromCache: true,
-        cacheAge: Math.floor((now - globalCacheTimestamp) / 1000),
-        dataSource: 'Goalserve',
-        creditStatus: getGoalserveStatus(),
-        freshness: globalCache.freshness || null,
-        polling: {
-          recommendedInterval: cacheDuration,
-          hasLiveGames: globalCache?.freshness?.hasLiveGames || false
-        }
-      };
-      
-      if (debug === 'true') {
-        response.debugInfo = globalCache.debugInfo;
-      }
-      
-      return res.status(200).json(response);
-    }
-
-    console.log('[GAMES API] Fetching all games from Goalserve...');
+    // Use pre-warmed schedule cache for instant responses
+    // This avoids 100+ second waits for fresh Goalserve API calls
+    const scheduledGames = getCachedGames();
+    const cacheStatus = getScheduleCacheStatus();
     
-    const allGames = await getAllGamesWithOdds();
-    let formattedGames = allGames.map(convertGoalserveToDisplayFormat);
+    // Get live games from inplay service (2s polling)
+    const inplayService = getInplayService();
+    const liveEvents = inplayService.getEventsForSSR();
     
-    let hasLiveGames = false;
-    const sportsWithLiveGames = new Set();
+    // Merge live events with scheduled games
+    // Live events take priority (fresher data)
+    const liveEventIds = new Set(liveEvents.map(e => e.id));
+    const nonLiveScheduled = scheduledGames.filter(g => !liveEventIds.has(g.id) && !g.isLive);
     
-    for (const [sportKey] of Object.entries(SUPPORTED_SPORTS)) {
-      try {
-        const scores = await getScores(sportKey);
-        scores.forEach(score => {
-          const game = formattedGames.find(g => g.id === score.id);
-          if (game) {
-            game.isLive = score.isLive;
-            game.isCompleted = score.isCompleted;
-            game.status = score.status;
-            game.scores = score.scores;
-            if (score.isLive) {
-              hasLiveGames = true;
-              sportsWithLiveGames.add(sportKey);
-            }
-          }
-        });
-      } catch (e) {
-        console.error(`[GAMES API] Error fetching scores for ${sportKey}:`, e.message);
-      }
-    }
+    // Convert live events to game format
+    const liveGames = liveEvents.map(event => ({
+      id: event.id,
+      gameId: event.id,
+      sport: event.sport,
+      sportName: event.leagueName || event.sport,
+      homeTeam: event.homeTeam?.abbr || event.homeTeam?.name,
+      awayTeam: event.awayTeam?.abbr || event.awayTeam?.name,
+      homeTeamFull: event.homeTeam?.name,
+      awayTeamFull: event.awayTeam?.name,
+      time: event.displayClock || 'Live',
+      commenceTime: event.startTime,
+      status: event.status || 'inplay',
+      isLive: true,
+      isCompleted: false,
+      scores: {
+        home: event.homeTeam?.score,
+        away: event.awayTeam?.score
+      },
+      lines: event.odds ? {
+        moneyline: event.odds.moneyline || null,
+        spread: event.odds.spread || null,
+        total: event.odds.total || null
+      } : null,
+      dataSource: 'Goalserve-Inplay'
+    }));
     
-    if (sportsWithLiveGames.size > 0) {
-      console.log(`[GAMES API] Refreshing odds for live sports: ${Array.from(sportsWithLiveGames).join(', ')}`);
-      for (const sportKey of sportsWithLiveGames) {
-        try {
-          const freshOdds = await getOdds(sportKey);
-          const freshFormatted = freshOdds.map(convertGoalserveToDisplayFormat);
-          
-          freshFormatted.forEach(freshGame => {
-            const existingIdx = formattedGames.findIndex(g => g.id === freshGame.id);
-            if (existingIdx >= 0) {
-              formattedGames[existingIdx].lines = freshGame.lines;
-              formattedGames[existingIdx].allBookmakerOdds = freshGame.allBookmakerOdds;
-            }
-          });
-        } catch (e) {
-          console.error(`[GAMES API] Error refreshing odds for ${sportKey}:`, e.message);
-        }
-      }
-    }
+    const allGames = [...liveGames, ...nonLiveScheduled];
+    const hasLiveGames = liveGames.length > 0;
     
+    // Group by sport
     const bySport = {};
-    formattedGames.forEach(game => {
-      if (!bySport[game.sportName]) {
-        bySport[game.sportName] = [];
+    allGames.forEach(game => {
+      const sportName = game.sportName || game.sport || 'Other';
+      if (!bySport[sportName]) {
+        bySport[sportName] = [];
       }
-      bySport[game.sportName].push(game);
+      bySport[sportName].push(game);
     });
     
-    globalCache = {
-      games: formattedGames,
-      bySport,
-      freshness: { hasLiveGames },
-      debugInfo: { gameCount: formattedGames.length, sports: Object.keys(bySport) }
-    };
-    globalCacheTimestamp = now;
-
-    const recommendedInterval = hasLiveGames ? LIVE_GAMES_CACHE_DURATION : NO_LIVE_GAMES_CACHE_DURATION;
+    console.log(`[GAMES API] Serving ${liveGames.length} live + ${nonLiveScheduled.length} scheduled from cache (instant)`);
     
     const response = {
-      games: formattedGames,
+      games: allGames,
       bySport,
-      count: formattedGames.length,
-      fromCache: false,
+      count: allGames.length,
+      fromCache: true,
+      cacheAge: cacheStatus.lastFetchTime ? Math.floor((now - cacheStatus.lastFetchTime) / 1000) : 0,
       dataSource: 'Goalserve',
       creditStatus: getGoalserveStatus(),
       freshness: { hasLiveGames },
       polling: {
-        recommendedInterval,
+        recommendedInterval: hasLiveGames ? 10000 : 30000,
         hasLiveGames
       }
     };
     
     if (debug === 'true') {
-      response.debugInfo = globalCache.debugInfo;
-      response.supportedSports = getSupportedSports();
+      response.debugInfo = {
+        gameCount: allGames.length,
+        liveCount: liveGames.length,
+        scheduledCount: nonLiveScheduled.length,
+        cacheStatus
+      };
     }
-
-    console.log(`[GAMES API] Returning ${formattedGames.length} games from Goalserve`);
+    
     return res.status(200).json(response);
   } catch (error) {
-    console.error('Error in games API:', error);
+    console.error('[GAMES API] Error:', error);
     
-    if (globalCache) {
-      const clonedGames = globalCache.games.map(game => ({ ...game, lines: game.lines ? { ...game.lines } : null }));
+    // Fallback to schedule cache on error
+    const fallbackGames = getCachedGames();
+    if (fallbackGames.length > 0) {
       return res.status(200).json({ 
-        games: clonedGames, 
-        bySport: globalCache.bySport,
+        games: fallbackGames, 
         fromCache: true,
         stale: true,
         error: 'Using cached data due to API error',
         dataSource: 'Goalserve',
-        creditStatus: getGoalserveStatus(),
-        freshness: globalCache.freshness || null
+        creditStatus: getGoalserveStatus()
       });
     }
     
