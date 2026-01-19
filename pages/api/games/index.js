@@ -7,7 +7,7 @@ import {
   SUPPORTED_SPORTS 
 } from '../../../lib/goalserve';
 import { getCachedGames, getScheduleCacheStatus } from '../../../lib/schedule-cache';
-import { getInplayService } from '../../../lib/goalserve-inplay';
+// Note: Live games are served via SSE stream (/api/goalserve/stream), not this API
 
 // Use schedule cache for instant responses - no more 100+ second waits
 const CACHE_FALLBACK_DURATION = 60 * 1000;
@@ -194,83 +194,19 @@ export default async function handler(req, res) {
 
     // Use pre-warmed schedule cache for instant responses
     // This avoids 100+ second waits for fresh Goalserve API calls
+    // NOTE: This API returns SCHEDULED games ONLY
+    // Live games come from SSE stream (/api/goalserve/stream) - do NOT merge here
     const scheduledGames = getCachedGames();
     const cacheStatus = getScheduleCacheStatus();
     
-    // Get live games from inplay service (2s polling)
-    const inplayService = getInplayService();
-    const liveEvents = inplayService.getEventsForSSR();
-    
-    // Merge live events with scheduled games
-    // Live events take priority (fresher data)
-    // Use both ID matching AND team name matching to prevent duplicates when IDs differ
-    const liveEventIds = new Set(liveEvents.map(e => e.id));
-    
-    // Create a set of live game signatures for fallback matching (home+away teams)
-    const liveGameSignatures = new Set(liveEvents.map(e => {
-      const homeTeam = typeof e.homeTeam === 'string' ? e.homeTeam : (e.homeTeam?.name || e.homeTeam?.abbr || '');
-      const awayTeam = typeof e.awayTeam === 'string' ? e.awayTeam : (e.awayTeam?.name || e.awayTeam?.abbr || '');
-      return `${homeTeam.toLowerCase().trim()}|${awayTeam.toLowerCase().trim()}`;
-    }));
-    
-    const nonLiveScheduled = scheduledGames.filter(g => {
-      // Already excluded by ID match
-      if (liveEventIds.has(g.id)) return false;
-      // Already marked as live
-      if (g.isLive) return false;
-      // Check team name signature to catch duplicates with different IDs
-      const signature = `${(g.homeTeam || '').toLowerCase().trim()}|${(g.awayTeam || '').toLowerCase().trim()}`;
-      if (liveGameSignatures.has(signature)) return false;
-      return true;
-    });
-    
-    // Convert live events to game format
-    // Handle both string and object formats for team names
-    const liveGames = liveEvents.map(event => {
-      // homeTeam/awayTeam can be strings (from normalizeEvent) or objects
-      const homeTeamName = typeof event.homeTeam === 'string' 
-        ? event.homeTeam 
-        : (event.homeTeam?.abbr || event.homeTeam?.name || '');
-      const awayTeamName = typeof event.awayTeam === 'string' 
-        ? event.awayTeam 
-        : (event.awayTeam?.abbr || event.awayTeam?.name || '');
-      
-      return {
-        id: event.id,
-        gameId: event.id,
-        sport: event.sport,
-        sportName: event.leagueName || event.league || event.sport,
-        homeTeam: homeTeamName,
-        awayTeam: awayTeamName,
-        homeTeamFull: homeTeamName,
-        awayTeamFull: awayTeamName,
-        time: event.displayClock || 'Live',
-        commenceTime: event.startTime,
-        status: event.status || 'inplay',
-        isLive: true,
-        isCompleted: false,
-        scores: {
-          home: event.homeScore ?? event.homeTeam?.score ?? 0,
-          away: event.awayScore ?? event.awayTeam?.score ?? 0
-        },
-        lines: event.odds ? {
-          moneyline: event.odds.moneyline || null,
-          spread: event.odds.spread || null,
-          total: event.odds.total || null
-        } : null,
-        dataSource: 'Goalserve-Inplay'
-      };
-    });
-    
-    // Filter out invalid games (no team names = untitled)
-    const validLiveGames = liveGames.filter(g => g.homeTeam && g.awayTeam);
-    
-    const allGames = [...validLiveGames, ...nonLiveScheduled];
-    const hasLiveGames = validLiveGames.length > 0;
+    // Filter to only non-live scheduled games
+    // Live games are handled exclusively by SSE stream
+    const upcomingGames = scheduledGames.filter(g => !g.isLive);
+    const hasLiveGames = false; // Live games come from SSE, not this API
     
     // Group by sport
     const bySport = {};
-    allGames.forEach(game => {
+    upcomingGames.forEach(game => {
       const sportName = game.sportName || game.sport || 'Other';
       if (!bySport[sportName]) {
         bySport[sportName] = [];
@@ -278,28 +214,27 @@ export default async function handler(req, res) {
       bySport[sportName].push(game);
     });
     
-    console.log(`[GAMES API] Serving ${liveGames.length} live + ${nonLiveScheduled.length} scheduled from cache (instant)`);
+    console.log(`[GAMES API] Serving ${upcomingGames.length} scheduled games from cache (live games via SSE)`);
     
     const response = {
-      games: allGames,
+      games: upcomingGames,
       bySport,
-      count: allGames.length,
+      count: upcomingGames.length,
       fromCache: true,
       cacheAge: cacheStatus.lastFetchTime ? Math.floor((now - cacheStatus.lastFetchTime) / 1000) : 0,
       dataSource: 'Goalserve',
       creditStatus: getGoalserveStatus(),
       freshness: { hasLiveGames },
       polling: {
-        recommendedInterval: hasLiveGames ? 10000 : 30000,
+        recommendedInterval: 30000, // Scheduled games don't need frequent polling
         hasLiveGames
       }
     };
     
     if (debug === 'true') {
       response.debugInfo = {
-        gameCount: allGames.length,
-        liveCount: liveGames.length,
-        scheduledCount: nonLiveScheduled.length,
+        scheduledCount: upcomingGames.length,
+        note: 'Live games served via SSE stream at /api/goalserve/stream',
         cacheStatus
       };
     }
