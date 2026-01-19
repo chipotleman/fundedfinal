@@ -42,10 +42,17 @@ export default async function handler(req, res) {
     
     if (keys === 'true') {
       const sampleEvent = Object.values(rawEvents)[0];
+      const status = service.getStatus();
       return res.status(200).json({
         success: true,
         sport: sport || 'all',
         eventCount: Object.keys(rawEvents).length,
+        status: {
+          isPolling: status.isPolling,
+          lastUpdate: status.lastUpdate,
+          cachedSports: status.cachedSports,
+          errors: status.errors
+        },
         sampleEventKeys: sampleEvent ? {
           topLevel: Object.keys(sampleEvent),
           extra: sampleEvent.extra ? Object.keys(sampleEvent.extra) : null,
