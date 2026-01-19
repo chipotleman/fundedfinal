@@ -225,6 +225,60 @@ export default async function handler(req, res) {
       return true;
     });
     
+    // Helper to infer sport category from league/team names for proper filtering
+    const inferSportName = (event) => {
+      const league = (event.leagueName || event.league || '').toLowerCase();
+      const sport = (event.sport || '').toLowerCase();
+      
+      // Basketball leagues
+      if (sport === 'basketball' || league.includes('basketball') || league.includes('nba') || league.includes('ncaa')) {
+        if (league.includes('nba') || league.includes('national basketball')) return 'NBA';
+        if (league.includes('ncaa') || league.includes('college') || league.includes('ncaab')) return 'NCAAB';
+        if (league.includes('wnba') || league.includes('wncaab') || league.includes('women')) return 'WNCAAB';
+        if (league.includes('euroleague') || league.includes('euro')) return 'Euro Basketball';
+        if (league.includes('brazil') || league.includes('nbb')) return 'Basketball';
+        // Default to NBA for unrecognized US basketball (most common)
+        return 'NBA';
+      }
+      
+      // Football leagues
+      if (sport === 'amfootball' || league.includes('football') || league.includes('nfl') || league.includes('ncaaf')) {
+        if (league.includes('nfl') || league.includes('national football')) return 'NFL';
+        if (league.includes('ncaa') || league.includes('college') || league.includes('ncaaf') || league.includes('fbs')) return 'NCAAF';
+        return 'NFL';
+      }
+      
+      // Hockey leagues
+      if (sport === 'hockey' || league.includes('hockey') || league.includes('nhl')) {
+        if (league.includes('nhl') || league.includes('national hockey')) return 'NHL';
+        return 'NHL';
+      }
+      
+      // Baseball leagues
+      if (sport === 'baseball' || league.includes('baseball') || league.includes('mlb')) {
+        return 'MLB';
+      }
+      
+      // Esports
+      if (sport === 'esports' || league.includes('esport') || league.includes('egaming') || 
+          league.includes('ebasketball') || league.includes('esoccer')) {
+        return 'Esports';
+      }
+      
+      // Soccer
+      if (sport === 'soccer' || league.includes('soccer') || league.includes('football') && !league.includes('american')) {
+        return 'Soccer';
+      }
+      
+      // Tennis
+      if (sport === 'tennis' || league.includes('tennis')) {
+        return 'Tennis';
+      }
+      
+      // Return the league name or sport as fallback
+      return event.leagueName || event.league || event.sport || 'Other';
+    };
+    
     // Convert live events to game format
     // Handle both string and object formats for team names
     const liveGames = liveEvents.map(event => {
@@ -240,7 +294,7 @@ export default async function handler(req, res) {
         id: event.id,
         gameId: event.id,
         sport: event.sport,
-        sportName: event.leagueName || event.league || event.sport,
+        sportName: inferSportName(event),
         homeTeam: homeTeamName,
         awayTeam: awayTeamName,
         homeTeamFull: homeTeamName,
