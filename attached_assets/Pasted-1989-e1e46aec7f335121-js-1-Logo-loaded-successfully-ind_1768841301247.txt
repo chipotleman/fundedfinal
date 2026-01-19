@@ -1,0 +1,51 @@
+1989-e1e46aec7f335121.js:1 Logo loaded successfully
+(index):1 <meta name="apple-mobile-web-app-capable" content="yes"> is deprecated. Please include <meta name="mobile-web-app-capable" content="yes">
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: {isPolling: true, pollInterval: 1000, subscriberCount: 2, eventCount: 16, lastUpdate: '2026-01-19T16:46:33.664Z', …}
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 16
+[id]-8c31d35bf48a4a15.js:1  GET https://thepiks.com/api/games/inplay_basketball_al_manama_vs_al_najma 404 (Not Found)
+e @ [id]-8c31d35bf48a4a15.js:1
+await in e
+(anonymous) @ [id]-8c31d35bf48a4a15.js:1
+uU @ framework-9651f24559de936b.js:1
+oV @ framework-9651f24559de936b.js:1
+o @ framework-9651f24559de936b.js:1
+x @ framework-9651f24559de936b.js:1
+T @ framework-9651f24559de936b.js:1
+1989-e1e46aec7f335121.js:1 Logo loaded successfully
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: {isPolling: true, pollInterval: 1000, subscriberCount: 1, eventCount: 0, lastUpdate: null, …}
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] SSE connected
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: {isPolling: true, pollInterval: 1000, subscriberCount: 2, eventCount: 0, lastUpdate: null, …}
+index-2a100baa67843631.js:1 [Goalserve Live] Initial status: {isPolling: true, pollInterval: 1000, subscriberCount: 1, eventCount: 0, lastUpdate: null, …}
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 0
+index-2a100baa67843631.js:1 [Goalserve Live] Initial events loaded: 16
+[id]-8c31d35bf48a4a15.js:1  GET https://thepiks.com/api/games/inplay_basketball_al_manama_vs_al_najma 404 (Not Found)
+e @ [id]-8c31d35bf48a4a15.js:1
+setInterval
+(anonymous) @ [id]-8c31d35bf48a4a15.js:1
+uU @ framework-9651f24559de936b.js:1
+oV @ framework-9651f24559de936b.js:1
+o @ framework-9651f24559de936b.js:1
+x @ framework-9651f24559de936b.js:1
+T @ framework-9651f24559de936b.js:1
+[id]-8c31d35bf48a4a15.js:1  GET https://thepiks.com/api/games/inplay_basketball_al_manama_vs_al_najma 404 (Not Found)
+e @ [id]-8c31d35bf48a4a15.js:1
+setInterval
+(anonymous) @ [id]-8c31d35bf48a4a15.js:1
+uU @ framework-9651f24559de936b.js:1
+oV @ framework-9651f24559de936b.js:1
+o @ framework-9651f24559de936b.js:1
+x @ framework-9651f24559de936b.js:1
+T @ framework-9651f24559de936b.js:1
+[id]-8c31d35bf48a4a15.js:1  GET https://thepiks.com/api/games/inplay_basketball_al_manama_vs_al_najma 404 (Not Found)
+e @ [id]-8c31d35bf48a4a15.js:1
+setInterval
+(anonymous) @ [id]-8c31d35bf48a4a15.js:1
+uU @ framework-9651f24559de936b.js:1
+oV @ framework-9651f24559de936b.js:1
+o @ framework-9651f24559de936b.js:1
+x @ framework-9651f24559de936b.js:1
+T @ framework-9651f24559de936b.js:1

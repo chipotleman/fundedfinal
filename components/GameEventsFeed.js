@@ -1,33 +1,72 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLiveEvent } from '../hooks/useGoalserveLive';
 
-export default function GameEventsFeed({ gameId, sport, initialEvents = [] }) {
+export default function GameEventsFeed({ gameId, sport, goalserveId, initialPlays = [] }) {
   const { event, isConnected } = useLiveEvent(gameId, { autoConnect: true });
-  const [feedEvents, setFeedEvents] = useState(initialEvents);
+  const [plays, setPlays] = useState(initialPlays);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const feedRef = useRef(null);
+  const pollIntervalRef = useRef(null);
+
+  const sportKeyMap = {
+    'basketball': 'nba',
+    'nba': 'nba',
+    'ncaab': 'ncaab',
+    'hockey': 'nhl',
+    'nhl': 'nhl',
+    'amfootball': 'nfl',
+    'nfl': 'nfl',
+    'ncaaf': 'ncaaf',
+    'baseball': 'mlb',
+    'mlb': 'mlb'
+  };
+
+  const fetchPlayByPlay = async () => {
+    if (!goalserveId && !event?.rawId) return;
+    
+    const matchId = goalserveId || event?.rawId || event?.id;
+    const sportKey = sportKeyMap[sport?.toLowerCase()] || sport;
+    
+    if (!matchId || !sportKey) return;
+    
+    try {
+      setLoading(plays.length === 0);
+      const res = await fetch(`/api/goalserve/playbyplay?sport=${sportKey}&gameId=${matchId}`);
+      
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.game?.plays?.length > 0) {
+          const sortedPlays = [...data.game.plays].reverse();
+          setPlays(sortedPlays);
+          setError(null);
+        }
+      }
+    } catch (err) {
+      console.error('[GameEventsFeed] Fetch error:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (event?.extra) {
-      const extraEvents = Object.values(event.extra)
-        .filter(e => e && e.value)
-        .map((e, idx) => ({
-          id: `${event.id}_${idx}_${e.minute || 0}`,
-          minute: e.minute || '',
-          message: e.value,
-          code: e.code || '',
-          timestamp: Date.now()
-        }))
-        .reverse();
-      
-      setFeedEvents(extraEvents);
-    }
-  }, [event]);
-
-  const getEventIcon = (message, code) => {
-    const msg = message?.toLowerCase() || '';
-    const c = code?.toLowerCase() || '';
+    fetchPlayByPlay();
     
-    if (msg.includes('goal') || msg.includes('score') || c === 'goal') {
+    pollIntervalRef.current = setInterval(fetchPlayByPlay, 30000);
+    
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    };
+  }, [gameId, sport, goalserveId, event?.id]);
+
+  const getEventIcon = (play) => {
+    const type = play?.type?.toLowerCase() || '';
+    const desc = play?.description?.toLowerCase() || '';
+    
+    if (play?.isScoring || type.includes('score') || type.includes('goal') || type.includes('touchdown')) {
       return (
         <div className="w-8 h-8 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0">
           <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
@@ -36,7 +75,7 @@ export default function GameEventsFeed({ gameId, sport, initialEvents = [] }) {
         </div>
       );
     }
-    if (msg.includes('foul') || msg.includes('penalty') || c === 'foul') {
+    if (type.includes('foul') || type.includes('penalty') || desc.includes('foul')) {
       return (
         <div className="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
           <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
@@ -45,7 +84,7 @@ export default function GameEventsFeed({ gameId, sport, initialEvents = [] }) {
         </div>
       );
     }
-    if (msg.includes('timeout') || msg.includes('break') || c === 'timeout') {
+    if (type.includes('timeout') || desc.includes('timeout')) {
       return (
         <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0">
           <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
@@ -54,11 +93,20 @@ export default function GameEventsFeed({ gameId, sport, initialEvents = [] }) {
         </div>
       );
     }
-    if (msg.includes('quarter') || msg.includes('period') || msg.includes('half')) {
+    if (type.includes('quarter') || type.includes('period') || type.includes('half') || desc.includes('quarter') || desc.includes('period')) {
       return (
         <div className="w-8 h-8 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0">
           <svg className="w-4 h-4 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm1 8.414l2.293 2.293a1 1 0 01-1.414 1.414l-2.586-2.586A1 1 0 019 11V6a1 1 0 112 0v4.414z"/>
+          </svg>
+        </div>
+      );
+    }
+    if (play?.isShooting || type.includes('shot') || type.includes('rebound')) {
+      return (
+        <div className="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+          <svg className="w-4 h-4 text-orange-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd"/>
           </svg>
         </div>
       );
@@ -72,7 +120,22 @@ export default function GameEventsFeed({ gameId, sport, initialEvents = [] }) {
     );
   };
 
-  if (feedEvents.length === 0) {
+  if (loading) {
+    return (
+      <div className="bg-[#111111] rounded-xl border border-gray-800 p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></div>
+          <span className="font-semibold text-sm">Game Feed</span>
+        </div>
+        <div className="text-center py-6 text-gray-500 text-sm">
+          <div className="animate-spin w-6 h-6 border-2 border-gray-600 border-t-green-500 rounded-full mx-auto mb-2"></div>
+          Loading play-by-play...
+        </div>
+      </div>
+    );
+  }
+
+  if (plays.length === 0) {
     return (
       <div className="bg-[#111111] rounded-xl border border-gray-800 p-4">
         <div className="flex items-center gap-2 mb-3">
@@ -83,7 +146,7 @@ export default function GameEventsFeed({ gameId, sport, initialEvents = [] }) {
           <svg className="w-8 h-8 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"/>
           </svg>
-          Waiting for game updates...
+          {error ? `Error: ${error}` : 'No play-by-play data available'}
         </div>
       </div>
     );
@@ -96,25 +159,36 @@ export default function GameEventsFeed({ gameId, sport, initialEvents = [] }) {
           <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-500'}`}></div>
           <span className="font-semibold text-sm">Game Feed</span>
         </div>
-        <span className="text-xs text-gray-500">{feedEvents.length} updates</span>
+        <span className="text-xs text-gray-500">{plays.length} plays</span>
       </div>
       
       <div ref={feedRef} className="max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
         <div className="divide-y divide-gray-800/50">
-          {feedEvents.map((evt, idx) => (
+          {plays.slice(0, 50).map((play, idx) => (
             <div 
-              key={evt.id || idx} 
-              className={`flex items-start gap-3 px-4 py-3 ${idx === 0 ? 'bg-green-500/5' : ''}`}
+              key={`${play.time}_${idx}`} 
+              className={`flex items-start gap-3 px-4 py-3 ${idx === 0 ? 'bg-green-500/5' : ''} ${play.isScoring ? 'bg-green-500/5' : ''}`}
             >
-              {getEventIcon(evt.message, evt.code)}
+              {getEventIcon(play)}
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-200 leading-relaxed">{evt.message}</p>
-                {evt.minute && evt.minute !== '0' && (
-                  <p className="text-xs text-gray-500 mt-1">{evt.minute}'</p>
-                )}
+                <p className="text-sm text-gray-200 leading-relaxed">{play.description}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  {play.time && (
+                    <span className="text-xs text-gray-500">{play.time}</span>
+                  )}
+                  {play.period && (
+                    <span className="text-xs text-gray-600">| {play.period}</span>
+                  )}
+                  {play.team && (
+                    <span className="text-xs text-gray-500">| {play.team}</span>
+                  )}
+                </div>
               </div>
               {idx === 0 && (
-                <span className="text-[10px] text-green-400 bg-green-500/10 px-2 py-0.5 rounded uppercase font-medium">New</span>
+                <span className="text-[10px] text-green-400 bg-green-500/10 px-2 py-0.5 rounded uppercase font-medium">Latest</span>
+              )}
+              {play.isScoring && idx !== 0 && (
+                <span className="text-[10px] text-green-400 bg-green-500/10 px-2 py-0.5 rounded uppercase font-medium">Score</span>
               )}
             </div>
           ))}
