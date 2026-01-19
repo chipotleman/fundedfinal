@@ -66,7 +66,7 @@ None documented yet.
 - **Sports Data**: Goalserve API (primary source)
     - **Goalserve REST API**: Main data source for games and odds (bet365 primary), with 30-second caching. Handles home/away team reversal internally.
     - **Goalserve WebSocket**: Real-time scores and in-play odds, IP whitelisted for production. Development uses REST API fallback.
-    - **Goalserve Inplay HTTP Feeds**: Alternative real-time data, also requires IP whitelisting and handles home/away reversal.
+    - **Goalserve Inplay HTTP Feeds**: Alternative real-time data, also requires IP whitelisting and handles home/away reversal. Polling interval configurable via `GOALSERVE_POLL_INTERVAL_MS` env var (default: 2000ms = 2 seconds for snappy updates).
     - **Supported Sports**: NBA, NFL, NCAAB, NCAAF, MLB, NHL, Soccer, Euro Basketball, Int'l Hockey.
     - **Zero-Delay SSR Architecture**: Both live AND scheduled games render instantly via Server-Side Rendering:
       1. Server starts → `instrumentation.js` triggers 24/7 polling via `goalserve-autostart.js`
