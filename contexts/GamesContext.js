@@ -28,6 +28,10 @@ export function GamesProvider({ children, initialInplayEvents = null, initialApi
     }
     return initialInplayEvents || {};
   });
+  
+  // Real-time possession state (updated every 5 seconds)
+  const [possessionState, setPossessionState] = useState({});
+  
   // If we have either SSR data, we're not loading
   const [loading, setLoading] = useState(!initialInplayEvents && !initialApiGames);
   const [error, setError] = useState(null);
@@ -35,6 +39,7 @@ export function GamesProvider({ children, initialInplayEvents = null, initialApi
   
   const pollingIntervalRef = useRef(null);
   const sseRef = useRef(null);
+  const possessionSseRef = useRef(null);
   const currentIntervalRef = useRef(5000);
   const lastFetchTimeRef = useRef(0);
   const isMountedRef = useRef(true);
@@ -154,6 +159,61 @@ export function GamesProvider({ children, initialInplayEvents = null, initialApi
     };
   }, []);
 
+  // Connect to possession SSE stream for real-time possession updates (5-second polling)
+  const connectPossessionSSE = useCallback(() => {
+    if (possessionSseRef.current) {
+      possessionSseRef.current.close();
+    }
+
+    const eventSource = new EventSource('/api/goalserve/possession-stream');
+    possessionSseRef.current = eventSource;
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        
+        if (!isMountedRef.current) return;
+        
+        // Handle initial possession states
+        if (data.type === 'initial' && data.states) {
+          const statesObj = {};
+          data.states.forEach(state => {
+            if (state.gameId) {
+              statesObj[state.gameId] = state;
+            }
+          });
+          setPossessionState(statesObj);
+        }
+        // Handle possession updates
+        else if (data.type === 'possession_update' && data.changes) {
+          setPossessionState(prev => {
+            const updated = { ...prev };
+            data.changes.forEach(change => {
+              if (change.gameId) {
+                // Remove finished games from state
+                if (change.type === 'finished') {
+                  delete updated[change.gameId];
+                } else {
+                  updated[change.gameId] = change;
+                }
+              }
+            });
+            return updated;
+          });
+        }
+      } catch (err) {
+        console.error('[GamesContext] Possession SSE parse error:', err);
+      }
+    };
+
+    eventSource.onerror = () => {
+      eventSource.close();
+      if (isMountedRef.current) {
+        setTimeout(connectPossessionSSE, 5000);
+      }
+    };
+  }, []);
+
   useEffect(() => {
     // Only run client-side effects in browser (not during SSR)
     if (typeof window === 'undefined') return;
@@ -176,6 +236,9 @@ export function GamesProvider({ children, initialInplayEvents = null, initialApi
     
     // Connect SSE for live updates (this won't clear SSR data, just merges updates)
     connectSSE();
+    
+    // Connect possession SSE for real-time possession updates (5-second polling)
+    connectPossessionSSE();
 
     return () => {
       isMountedRef.current = false;
@@ -185,22 +248,32 @@ export function GamesProvider({ children, initialInplayEvents = null, initialApi
       if (sseRef.current) {
         sseRef.current.close();
       }
+      if (possessionSseRef.current) {
+        possessionSseRef.current.close();
+      }
     };
-  }, [fetchGames, connectSSE]); // Note: inplayEvents intentionally excluded to avoid re-triggering
+  }, [fetchGames, connectSSE, connectPossessionSSE]); // Note: inplayEvents intentionally excluded to avoid re-triggering
 
   const refetch = useCallback(() => {
     lastFetchTimeRef.current = 0;
     fetchGames();
   }, [fetchGames]);
 
+  // Helper to get possession for a specific game ID
+  const getPossession = useCallback((gameId) => {
+    return possessionState[gameId] || null;
+  }, [possessionState]);
+
   const value = useMemo(() => ({
     apiGames,
     inplayEvents,
+    possessionState,
+    getPossession,
     loading,
     error,
     lastUpdated,
     refetch
-  }), [apiGames, inplayEvents, loading, error, lastUpdated, refetch]);
+  }), [apiGames, inplayEvents, possessionState, getPossession, loading, error, lastUpdated, refetch]);
 
   return (
     <GamesContext.Provider value={value}>

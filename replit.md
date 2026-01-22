@@ -75,4 +75,12 @@ None documented yet.
     - **Odds Parsing**: Supports Moneyline, Spreads, Totals for various sports.
     - **Admin Odds View**: Full bookmaker comparison in admin panel.
     - **Historical Odds**: Downloadable historical odds pulls.
+    - **Real-Time Possession Polling**: 
+      1. `LivePossessionPoller` service polls Goalserve REST API every 5 seconds for live games only
+      2. Extracts possession boolean (which team has the ball) from team data
+      3. Detects and broadcasts possession/score changes via dedicated SSE endpoint (`/api/goalserve/possession-stream`)
+      4. Auto-starts when first subscriber connects, auto-stops when no subscribers remain
+      5. Prunes finished games from state to prevent memory leaks
+      6. GamesContext integrates `possessionState` and `getPossession(gameId)` helper
+      7. Key files: `lib/live-possession-poller.js`, `pages/api/goalserve/possession-stream.js`, `contexts/GamesContext.js`
 - **Backup Sports Data**: The Odds API (not currently used).
