@@ -31,6 +31,7 @@ export function GamesProvider({ children, initialInplayEvents = null, initialApi
   
   // Real-time possession state (updated every 5 seconds)
   const [possessionState, setPossessionState] = useState({});
+  const [possessionConnected, setPossessionConnected] = useState(false);
   
   // If we have either SSR data, we're not loading
   const [loading, setLoading] = useState(!initialInplayEvents && !initialApiGames);
@@ -174,8 +175,12 @@ export function GamesProvider({ children, initialInplayEvents = null, initialApi
         
         if (!isMountedRef.current) return;
         
+        // Handle connected event
+        if (data.type === 'connected') {
+          setPossessionConnected(true);
+        }
         // Handle initial possession states
-        if (data.type === 'initial' && data.states) {
+        else if (data.type === 'initial' && data.states) {
           const statesObj = {};
           data.states.forEach(state => {
             if (state.gameId) {
@@ -208,6 +213,7 @@ export function GamesProvider({ children, initialInplayEvents = null, initialApi
 
     eventSource.onerror = () => {
       eventSource.close();
+      setPossessionConnected(false);
       if (isMountedRef.current) {
         setTimeout(connectPossessionSSE, 5000);
       }
@@ -268,12 +274,13 @@ export function GamesProvider({ children, initialInplayEvents = null, initialApi
     apiGames,
     inplayEvents,
     possessionState,
+    possessionConnected,
     getPossession,
     loading,
     error,
     lastUpdated,
     refetch
-  }), [apiGames, inplayEvents, possessionState, getPossession, loading, error, lastUpdated, refetch]);
+  }), [apiGames, inplayEvents, possessionState, possessionConnected, getPossession, loading, error, lastUpdated, refetch]);
 
   return (
     <GamesContext.Provider value={value}>

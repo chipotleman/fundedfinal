@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { useBetSlip } from '../../contexts/BetSlipContext';
+import { useGames } from '../../contexts/GamesContext';
 import LiveGameTracker from '../../components/LiveGameTracker';
 
 export default function GameDetail() {
@@ -12,6 +13,12 @@ export default function GameDetail() {
   const [showTracker, setShowTracker] = useState(true);
   const [activeTab, setActiveTab] = useState('Popular');
   const { betSlip, addToBetSlip, isBetInSlip, showBetSlip, setShowBetSlip } = useBetSlip();
+  const { getPossession, possessionConnected } = useGames();
+  
+  const possession = useMemo(() => {
+    if (!id) return null;
+    return getPossession(id);
+  }, [id, getPossession]);
 
   const betTabs = ['Popular', 'Live SGP', 'Spread', 'Total', 'Moneyline'];
 
@@ -137,19 +144,31 @@ export default function GameDetail() {
           <div className="px-4 py-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
+                <div className="flex items-center gap-2 mb-2">
+                  {isLive && possession?.awayHasPossession && (
+                    <div className="w-2.5 h-2.5 bg-orange-500 rounded-full animate-pulse" title="Has possession"></div>
+                  )}
+                  {isLive && !possession?.awayHasPossession && possession?.homeHasPossession && (
+                    <div className="w-2.5 h-2.5 rounded-full opacity-0"></div>
+                  )}
                   <span className="text-lg font-bold">{game.awayTeamFull || game.awayTeam}</span>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  {isLive && possession?.homeHasPossession && (
+                    <div className="w-2.5 h-2.5 bg-orange-500 rounded-full animate-pulse" title="Has possession"></div>
+                  )}
+                  {isLive && !possession?.homeHasPossession && possession?.awayHasPossession && (
+                    <div className="w-2.5 h-2.5 rounded-full opacity-0"></div>
+                  )}
                   <span className="text-lg font-bold">{game.homeTeamFull || game.homeTeam}</span>
                 </div>
               </div>
               <div className="text-right">
                 <div className="flex items-center justify-end gap-3 mb-2">
-                  <span className="text-2xl font-bold">{isLive || isFinal ? (game.scores?.away?.total || 0) : '-'}</span>
+                  <span className="text-2xl font-bold">{isLive || isFinal ? (possession?.awayScore ?? game.scores?.away?.total ?? 0) : '-'}</span>
                 </div>
                 <div className="flex items-center justify-end gap-3">
-                  <span className="text-2xl font-bold">{isLive || isFinal ? (game.scores?.home?.total || 0) : '-'}</span>
+                  <span className="text-2xl font-bold">{isLive || isFinal ? (possession?.homeScore ?? game.scores?.home?.total ?? 0) : '-'}</span>
                 </div>
               </div>
               <div className="ml-4 text-right">
@@ -195,18 +214,83 @@ export default function GameDetail() {
             </div>
           </div>
 
-          {showTracker && isLive && (
-            <div className="px-4 pb-4">
-              <LiveGameTracker 
-                gameId={game.id} 
-                sport={game.sport_key || 'basketball_nba'}
-                initialData={{
-                  home_team: game.homeTeamFull || game.homeTeam,
-                  away_team: game.awayTeamFull || game.awayTeam,
-                  home_score: game.scores?.home?.total || 0,
-                  away_score: game.scores?.away?.total || 0
-                }}
-              />
+          {isLive && (
+            <div className="px-4 pb-4 space-y-3">
+              {/* Live Possession Panel */}
+              <div className="bg-[#1a1a1a] rounded-xl p-4 border border-gray-800">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-sm font-semibold text-gray-300">Live Updates</span>
+                  </div>
+                  <span className="text-xs text-gray-500">
+                    {possessionConnected ? 'Connected' : 'Connecting...'}
+                  </span>
+                </div>
+                
+                <div className="space-y-3">
+                  {/* Away Team Row */}
+                  <div className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 ${
+                    possession?.awayHasPossession ? 'bg-orange-500/20 border border-orange-500/50' : 'bg-gray-800/50'
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      {possession?.awayHasPossession && (
+                        <div className="flex items-center gap-1">
+                          <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
+                          <span className="text-[10px] text-orange-400 font-bold uppercase">Ball</span>
+                        </div>
+                      )}
+                      <span className={`font-semibold ${possession?.awayHasPossession ? 'text-white' : 'text-gray-400'}`}>
+                        {game.awayTeamFull || game.awayTeam}
+                      </span>
+                    </div>
+                    <span className={`text-2xl font-bold ${possession?.awayHasPossession ? 'text-white' : 'text-gray-400'}`}>
+                      {possession?.awayScore ?? game.scores?.away?.total ?? 0}
+                    </span>
+                  </div>
+                  
+                  {/* Home Team Row */}
+                  <div className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 ${
+                    possession?.homeHasPossession ? 'bg-orange-500/20 border border-orange-500/50' : 'bg-gray-800/50'
+                  }`}>
+                    <div className="flex items-center gap-3">
+                      {possession?.homeHasPossession && (
+                        <div className="flex items-center gap-1">
+                          <div className="w-3 h-3 bg-orange-500 rounded-full animate-pulse"></div>
+                          <span className="text-[10px] text-orange-400 font-bold uppercase">Ball</span>
+                        </div>
+                      )}
+                      <span className={`font-semibold ${possession?.homeHasPossession ? 'text-white' : 'text-gray-400'}`}>
+                        {game.homeTeamFull || game.homeTeam}
+                      </span>
+                    </div>
+                    <span className={`text-2xl font-bold ${possession?.homeHasPossession ? 'text-white' : 'text-gray-400'}`}>
+                      {possession?.homeScore ?? game.scores?.home?.total ?? 0}
+                    </span>
+                  </div>
+                </div>
+                
+                {game.quarter && (
+                  <div className="mt-3 pt-3 border-t border-gray-700 flex items-center justify-center">
+                    <span className="text-sm text-gray-400">{game.quarter}</span>
+                    {game.displayClock && <span className="text-sm text-gray-400 ml-2">• {game.displayClock}</span>}
+                  </div>
+                )}
+              </div>
+              
+              {/* Original Game Tracker */}
+              {showTracker && (
+                <LiveGameTracker 
+                  gameId={game.id} 
+                  sport={game.sport_key || 'basketball_nba'}
+                  initialData={{
+                    home_team: game.homeTeamFull || game.homeTeam,
+                    away_team: game.awayTeamFull || game.awayTeam,
+                    home_score: possession?.homeScore ?? game.scores?.home?.total ?? 0,
+                    away_score: possession?.awayScore ?? game.scores?.away?.total ?? 0
+                  }}
+                />
+              )}
             </div>
           )}
         </div>
