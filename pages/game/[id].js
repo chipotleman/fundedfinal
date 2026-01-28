@@ -26,12 +26,21 @@ export default function GameDetail() {
     if (!id) return;
 
     const findGameInContext = () => {
-      if (inplayEvents && inplayEvents[id]) {
-        setGame(inplayEvents[id]);
+      // Dashboard prefixes inplay game IDs with "inplay_", so check for that pattern
+      const isInplayId = id.startsWith('inplay_');
+      const originalEventId = isInplayId ? id.replace(/^inplay_/, '') : id;
+      
+      // Check inplayEvents using the original event ID (without prefix)
+      if (inplayEvents && inplayEvents[originalEventId]) {
+        const event = inplayEvents[originalEventId];
+        // Transform to display format (matching dashboard logic)
+        const transformedGame = transformInplayEventToGame(event, id);
+        setGame(transformedGame);
         setLoading(false);
         return true;
       }
       
+      // Check apiGames
       if (apiGames && apiGames.length > 0) {
         const foundGame = apiGames.find(g => String(g.id) === String(id));
         if (foundGame) {
@@ -42,17 +51,74 @@ export default function GameDetail() {
       }
       return false;
     };
+    
+    // Helper to transform inplay event to game display format
+    const transformInplayEventToGame = (event, gameId) => {
+      const homeTeam = event.homeTeam || 'Home';
+      const awayTeam = event.awayTeam || 'Away';
+      let homeScore = event.homeScore ?? 0;
+      let awayScore = event.awayScore ?? 0;
+      
+      if (homeScore === 0 && awayScore === 0 && event.stats) {
+        const totalStat = Object.values(event.stats).find(s => s.name === 'T');
+        if (totalStat) {
+          homeScore = parseInt(totalStat.home) || 0;
+          awayScore = parseInt(totalStat.away) || 0;
+        }
+      }
+      
+      const odds = event.odds || {};
+      const lines = {
+        moneyline: {
+          home: odds.moneyline?.home || null,
+          away: odds.moneyline?.away || null
+        },
+        spread: odds.spread ? {
+          home: { point: odds.spread.home, odds: -110 },
+          away: { point: odds.spread.away, odds: -110 }
+        } : {},
+        total: odds.total ? {
+          over: { point: odds.total.line, odds: -110 },
+          under: { point: odds.total.line, odds: -110 }
+        } : {}
+      };
+      
+      return {
+        id: gameId,
+        sport: event.sport,
+        sportName: event.league || event.sport,
+        homeTeam: homeTeam.substring(0, 20),
+        awayTeam: awayTeam.substring(0, 20),
+        homeTeamFull: homeTeam,
+        awayTeamFull: awayTeam,
+        homeScore,
+        awayScore,
+        time: 'LIVE',
+        isLive: true,
+        status: 'IN_PROGRESS',
+        period: event.period || event.quarter || '',
+        lines,
+        odds: event.odds
+      };
+    };
 
     if (findGameInContext()) {
       return;
     }
 
+    console.log('[GameDetail] Not found in context, fetching from API...');
     const fetchGame = async () => {
       try {
         const response = await fetch('/api/games');
         if (response.ok) {
           const data = await response.json();
+          console.log('[GameDetail] API returned', data.games?.length || 0, 'games');
           const foundGame = data.games?.find(g => String(g.id) === String(id));
+          if (foundGame) {
+            console.log('[GameDetail] Found in API response');
+          } else {
+            console.log('[GameDetail] Not found in API response');
+          }
           setGame(foundGame);
         }
       } catch (error) {
