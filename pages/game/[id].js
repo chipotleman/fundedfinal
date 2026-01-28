@@ -13,7 +13,7 @@ export default function GameDetail() {
   const [showTracker, setShowTracker] = useState(true);
   const [activeTab, setActiveTab] = useState('Popular');
   const { betSlip, addToBetSlip, isBetInSlip, showBetSlip, setShowBetSlip } = useBetSlip();
-  const { getPossession, possessionConnected } = useGames();
+  const { getPossession, possessionConnected, apiGames } = useGames();
   
   const possession = useMemo(() => {
     if (!id) return null;
@@ -24,6 +24,22 @@ export default function GameDetail() {
 
   useEffect(() => {
     if (!id) return;
+
+    const findGameInContext = () => {
+      if (apiGames && apiGames.length > 0) {
+        const foundGame = apiGames.find(g => String(g.id) === String(id));
+        if (foundGame) {
+          setGame(foundGame);
+          setLoading(false);
+          return true;
+        }
+      }
+      return false;
+    };
+
+    if (findGameInContext()) {
+      return;
+    }
 
     const fetchGame = async () => {
       try {
@@ -41,9 +57,28 @@ export default function GameDetail() {
     };
 
     fetchGame();
-    const interval = setInterval(fetchGame, 30000);
+  }, [id, apiGames]);
+  
+  useEffect(() => {
+    if (!id || !game) return;
+    
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch('/api/games');
+        if (response.ok) {
+          const data = await response.json();
+          const foundGame = data.games?.find(g => String(g.id) === String(id));
+          if (foundGame) {
+            setGame(foundGame);
+          }
+        }
+      } catch (error) {
+        console.error('Error refreshing game:', error);
+      }
+    }, 30000);
+    
     return () => clearInterval(interval);
-  }, [id]);
+  }, [id, game]);
 
   const formatOdds = (odds) => {
     if (typeof odds !== 'number') return odds;
