@@ -13,7 +13,7 @@ export default function GameDetail() {
   const [showTracker, setShowTracker] = useState(true);
   const [activeTab, setActiveTab] = useState('Popular');
   const { betSlip, addToBetSlip, isBetInSlip, showBetSlip, setShowBetSlip } = useBetSlip();
-  const { getPossession, possessionConnected, apiGames } = useGames();
+  const { getPossession, possessionConnected, apiGames, inplayEvents } = useGames();
   
   const possession = useMemo(() => {
     if (!id) return null;
@@ -26,6 +26,12 @@ export default function GameDetail() {
     if (!id) return;
 
     const findGameInContext = () => {
+      if (inplayEvents && inplayEvents[id]) {
+        setGame(inplayEvents[id]);
+        setLoading(false);
+        return true;
+      }
+      
       if (apiGames && apiGames.length > 0) {
         const foundGame = apiGames.find(g => String(g.id) === String(id));
         if (foundGame) {
@@ -57,7 +63,7 @@ export default function GameDetail() {
     };
 
     fetchGame();
-  }, [id, apiGames]);
+  }, [id, apiGames, inplayEvents]);
   
   useEffect(() => {
     if (!id || !game) return;
