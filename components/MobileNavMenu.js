@@ -225,11 +225,11 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 Leaderboard
               </Link>
               <Link
-                href="/friends"
+                href="/social"
                 onClick={onClose}
                 className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
-                Friends
+                Social
               </Link>
 
               <div className="border-t border-gray-700 pt-4 mt-6">
