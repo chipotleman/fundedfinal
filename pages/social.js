@@ -186,7 +186,7 @@ const UserCard = ({ user, isFriend, session, onAction, compact = false }) => {
   );
 };
 
-const ChatModal = ({ friend, messages, onClose, onSend, messageInput, setMessageInput, sending, session }) => {
+const ChatModal = ({ friend, messages, onClose, onSend, messageInput, setMessageInput, sending, session, isFriend, messageError }) => {
   const messagesEndRef = useRef(null);
   
   useEffect(() => {
@@ -210,7 +210,15 @@ const ChatModal = ({ friend, messages, onClose, onSend, messageInput, setMessage
         </div>
         
         <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px]">
-          {messages.length === 0 ? (
+          {messageError ? (
+            <div className="text-center py-8">
+              <svg className="w-12 h-12 mx-auto text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+              <p className="text-gray-400 mb-2">You can only message friends</p>
+              <p className="text-sm text-gray-500">Add {friend.username} as a friend to start chatting!</p>
+            </div>
+          ) : messages.length === 0 ? (
             <p className="text-gray-400 text-center py-8">No messages yet. Say hi!</p>
           ) : (
             messages.map((msg) => (
@@ -225,24 +233,26 @@ const ChatModal = ({ friend, messages, onClose, onSend, messageInput, setMessage
           <div ref={messagesEndRef} />
         </div>
         
-        <form onSubmit={onSend} className="p-4 border-t border-gray-800">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              value={messageInput}
-              onChange={(e) => setMessageInput(e.target.value)}
-              placeholder="Type a message..."
-              className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-purple-500 text-sm"
-            />
-            <button
-              type="submit"
-              disabled={!messageInput.trim() || sending}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-xl font-medium transition text-sm"
-            >
-              Send
-            </button>
-          </div>
-        </form>
+        {!messageError && (
+          <form onSubmit={onSend} className="p-4 border-t border-gray-800">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={messageInput}
+                onChange={(e) => setMessageInput(e.target.value)}
+                placeholder="Type a message..."
+                className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-purple-500 text-sm"
+              />
+              <button
+                type="submit"
+                disabled={!messageInput.trim() || sending}
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-xl font-medium transition text-sm"
+              >
+                Send
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );
@@ -678,10 +688,23 @@ export default function SocialPage() {
   const [messages, setMessages] = useState([]);
   const [messageInput, setMessageInput] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [messageError, setMessageError] = useState(false);
   
   const [watchBattle, setWatchBattle] = useState(null);
   
   const [activeTab, setActiveTab] = useState('friends');
+  
+  const [showInviteModal, setShowInviteModal] = useState(null);
+  const [inviteBuyIn, setInviteBuyIn] = useState('100');
+  const [inviteDuration, setInviteDuration] = useState('24');
+  const [sendingInvite, setSendingInvite] = useState(false);
+  
+  const [showMatchmaking, setShowMatchmaking] = useState(false);
+  const [matchmakingBuyIn, setMatchmakingBuyIn] = useState('100');
+  const [matchmakingDuration, setMatchmakingDuration] = useState('24');
+  const [searchingMatch, setSearchingMatch] = useState(false);
+  
+  const [pendingInvites, setPendingInvites] = useState({ received: [], sent: [] });
 
   const friendIds = new Set(friends.map(f => f.id));
 
@@ -703,6 +726,19 @@ export default function SocialPage() {
       fetchRequests();
     }
   }, [session]);
+
+  useEffect(() => {
+    const { chat, name } = router.query;
+    if (chat && session?.user?.id) {
+      const existingFriend = friends.find(f => f.id === chat);
+      if (existingFriend) {
+        setSelectedChat(existingFriend);
+      } else {
+        setSelectedChat({ id: chat, username: name || 'User' });
+      }
+      router.replace('/social', undefined, { shallow: true });
+    }
+  }, [router.query, friends, session]);
 
   useEffect(() => {
     if (selectedChat) {
@@ -830,9 +866,16 @@ export default function SocialPage() {
       if (res.ok) {
         const data = await res.json();
         setMessages(data.messages || []);
+        setMessageError(false);
+      } else if (res.status === 403) {
+        setMessages([]);
+        setMessageError(true);
+      } else {
+        setMessages([]);
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
+      setMessages([]);
     }
   };
 
@@ -864,11 +907,146 @@ export default function SocialPage() {
         setSelectedChat(user);
         break;
       case 'battle':
-        router.push(`/battle?invite=${user.id}`);
+        setShowInviteModal(user);
         break;
       case 'add':
         handleAddFriend(user.id);
         break;
+    }
+  };
+
+  const fetchPendingInvites = async () => {
+    try {
+      const res = await fetch('/api/battles/invite', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setPendingInvites({ received: data.received || [], sent: data.sent || [] });
+      }
+    } catch (error) {
+      console.error('Error fetching invites:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetchPendingInvites();
+      const interval = setInterval(fetchPendingInvites, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [session]);
+
+  const handleSendInvite = async () => {
+    if (!showInviteModal) return;
+    setSendingInvite(true);
+    try {
+      const res = await fetch('/api/battles/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          receiverId: showInviteModal.id,
+          buyIn: parseFloat(inviteBuyIn) || 100,
+          duration: parseInt(inviteDuration) || 24,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setShowInviteModal(null);
+        setInviteBuyIn('100');
+        setInviteDuration('24');
+        fetchPendingInvites();
+      } else {
+        alert(data.error || 'Failed to send invite');
+      }
+    } catch (error) {
+      console.error('Error sending invite:', error);
+      alert('Failed to send invite');
+    } finally {
+      setSendingInvite(false);
+    }
+  };
+
+  const handleAcceptInvite = async (inviteId) => {
+    try {
+      const res = await fetch(`/api/battles/invite/${inviteId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ action: 'accept' }),
+      });
+      if (res.ok) {
+        fetchPendingInvites();
+        fetchLiveBattles();
+      }
+    } catch (error) {
+      console.error('Error accepting invite:', error);
+    }
+  };
+
+  const handleDeclineInvite = async (inviteId) => {
+    try {
+      const res = await fetch(`/api/battles/invite/${inviteId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ action: 'decline' }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || 'Failed to decline invite');
+      }
+      fetchPendingInvites();
+    } catch (error) {
+      console.error('Error declining invite:', error);
+    }
+  };
+
+  const handleCancelInvite = async (inviteId) => {
+    try {
+      const res = await fetch(`/api/battles/invite/${inviteId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ action: 'cancel' }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        alert(data.error || 'Failed to cancel invite');
+      }
+      fetchPendingInvites();
+    } catch (error) {
+      console.error('Error canceling invite:', error);
+    }
+  };
+
+  const handleRandomMatchmaking = async () => {
+    setSearchingMatch(true);
+    try {
+      const res = await fetch('/api/battles/matchmaking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          buyIn: parseFloat(matchmakingBuyIn) || 100,
+          duration: parseInt(matchmakingDuration) || 24,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        if (data.matched) {
+          setShowMatchmaking(false);
+          fetchLiveBattles();
+        } else {
+          alert('Searching for opponent... We\'ll notify you when matched!');
+        }
+      } else {
+        alert(data.error || 'Failed to start matchmaking');
+      }
+    } catch (error) {
+      console.error('Error with matchmaking:', error);
+      alert('Failed to start matchmaking');
+    } finally {
+      setSearchingMatch(false);
     }
   };
 
@@ -901,14 +1079,25 @@ export default function SocialPage() {
           <h1 className="text-2xl sm:text-3xl font-bold mb-6">Battle Hub</h1>
 
           <section className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <h2 className="text-lg font-semibold">Live Battles</h2>
-              {liveBattles.length > 0 && (
-                <span className="flex items-center gap-1 px-2 py-0.5 bg-red-500/20 text-red-400 rounded-full text-xs">
-                  <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
-                  {liveBattles.length} live
-                </span>
-              )}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <h2 className="text-lg font-semibold">Live Battles</h2>
+                {liveBattles.length > 0 && (
+                  <span className="flex items-center gap-1 px-2 py-0.5 bg-red-500/20 text-red-400 rounded-full text-xs">
+                    <span className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></span>
+                    {liveBattles.length} live
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => setShowMatchmaking(true)}
+                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg font-medium text-sm flex items-center gap-2 transition"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                </svg>
+                Find Match
+              </button>
             </div>
             
             {loadingBattles ? (
@@ -994,6 +1183,17 @@ export default function SocialPage() {
                   </span>
                 )}
               </button>
+              <button
+                onClick={() => setActiveTab('invites')}
+                className={`flex-1 py-2.5 rounded-xl font-medium transition text-sm relative ${activeTab === 'invites' ? 'bg-purple-600' : 'bg-gray-800/60 hover:bg-gray-700/60'}`}
+              >
+                Battle Invites
+                {pendingInvites.received.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full text-xs flex items-center justify-center font-bold">
+                    {pendingInvites.received.length}
+                  </span>
+                )}
+              </button>
             </div>
 
             {activeTab === 'friends' && (
@@ -1053,6 +1253,76 @@ export default function SocialPage() {
                 </div>
               )
             )}
+
+            {activeTab === 'invites' && (
+              <div className="space-y-6">
+                {pendingInvites.received.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-400 mb-3">Received Challenges</h3>
+                    <div className="space-y-3">
+                      {pendingInvites.received.map(invite => (
+                        <div key={invite.id} className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-500/30 rounded-xl p-4">
+                          <div className="flex items-center gap-3 mb-3">
+                            <UserAvatar user={invite.sender} />
+                            <div className="flex-1">
+                              <p className="font-semibold">{invite.sender?.username} challenged you!</p>
+                              <p className="text-xs text-gray-400">${invite.buyIn} buy-in • {invite.duration}h battle</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm font-bold text-green-400">Win ${(parseFloat(invite.buyIn) * 2 * 0.9).toFixed(0)}</p>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => handleAcceptInvite(invite.id)}
+                              className="flex-1 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition"
+                            >
+                              Accept Challenge
+                            </button>
+                            <button
+                              onClick={() => handleDeclineInvite(invite.id)}
+                              className="flex-1 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium transition"
+                            >
+                              Decline
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {pendingInvites.sent.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-400 mb-3">Sent Challenges</h3>
+                    <div className="space-y-3">
+                      {pendingInvites.sent.map(invite => (
+                        <div key={invite.id} className="bg-gray-900/60 border border-gray-700/50 rounded-xl p-4 flex items-center gap-3">
+                          <UserAvatar user={invite.receiver} />
+                          <div className="flex-1">
+                            <p className="font-medium">Challenged {invite.receiver?.username}</p>
+                            <p className="text-xs text-gray-400">${invite.buyIn} buy-in • {invite.duration}h • Waiting for response...</p>
+                          </div>
+                          <button
+                            onClick={() => handleCancelInvite(invite.id)}
+                            className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-xs font-medium transition"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {pendingInvites.received.length === 0 && pendingInvites.sent.length === 0 && (
+                  <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-8 text-center">
+                    <p className="text-gray-400 mb-4">No pending battle invites</p>
+                    <p className="text-sm text-gray-500">Challenge a friend to a battle or find a random opponent!</p>
+                  </div>
+                )}
+              </div>
+            )}
           </section>
         </div>
 
@@ -1060,12 +1330,14 @@ export default function SocialPage() {
           <ChatModal
             friend={selectedChat}
             messages={messages}
-            onClose={() => setSelectedChat(null)}
+            onClose={() => { setSelectedChat(null); setMessageError(false); }}
             onSend={handleSendMessage}
             messageInput={messageInput}
             setMessageInput={setMessageInput}
             sending={sendingMessage}
             session={session}
+            isFriend={friendIds.has(selectedChat?.id)}
+            messageError={messageError}
           />
         )}
 
@@ -1074,6 +1346,163 @@ export default function SocialPage() {
             battle={watchBattle}
             onClose={() => setWatchBattle(null)}
           />
+        )}
+
+        {showInviteModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowInviteModal(null)}>
+            <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold">Challenge to Battle</h2>
+                <button onClick={() => setShowInviteModal(null)} className="p-2 hover:bg-gray-800 rounded-lg transition">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="flex items-center gap-3 p-4 bg-gray-800/50 rounded-xl mb-6">
+                <UserAvatar user={showInviteModal} />
+                <div>
+                  <p className="font-semibold">{showInviteModal.username}</p>
+                  <p className="text-xs text-gray-400">{showInviteModal.battleWins || 0}W - {showInviteModal.battleLosses || 0}L</p>
+                </div>
+              </div>
+              
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Buy-In Amount ($)</label>
+                  <select 
+                    value={inviteBuyIn} 
+                    onChange={e => setInviteBuyIn(e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-purple-500"
+                  >
+                    <option value="50">$50</option>
+                    <option value="100">$100</option>
+                    <option value="250">$250</option>
+                    <option value="500">$500</option>
+                    <option value="1000">$1,000</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Battle Duration</label>
+                  <select 
+                    value={inviteDuration} 
+                    onChange={e => setInviteDuration(e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-purple-500"
+                  >
+                    <option value="1">1 Hour</option>
+                    <option value="3">3 Hours</option>
+                    <option value="6">6 Hours</option>
+                    <option value="12">12 Hours</option>
+                    <option value="24">24 Hours</option>
+                    <option value="48">48 Hours</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="bg-purple-900/30 border border-purple-500/30 rounded-xl p-4 mb-6">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-gray-400">Total Pot</span>
+                  <span className="font-bold">${parseFloat(inviteBuyIn) * 2}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Winner Takes (90%)</span>
+                  <span className="font-bold text-green-400">${(parseFloat(inviteBuyIn) * 2 * 0.9).toFixed(2)}</span>
+                </div>
+              </div>
+              
+              <button
+                onClick={handleSendInvite}
+                disabled={sendingInvite}
+                className="w-full py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 rounded-xl font-bold transition"
+              >
+                {sendingInvite ? 'Sending...' : 'Send Challenge'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {showMatchmaking && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowMatchmaking(false)}>
+            <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold">Find Random Opponent</h2>
+                <button onClick={() => setShowMatchmaking(false)} className="p-2 hover:bg-gray-800 rounded-lg transition">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="text-center mb-6">
+                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center mb-3">
+                  <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                  </svg>
+                </div>
+                <p className="text-gray-400 text-sm">Get matched with a random player at your skill level</p>
+              </div>
+              
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Buy-In Amount ($)</label>
+                  <select 
+                    value={matchmakingBuyIn} 
+                    onChange={e => setMatchmakingBuyIn(e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-purple-500"
+                  >
+                    <option value="50">$50</option>
+                    <option value="100">$100</option>
+                    <option value="250">$250</option>
+                    <option value="500">$500</option>
+                    <option value="1000">$1,000</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Battle Duration</label>
+                  <select 
+                    value={matchmakingDuration} 
+                    onChange={e => setMatchmakingDuration(e.target.value)}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-purple-500"
+                  >
+                    <option value="1">1 Hour</option>
+                    <option value="3">3 Hours</option>
+                    <option value="6">6 Hours</option>
+                    <option value="12">12 Hours</option>
+                    <option value="24">24 Hours</option>
+                    <option value="48">48 Hours</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="bg-purple-900/30 border border-purple-500/30 rounded-xl p-4 mb-6">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-gray-400">Total Pot</span>
+                  <span className="font-bold">${parseFloat(matchmakingBuyIn) * 2}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Winner Takes (90%)</span>
+                  <span className="font-bold text-green-400">${(parseFloat(matchmakingBuyIn) * 2 * 0.9).toFixed(2)}</span>
+                </div>
+              </div>
+              
+              <button
+                onClick={handleRandomMatchmaking}
+                disabled={searchingMatch}
+                className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-700 disabled:to-gray-700 rounded-xl font-bold transition flex items-center justify-center gap-2"
+              >
+                {searchingMatch ? (
+                  <>
+                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Searching...
+                  </>
+                ) : 'Find Opponent'}
+              </button>
+            </div>
+          </div>
         )}
       </div>
 

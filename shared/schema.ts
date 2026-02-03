@@ -90,6 +90,20 @@ export const battleInvites = pgTable("battle_invites", {
   statusIdx: index("battle_invites_status_idx").on(table.status),
 }));
 
+// Matchmaking queue for random opponent matching
+export const matchmakingQueue = pgTable("matchmaking_queue", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  buyIn: decimal("buy_in", { precision: 10, scale: 2 }).notNull(),
+  duration: integer("duration").notNull(),
+  status: varchar("status", { length: 20 }).default('waiting').notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  userIdIdx: index("matchmaking_queue_user_id_idx").on(table.userId),
+  statusIdx: index("matchmaking_queue_status_idx").on(table.status),
+}));
+
 // Messages for friend messaging system
 export const messages = pgTable("messages", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
