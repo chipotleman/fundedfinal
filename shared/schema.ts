@@ -90,6 +90,20 @@ export const battleInvites = pgTable("battle_invites", {
   statusIdx: index("battle_invites_status_idx").on(table.status),
 }));
 
+// Messages for friend messaging system
+export const messages = pgTable("messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  senderId: varchar("sender_id").notNull(),
+  receiverId: varchar("receiver_id").notNull(),
+  content: text("content").notNull(),
+  read: boolean("read").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  senderIdIdx: index("messages_sender_id_idx").on(table.senderId),
+  receiverIdIdx: index("messages_receiver_id_idx").on(table.receiverId),
+  createdAtIdx: index("messages_created_at_idx").on(table.createdAt),
+}));
+
 // User bets
 export const userBets = pgTable("user_bets", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
