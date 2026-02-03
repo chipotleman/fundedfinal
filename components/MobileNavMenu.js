@@ -90,6 +90,11 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
     router.push('/');
   };
 
+  const handleNavigation = (href) => {
+    onClose();
+    router.push(href);
+  };
+
   const minSwipeDistance = 50;
 
   const onTouchStart = (e) => {
@@ -217,20 +222,18 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                   My Battle
                 </Link>
               )}
-              <Link
-                href="/leaderboard"
-                onClick={onClose}
-                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
+              <button
+                onClick={() => handleNavigation('/leaderboard')}
+                className="block w-full text-left text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 Leaderboard
-              </Link>
-              <Link
-                href="/social"
-                onClick={onClose}
-                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
+              </button>
+              <button
+                onClick={() => handleNavigation('/social')}
+                className="block w-full text-left text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 Social
-              </Link>
+              </button>
 
               <div className="border-t border-gray-700 pt-4 mt-6">
                 <div className="mb-4">
@@ -265,13 +268,12 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
               >
                 How It Works
               </Link>
-              <Link
-                href="/leaderboard"
-                onClick={onClose}
-                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
+              <button
+                onClick={() => handleNavigation('/leaderboard')}
+                className="block w-full text-left text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 Leaderboard
-              </Link>
+              </button>
 
               <div className="mt-6 space-y-3">
                 <button

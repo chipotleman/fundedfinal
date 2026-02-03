@@ -27,6 +27,8 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
     router.prefetch('/');
     router.prefetch('/my-battle');
     router.prefetch('/leaderboard');
+    router.prefetch('/social');
+    router.prefetch('/battle');
   }, [router]);
   
   // Measure and expose navbar height as CSS variable for sticky elements below
