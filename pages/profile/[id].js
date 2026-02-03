@@ -15,6 +15,12 @@ export default function PublicProfile() {
   const [formData, setFormData] = useState({ username: '', bio: '', avatar: '' });
   const [usernameStatus, setUsernameStatus] = useState({ checking: false, available: null, error: null });
   const [saving, setSaving] = useState(false);
+  const [friendStatus, setFriendStatus] = useState(null);
+  const [friendActionLoading, setFriendActionLoading] = useState(false);
+  const [showBattleInvite, setShowBattleInvite] = useState(false);
+  const [battleInviteLoading, setBattleInviteLoading] = useState(false);
+  const [inviteBuyIn, setInviteBuyIn] = useState(100);
+  const [inviteDuration, setInviteDuration] = useState(24);
   
   const { betSlip } = useBetSlip();
   const { data: session } = useSession();
@@ -24,6 +30,9 @@ export default function PublicProfile() {
   useEffect(() => {
     if (id) {
       fetchProfile();
+      if (session?.user?.id && session.user.id !== id) {
+        checkFriendStatus();
+      }
     }
   }, [id, session]);
 
@@ -54,6 +63,102 @@ export default function PublicProfile() {
       console.error('Error fetching profile:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkFriendStatus = async () => {
+    try {
+      const res = await fetch('/api/friends', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        const isFriend = data.friends?.some(f => f.id === id);
+        if (isFriend) {
+          setFriendStatus('friends');
+          return;
+        }
+      }
+      const reqRes = await fetch('/api/friends/requests', { credentials: 'include' });
+      if (reqRes.ok) {
+        const reqData = await reqRes.json();
+        const hasPendingFromThem = reqData.requests?.some(r => r.sender?.id === id);
+        if (hasPendingFromThem) {
+          setFriendStatus('pending_received');
+          return;
+        }
+      }
+      const sentRes = await fetch('/api/friends/sent', { credentials: 'include' });
+      if (sentRes.ok) {
+        const sentData = await sentRes.json();
+        const hasSentToThem = sentData.requests?.some(r => r.receiver?.id === id);
+        if (hasSentToThem) {
+          setFriendStatus('pending_sent');
+          return;
+        }
+      }
+      setFriendStatus('none');
+    } catch (error) {
+      console.error('Error checking friend status:', error);
+      setFriendStatus('none');
+    }
+  };
+
+  const handleAddFriend = async () => {
+    setFriendActionLoading(true);
+    try {
+      const res = await fetch('/api/friends', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ friendId: id }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFriendStatus(data.status === 'accepted' ? 'friends' : 'pending_sent');
+      }
+    } catch (error) {
+      console.error('Error adding friend:', error);
+    } finally {
+      setFriendActionLoading(false);
+    }
+  };
+
+  const handleRemoveFriend = async () => {
+    setFriendActionLoading(true);
+    try {
+      await fetch(`/api/friends/${id}`, { method: 'DELETE', credentials: 'include' });
+      setFriendStatus('none');
+    } catch (error) {
+      console.error('Error removing friend:', error);
+    } finally {
+      setFriendActionLoading(false);
+    }
+  };
+
+  const handleSendBattleInvite = async () => {
+    setBattleInviteLoading(true);
+    try {
+      const res = await fetch('/api/battles/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          receiverId: id,
+          buyIn: inviteBuyIn,
+          duration: inviteDuration,
+        }),
+      });
+      if (res.ok) {
+        setShowBattleInvite(false);
+        alert('Battle invite sent!');
+      } else {
+        const data = await res.json();
+        alert(data.error || 'Failed to send invite');
+      }
+    } catch (error) {
+      console.error('Error sending battle invite:', error);
+      alert('Failed to send battle invite');
+    } finally {
+      setBattleInviteLoading(false);
     }
   };
 
@@ -293,6 +398,65 @@ export default function PublicProfile() {
                         Edit Profile
                       </button>
                     )}
+                    
+                    {!isOwnProfile && session?.user && (
+                      <div className="flex gap-3 mt-4">
+                        {friendStatus === 'none' && (
+                          <button
+                            onClick={handleAddFriend}
+                            disabled={friendActionLoading}
+                            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-all text-sm flex items-center gap-2"
+                          >
+                            {friendActionLoading ? 'Sending...' : (
+                              <>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                                </svg>
+                                Add Friend
+                              </>
+                            )}
+                          </button>
+                        )}
+                        
+                        {friendStatus === 'pending_sent' && (
+                          <button disabled className="bg-gray-600 text-gray-300 font-semibold py-2 px-4 rounded-lg text-sm">
+                            Request Sent
+                          </button>
+                        )}
+                        
+                        {friendStatus === 'pending_received' && (
+                          <button
+                            onClick={handleAddFriend}
+                            disabled={friendActionLoading}
+                            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-all text-sm"
+                          >
+                            {friendActionLoading ? 'Accepting...' : 'Accept Request'}
+                          </button>
+                        )}
+                        
+                        {friendStatus === 'friends' && (
+                          <>
+                            <button
+                              onClick={() => setShowBattleInvite(true)}
+                              className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-all text-sm flex items-center gap-2"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              Challenge to Battle
+                            </button>
+                            <button
+                              onClick={handleRemoveFriend}
+                              disabled={friendActionLoading}
+                              className="bg-red-600/20 hover:bg-red-600/40 text-red-400 font-semibold py-2 px-4 rounded-lg transition-all text-sm"
+                            >
+                              {friendActionLoading ? '...' : 'Remove Friend'}
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -366,6 +530,87 @@ export default function PublicProfile() {
           )}
         </div>
       </div>
+
+      {showBattleInvite && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+            onClick={() => setShowBattleInvite(false)}
+          />
+          <div className="relative bg-slate-900 rounded-2xl border border-slate-700 p-6 max-w-md w-full">
+            <h3 className="text-xl font-bold text-white mb-4">
+              Challenge {profile?.username || 'User'} to Battle
+            </h3>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Buy-in Amount</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {[50, 100, 250, 500].map(amount => (
+                    <button
+                      key={amount}
+                      onClick={() => setInviteBuyIn(amount)}
+                      className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
+                        inviteBuyIn === amount 
+                          ? 'bg-green-600 text-white' 
+                          : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
+                      }`}
+                    >
+                      ${amount}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Duration</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[{ value: 1, label: '1 Hour' }, { value: 24, label: '24 Hours' }, { value: 72, label: '3 Days' }].map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setInviteDuration(opt.value)}
+                      className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
+                        inviteDuration === opt.value 
+                          ? 'bg-green-600 text-white' 
+                          : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="bg-slate-800 rounded-lg p-4">
+                <div className="flex justify-between text-sm mb-2">
+                  <span className="text-gray-400">Prize Pool</span>
+                  <span className="text-white font-bold">${inviteBuyIn * 2}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-400">Winner Takes (90%)</span>
+                  <span className="text-green-400 font-bold">${(inviteBuyIn * 2 * 0.9).toFixed(0)}</span>
+                </div>
+              </div>
+              
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setShowBattleInvite(false)}
+                  className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSendBattleInvite}
+                  disabled={battleInviteLoading}
+                  className="flex-1 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-semibold rounded-lg transition-all"
+                >
+                  {battleInviteLoading ? 'Sending...' : 'Send Challenge'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -11,6 +11,7 @@ import ChallengePopup from '../components/ChallengePopup';
 import HowItWorksPopup from '../components/HowItWorksPopup';
 import DemoPopup from '../components/DemoPopup';
 import AuthPopup from '../components/AuthPopup';
+import OnboardingPopup from '../components/OnboardingPopup';
 import SessionSummaryPopup from '../components/SessionSummaryPopup';
 import MyChallengePopup from '../components/MyChallengePopup';
 import MobileNavMenu from '../components/MobileNavMenu';
@@ -86,6 +87,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
   const [showDemoPopup, setShowDemoPopup] = useState(false);
   const [showAuthPopup, setShowAuthPopup] = useState(false);
   const [authPopupMode, setAuthPopupMode] = useState('signin');
+  const [showOnboardingPopup, setShowOnboardingPopup] = useState(false);
   const [showSessionSummary, setShowSessionSummary] = useState(false);
   const [sessionSummaryData, setSessionSummaryData] = useState(null);
   const [showMyChallengePopup, setShowMyChallengePopup] = useState(false);
@@ -230,6 +232,10 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
       setShowMyChallengePopup(true);
     };
 
+    const handleOpenOnboardingPopup = () => {
+      setShowOnboardingPopup(true);
+    };
+
     if (typeof window !== 'undefined') {
       window.addEventListener('openChallengePopup', handleOpenChallengePopup);
       window.addEventListener('openHowItWorks', handleOpenHowItWorks);
@@ -238,6 +244,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
       window.addEventListener('openAuthPopup', handleOpenAuthPopup);
       window.addEventListener('openSessionSummary', handleOpenSessionSummary);
       window.addEventListener('openMyChallengePopup', handleOpenMyChallengePopup);
+      window.addEventListener('openOnboardingPopup', handleOpenOnboardingPopup);
     }
 
     return () => {
@@ -249,6 +256,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
         window.removeEventListener('openAuthPopup', handleOpenAuthPopup);
         window.removeEventListener('openSessionSummary', handleOpenSessionSummary);
         window.removeEventListener('openMyChallengePopup', handleOpenMyChallengePopup);
+        window.removeEventListener('openOnboardingPopup', handleOpenOnboardingPopup);
       }
     };
   }, [session]);
@@ -356,6 +364,11 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
                   isOpen={showAuthPopup} 
                   onClose={() => setShowAuthPopup(false)}
                   initialMode={authPopupMode}
+                />
+
+                <OnboardingPopup
+                  isOpen={showOnboardingPopup}
+                  onClose={() => setShowOnboardingPopup(false)}
                 />
 
                 <SessionSummaryPopup

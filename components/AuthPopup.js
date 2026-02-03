@@ -79,7 +79,9 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
         }
         
         onClose();
-        router.push('/');
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('openOnboardingPopup'));
+        }, 500);
       } else {
         await login(email.trim(), password, rememberMe);
         onClose();

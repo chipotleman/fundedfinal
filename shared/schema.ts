@@ -48,10 +48,46 @@ export const profiles = pgTable("profiles", {
   battleLosses: integer("battle_losses").default(0),
   totalWinnings: decimal("total_winnings", { precision: 12, scale: 2 }).default('0'),
   isFakeAccount: boolean("is_fake_account").default(false),
+  sportPreferences: jsonb("sport_preferences").default([]),
+  bettingStyle: varchar("betting_style", { length: 50 }),
+  experienceLevel: varchar("experience_level", { length: 50 }),
+  onboardingCompleted: boolean("onboarding_completed").default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
   usernameIdx: index("profiles_username_idx").on(table.username),
+}));
+
+// Friendships table for social features
+export const friendships = pgTable("friendships", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  friendId: varchar("friend_id").notNull(),
+  status: varchar("status", { length: 20 }).default('pending').notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+}, (table) => ({
+  userIdIdx: index("friendships_user_id_idx").on(table.userId),
+  friendIdIdx: index("friendships_friend_id_idx").on(table.friendId),
+  uniqueFriendship: index("friendships_unique_idx").on(table.userId, table.friendId),
+}));
+
+// Battle invites for 1v1 matchmaking
+export const battleInvites = pgTable("battle_invites", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  senderId: varchar("sender_id").notNull(),
+  receiverId: varchar("receiver_id").notNull(),
+  buyIn: decimal("buy_in", { precision: 10, scale: 2 }).notNull(),
+  duration: integer("duration").notNull(),
+  status: varchar("status", { length: 20 }).default('pending').notNull(),
+  matchupId: varchar("matchup_id"),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  respondedAt: timestamp("responded_at"),
+}, (table) => ({
+  senderIdIdx: index("battle_invites_sender_id_idx").on(table.senderId),
+  receiverIdIdx: index("battle_invites_receiver_id_idx").on(table.receiverId),
+  statusIdx: index("battle_invites_status_idx").on(table.status),
 }));
 
 // User bets
