@@ -249,325 +249,93 @@ const ChatModal = ({ friend, messages, onClose, onSend, messageInput, setMessage
 };
 
 const WatchBattleModal = ({ battle, onClose }) => {
-  const [activeTab, setActiveTab] = useState('stakes');
-  
   if (!battle) return null;
 
   const remaining = battle.remainingMs || 0;
   const hours = Math.floor(remaining / 3600000);
   const mins = Math.floor((remaining % 3600000) / 60000);
   const secs = Math.floor((remaining % 60000) / 1000);
-  const timeDisplay = hours > 0 ? `${hours}h ${mins}m` : `${mins}m ${secs}s`;
+  const timeDisplay = hours > 0 ? `${hours}h ${mins}m ${secs}s` : `${mins}m ${secs}s`;
 
-  const user1Wins = battle.user1?.battleWins || 0;
-  const user1Losses = battle.user1?.battleLosses || 0;
-  const user2Wins = battle.user2?.battleWins || 0;
-  const user2Losses = battle.user2?.battleLosses || 0;
-
-  const tabs = [
-    { id: 'stakes', label: 'All Stakes' },
-    { id: 'stats', label: 'Stats' },
-    { id: 'rules', label: 'Match Rules' },
-  ];
+  const user1Balance = parseFloat(battle.user1?.balance || 0);
+  const user2Balance = parseFloat(battle.user2?.balance || 0);
+  const user1Pnl = parseFloat(battle.user1?.pnl || 0);
+  const user2Pnl = parseFloat(battle.user2?.pnl || 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/95 backdrop-blur-sm overflow-y-auto">
-      <div className="w-full max-w-lg mx-4 my-4 sm:my-8">
-        <div 
-          className="rounded-t-3xl p-6 relative overflow-hidden"
-          style={{
-            background: 'linear-gradient(180deg, #8B5CF6 0%, #7C3AED 50%, #1F1B3D 100%)',
-          }}
-        >
-          <button 
-            onClick={onClose} 
-            className="absolute top-4 right-4 p-2 bg-black/30 hover:bg-black/50 rounded-full transition z-10"
-          >
-            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-
-          <div className="text-center mb-2">
-            <div className="flex items-center justify-center gap-2 mb-1">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={onClose}>
+      <div 
+        className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 p-4 border-b border-gray-800">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
               <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-              <span className="text-white/90 text-sm font-medium uppercase tracking-wider">1v1 Battle</span>
+              <span className="text-white font-semibold">LIVE BATTLE</span>
             </div>
-            <p className="text-white/70 text-xs">{timeDisplay} remaining</p>
-          </div>
-
-          <div className="flex items-center justify-center gap-4 mt-4">
-            <div className="flex flex-col items-center">
-              <div className="w-20 h-24 rounded-xl bg-gradient-to-br from-blue-500 to-blue-700 p-1 shadow-lg transform -rotate-3">
-                <div className="w-full h-full rounded-lg bg-black/20 flex items-center justify-center overflow-hidden">
-                  {battle.user1?.avatar ? (
-                    <img src={battle.user1.avatar} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-2xl font-bold text-white">{battle.user1?.username?.charAt(0)?.toUpperCase()}</span>
-                  )}
-                </div>
-              </div>
-              <p className="text-white font-semibold mt-2 text-sm">{battle.user1?.username || 'Player 1'}</p>
-              <p className="text-white/60 text-xs">Betting</p>
-            </div>
-
-            <div className="flex flex-col items-center px-4">
-              <span className="text-4xl font-black text-white" style={{ textShadow: '0 0 20px rgba(139, 92, 246, 0.8)' }}>VS</span>
-              <div className="mt-2 px-3 py-1 bg-black/30 rounded-full">
-                <span className="text-green-400 text-sm font-bold">${battle.potSize}</span>
-              </div>
-            </div>
-
-            <div className="flex flex-col items-center">
-              <div className="w-20 h-24 rounded-xl bg-gradient-to-br from-pink-500 to-pink-700 p-1 shadow-lg transform rotate-3">
-                <div className="w-full h-full rounded-lg bg-black/20 flex items-center justify-center overflow-hidden">
-                  {battle.user2?.avatar ? (
-                    <img src={battle.user2.avatar} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-2xl font-bold text-white">{battle.user2?.username?.charAt(0)?.toUpperCase()}</span>
-                  )}
-                </div>
-              </div>
-              <p className="text-white font-semibold mt-2 text-sm">{battle.user2?.username || 'Player 2'}</p>
-              <p className="text-white/60 text-xs">Betting</p>
-            </div>
+            <button onClick={onClose} className="text-gray-400 hover:text-white transition p-1">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
         </div>
 
-        <div className="bg-[#0D0D0D] rounded-b-3xl">
-          <div className="flex border-b border-gray-800">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-3 text-sm font-medium transition-all ${
-                  activeTab === tab.id 
-                    ? 'text-white border-b-2 border-white' 
-                    : 'text-gray-500 hover:text-gray-300'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+        <div className="p-5">
+          <div className="text-center mb-6">
+            <p className="text-3xl font-bold text-green-400">${battle.potSize}</p>
+            <p className="text-gray-400 text-sm mt-1">Prize Pool</p>
           </div>
 
-          <div className="p-4 max-h-[50vh] overflow-y-auto">
-            {activeTab === 'stakes' && (
-              <div className="space-y-3">
-                <div className="bg-gray-900/60 rounded-xl p-4 border border-gray-800">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center overflow-hidden">
-                      {battle.user1?.avatar ? (
-                        <img src={battle.user1.avatar} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-sm font-bold text-white">{battle.user1?.username?.charAt(0)?.toUpperCase()}</span>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-white">{battle.user1?.username}</p>
-                      <p className="text-xs text-gray-400">Current Balance</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-lg">${parseFloat(battle.user1?.balance || 0).toFixed(2)}</p>
-                      <p className={`text-sm ${parseFloat(battle.user1?.pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {parseFloat(battle.user1?.pnl || 0) >= 0 ? '+' : ''}{battle.user1?.pnlPercent || '0.0'}%
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gray-900/60 rounded-xl p-4 border border-gray-800">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-pink-500 to-pink-700 flex items-center justify-center overflow-hidden">
-                      {battle.user2?.avatar ? (
-                        <img src={battle.user2.avatar} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-sm font-bold text-white">{battle.user2?.username?.charAt(0)?.toUpperCase()}</span>
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-white">{battle.user2?.username}</p>
-                      <p className="text-xs text-gray-400">Current Balance</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-lg">${parseFloat(battle.user2?.balance || 0).toFixed(2)}</p>
-                      <p className={`text-sm ${parseFloat(battle.user2?.pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {parseFloat(battle.user2?.pnl || 0) >= 0 ? '+' : ''}{battle.user2?.pnlPercent || '0.0'}%
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <div className="flex justify-between text-xs text-gray-400 mb-1">
-                    <span>Progress</span>
-                    <span>{Math.round(battle.progressPercent || 0)}%</span>
-                  </div>
-                  <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all" 
-                      style={{ width: `${battle.progressPercent || 0}%` }}
-                    ></div>
-                  </div>
-                </div>
+          <div className="flex items-center gap-4 mb-6">
+            <div className="flex-1 text-center">
+              <div className="w-16 h-16 mx-auto rounded-full bg-gray-800 border-2 border-blue-500 flex items-center justify-center overflow-hidden mb-2">
+                {battle.user1?.avatar ? (
+                  <img src={battle.user1.avatar} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-xl font-bold text-blue-400">{battle.user1?.username?.charAt(0)?.toUpperCase()}</span>
+                )}
               </div>
-            )}
+              <p className="font-medium text-sm truncate">{battle.user1?.username || 'Player 1'}</p>
+              <p className="text-lg font-bold mt-1">${user1Balance.toFixed(2)}</p>
+              <p className={`text-sm ${user1Pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {user1Pnl >= 0 ? '+' : ''}{battle.user1?.pnlPercent || '0.0'}%
+              </p>
+            </div>
 
-            {activeTab === 'stats' && (
-              <div className="space-y-4">
-                <div className="bg-gray-900/60 rounded-xl p-4 border border-gray-800">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center overflow-hidden text-xs">
-                        {battle.user1?.avatar ? (
-                          <img src={battle.user1.avatar} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          battle.user1?.username?.charAt(0)?.toUpperCase()
-                        )}
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-xs text-gray-400 mb-1">Head-to-Head</p>
-                      <p className="text-xl font-bold">0 - 0</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-pink-500 to-pink-700 flex items-center justify-center overflow-hidden text-xs">
-                        {battle.user2?.avatar ? (
-                          <img src={battle.user2.avatar} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          battle.user2?.username?.charAt(0)?.toUpperCase()
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            <div className="flex flex-col items-center">
+              <span className="text-2xl font-black text-gray-500">VS</span>
+            </div>
 
-                <div className="bg-gray-900/60 rounded-xl p-4 border border-gray-800">
-                  <p className="text-xs text-gray-400 mb-3 flex items-center gap-1">
-                    Compare Stats
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-                    </svg>
-                  </p>
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center overflow-hidden text-[10px]">
-                        {battle.user1?.avatar ? (
-                          <img src={battle.user1.avatar} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          battle.user1?.username?.charAt(0)?.toUpperCase()
-                        )}
-                      </div>
-                    </div>
-                    <div></div>
-                    <div className="flex items-center justify-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-pink-500 to-pink-700 flex items-center justify-center overflow-hidden text-[10px]">
-                        {battle.user2?.avatar ? (
-                          <img src={battle.user2.avatar} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          battle.user2?.username?.charAt(0)?.toUpperCase()
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-4 text-center mt-2">
-                    <p className="text-lg font-bold">{user1Wins} - {user1Losses}</p>
-                    <p className="text-sm text-gray-400">Record</p>
-                    <p className="text-lg font-bold">{user2Wins} - {user2Losses}</p>
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold mb-3">Last 5 Matches</p>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-xs text-gray-400 mb-2">Most Recent</p>
-                      <div className="flex gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <div key={i} className={`w-8 h-8 rounded flex items-center justify-center text-xs font-bold ${
-                            i < (user1Wins % 5) ? 'bg-green-500/20 text-green-400' : 'bg-gray-800 text-gray-500'
-                          }`}>
-                            {i < (user1Wins % 5) ? 'W' : '-'}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-xs text-gray-400 mb-2">Least Recent</p>
-                      <div className="flex gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <div key={i} className={`w-8 h-8 rounded flex items-center justify-center text-xs font-bold ${
-                            i < (user2Wins % 5) ? 'bg-green-500/20 text-green-400' : 'bg-gray-800 text-gray-500'
-                          }`}>
-                            {i < (user2Wins % 5) ? 'W' : '-'}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+            <div className="flex-1 text-center">
+              <div className="w-16 h-16 mx-auto rounded-full bg-gray-800 border-2 border-pink-500 flex items-center justify-center overflow-hidden mb-2">
+                {battle.user2?.avatar ? (
+                  <img src={battle.user2.avatar} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-xl font-bold text-pink-400">{battle.user2?.username?.charAt(0)?.toUpperCase()}</span>
+                )}
               </div>
-            )}
+              <p className="font-medium text-sm truncate">{battle.user2?.username || 'Player 2'}</p>
+              <p className="text-lg font-bold mt-1">${user2Balance.toFixed(2)}</p>
+              <p className={`text-sm ${user2Pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {user2Pnl >= 0 ? '+' : ''}{battle.user2?.pnlPercent || '0.0'}%
+              </p>
+            </div>
+          </div>
 
-            {activeTab === 'rules' && (
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm font-semibold mb-3">Match Specific Rules</p>
-                  <div className="space-y-2">
-                    <div className="bg-gray-900/60 rounded-xl p-4 border border-gray-800 flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">Buy-In Amount</p>
-                        <p className="text-xs text-gray-400">Entry fee per player</p>
-                      </div>
-                      <p className="font-bold text-purple-400">${parseFloat(battle.potSize || 0) / 2}</p>
-                    </div>
-                    <div className="bg-gray-900/60 rounded-xl p-4 border border-gray-800 flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">Winner Takes</p>
-                        <p className="text-xs text-gray-400">90% of prize pool</p>
-                      </div>
-                      <p className="font-bold text-green-400">${(parseFloat(battle.potSize || 0) * 0.9).toFixed(2)}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold mb-3">Battle Rules</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-gray-900/60 rounded-xl p-3 border border-gray-800 text-center">
-                      <p className="text-xl font-bold">1v1</p>
-                      <p className="text-xs text-gray-400">Players</p>
-                    </div>
-                    <div className="bg-gray-900/60 rounded-xl p-3 border border-gray-800 text-center">
-                      <p className="text-xl font-bold">{battle.durationMinutes || Math.max(1, Math.round((battle.remainingMs || 0) / 60000 / Math.max(0.01, 1 - (battle.progressPercent || 0) / 100)))}m</p>
-                      <p className="text-xs text-gray-400">Duration</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gray-900/60 rounded-xl p-4 border border-gray-800">
-                  <p className="text-xs text-gray-400 mb-2">How It Works</p>
-                  <ul className="text-sm space-y-2 text-gray-300">
-                    <li className="flex items-start gap-2">
-                      <span className="text-purple-400">•</span>
-                      Both players start with equal balance
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-purple-400">•</span>
-                      Place bets on live sports events
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-purple-400">•</span>
-                      Highest balance when time expires wins
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-purple-400">•</span>
-                      Winner takes 90% of the prize pool
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            )}
+          <div className="bg-gray-800/50 rounded-xl p-4">
+            <div className="flex justify-between text-sm text-gray-400 mb-2">
+              <span>Time Remaining</span>
+              <span className="font-mono text-white">{timeDisplay}</span>
+            </div>
+            <div className="h-2 bg-gray-700 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all" 
+                style={{ width: `${battle.progressPercent || 0}%` }}
+              ></div>
+            </div>
+            <p className="text-center text-xs text-gray-500 mt-2">{Math.round(battle.progressPercent || 0)}% complete</p>
           </div>
         </div>
       </div>
