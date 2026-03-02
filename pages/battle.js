@@ -33,17 +33,16 @@ export default function BattlePage() {
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/');
-      return;
-    }
+    if (status === 'loading') return;
 
     if (session?.user?.id) {
       fetchProfileAndMatchup();
       fetchFriends();
       fetchPendingInvites();
+    } else {
+      setLoading(false);
     }
-  }, [session, status, router]);
+  }, [session, status]);
 
   const fetchProfileAndMatchup = async () => {
     try {
@@ -185,8 +184,13 @@ export default function BattlePage() {
     setStep('select');
   };
 
+  const isGuest = !session?.user?.id;
   const receivedInvites = pendingInvites.filter(inv => inv.receiverId === session?.user?.id);
   const sentInvites = pendingInvites.filter(inv => inv.senderId === session?.user?.id);
+
+  const handleGuestAction = () => {
+    window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signup' } }));
+  };
 
   if (status === 'loading' || loading) {
     return (
@@ -231,36 +235,26 @@ export default function BattlePage() {
     );
   }
 
-  if (!profile || !profile.challenge) {
-    return (
-      <div className="min-h-screen bg-black">
-        <TopNavbar />
-        <div className="pt-20 px-4 text-center">
-          <h1 className="text-2xl font-bold text-white mb-4">No Active Challenge</h1>
-          <p className="text-gray-400 mb-6">Purchase a challenge to start battling other players.</p>
-          <button
-            onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
-          >
-            View Challenges
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  const challengeData = typeof profile.challenge === 'string' 
-    ? JSON.parse(profile.challenge) 
-    : profile.challenge;
-  
-  const bankroll = parseFloat(profile.bankroll) || 0;
-  const challengeType = challengeData?.challengeType || 'Starter';
-
   return (
     <div className="min-h-screen bg-black">
       <TopNavbar />
       
       <div className="pt-20 px-4 max-w-2xl mx-auto pb-8">
+        {isGuest && (
+          <div className="mb-6 p-4 bg-blue-600/10 border border-blue-500/30 rounded-xl flex items-center gap-3">
+            <svg className="w-5 h-5 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p className="text-blue-300 text-sm">
+              You're previewing the battle setup.{' '}
+              <button onClick={handleGuestAction} className="text-blue-400 font-semibold underline hover:text-blue-300">
+                Sign up for free
+              </button>{' '}
+              to start competing.
+            </p>
+          </div>
+        )}
+
         <div className="text-center mb-6">
           <h1 className="text-3xl font-bold text-white mb-2">Start a Battle</h1>
           <p className="text-gray-400">Challenge a friend or find a random opponent</p>
@@ -429,7 +423,14 @@ export default function BattlePage() {
           </div>
         </div>
 
-        {battleMode === 'random' ? (
+        {isGuest ? (
+          <button
+            onClick={handleGuestAction}
+            className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-lg hover:from-blue-500 hover:to-purple-500 transition"
+          >
+            Sign Up to Start Battling
+          </button>
+        ) : battleMode === 'random' ? (
           <button
             onClick={startBattle}
             className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-lg hover:from-blue-500 hover:to-purple-500 transition"
@@ -447,7 +448,7 @@ export default function BattlePage() {
         )}
 
         <button onClick={() => router.push('/')} className="w-full mt-3 py-3 bg-gray-800 text-gray-400 rounded-xl hover:bg-gray-700 transition">
-          Cancel
+          Back to Dashboard
         </button>
 
         {sentInvites.length > 0 && (

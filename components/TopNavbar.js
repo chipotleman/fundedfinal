@@ -493,15 +493,9 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
             <div className="hidden lg:flex items-center space-x-8">
               {isLoggedIn ? (
                 <>
-                  <button onClick={() => {
-                      if (hasActiveChallenge) {
-                        router.push('/');
-                      } else {
-                        window.dispatchEvent(new CustomEvent('openChallengePopup'));
-                      }
-                    }} className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+                  <Link href="/dashboard" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                     The Lab
-                  </button>
+                  </Link>
                   {hasActiveChallenge && (
                     <Link href="/my-battle" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                       My Battle
@@ -626,22 +620,16 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                               <span className="font-medium">Bet History</span>
                             </Link>
 
-                            <button
-                              onClick={() => {
-                                setShowUserMenu(false);
-                                if (hasActiveChallenge) {
-                                  router.push('/');
-                                } else {
-                                  window.dispatchEvent(new CustomEvent('openChallengePopup'));
-                                }
-                              }}
+                            <Link
+                              href="/dashboard"
+                              onClick={() => setShowUserMenu(false)}
                               className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-[#1a1a1a] text-gray-300 hover:text-green-400 transition-colors"
                             >
                               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
                               </svg>
                               <span className="font-medium">The Lab</span>
-                            </button>
+                            </Link>
 
                             <button
                               onClick={() => {

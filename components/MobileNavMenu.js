@@ -193,19 +193,13 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 </div>
               )}
 
-              <button
-                onClick={() => {
-                  onClose();
-                  if (hasActiveChallenge) {
-                    window.location.href = '/dashboard';
-                  } else {
-                    window.dispatchEvent(new CustomEvent('openChallengePopup'));
-                  }
-                }}
-                className="block w-full text-left text-gray-300 font-light text-base uppercase tracking-wider py-3"
+              <Link
+                href="/dashboard"
+                onClick={onClose}
+                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 The Lab
-              </button>
+              </Link>
               <Link
                 href="/bet-history"
                 onClick={onClose}
