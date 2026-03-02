@@ -293,16 +293,6 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 </button>
                 <button
                   onClick={() => {
-                    onClose();
-                    window.dispatchEvent(new CustomEvent('openChallengePopup'));
-                  }}
-                  className="w-full text-center font-bold py-4 px-6 rounded-xl flex items-center justify-center space-x-3 shadow-lg"
-                  style={{ backgroundColor: '#2563eb', color: '#ffffff' }}
-                >
-                  <span className="text-base">GET FUNDED</span>
-                </button>
-                <button
-                  onClick={() => {
                     localStorage.removeItem('beta_access');
                     window.location.href = '/';
                   }}
