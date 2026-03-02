@@ -496,6 +496,9 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                   <Link href="/dashboard" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                     The Lab
                   </Link>
+                  <Link href="/battle" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+                    Battle
+                  </Link>
                   {hasActiveChallenge && (
                     <Link href="/my-battle" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                       My Battle
@@ -512,6 +515,9 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                 <>
                   <Link href="/how-it-works" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                     How It Works
+                  </Link>
+                  <Link href="/battle" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+                    Battle
                   </Link>
                   <Link href="/leaderboard" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                     Leaderboard
@@ -691,7 +697,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                 <button
                   onClick={toggleMobileMenu}
                   className="lg:hidden absolute no-hover-effect hamburger-btn"
-                  style={{ WebkitTapHighlightColor: 'transparent', right: '-4px', top: '50%', transform: 'translateY(calc(-50% + 2px))', WebkitUserSelect: 'none', userSelect: 'none' }}
+                  style={{ WebkitTapHighlightColor: 'transparent', right: '4px', top: '50%', transform: 'translateY(calc(-50% + 2px))', WebkitUserSelect: 'none', userSelect: 'none', zIndex: 60 }}
                 >
                   <svg className="w-7 h-7 text-gray-300 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                     <path d="M3 7h18M3 12h18M3 17h18" />

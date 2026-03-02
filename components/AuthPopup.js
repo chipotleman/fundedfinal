@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -12,16 +12,31 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [emailStatus, setEmailStatus] = useState(null);
+  const [emailChecking, setEmailChecking] = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
+  const [confirmTouched, setConfirmTouched] = useState(false);
+
+  const emailDebounceRef = useRef(null);
   const router = useRouter();
   const { login, signUp: signUpUser } = useAuth();
   const { isDarkMode } = useTheme();
 
-  const isPasswordStrong = password.length >= 6;
-  const passwordsMatch = isSignUp && confirmPassword.length > 0 && password === confirmPassword;
+  const hasMinLength = password.length >= 8;
+  const hasNumber = /\d/.test(password);
+  const hasUppercase = /[A-Z]/.test(password);
+  const isPasswordStrong = hasMinLength && hasNumber && hasUppercase;
+  const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword;
 
   useEffect(() => {
     if (isOpen) {
       setIsSignUp(initialMode === 'signup');
+      setEmailStatus(null);
+      setEmailTouched(false);
+      setPasswordTouched(false);
+      setConfirmTouched(false);
       const savedEmail = localStorage.getItem('remembered_email');
       if (savedEmail) {
         setEmail(savedEmail);
@@ -48,6 +63,43 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
     };
   }, [isOpen, initialMode]);
 
+  const checkEmail = useCallback(async (val) => {
+    if (!val || !val.trim()) {
+      setEmailStatus(null);
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(val.trim())) {
+      setEmailStatus('invalid');
+      return;
+    }
+    if (!isSignUp) {
+      setEmailStatus('valid_format');
+      return;
+    }
+    setEmailChecking(true);
+    try {
+      const res = await fetch(`/api/auth/check-email?email=${encodeURIComponent(val.trim())}`);
+      if (res.ok) {
+        const data = await res.json();
+        setEmailStatus(data.available ? 'available' : 'taken');
+      }
+    } catch {
+      setEmailStatus('valid_format');
+    } finally {
+      setEmailChecking(false);
+    }
+  }, [isSignUp]);
+
+  const handleEmailChange = (e) => {
+    const val = e.target.value;
+    setEmail(val);
+    setEmailTouched(true);
+    setEmailStatus(null);
+    if (emailDebounceRef.current) clearTimeout(emailDebounceRef.current);
+    emailDebounceRef.current = setTimeout(() => checkEmail(val), 500);
+  };
+
   const handleAuth = async (e) => {
     e.preventDefault();
 
@@ -56,7 +108,12 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
       return;
     }
 
-    if (password.length < 6) {
+    if (isSignUp && !isPasswordStrong) {
+      setError('Password must be at least 8 characters with a number and uppercase letter');
+      return;
+    }
+
+    if (!isSignUp && password.length < 6) {
       setError('Password must be at least 6 characters long');
       return;
     }
@@ -110,13 +167,30 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
     setError(`${provider} sign-in will be available soon!`);
   };
 
-  // Use CSS to hide instead of unmounting, so logo stays in DOM
   const hiddenStyle = !isOpen ? {
     visibility: 'hidden',
     pointerEvents: 'none',
     position: 'fixed',
     opacity: 0
   } : {};
+
+  const CheckIcon = ({ met }) => (
+    <svg className={`w-3.5 h-3.5 flex-shrink-0 ${met ? 'text-green-400' : 'text-gray-600'}`} fill="currentColor" viewBox="0 0 20 20">
+      {met
+        ? <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+        : <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5" fill="none" />
+      }
+    </svg>
+  );
+
+  const emailBorderColor = () => {
+    if (!emailTouched || !email) return 'border-slate-700/50';
+    if (emailChecking) return 'border-blue-500/50';
+    if (emailStatus === 'invalid') return 'border-red-500/50';
+    if (emailStatus === 'taken') return 'border-red-500/50';
+    if (emailStatus === 'available' || emailStatus === 'valid_format') return 'border-green-500/50';
+    return 'border-slate-700/50';
+  };
 
   return (
     <div 
@@ -182,26 +256,54 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
             </div>
           </div>
 
-          <form onSubmit={handleAuth} className="space-y-4">
+          <form onSubmit={handleAuth} className="space-y-3">
             <div>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all duration-200"
-                placeholder="Email address"
-                required
-              />
+              <div className="relative">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={handleEmailChange}
+                  onBlur={() => { setEmailTouched(true); checkEmail(email); }}
+                  className={`w-full bg-slate-800/50 border rounded-xl px-4 py-3 pr-10 text-white placeholder-gray-500 focus:outline-none transition-all duration-200 ${emailBorderColor()}`}
+                  placeholder="Email address"
+                  required
+                />
+                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                  {emailChecking && (
+                    <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                  )}
+                  {!emailChecking && emailTouched && email && emailStatus === 'available' && (
+                    <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                  {!emailChecking && emailTouched && email && (emailStatus === 'taken' || emailStatus === 'invalid') && (
+                    <svg className="w-4 h-4 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+              {isSignUp && emailTouched && email && (
+                <p className={`text-xs mt-1.5 ${
+                  emailStatus === 'taken' ? 'text-red-400' :
+                  emailStatus === 'invalid' ? 'text-red-400' :
+                  emailStatus === 'available' ? 'text-green-400' : 'text-gray-500'
+                }`}>
+                  {emailStatus === 'taken' && 'Email already registered — sign in instead'}
+                  {emailStatus === 'invalid' && 'Please enter a valid email address'}
+                  {emailStatus === 'available' && 'Email is available'}
+                </p>
+              )}
             </div>
 
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { setPassword(e.target.value); setPasswordTouched(true); }}
                 className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 pr-12 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all duration-200"
                 placeholder="Password"
-                minLength="6"
                 required
               />
               <button
@@ -221,10 +323,22 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                 )}
               </button>
             </div>
-            {isSignUp && password.length > 0 && !isPasswordStrong && (
-              <p className="text-xs text-gray-400">
-                Minimum 6 characters required
-              </p>
+
+            {isSignUp && passwordTouched && (
+              <div className="space-y-1.5 px-1">
+                <div className="flex items-center gap-2">
+                  <CheckIcon met={hasMinLength} />
+                  <span className={`text-xs ${hasMinLength ? 'text-green-400' : 'text-gray-500'}`}>At least 8 characters</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckIcon met={hasNumber} />
+                  <span className={`text-xs ${hasNumber ? 'text-green-400' : 'text-gray-500'}`}>Contains a number</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckIcon met={hasUppercase} />
+                  <span className={`text-xs ${hasUppercase ? 'text-green-400' : 'text-gray-500'}`}>Contains an uppercase letter</span>
+                </div>
+              </div>
             )}
 
             {isSignUp && (
@@ -232,16 +346,22 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                 <input
                   type="password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all duration-200"
+                  onChange={(e) => { setConfirmPassword(e.target.value); setConfirmTouched(true); }}
+                  className={`w-full bg-slate-800/50 border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none transition-all duration-200 ${
+                    confirmTouched && confirmPassword
+                      ? passwordsMatch ? 'border-green-500/50' : 'border-red-500/40'
+                      : 'border-slate-700/50 focus:border-blue-500'
+                  }`}
                   placeholder="Confirm password"
-                  minLength="6"
                   required
                 />
-                {confirmPassword.length > 0 && (
-                  <p className={`text-xs mt-2 ${passwordsMatch ? 'text-green-400' : 'text-gray-400'}`}>
-                    {passwordsMatch ? '✓ Passwords match' : 'Passwords must match'}
-                  </p>
+                {confirmTouched && confirmPassword.length > 0 && (
+                  <div className="flex items-center gap-2 mt-1.5 px-1">
+                    <CheckIcon met={passwordsMatch} />
+                    <span className={`text-xs ${passwordsMatch ? 'text-green-400' : 'text-gray-500'}`}>
+                      {passwordsMatch ? 'Passwords match' : 'Passwords must match'}
+                    </span>
+                  </div>
                 )}
               </div>
             )}
@@ -288,6 +408,10 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                 setError('');
                 setPassword('');
                 setConfirmPassword('');
+                setEmailStatus(null);
+                setEmailTouched(false);
+                setPasswordTouched(false);
+                setConfirmTouched(false);
               }}
               className="text-blue-500 hover:text-blue-400 font-medium transition-colors text-sm"
             >

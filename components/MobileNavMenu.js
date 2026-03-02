@@ -201,6 +201,13 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 The Lab
               </Link>
               <Link
+                href="/battle"
+                onClick={onClose}
+                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
+              >
+                Battle
+              </Link>
+              <Link
                 href="/bet-history"
                 onClick={onClose}
                 className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
@@ -267,8 +274,14 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 How It Works
               </Link>
               <Link
+                href="/battle"
+                onClick={onClose}
+                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
+              >
+                Battle
+              </Link>
+              <Link
                 href="/leaderboard"
-                prefetch={true}
                 onClick={onClose}
                 className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
