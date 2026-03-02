@@ -1,0 +1,142 @@
+You are my senior product engineer + UI designer. Redesign and rebuild our website “Battle” page to feel like a billion-dollar consumer game UI inspired by Trivia Crack (simple, playful, ultra-clean), while still being premium and modern (not childish). This is a website, so avoid app-like tab bars. Everything should feel obvious and minimal.
+
+CRITICAL:
+- No tabs. No “Settings” vibes. No clutter.
+- One primary Battle screen with large actions + small secondary panels/cards.
+- Implement a fully working end-to-end 1v1 system (friends, invites, random matchmaking, private codes, match lobby, live match tracking, history).
+- Do NOT only reskin. The current page looks bad and barely functions. Fix flows and reliability.
+
+UI DIRECTION (Trivia Crack-inspired):
+- Single “Battle Home” screen:
+  1) Top area: user identity strip (avatar, username, balance, status)
+  2) Center: 3 big primary action buttons (large tiles):
+     - QUICK MATCH (random opponent)
+     - PLAY A FRIEND
+     - PRIVATE MATCH (Create code / Join code)
+  3) Below actions: “Live Activity” strip (searching, match found, invite pending, etc.)
+  4) Right side (desktop) / collapsible drawer (mobile):
+     - Friends Online (small list with invite buttons)
+     - Invites (incoming/outgoing summarized as small chips)
+  5) Bottom: Recent Matches (compact list + “View all” modal)
+
+Interaction rules:
+- Clicking PLAY A FRIEND opens a clean modal/sheet (not a new page) with:
+  - search friends
+  - invite button
+  - add friend by username search (inline)
+- Clicking PRIVATE MATCH opens a modal with Create Code + Join Code.
+- Clicking QUICK MATCH instantly queues you and shows a large “Searching…” card (with cancel).
+- Incoming invites show as a small toast + a prominent card until handled.
+
+SCREENS (keep minimal):
+A) Battle Home (single page, most actions via modals)
+B) Match Lobby (overlay or dedicated page): both players shown, rules/stake, ready toggle, countdown
+C) Active Match (page): real-time balances, match clock, connection state, forfeit rules
+D) Match Result (overlay): winner, balances, rematch button
+E) “All Matches” modal/page (optional) for history
+
+FUNCTIONAL REQUIREMENTS (must be fully working):
+1) Friends System
+- Search users by username
+- Send friend request
+- Accept/decline friend request
+- Remove friend
+- Friends list shows status: Online / In Match / Offline
+- Invite a friend to a 1v1 from the friend row in one click
+
+2) Invites
+- Incoming invites: Accept / Decline
+- Outgoing invites: Pending / Expired / Accepted
+- Invites expire after configurable minutes (default 5)
+- On accept → both users land in Match Lobby
+
+3) Matchmaking
+- Quick Match queue with cancel
+- Fair matching rule (start simple: similar “rank”/balance band)
+- Timeouts handled cleanly (show message + return to home state)
+- Private match: create code and join code
+
+4) Match Flow
+- Match lobby with:
+  - both player cards
+  - match type (Quick/Friend/Private)
+  - clear rules: “Higher ending balance wins”
+  - ready system (both ready) OR auto-start countdown
+- Active match:
+  - Server is source of truth for balances
+  - Real-time balance updates (WebSockets/SSE preferred; otherwise polling every 2–5s)
+  - Disconnect/reconnect states; forfeit after timeout
+- Match end:
+  - Determine winner by higher end balance
+  - Tie rule: define and implement (suggest: 60s overtime; if still tied → draw)
+  - Persist match result + history
+
+5) Match History
+- Show recent matches on Battle Home
+- Full history in modal/page
+- Each item: opponent, date, type, result, start balance, end balance
+
+NON-FUNCTIONAL REQUIREMENTS:
+- The UI must look “consumer game premium”: beautiful spacing, typography, subtle motion, hover states, skeleton loaders, toasts, perfect empty states.
+- Responsive for mobile/desktop
+- Accessible (focus states, keyboard nav, aria labels)
+- Robust error handling: every failure state has a user-friendly message and recovery path
+
+TECHNICAL REQUIREMENTS:
+- First, scan the repo and summarize:
+  1) current stack (Next/React/etc), styling approach, API patterns
+  2) existing battle code paths (frontend + backend)
+  3) current DB and models related to users/balances/battles
+- Then implement in safe steps with small commits.
+
+API/ENDPOINTS (adapt to existing patterns; don’t invent a new architecture if one exists):
+- Friends:
+  - POST /friends/request
+  - POST /friends/accept
+  - POST /friends/decline
+  - DELETE /friends/:id
+  - GET /friends
+  - GET /users/search?q=
+- Invites:
+  - POST /invites/create
+  - POST /invites/accept
+  - POST /invites/decline
+  - GET /invites
+- Matchmaking:
+  - POST /matchmaking/queue
+  - POST /matchmaking/cancel
+- Matches:
+  - POST /matches/create (friend/private)
+  - GET /matches/:id
+  - POST /matches/:id/ready
+  - POST /matches/:id/heartbeat
+  - POST /matches/:id/end
+  - GET /matches/history
+
+DATA MODEL (create/update as needed, using existing DB tooling):
+- FriendRequest: id, fromUserId, toUserId, status, createdAt
+- Friendship: id, userId, friendUserId, createdAt
+- Invite: id, fromUserId, toUserId, status, createdAt, expiresAt, matchType
+- Match: id, playerAId, playerBId, matchType, status, createdAt, startedAt, endedAt
+- MatchSnapshot (optional): matchId, userId, balance, timestamp
+- MatchResult: matchId, winnerUserId, loserUserId, endBalanceA, endBalanceB, tieFlag
+
+BUSINESS LOGIC:
+- Balance is always server-authoritative.
+- Record starting balances at match start.
+- Capture snapshots during match (or on interval).
+- Determine winner at end based on ending balances.
+
+DELIVERABLES:
+1) Fully working Battle experience end-to-end
+2) Trivia Crack-inspired simple, premium UI on web (no tabs)
+3) README update explaining user flows + endpoints
+4) Basic tests for core flows (friend request, invite accept, quick match create, match end)
+5) A short “What changed” summary
+
+START:
+- Step 1: scan repo, summarize architecture and existing battle logic.
+- Step 2: propose the Battle Home layout (text wireframe + component list).
+- Step 3: implement backend models/endpoints.
+- Step 4: implement frontend screens/modals and state flows.
+- Step 5: test edge cases: declines, timeouts, disconnects, ties, expired invites.

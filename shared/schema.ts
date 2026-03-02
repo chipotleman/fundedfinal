@@ -589,6 +589,10 @@ export const matchups = pgTable("matchups", {
   winnerId: varchar("winner_id"),
   winnerType: varchar("winner_type", { length: 20 }), // user1, user2, tie
   
+  // Private match code
+  privateCode: varchar("private_code", { length: 10 }),
+  matchType: varchar("match_type", { length: 20 }).default('random'), // random, friend, private
+  
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
@@ -596,6 +600,7 @@ export const matchups = pgTable("matchups", {
   user2IdIdx: index("matchups_user2_id_idx").on(table.user2Id),
   statusIdx: index("matchups_status_idx").on(table.status),
   challengeTypeIdx: index("matchups_challenge_type_idx").on(table.challengeType),
+  privateCodeIdx: index("matchups_private_code_idx").on(table.privateCode),
 }));
 
 // Matchup Queue - Users waiting to be matched

@@ -1,475 +1,505 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import TopNavbar from '../components/TopNavbar';
-import FindingMatchup from '../components/FindingMatchup';
-
-const DURATION_OPTIONS = [
-  { value: '30_min', label: '30 Min Flash', description: 'Quick battle', icon: '⚡', hours: 0.5 },
-  { value: '1_hour', label: '1 Hour', description: 'Fast paced', icon: '🔥', hours: 1 },
-  { value: '1_day', label: '1 Day', description: 'Standard battle', icon: '📅', recommended: true, hours: 24 },
-  { value: '3_days', label: '3 Days', description: 'Extended battle', icon: '📆', hours: 72 },
-  { value: '1_week', label: '1 Week', description: 'Tournament style', icon: '🏆', hours: 168 },
-];
-
-const BUY_IN_OPTIONS = [5, 10, 25, 50, 100];
+import QuickMatchModal from '../components/battle/QuickMatchModal';
+import PlayFriendModal from '../components/battle/PlayFriendModal';
+import PrivateMatchModal from '../components/battle/PrivateMatchModal';
+import InviteToast from '../components/battle/InviteToast';
+import MatchHistoryModal from '../components/battle/MatchHistoryModal';
+import MatchLobby from '../components/battle/MatchLobby';
+import MatchResult from '../components/battle/MatchResult';
 
 export default function BattlePage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  
-  const [step, setStep] = useState('select');
-  const [battleMode, setBattleMode] = useState('random');
-  const [selectedDuration, setSelectedDuration] = useState('1_day');
-  const [buyIn, setBuyIn] = useState(10);
+
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeMatchup, setActiveMatchup] = useState(null);
   const [friends, setFriends] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [selectedFriend, setSelectedFriend] = useState(null);
-  const [pendingInvites, setPendingInvites] = useState([]);
-  const [sending, setSending] = useState(false);
+  const [invites, setInvites] = useState({ received: [], sent: [] });
+  const [recentMatches, setRecentMatches] = useState([]);
+  const [activeMatchup, setActiveMatchup] = useState(null);
 
-  useEffect(() => {
-    if (status === 'loading') return;
+  const [showQuickMatch, setShowQuickMatch] = useState(false);
+  const [showPlayFriend, setShowPlayFriend] = useState(false);
+  const [showPrivateMatch, setShowPrivateMatch] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [showLobby, setShowLobby] = useState(null);
+  const [showResult, setShowResult] = useState(null);
 
-    if (session?.user?.id) {
-      fetchProfileAndMatchup();
-      fetchFriends();
-      fetchPendingInvites();
-    } else {
+  const isGuest = status !== 'authenticated';
+  const userId = session?.user?.id;
+
+  const fetchData = useCallback(async () => {
+    if (!userId) {
       setLoading(false);
-    }
-  }, [session, status]);
-
-  const fetchProfileAndMatchup = async () => {
-    try {
-      const [profileRes, matchupRes] = await Promise.all([
-        fetch(`/api/profiles/${session.user.id}`),
-        fetch('/api/matchups/current')
-      ]);
-
-      if (profileRes.ok) {
-        const profileData = await profileRes.json();
-        setProfile(profileData);
-      }
-
-      if (matchupRes.ok) {
-        const matchupData = await matchupRes.json();
-        if (matchupData.matchup) {
-          setActiveMatchup(matchupData.matchup);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchFriends = async () => {
-    try {
-      const res = await fetch('/api/friends', { credentials: 'include' });
-      if (res.ok) {
-        const data = await res.json();
-        setFriends(data.friends || []);
-      }
-    } catch (error) {
-      console.error('Error fetching friends:', error);
-    }
-  };
-
-  const fetchPendingInvites = async () => {
-    try {
-      const res = await fetch('/api/battles/invite', { credentials: 'include' });
-      if (res.ok) {
-        const data = await res.json();
-        setPendingInvites(data.invites || []);
-      }
-    } catch (error) {
-      console.error('Error fetching invites:', error);
-    }
-  };
-
-  const handleSearch = async (query) => {
-    setSearchQuery(query);
-    if (query.length < 2) {
-      setSearchResults([]);
       return;
     }
     try {
-      const res = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`, { credentials: 'include' });
-      if (res.ok) {
-        const data = await res.json();
-        setSearchResults(data.users || []);
-      }
-    } catch (error) {
-      console.error('Error searching users:', error);
-    }
-  };
+      const [profileRes, friendsRes, invitesRes, historyRes, matchupRes] = await Promise.allSettled([
+        fetch(`/api/profiles/${userId}`),
+        fetch('/api/friends'),
+        fetch('/api/battles/invite'),
+        fetch('/api/battles/history?limit=5'),
+        fetch('/api/matchups/current'),
+      ]);
 
-  const handleSendInvite = async () => {
-    if (!selectedFriend) return;
-    setSending(true);
-    const durationHours = DURATION_OPTIONS.find(d => d.value === selectedDuration)?.hours || 24;
-    try {
-      const res = await fetch('/api/battles/invite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          receiverId: selectedFriend.id,
-          buyIn,
-          duration: durationHours,
-        }),
-      });
-      if (res.ok) {
-        setSelectedFriend(null);
-        fetchPendingInvites();
-        alert('Battle invite sent!');
-      } else {
-        const data = await res.json();
-        alert(data.error || 'Failed to send invite');
+      if (profileRes.status === 'fulfilled' && profileRes.value.ok) {
+        const data = await profileRes.value.json();
+        setProfile(data.profile || data);
       }
-    } catch (error) {
-      console.error('Error sending invite:', error);
+      if (friendsRes.status === 'fulfilled' && friendsRes.value.ok) {
+        const data = await friendsRes.value.json();
+        setFriends(data.friends || []);
+      }
+      if (invitesRes.status === 'fulfilled' && invitesRes.value.ok) {
+        const data = await invitesRes.value.json();
+        setInvites(data);
+      }
+      if (historyRes.status === 'fulfilled' && historyRes.value.ok) {
+        const data = await historyRes.value.json();
+        setRecentMatches(data.matches || []);
+      }
+      if (matchupRes.status === 'fulfilled' && matchupRes.value.ok) {
+        const data = await matchupRes.value.json();
+        if (data.matchup && (data.matchup.status === 'active' || data.matchup.status === 'matched')) {
+          setActiveMatchup(data.matchup);
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching battle data:', err);
     } finally {
-      setSending(false);
+      setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  useEffect(() => {
+    if (!userId) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/battles/invite');
+        if (res.ok) {
+          const data = await res.json();
+          setInvites(data);
+        }
+      } catch {}
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [userId]);
 
   const handleAcceptInvite = async (inviteId) => {
     try {
+      const invite = invites.received?.find(i => i.id === inviteId);
       const res = await fetch(`/api/battles/invite/${inviteId}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ action: 'accept' }),
       });
       if (res.ok) {
-        fetchPendingInvites();
-        router.push('/');
+        const data = await res.json();
+        if (data.matchupId) {
+          const matchRes = await fetch(`/api/matchups/${data.matchupId}`);
+          if (matchRes.ok) {
+            const matchData = await matchRes.json();
+            setShowLobby(matchData.matchup || matchData);
+          } else {
+            router.push('/');
+          }
+        }
+        fetchData();
       }
-    } catch (error) {
-      console.error('Error accepting invite:', error);
-    }
+    } catch {}
   };
 
   const handleDeclineInvite = async (inviteId) => {
     try {
       await fetch(`/api/battles/invite/${inviteId}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ action: 'decline' }),
       });
-      fetchPendingInvites();
-    } catch (error) {
-      console.error('Error declining invite:', error);
+      fetchData();
+    } catch {}
+  };
+
+  const handleCancelInvite = async (inviteId) => {
+    try {
+      await fetch(`/api/battles/invite/${inviteId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'cancel' }),
+      });
+      fetchData();
+    } catch {}
+  };
+
+  const requireAuth = (callback) => {
+    if (isGuest) {
+      window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signup' } }));
+      return;
     }
+    callback();
   };
 
-  const startBattle = () => {
-    if (!profile) return;
-    setStep('finding');
+  const formatDate = (date) => {
+    if (!date) return '';
+    const d = new Date(date);
+    const now = new Date();
+    const diff = now - d;
+    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+    return `${Math.floor(diff / 86400000)}d ago`;
   };
 
-  const handleMatchFound = (matchup, opponent) => {
-    router.push('/');
-  };
-
-  const handleCancel = () => {
-    setStep('select');
-  };
-
-  const isGuest = !session?.user?.id;
-  const receivedInvites = pendingInvites.filter(inv => inv.receiverId === session?.user?.id);
-  const sentInvites = pendingInvites.filter(inv => inv.senderId === session?.user?.id);
-
-  const handleGuestAction = () => {
-    window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signup' } }));
+  const getResultColor = (result) => {
+    switch (result) {
+      case 'win': return 'text-green-400';
+      case 'loss': return 'text-red-400';
+      case 'tie': return 'text-yellow-400';
+      default: return 'text-blue-400';
+    }
   };
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-white">Loading...</div>
-      </div>
-    );
-  }
-
-  if (activeMatchup) {
-    return (
       <div className="min-h-screen bg-black">
         <TopNavbar />
-        <div className="pt-20 px-4 text-center max-w-md mx-auto">
-          <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-xl p-6 border border-blue-500/30 mb-6">
-            <h1 className="text-2xl font-bold text-white mb-2">Battle In Progress</h1>
-            <p className="text-gray-400 mb-4">You already have an active battle</p>
-            <div className="text-sm text-gray-500 mb-4">
-              Ends: {new Date(activeMatchup.endsAt).toLocaleString()}
-            </div>
+        <div className="pt-20 flex items-center justify-center" style={{ minHeight: 'calc(100vh - 5rem)' }}>
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-400 text-sm">Loading Battle Arena...</p>
           </div>
-          <button
-            onClick={() => router.push('/')}
-            className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-500"
-          >
-            Go to Dashboard
-          </button>
         </div>
       </div>
-    );
-  }
-
-  if (step === 'finding' && profile) {
-    return (
-      <FindingMatchup
-        userId={session.user.id}
-        profile={profile}
-        durationType={selectedDuration}
-        onMatchFound={handleMatchFound}
-        onCancel={handleCancel}
-      />
     );
   }
 
   return (
     <div className="min-h-screen bg-black">
       <TopNavbar />
-      
-      <div className="pt-20 px-4 max-w-2xl mx-auto pb-8">
-        {isGuest && (
-          <div className="mb-6 p-4 bg-blue-600/10 border border-blue-500/30 rounded-xl flex items-center gap-3">
-            <svg className="w-5 h-5 text-blue-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p className="text-blue-300 text-sm">
-              You're previewing the battle setup.{' '}
-              <button onClick={handleGuestAction} className="text-blue-400 font-semibold underline hover:text-blue-300">
-                Sign up for free
-              </button>{' '}
-              to start competing.
-            </p>
-          </div>
-        )}
 
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">Start a Battle</h1>
-          <p className="text-gray-400">Challenge a friend or find a random opponent</p>
-        </div>
+      <div className="pt-20 pb-8 max-w-6xl mx-auto px-4">
+        <div className="flex flex-col lg:flex-row gap-6">
 
-        {receivedInvites.length > 0 && (
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
-              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-              Incoming Battle Invites
-            </h2>
-            <div className="space-y-2">
-              {receivedInvites.map((invite) => (
-                <div key={invite.id} className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center text-lg overflow-hidden">
-                      {invite.sender?.avatar ? (
-                        <img src={invite.sender.avatar} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        invite.sender?.username?.charAt(0)?.toUpperCase() || '?'
-                      )}
-                    </div>
-                    <div>
-                      <p className="font-medium text-white">{invite.sender?.username || 'Unknown'}</p>
-                      <p className="text-sm text-gray-400">${invite.buyIn} • {invite.duration}h</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleAcceptInvite(invite.id)} className="px-3 py-1.5 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium">Accept</button>
-                    <button onClick={() => handleDeclineInvite(invite.id)} className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm font-medium">Decline</button>
-                  </div>
+          <div className="flex-1">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center overflow-hidden ring-2 ring-blue-500/20">
+                {profile?.avatar ? (
+                  <img src={profile.avatar} className="w-full h-full object-cover" alt="" />
+                ) : (
+                  <span className="text-xl font-bold text-white">{profile?.username?.[0]?.toUpperCase() || '?'}</span>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-xl font-bold text-white truncate">{profile?.username || (isGuest ? 'Guest' : 'Player')}</h1>
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="text-green-400 font-medium">{profile?.battleWins || 0}W</span>
+                  <span className="text-gray-600">-</span>
+                  <span className="text-red-400 font-medium">{profile?.battleLosses || 0}L</span>
+                  {profile?.bankroll && (
+                    <>
+                      <span className="text-gray-700">|</span>
+                      <span className="text-gray-400">${parseFloat(profile.bankroll).toFixed(2)}</span>
+                    </>
+                  )}
                 </div>
-              ))}
+              </div>
+              <button
+                onClick={() => setShowSidebar(!showSidebar)}
+                className="lg:hidden w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 hover:text-white transition-colors relative"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                {(invites.received?.length > 0) && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white">
+                    {invites.received.length}
+                  </span>
+                )}
+              </button>
             </div>
-          </div>
-        )}
 
-        <div className="flex gap-2 mb-6">
-          <button
-            onClick={() => setBattleMode('random')}
-            className={`flex-1 py-3 rounded-xl font-medium transition ${battleMode === 'random' ? 'bg-purple-600' : 'bg-gray-800 hover:bg-gray-700'}`}
-          >
-            🎲 Random Match
-          </button>
-          <button
-            onClick={() => setBattleMode('friend')}
-            className={`flex-1 py-3 rounded-xl font-medium transition ${battleMode === 'friend' ? 'bg-purple-600' : 'bg-gray-800 hover:bg-gray-700'}`}
-          >
-            👥 Challenge Friend
-          </button>
-        </div>
+            {activeMatchup && (
+              <div className="mb-6 bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-500/30 rounded-2xl p-5">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-green-400 text-sm font-bold">Active Battle</span>
+                  </div>
+                  <button
+                    onClick={() => router.push('/')}
+                    className="text-blue-400 text-sm hover:text-blue-300 transition-colors font-medium"
+                  >
+                    Go to Dashboard →
+                  </button>
+                </div>
+                <p className="text-gray-400 text-sm">You have an active battle in progress. Head to the dashboard to place bets.</p>
+              </div>
+            )}
 
-        {battleMode === 'friend' && (
-          <>
-            <div className="bg-gray-900 rounded-xl p-4 mb-4 border border-gray-800">
-              <h3 className="text-white font-semibold mb-3">Select Opponent</h3>
-              <input
-                type="text"
-                placeholder="Search users..."
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="w-full px-4 py-2.5 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-purple-500 mb-3"
-              />
-              {searchResults.length > 0 && (
-                <div className="space-y-2 max-h-32 overflow-y-auto mb-3">
-                  {searchResults.map((user) => (
-                    <div
-                      key={user.id}
-                      onClick={() => { setSelectedFriend(user); setSearchResults([]); setSearchQuery(''); }}
-                      className="flex items-center gap-3 p-2 rounded-lg cursor-pointer bg-gray-800 hover:bg-gray-700"
-                    >
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center overflow-hidden">
-                        {user.avatar ? <img src={user.avatar} alt="" className="w-full h-full object-cover" /> : user.username?.charAt(0)?.toUpperCase()}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+              <button
+                onClick={() => requireAuth(() => setShowQuickMatch(true))}
+                disabled={!!activeMatchup}
+                className="group relative bg-gradient-to-br from-blue-900/40 to-blue-800/20 border border-blue-500/20 hover:border-blue-500/50 rounded-2xl p-6 text-left transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <div className="w-14 h-14 bg-blue-500/15 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <span className="text-3xl">⚡</span>
+                </div>
+                <h3 className="text-white font-bold text-lg mb-1">Quick Match</h3>
+                <p className="text-gray-400 text-sm">Find a random opponent</p>
+              </button>
+
+              <button
+                onClick={() => requireAuth(() => setShowPlayFriend(true))}
+                disabled={!!activeMatchup}
+                className="group relative bg-gradient-to-br from-purple-900/40 to-purple-800/20 border border-purple-500/20 hover:border-purple-500/50 rounded-2xl p-6 text-left transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <div className="w-14 h-14 bg-purple-500/15 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <span className="text-3xl">👥</span>
+                </div>
+                <h3 className="text-white font-bold text-lg mb-1">Play a Friend</h3>
+                <p className="text-gray-400 text-sm">Challenge someone you know</p>
+              </button>
+
+              <button
+                onClick={() => requireAuth(() => setShowPrivateMatch(true))}
+                disabled={!!activeMatchup}
+                className="group relative bg-gradient-to-br from-orange-900/40 to-orange-800/20 border border-orange-500/20 hover:border-orange-500/50 rounded-2xl p-6 text-left transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/10 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <div className="w-14 h-14 bg-orange-500/15 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                  <span className="text-3xl">🔑</span>
+                </div>
+                <h3 className="text-white font-bold text-lg mb-1">Private Match</h3>
+                <p className="text-gray-400 text-sm">Create or join with a code</p>
+              </button>
+            </div>
+
+            {isGuest && (
+              <div className="mb-6 bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-2xl p-6 text-center">
+                <h3 className="text-white font-bold text-lg mb-2">Ready to Battle?</h3>
+                <p className="text-gray-400 text-sm mb-4">Sign up to challenge opponents and win real prizes</p>
+                <button
+                  onClick={() => window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signup' } }))}
+                  className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-xl transition-colors"
+                >
+                  Sign Up to Start Battling
+                </button>
+              </div>
+            )}
+
+            {!isGuest && invites.received?.length > 0 && (
+              <div className="mb-6 space-y-2">
+                <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2">Incoming Challenges</h3>
+                {invites.received.map(invite => (
+                  <InviteToast
+                    key={invite.id}
+                    invite={invite}
+                    onAccept={handleAcceptInvite}
+                    onDecline={handleDeclineInvite}
+                  />
+                ))}
+              </div>
+            )}
+
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider">Recent Matches</h3>
+                <button
+                  onClick={() => requireAuth(() => setShowHistory(true))}
+                  className="text-blue-400 text-xs hover:text-blue-300 transition-colors"
+                >
+                  View All
+                </button>
+              </div>
+
+              {recentMatches.length === 0 ? (
+                <div className="bg-gray-900/30 border border-gray-800/50 rounded-xl p-8 text-center">
+                  <span className="text-3xl block mb-2">🏟️</span>
+                  <p className="text-gray-500 text-sm">No matches yet</p>
+                  <p className="text-gray-600 text-xs mt-1">Start your first battle above!</p>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  {recentMatches.map(match => (
+                    <div key={match.id} className="bg-gray-900/30 border border-gray-800/30 rounded-xl px-4 py-3 flex items-center gap-3 hover:bg-gray-800/30 transition-colors">
+                      <div className="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {match.opponent?.avatar ? (
+                          <img src={match.opponent.avatar} className="w-full h-full object-cover" alt="" />
+                        ) : (
+                          <span className="text-xs font-bold text-gray-300">{match.opponent?.username?.[0]?.toUpperCase() || '?'}</span>
+                        )}
                       </div>
-                      <span className="text-white">{user.username}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-white text-sm font-medium truncate">{match.opponent?.username || 'Unknown'}</div>
+                        <div className="text-gray-500 text-xs">${match.buyIn} · {formatDate(match.createdAt)}</div>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <div className={`text-xs font-bold uppercase ${getResultColor(match.result)}`}>
+                          {match.result === 'pending' ? 'ACTIVE' : match.result?.toUpperCase()}
+                        </div>
+                        {match.result !== 'pending' && match.result !== 'cancelled' && (
+                          <div className={`text-xs ${match.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {match.pnl >= 0 ? '+' : ''}{match.pnl?.toFixed(2)}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
-              {friends.length > 0 && !searchQuery && (
-                <>
-                  <p className="text-sm text-gray-400 mb-2">Your Friends</p>
-                  <div className="space-y-2 max-h-32 overflow-y-auto">
-                    {friends.map((friend) => (
-                      <div
-                        key={friend.id}
-                        onClick={() => setSelectedFriend(friend)}
-                        className={`flex items-center gap-3 p-2 rounded-lg cursor-pointer transition ${selectedFriend?.id === friend.id ? 'bg-purple-600/30 border border-purple-500' : 'bg-gray-800 hover:bg-gray-700'}`}
-                      >
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center overflow-hidden">
-                          {friend.avatar ? <img src={friend.avatar} alt="" className="w-full h-full object-cover" /> : friend.username?.charAt(0)?.toUpperCase()}
+            </div>
+          </div>
+
+          <div className={`lg:w-72 flex-shrink-0 ${showSidebar ? 'fixed inset-0 z-40 bg-black/80 lg:static lg:bg-transparent' : 'hidden lg:block'}`}>
+            {showSidebar && (
+              <div className="absolute inset-0 lg:hidden" onClick={() => setShowSidebar(false)}></div>
+            )}
+            <div className={`${showSidebar ? 'absolute right-0 top-0 bottom-0 w-80 bg-gray-900 border-l border-gray-800 p-4 overflow-y-auto z-50' : ''} lg:static lg:p-0 space-y-5`}>
+              {showSidebar && (
+                <div className="flex items-center justify-between mb-2 lg:hidden">
+                  <h3 className="text-white font-bold">Social</h3>
+                  <button onClick={() => setShowSidebar(false)} className="text-gray-400 hover:text-white">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                </div>
+              )}
+
+              <div className="bg-gray-900/50 border border-gray-800/50 rounded-xl p-4">
+                <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">Friends</h3>
+                {friends.length === 0 ? (
+                  <div className="text-center py-4">
+                    <p className="text-gray-500 text-sm mb-2">No friends yet</p>
+                    <button
+                      onClick={() => requireAuth(() => setShowPlayFriend(true))}
+                      className="text-blue-400 text-xs hover:text-blue-300"
+                    >
+                      Find friends →
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5 max-h-60 overflow-y-auto">
+                    {friends.map(friend => (
+                      <div key={friend.id} className="flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-gray-800/50 transition-colors group">
+                        <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                          {friend.avatar ? (
+                            <img src={friend.avatar} className="w-full h-full object-cover" alt="" />
+                          ) : (
+                            <span className="text-xs font-bold">{friend.username?.[0]?.toUpperCase()}</span>
+                          )}
                         </div>
-                        <span className="text-white">{friend.username}</span>
-                        <span className="text-xs text-gray-400 ml-auto">{friend.battleWins || 0}W-{friend.battleLosses || 0}L</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-white text-sm font-medium truncate">{friend.username}</div>
+                          <div className="text-gray-500 text-[11px]">{friend.battleWins || 0}W-{friend.battleLosses || 0}L</div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setShowPlayFriend(true);
+                            setShowSidebar(false);
+                          }}
+                          className="opacity-0 group-hover:opacity-100 text-blue-400 hover:text-blue-300 transition-all p-1"
+                          title="Challenge"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        </button>
                       </div>
                     ))}
                   </div>
-                </>
-              )}
-              {selectedFriend && (
-                <div className="mt-3 p-3 bg-purple-600/20 border border-purple-500 rounded-lg flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center overflow-hidden">
-                      {selectedFriend.avatar ? <img src={selectedFriend.avatar} alt="" className="w-full h-full object-cover" /> : selectedFriend.username?.charAt(0)?.toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="font-medium text-white">{selectedFriend.username}</p>
-                      <p className="text-xs text-gray-400">{selectedFriend.battleWins || 0}W - {selectedFriend.battleLosses || 0}L</p>
-                    </div>
-                  </div>
-                  <button onClick={() => setSelectedFriend(null)} className="text-gray-400 hover:text-white">✕</button>
-                </div>
-              )}
-            </div>
-
-            <div className="bg-gray-900 rounded-xl p-4 mb-4 border border-gray-800">
-              <h3 className="text-white font-semibold mb-3">Buy-In Amount</h3>
-              <div className="flex flex-wrap gap-2">
-                {BUY_IN_OPTIONS.map((amount) => (
-                  <button
-                    key={amount}
-                    onClick={() => setBuyIn(amount)}
-                    className={`px-4 py-2 rounded-lg font-medium transition ${buyIn === amount ? 'bg-green-600' : 'bg-gray-800 hover:bg-gray-700'}`}
-                  >
-                    ${amount}
-                  </button>
-                ))}
-              </div>
-              <div className="mt-3 flex justify-between text-sm">
-                <span className="text-gray-400">Prize Pool: <span className="text-green-400 font-semibold">${buyIn * 2}</span></span>
-                <span className="text-gray-400">Winner Takes: <span className="text-yellow-400 font-semibold">${(buyIn * 2 * 0.9).toFixed(0)}</span></span>
-              </div>
-            </div>
-          </>
-        )}
-
-        <div className="mb-6">
-          <h3 className="text-white font-semibold mb-3">Battle Duration</h3>
-          <div className="space-y-2">
-            {DURATION_OPTIONS.map((option) => (
-              <button
-                key={option.value}
-                onClick={() => setSelectedDuration(option.value)}
-                className={`w-full flex items-center justify-between p-3 rounded-xl border transition ${
-                  selectedDuration === option.value ? 'bg-blue-600/20 border-blue-500' : 'bg-gray-900 border-gray-700 hover:border-gray-600'
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <span className="text-xl">{option.icon}</span>
-                  <div className="text-left">
-                    <p className={`font-medium ${selectedDuration === option.value ? 'text-white' : 'text-gray-300'}`}>
-                      {option.label}
-                      {option.recommended && <span className="ml-2 px-2 py-0.5 bg-green-500/20 text-green-400 text-xs rounded">Recommended</span>}
-                    </p>
-                  </div>
-                </div>
-                {selectedDuration === option.value && (
-                  <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                    <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </div>
                 )}
-              </button>
-            ))}
-          </div>
-        </div>
+              </div>
 
-        {isGuest ? (
-          <button
-            onClick={handleGuestAction}
-            className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-lg hover:from-blue-500 hover:to-purple-500 transition"
-          >
-            Sign Up to Start Battling
-          </button>
-        ) : battleMode === 'random' ? (
-          <button
-            onClick={startBattle}
-            className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold text-lg hover:from-blue-500 hover:to-purple-500 transition"
-          >
-            Find Random Opponent
-          </button>
-        ) : (
-          <button
-            onClick={handleSendInvite}
-            disabled={!selectedFriend || sending}
-            className={`w-full py-4 rounded-xl font-semibold text-lg transition ${selectedFriend && !sending ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700' : 'bg-gray-700 cursor-not-allowed text-gray-400'}`}
-          >
-            {sending ? 'Sending...' : selectedFriend ? `Send Invite to ${selectedFriend.username}` : 'Select an Opponent'}
-          </button>
-        )}
-
-        <button onClick={() => router.push('/')} className="w-full mt-3 py-3 bg-gray-800 text-gray-400 rounded-xl hover:bg-gray-700 transition">
-          Back to Dashboard
-        </button>
-
-        {sentInvites.length > 0 && (
-          <div className="mt-6">
-            <h3 className="text-white font-semibold mb-3">Pending Invites Sent</h3>
-            <div className="space-y-2">
-              {sentInvites.map((invite) => (
-                <div key={invite.id} className="bg-gray-900 border border-gray-800 rounded-xl p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center overflow-hidden">
-                      {invite.receiver?.avatar ? <img src={invite.receiver.avatar} alt="" className="w-full h-full object-cover" /> : invite.receiver?.username?.charAt(0)?.toUpperCase()}
-                    </div>
-                    <span className="text-white">{invite.receiver?.username}</span>
+              {invites.sent?.length > 0 && (
+                <div className="bg-gray-900/50 border border-gray-800/50 rounded-xl p-4">
+                  <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">Sent Invites</h3>
+                  <div className="space-y-2">
+                    {invites.sent.map(invite => (
+                      <div key={invite.id} className="flex items-center justify-between bg-gray-800/30 rounded-lg px-3 py-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                            {invite.receiver?.avatar ? (
+                              <img src={invite.receiver.avatar} className="w-full h-full object-cover" alt="" />
+                            ) : (
+                              <span className="text-[10px]">{invite.receiver?.username?.[0]?.toUpperCase() || '?'}</span>
+                            )}
+                          </div>
+                          <span className="text-gray-300 text-xs truncate">{invite.receiver?.username || 'User'}</span>
+                        </div>
+                        <button
+                          onClick={() => handleCancelInvite(invite.id)}
+                          className="text-gray-500 hover:text-red-400 text-[10px] font-medium transition-colors flex-shrink-0"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                  <span className="text-yellow-400 text-sm">Waiting...</span>
                 </div>
-              ))}
+              )}
             </div>
           </div>
-        )}
+
+        </div>
       </div>
+
+      <QuickMatchModal
+        isOpen={showQuickMatch}
+        onClose={() => setShowQuickMatch(false)}
+        userId={userId}
+        onMatchFound={(matchup) => {
+          setShowLobby(matchup);
+          fetchData();
+        }}
+      />
+      <PlayFriendModal
+        isOpen={showPlayFriend}
+        onClose={() => setShowPlayFriend(false)}
+        friends={friends}
+        onInviteSent={fetchData}
+      />
+      <PrivateMatchModal
+        isOpen={showPrivateMatch}
+        onClose={() => setShowPrivateMatch(false)}
+        onMatchJoined={(matchup) => {
+          setShowLobby(matchup);
+          fetchData();
+        }}
+      />
+      <MatchHistoryModal
+        isOpen={showHistory}
+        onClose={() => setShowHistory(false)}
+      />
+      {showLobby && (
+        <MatchLobby
+          matchup={showLobby}
+          currentUser={{ id: userId }}
+          onDismiss={() => setShowLobby(null)}
+        />
+      )}
+      {showResult && (
+        <MatchResult
+          matchup={showResult}
+          currentUserId={userId}
+          onRematch={() => {
+            setShowResult(null);
+            setShowPlayFriend(true);
+          }}
+          onClose={() => setShowResult(null)}
+        />
+      )}
+
+      <style jsx>{`
+        @keyframes slideIn {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        :global(.animate-slideIn) {
+          animation: slideIn 0.3s ease-out;
+        }
+      `}</style>
     </div>
   );
 }

@@ -1,7 +1,7 @@
-# Piks - Sports Betting Challenge Platform
+# Piks - Sports Betting Battle Platform
 
 ### Overview
-Piks is a Next.js sports betting platform that offers funded challenges across various tiers (Starter, Pro, Elite). It allows users to progress from demo trials to real-money challenges, gain access to funded accounts, and retain a percentage of their profits. The platform emphasizes user progression, profit sharing, and a comprehensive betting experience. Key features include competitive 1v1 matchmaking, multi-player Pik Pools, and an education marketplace where verified cappers can sell picks.
+Piks is a Next.js sports betting platform centered on competitive 1v1 betting battles. Users compete against friends or random opponents in real-time betting matchups, with the winner taking 90% of the combined pot (10% platform fee). Features include Quick Match (random matchmaking), Play a Friend (friend invites), Private Match (shareable codes), battle history, and social features. The platform also includes multi-player Pik Pools and an education marketplace.
 
 ### User Preferences
 None documented yet.
@@ -34,7 +34,15 @@ None documented yet.
 - **Withdrawal System**: Payment method-specific forms, history, status flows, user cancellation, admin approval.
 - **User Tracking & Analytics**: Tracks user interactions, session metrics, page views, demo bets, unplaced bets.
 - **Education Marketplace**: Verified cappers sell picks and Discord access via subscription products; includes review system and performance stats.
-- **1v1 Matchmaking System**: Users compete head-to-head for a prize pot (winner takes 90% of combined pot). Configurable durations, hidden opponent bets until user places their own, admin-controlled fake opponents. Opponent avatars cycle every 0.6s from admin-uploaded images (fallback to animal emojis). Fake opponents must have valid entries in users, profiles, AND fakeOpponents tables with matching IDs.
+- **1v1 Battle System (Trivia Crack-inspired)**: Redesigned Battle Home page at `/battle` with three primary action tiles:
+  - **Quick Match**: Random matchmaking with buy-in/duration config via modal. Uses `/api/battles/matchmaking` queue + `/api/matchups/assign-opponent` fallback.
+  - **Play a Friend**: Search friends, send battle invite with buy-in/duration. Uses `/api/battles/invite` CRUD.
+  - **Private Match**: Generate 6-char alphanumeric code or join with code. Uses `/api/battles/private` (create/join actions).
+  - Battle Home layout: User identity strip, 3 large action tiles, incoming invite toasts, friends sidebar (desktop) / drawer (mobile), recent matches list.
+  - Match lifecycle: Battle Home → Modal config → Matchmaking/Invite → Match Lobby (5s countdown) → Dashboard (place bets) → Match Result overlay.
+  - Components in `components/battle/`: QuickMatchModal, PlayFriendModal, PrivateMatchModal, InviteToast, MatchHistoryModal, MatchLobby, MatchResult.
+  - Schema additions: `privateCode` and `matchType` columns on `matchups` table.
+  - Winner takes 90% of combined pot (10% platform fee). Hidden opponent bets until user places their own. Admin-controlled fake opponents.
 - **User Profiles**: Customizable profiles with username (2-100 chars), avatar (upload or URL), bio (max 500 chars), battle stats, and public profile pages. Avatar uploads use Replit Object Storage with presigned URLs.
 - **Pik Pool System**: Multi-player betting competitions (5-25 players) for a prize pool (winner takes 90%). Configurable buy-ins and durations.
 
