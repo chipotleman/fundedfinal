@@ -36,12 +36,30 @@ button:focus-within,
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 :root {
-  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
   --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
   --danger-gradient: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
   --card-gradient: linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
   --glass-bg: rgba(255, 255, 255, 0.08);
   --glass-border: rgba(255, 255, 255, 0.12);
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .touch-none-hover:hover,
+  button:hover,
+  a:hover {
+    filter: none !important;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  .group:hover .group-hover\:opacity-100 {
+    opacity: 0 !important;
+  }
+
+  .group:hover .group-hover\:scale-110 {
+    transform: none !important;
+  }
 }
 
 /* Light Theme Styles */
@@ -120,6 +138,34 @@ html.light .border-gray-700 {
 
 html.light .border-gray-800 {
   border-color: #e5e7eb !important;
+}
+
+html.light .bg-gray-900\/30 {
+  background-color: rgba(243, 244, 246, 0.8) !important;
+}
+
+html.light .bg-gray-800\/30 {
+  background-color: rgba(229, 231, 235, 0.3) !important;
+}
+
+html.light .bg-gray-800\/50 {
+  background-color: rgba(229, 231, 235, 0.5) !important;
+}
+
+html.light .border-gray-800\/50 {
+  border-color: rgba(209, 213, 219, 0.5) !important;
+}
+
+html.light .border-gray-800\/30 {
+  border-color: rgba(209, 213, 219, 0.3) !important;
+}
+
+html.light .border-gray-700\/40 {
+  border-color: rgba(209, 213, 219, 0.6) !important;
+}
+
+html.light .border-gray-700\/30 {
+  border-color: rgba(209, 213, 219, 0.4) !important;
 }
 
 html.light .border-slate-600 {

@@ -13,7 +13,43 @@ function formatTimeRemaining(ms) {
   return `${seconds}s`;
 }
 
-function BattleCard({ battle, compact }) {
+const SIMULATED_BATTLES = [
+  {
+    id: 'sim-1',
+    simulated: true,
+    potSize: '500',
+    startsAt: new Date(Date.now() - 1800000).toISOString(),
+    endsAt: new Date(Date.now() + 5400000).toISOString(),
+    remainingMs: 5400000,
+    progressPercent: 25,
+    user1: { id: 'bot-1', username: 'SharpShooter', avatar: null, balance: 285, pnl: 35, pnlPercent: '14.0', battleWins: 12, battleLosses: 3 },
+    user2: { id: 'bot-2', username: 'TheAnalyst', avatar: null, balance: 240, pnl: -10, pnlPercent: '-4.0', battleWins: 8, battleLosses: 5, isFake: true },
+  },
+  {
+    id: 'sim-2',
+    simulated: true,
+    potSize: '1000',
+    startsAt: new Date(Date.now() - 7200000).toISOString(),
+    endsAt: new Date(Date.now() + 3600000).toISOString(),
+    remainingMs: 3600000,
+    progressPercent: 67,
+    user1: { id: 'bot-3', username: 'BetMaster_X', avatar: null, balance: 620, pnl: 120, pnlPercent: '24.0', battleWins: 22, battleLosses: 9 },
+    user2: { id: 'bot-4', username: 'OddsKing99', avatar: null, balance: 445, pnl: -55, pnlPercent: '-11.0', battleWins: 15, battleLosses: 11, isFake: true },
+  },
+  {
+    id: 'sim-3',
+    simulated: true,
+    potSize: '250',
+    startsAt: new Date(Date.now() - 600000).toISOString(),
+    endsAt: new Date(Date.now() + 43200000).toISOString(),
+    remainingMs: 43200000,
+    progressPercent: 1.4,
+    user1: { id: 'bot-5', username: 'LocksOnly', avatar: null, balance: 128, pnl: 3, pnlPercent: '2.4', battleWins: 5, battleLosses: 2 },
+    user2: { id: 'bot-6', username: 'ValueHunter', avatar: null, balance: 125, pnl: 0, pnlPercent: '0.0', battleWins: 7, battleLosses: 4, isFake: true },
+  },
+];
+
+function BattleCard({ battle, compact, focused }) {
   const router = useRouter();
   const [timeLeft, setTimeLeft] = useState(battle.remainingMs || 0);
 
@@ -37,8 +73,8 @@ function BattleCard({ battle, compact }) {
 
   if (compact) {
     return (
-      <div className="flex-shrink-0 w-[260px] bg-gradient-to-br from-purple-900/40 to-indigo-900/30 border border-purple-500/20 rounded-xl p-3 hover:border-purple-500/40 transition-all cursor-pointer"
-        onClick={() => router.push('/battle')}
+      <div className="flex-shrink-0 w-[260px] bg-gradient-to-br from-gray-900/80 to-gray-800/40 border border-gray-700/30 rounded-xl p-3 transition-all cursor-pointer"
+        onClick={() => router.push(`/battle?battle=${battle.id}`)}
       >
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1">
@@ -50,7 +86,7 @@ function BattleCard({ battle, compact }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs overflow-hidden ${user1Winning ? 'ring-1 ring-green-400' : ''} bg-gradient-to-br from-blue-600 to-blue-800`}>
-              {user1.avatar ? <img src={user1.avatar} className="w-full h-full object-cover" alt="" /> : <span>{user1.username?.[0]?.toUpperCase() || '?'}</span>}
+              {user1.avatar ? <img src={user1.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-white font-bold">{user1.username?.[0]?.toUpperCase() || '?'}</span>}
             </div>
             <div className="min-w-0">
               <p className="text-white text-xs font-medium truncate max-w-[60px]">{user1.username || 'Player 1'}</p>
@@ -71,19 +107,19 @@ function BattleCard({ battle, compact }) {
               </p>
             </div>
             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs overflow-hidden ${user2Winning ? 'ring-1 ring-green-400' : ''} bg-gradient-to-br from-red-600 to-red-800`}>
-              {user2.avatar ? <img src={user2.avatar} className="w-full h-full object-cover" alt="" /> : <span>{user2.username?.[0]?.toUpperCase() || '?'}</span>}
+              {user2.avatar ? <img src={user2.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-white font-bold">{user2.username?.[0]?.toUpperCase() || '?'}</span>}
             </div>
           </div>
         </div>
         <div className="mt-2 h-1 bg-gray-800 rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full transition-all duration-1000" style={{ width: `${progress}%` }}></div>
+          <div className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full transition-all duration-1000" style={{ width: `${progress}%` }}></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-gradient-to-br from-gray-900/60 to-gray-800/40 border border-gray-700/40 rounded-2xl p-4 hover:border-purple-500/30 transition-all">
+    <div className={`bg-gradient-to-br from-gray-900/60 to-gray-800/40 border rounded-2xl p-4 transition-all ${focused ? 'border-blue-500/60 ring-1 ring-blue-500/30 shadow-lg shadow-blue-500/10' : 'border-gray-700/40'}`}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-1.5">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -132,22 +168,24 @@ function BattleCard({ battle, compact }) {
       </div>
 
       <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden mb-2">
-        <div className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full transition-all duration-1000" style={{ width: `${progress}%` }}></div>
+        <div className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full transition-all duration-1000" style={{ width: `${progress}%` }}></div>
       </div>
       <div className="flex items-center justify-between">
         <span className="text-gray-500 text-[10px]">{progress.toFixed(0)}% complete</span>
-        <button
-          onClick={() => router.push('/battle')}
-          className="text-purple-400 text-xs font-medium hover:text-purple-300 transition-colors"
-        >
-          Watch
-        </button>
+        {!battle.simulated && (
+          <button
+            onClick={() => router.push(`/battle?battle=${battle.id}`)}
+            className="text-blue-400 text-xs font-medium transition-colors"
+          >
+            Watch
+          </button>
+        )}
       </div>
     </div>
   );
 }
 
-export default function LiveBattlesSection({ compact = false }) {
+export default function LiveBattlesSection({ compact = false, focusBattleId = null }) {
   const [battles, setBattles] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -157,10 +195,15 @@ export default function LiveBattlesSection({ compact = false }) {
       const res = await fetch('/api/battles/live');
       if (res.ok) {
         const data = await res.json();
-        setBattles(data.battles || []);
+        let liveBattles = (data.battles || []).filter(b => b.user2 && b.remainingMs > 0);
+        if (liveBattles.length === 0) {
+          liveBattles = SIMULATED_BATTLES;
+        }
+        setBattles(liveBattles);
       }
     } catch (err) {
       console.error('Error fetching live battles:', err);
+      setBattles(SIMULATED_BATTLES);
     } finally {
       setLoading(false);
     }
@@ -172,6 +215,10 @@ export default function LiveBattlesSection({ compact = false }) {
     return () => clearInterval(interval);
   }, [fetchBattles]);
 
+  const sortedBattles = focusBattleId
+    ? [...battles].sort((a, b) => (a.id === focusBattleId ? -1 : b.id === focusBattleId ? 1 : 0))
+    : battles;
+
   if (loading) {
     return (
       <div className={compact ? 'mb-4' : 'mb-6'}>
@@ -182,7 +229,7 @@ export default function LiveBattlesSection({ compact = false }) {
           </h3>
         </div>
         <div className="flex items-center justify-center py-4">
-          <div className="w-6 h-6 border-2 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div>
+          <div className="w-6 h-6 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
         </div>
       </div>
     );
@@ -195,28 +242,28 @@ export default function LiveBattlesSection({ compact = false }) {
           <div className="flex items-center gap-2">
             <span className="text-lg">🔥</span>
             <h3 className="font-bold text-sm text-white">Featured Battles</h3>
-            {battles.length > 0 && (
-              <span className="bg-purple-500/20 text-purple-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{battles.length}</span>
+            {sortedBattles.length > 0 && (
+              <span className="bg-green-500/20 text-green-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{sortedBattles.length}</span>
             )}
           </div>
-          <button onClick={() => router.push('/battle')} className="text-purple-400 text-xs hover:text-purple-300 transition-colors">
+          <button onClick={() => router.push('/battle')} className="text-blue-400 text-xs transition-colors">
             See All
           </button>
         </div>
-        {battles.length === 0 ? (
+        {sortedBattles.length === 0 ? (
           <div
-            className="flex-shrink-0 w-[260px] bg-gradient-to-br from-purple-900/20 to-indigo-900/10 border border-purple-500/10 rounded-xl p-4 cursor-pointer hover:border-purple-500/30 transition-all"
+            className="flex-shrink-0 w-[260px] bg-gradient-to-br from-gray-900/40 to-gray-800/20 border border-gray-700/20 rounded-xl p-4 cursor-pointer transition-all"
             onClick={() => router.push('/battle')}
           >
             <div className="text-center">
               <span className="text-2xl block mb-1">⚔️</span>
               <p className="text-gray-400 text-xs">No live battles right now.</p>
-              <p className="text-purple-400 text-xs font-medium mt-1">Start one!</p>
+              <p className="text-blue-400 text-xs font-medium mt-1">Start one!</p>
             </div>
           </div>
         ) : (
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {battles.filter(b => b.user2).map(battle => (
+            {sortedBattles.map(battle => (
               <BattleCard key={battle.id} battle={battle} compact />
             ))}
           </div>
@@ -231,22 +278,22 @@ export default function LiveBattlesSection({ compact = false }) {
         <div className="flex items-center gap-2">
           <span className="text-xl">⚔️</span>
           <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider">Live Battles</h3>
-          {battles.length > 0 && (
-            <span className="bg-green-500/20 text-green-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{battles.length} live</span>
+          {sortedBattles.length > 0 && (
+            <span className="bg-green-500/20 text-green-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full">{sortedBattles.length} live</span>
           )}
         </div>
       </div>
 
-      {battles.filter(b => b.user2).length === 0 ? (
+      {sortedBattles.length === 0 ? (
         <div className="bg-gray-900/30 border border-gray-800/50 rounded-xl p-8 text-center">
           <span className="text-3xl block mb-2">⚔️</span>
           <p className="text-gray-500 text-sm">No live battles right now</p>
           <p className="text-gray-600 text-xs mt-1">Start one and show everyone how it's done!</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {battles.filter(b => b.user2).map(battle => (
-            <BattleCard key={battle.id} battle={battle} />
+        <div className="space-y-3">
+          {sortedBattles.map(battle => (
+            <BattleCard key={battle.id} battle={battle} focused={battle.id === focusBattleId} />
           ))}
         </div>
       )}

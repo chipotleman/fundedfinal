@@ -295,7 +295,7 @@ export default function MyBattle() {
           </div>
         ) : (
           <div className="mb-8">
-            <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-2xl p-6 text-center">
+            <div className="bg-gradient-to-r from-blue-600/20 to-emerald-600/20 border border-blue-500/30 rounded-2xl p-6 text-center">
               <span className="text-4xl block mb-3">⚔️</span>
               <h3 className="text-white font-bold text-lg mb-2">No Active Battle</h3>
               <p className="text-gray-400 text-sm mb-4">Start a new battle to compete against other players</p>

@@ -53,7 +53,11 @@ export default async function handler(req, res) {
     const profileMap = Object.fromEntries(userProfiles.map(p => [p.id, p]));
 
     const enrichedBattles = activeBattles
-      .filter(battle => battle.startsAt && battle.endsAt)
+      .filter(battle => {
+        if (!battle.startsAt || !battle.endsAt) return false;
+        const endTime = new Date(battle.endsAt).getTime();
+        return endTime > Date.now();
+      })
       .map(battle => {
         const startTime = new Date(battle.startsAt).getTime();
         const endTime = new Date(battle.endsAt).getTime();

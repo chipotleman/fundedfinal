@@ -309,7 +309,7 @@ export default function PoolContainer({ isDarkMode }) {
                   </span>
                   <div className={`w-6 h-6 rounded-full border flex items-center justify-center text-[10px] overflow-hidden ${
                     player.isCurrentUser 
-                      ? 'bg-gradient-to-br from-purple-600 to-indigo-800 border-yellow-400' 
+                      ? 'bg-gradient-to-br from-blue-600 to-blue-900 border-yellow-400' 
                       : 'bg-gradient-to-br from-cyan-300 to-blue-500 border-white/30'
                   }`}>
                     {player.isCurrentUser ? (

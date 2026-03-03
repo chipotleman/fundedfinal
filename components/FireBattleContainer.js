@@ -122,7 +122,7 @@ export default function FireBattleContainer({ isDarkMode }) {
             <div className="flex flex-col items-center flex-1">
               <div className="flex flex-col items-center h-[90px] md:h-[110px]">
                 <div 
-                  className="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 border-yellow-400 shadow-lg bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center"
+                  className="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 border-yellow-400 shadow-lg bg-gradient-to-br from-blue-600 to-blue-900 flex items-center justify-center"
                   style={{ animation: 'battle-glow 2s ease-in-out infinite' }}
                 >
                   <span className="text-2xl md:text-3xl">🐍</span>
@@ -160,7 +160,7 @@ export default function FireBattleContainer({ isDarkMode }) {
             <div className="flex flex-col items-center flex-1">
               <div className="flex flex-col items-center h-[90px] md:h-[110px]">
                 <div 
-                  className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-violet-600 to-indigo-900 flex items-center justify-center border-2 border-violet-400 shadow-lg overflow-hidden"
+                  className="w-12 h-12 md:w-16 md:h-16 rounded-full bg-gradient-to-br from-cyan-600 to-blue-900 flex items-center justify-center border-2 border-cyan-400 shadow-lg overflow-hidden"
                   style={{ animation: 'battle-pulse 2s ease-in-out infinite' }}
                 >
                   {uploadedAvatars.length > 0 ? (

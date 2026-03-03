@@ -368,7 +368,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                 <button
                   onClick={sendInvite}
                   disabled={sending}
-                  className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white font-bold py-3 rounded-xl hover:from-purple-500 hover:to-blue-500 transition-all disabled:opacity-50"
+                  className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50"
                 >
                   {sending ? 'Sending...' : `Challenge ${selectedFriend.username}`}
                 </button>

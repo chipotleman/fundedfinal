@@ -54,7 +54,18 @@ export default async function handler(req, res) {
         END`
       );
 
-    if (activeMatchups.length === 0) {
+    const validMatchups = activeMatchups.filter(m => {
+      if (m.status === 'active' && m.endsAt) {
+        const endTime = new Date(m.endsAt).getTime();
+        if (endTime <= Date.now()) {
+          fetch(`${req.headers['x-forwarded-proto'] || 'http'}://${req.headers.host}/api/matchups/resolve`, { method: 'POST' }).catch(() => {});
+          return false;
+        }
+      }
+      return true;
+    });
+
+    if (validMatchups.length === 0) {
       const [queueEntry] = await db
         .select()
         .from(matchupQueue)
@@ -77,7 +88,7 @@ export default async function handler(req, res) {
       });
     }
 
-    const matchup = activeMatchups[0];
+    const matchup = validMatchups[0];
     
     // Determine if current user is user1 or user2
     // For fake opponents, they're user2 if their fakeOpponentId matches

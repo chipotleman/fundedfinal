@@ -22,7 +22,7 @@ export default async function handler(req, res) {
 
     for (const matchup of expiredMatchups) {
       try {
-        const matchupStartTime = new Date(matchup.startedAt);
+        const matchupStartTime = new Date(matchup.startsAt || matchup.createdAt);
         const matchupEndTime = new Date(matchup.endsAt);
         
         let user1FinalBalance = parseFloat(matchup.startingBalance);

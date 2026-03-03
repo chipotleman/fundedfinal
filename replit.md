@@ -4,7 +4,10 @@
 Piks is a Next.js sports betting platform centered on competitive 1v1 betting battles. Users compete against friends or random opponents in real-time betting matchups, with the winner taking 90% of the combined pot (10% platform fee). Features include Quick Match (random matchmaking), Play a Friend (friend invites), Private Match (shareable codes), battle history, and social features. The platform also includes multi-player Pik Pools and an education marketplace.
 
 ### User Preferences
-None documented yet.
+- **No purple gradients** — purple signals "vibe coding". Use blue, emerald, cyan, and orange for premium look.
+- **No hover effects on mobile/iPad** — use `@media (hover: none)` to disable hover states on touch devices.
+- **High-end aesthetic** — should look like a billion-dollar company is behind it. Clean, minimal, professional.
+- **"Cancel Friend Request"** not "Withdraw Request" for cancelling sent friend requests.
 
 ### System Architecture
 
@@ -39,7 +42,8 @@ None documented yet.
   - **Play a Friend**: Search friends, send battle invite with buy-in/duration. Non-friend users can send friend request or create private match code instead. Uses `/api/battles/invite` CRUD.
   - **Private Match**: Generate 6-char alphanumeric code or join with code. Uses `/api/battles/private` (create/join actions).
   - **Battle Forfeit**: Users can forfeit active battles from any page (battle, my-battle, dashboard). Opponent wins 90% of pot. API: `POST /api/battles/forfeit`.
-  - **Live Battles Showcase**: `LiveBattlesSection` component displays active battles as spectator cards with player avatars, balances, PnL, progress bars, and pot size. Visible to everyone (including guests). Polls `/api/battles/live` every 30 seconds. Shown on both `/battle` (full) and dashboard (compact strip).
+  - **Live Battles Showcase**: `LiveBattlesSection` component displays active battles as spectator cards with player avatars, balances, PnL, progress bars, and pot size. Visible to everyone (including guests). Polls `/api/battles/live` every 30 seconds. Shown on both `/battle` (full) and dashboard (compact strip). Filters out ended battles (remainingMs <= 0). Falls back to simulated bot battles when no real battles are active. Supports `focusBattleId` prop to highlight a specific battle (from dashboard click-through via `?battle=ID` URL param). `/api/battles/live` filters out expired battles even if still marked `active` in DB.
+  - **Auto-Resolve**: `/api/matchups/current` now detects expired-but-active battles and triggers async resolution via `/api/matchups/resolve`. `/api/matchups/resolve` fixed to use `startsAt` (not `startedAt`).
   - Battle Home layout: User identity strip, 3 large action tiles, live battles showcase, incoming invite toasts, friends sidebar (desktop) / drawer (mobile), recent matches list.
   - Match lifecycle: Battle Home → Modal config → Matchmaking/Invite → Match Lobby (5s countdown) → Dashboard (place bets) → Match Result overlay.
   - Components in `components/battle/`: QuickMatchModal, PlayFriendModal, PrivateMatchModal, InviteToast, MatchHistoryModal, MatchLobby, MatchResult, LiveBattlesSection.

@@ -598,9 +598,8 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                     {/* Dropdown Menu */}
                     {showUserMenu && (
                       <>
-                        {/* Backdrop */}
                         <div
-                          className="fixed inset-0 z-40"
+                          className="fixed inset-0 z-[45]"
                           onClick={() => setShowUserMenu(false)}
                         />
                         

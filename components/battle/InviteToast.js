@@ -18,7 +18,7 @@ export default function InviteToast({ invite, onAccept, onDecline }) {
   const potSize = buyIn * 2;
 
   return (
-    <div className="bg-gradient-to-r from-blue-900/40 to-purple-900/40 border border-blue-500/30 rounded-xl p-4 animate-slideIn">
+    <div className="bg-gradient-to-r from-blue-900/40 to-blue-800/30 border border-blue-500/30 rounded-xl p-4 animate-slideIn">
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
           {sender.avatar ? (

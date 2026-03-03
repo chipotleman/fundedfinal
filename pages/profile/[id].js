@@ -447,12 +447,12 @@ export default function PublicProfile() {
                             disabled={friendActionLoading}
                             className="bg-red-600/20 hover:bg-red-600/40 disabled:bg-gray-600 text-red-400 font-semibold py-2 px-4 rounded-lg transition-all text-sm flex items-center gap-2"
                           >
-                            {friendActionLoading ? 'Withdrawing...' : (
+                            {friendActionLoading ? 'Cancelling...' : (
                               <>
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
-                                Withdraw Request
+                                Cancel Friend Request
                               </>
                             )}
                           </button>

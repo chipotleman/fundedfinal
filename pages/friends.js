@@ -205,7 +205,7 @@ export default function FriendsPage() {
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
@@ -227,13 +227,13 @@ export default function FriendsPage() {
               <div className="flex gap-2 mb-4">
                 <button
                   onClick={() => setActiveTab('friends')}
-                  className={`flex-1 py-2 rounded-lg font-medium transition ${activeTab === 'friends' ? 'bg-purple-600' : 'bg-gray-800 hover:bg-gray-700'}`}
+                  className={`flex-1 py-2 rounded-lg font-medium transition ${activeTab === 'friends' ? 'bg-blue-600' : 'bg-gray-800 hover:bg-gray-700'}`}
                 >
                   Friends ({friends.length})
                 </button>
                 <button
                   onClick={() => setActiveTab('requests')}
-                  className={`flex-1 py-2 rounded-lg font-medium transition relative ${activeTab === 'requests' ? 'bg-purple-600' : 'bg-gray-800 hover:bg-gray-700'}`}
+                  className={`flex-1 py-2 rounded-lg font-medium transition relative ${activeTab === 'requests' ? 'bg-blue-600' : 'bg-gray-800 hover:bg-gray-700'}`}
                 >
                   Requests
                   {requests.length > 0 && (
@@ -244,7 +244,7 @@ export default function FriendsPage() {
                 </button>
                 <button
                   onClick={() => setActiveTab('search')}
-                  className={`flex-1 py-2 rounded-lg font-medium transition ${activeTab === 'search' ? 'bg-purple-600' : 'bg-gray-800 hover:bg-gray-700'}`}
+                  className={`flex-1 py-2 rounded-lg font-medium transition ${activeTab === 'search' ? 'bg-blue-600' : 'bg-gray-800 hover:bg-gray-700'}`}
                 >
                   Find
                 </button>
@@ -257,7 +257,7 @@ export default function FriendsPage() {
                     placeholder="Search users..."
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-purple-500"
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500"
                   />
                 </div>
               )}
@@ -273,9 +273,9 @@ export default function FriendsPage() {
                           <div
                             key={friend.id}
                             onClick={() => setSelectedChat(friend)}
-                            className={`flex items-center gap-3 p-4 cursor-pointer transition ${selectedChat?.id === friend.id ? 'bg-purple-600/20' : 'hover:bg-gray-800'}`}
+                            className={`flex items-center gap-3 p-4 cursor-pointer transition ${selectedChat?.id === friend.id ? 'bg-blue-600/20' : 'hover:bg-gray-800'}`}
                           >
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center overflow-hidden">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center overflow-hidden">
                               {friend.avatar ? (
                                 <img src={friend.avatar} alt="" className="w-full h-full object-cover" />
                               ) : (
@@ -307,7 +307,7 @@ export default function FriendsPage() {
                         <div className="divide-y divide-gray-800">
                           {requests.map((request) => (
                             <div key={request.id} className="flex items-center gap-3 p-4">
-                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center overflow-hidden">
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center overflow-hidden">
                                 {request.sender?.avatar ? (
                                   <img src={request.sender.avatar} alt="" className="w-full h-full object-cover" />
                                 ) : (
@@ -332,7 +332,7 @@ export default function FriendsPage() {
                         <div className="divide-y divide-gray-800">
                           {sentRequests.map((request) => (
                             <div key={request.id} className="flex items-center gap-3 p-4">
-                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center overflow-hidden">
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center overflow-hidden">
                                 {request.receiver?.avatar ? (
                                   <img src={request.receiver.avatar} alt="" className="w-full h-full object-cover" />
                                 ) : (
@@ -343,7 +343,7 @@ export default function FriendsPage() {
                                 <p className="font-medium">{request.receiver?.username}</p>
                                 <p className="text-xs text-gray-500">Pending</p>
                               </div>
-                              <button onClick={() => handleWithdrawRequest(request.id)} className="px-3 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-lg text-sm">Withdraw</button>
+                              <button onClick={() => handleWithdrawRequest(request.id)} className="px-3 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-lg text-sm">Cancel</button>
                             </div>
                           ))}
                         </div>
@@ -365,7 +365,7 @@ export default function FriendsPage() {
                       <div className="divide-y divide-gray-800">
                         {searchResults.map((user) => (
                           <div key={user.id} className="flex items-center gap-3 p-4">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center overflow-hidden">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center overflow-hidden">
                               {user.avatar ? (
                                 <img src={user.avatar} alt="" className="w-full h-full object-cover" />
                               ) : (
@@ -376,7 +376,7 @@ export default function FriendsPage() {
                               <p className="font-medium">{user.username}</p>
                               <p className="text-xs text-gray-400">{user.battleWins || 0}W - {user.battleLosses || 0}L</p>
                             </div>
-                            <button onClick={() => handleAddFriend(user.id)} className="px-3 py-1 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm">Add</button>
+                            <button onClick={() => handleAddFriend(user.id)} className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm">Add</button>
                           </div>
                         ))}
                       </div>
@@ -391,7 +391,7 @@ export default function FriendsPage() {
                 {selectedChat ? (
                   <>
                     <div className="flex items-center gap-3 p-4 border-b border-gray-800">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center overflow-hidden">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center overflow-hidden">
                         {selectedChat.avatar ? (
                           <img src={selectedChat.avatar} alt="" className="w-full h-full object-cover" />
                         ) : (
@@ -404,7 +404,7 @@ export default function FriendsPage() {
                       </div>
                       <button
                         onClick={() => router.push(`/battle?invite=${selectedChat.id}`)}
-                        className="ml-auto px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-medium"
+                        className="ml-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium"
                       >
                         Challenge to Battle
                       </button>
@@ -421,7 +421,7 @@ export default function FriendsPage() {
                             <div
                               className={`max-w-[70%] px-4 py-2 rounded-2xl ${
                                 msg.senderId === session.user.id
-                                  ? 'bg-purple-600 rounded-br-md'
+                                  ? 'bg-blue-600 rounded-br-md'
                                   : 'bg-gray-700 rounded-bl-md'
                               }`}
                             >
@@ -442,12 +442,12 @@ export default function FriendsPage() {
                           value={messageInput}
                           onChange={(e) => setMessageInput(e.target.value)}
                           placeholder="Type a message..."
-                          className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-purple-500"
+                          className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-blue-500"
                         />
                         <button
                           type="submit"
                           disabled={!messageInput.trim() || sendingMessage}
-                          className="px-6 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-xl font-medium transition"
+                          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-xl font-medium transition"
                         >
                           Send
                         </button>
