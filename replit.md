@@ -49,9 +49,15 @@ Piks is a Next.js sports betting platform centered on competitive 1v1 betting ba
   - **Auto-Resolve**: `/api/matchups/current` now detects expired-but-active battles and triggers async resolution via `/api/matchups/resolve`. `/api/matchups/resolve` fixed to use `startsAt` (not `startedAt`).
   - Battle Home layout: User identity strip, 3 large action tiles, live battles showcase, incoming invite toasts, friends sidebar (desktop) / drawer (mobile), recent matches list.
   - Match lifecycle: Battle Home → Modal config → Matchmaking/Invite → Match Lobby (5s countdown) → Dashboard (place bets) → Match Result overlay.
-  - Components in `components/battle/`: QuickMatchModal, PlayFriendModal, PrivateMatchModal, InviteToast, MatchHistoryModal, MatchLobby, MatchResult, LiveBattlesSection, BattleChat.
+  - Components in `components/battle/`: QuickMatchModal, PlayFriendModal, PrivateMatchModal, InviteToast, MatchHistoryModal, MatchLobby, MatchResult, LiveBattlesSection, BattleChat, ForfeitModal.
   - Schema additions: `privateCode` and `matchType` columns on `matchups` table.
   - Winner takes 90% of combined pot (10% platform fee). Hidden opponent bets until user places their own. Admin-controlled fake opponents.
+  - **Gamified Battle Experience** (CSS-only animations, no sound):
+    - **MatchLobby**: Fighting-game entrance — avatars slide in from left/right, "VS" slam animation, glowing avatar rings, countdown numbers scale+fade per tick, "BATTLE!" flash at 0 with screen flash before redirect.
+    - **MatchResult**: Win = confetti rain (40 CSS particles) + trophy bounce + "VICTORY!" golden glow + prize counter-up animation. Loss = screen shake + red vignette + "DEFEAT" fade-in. Tie = scale emoji + cyan. All stats count up from 0 with eased animation. "Share Win" copies to clipboard. Rematch button pulses.
+    - **QuickMatchModal search**: Radar sweep animation, cycling opponent avatars (fetched from `/api/admin/battle-avatars`) with 3D flip transition, random names/records flashing, dramatic "MATCHED!" reveal with green flash + expanding ring.
+    - **ForfeitModal**: Custom red-themed confirmation modal (replaces window.confirm). Shows "Surrender?" with consequences, "Keep Fighting" (green) vs "Forfeit Battle" (red pulsing) buttons, loading spinner state.
+    - **Spectator reactions**: Expanded battle cards have reaction buttons (Fire/Money/Intense/Eyes) with floating emoji animations. Momentum flame icon on players with PnL > 10%. Shimmer on leading player's progress bar. Slide-in transition on compact chat messages.
   - **Cross-page integration**: Dashboard shows MatchupBanner with forfeit option, My Battle page (`/my-battle`) uses `/api/battles/history` for robust history with match type labels, links to `/battle` when no active matchup.
 - **Friend Request Withdrawal**: Users can withdraw sent friend requests from both the friends page (Requests tab → Sent section) and profile pages. API: `PATCH /api/friends/[id]` with `action: 'withdraw'`.
 - **User Profiles**: Customizable profiles with username (2-100 chars), avatar (upload or URL), bio (max 500 chars), battle stats, and public profile pages. Avatar uploads use Replit Object Storage with presigned URLs.

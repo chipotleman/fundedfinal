@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
 import FireBattleContainer from '../components/FireBattleContainer';
+import ForfeitModal from '../components/battle/ForfeitModal';
 import { useBetSlip } from '../contexts/BetSlipContext';
 
 export default function MyBattle() {
@@ -16,6 +17,7 @@ export default function MyBattle() {
   const [opponentBets, setOpponentBets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState(null);
+  const [showForfeitModal, setShowForfeitModal] = useState(false);
   
   const { betSlip } = useBetSlip();
   const { data: session } = useSession();
@@ -383,19 +385,7 @@ export default function MyBattle() {
                   </button>
                 </Link>
                 <button
-                  onClick={() => {
-                    if (window.confirm('Are you sure you want to forfeit this battle? Your opponent will be declared the winner and receive the payout.')) {
-                      fetch('/api/battles/forfeit', { method: 'POST' })
-                        .then(r => r.json())
-                        .then(data => {
-                          if (data.success) {
-                            setCurrentMatchup(null);
-                            fetchAllData();
-                          }
-                        })
-                        .catch(() => {});
-                    }
-                  }}
+                  onClick={() => setShowForfeitModal(true)}
                   className="bg-red-500/20 hover:bg-red-500/30 text-red-400 font-bold py-3 px-6 rounded-xl transition-all border border-red-500/30"
                 >
                   Forfeit
@@ -516,6 +506,23 @@ export default function MyBattle() {
           )}
         </div>
       </div>
+
+      <ForfeitModal
+        isOpen={showForfeitModal}
+        matchup={currentMatchup}
+        onCancel={() => setShowForfeitModal(false)}
+        onConfirm={async () => {
+          try {
+            const res = await fetch('/api/battles/forfeit', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+              setCurrentMatchup(null);
+              fetchAllData();
+            }
+          } catch {}
+          setShowForfeitModal(false);
+        }}
+      />
     </div>
   );
 }

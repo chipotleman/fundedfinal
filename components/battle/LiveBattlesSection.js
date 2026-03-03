@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import BattleChat from './BattleChat';
 
@@ -45,6 +45,13 @@ const SIMULATED_PICKS = {
     ],
   },
 };
+
+const REACTIONS = [
+  { emoji: '🔥', label: 'Fire' },
+  { emoji: '💰', label: 'Money' },
+  { emoji: '😤', label: 'Intense' },
+  { emoji: '👀', label: 'Eyes' },
+];
 
 function getSimulatedBattles(avatars) {
   const avatarPool = avatars.length >= 6 ? avatars : [];
@@ -102,6 +109,72 @@ function PickPill({ pick }) {
   );
 }
 
+function FloatingReaction({ emoji, id, onDone }) {
+  useEffect(() => {
+    const timer = setTimeout(() => onDone(id), 1200);
+    return () => clearTimeout(timer);
+  }, [id, onDone]);
+
+  const left = 20 + Math.random() * 60;
+
+  return (
+    <span
+      className="live-reaction-float"
+      style={{ left: `${left}%`, position: 'absolute', bottom: 0, fontSize: '20px', pointerEvents: 'none' }}
+    >
+      {emoji}
+    </span>
+  );
+}
+
+function ReactionBar({ battleId }) {
+  const [counts, setCounts] = useState(() => {
+    const initial = {};
+    REACTIONS.forEach(r => {
+      initial[r.label] = Math.floor(Math.random() * 30) + 5;
+    });
+    return initial;
+  });
+  const [floatingEmojis, setFloatingEmojis] = useState([]);
+  const idCounter = useRef(0);
+
+  const handleReaction = (reaction) => {
+    setCounts(prev => ({ ...prev, [reaction.label]: (prev[reaction.label] || 0) + 1 }));
+    const newId = `float-${idCounter.current++}`;
+    setFloatingEmojis(prev => [...prev, { id: newId, emoji: reaction.emoji }]);
+  };
+
+  const removeFloating = useCallback((id) => {
+    setFloatingEmojis(prev => prev.filter(f => f.id !== id));
+  }, []);
+
+  return (
+    <div className="relative px-3 py-2" onClick={e => e.stopPropagation()}>
+      <div className="flex items-center gap-2 justify-center">
+        {REACTIONS.map(r => (
+          <button
+            key={r.label}
+            onClick={(e) => { e.stopPropagation(); handleReaction(r); }}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-cyan-500/30 transition-all active:scale-90"
+          >
+            <span className="text-sm">{r.emoji}</span>
+            <span className="text-[10px] text-gray-400 font-medium">{counts[r.label]}</span>
+          </button>
+        ))}
+      </div>
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {floatingEmojis.map(f => (
+          <FloatingReaction key={f.id} id={f.id} emoji={f.emoji} onDone={removeFloating} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function MomentumIcon() {
+  return <span className="live-momentum-flame text-[10px]" title="On fire!">🔥</span>;
+}
+
 function BattleCard({ battle, compact, focused }) {
   const router = useRouter();
   const [timeLeft, setTimeLeft] = useState(battle.remainingMs || 0);
@@ -126,6 +199,9 @@ function BattleCard({ battle, compact, focused }) {
   const progress = battle.progressPercent || 0;
   const picks = SIMULATED_PICKS[battle.id];
 
+  const user1OnFire = parseFloat(user1.pnlPercent) > 10;
+  const user2OnFire = parseFloat(user2.pnlPercent) > 10;
+
   if (compact) {
     return (
       <div className="flex-shrink-0 w-[280px] bg-gradient-to-br from-gray-900/80 to-gray-800/40 border border-gray-700/30 rounded-xl p-3 transition-all cursor-pointer"
@@ -144,7 +220,10 @@ function BattleCard({ battle, compact, focused }) {
               {user1.avatar ? <img src={user1.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-white font-bold">{user1.username?.[0]?.toUpperCase() || '?'}</span>}
             </div>
             <div className="min-w-0">
-              <p className="text-white text-xs font-medium truncate max-w-[65px]">{user1.username || 'Player 1'}</p>
+              <p className="text-white text-xs font-medium truncate max-w-[65px] flex items-center gap-0.5">
+                {user1.username || 'Player 1'}
+                {user1OnFire && <MomentumIcon />}
+              </p>
               <p className={`text-[10px] font-bold ${parseFloat(user1.pnlPercent) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                 {parseFloat(user1.pnlPercent) >= 0 ? '+' : ''}{user1.pnlPercent}%
               </p>
@@ -156,7 +235,10 @@ function BattleCard({ battle, compact, focused }) {
           </div>
           <div className="flex items-center gap-1.5">
             <div className="min-w-0 text-right">
-              <p className="text-white text-xs font-medium truncate max-w-[65px]">{user2.username || 'Player 2'}</p>
+              <p className="text-white text-xs font-medium truncate max-w-[65px] flex items-center justify-end gap-0.5">
+                {user2OnFire && <MomentumIcon />}
+                {user2.username || 'Player 2'}
+              </p>
               <p className={`text-[10px] font-bold ${parseFloat(user2.pnlPercent) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                 {parseFloat(user2.pnlPercent) >= 0 ? '+' : ''}{user2.pnlPercent}%
               </p>
@@ -178,8 +260,8 @@ function BattleCard({ battle, compact, focused }) {
           </div>
         )}
         <BattleChat battleId={battle.id} compact />
-        <div className="mt-2 h-1 bg-gray-800 rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full transition-all duration-1000" style={{ width: `${progress}%` }}></div>
+        <div className="mt-2 h-1 bg-gray-800 rounded-full overflow-hidden relative">
+          <div className={`h-full rounded-full transition-all duration-1000 ${user1Winning ? 'live-progress-shimmer' : ''}`} style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #3b82f6, #10b981)' }}></div>
         </div>
       </div>
     );
@@ -207,7 +289,10 @@ function BattleCard({ battle, compact, focused }) {
               {user1.avatar ? <img src={user1.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-white font-bold">{user1.username?.[0]?.toUpperCase() || '?'}</span>}
             </div>
             <div className="min-w-0">
-              <p className="text-white text-sm font-bold truncate">{user1.username || 'Player 1'}</p>
+              <p className="text-white text-sm font-bold truncate flex items-center gap-1">
+                {user1.username || 'Player 1'}
+                {user1OnFire && <MomentumIcon />}
+              </p>
               <div className="flex items-center gap-2">
                 <span className="text-gray-400 text-xs">${(user1.balance || 0).toLocaleString()}</span>
                 <span className={`text-xs font-bold ${parseFloat(user1.pnlPercent) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -234,7 +319,10 @@ function BattleCard({ battle, compact, focused }) {
 
           <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
             <div className="min-w-0 text-right">
-              <p className="text-white text-sm font-bold truncate">{user2.username || 'Player 2'}</p>
+              <p className="text-white text-sm font-bold truncate flex items-center justify-end gap-1">
+                {user2OnFire && <MomentumIcon />}
+                {user2.username || 'Player 2'}
+              </p>
               <div className="flex items-center gap-2 justify-end">
                 <span className={`text-xs font-bold ${parseFloat(user2.pnlPercent) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                   {parseFloat(user2.pnlPercent) >= 0 ? '+' : ''}{user2.pnlPercent}%
@@ -256,8 +344,8 @@ function BattleCard({ battle, compact, focused }) {
           </div>
         </div>
 
-        <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden mb-2">
-          <div className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full transition-all duration-1000" style={{ width: `${progress}%` }}></div>
+        <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden mb-2 relative">
+          <div className={`h-full rounded-full transition-all duration-1000 ${user1Winning ? 'live-progress-shimmer' : ''}`} style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #3b82f6, #10b981)' }}></div>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-gray-500 text-[10px]">{progress.toFixed(0)}% complete</span>
@@ -312,9 +400,38 @@ function BattleCard({ battle, compact, focused }) {
               </div>
             </div>
           )}
+          <ReactionBar battleId={battle.id} />
           <BattleChat battleId={battle.id} />
         </>
       )}
+
+      <style>{`
+        @keyframes liveReactionFloat {
+          0% { opacity: 1; transform: translateY(0) scale(1); }
+          50% { opacity: 0.8; transform: translateY(-40px) scale(1.2); }
+          100% { opacity: 0; transform: translateY(-80px) scale(0.8); }
+        }
+        .live-reaction-float {
+          animation: liveReactionFloat 1.2s ease-out forwards;
+        }
+        @keyframes liveProgressShimmer {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        .live-progress-shimmer {
+          background: linear-gradient(90deg, #3b82f6 0%, #10b981 30%, #67e8f9 50%, #10b981 70%, #3b82f6 100%) !important;
+          background-size: 200% 100% !important;
+          animation: liveProgressShimmer 2s linear infinite;
+        }
+        @keyframes liveMomentumPulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.7; transform: scale(1.3); }
+        }
+        .live-momentum-flame {
+          display: inline-block;
+          animation: liveMomentumPulse 1s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 }

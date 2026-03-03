@@ -10,6 +10,7 @@ import MatchHistoryModal from '../components/battle/MatchHistoryModal';
 import MatchLobby from '../components/battle/MatchLobby';
 import MatchResult from '../components/battle/MatchResult';
 import LiveBattlesSection from '../components/battle/LiveBattlesSection';
+import ForfeitModal from '../components/battle/ForfeitModal';
 
 function GuestAvatarRotator() {
   const [index, setIndex] = useState(0);
@@ -41,6 +42,7 @@ export default function BattlePage() {
   const [showSidebar, setShowSidebar] = useState(false);
   const [showLobby, setShowLobby] = useState(null);
   const [showResult, setShowResult] = useState(null);
+  const [showForfeitModal, setShowForfeitModal] = useState(false);
 
   const isGuest = status !== 'authenticated';
   const userId = session?.user?.id;
@@ -356,19 +358,7 @@ export default function BattlePage() {
                 </div>
                 <p className="text-gray-400 text-sm mb-3">You have an active battle in progress. Head to the dashboard to place bets.</p>
                 <button
-                  onClick={() => {
-                    if (window.confirm('Are you sure you want to forfeit this battle? Your opponent will be declared the winner and receive the payout.')) {
-                      fetch('/api/battles/forfeit', { method: 'POST' })
-                        .then(r => r.json())
-                        .then(data => {
-                          if (data.success) {
-                            setActiveMatchup(null);
-                            fetchData();
-                          }
-                        })
-                        .catch(() => {});
-                    }
-                  }}
+                  onClick={() => setShowForfeitModal(true)}
                   className="text-red-400 hover:text-red-300 text-xs font-medium transition-colors"
                 >
                   Forfeit Battle
@@ -649,6 +639,23 @@ export default function BattlePage() {
           onClose={() => setShowResult(null)}
         />
       )}
+
+      <ForfeitModal
+        isOpen={showForfeitModal}
+        matchup={activeMatchup}
+        onCancel={() => setShowForfeitModal(false)}
+        onConfirm={async () => {
+          try {
+            const res = await fetch('/api/battles/forfeit', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+              setActiveMatchup(null);
+              fetchData();
+            }
+          } catch {}
+          setShowForfeitModal(false);
+        }}
+      />
 
       <style jsx>{`
         @keyframes slideIn {

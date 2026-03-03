@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useTheme } from '../contexts/ThemeContext';
 import PiksPoolPopup from './PiksPoolPopup';
+import ForfeitModal from './battle/ForfeitModal';
 
 function formatTimeRemaining(ms) {
   if (!ms || ms <= 0) return 'Ended';
@@ -46,6 +47,7 @@ export default function MatchupBanner({
   const [holdProgress, setHoldProgress] = useState(0);
   const [isHolding, setIsHolding] = useState(false);
   const [showPoolPopup, setShowPoolPopup] = useState(false);
+  const [showForfeitModal, setShowForfeitModal] = useState(false);
   const [myPoolData, setMyPoolData] = useState(null);
   const [poolTimeRemaining, setPoolTimeRemaining] = useState(null);
   const scrollRef = useRef(null);
@@ -740,10 +742,7 @@ export default function MatchupBanner({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (window.confirm('Are you sure you want to forfeit this battle? Your opponent will be declared the winner and receive the payout.')) {
-                        onForfeit();
-                        setShowModal(false);
-                      }
+                      setShowForfeitModal(true);
                     }}
                     className="text-red-400 hover:text-red-300 text-xs font-medium transition-colors"
                   >
@@ -757,6 +756,19 @@ export default function MatchupBanner({
         </div>
       )}
       
+      <ForfeitModal
+        isOpen={showForfeitModal}
+        matchup={matchup}
+        onCancel={() => setShowForfeitModal(false)}
+        onConfirm={async () => {
+          if (onForfeit) {
+            await onForfeit();
+          }
+          setShowForfeitModal(false);
+          setShowModal(false);
+        }}
+      />
+
       <PiksPoolPopup 
         isOpen={showPoolPopup} 
         onClose={() => setShowPoolPopup(false)} 
