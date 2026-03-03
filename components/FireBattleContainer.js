@@ -1,15 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-
-const PLACEHOLDER_AVATARS = [
-  '🦁', '🐯', '🦊', '🐺', '🦅', '🐉', '🦈', '🐻', '🦇', '🐍',
-  '🦂', '🦎', '🐊', '🦍', '🐘', '🦏', '🐃', '🐎', '🦌', '🐗'
-];
+import { useSession } from 'next-auth/react';
 
 export default function FireBattleContainer({ isDarkMode }) {
   const [currentAvatarIndex, setCurrentAvatarIndex] = useState(0);
   const [uploadedAvatars, setUploadedAvatars] = useState([]);
+  const [userAvatar, setUserAvatar] = useState(null);
   const router = useRouter();
+  const { data: session } = useSession();
   
   useEffect(() => {
     fetch('/api/admin/battle-avatars')
@@ -17,11 +15,22 @@ export default function FireBattleContainer({ isDarkMode }) {
       .then(data => setUploadedAvatars(data.avatars || []))
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      fetch(`/api/profiles/${session.user.id}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data?.avatar) setUserAvatar(data.avatar);
+        })
+        .catch(() => {});
+    }
+  }, [session?.user?.id]);
   
   useEffect(() => {
+    if (uploadedAvatars.length === 0) return;
     const interval = setInterval(() => {
-      const avatarList = uploadedAvatars.length > 0 ? uploadedAvatars : PLACEHOLDER_AVATARS;
-      setCurrentAvatarIndex(prev => (prev + 1) % avatarList.length);
+      setCurrentAvatarIndex(prev => (prev + 1) % uploadedAvatars.length);
     }, 600);
     return () => clearInterval(interval);
   }, [uploadedAvatars]);
@@ -34,8 +43,8 @@ export default function FireBattleContainer({ isDarkMode }) {
           50% { opacity: 1; transform: scale(1.05); }
         }
         @keyframes battle-glow {
-          0%, 100% { box-shadow: 0 0 20px rgba(139, 92, 246, 0.5); }
-          50% { box-shadow: 0 0 40px rgba(139, 92, 246, 0.8); }
+          0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+          50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.8); }
         }
         @keyframes ember-float {
           0% { 
@@ -70,15 +79,15 @@ export default function FireBattleContainer({ isDarkMode }) {
       <div 
         className="w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 relative h-[140px] md:h-[180px] hover:scale-[1.02] active:scale-[0.98]"
         style={{
-          background: 'linear-gradient(135deg, #0a0515 0%, #1a103d 25%, #2d1b69 50%, #1e1450 75%, #0d0820 100%)',
-          border: '2px solid rgba(139, 92, 246, 0.3)',
+          background: 'linear-gradient(135deg, #020a18 0%, #0a1628 25%, #122240 50%, #0d1a30 75%, #050d1a 100%)',
+          border: '2px solid rgba(59, 130, 246, 0.3)',
         }}
         onClick={() => router.push('/battle')}
       >
         <div 
           className="absolute inset-0 opacity-30"
           style={{
-            background: 'radial-gradient(ellipse at center bottom, rgba(139, 92, 246, 0.4) 0%, transparent 60%)',
+            background: 'radial-gradient(ellipse at center bottom, rgba(59, 130, 246, 0.4) 0%, transparent 60%)',
           }}
         />
         
@@ -108,8 +117,8 @@ export default function FireBattleContainer({ isDarkMode }) {
                 height: `${2 + (i % 3) * 2}px`,
                 left: `${2 + (i * 4)}%`,
                 bottom: `-5%`,
-                background: i % 3 === 0 ? '#c4b5fd' : i % 3 === 1 ? '#a78bfa' : '#8b5cf6',
-                boxShadow: `0 0 ${6 + (i % 3) * 3}px ${i % 3 === 0 ? '#c4b5fd' : '#a78bfa'}`,
+                background: i % 3 === 0 ? '#93c5fd' : i % 3 === 1 ? '#60a5fa' : '#3b82f6',
+                boxShadow: `0 0 ${6 + (i % 3) * 3}px ${i % 3 === 0 ? '#93c5fd' : '#60a5fa'}`,
                 animation: `ember-float ${2.5 + (i % 5) * 0.4}s linear infinite`,
                 animationDelay: `${(i * 0.12)}s`,
               }}
@@ -122,10 +131,20 @@ export default function FireBattleContainer({ isDarkMode }) {
             <div className="flex flex-col items-center flex-1">
               <div className="flex flex-col items-center h-[90px] md:h-[110px]">
                 <div 
-                  className="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 border-yellow-400 shadow-lg bg-gradient-to-br from-blue-600 to-blue-900 flex items-center justify-center"
+                  className="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 border-yellow-400 shadow-lg bg-gradient-to-br from-blue-600 to-blue-900 flex items-center justify-center overflow-hidden"
                   style={{ animation: 'battle-glow 2s ease-in-out infinite' }}
                 >
-                  <span className="text-2xl md:text-3xl">🐍</span>
+                  {userAvatar ? (
+                    <img src={userAvatar} alt="" className="w-full h-full object-cover" />
+                  ) : uploadedAvatars.length > 0 ? (
+                    <img 
+                      src={uploadedAvatars[(currentAvatarIndex + Math.floor(uploadedAvatars.length / 2)) % uploadedAvatars.length]} 
+                      alt="" 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span className="text-2xl md:text-3xl">👤</span>
+                  )}
                 </div>
                 <span className="text-white/80 text-[9px] md:text-xs mt-1 uppercase tracking-wide">You</span>
                 <div 
@@ -170,7 +189,7 @@ export default function FireBattleContainer({ isDarkMode }) {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-2xl md:text-3xl">{PLACEHOLDER_AVATARS[currentAvatarIndex]}</span>
+                    <span className="text-2xl md:text-3xl">👤</span>
                   )}
                 </div>
                 <div className="flex flex-col items-center mt-0.5">
