@@ -188,10 +188,8 @@ function BattleCard({ battle, compact, focused }) {
   return (
     <div 
       className={`bg-gradient-to-br from-gray-900/60 to-gray-800/40 border rounded-2xl overflow-hidden transition-all ${focused ? 'border-blue-500/60 ring-1 ring-blue-500/30 shadow-lg shadow-blue-500/10' : 'border-gray-700/40'}`}
-      onClick={() => picks && setExpanded(!expanded)}
-      style={{ cursor: picks ? 'pointer' : 'default' }}
     >
-      <div className="p-4">
+      <div className="p-4" onClick={() => picks && setExpanded(!expanded)} style={{ cursor: picks ? 'pointer' : 'default' }}>
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -288,7 +286,7 @@ function BattleCard({ battle, compact, focused }) {
                   </div>
                   <div className="space-y-1.5">
                     {picks.user1.map((pick, i) => (
-                      <div key={i} className="flex items-center justify-between">
+                      <div key={i} className="flex flex-col items-center gap-0.5">
                         <PickPill pick={pick} />
                         <span className="text-gray-500 text-[9px]">${pick.amount}</span>
                       </div>
@@ -304,7 +302,7 @@ function BattleCard({ battle, compact, focused }) {
                   </div>
                   <div className="space-y-1.5">
                     {picks.user2.map((pick, i) => (
-                      <div key={i} className="flex items-center justify-between">
+                      <div key={i} className="flex flex-col items-center gap-0.5">
                         <PickPill pick={pick} />
                         <span className="text-gray-500 text-[9px]">${pick.amount}</span>
                       </div>

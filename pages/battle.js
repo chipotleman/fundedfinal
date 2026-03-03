@@ -223,42 +223,42 @@ export default function BattlePage() {
         <div className="flex flex-col lg:flex-row gap-6">
 
           <div className="flex-1">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center overflow-hidden ring-2 ring-blue-500/20">
-                {profile?.avatar ? (
-                  <img src={profile.avatar} className="w-full h-full object-cover" alt="" />
-                ) : isGuest ? (
-                  <GuestAvatarRotator />
-                ) : (
-                  <span className="text-xl font-bold text-white">{profile?.username?.[0]?.toUpperCase() || '?'}</span>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <h1 className="text-xl font-bold text-white truncate">{profile?.username || (isGuest ? 'Create an Account' : 'Player')}</h1>
-                <div className="flex items-center gap-3 text-sm">
-                  <span className="text-green-400 font-medium">{profile?.battleWins || 0}W</span>
-                  <span className="text-gray-600">-</span>
-                  <span className="text-red-400 font-medium">{profile?.battleLosses || 0}L</span>
-                  {profile?.bankroll && (
-                    <>
-                      <span className="text-gray-700">|</span>
-                      <span className="text-gray-400">${parseFloat(profile.bankroll).toFixed(2)}</span>
-                    </>
+            {!isGuest && (
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center overflow-hidden ring-2 ring-blue-500/20">
+                  {profile?.avatar ? (
+                    <img src={profile.avatar} className="w-full h-full object-cover" alt="" />
+                  ) : (
+                    <span className="text-xl font-bold text-white">{profile?.username?.[0]?.toUpperCase() || '?'}</span>
                   )}
                 </div>
+                <div className="flex-1 min-w-0">
+                  <h1 className="text-xl font-bold text-white truncate">{profile?.username || 'Player'}</h1>
+                  <div className="flex items-center gap-3 text-sm">
+                    <span className="text-green-400 font-medium">{profile?.battleWins || 0}W</span>
+                    <span className="text-gray-600">-</span>
+                    <span className="text-red-400 font-medium">{profile?.battleLosses || 0}L</span>
+                    {profile?.bankroll && (
+                      <>
+                        <span className="text-gray-700">|</span>
+                        <span className="text-gray-400">${parseFloat(profile.bankroll).toFixed(2)}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowSidebar(!showSidebar)}
+                  className="lg:hidden w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 hover:text-white transition-colors relative"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  {(invites.received?.length > 0) && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white">
+                      {invites.received.length}
+                    </span>
+                  )}
+                </button>
               </div>
-              <button
-                onClick={() => setShowSidebar(!showSidebar)}
-                className="lg:hidden w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center text-gray-400 hover:text-white transition-colors relative"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                {(invites.received?.length > 0) && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white">
-                    {invites.received.length}
-                  </span>
-                )}
-              </button>
-            </div>
+            )}
 
             {activeMatchup && activeMatchup.status === 'waiting' && (
               <div className="mb-6 bg-gradient-to-r from-orange-900/20 to-orange-800/10 border border-orange-500/30 rounded-2xl p-5">

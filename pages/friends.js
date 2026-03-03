@@ -219,32 +219,32 @@ export default function FriendsPage() {
       </Head>
       <div className="min-h-screen bg-black text-white">
         <TopNavbar />
-        <div className="max-w-6xl mx-auto px-4 pt-20 pb-8">
-          <h1 className="text-3xl font-bold mb-6">Friends</h1>
+        <div className="max-w-6xl mx-auto px-4 pb-8" style={{ paddingTop: 'calc(var(--top-nav-height, 64px) + 24px)' }}>
+          <h1 className="text-2xl font-bold text-white mb-6">Friends</h1>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1">
-              <div className="flex gap-2 mb-4">
+              <div className="flex gap-2 mb-4 bg-gray-900/50 border border-gray-800/50 rounded-xl p-1">
                 <button
                   onClick={() => setActiveTab('friends')}
-                  className={`flex-1 py-2 rounded-lg font-medium transition ${activeTab === 'friends' ? 'bg-blue-600' : 'bg-gray-800 hover:bg-gray-700'}`}
+                  className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'friends' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
                 >
                   Friends ({friends.length})
                 </button>
                 <button
                   onClick={() => setActiveTab('requests')}
-                  className={`flex-1 py-2 rounded-lg font-medium transition relative ${activeTab === 'requests' ? 'bg-blue-600' : 'bg-gray-800 hover:bg-gray-700'}`}
+                  className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all relative ${activeTab === 'requests' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
                 >
                   Requests
                   {requests.length > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white">
                       {requests.length}
                     </span>
                   )}
                 </button>
                 <button
                   onClick={() => setActiveTab('search')}
-                  className={`flex-1 py-2 rounded-lg font-medium transition ${activeTab === 'search' ? 'bg-blue-600' : 'bg-gray-800 hover:bg-gray-700'}`}
+                  className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'search' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
                 >
                   Find
                 </button>
@@ -257,12 +257,12 @@ export default function FriendsPage() {
                     placeholder="Search users..."
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:border-blue-500"
+                    className="w-full px-4 py-3 bg-gray-900/60 border border-gray-700/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50"
                   />
                 </div>
               )}
 
-              <div className="bg-gray-900/50 border border-gray-800 rounded-xl overflow-hidden">
+              <div className="bg-gray-900/40 border border-gray-800/50 rounded-xl overflow-hidden">
                 {activeTab === 'friends' && (
                   <>
                     {friends.length === 0 ? (
