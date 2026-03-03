@@ -77,7 +77,7 @@ export default function BattlePage() {
       }
       if (matchupRes.status === 'fulfilled' && matchupRes.value.ok) {
         const data = await matchupRes.value.json();
-        if (data.matchup && (data.matchup.status === 'active' || data.matchup.status === 'matched')) {
+        if (data.matchup && (data.matchup.status === 'active' || data.matchup.status === 'matched' || data.matchup.status === 'waiting')) {
           setActiveMatchup(data.matchup);
         }
       }
@@ -105,6 +105,28 @@ export default function BattlePage() {
     }, 10000);
     return () => clearInterval(interval);
   }, [userId]);
+
+  useEffect(() => {
+    if (!userId || !activeMatchup || activeMatchup.status !== 'waiting') return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/matchups/current');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.matchup) {
+            if (data.matchup.status === 'active' || data.matchup.status === 'matched') {
+              setActiveMatchup(data.matchup);
+              clearInterval(interval);
+            }
+          } else {
+            setActiveMatchup(null);
+            clearInterval(interval);
+          }
+        }
+      } catch {}
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [userId, activeMatchup?.status]);
 
   const handleAcceptInvite = async (inviteId) => {
     try {
@@ -238,7 +260,87 @@ export default function BattlePage() {
               </button>
             </div>
 
-            {activeMatchup && (
+            {activeMatchup && activeMatchup.status === 'waiting' && (
+              <div className="mb-6 bg-gradient-to-r from-orange-900/20 to-orange-800/10 border border-orange-500/30 rounded-2xl p-5">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2.5 h-2.5 bg-orange-400 rounded-full animate-pulse"></div>
+                    <span className="text-orange-400 text-sm font-bold">Waiting for Opponent</span>
+                  </div>
+                  <span className="text-gray-500 text-xs">
+                    {activeMatchup.matchType === 'private' ? 'Private Match' : activeMatchup.matchType === 'friend' ? 'Friend Match' : 'Quick Match'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                    <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-1">Buy-In</p>
+                    <p className="text-white font-bold text-lg">${parseFloat(activeMatchup.startingBalance || 0).toFixed(0)}</p>
+                  </div>
+                  <div className="bg-black/30 rounded-xl p-3 text-center">
+                    <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-1">Duration</p>
+                    <p className="text-white font-bold text-lg">
+                      {activeMatchup.durationMinutes >= 1440
+                        ? `${Math.floor(activeMatchup.durationMinutes / 1440)}d`
+                        : activeMatchup.durationMinutes >= 60
+                        ? `${Math.floor(activeMatchup.durationMinutes / 60)}h`
+                        : `${activeMatchup.durationMinutes}m`}
+                    </p>
+                  </div>
+                </div>
+
+                {activeMatchup.privateCode && (
+                  <div className="bg-black/40 rounded-xl p-4 mb-4">
+                    <p className="text-gray-400 text-xs text-center mb-2">Share this code with your opponent</p>
+                    <div className="text-3xl font-mono font-bold text-white text-center tracking-[0.3em] mb-3">
+                      {activeMatchup.privateCode}
+                    </div>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(activeMatchup.privateCode);
+                        const btn = document.getElementById('copy-code-btn');
+                        if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy Code'; }, 2000); }
+                      }}
+                      id="copy-code-btn"
+                      className="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 rounded-xl transition-colors text-sm"
+                    >
+                      Copy Code
+                    </button>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 flex items-center gap-2 bg-black/20 rounded-lg px-3 py-2">
+                    <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
+                    <span className="text-gray-400 text-xs">Waiting for someone to join...</span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      if (window.confirm('Cancel this match? You can create a new one afterward.')) {
+                        fetch('/api/battles/private', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ action: 'cancel' }),
+                        })
+                          .then(r => r.json())
+                          .then(data => {
+                            if (data.success) {
+                              setActiveMatchup(null);
+                              fetchData();
+                            }
+                          })
+                          .catch(() => {});
+                      }
+                    }}
+                    className="text-red-400 hover:text-red-300 text-xs font-medium transition-colors px-3 py-2 bg-red-500/10 rounded-lg border border-red-500/20"
+                  >
+                    Cancel Match
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {activeMatchup && (activeMatchup.status === 'active' || activeMatchup.status === 'matched') && (
               <div className="mb-6 bg-gradient-to-r from-blue-900/30 to-blue-800/20 border border-blue-500/30 rounded-2xl p-5">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">

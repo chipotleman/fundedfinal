@@ -127,5 +127,32 @@ export default async function handler(req, res) {
     }
   }
 
-  return res.status(400).json({ error: 'Invalid action. Use "create" or "join".' });
+  if (action === 'cancel') {
+    try {
+      const [matchup] = await db
+        .select()
+        .from(matchups)
+        .where(and(
+          eq(matchups.user1Id, userId),
+          eq(matchups.status, 'waiting')
+        ))
+        .limit(1);
+
+      if (!matchup) {
+        return res.status(404).json({ error: 'No pending match found' });
+      }
+
+      await db
+        .update(matchups)
+        .set({ status: 'cancelled', updatedAt: new Date() })
+        .where(eq(matchups.id, matchup.id));
+
+      return res.status(200).json({ success: true, message: 'Match cancelled' });
+    } catch (error) {
+      console.error('Error cancelling private match:', error);
+      return res.status(500).json({ error: 'Failed to cancel match' });
+    }
+  }
+
+  return res.status(400).json({ error: 'Invalid action. Use "create", "join", or "cancel".' });
 }

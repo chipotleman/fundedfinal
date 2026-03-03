@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 
 const BUY_IN_OPTIONS = [5, 10, 25, 50, 100];
@@ -16,23 +16,60 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
   const [duration, setDuration] = useState(24);
   const [code, setCode] = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
+  const [matchupId, setMatchupId] = useState(null);
   const [joinCode, setJoinCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
   const [joined, setJoined] = useState(false);
   const router = useRouter();
+  const pollRef = useRef(null);
 
   useEffect(() => {
     if (!isOpen) {
       setMode('choose');
       setGeneratedCode('');
+      setMatchupId(null);
       setJoinCode('');
       setError('');
       setCopied(false);
       setJoined(false);
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (mode === 'created' && matchupId) {
+      pollRef.current = setInterval(async () => {
+        try {
+          const res = await fetch('/api/matchups/current');
+          if (res.ok) {
+            const data = await res.json();
+            if (data.matchup && data.matchup.status === 'active') {
+              clearInterval(pollRef.current);
+              pollRef.current = null;
+              setJoined(true);
+              setMode('opponent_joined');
+              setTimeout(() => {
+                onClose();
+                if (onMatchJoined) onMatchJoined(data.matchup);
+                else router.push('/');
+              }, 1500);
+            }
+          }
+        } catch {}
+      }, 3000);
+      return () => {
+        if (pollRef.current) {
+          clearInterval(pollRef.current);
+          pollRef.current = null;
+        }
+      };
+    }
+  }, [mode, matchupId]);
 
   const createMatch = async () => {
     setLoading(true);
@@ -49,6 +86,7 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
         return;
       }
       setGeneratedCode(data.code);
+      setMatchupId(data.matchupId);
       setMode('created');
     } catch {
       setError('Network error');
@@ -203,7 +241,39 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
               >
                 {copied ? 'Copied!' : 'Copy Code'}
               </button>
-              <p className="text-gray-500 text-xs mt-4">Waiting for opponent to join...</p>
+              <div className="flex items-center justify-center gap-2 mt-4">
+                <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
+                <p className="text-gray-400 text-xs">Waiting for opponent to join...</p>
+              </div>
+              <p className="text-gray-600 text-[10px] mt-2">You can close this and come back — your match will stay active on the Battle and My Battle pages.</p>
+              <button
+                onClick={() => {
+                  if (window.confirm('Cancel this match?')) {
+                    fetch('/api/battles/private', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ action: 'cancel' }),
+                    }).then(r => r.json()).then(data => {
+                      if (data.success) {
+                        onClose();
+                      }
+                    }).catch(() => {});
+                  }
+                }}
+                className="text-red-400 hover:text-red-300 text-xs font-medium transition-colors mt-3"
+              >
+                Cancel Match
+              </button>
+            </div>
+          )}
+
+          {mode === 'opponent_joined' && (
+            <div className="text-center py-4">
+              <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+              </div>
+              <h3 className="text-white font-bold text-lg">Opponent Joined!</h3>
+              <p className="text-green-400 text-sm mt-1">Battle starting now...</p>
             </div>
           )}
 

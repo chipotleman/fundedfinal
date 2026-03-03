@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
+import BattleChat from './BattleChat';
 
 function formatTimeRemaining(ms) {
   if (!ms || ms <= 0) return 'Ended';
@@ -176,6 +177,7 @@ function BattleCard({ battle, compact, focused }) {
             </div>
           </div>
         )}
+        <BattleChat battleId={battle.id} compact />
         <div className="mt-2 h-1 bg-gray-800 rounded-full overflow-hidden">
           <div className="h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full transition-all duration-1000" style={{ width: `${progress}%` }}></div>
         </div>
@@ -272,43 +274,48 @@ function BattleCard({ battle, compact, focused }) {
         </div>
       </div>
 
-      {expanded && picks && (
-        <div className="border-t border-gray-700/40 bg-black/20">
-          <div className="grid grid-cols-2 divide-x divide-gray-700/30">
-            <div className="p-3">
-              <div className="flex items-center gap-1.5 mb-2">
-                <div className="w-5 h-5 rounded-full overflow-hidden bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center flex-shrink-0">
-                  {user1.avatar ? <img src={user1.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-[8px] text-white font-bold">{user1.username?.[0]}</span>}
-                </div>
-                <span className="text-white text-[11px] font-semibold truncate">{user1.username}'s Picks</span>
-              </div>
-              <div className="space-y-1.5">
-                {picks.user1.map((pick, i) => (
-                  <div key={i} className="flex items-center justify-between">
-                    <PickPill pick={pick} />
-                    <span className="text-gray-500 text-[9px]">${pick.amount}</span>
+      {expanded && (
+        <>
+          {picks && (
+            <div className="border-t border-gray-700/40 bg-black/20">
+              <div className="grid grid-cols-2 divide-x divide-gray-700/30">
+                <div className="p-3">
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <div className="w-5 h-5 rounded-full overflow-hidden bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center flex-shrink-0">
+                      {user1.avatar ? <img src={user1.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-[8px] text-white font-bold">{user1.username?.[0]}</span>}
+                    </div>
+                    <span className="text-white text-[11px] font-semibold truncate">{user1.username}'s Picks</span>
                   </div>
-                ))}
+                  <div className="space-y-1.5">
+                    {picks.user1.map((pick, i) => (
+                      <div key={i} className="flex items-center justify-between">
+                        <PickPill pick={pick} />
+                        <span className="text-gray-500 text-[9px]">${pick.amount}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="p-3">
+                  <div className="flex items-center gap-1.5 mb-2 justify-end">
+                    <span className="text-white text-[11px] font-semibold truncate">{user2.username}'s Picks</span>
+                    <div className="w-5 h-5 rounded-full overflow-hidden bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center flex-shrink-0">
+                      {user2.avatar ? <img src={user2.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-[8px] text-white font-bold">{user2.username?.[0]}</span>}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    {picks.user2.map((pick, i) => (
+                      <div key={i} className="flex items-center justify-between">
+                        <PickPill pick={pick} />
+                        <span className="text-gray-500 text-[9px]">${pick.amount}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
-            <div className="p-3">
-              <div className="flex items-center gap-1.5 mb-2 justify-end">
-                <span className="text-white text-[11px] font-semibold truncate">{user2.username}'s Picks</span>
-                <div className="w-5 h-5 rounded-full overflow-hidden bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center flex-shrink-0">
-                  {user2.avatar ? <img src={user2.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-[8px] text-white font-bold">{user2.username?.[0]}</span>}
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                {picks.user2.map((pick, i) => (
-                  <div key={i} className="flex items-center justify-between">
-                    <PickPill pick={pick} />
-                    <span className="text-gray-500 text-[9px]">${pick.amount}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
+          )}
+          <BattleChat battleId={battle.id} />
+        </>
       )}
     </div>
   );

@@ -55,6 +55,29 @@ export default function MyBattle() {
     }
   }, [currentMatchup]);
 
+  useEffect(() => {
+    if (!currentMatchup || currentMatchup.status !== 'waiting') return;
+    const poll = setInterval(async () => {
+      try {
+        const res = await fetch('/api/matchups/current', { credentials: 'include' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.matchup) {
+            if (data.matchup.status === 'active' || data.matchup.status === 'matched') {
+              setCurrentMatchup(data.matchup);
+              setOpponentProfile(data.opponent);
+              clearInterval(poll);
+            }
+          } else {
+            setCurrentMatchup(null);
+            clearInterval(poll);
+          }
+        }
+      } catch {}
+    }, 5000);
+    return () => clearInterval(poll);
+  }, [currentMatchup?.status]);
+
   const fetchAllData = async () => {
     try {
       const [matchupRes, profileRes, historyRes] = await Promise.all([
@@ -163,7 +186,94 @@ export default function MyBattle() {
         </h1>
         <p className="text-gray-400 mb-8">Track your current matchup and battle history</p>
 
-        {currentMatchup ? (
+        {currentMatchup && currentMatchup.status === 'waiting' && (
+          <div className="mb-8">
+            <div className="bg-gradient-to-r from-orange-500/10 to-orange-400/5 rounded-2xl border border-orange-500/20 p-6 mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 bg-orange-400 rounded-full animate-pulse"></div>
+                  <span className="text-orange-400 font-semibold text-sm uppercase tracking-wide">Waiting for Opponent</span>
+                </div>
+                <span className="text-gray-500 text-xs">
+                  {currentMatchup.matchType === 'private' ? 'Private Match' : currentMatchup.matchType === 'friend' ? 'Friend Match' : 'Quick Match'}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4 items-center mb-6">
+                <div className="text-center">
+                  <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-2xl ring-2 ring-blue-500/30">
+                    {userProfile?.avatar ? (
+                      <img src={userProfile.avatar} alt="You" className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      '👤'
+                    )}
+                  </div>
+                  <p className="text-white font-bold text-sm">{userProfile?.username || 'You'}</p>
+                  <p className="text-green-400 font-bold">${parseFloat(currentMatchup.startingBalance || 0).toFixed(0)}</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-yellow-400 text-3xl font-black">VS</p>
+                  <p className="text-gray-500 text-xs mt-1">POT ${parseFloat(currentMatchup.potSize || 0).toFixed(0)}</p>
+                </div>
+                <div className="text-center">
+                  <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center border-2 border-dashed border-gray-600">
+                    <div className="w-6 h-6 border-2 border-gray-500 border-t-orange-400 rounded-full animate-spin"></div>
+                  </div>
+                  <p className="text-gray-500 font-bold text-sm">Waiting...</p>
+                  <p className="text-gray-600 text-xs">
+                    {currentMatchup.durationMinutes >= 1440
+                      ? `${Math.floor(currentMatchup.durationMinutes / 1440)}d match`
+                      : currentMatchup.durationMinutes >= 60
+                      ? `${Math.floor(currentMatchup.durationMinutes / 60)}h match`
+                      : `${currentMatchup.durationMinutes}m match`}
+                  </p>
+                </div>
+              </div>
+
+              {currentMatchup.privateCode && (
+                <div className="bg-black/30 rounded-xl p-4 mb-4">
+                  <p className="text-gray-400 text-xs text-center mb-2">Share this code with your opponent</p>
+                  <div className="text-3xl font-mono font-bold text-white text-center tracking-[0.3em] mb-3">
+                    {currentMatchup.privateCode}
+                  </div>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(currentMatchup.privateCode);
+                    }}
+                    className="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 rounded-xl transition-colors text-sm"
+                  >
+                    Copy Code
+                  </button>
+                </div>
+              )}
+
+              <button
+                onClick={() => {
+                  if (window.confirm('Cancel this match? You can create a new one afterward.')) {
+                    fetch('/api/battles/private', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ action: 'cancel' }),
+                    })
+                      .then(r => r.json())
+                      .then(data => {
+                        if (data.success) {
+                          setCurrentMatchup(null);
+                          fetchAllData();
+                        }
+                      })
+                      .catch(() => {});
+                  }
+                }}
+                className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold py-3 rounded-xl transition-colors border border-red-500/20 text-sm"
+              >
+                Cancel Match
+              </button>
+            </div>
+          </div>
+        )}
+
+        {currentMatchup && currentMatchup.status !== 'waiting' ? (
           <div className="mb-8">
             <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/20 p-6 mb-6">
               <div className="flex items-center justify-between mb-4">
@@ -293,7 +403,9 @@ export default function MyBattle() {
               </div>
             </div>
           </div>
-        ) : (
+        ) : null}
+
+        {!currentMatchup && (
           <div className="mb-8">
             <div className="bg-gradient-to-r from-blue-600/20 to-emerald-600/20 border border-blue-500/30 rounded-2xl p-6 text-center">
               <span className="text-4xl block mb-3">⚔️</span>
