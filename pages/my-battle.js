@@ -60,7 +60,7 @@ export default function MyBattle() {
       const [matchupRes, profileRes, historyRes] = await Promise.all([
         fetch('/api/matchups/current', { credentials: 'include' }),
         fetch(`/api/profiles/${session.user.id}`, { credentials: 'include' }),
-        fetch(`/api/profiles/battle-history?userId=${session.user.id}`, { credentials: 'include' }),
+        fetch('/api/battles/history?limit=50', { credentials: 'include' }),
       ]);
 
       if (matchupRes.ok) {
@@ -70,6 +70,9 @@ export default function MyBattle() {
           setOpponentProfile(matchupData.opponent);
           setUserBets(matchupData.userBets || []);
           setOpponentBets(matchupData.opponentBets || []);
+        } else {
+          setCurrentMatchup(null);
+          setOpponentProfile(null);
         }
       }
 
@@ -80,8 +83,12 @@ export default function MyBattle() {
 
       if (historyRes.ok) {
         const historyData = await historyRes.json();
-        setBattleHistory(historyData.battles || []);
-        setBattleStats(historyData.stats);
+        const matches = historyData.matches || [];
+        setBattleHistory(matches);
+        const wins = matches.filter(m => m.result === 'win').length;
+        const losses = matches.filter(m => m.result === 'loss').length;
+        const totalWinnings = matches.filter(m => m.result === 'win').reduce((sum, m) => sum + (parseFloat(m.winnerPayout) || 0), 0);
+        setBattleStats({ totalBattles: matches.length, wins, losses, totalWinnings });
       }
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -265,12 +272,39 @@ export default function MyBattle() {
                     Place Bets
                   </button>
                 </Link>
+                <button
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to forfeit this battle? Your opponent will be declared the winner and receive the payout.')) {
+                      fetch('/api/battles/forfeit', { method: 'POST' })
+                        .then(r => r.json())
+                        .then(data => {
+                          if (data.success) {
+                            setCurrentMatchup(null);
+                            fetchAllData();
+                          }
+                        })
+                        .catch(() => {});
+                    }
+                  }}
+                  className="bg-red-500/20 hover:bg-red-500/30 text-red-400 font-bold py-3 px-6 rounded-xl transition-all border border-red-500/30"
+                >
+                  Forfeit
+                </button>
               </div>
             </div>
           </div>
         ) : (
           <div className="mb-8">
-            <FireBattleContainer isDarkMode={true} />
+            <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-2xl p-6 text-center">
+              <span className="text-4xl block mb-3">⚔️</span>
+              <h3 className="text-white font-bold text-lg mb-2">No Active Battle</h3>
+              <p className="text-gray-400 text-sm mb-4">Start a new battle to compete against other players</p>
+              <Link href="/battle">
+                <button className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-xl transition-colors">
+                  Go to Battle Arena
+                </button>
+              </Link>
+            </div>
           </div>
         )}
 
@@ -345,7 +379,7 @@ export default function MyBattle() {
                           vs {battle.opponent?.username || battle.opponent?.displayName || 'Unknown'}
                         </p>
                         <p className="text-gray-400 text-sm">
-                          {battle.challengeType?.toUpperCase()} • {battle.durationType?.replace('_', ' ')}
+                          {battle.matchType === 'friend' ? '👥 Friend' : battle.matchType === 'private' ? '🔑 Private' : '⚡ Quick'} • {battle.duration ? `${battle.duration}min` : battle.durationType?.replace('_', ' ') || 'N/A'}
                         </p>
                       </div>
                     </div>
@@ -353,8 +387,8 @@ export default function MyBattle() {
                       <p className={`font-bold uppercase ${getResultColor(battle.result)}`}>
                         {battle.result === 'pending' ? 'In Progress' : battle.result}
                       </p>
-                      <p className={`text-lg font-bold ${battle.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {battle.pnl >= 0 ? '+' : ''}{formatCurrency(battle.pnl)}
+                      <p className={`text-lg font-bold ${(battle.pnl || 0) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {(battle.pnl || 0) >= 0 ? '+' : ''}{formatCurrency(battle.pnl || 0)}
                       </p>
                     </div>
                   </div>

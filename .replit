@@ -10,10 +10,7 @@ run = ["sh", "-c", "npm run dev"]
 
 [[ports]]
 localPort = 3000
-
-[[ports]]
-localPort = 3001
-externalPort = 3001
+externalPort = 3000
 
 [[ports]]
 localPort = 5000
@@ -32,16 +29,8 @@ task = "shell.exec"
 args = "npm run dev"
 
 [[workflows.workflow]]
-name = "Project"
+name = "Run Dev Server"
 mode = "parallel"
-author = "agent"
-
-[[workflows.workflow.tasks]]
-task = "workflow.run"
-args = "Next.js Dev Server"
-
-[[workflows.workflow]]
-name = "Next.js Dev Server"
 author = "agent"
 
 [[workflows.workflow.tasks]]

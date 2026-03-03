@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const BUY_IN_OPTIONS = [5, 10, 25, 50, 100];
 const DURATION_OPTIONS = [
@@ -9,7 +9,9 @@ const DURATION_OPTIONS = [
   { label: '1 Week', value: 168 },
 ];
 
-export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent }) {
+const INVITE_TIMEOUT_SECONDS = 300;
+
+export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onSwitchToPrivate }) {
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [buyIn, setBuyIn] = useState(10);
   const [duration, setDuration] = useState(24);
@@ -19,6 +21,8 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+  const [inviteCountdown, setInviteCountdown] = useState(0);
+  const countdownRef = useRef(null);
 
   useEffect(() => {
     if (!isOpen) {
@@ -27,8 +31,20 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
       setSearchResults([]);
       setSent(false);
       setError('');
+      setInviteCountdown(0);
+      if (countdownRef.current) clearInterval(countdownRef.current);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+    };
+  }, []);
+
+  const friendIds = friends.map(f => f.id);
+
+  const isFriend = (userId) => friendIds.includes(userId);
 
   const handleSearch = async (query) => {
     setSearchQuery(query);
@@ -68,8 +84,17 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
         return;
       }
       setSent(true);
+      setInviteCountdown(INVITE_TIMEOUT_SECONDS);
+      countdownRef.current = setInterval(() => {
+        setInviteCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(countdownRef.current);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
       if (onInviteSent) onInviteSent();
-      setTimeout(() => onClose(), 1500);
     } catch {
       setError('Network error. Please try again.');
     } finally {
@@ -79,13 +104,20 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
 
   const addFriend = async (userId) => {
     try {
-      await fetch('/api/friends', {
+      const res = await fetch('/api/friends', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ friendId: userId }),
       });
-      setSearchResults(prev => prev.map(u => u.id === userId ? { ...u, requestSent: true } : u));
+      if (res.ok) {
+        setSearchResults(prev => prev.map(u => u.id === userId ? { ...u, requestSent: true } : u));
+      }
     } catch {}
+  };
+
+  const handleSwitchToPrivate = () => {
+    onClose();
+    if (onSwitchToPrivate) onSwitchToPrivate();
   };
 
   if (!isOpen) return null;
@@ -93,6 +125,15 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
   const filteredFriends = friends.filter(f =>
     !searchQuery || f.username?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const nonFriendResults = searchResults.filter(u => !isFriend(u.id));
+  const friendResults = searchResults.filter(u => isFriend(u.id));
+
+  const formatCountdown = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -113,6 +154,33 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
             </div>
             <h3 className="text-white font-bold text-lg">Invite Sent!</h3>
             <p className="text-gray-400 text-sm mt-1">Waiting for {selectedFriend?.username} to accept</p>
+            {inviteCountdown > 0 ? (
+              <div className="mt-4">
+                <div className="w-full bg-gray-800 rounded-full h-1.5 mb-2">
+                  <div
+                    className="bg-blue-500 h-1.5 rounded-full transition-all duration-1000"
+                    style={{ width: `${(inviteCountdown / INVITE_TIMEOUT_SECONDS) * 100}%` }}
+                  ></div>
+                </div>
+                <p className="text-gray-500 text-xs">Expires in {formatCountdown(inviteCountdown)}</p>
+              </div>
+            ) : (
+              <div className="mt-4">
+                <p className="text-yellow-400 text-sm">Invite expired. Your friend may be offline.</p>
+                <button
+                  onClick={() => { setSent(false); setError(''); }}
+                  className="mt-3 px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm hover:bg-gray-700 transition-colors"
+                >
+                  Try Again
+                </button>
+              </div>
+            )}
+            <button
+              onClick={onClose}
+              className="mt-3 text-gray-500 text-xs hover:text-gray-400 transition-colors"
+            >
+              Close
+            </button>
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto p-5 space-y-4">
@@ -127,30 +195,97 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                 placeholder="Search friends or find users..."
               />
               <svg className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              {searching && (
+                <div className="absolute right-3.5 top-1/2 -translate-y-1/2">
+                  <div className="w-4 h-4 border-2 border-gray-600 border-t-blue-400 rounded-full animate-spin"></div>
+                </div>
+              )}
             </div>
 
-            {searchQuery.length >= 2 && searchResults.length > 0 && (
+            {searchQuery.length >= 2 && friendResults.length > 0 && (
               <div>
-                <label className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 block">Search Results</label>
+                <label className="text-xs font-medium text-green-400 uppercase tracking-wider mb-2 block">Friends Found</label>
                 <div className="space-y-1">
-                  {searchResults.map(user => (
-                    <div key={user.id} className="flex items-center justify-between bg-gray-800/30 rounded-lg px-3 py-2">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
-                          {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-sm">{user.username?.[0]?.toUpperCase()}</span>}
-                        </div>
-                        <span className="text-white text-sm font-medium">{user.username}</span>
+                  {friendResults.map(user => (
+                    <button
+                      key={user.id}
+                      onClick={() => setSelectedFriend(user)}
+                      className={`w-full flex items-center gap-2.5 bg-gray-800/30 rounded-lg px-3 py-2 transition-all ${
+                        selectedFriend?.id === user.id
+                          ? 'bg-blue-600/20 border border-blue-500/40'
+                          : 'border border-transparent hover:bg-gray-800/60'
+                      }`}
+                    >
+                      <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
+                        {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-sm">{user.username?.[0]?.toUpperCase()}</span>}
                       </div>
-                      <button
-                        onClick={() => addFriend(user.id)}
-                        disabled={user.requestSent}
-                        className={`text-xs px-3 py-1 rounded-lg font-medium ${user.requestSent ? 'bg-gray-700 text-gray-500' : 'bg-blue-600/20 text-blue-400 hover:bg-blue-600/30'}`}
-                      >
-                        {user.requestSent ? 'Sent' : 'Add'}
-                      </button>
+                      <span className="text-white text-sm font-medium flex-1 text-left">{user.username}</span>
+                      {selectedFriend?.id === user.id && (
+                        <svg className="w-4 h-4 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {searchQuery.length >= 2 && nonFriendResults.length > 0 && (
+              <div>
+                <label className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 block">Other Users</label>
+                <div className="space-y-1.5">
+                  {nonFriendResults.map(user => (
+                    <div key={user.id} className="bg-gray-800/30 rounded-lg px-3 py-2.5 border border-gray-700/30">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
+                            {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-sm">{user.username?.[0]?.toUpperCase()}</span>}
+                          </div>
+                          <div>
+                            <span className="text-white text-sm font-medium">{user.username}</span>
+                            <span className="text-gray-500 text-xs block">Not a friend</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => addFriend(user.id)}
+                          disabled={user.requestSent}
+                          className={`text-xs px-3 py-1 rounded-lg font-medium ${user.requestSent ? 'bg-gray-700 text-gray-500' : 'bg-blue-600/20 text-blue-400 hover:bg-blue-600/30'}`}
+                        >
+                          {user.requestSent ? 'Request Sent' : 'Add Friend'}
+                        </button>
+                      </div>
+                      {!user.requestSent && (
+                        <div className="mt-2 pt-2 border-t border-gray-700/30">
+                          <p className="text-gray-500 text-xs mb-1.5">Want to play now without adding?</p>
+                          <button
+                            onClick={handleSwitchToPrivate}
+                            className="text-xs px-3 py-1.5 rounded-lg font-medium bg-orange-600/20 text-orange-400 hover:bg-orange-600/30 transition-colors flex items-center gap-1.5"
+                          >
+                            <span>🔑</span>
+                            <span>Create Private Match Code</span>
+                          </button>
+                        </div>
+                      )}
+                      {user.requestSent && (
+                        <div className="mt-2 pt-2 border-t border-gray-700/30">
+                          <p className="text-gray-500 text-xs">Friend request sent! Once accepted, you can challenge them. Or use a Private Match code instead:</p>
+                          <button
+                            onClick={handleSwitchToPrivate}
+                            className="mt-1.5 text-xs px-3 py-1.5 rounded-lg font-medium bg-orange-600/20 text-orange-400 hover:bg-orange-600/30 transition-colors flex items-center gap-1.5"
+                          >
+                            <span>🔑</span>
+                            <span>Create Private Match Code</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {searchQuery.length >= 2 && !searching && searchResults.length === 0 && (
+              <div className="text-center py-4">
+                <p className="text-gray-500 text-sm">No users found for "{searchQuery}"</p>
               </div>
             )}
 
@@ -158,9 +293,17 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
               <label className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 block">Your Friends</label>
               {filteredFriends.length === 0 ? (
                 <div className="text-center py-6">
-                  <p className="text-gray-500 text-sm">
+                  <p className="text-gray-500 text-sm mb-2">
                     {friends.length === 0 ? 'No friends yet. Search for users above!' : 'No friends match your search'}
                   </p>
+                  {friends.length === 0 && (
+                    <button
+                      onClick={handleSwitchToPrivate}
+                      className="text-orange-400 text-xs hover:text-orange-300 transition-colors"
+                    >
+                      Or create a Private Match code to share →
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-1 max-h-40 overflow-y-auto">

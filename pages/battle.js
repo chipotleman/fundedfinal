@@ -9,6 +9,7 @@ import InviteToast from '../components/battle/InviteToast';
 import MatchHistoryModal from '../components/battle/MatchHistoryModal';
 import MatchLobby from '../components/battle/MatchLobby';
 import MatchResult from '../components/battle/MatchResult';
+import LiveBattlesSection from '../components/battle/LiveBattlesSection';
 
 export default function BattlePage() {
   const router = useRouter();
@@ -237,46 +238,85 @@ export default function BattlePage() {
                     Go to Dashboard →
                   </button>
                 </div>
-                <p className="text-gray-400 text-sm">You have an active battle in progress. Head to the dashboard to place bets.</p>
+                <p className="text-gray-400 text-sm mb-3">You have an active battle in progress. Head to the dashboard to place bets.</p>
+                <button
+                  onClick={() => {
+                    if (window.confirm('Are you sure you want to forfeit this battle? Your opponent will be declared the winner and receive the payout.')) {
+                      fetch('/api/battles/forfeit', { method: 'POST' })
+                        .then(r => r.json())
+                        .then(data => {
+                          if (data.success) {
+                            setActiveMatchup(null);
+                            fetchData();
+                          }
+                        })
+                        .catch(() => {});
+                    }
+                  }}
+                  className="text-red-400 hover:text-red-300 text-xs font-medium transition-colors"
+                >
+                  Forfeit Battle
+                </button>
               </div>
             )}
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-              <button
-                onClick={() => requireAuth(() => setShowQuickMatch(true))}
-                disabled={!!activeMatchup}
-                className="group relative bg-gradient-to-br from-blue-900/40 to-blue-800/20 border border-blue-500/20 hover:border-blue-500/50 rounded-2xl p-6 text-left transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <div className="w-14 h-14 bg-blue-500/15 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <span className="text-3xl">⚡</span>
-                </div>
-                <h3 className="text-white font-bold text-lg mb-1">Quick Match</h3>
-                <p className="text-gray-400 text-sm">Find a random opponent</p>
-              </button>
+              <div className="relative group">
+                <button
+                  onClick={() => requireAuth(() => setShowQuickMatch(true))}
+                  disabled={!!activeMatchup}
+                  className="w-full bg-gradient-to-br from-blue-900/40 to-blue-800/20 border border-blue-500/20 hover:border-blue-500/50 rounded-2xl p-6 text-left transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <div className="w-14 h-14 bg-blue-500/15 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <span className="text-3xl">⚡</span>
+                  </div>
+                  <h3 className="text-white font-bold text-lg mb-1">Quick Match</h3>
+                  <p className="text-gray-400 text-sm">Find a random opponent</p>
+                </button>
+                {!!activeMatchup && (
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-xs text-gray-300 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                    Finish your current battle first
+                  </div>
+                )}
+              </div>
 
-              <button
-                onClick={() => requireAuth(() => setShowPlayFriend(true))}
-                disabled={!!activeMatchup}
-                className="group relative bg-gradient-to-br from-purple-900/40 to-purple-800/20 border border-purple-500/20 hover:border-purple-500/50 rounded-2xl p-6 text-left transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <div className="w-14 h-14 bg-purple-500/15 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <span className="text-3xl">👥</span>
-                </div>
-                <h3 className="text-white font-bold text-lg mb-1">Play a Friend</h3>
-                <p className="text-gray-400 text-sm">Challenge someone you know</p>
-              </button>
+              <div className="relative group">
+                <button
+                  onClick={() => requireAuth(() => setShowPlayFriend(true))}
+                  disabled={!!activeMatchup}
+                  className="w-full bg-gradient-to-br from-purple-900/40 to-purple-800/20 border border-purple-500/20 hover:border-purple-500/50 rounded-2xl p-6 text-left transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <div className="w-14 h-14 bg-purple-500/15 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <span className="text-3xl">👥</span>
+                  </div>
+                  <h3 className="text-white font-bold text-lg mb-1">Play a Friend</h3>
+                  <p className="text-gray-400 text-sm">Challenge someone you know</p>
+                </button>
+                {!!activeMatchup && (
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-xs text-gray-300 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                    Finish your current battle first
+                  </div>
+                )}
+              </div>
 
-              <button
-                onClick={() => requireAuth(() => setShowPrivateMatch(true))}
-                disabled={!!activeMatchup}
-                className="group relative bg-gradient-to-br from-orange-900/40 to-orange-800/20 border border-orange-500/20 hover:border-orange-500/50 rounded-2xl p-6 text-left transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/10 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <div className="w-14 h-14 bg-orange-500/15 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                  <span className="text-3xl">🔑</span>
-                </div>
-                <h3 className="text-white font-bold text-lg mb-1">Private Match</h3>
-                <p className="text-gray-400 text-sm">Create or join with a code</p>
-              </button>
+              <div className="relative group">
+                <button
+                  onClick={() => requireAuth(() => setShowPrivateMatch(true))}
+                  disabled={!!activeMatchup}
+                  className="w-full bg-gradient-to-br from-orange-900/40 to-orange-800/20 border border-orange-500/20 hover:border-orange-500/50 rounded-2xl p-6 text-left transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/10 disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <div className="w-14 h-14 bg-orange-500/15 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <span className="text-3xl">🔑</span>
+                  </div>
+                  <h3 className="text-white font-bold text-lg mb-1">Private Match</h3>
+                  <p className="text-gray-400 text-sm">Create or join with a code</p>
+                </button>
+                {!!activeMatchup && (
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-800 border border-gray-700 rounded-lg text-xs text-gray-300 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                    Finish your current battle first
+                  </div>
+                )}
+              </div>
             </div>
 
             {isGuest && (
@@ -305,6 +345,8 @@ export default function BattlePage() {
                 ))}
               </div>
             )}
+
+            <LiveBattlesSection />
 
             <div>
               <div className="flex items-center justify-between mb-3">
@@ -459,6 +501,7 @@ export default function BattlePage() {
         onClose={() => setShowPlayFriend(false)}
         friends={friends}
         onInviteSent={fetchData}
+        onSwitchToPrivate={() => setShowPrivateMatch(true)}
       />
       <PrivateMatchModal
         isOpen={showPrivateMatch}

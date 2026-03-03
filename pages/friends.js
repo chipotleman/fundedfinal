@@ -10,6 +10,7 @@ export default function FriendsPage() {
   const [activeTab, setActiveTab] = useState('friends');
   const [friends, setFriends] = useState([]);
   const [requests, setRequests] = useState([]);
+  const [sentRequests, setSentRequests] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +30,7 @@ export default function FriendsPage() {
     if (session?.user?.id) {
       fetchFriends();
       fetchRequests();
+      fetchSentRequests();
     }
   }, [session]);
 
@@ -67,6 +69,34 @@ export default function FriendsPage() {
       }
     } catch (error) {
       console.error('Error fetching requests:', error);
+    }
+  };
+
+  const fetchSentRequests = async () => {
+    try {
+      const res = await fetch('/api/friends/sent', { credentials: 'include' });
+      if (res.ok) {
+        const data = await res.json();
+        setSentRequests(data.requests || []);
+      }
+    } catch (error) {
+      console.error('Error fetching sent requests:', error);
+    }
+  };
+
+  const handleWithdrawRequest = async (requestId) => {
+    try {
+      const res = await fetch(`/api/friends/${requestId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ action: 'withdraw' }),
+      });
+      if (res.ok) {
+        fetchSentRequests();
+      }
+    } catch (error) {
+      console.error('Error withdrawing request:', error);
     }
   };
 
@@ -271,29 +301,56 @@ export default function FriendsPage() {
 
                 {activeTab === 'requests' && (
                   <>
-                    {requests.length === 0 ? (
-                      <p className="text-gray-400 text-center py-8">No pending requests</p>
-                    ) : (
-                      <div className="divide-y divide-gray-800">
-                        {requests.map((request) => (
-                          <div key={request.id} className="flex items-center gap-3 p-4">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center overflow-hidden">
-                              {request.sender?.avatar ? (
-                                <img src={request.sender.avatar} alt="" className="w-full h-full object-cover" />
-                              ) : (
-                                request.sender?.username?.charAt(0)?.toUpperCase()
-                              )}
+                    {requests.length > 0 && (
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wider px-4 pt-3 pb-1">Received</p>
+                        <div className="divide-y divide-gray-800">
+                          {requests.map((request) => (
+                            <div key={request.id} className="flex items-center gap-3 p-4">
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center overflow-hidden">
+                                {request.sender?.avatar ? (
+                                  <img src={request.sender.avatar} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                  request.sender?.username?.charAt(0)?.toUpperCase()
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium">{request.sender?.username}</p>
+                              </div>
+                              <div className="flex gap-2">
+                                <button onClick={() => handleAcceptRequest(request.id)} className="px-3 py-1 bg-green-600 hover:bg-green-700 rounded-lg text-sm">Accept</button>
+                                <button onClick={() => handleDeclineRequest(request.id)} className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm">Decline</button>
+                              </div>
                             </div>
-                            <div className="flex-1">
-                              <p className="font-medium">{request.sender?.username}</p>
-                            </div>
-                            <div className="flex gap-2">
-                              <button onClick={() => handleAcceptRequest(request.id)} className="px-3 py-1 bg-green-600 hover:bg-green-700 rounded-lg text-sm">Accept</button>
-                              <button onClick={() => handleDeclineRequest(request.id)} className="px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm">Decline</button>
-                            </div>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
+                    )}
+                    {sentRequests.length > 0 && (
+                      <div>
+                        <p className="text-xs text-gray-500 uppercase tracking-wider px-4 pt-3 pb-1">Sent</p>
+                        <div className="divide-y divide-gray-800">
+                          {sentRequests.map((request) => (
+                            <div key={request.id} className="flex items-center gap-3 p-4">
+                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-indigo-800 flex items-center justify-center overflow-hidden">
+                                {request.receiver?.avatar ? (
+                                  <img src={request.receiver.avatar} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                  request.receiver?.username?.charAt(0)?.toUpperCase()
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium">{request.receiver?.username}</p>
+                                <p className="text-xs text-gray-500">Pending</p>
+                              </div>
+                              <button onClick={() => handleWithdrawRequest(request.id)} className="px-3 py-1 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded-lg text-sm">Withdraw</button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {requests.length === 0 && sentRequests.length === 0 && (
+                      <p className="text-gray-400 text-center py-8">No pending requests</p>
                     )}
                   </>
                 )}

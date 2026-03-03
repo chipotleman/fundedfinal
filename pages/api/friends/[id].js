@@ -16,11 +16,34 @@ export default async function handler(req, res) {
   if (req.method === 'PATCH') {
     const { action } = req.body;
 
-    if (!['accept', 'reject'].includes(action)) {
-      return res.status(400).json({ error: 'Invalid action. Use "accept" or "reject"' });
+    if (!['accept', 'reject', 'withdraw'].includes(action)) {
+      return res.status(400).json({ error: 'Invalid action. Use "accept", "reject", or "withdraw"' });
     }
 
     try {
+      if (action === 'withdraw') {
+        const friendship = await db
+          .select()
+          .from(friendships)
+          .where(
+            and(
+              eq(friendships.id, id),
+              eq(friendships.userId, userId),
+              eq(friendships.status, 'pending')
+            )
+          )
+          .limit(1);
+
+        if (friendship.length === 0) {
+          return res.status(404).json({ error: 'Sent friend request not found' });
+        }
+
+        await db
+          .delete(friendships)
+          .where(eq(friendships.id, id));
+        return res.status(200).json({ message: 'Friend request withdrawn' });
+      }
+
       const friendship = await db
         .select()
         .from(friendships)

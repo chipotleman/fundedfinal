@@ -7,6 +7,7 @@ import LiveGameTimer from '../components/LiveGameTimer';
 import MatchupBanner from '../components/MatchupBanner';
 import PoolContainer from '../components/PoolContainer';
 import FireBattleContainer from '../components/FireBattleContainer';
+import LiveBattlesSection from '../components/battle/LiveBattlesSection';
 import Footer from '../components/Footer';
 import { inferLeague } from '../lib/leagueInference';
 import { useBetSlip } from '../contexts/BetSlipContext';
@@ -504,6 +505,16 @@ export default function Dashboard() {
             canSeeBets={canSeeOpponentBets}
             onRefreshOpponentBets={refreshMatchup}
             myBetsCount={myBets?.length || 0}
+            onForfeit={() => {
+              fetch('/api/battles/forfeit', { method: 'POST' })
+                .then(r => r.json())
+                .then(data => {
+                  if (data.success) {
+                    refreshMatchup();
+                  }
+                })
+                .catch(() => {});
+            }}
           />
         ) : (
           <div className="mb-6">
@@ -588,6 +599,8 @@ export default function Dashboard() {
             ))}
           </div>
         </div>
+
+        <LiveBattlesSection compact />
 
         <div className="mb-6">
           <div className="flex items-center justify-between px-1 mb-3">

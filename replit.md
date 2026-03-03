@@ -36,13 +36,17 @@ None documented yet.
 - **Education Marketplace**: Verified cappers sell picks and Discord access via subscription products; includes review system and performance stats.
 - **1v1 Battle System (Trivia Crack-inspired)**: Redesigned Battle Home page at `/battle` with three primary action tiles:
   - **Quick Match**: Random matchmaking with buy-in/duration config via modal. Uses `/api/battles/matchmaking` queue + `/api/matchups/assign-opponent` fallback.
-  - **Play a Friend**: Search friends, send battle invite with buy-in/duration. Uses `/api/battles/invite` CRUD.
+  - **Play a Friend**: Search friends, send battle invite with buy-in/duration. Non-friend users can send friend request or create private match code instead. Uses `/api/battles/invite` CRUD.
   - **Private Match**: Generate 6-char alphanumeric code or join with code. Uses `/api/battles/private` (create/join actions).
-  - Battle Home layout: User identity strip, 3 large action tiles, incoming invite toasts, friends sidebar (desktop) / drawer (mobile), recent matches list.
+  - **Battle Forfeit**: Users can forfeit active battles from any page (battle, my-battle, dashboard). Opponent wins 90% of pot. API: `POST /api/battles/forfeit`.
+  - **Live Battles Showcase**: `LiveBattlesSection` component displays active battles as spectator cards with player avatars, balances, PnL, progress bars, and pot size. Visible to everyone (including guests). Polls `/api/battles/live` every 30 seconds. Shown on both `/battle` (full) and dashboard (compact strip).
+  - Battle Home layout: User identity strip, 3 large action tiles, live battles showcase, incoming invite toasts, friends sidebar (desktop) / drawer (mobile), recent matches list.
   - Match lifecycle: Battle Home → Modal config → Matchmaking/Invite → Match Lobby (5s countdown) → Dashboard (place bets) → Match Result overlay.
-  - Components in `components/battle/`: QuickMatchModal, PlayFriendModal, PrivateMatchModal, InviteToast, MatchHistoryModal, MatchLobby, MatchResult.
+  - Components in `components/battle/`: QuickMatchModal, PlayFriendModal, PrivateMatchModal, InviteToast, MatchHistoryModal, MatchLobby, MatchResult, LiveBattlesSection.
   - Schema additions: `privateCode` and `matchType` columns on `matchups` table.
   - Winner takes 90% of combined pot (10% platform fee). Hidden opponent bets until user places their own. Admin-controlled fake opponents.
+  - **Cross-page integration**: Dashboard shows MatchupBanner with forfeit option, My Battle page (`/my-battle`) uses `/api/battles/history` for robust history with match type labels, links to `/battle` when no active matchup.
+- **Friend Request Withdrawal**: Users can withdraw sent friend requests from both the friends page (Requests tab → Sent section) and profile pages. API: `PATCH /api/friends/[id]` with `action: 'withdraw'`.
 - **User Profiles**: Customizable profiles with username (2-100 chars), avatar (upload or URL), bio (max 500 chars), battle stats, and public profile pages. Avatar uploads use Replit Object Storage with presigned URLs.
 - **Pik Pool System**: Multi-player betting competitions (5-25 players) for a prize pool (winner takes 90%). Configurable buy-ins and durations.
 

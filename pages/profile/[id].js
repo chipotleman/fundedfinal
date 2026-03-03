@@ -16,6 +16,7 @@ export default function PublicProfile() {
   const [usernameStatus, setUsernameStatus] = useState({ checking: false, available: null, error: null });
   const [saving, setSaving] = useState(false);
   const [friendStatus, setFriendStatus] = useState(null);
+  const [friendRequestId, setFriendRequestId] = useState(null);
   const [friendActionLoading, setFriendActionLoading] = useState(false);
   const [showBattleInvite, setShowBattleInvite] = useState(false);
   const [battleInviteLoading, setBattleInviteLoading] = useState(false);
@@ -89,9 +90,10 @@ export default function PublicProfile() {
       const sentRes = await fetch('/api/friends/sent', { credentials: 'include' });
       if (sentRes.ok) {
         const sentData = await sentRes.json();
-        const hasSentToThem = sentData.requests?.some(r => r.receiver?.id === id);
-        if (hasSentToThem) {
+        const sentToThem = sentData.requests?.find(r => r.receiver?.id === id);
+        if (sentToThem) {
           setFriendStatus('pending_sent');
+          setFriendRequestId(sentToThem.id);
           return;
         }
       }
@@ -117,6 +119,27 @@ export default function PublicProfile() {
       }
     } catch (error) {
       console.error('Error adding friend:', error);
+    } finally {
+      setFriendActionLoading(false);
+    }
+  };
+
+  const handleWithdrawRequest = async () => {
+    if (!friendRequestId) return;
+    setFriendActionLoading(true);
+    try {
+      const res = await fetch(`/api/friends/${friendRequestId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ action: 'withdraw' }),
+      });
+      if (res.ok) {
+        setFriendStatus('none');
+        setFriendRequestId(null);
+      }
+    } catch (error) {
+      console.error('Error withdrawing friend request:', error);
     } finally {
       setFriendActionLoading(false);
     }
@@ -419,8 +442,19 @@ export default function PublicProfile() {
                         )}
                         
                         {friendStatus === 'pending_sent' && (
-                          <button disabled className="bg-gray-600 text-gray-300 font-semibold py-2 px-4 rounded-lg text-sm">
-                            Request Sent
+                          <button
+                            onClick={handleWithdrawRequest}
+                            disabled={friendActionLoading}
+                            className="bg-red-600/20 hover:bg-red-600/40 disabled:bg-gray-600 text-red-400 font-semibold py-2 px-4 rounded-lg transition-all text-sm flex items-center gap-2"
+                          >
+                            {friendActionLoading ? 'Withdrawing...' : (
+                              <>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                                Withdraw Request
+                              </>
+                            )}
                           </button>
                         )}
                         

@@ -36,7 +36,8 @@ export default function MatchupBanner({
   onRefreshOpponentBets,
   myBetsCount = 0,
   myWins = 0,
-  myLosses = 0
+  myLosses = 0,
+  onForfeit,
 }) {
   const [timeRemaining, setTimeRemaining] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -733,6 +734,23 @@ export default function MatchupBanner({
                   </div>
                 )}
               </div>
+
+              {onForfeit && (
+                <div className="pt-2 text-center">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.confirm('Are you sure you want to forfeit this battle? Your opponent will be declared the winner and receive the payout.')) {
+                        onForfeit();
+                        setShowModal(false);
+                      }
+                    }}
+                    className="text-red-400 hover:text-red-300 text-xs font-medium transition-colors"
+                  >
+                    Forfeit Battle
+                  </button>
+                </div>
+              )}
             </div>
             </div>
           </div>
