@@ -61,6 +61,24 @@ export default async function handler(req, res) {
       }
 
       if (action === 'accept') {
+        if (battleInvite.expiresAt && new Date(battleInvite.expiresAt) < new Date()) {
+          await db
+            .update(battleInvites)
+            .set({ status: 'expired', respondedAt: new Date() })
+            .where(eq(battleInvites.id, id));
+          return res.status(400).json({ error: 'This invite has expired' });
+        }
+
+        const claimed = await db
+          .update(battleInvites)
+          .set({ status: 'accepted', respondedAt: new Date() })
+          .where(and(eq(battleInvites.id, id), eq(battleInvites.status, 'pending')))
+          .returning();
+
+        if (claimed.length === 0) {
+          return res.status(409).json({ error: 'This invite has already been handled' });
+        }
+
         const buyIn = parseFloat(battleInvite.buyIn);
         const duration = battleInvite.duration;
         const durationMinutes = duration * 60;
@@ -75,6 +93,7 @@ export default async function handler(req, res) {
           .insert(matchups)
           .values({
             challengeType: 'friend_battle',
+            matchType: 'friend',
             startingBalance: buyIn.toString(),
             potSize: potSize.toString(),
             platformFee: platformFee.toString(),
@@ -93,16 +112,24 @@ export default async function handler(req, res) {
 
         await db
           .update(battleInvites)
-          .set({ 
-            status: 'accepted', 
-            respondedAt: new Date(),
-            matchupId: newMatchup.id,
-          })
+          .set({ matchupId: newMatchup.id })
           .where(eq(battleInvites.id, id));
+
+        const [senderProfile, receiverProfile] = await Promise.all([
+          db.select({ id: profiles.id, username: profiles.username, avatar: profiles.avatar })
+            .from(profiles).where(eq(profiles.id, battleInvite.senderId)).then(r => r[0]),
+          db.select({ id: profiles.id, username: profiles.username, avatar: profiles.avatar })
+            .from(profiles).where(eq(profiles.id, battleInvite.receiverId)).then(r => r[0]),
+        ]);
 
         return res.status(200).json({ 
           message: 'Battle started!',
           matchupId: newMatchup.id,
+          matchup: {
+            ...newMatchup,
+            player1: senderProfile || { id: battleInvite.senderId, username: 'Player 1' },
+            player2: receiverProfile || { id: battleInvite.receiverId, username: 'Player 2' },
+          },
         });
       }
     } catch (error) {

@@ -16,6 +16,7 @@ export default function AdminMatchups() {
   const [activeTab, setActiveTab] = useState('matchups');
   const [matchups, setMatchups] = useState([]);
   const [fakeOpponents, setFakeOpponents] = useState([]);
+  const [battleInvites, setBattleInvites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMatchup, setSelectedMatchup] = useState(null);
   const [showBetModal, setShowBetModal] = useState(false);
@@ -69,10 +70,11 @@ export default function AdminMatchups() {
     setLoading(true);
     try {
       const headers = getAuthHeaders();
-      const [matchupsRes, opponentsRes, challengesRes] = await Promise.all([
+      const [matchupsRes, opponentsRes, challengesRes, invitesRes] = await Promise.all([
         fetch('/api/admin-panel/matchups', { headers }),
         fetch('/api/admin-panel/matchups/fake-opponents', { headers }),
         fetch('/api/admin/reset-user-challenge', { headers }),
+        fetch('/api/admin-panel/matchups/invites', { headers }),
       ]);
 
       if (matchupsRes.ok) {
@@ -88,6 +90,11 @@ export default function AdminMatchups() {
       if (challengesRes.ok) {
         const data = await challengesRes.json();
         setUsersWithChallenges(data.users || []);
+      }
+
+      if (invitesRes.ok) {
+        const data = await invitesRes.json();
+        setBattleInvites(data);
       }
     } catch (error) {
       console.error('Fetch error:', error);
@@ -281,6 +288,39 @@ export default function AdminMatchups() {
     }
   };
 
+  const handleInviteAction = async (inviteId, action) => {
+    try {
+      await fetch('/api/admin-panel/matchups/invites', {
+        method: 'PATCH',
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ id: inviteId, action }),
+      });
+      fetchData();
+    } catch (error) {
+      console.error('Invite action error:', error);
+    }
+  };
+
+  const getInviteStatusColor = (status) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-500';
+      case 'accepted': return 'bg-green-500';
+      case 'declined': return 'bg-red-500';
+      case 'cancelled': return 'bg-gray-500';
+      case 'expired': return 'bg-orange-500';
+      default: return 'bg-gray-500';
+    }
+  };
+
+  const getMatchTypeColor = (type) => {
+    switch (type) {
+      case 'friend': return 'bg-emerald-600';
+      case 'private': return 'bg-orange-600';
+      case 'random': return 'bg-blue-600';
+      default: return 'bg-gray-600';
+    }
+  };
+
   const [impersonating, setImpersonating] = useState(null);
 
   const handlePlayAs = async (matchup) => {
@@ -345,8 +385,19 @@ export default function AdminMatchups() {
             Fake Opponents
           </button>
           <button
+            onClick={() => setActiveTab('invites')}
+            className={`px-4 py-2 rounded ${activeTab === 'invites' ? 'bg-emerald-600' : 'bg-gray-700'}`}
+          >
+            Battle Invites
+            {battleInvites.filter(i => i.status === 'pending').length > 0 && (
+              <span className="ml-2 px-1.5 py-0.5 bg-yellow-500 text-black text-xs rounded-full font-bold">
+                {battleInvites.filter(i => i.status === 'pending').length}
+              </span>
+            )}
+          </button>
+          <button
             onClick={() => setActiveTab('reset')}
-            className={`px-4 py-2 rounded ${activeTab === 'reset' ? 'bg-purple-600' : 'bg-gray-700'}`}
+            className={`px-4 py-2 rounded ${activeTab === 'reset' ? 'bg-blue-600' : 'bg-gray-700'}`}
           >
             Reset User Challenges
           </button>
@@ -359,6 +410,7 @@ export default function AdminMatchups() {
                 <thead className="bg-gray-800">
                   <tr>
                     <th className="p-3">Status</th>
+                    <th className="p-3">Type</th>
                     <th className="p-3">Challenge</th>
                     <th className="p-3">User 1</th>
                     <th className="p-3">User 2</th>
@@ -375,6 +427,11 @@ export default function AdminMatchups() {
                       <td className="p-3">
                         <span className={`px-2 py-1 rounded text-xs ${getStatusColor(matchup.status)}`}>
                           {matchup.status}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <span className={`px-2 py-1 rounded text-xs ${getMatchTypeColor(matchup.matchType)}`}>
+                          {matchup.matchType || 'random'}
                         </span>
                       </td>
                       <td className="p-3 capitalize">{matchup.challengeType}</td>
@@ -412,7 +469,7 @@ export default function AdminMatchups() {
                   ))}
                   {matchups.length === 0 && (
                     <tr>
-                      <td colSpan="9" className="p-6 text-center text-gray-500">
+                      <td colSpan="10" className="p-6 text-center text-gray-500">
                         No matchups found
                       </td>
                     </tr>
@@ -492,6 +549,82 @@ export default function AdminMatchups() {
                   No fake opponents created. Add one to start matching with users.
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'invites' && (
+          <div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-gray-800">
+                  <tr>
+                    <th className="p-3">Status</th>
+                    <th className="p-3">Sender</th>
+                    <th className="p-3">Receiver</th>
+                    <th className="p-3">Buy-In</th>
+                    <th className="p-3">Duration</th>
+                    <th className="p-3">Created</th>
+                    <th className="p-3">Expires</th>
+                    <th className="p-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {battleInvites.map((invite) => (
+                    <tr key={invite.id} className="border-b border-gray-700 hover:bg-gray-800">
+                      <td className="p-3">
+                        <span className={`px-2 py-1 rounded text-xs ${getInviteStatusColor(invite.status)}`}>
+                          {invite.status}
+                        </span>
+                      </td>
+                      <td className="p-3">{invite.sender?.username || 'Unknown'}</td>
+                      <td className="p-3">{invite.receiver?.username || 'Unknown'}</td>
+                      <td className="p-3">${parseFloat(invite.buyIn || 0).toFixed(0)}</td>
+                      <td className="p-3">{invite.duration}h</td>
+                      <td className="p-3">{formatDate(invite.createdAt)}</td>
+                      <td className="p-3">
+                        {invite.expiresAt && new Date(invite.expiresAt) < new Date() ? (
+                          <span className="text-red-400 text-sm">Expired</span>
+                        ) : (
+                          formatDate(invite.expiresAt)
+                        )}
+                      </td>
+                      <td className="p-3 space-x-2">
+                        {invite.status === 'pending' && (
+                          <button
+                            onClick={() => handleInviteAction(invite.id, 'cancel')}
+                            className="px-3 py-1 bg-yellow-600 rounded text-sm hover:bg-yellow-500"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                        {invite.status !== 'pending' && (
+                          <button
+                            onClick={() => {
+                              if (confirm('Delete this invite permanently?')) {
+                                handleInviteAction(invite.id, 'delete');
+                              }
+                            }}
+                            className="px-3 py-1 bg-red-600 rounded text-sm hover:bg-red-500"
+                          >
+                            Delete
+                          </button>
+                        )}
+                        {invite.matchupId && (
+                          <span className="text-xs text-blue-400">Matchup: {invite.matchupId.slice(0, 8)}...</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                  {battleInvites.length === 0 && (
+                    <tr>
+                      <td colSpan="8" className="p-6 text-center text-gray-500">
+                        No battle invites found
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         )}

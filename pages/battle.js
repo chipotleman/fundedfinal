@@ -132,7 +132,6 @@ export default function BattlePage() {
 
   const handleAcceptInvite = async (inviteId) => {
     try {
-      const invite = invites.received?.find(i => i.id === inviteId);
       const res = await fetch(`/api/battles/invite/${inviteId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -140,7 +139,9 @@ export default function BattlePage() {
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.matchupId) {
+        if (data.matchup) {
+          setShowLobby(data.matchup);
+        } else if (data.matchupId) {
           const matchRes = await fetch(`/api/matchups/${data.matchupId}`);
           if (matchRes.ok) {
             const matchData = await matchRes.json();

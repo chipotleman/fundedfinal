@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { battleInvites, profiles, friendships } from '../../../shared/schema';
-import { eq, and, or } from 'drizzle-orm';
+import { eq, and, or, lt } from 'drizzle-orm';
 
 export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions);
@@ -14,6 +14,18 @@ export default async function handler(req, res) {
 
   if (req.method === 'GET') {
     try {
+      const now = new Date();
+
+      await db
+        .update(battleInvites)
+        .set({ status: 'expired', respondedAt: now })
+        .where(
+          and(
+            eq(battleInvites.status, 'pending'),
+            lt(battleInvites.expiresAt, now)
+          )
+        );
+
       const receivedInvites = await db
         .select()
         .from(battleInvites)

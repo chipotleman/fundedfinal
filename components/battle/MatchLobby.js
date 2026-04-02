@@ -42,6 +42,9 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
   const potSize = matchup.potSize;
   const payout = matchup.winnerPayout;
 
+  const player1 = matchup.player1 || { username: matchup.user1Info?.username || 'Player 1', avatar: matchup.user1Info?.avatar };
+  const player2 = matchup.player2 || { username: matchup.user2Info?.username || 'Player 2', avatar: matchup.user2Info?.avatar };
+
   const matchTypeLabel = {
     random: 'Quick Match',
     friend: 'Friend Battle',
@@ -180,14 +183,14 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
                   background: 'conic-gradient(from 0deg, transparent, rgba(59,130,246,0.6), transparent, rgba(59,130,246,0.3), transparent)',
                 }} />
                 <div className="lobby-avatar-left w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center relative overflow-hidden border-2 border-blue-400/50">
-                  {matchup.player1?.avatar ? (
-                    <img src={matchup.player1.avatar} className="w-full h-full object-cover" alt="" />
+                  {player1.avatar ? (
+                    <img src={player1.avatar} className="w-full h-full object-cover" alt="" />
                   ) : (
-                    <span className="text-3xl font-black text-white">{matchup.player1?.username?.[0]?.toUpperCase() || 'P1'}</span>
+                    <span className="text-3xl font-black text-white">{player1.username?.[0]?.toUpperCase() || 'P1'}</span>
                   )}
                 </div>
               </div>
-              <div className="text-white text-sm font-bold truncate max-w-[110px] mx-auto">{matchup.player1?.username || 'Player 1'}</div>
+              <div className="text-white text-sm font-bold truncate max-w-[110px] mx-auto">{player1.username || 'Player 1'}</div>
             </div>
 
             <div className="flex flex-col items-center relative z-10">
@@ -214,14 +217,14 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
                   animationDirection: 'reverse',
                 }} />
                 <div className="lobby-avatar-right w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-700 flex items-center justify-center relative overflow-hidden border-2 border-cyan-400/50">
-                  {matchup.player2?.avatar ? (
-                    <img src={matchup.player2.avatar} className="w-full h-full object-cover" alt="" />
+                  {player2.avatar ? (
+                    <img src={player2.avatar} className="w-full h-full object-cover" alt="" />
                   ) : (
-                    <span className="text-3xl font-black text-white">{matchup.player2?.username?.[0]?.toUpperCase() || 'P2'}</span>
+                    <span className="text-3xl font-black text-white">{player2.username?.[0]?.toUpperCase() || 'P2'}</span>
                   )}
                 </div>
               </div>
-              <div className="text-white text-sm font-bold truncate max-w-[110px] mx-auto">{matchup.player2?.username || 'Player 2'}</div>
+              <div className="text-white text-sm font-bold truncate max-w-[110px] mx-auto">{player2.username || 'Player 2'}</div>
             </div>
 
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[3px] z-0 pointer-events-none" style={{ maxWidth: '80%' }}>
