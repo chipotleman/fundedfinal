@@ -16,13 +16,15 @@ const capitalizeLeagueId = (text) => {
   return text.replace(/\(([wm])\)/gi, (match, letter) => `(${letter.toUpperCase()})`);
 };
 
-export default function BetSlip({ bankroll, onClose, isOpen, onBetPlaced }) {
+export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, onBetPlaced }) {
   const { data: session } = useSession();
   const isLoggedIn = !!session?.user;
   const { isDarkMode } = useTheme();
   const { betSlip: bets, removeBet, updateStake, clearBetSlip, setShowBetSlip } = useBetSlip();
   const { apiGames, inplayEvents } = useGames();
-  const { refresh: refreshMatchup } = useMatchup();
+  const { hasActiveMatchup, myBalance: matchupBalance, refresh: refreshMatchup } = useMatchup();
+
+  const bankroll = hasActiveMatchup && matchupBalance != null ? matchupBalance : profileBankroll;
   const [isPlacing, setIsPlacing] = useState(false);
   const [betType, setBetType] = useState('single');
   const [parlayStake, setParlayStake] = useState(0);
