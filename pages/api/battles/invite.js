@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { battleInvites, profiles, friendships } from '../../../shared/schema';
-import { eq, and, or, lt } from 'drizzle-orm';
+import { eq, and, or, lt, gt, inArray } from 'drizzle-orm';
 
 export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions);
@@ -46,9 +46,22 @@ export default async function handler(req, res) {
           )
         );
 
+      const recentCutoff = new Date(Date.now() - 60 * 60 * 1000);
+      const recentlyClosed = await db
+        .select()
+        .from(battleInvites)
+        .where(
+          and(
+            eq(battleInvites.senderId, userId),
+            inArray(battleInvites.status, ['accepted', 'expired', 'declined']),
+            gt(battleInvites.respondedAt, recentCutoff)
+          )
+        );
+
       const allUserIds = [
         ...receivedInvites.map(i => i.senderId),
         ...sentInvites.map(i => i.receiverId),
+        ...recentlyClosed.map(i => i.receiverId),
       ].filter((v, i, a) => a.indexOf(v) === i);
 
       let userProfiles = [];
@@ -77,9 +90,15 @@ export default async function handler(req, res) {
         receiver: userProfiles.find(p => p.id === invite.receiverId),
       }));
 
+      const enrichedRecentlyClosed = recentlyClosed.map(invite => ({
+        ...invite,
+        receiver: userProfiles.find(p => p.id === invite.receiverId),
+      }));
+
       return res.status(200).json({
         received: enrichedReceived,
         sent: enrichedSent,
+        recentlyClosed: enrichedRecentlyClosed,
       });
     } catch (error) {
       console.error('Error fetching battle invites:', error);

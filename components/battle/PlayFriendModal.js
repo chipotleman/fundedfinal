@@ -9,7 +9,7 @@ const DURATION_OPTIONS = [
   { label: '1 Week', value: 168 },
 ];
 
-const INVITE_TIMEOUT_SECONDS = 300;
+const INVITE_EXPIRY_HOURS = 24;
 
 export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onSwitchToPrivate }) {
   const [selectedFriend, setSelectedFriend] = useState(null);
@@ -84,7 +84,8 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
         return;
       }
       setSent(true);
-      setInviteCountdown(INVITE_TIMEOUT_SECONDS);
+      const expirySeconds = INVITE_EXPIRY_HOURS * 3600;
+      setInviteCountdown(expirySeconds);
       countdownRef.current = setInterval(() => {
         setInviteCountdown(prev => {
           if (prev <= 1) {
@@ -130,8 +131,10 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
   const friendResults = searchResults.filter(u => isFriend(u.id));
 
   const formatCountdown = (seconds) => {
-    const m = Math.floor(seconds / 60);
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
+    if (h > 0) return `${h}h ${m}m`;
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
@@ -159,7 +162,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                 <div className="w-full bg-gray-800 rounded-full h-1.5 mb-2">
                   <div
                     className="bg-blue-500 h-1.5 rounded-full transition-all duration-1000"
-                    style={{ width: `${(inviteCountdown / INVITE_TIMEOUT_SECONDS) * 100}%` }}
+                    style={{ width: `${(inviteCountdown / (INVITE_EXPIRY_HOURS * 3600)) * 100}%` }}
                   ></div>
                 </div>
                 <p className="text-gray-500 text-xs">Expires in {formatCountdown(inviteCountdown)}</p>

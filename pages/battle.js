@@ -98,15 +98,28 @@ export default function BattlePage() {
     if (!userId) return;
     const interval = setInterval(async () => {
       try {
-        const res = await fetch('/api/battles/invite');
-        if (res.ok) {
-          const data = await res.json();
+        const [inviteRes, matchupRes] = await Promise.all([
+          fetch('/api/battles/invite'),
+          fetch('/api/matchups/current'),
+        ]);
+        if (inviteRes.ok) {
+          const data = await inviteRes.json();
+          const hadPendingSent = invites.sent?.length > 0;
+          const hasPendingSent = data.sent?.length > 0;
           setInvites(data);
+
+          if (hadPendingSent && !hasPendingSent && matchupRes.ok) {
+            const matchData = await matchupRes.json();
+            if (matchData.matchup && (matchData.matchup.status === 'active' || matchData.matchup.status === 'matched')) {
+              setActiveMatchup(matchData.matchup);
+              setShowLobby(matchData.matchup);
+            }
+          }
         }
       } catch {}
-    }, 10000);
+    }, 5000);
     return () => clearInterval(interval);
-  }, [userId]);
+  }, [userId, invites.sent?.length]);
 
   useEffect(() => {
     if (!userId || !activeMatchup || activeMatchup.status !== 'waiting') return;
@@ -583,6 +596,37 @@ export default function BattlePage() {
                         >
                           Cancel
                         </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {invites.recentlyClosed?.length > 0 && (
+                <div className="bg-gray-900/50 border border-gray-800/50 rounded-xl p-4">
+                  <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-3">Invite Updates</h3>
+                  <div className="space-y-2">
+                    {invites.recentlyClosed.map(invite => (
+                      <div key={invite.id} className="flex items-center justify-between bg-gray-800/30 rounded-lg px-3 py-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                            {invite.receiver?.avatar ? (
+                              <img src={invite.receiver.avatar} className="w-full h-full object-cover" alt="" />
+                            ) : (
+                              <span className="text-[10px]">{invite.receiver?.username?.[0]?.toUpperCase() || '?'}</span>
+                            )}
+                          </div>
+                          <span className="text-gray-300 text-xs truncate">{invite.receiver?.username || 'User'}</span>
+                        </div>
+                        <span className={`text-[10px] font-medium flex-shrink-0 ${
+                          invite.status === 'accepted' ? 'text-green-400' :
+                          invite.status === 'expired' ? 'text-orange-400' :
+                          invite.status === 'declined' ? 'text-red-400' : 'text-gray-400'
+                        }`}>
+                          {invite.status === 'accepted' ? 'Accepted' :
+                           invite.status === 'expired' ? 'Expired' :
+                           invite.status === 'declined' ? 'Declined' : invite.status}
+                        </span>
                       </div>
                     ))}
                   </div>
