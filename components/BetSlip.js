@@ -25,6 +25,13 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
   const { hasActiveMatchup, myBalance: matchupBalance, refresh: refreshMatchup } = useMatchup();
 
   const bankroll = hasActiveMatchup && matchupBalance != null ? matchupBalance : profileBankroll;
+
+  useEffect(() => {
+    if (isOpen && refreshMatchup) {
+      refreshMatchup();
+    }
+  }, [isOpen]);
+
   const [isPlacing, setIsPlacing] = useState(false);
   const [betType, setBetType] = useState('single');
   const [parlayStake, setParlayStake] = useState(0);
