@@ -125,14 +125,14 @@ function PickPill({ pick, compact = false }) {
           border: `1.5px solid ${isWon ? '#10b981' : isLost ? '#ef4444' : '#4b5563'}`,
         }}
       >
-        {isWon && <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2.5 6L5 8.5L9.5 3.5" stroke="#10b981" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-        {isLost && <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 3L9 9M9 3L3 9" stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-        {isPending && <div className="pick-pending-dot" style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#6b7280' }}></div>}
+        {isWon && <svg width={compact ? "10" : "12"} height={compact ? "10" : "12"} viewBox="0 0 12 12" fill="none"><path d="M2.5 6L5 8.5L9.5 3.5" stroke="#10b981" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+        {isLost && <svg width={compact ? "10" : "12"} height={compact ? "10" : "12"} viewBox="0 0 12 12" fill="none"><path d="M3 3L9 9M9 3L3 9" stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+        {isPending && <div className="pick-pending-dot" style={{ width: compact ? '5px' : '6px', height: compact ? '5px' : '6px', borderRadius: '50%', background: '#6b7280' }}></div>}
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: compact ? '0px' : '2px', whiteSpace: 'nowrap', overflow: 'hidden' }}>
-          <span style={{ color: '#ffffff', fontSize: compact ? '10px' : '12px', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis' }}>{pick.team}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: compact ? '4px' : '6px', marginBottom: compact ? '0px' : '2px', ...(compact ? { whiteSpace: 'nowrap', overflow: 'hidden' } : {}) }}>
+          <span style={{ color: '#ffffff', fontSize: compact ? '10px' : '12px', fontWeight: 700, ...(compact ? { overflow: 'hidden', textOverflow: 'ellipsis' } : {}) }}>{pick.team}</span>
           <span
             style={{
               fontSize: compact ? '8px' : '9px',
