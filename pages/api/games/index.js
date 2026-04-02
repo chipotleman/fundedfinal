@@ -6,6 +6,7 @@ import {
   clearCache,
   SUPPORTED_SPORTS 
 } from '../../../lib/goalserve';
+import { generateSimulatedGames } from '../../../lib/simulated-games';
 
 let globalCache = null;
 let globalCacheTimestamp = null;
@@ -267,6 +268,27 @@ export default async function handler(req, res) {
       }
     }
     
+    if (formattedGames.length === 0) {
+      console.log('[GAMES API] No games from Goalserve, falling back to simulated games');
+      const simGames = generateSimulatedGames();
+      const simBySport = {};
+      simGames.forEach(game => {
+        if (!simBySport[game.sportName]) simBySport[game.sportName] = [];
+        simBySport[game.sportName].push(game);
+      });
+      return res.status(200).json({
+        games: simGames,
+        bySport: simBySport,
+        count: simGames.length,
+        fromCache: false,
+        dataSource: 'Demo',
+        isSimulated: true,
+        creditStatus: getGoalserveStatus(),
+        freshness: { hasLiveGames: simGames.some(g => g.isLive) },
+        polling: { recommendedInterval: 60000, hasLiveGames: false }
+      });
+    }
+
     const bySport = {};
     formattedGames.forEach(game => {
       if (!bySport[game.sportName]) {
@@ -323,9 +345,23 @@ export default async function handler(req, res) {
       });
     }
     
-    return res.status(500).json({ 
-      error: 'Failed to fetch games',
-      message: error.message 
+    console.log('[GAMES API] API error and no cache, falling back to simulated games');
+    const simGames = generateSimulatedGames();
+    const simBySport = {};
+    simGames.forEach(game => {
+      if (!simBySport[game.sportName]) simBySport[game.sportName] = [];
+      simBySport[game.sportName].push(game);
+    });
+    return res.status(200).json({
+      games: simGames,
+      bySport: simBySport,
+      count: simGames.length,
+      fromCache: false,
+      dataSource: 'Demo',
+      isSimulated: true,
+      creditStatus: getGoalserveStatus(),
+      freshness: { hasLiveGames: false },
+      polling: { recommendedInterval: 60000, hasLiveGames: false }
     });
   }
 }

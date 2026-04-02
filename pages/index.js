@@ -23,7 +23,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
-  const { apiGames: contextApiGames, inplayEvents: contextInplayEvents, loading: gamesLoading, error: gamesError, lastUpdated } = useGames();
+  const { apiGames: contextApiGames, inplayEvents: contextInplayEvents, loading: gamesLoading, error: gamesError, lastUpdated, isDemoMode } = useGames();
   const { matchup, opponent, myBalance: matchupBalance, opponentBalance, myBets, opponentBets, canSeeOpponentBets, hasActiveMatchup, refresh: refreshMatchup } = useMatchup();
   const [selectedSport, setSelectedSport] = useState('Live');
   // Note: games/allGames are derived at render time via useMemo for SSR compatibility
@@ -538,7 +538,13 @@ export default function Dashboard() {
             backgroundColor: isDarkMode ? '#000000' : '#f5f5f5',
           }}
         >
-          <div className="flex space-x-2 overflow-x-auto pb-1 scrollbar-hide">
+          <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-hide">
+            {isDemoMode && (
+              <div className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10">
+                <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></div>
+                <span className="text-cyan-400 text-[10px] font-bold uppercase tracking-wider">Demo</span>
+              </div>
+            )}
             <TapSurface
               onTap={() => handleSportClick('Live')}
               isActive={selectedSport === 'Live'}

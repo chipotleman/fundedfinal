@@ -14,6 +14,7 @@ export function GamesProvider({ children, initialInplayEvents = null, initialApi
     }
     return [];
   });
+  const [isDemoMode, setIsDemoMode] = useState(false);
   // Track if we have SSR data for scheduled games to skip initial fetch
   const hasInitialApiGamesRef = React.useRef(initialApiGames && initialApiGames.length > 0);
   
@@ -57,6 +58,7 @@ export function GamesProvider({ children, initialInplayEvents = null, initialApi
         const data = await response.json();
         if (isMountedRef.current) {
           setApiGames(data.games || []);
+          setIsDemoMode(data.isSimulated === true || data.dataSource === 'Demo');
           setLoading(false);
           setLastUpdated(new Date());
           lastFetchTimeRef.current = Date.now();
@@ -279,8 +281,9 @@ export function GamesProvider({ children, initialInplayEvents = null, initialApi
     loading,
     error,
     lastUpdated,
-    refetch
-  }), [apiGames, inplayEvents, possessionState, possessionConnected, getPossession, loading, error, lastUpdated, refetch]);
+    refetch,
+    isDemoMode
+  }), [apiGames, inplayEvents, possessionState, possessionConnected, getPossession, loading, error, lastUpdated, refetch, isDemoMode]);
 
   return (
     <GamesContext.Provider value={value}>

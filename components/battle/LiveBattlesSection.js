@@ -94,17 +94,69 @@ function getSimulatedBattles(avatars) {
 }
 
 function PickPill({ pick }) {
-  const statusColor = pick.status === 'won' ? 'text-green-400 bg-green-500/10 border-green-500/20' 
-    : pick.status === 'lost' ? 'text-red-400 bg-red-500/10 border-red-500/20' 
-    : 'text-gray-300 bg-white/5 border-white/10';
-  const statusIcon = pick.status === 'won' ? '✓' : pick.status === 'lost' ? '✗' : '•';
-  
+  const isWon = pick.status === 'won';
+  const isLost = pick.status === 'lost';
+  const isPending = pick.status === 'pending';
+
   return (
-    <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-medium ${statusColor}`}>
-      <span className="opacity-70">{statusIcon}</span>
-      <span className="font-semibold">{pick.team}</span>
-      <span className="opacity-60">{pick.type}</span>
-      <span className="opacity-50">({pick.odds})</span>
+    <div
+      className="pick-chip-card"
+      style={{
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        padding: '8px 10px',
+        borderRadius: '10px',
+        border: '1px solid',
+        borderColor: isWon ? 'rgba(16, 185, 129, 0.4)' : isLost ? 'rgba(239, 68, 68, 0.4)' : 'rgba(255,255,255,0.08)',
+        background: isWon ? 'rgba(16, 185, 129, 0.08)' : isLost ? 'rgba(239, 68, 68, 0.08)' : 'rgba(255,255,255,0.03)',
+        backdropFilter: 'blur(8px)',
+        boxShadow: isWon ? '0 0 12px rgba(16, 185, 129, 0.15)' : isLost ? '0 0 12px rgba(239, 68, 68, 0.15)' : 'none',
+      }}
+    >
+      <div
+        style={{
+          width: '22px',
+          height: '22px',
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          background: isWon ? 'rgba(16, 185, 129, 0.2)' : isLost ? 'rgba(239, 68, 68, 0.2)' : 'rgba(107, 114, 128, 0.2)',
+          border: `1.5px solid ${isWon ? '#10b981' : isLost ? '#ef4444' : '#4b5563'}`,
+        }}
+      >
+        {isWon && <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6L5 8.5L9.5 3.5" stroke="#10b981" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+        {isLost && <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 3L9 9M9 3L3 9" stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+        {isPending && <div className="pick-pending-dot" style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#6b7280' }}></div>}
+      </div>
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+          <span style={{ color: '#ffffff', fontSize: '12px', fontWeight: 700 }}>{pick.team}</span>
+          <span
+            style={{
+              fontSize: '9px',
+              fontWeight: 600,
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              padding: '1px 5px',
+              borderRadius: '4px',
+              background: 'rgba(59, 130, 246, 0.15)',
+              color: '#60a5fa',
+              border: '1px solid rgba(59, 130, 246, 0.2)',
+            }}
+          >
+            {pick.type}
+          </span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ color: '#3b82f6', fontSize: '13px', fontWeight: 800 }}>{pick.odds}</span>
+          <span style={{ color: '#6b7280', fontSize: '10px', fontWeight: 500 }}>${pick.amount}</span>
+        </div>
+      </div>
     </div>
   );
 }
@@ -155,7 +207,8 @@ function ReactionBar({ battleId }) {
           <button
             key={r.label}
             onClick={(e) => { e.stopPropagation(); handleReaction(r); }}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-cyan-500/30 transition-all active:scale-90"
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 transition-all active:scale-90"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             <span className="text-sm">{r.emoji}</span>
             <span className="text-[10px] text-gray-400 font-medium">{counts[r.label]}</span>
@@ -173,6 +226,71 @@ function ReactionBar({ battleId }) {
 
 function MomentumIcon() {
   return <span className="live-momentum-flame text-[10px]" title="On fire!">🔥</span>;
+}
+
+function PlayerAvatar({ user, isWinning, size = 44, gradient = 'from-blue-600 to-blue-800' }) {
+  return (
+    <div className="battle-avatar-ring" style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
+      <div
+        className={`bg-gradient-to-br ${gradient} ${isWinning ? 'battle-avatar-glow' : ''}`}
+        style={{
+          width: '100%',
+          height: '100%',
+          borderRadius: '50%',
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: isWinning ? '2px solid #10b981' : '2px solid rgba(75, 85, 99, 0.6)',
+        }}
+      >
+        {user.avatar ? (
+          <img src={user.avatar} className="w-full h-full object-cover" alt="" style={{ borderRadius: '50%' }} />
+        ) : (
+          <span className="text-white font-bold" style={{ fontSize: size * 0.35 }}>{user.username?.[0]?.toUpperCase() || '?'}</span>
+        )}
+      </div>
+      {isWinning && (
+        <div style={{
+          position: 'absolute',
+          bottom: -2,
+          right: -2,
+          width: 16,
+          height: 16,
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #10b981, #06b6d4)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: '2px solid #000',
+          fontSize: '8px',
+        }}>
+          👑
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PnlBadge({ pnlPercent, size = 'normal' }) {
+  const val = parseFloat(pnlPercent);
+  const isPos = val >= 0;
+  const fontSize = size === 'small' ? '10px' : '11px';
+  const padding = size === 'small' ? '1px 5px' : '2px 6px';
+  
+  return (
+    <span style={{
+      fontSize,
+      fontWeight: 700,
+      padding,
+      borderRadius: '6px',
+      background: isPos ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+      color: isPos ? '#10b981' : '#ef4444',
+      border: `1px solid ${isPos ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`,
+    }}>
+      {isPos ? '+' : ''}{pnlPercent}%
+    </span>
+  );
 }
 
 function BattleCard({ battle, compact, focused }) {
@@ -204,155 +322,176 @@ function BattleCard({ battle, compact, focused }) {
 
   if (compact) {
     return (
-      <div className="flex-shrink-0 w-[280px] bg-gradient-to-br from-gray-900/80 to-gray-800/40 border border-gray-700/30 rounded-xl p-3 transition-all cursor-pointer"
+      <div
+        className="battle-card-glass flex-shrink-0 w-[280px] rounded-xl p-3 transition-all cursor-pointer"
         onClick={() => router.push(`/battle?battle=${battle.id}`)}
+        style={{
+          background: 'linear-gradient(135deg, rgba(15,23,42,0.9) 0%, rgba(15,23,42,0.6) 100%)',
+          border: '1px solid rgba(59, 130, 246, 0.15)',
+          backdropFilter: 'blur(12px)',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05)',
+        }}
       >
         <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-green-400 text-[10px] font-bold uppercase">Live</span>
+            <span className="text-green-400 text-[10px] font-bold uppercase tracking-wider">Live</span>
           </div>
-          <span className="text-gray-400 text-[10px]">{formatTimeRemaining(timeLeft)}</span>
+          <div className="flex items-center gap-2">
+            <span style={{ fontSize: '10px', fontWeight: 700, color: '#fbbf24', background: 'rgba(251, 191, 36, 0.1)', padding: '1px 6px', borderRadius: '4px', border: '1px solid rgba(251, 191, 36, 0.2)' }}>${potSize.toFixed(0)}</span>
+            <span className="text-gray-500 text-[10px]">{formatTimeRemaining(timeLeft)}</span>
+          </div>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs overflow-hidden ${user1Winning ? 'ring-1 ring-green-400' : ''} bg-gradient-to-br from-blue-600 to-blue-800`}>
-              {user1.avatar ? <img src={user1.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-white font-bold">{user1.username?.[0]?.toUpperCase() || '?'}</span>}
-            </div>
+            <PlayerAvatar user={user1} isWinning={user1Winning} size={32} gradient="from-blue-600 to-blue-800" />
             <div className="min-w-0">
-              <p className="text-white text-xs font-medium truncate max-w-[65px] flex items-center gap-0.5">
+              <p className="text-white text-xs font-semibold truncate max-w-[65px] flex items-center gap-0.5">
                 {user1.username || 'Player 1'}
                 {user1OnFire && <MomentumIcon />}
               </p>
-              <p className={`text-[10px] font-bold ${parseFloat(user1.pnlPercent) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {parseFloat(user1.pnlPercent) >= 0 ? '+' : ''}{user1.pnlPercent}%
-              </p>
+              <PnlBadge pnlPercent={user1.pnlPercent} size="small" />
             </div>
           </div>
           <div className="flex flex-col items-center px-2">
-            <span className="text-yellow-400 text-[10px] font-black">VS</span>
-            <span className="text-yellow-400/70 text-[9px]">${potSize.toFixed(0)}</span>
+            <span style={{ fontSize: '14px', fontWeight: 900, background: 'linear-gradient(135deg, #3b82f6, #06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>VS</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="min-w-0 text-right">
-              <p className="text-white text-xs font-medium truncate max-w-[65px] flex items-center justify-end gap-0.5">
+              <p className="text-white text-xs font-semibold truncate max-w-[65px] flex items-center justify-end gap-0.5">
                 {user2OnFire && <MomentumIcon />}
                 {user2.username || 'Player 2'}
               </p>
-              <p className={`text-[10px] font-bold ${parseFloat(user2.pnlPercent) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {parseFloat(user2.pnlPercent) >= 0 ? '+' : ''}{user2.pnlPercent}%
-              </p>
+              <PnlBadge pnlPercent={user2.pnlPercent} size="small" />
             </div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs overflow-hidden ${user2Winning ? 'ring-1 ring-green-400' : ''} bg-gradient-to-br from-red-600 to-red-800`}>
-              {user2.avatar ? <img src={user2.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-white font-bold">{user2.username?.[0]?.toUpperCase() || '?'}</span>}
-            </div>
+            <PlayerAvatar user={user2} isWinning={user2Winning} size={32} gradient="from-emerald-600 to-cyan-800" />
           </div>
         </div>
         {picks && (
           <div className="mt-2 flex gap-1 overflow-hidden">
-            <div className="flex gap-0.5 flex-wrap">
+            <div className="flex gap-0.5 flex-wrap flex-1">
               {picks.user1.slice(0, 1).map((p, i) => <PickPill key={i} pick={p} />)}
             </div>
-            <span className="text-gray-600 text-[9px] self-center">vs</span>
-            <div className="flex gap-0.5 flex-wrap">
+            <span className="text-gray-600 text-[9px] self-center px-1">vs</span>
+            <div className="flex gap-0.5 flex-wrap flex-1">
               {picks.user2.slice(0, 1).map((p, i) => <PickPill key={i} pick={p} />)}
             </div>
           </div>
         )}
         <BattleChat battleId={battle.id} compact />
-        <div className="mt-2 h-1 bg-gray-800 rounded-full overflow-hidden relative">
-          <div className={`h-full rounded-full transition-all duration-1000 ${user1Winning ? 'live-progress-shimmer' : ''}`} style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #3b82f6, #10b981)' }}></div>
+        <div className="mt-2 h-1.5 rounded-full overflow-hidden relative" style={{ background: 'rgba(255,255,255,0.06)' }}>
+          <div className={`h-full rounded-full transition-all duration-1000 ${user1Winning ? 'battle-progress-animated' : ''}`} style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #3b82f6, #10b981, #06b6d4)' }}></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div 
-      className={`bg-gradient-to-br from-gray-900/60 to-gray-800/40 border rounded-2xl overflow-hidden transition-all ${focused ? 'border-blue-500/60 ring-1 ring-blue-500/30 shadow-lg shadow-blue-500/10' : 'border-gray-700/40'}`}
+    <div
+      className={`battle-card-glass rounded-2xl overflow-hidden transition-all ${focused ? 'battle-card-focused' : ''}`}
+      style={{
+        background: 'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(15,23,42,0.7) 100%)',
+        border: focused ? '1px solid rgba(59, 130, 246, 0.5)' : '1px solid rgba(59, 130, 246, 0.12)',
+        backdropFilter: 'blur(16px)',
+        boxShadow: focused
+          ? '0 8px 32px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255,255,255,0.06)'
+          : '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)',
+      }}
     >
       <div className="p-4" onClick={() => picks && setExpanded(!expanded)} style={{ cursor: picks ? 'pointer' : 'default' }}>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-green-400 text-xs font-bold">LIVE</span>
-          </div>
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <span className="text-yellow-400 text-xs font-bold">${potSize.toFixed(0)} Pot</span>
+            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-green-400 text-xs font-bold uppercase tracking-wider">Live Battle</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '3px 10px', borderRadius: '8px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.25)' }}>
+              <span style={{ fontSize: '12px', fontWeight: 800, color: '#fbbf24' }}>${potSize.toFixed(0)}</span>
+              <span style={{ fontSize: '10px', color: 'rgba(251, 191, 36, 0.6)', fontWeight: 500 }}>pot</span>
+            </div>
             <span className="text-gray-500 text-xs">{formatTimeRemaining(timeLeft)} left</span>
           </div>
         </div>
 
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2.5 flex-1 min-w-0">
-            <div className={`w-11 h-11 rounded-full flex items-center justify-center text-sm overflow-hidden flex-shrink-0 ${user1Winning ? 'ring-2 ring-green-400 shadow-lg shadow-green-500/20' : 'ring-1 ring-gray-600'} bg-gradient-to-br from-blue-600 to-blue-800`}>
-              {user1.avatar ? <img src={user1.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-white font-bold">{user1.username?.[0]?.toUpperCase() || '?'}</span>}
-            </div>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <PlayerAvatar user={user1} isWinning={user1Winning} size={48} gradient="from-blue-600 to-blue-800" />
             <div className="min-w-0">
               <p className="text-white text-sm font-bold truncate flex items-center gap-1">
                 {user1.username || 'Player 1'}
                 {user1OnFire && <MomentumIcon />}
               </p>
-              <div className="flex items-center gap-2">
-                <span className="text-gray-400 text-xs">${(user1.balance || 0).toLocaleString()}</span>
-                <span className={`text-xs font-bold ${parseFloat(user1.pnlPercent) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {parseFloat(user1.pnlPercent) >= 0 ? '+' : ''}{user1.pnlPercent}%
-                </span>
+              <div className="flex items-center gap-2 mt-1">
+                <span style={{ color: '#e5e7eb', fontSize: '16px', fontWeight: 800, letterSpacing: '-0.5px' }}>${(user1.balance || 0).toLocaleString()}</span>
               </div>
-              {picks && (
-                <div className="flex items-center gap-1 mt-1">
-                  <span className="text-gray-500 text-[10px]">{picks.user1.length} pick{picks.user1.length !== 1 ? 's' : ''}</span>
-                  <span className="text-green-400 text-[10px]">{picks.user1.filter(p => p.status === 'won').length}W</span>
-                  <span className="text-red-400 text-[10px]">{picks.user1.filter(p => p.status === 'lost').length}L</span>
-                  <span className="text-gray-400 text-[10px]">{picks.user1.filter(p => p.status === 'pending').length}P</span>
-                </div>
-              )}
+              <div className="flex items-center gap-2 mt-1">
+                <PnlBadge pnlPercent={user1.pnlPercent} />
+                {picks && (
+                  <span className="text-gray-500 text-[10px]">
+                    {picks.user1.length}P · <span className="text-green-400">{picks.user1.filter(p => p.status === 'won').length}W</span> <span className="text-red-400">{picks.user1.filter(p => p.status === 'lost').length}L</span>
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className="px-3 flex flex-col items-center">
-            <span className="text-yellow-400 text-lg font-black">VS</span>
+          <div className="px-4 flex flex-col items-center">
+            <div className="battle-vs-badge" style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(6, 182, 212, 0.15))',
+              border: '2px solid rgba(59, 130, 246, 0.3)',
+            }}>
+              <span style={{ fontSize: '14px', fontWeight: 900, background: 'linear-gradient(135deg, #3b82f6, #06b6d4)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>VS</span>
+            </div>
             {picks && (
-              <span className="text-gray-500 text-[9px] mt-0.5">{expanded ? 'Hide picks' : 'View picks'}</span>
+              <span className="text-gray-500 text-[9px] mt-1">{expanded ? 'Hide' : 'View'} picks</span>
             )}
           </div>
 
-          <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
+          <div className="flex items-center gap-3 flex-1 min-w-0 justify-end">
             <div className="min-w-0 text-right">
               <p className="text-white text-sm font-bold truncate flex items-center justify-end gap-1">
                 {user2OnFire && <MomentumIcon />}
                 {user2.username || 'Player 2'}
               </p>
-              <div className="flex items-center gap-2 justify-end">
-                <span className={`text-xs font-bold ${parseFloat(user2.pnlPercent) >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  {parseFloat(user2.pnlPercent) >= 0 ? '+' : ''}{user2.pnlPercent}%
-                </span>
-                <span className="text-gray-400 text-xs">${(user2.balance || 0).toLocaleString()}</span>
+              <div className="flex items-center gap-2 justify-end mt-1">
+                <span style={{ color: '#e5e7eb', fontSize: '16px', fontWeight: 800, letterSpacing: '-0.5px' }}>${(user2.balance || 0).toLocaleString()}</span>
               </div>
-              {picks && (
-                <div className="flex items-center gap-1 mt-1 justify-end">
-                  <span className="text-gray-500 text-[10px]">{picks.user2.length} pick{picks.user2.length !== 1 ? 's' : ''}</span>
-                  <span className="text-green-400 text-[10px]">{picks.user2.filter(p => p.status === 'won').length}W</span>
-                  <span className="text-red-400 text-[10px]">{picks.user2.filter(p => p.status === 'lost').length}L</span>
-                  <span className="text-gray-400 text-[10px]">{picks.user2.filter(p => p.status === 'pending').length}P</span>
-                </div>
-              )}
+              <div className="flex items-center gap-2 justify-end mt-1">
+                {picks && (
+                  <span className="text-gray-500 text-[10px]">
+                    {picks.user2.length}P · <span className="text-green-400">{picks.user2.filter(p => p.status === 'won').length}W</span> <span className="text-red-400">{picks.user2.filter(p => p.status === 'lost').length}L</span>
+                  </span>
+                )}
+                <PnlBadge pnlPercent={user2.pnlPercent} />
+              </div>
             </div>
-            <div className={`w-11 h-11 rounded-full flex items-center justify-center text-sm overflow-hidden flex-shrink-0 ${user2Winning ? 'ring-2 ring-green-400 shadow-lg shadow-green-500/20' : 'ring-1 ring-gray-600'} bg-gradient-to-br from-red-600 to-red-800`}>
-              {user2.avatar ? <img src={user2.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-white font-bold">{user2.username?.[0]?.toUpperCase() || '?'}</span>}
-            </div>
+            <PlayerAvatar user={user2} isWinning={user2Winning} size={48} gradient="from-emerald-600 to-cyan-800" />
           </div>
         </div>
 
-        <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden mb-2 relative">
-          <div className={`h-full rounded-full transition-all duration-1000 ${user1Winning ? 'live-progress-shimmer' : ''}`} style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #3b82f6, #10b981)' }}></div>
+        <div className="h-2 rounded-full overflow-hidden mb-2 relative" style={{ background: 'rgba(255,255,255,0.06)' }}>
+          <div className={`h-full rounded-full transition-all duration-1000 ${user1Winning ? 'battle-progress-animated' : ''}`} style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #3b82f6, #10b981, #06b6d4)' }}></div>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-gray-500 text-[10px]">{progress.toFixed(0)}% complete</span>
           {!battle.simulated && (
             <button
               onClick={(e) => { e.stopPropagation(); router.push(`/battle?battle=${battle.id}`); }}
-              className="text-blue-400 text-xs font-medium transition-colors"
+              style={{
+                fontSize: '11px',
+                fontWeight: 600,
+                color: '#3b82f6',
+                background: 'rgba(59, 130, 246, 0.08)',
+                padding: '3px 10px',
+                borderRadius: '6px',
+                border: '1px solid rgba(59, 130, 246, 0.2)',
+              }}
             >
               Watch
             </button>
@@ -363,37 +502,48 @@ function BattleCard({ battle, compact, focused }) {
       {expanded && (
         <>
           {picks && (
-            <div className="border-t border-gray-700/40 bg-black/20">
-              <div className="grid grid-cols-2 divide-x divide-gray-700/30">
+            <div style={{ borderTop: '1px solid rgba(59, 130, 246, 0.1)', background: 'rgba(0,0,0,0.2)' }}>
+              <div className="grid grid-cols-2 relative">
+                <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: '1px', background: 'linear-gradient(to bottom, rgba(59,130,246,0.3), rgba(6,182,212,0.3), rgba(59,130,246,0.1))' }}></div>
+                <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 5 }}>
+                  <div style={{
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(6, 182, 212, 0.2))',
+                    border: '1.5px solid rgba(59, 130, 246, 0.4)',
+                    backdropFilter: 'blur(8px)',
+                  }}>
+                    <span style={{ fontSize: '9px', fontWeight: 900, color: '#60a5fa' }}>VS</span>
+                  </div>
+                </div>
+
                 <div className="p-3">
-                  <div className="flex items-center gap-1.5 mb-2">
+                  <div className="flex items-center gap-1.5 mb-3">
                     <div className="w-5 h-5 rounded-full overflow-hidden bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center flex-shrink-0">
                       {user1.avatar ? <img src={user1.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-[8px] text-white font-bold">{user1.username?.[0]}</span>}
                     </div>
                     <span className="text-white text-[11px] font-semibold truncate">{user1.username}'s Picks</span>
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     {picks.user1.map((pick, i) => (
-                      <div key={i} className="flex flex-col items-center gap-0.5">
-                        <PickPill pick={pick} />
-                        <span className="text-gray-500 text-[9px]">${pick.amount}</span>
-                      </div>
+                      <PickPill key={i} pick={pick} />
                     ))}
                   </div>
                 </div>
                 <div className="p-3">
-                  <div className="flex items-center gap-1.5 mb-2 justify-end">
+                  <div className="flex items-center gap-1.5 mb-3 justify-end">
                     <span className="text-white text-[11px] font-semibold truncate">{user2.username}'s Picks</span>
-                    <div className="w-5 h-5 rounded-full overflow-hidden bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center flex-shrink-0">
+                    <div className="w-5 h-5 rounded-full overflow-hidden bg-gradient-to-br from-emerald-600 to-cyan-800 flex items-center justify-center flex-shrink-0">
                       {user2.avatar ? <img src={user2.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-[8px] text-white font-bold">{user2.username?.[0]}</span>}
                     </div>
                   </div>
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     {picks.user2.map((pick, i) => (
-                      <div key={i} className="flex flex-col items-center gap-0.5">
-                        <PickPill pick={pick} />
-                        <span className="text-gray-500 text-[9px]">${pick.amount}</span>
-                      </div>
+                      <PickPill key={i} pick={pick} />
                     ))}
                   </div>
                 </div>
@@ -414,14 +564,14 @@ function BattleCard({ battle, compact, focused }) {
         .live-reaction-float {
           animation: liveReactionFloat 1.2s ease-out forwards;
         }
-        @keyframes liveProgressShimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
+        @keyframes battleProgressAnim {
+          0% { background-position: 0% 50%; }
+          100% { background-position: 200% 50%; }
         }
-        .live-progress-shimmer {
-          background: linear-gradient(90deg, #3b82f6 0%, #10b981 30%, #67e8f9 50%, #10b981 70%, #3b82f6 100%) !important;
+        .battle-progress-animated {
+          background: linear-gradient(90deg, #3b82f6 0%, #10b981 25%, #06b6d4 50%, #10b981 75%, #3b82f6 100%) !important;
           background-size: 200% 100% !important;
-          animation: liveProgressShimmer 2s linear infinite;
+          animation: battleProgressAnim 2.5s linear infinite;
         }
         @keyframes liveMomentumPulse {
           0%, 100% { opacity: 1; transform: scale(1); }
@@ -430,6 +580,32 @@ function BattleCard({ battle, compact, focused }) {
         .live-momentum-flame {
           display: inline-block;
           animation: liveMomentumPulse 1s ease-in-out infinite;
+        }
+        @keyframes pickPendingPulse {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 1; }
+        }
+        .pick-pending-dot {
+          animation: pickPendingPulse 1.5s ease-in-out infinite;
+        }
+        @keyframes battleCardBorderShift {
+          0% { border-color: rgba(59, 130, 246, 0.5); }
+          33% { border-color: rgba(16, 185, 129, 0.5); }
+          66% { border-color: rgba(6, 182, 212, 0.5); }
+          100% { border-color: rgba(59, 130, 246, 0.5); }
+        }
+        .battle-card-focused {
+          animation: battleCardBorderShift 4s ease-in-out infinite;
+        }
+        @keyframes avatarGlow {
+          0%, 100% { box-shadow: 0 0 12px rgba(16, 185, 129, 0.3); }
+          50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
+        }
+        .battle-avatar-glow {
+          animation: avatarGlow 2s ease-in-out infinite;
+        }
+        @media (hover: none) {
+          .battle-card-glass:active { transform: scale(0.98); }
         }
       `}</style>
     </div>
@@ -515,8 +691,12 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
         </div>
         {sortedBattles.length === 0 ? (
           <div
-            className="flex-shrink-0 w-[260px] bg-gradient-to-br from-gray-900/40 to-gray-800/20 border border-gray-700/20 rounded-xl p-4 cursor-pointer transition-all"
+            className="flex-shrink-0 w-[260px] rounded-xl p-4 cursor-pointer transition-all"
             onClick={() => router.push('/battle')}
+            style={{
+              background: 'linear-gradient(135deg, rgba(15,23,42,0.6) 0%, rgba(15,23,42,0.3) 100%)',
+              border: '1px solid rgba(59, 130, 246, 0.1)',
+            }}
           >
             <div className="text-center">
               <span className="text-2xl block mb-1">⚔️</span>
@@ -548,7 +728,7 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
       </div>
 
       {sortedBattles.length === 0 ? (
-        <div className="bg-gray-900/30 border border-gray-800/50 rounded-xl p-8 text-center">
+        <div className="rounded-xl p-8 text-center" style={{ background: 'rgba(15,23,42,0.5)', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
           <span className="text-3xl block mb-2">⚔️</span>
           <p className="text-gray-500 text-sm">No live battles right now</p>
           <p className="text-gray-600 text-xs mt-1">Start one and show everyone how it's done!</p>
