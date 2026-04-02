@@ -14,7 +14,12 @@ export function GamesProvider({ children, initialInplayEvents = null, initialApi
     }
     return [];
   });
-  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [isDemoMode, setIsDemoMode] = useState(() => {
+    if (initialApiGames && Array.isArray(initialApiGames)) {
+      return initialApiGames.some(g => g.isSimulated);
+    }
+    return false;
+  });
   // Track if we have SSR data for scheduled games to skip initial fetch
   const hasInitialApiGamesRef = React.useRef(initialApiGames && initialApiGames.length > 0);
   
