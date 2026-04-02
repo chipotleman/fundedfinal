@@ -707,7 +707,7 @@ export default function Dashboard() {
           <div className="space-y-2">
             {loading ? (
               <div className="text-center py-12">
-                <div className="w-10 h-10 border-3 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-3"></div>
+                <div className="w-10 h-10 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-3"></div>
                 <p className="text-sm" style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>Loading games...</p>
               </div>
             ) : games.length > 0 ? (
