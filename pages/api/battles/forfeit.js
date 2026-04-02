@@ -83,10 +83,12 @@ export default async function handler(req, res) {
         .where(eq(profiles.id, opponentId));
 
       if (oppProfile) {
+        const newBankroll = parseFloat(oppProfile.bankroll || 0) + winnerPayout;
         await db
           .update(profiles)
           .set({
             battleWins: (oppProfile.battleWins || 0) + 1,
+            bankroll: newBankroll.toFixed(2),
             updatedAt: now,
           })
           .where(eq(profiles.id, opponentId));

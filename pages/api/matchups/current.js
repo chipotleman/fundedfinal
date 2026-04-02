@@ -185,33 +185,29 @@ export default async function handler(req, res) {
       opponent = {
         id: opponentId,
         username: profile?.username || 'Opponent',
+        avatar: profile?.avatar,
         winRate: profile?.winRate,
         isReal: true,
       };
 
-      // Only get bets from during this battle
-      const battleStart = matchup.startsAt || matchup.createdAt;
+      const rawStart = matchup.startsAt || matchup.createdAt;
+      const battleStart = new Date(new Date(rawStart).getTime() - 30000);
       const battleEnd = matchup.endsAt || new Date();
 
-      const realOpponentBets = await db
-        .select()
-        .from(userBets)
-        .where(and(
+      const [realOpponentBets, realMyBets] = await Promise.all([
+        db.select().from(userBets).where(and(
           eq(userBets.userId, opponentId),
           gte(userBets.placedAt, battleStart),
           lte(userBets.placedAt, battleEnd)
-        ));
-      opponentBets = realOpponentBets;
-
-      // Get my bets - only from during this battle
-      myBets = await db
-        .select()
-        .from(userBets)
-        .where(and(
+        )),
+        db.select().from(userBets).where(and(
           eq(userBets.userId, userId),
           gte(userBets.placedAt, battleStart),
           lte(userBets.placedAt, battleEnd)
-        ));
+        )),
+      ]);
+      opponentBets = realOpponentBets;
+      myBets = realMyBets;
     }
 
     const hasPlacedBets = myBets.length > 0;

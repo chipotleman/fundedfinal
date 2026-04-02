@@ -233,7 +233,7 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
           </div>
 
           <div className="lobby-stakes">
-            <div className="bg-gray-900/80 border border-gray-700/40 rounded-2xl p-5 mb-6 space-y-3 backdrop-blur-sm">
+            <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-5 mb-6 space-y-3">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">Buy-In</span>
                 <span className="text-white font-semibold">${parseFloat(buyIn || 0).toFixed(2)}</span>
@@ -246,7 +246,7 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
                 <span className="text-gray-400">Winner Gets</span>
                 <span className="text-emerald-400 font-bold text-base">${parseFloat(payout || 0).toFixed(2)}</span>
               </div>
-              <div className="border-t border-gray-700/40 pt-3">
+              <div className="border-t border-[#222] pt-3">
                 <p className="text-gray-500 text-xs text-center">Higher ending balance wins · 10% platform fee</p>
               </div>
             </div>
