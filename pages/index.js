@@ -361,12 +361,18 @@ export default function Dashboard() {
     return [...liveGamesFromInplay, ...upcomingGamesFromApi];
   }, [liveGamesFromInplay, upcomingGamesFromApi]);
 
-  // Simplified categorization - no merge logic needed
+  const simulatedLiveGames = useMemo(() => {
+    if (!isDemoMode) return [];
+    return apiGames.filter(g => g.isLive && g.isSimulated);
+  }, [apiGames, isDemoMode]);
+
   const categorizedGames = useMemo(() => ({
-    liveGames: liveGamesFromInplay,
+    liveGames: isDemoMode && liveGamesFromInplay.length === 0
+      ? simulatedLiveGames
+      : liveGamesFromInplay,
     upcomingGames: upcomingGamesFromApi,
     recentlyCompletedGames: []
-  }), [liveGamesFromInplay, upcomingGamesFromApi]);
+  }), [liveGamesFromInplay, upcomingGamesFromApi, isDemoMode, simulatedLiveGames]);
 
   // Sport filter mappings
   const sportMappings = useMemo(() => ({
@@ -732,6 +738,9 @@ export default function Dashboard() {
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                           <span className="text-gray-500 text-xs font-medium">{game.league || sport}</span>
+                          {game.isSimulated && (
+                            <span style={{ fontSize: '9px', fontWeight: 600, color: '#06b6d4', background: 'rgba(6, 182, 212, 0.1)', padding: '1px 5px', borderRadius: '4px', border: '1px solid rgba(6, 182, 212, 0.2)' }}>DEMO</span>
+                          )}
                           {isFinal ? (
                             <span className="text-gray-400 text-xs font-bold">FINAL</span>
                           ) : isLive ? (
