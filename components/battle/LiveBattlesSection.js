@@ -93,7 +93,7 @@ function getSimulatedBattles(avatars) {
   ];
 }
 
-function PickPill({ pick }) {
+function PickPill({ pick, compact = false }) {
   const isWon = pick.status === 'won';
   const isLost = pick.status === 'lost';
   const isPending = pick.status === 'pending';
@@ -105,17 +105,17 @@ function PickPill({ pick }) {
         position: 'relative',
         display: 'flex',
         alignItems: 'center',
-        gap: '8px',
-        padding: '8px 10px',
-        borderRadius: '8px',
+        gap: compact ? '5px' : '8px',
+        padding: compact ? '5px 7px' : '8px 10px',
+        borderRadius: compact ? '6px' : '8px',
         border: `1px solid ${isWon ? 'rgba(16, 185, 129, 0.3)' : isLost ? 'rgba(239, 68, 68, 0.3)' : '#1a1a1a'}`,
         background: isWon ? 'rgba(16, 185, 129, 0.06)' : isLost ? 'rgba(239, 68, 68, 0.06)' : '#111',
       }}
     >
       <div
         style={{
-          width: '22px',
-          height: '22px',
+          width: compact ? '18px' : '22px',
+          height: compact ? '18px' : '22px',
           borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',
@@ -125,33 +125,35 @@ function PickPill({ pick }) {
           border: `1.5px solid ${isWon ? '#10b981' : isLost ? '#ef4444' : '#4b5563'}`,
         }}
       >
-        {isWon && <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6L5 8.5L9.5 3.5" stroke="#10b981" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-        {isLost && <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 3L9 9M9 3L3 9" stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-        {isPending && <div className="pick-pending-dot" style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#6b7280' }}></div>}
+        {isWon && <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2.5 6L5 8.5L9.5 3.5" stroke="#10b981" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+        {isLost && <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 3L9 9M9 3L3 9" stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+        {isPending && <div className="pick-pending-dot" style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#6b7280' }}></div>}
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
-          <span style={{ color: '#ffffff', fontSize: '12px', fontWeight: 700 }}>{pick.team}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: compact ? '0px' : '2px', whiteSpace: 'nowrap', overflow: 'hidden' }}>
+          <span style={{ color: '#ffffff', fontSize: compact ? '10px' : '12px', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis' }}>{pick.team}</span>
           <span
             style={{
-              fontSize: '9px',
+              fontSize: compact ? '8px' : '9px',
               fontWeight: 600,
               textTransform: 'uppercase',
-              letterSpacing: '0.5px',
-              padding: '1px 5px',
-              borderRadius: '4px',
+              letterSpacing: '0.3px',
+              padding: compact ? '0px 3px' : '1px 5px',
+              borderRadius: '3px',
               background: 'rgba(59, 130, 246, 0.15)',
               color: '#60a5fa',
               border: '1px solid rgba(59, 130, 246, 0.2)',
+              flexShrink: 0,
+              whiteSpace: 'nowrap',
             }}
           >
             {pick.type}
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ color: '#3b82f6', fontSize: '13px', fontWeight: 800 }}>{pick.odds}</span>
-          <span style={{ color: '#6b7280', fontSize: '10px', fontWeight: 500 }}>${pick.amount}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: compact ? '4px' : '8px' }}>
+          <span style={{ color: '#3b82f6', fontSize: compact ? '11px' : '13px', fontWeight: 800 }}>{pick.odds}</span>
+          <span style={{ color: '#6b7280', fontSize: compact ? '9px' : '10px', fontWeight: 500 }}>${pick.amount}</span>
         </div>
       </div>
     </div>
@@ -302,7 +304,7 @@ function BattleCard({ battle, compact, focused }) {
   if (compact) {
     return (
       <div
-        className="flex-shrink-0 w-[260px] rounded-xl p-3 cursor-pointer"
+        className="flex-shrink-0 w-[280px] rounded-xl p-3 cursor-pointer flex flex-col"
         onClick={() => router.push(`/battle?battle=${battle.id}`)}
         style={{
           backgroundColor: '#0d0d0d',
@@ -323,19 +325,19 @@ function BattleCard({ battle, compact, focused }) {
           <div className="flex items-center gap-1.5">
             <PlayerAvatar user={user1} isWinning={user1Winning} size={30} bgColor="#1e40af" />
             <div className="min-w-0">
-              <p className="text-white text-[11px] font-medium truncate max-w-[65px] flex items-center gap-0.5">
+              <p className="text-white text-[11px] font-medium truncate max-w-[95px] flex items-center gap-0.5">
                 {user1.username || 'Player 1'}
                 {user1OnFire && <MomentumIcon />}
               </p>
               <PnlBadge pnlPercent={user1.pnlPercent} size="small" />
             </div>
           </div>
-          <div className="flex flex-col items-center px-2">
-            <span className="text-[11px] font-bold text-gray-600">VS</span>
+          <div className="flex flex-col items-center px-1">
+            <span className="text-[10px] font-bold text-gray-600">VS</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="min-w-0 text-right">
-              <p className="text-white text-[11px] font-medium truncate max-w-[65px] flex items-center justify-end gap-0.5">
+              <p className="text-white text-[11px] font-medium truncate max-w-[95px] flex items-center justify-end gap-0.5">
                 {user2OnFire && <MomentumIcon />}
                 {user2.username || 'Player 2'}
               </p>
@@ -345,19 +347,21 @@ function BattleCard({ battle, compact, focused }) {
           </div>
         </div>
         {picks && (
-          <div className="mt-2 flex gap-1 overflow-hidden">
-            <div className="flex gap-0.5 flex-wrap flex-1">
-              {picks.user1.slice(0, 1).map((p, i) => <PickPill key={i} pick={p} />)}
+          <div className="mt-2 flex gap-1">
+            <div className="flex-1 min-w-0">
+              {picks.user1.slice(0, 1).map((p, i) => <PickPill key={i} pick={p} compact />)}
             </div>
-            <span className="text-gray-600 text-[9px] self-center px-1">vs</span>
-            <div className="flex gap-0.5 flex-wrap flex-1">
-              {picks.user2.slice(0, 1).map((p, i) => <PickPill key={i} pick={p} />)}
+            <span className="text-gray-600 text-[9px] self-center px-0.5">vs</span>
+            <div className="flex-1 min-w-0">
+              {picks.user2.slice(0, 1).map((p, i) => <PickPill key={i} pick={p} compact />)}
             </div>
           </div>
         )}
         <BattleChat battleId={battle.id} compact />
-        <div className="mt-2 h-1 rounded-full overflow-hidden" style={{ background: '#1a1a1a' }}>
-          <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${progress}%`, backgroundColor: '#3b82f6' }}></div>
+        <div className="mt-auto pt-2">
+          <div className="h-1 rounded-full overflow-hidden" style={{ background: '#1a1a1a' }}>
+            <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${progress}%`, backgroundColor: '#3b82f6' }}></div>
+          </div>
         </div>
       </div>
     );
@@ -596,7 +600,7 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
             <p className="text-gray-500 text-xs text-center">No live battles right now</p>
           </div>
         ) : (
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="flex gap-3 items-stretch overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             {sortedBattles.map(battle => (
               <BattleCard key={battle.id} battle={battle} compact />
             ))}
