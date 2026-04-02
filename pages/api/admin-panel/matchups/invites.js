@@ -1,6 +1,6 @@
 import { db } from '../../../../lib/db';
 import { battleInvites, profiles } from '../../../../shared/schema';
-import { eq, desc, or } from 'drizzle-orm';
+import { eq, desc, or, and } from 'drizzle-orm';
 import { requireAdmin } from '../../../../lib/adminAuth';
 
 async function handler(req, res) {
@@ -49,10 +49,14 @@ async function handler(req, res) {
 
     try {
       if (action === 'cancel') {
-        await db
+        const result = await db
           .update(battleInvites)
           .set({ status: 'cancelled', respondedAt: new Date() })
-          .where(eq(battleInvites.id, id));
+          .where(and(eq(battleInvites.id, id), eq(battleInvites.status, 'pending')))
+          .returning();
+        if (result.length === 0) {
+          return res.status(400).json({ error: 'Invite is not pending or not found' });
+        }
         return res.status(200).json({ message: 'Invite cancelled' });
       }
 

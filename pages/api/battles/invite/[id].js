@@ -89,26 +89,36 @@ export default async function handler(req, res) {
         const platformFee = potSize * 0.1;
         const winnerPayout = potSize - platformFee;
 
-        const [newMatchup] = await db
-          .insert(matchups)
-          .values({
-            challengeType: 'friend_battle',
-            matchType: 'friend',
-            startingBalance: buyIn.toString(),
-            potSize: potSize.toString(),
-            platformFee: platformFee.toString(),
-            winnerPayout: winnerPayout.toString(),
-            user1Id: battleInvite.senderId,
-            user2Id: battleInvite.receiverId,
-            user1Balance: buyIn.toString(),
-            user2Balance: buyIn.toString(),
-            durationMinutes,
-            durationType: `${duration}_hours`,
-            startsAt: now,
-            endsAt,
-            status: 'active',
-          })
-          .returning();
+        let newMatchup;
+        try {
+          [newMatchup] = await db
+            .insert(matchups)
+            .values({
+              challengeType: 'friend_battle',
+              matchType: 'friend',
+              startingBalance: buyIn.toString(),
+              potSize: potSize.toString(),
+              platformFee: platformFee.toString(),
+              winnerPayout: winnerPayout.toString(),
+              user1Id: battleInvite.senderId,
+              user2Id: battleInvite.receiverId,
+              user1Balance: buyIn.toString(),
+              user2Balance: buyIn.toString(),
+              durationMinutes,
+              durationType: `${duration}_hours`,
+              startsAt: now,
+              endsAt,
+              status: 'active',
+            })
+            .returning();
+        } catch (matchupError) {
+          await db
+            .update(battleInvites)
+            .set({ status: 'pending', respondedAt: null })
+            .where(eq(battleInvites.id, id));
+          console.error('Matchup creation failed, rolled back invite:', matchupError);
+          return res.status(500).json({ error: 'Failed to create battle matchup' });
+        }
 
         await db
           .update(battleInvites)
