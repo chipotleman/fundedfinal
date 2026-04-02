@@ -349,12 +349,11 @@ export default function Dashboard() {
           const away2 = normalizeTeamName(inplay.awayTeamFull || inplay.awayTeam);
           return (home1 === home2 && away1 === away2) || (home1 === away2 && away1 === home2);
         });
-        // Exclude games already in inplay feed, and exclude completed games
-        // Include all games that are NOT completed (live games from REST are ok since they'll be filtered by inplay check)
-        return !isInInplay && !game.isCompleted;
+        const isSimLive = isDemoMode && game.isSimulated && game.isLive;
+        return !isInInplay && !game.isCompleted && !isSimLive;
       });
     return result;
-  }, [apiGames, liveGamesFromInplay]);
+  }, [apiGames, liveGamesFromInplay, isDemoMode]);
   
   // Combined for backward compatibility with existing code
   const gamesWithLiveData = useMemo(() => {
