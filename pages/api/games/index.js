@@ -285,7 +285,7 @@ export default async function handler(req, res) {
         isSimulated: true,
         creditStatus: getGoalserveStatus(),
         freshness: { hasLiveGames: simGames.some(g => g.isLive) },
-        polling: { recommendedInterval: 60000, hasLiveGames: false }
+        polling: { recommendedInterval: 60000, hasLiveGames: simGames.some(g => g.isLive) }
       });
     }
 
@@ -360,8 +360,8 @@ export default async function handler(req, res) {
       dataSource: 'Demo',
       isSimulated: true,
       creditStatus: getGoalserveStatus(),
-      freshness: { hasLiveGames: false },
-      polling: { recommendedInterval: 60000, hasLiveGames: false }
+      freshness: { hasLiveGames: simGames.some(g => g.isLive) },
+      polling: { recommendedInterval: 60000, hasLiveGames: simGames.some(g => g.isLive) }
     });
   }
 }
