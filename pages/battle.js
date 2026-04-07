@@ -45,7 +45,6 @@ export default function BattlePage() {
   const [showForfeitModal, setShowForfeitModal] = useState(false);
 
   const isGuest = status !== 'authenticated';
-  const isSessionLoaded = status !== 'loading';
   const userId = session?.user?.id;
 
   const fetchData = useCallback(async () => {

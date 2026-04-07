@@ -518,7 +518,6 @@ function BattleCard({ battle, compact, focused }) {
 
 export default function LiveBattlesSection({ compact = false, focusBattleId = null }) {
   const [battles, setBattles] = useState(() => getSimulatedBattles([]));
-  const [loading, setLoading] = useState(false);
   const [avatars, setAvatars] = useState([]);
   const router = useRouter();
 
@@ -563,19 +562,6 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
   const sortedBattles = focusBattleId
     ? [...battles].sort((a, b) => (a.id === focusBattleId ? -1 : b.id === focusBattleId ? 1 : 0))
     : battles;
-
-  if (loading) {
-    return (
-      <div className={compact ? 'mb-4' : 'mb-6'}>
-        <span className="text-sm font-semibold uppercase tracking-wider text-gray-500">
-          {compact ? 'Featured Battles' : 'Live Battles'}
-        </span>
-        <div className="flex items-center justify-center py-4">
-          <div className="w-5 h-5 border-2 border-gray-700 border-t-gray-400 rounded-full animate-spin"></div>
-        </div>
-      </div>
-    );
-  }
 
   if (compact) {
     return (
