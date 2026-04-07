@@ -4,6 +4,7 @@ import {
   getAllGamesWithOdds,
   getSupportedSports,
   clearCache,
+  isGoalserveGloballyDown,
   SUPPORTED_SPORTS 
 } from '../../../lib/goalserve';
 import { generateSimulatedGames } from '../../../lib/simulated-games';
@@ -163,6 +164,20 @@ export default async function handler(req, res) {
     }
 
     if (sport && SUPPORTED_SPORTS[sport]) {
+      if (isGoalserveGloballyDown()) {
+        const simGames = generateSimulatedGames().filter(g => g.sport === sport || g.sportKey === sport);
+        return res.status(200).json({
+          games: simGames,
+          sport: sport,
+          sportName: SUPPORTED_SPORTS[sport].name,
+          count: simGames.length,
+          fromCache: false,
+          dataSource: 'Demo',
+          isSimulated: true,
+          creditStatus: getGoalserveStatus()
+        });
+      }
+      
       const games = await getOdds(sport);
       const formattedGames = games.map(convertGoalserveToDisplayFormat);
       
@@ -219,53 +234,104 @@ export default async function handler(req, res) {
       return res.status(200).json(response);
     }
 
+    if (isGoalserveGloballyDown()) {
+      console.log('[GAMES API] Goalserve globally down, using simulated games immediately');
+      const simGames = generateSimulatedGames();
+      const simBySport = {};
+      simGames.forEach(game => {
+        if (!simBySport[game.sportName]) simBySport[game.sportName] = [];
+        simBySport[game.sportName].push(game);
+      });
+      
+      globalCache = {
+        games: simGames,
+        bySport: simBySport,
+        freshness: { hasLiveGames: simGames.some(g => g.isLive) }
+      };
+      globalCacheTimestamp = now;
+      
+      return res.status(200).json({
+        games: simGames,
+        bySport: simBySport,
+        count: simGames.length,
+        fromCache: false,
+        dataSource: 'Demo',
+        isSimulated: true,
+        creditStatus: getGoalserveStatus(),
+        freshness: { hasLiveGames: simGames.some(g => g.isLive) },
+        polling: { recommendedInterval: 60000, hasLiveGames: simGames.some(g => g.isLive) }
+      });
+    }
+    
     console.log('[GAMES API] Fetching all games from Goalserve...');
     
-    const allGames = await getAllGamesWithOdds();
+    const fetchWithTimeout = (promise, ms) => Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms))
+    ]);
+    
+    let allGames;
+    try {
+      allGames = await fetchWithTimeout(getAllGamesWithOdds(), 2000);
+    } catch (e) {
+      allGames = [];
+    }
     let formattedGames = allGames.map(convertGoalserveToDisplayFormat);
     
     let hasLiveGames = false;
     const sportsWithLiveGames = new Set();
     
-    for (const [sportKey] of Object.entries(SUPPORTED_SPORTS)) {
-      try {
-        const scores = await getScores(sportKey);
-        scores.forEach(score => {
-          const game = formattedGames.find(g => g.id === score.id);
-          if (game) {
-            game.isLive = score.isLive;
-            game.isCompleted = score.isCompleted;
-            game.status = score.status;
-            game.scores = score.scores;
-            if (score.isLive) {
-              hasLiveGames = true;
-              sportsWithLiveGames.add(sportKey);
-            }
+    const scoreResults = await Promise.allSettled(
+      Object.keys(SUPPORTED_SPORTS).map(async (sportKey) => {
+        try {
+          const scores = await fetchWithTimeout(getScores(sportKey), 2000);
+          return { sportKey, scores };
+        } catch (e) {
+          return { sportKey, scores: [] };
+        }
+      })
+    );
+    
+    scoreResults.forEach(result => {
+      const { sportKey, scores } = result.status === 'fulfilled' ? result.value : { sportKey: null, scores: [] };
+      if (!scores) return;
+      scores.forEach(score => {
+        const game = formattedGames.find(g => g.id === score.id);
+        if (game) {
+          game.isLive = score.isLive;
+          game.isCompleted = score.isCompleted;
+          game.status = score.status;
+          game.scores = score.scores;
+          if (score.isLive) {
+            hasLiveGames = true;
+            sportsWithLiveGames.add(sportKey);
           }
-        });
-      } catch (e) {
-        console.error(`[GAMES API] Error fetching scores for ${sportKey}:`, e.message);
-      }
-    }
+        }
+      });
+    });
     
     if (sportsWithLiveGames.size > 0) {
-      console.log(`[GAMES API] Refreshing odds for live sports: ${Array.from(sportsWithLiveGames).join(', ')}`);
-      for (const sportKey of sportsWithLiveGames) {
-        try {
-          const freshOdds = await getOdds(sportKey);
-          const freshFormatted = freshOdds.map(convertGoalserveToDisplayFormat);
-          
-          freshFormatted.forEach(freshGame => {
-            const existingIdx = formattedGames.findIndex(g => g.id === freshGame.id);
-            if (existingIdx >= 0) {
-              formattedGames[existingIdx].lines = freshGame.lines;
-              formattedGames[existingIdx].allBookmakerOdds = freshGame.allBookmakerOdds;
-            }
-          });
-        } catch (e) {
-          console.error(`[GAMES API] Error refreshing odds for ${sportKey}:`, e.message);
-        }
-      }
+      const oddsResults = await Promise.allSettled(
+        Array.from(sportsWithLiveGames).map(async (sportKey) => {
+          try {
+            return await fetchWithTimeout(getOdds(sportKey), 5000);
+          } catch (e) {
+            return [];
+          }
+        })
+      );
+      
+      oddsResults.forEach(result => {
+        if (result.status !== 'fulfilled' || !result.value) return;
+        const freshFormatted = (result.value || []).map(convertGoalserveToDisplayFormat);
+        freshFormatted.forEach(freshGame => {
+          const existingIdx = formattedGames.findIndex(g => g.id === freshGame.id);
+          if (existingIdx >= 0) {
+            formattedGames[existingIdx].lines = freshGame.lines;
+            formattedGames[existingIdx].allBookmakerOdds = freshGame.allBookmakerOdds;
+          }
+        });
+      });
     }
     
     if (formattedGames.length === 0) {
