@@ -37,7 +37,7 @@ export default function FireBattleContainer({ isDarkMode }) {
 
   return (
     <>
-      <style jsx global>{`
+      <style>{`
         @keyframes battle-pulse {
           0%, 100% { opacity: 0.6; transform: scale(1); }
           50% { opacity: 1; transform: scale(1.05); }
@@ -174,6 +174,10 @@ export default function FireBattleContainer({ isDarkMode }) {
                 VS
               </div>
               <div className="text-yellow-400 text-[9px] md:text-xs font-bold uppercase tracking-wider mt-1">1v1 Battle</div>
+              <div className="mt-1.5 flex items-center gap-1 text-white/70 text-[10px] md:text-xs font-medium">
+                <span>Tap to Start</span>
+                <svg className="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+              </div>
             </div>
 
             <div className="flex flex-col items-center flex-1">

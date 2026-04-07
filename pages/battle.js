@@ -531,7 +531,7 @@ export default function BattlePage() {
             <div className="flex-1 min-w-0">
 
               <div className="mb-5">
-                <LiveBattlesSection focusBattleId={router.query.battle} />
+                <LiveBattlesSection focusBattleId={router.query.battle} activeMatchup={matchupData} />
               </div>
 
               {!activeMatchup && (

@@ -523,7 +523,7 @@ function BattleCard({ battle, compact, focused }) {
   );
 }
 
-export default function LiveBattlesSection({ compact = false, focusBattleId = null }) {
+export default function LiveBattlesSection({ compact = false, focusBattleId = null, activeMatchup = null }) {
   const [battles, setBattles] = useState(() => getSimulatedBattles([]));
   const [avatars, setAvatars] = useState([]);
   const router = useRouter();
@@ -623,7 +623,65 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
         </div>
       </div>
 
-      {sortedBattles.length === 0 ? (
+      {activeMatchup && (activeMatchup.opponent || activeMatchup.status === 'active' || activeMatchup.status === 'matched') && (
+        <div
+          className="rounded-xl overflow-hidden mb-3 cursor-pointer transition-all duration-200 hover:scale-[1.01] active:scale-[0.99]"
+          style={{ 
+            background: 'linear-gradient(135deg, #020a18 0%, #0a1628 50%, #050d1a 100%)',
+            border: '2px solid rgba(59, 130, 246, 0.4)',
+          }}
+          onClick={() => router.push('/')}
+        >
+          <div className="px-3 py-1.5 flex items-center gap-2" style={{ borderBottom: '1px solid rgba(59, 130, 246, 0.2)' }}>
+            <div className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse"></div>
+            <span className="text-green-400 text-[10px] font-bold uppercase tracking-wider">Your Active Battle</span>
+          </div>
+          <div className="p-3 flex items-center justify-between">
+            <div className="flex items-center gap-2.5 flex-1 min-w-0">
+              <div className="w-9 h-9 rounded-full border-2 border-blue-400 bg-gradient-to-br from-blue-600 to-blue-900 flex items-center justify-center overflow-hidden flex-shrink-0">
+                {activeMatchup.myAvatar ? (
+                  <img src={activeMatchup.myAvatar} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-sm">👤</span>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-xs font-semibold truncate">You</p>
+                <p className="text-sm font-bold" style={{ color: (activeMatchup.myBalance ?? 10000) >= 10000 ? '#4ade80' : '#ef4444' }}>
+                  ${(activeMatchup.myBalance ?? 10000).toLocaleString()}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center px-3">
+              <span className="text-yellow-400 text-lg font-black">VS</span>
+              <span className="text-gray-500 text-[9px]">{activeMatchup.timeRemaining ? formatTimeRemaining(activeMatchup.timeRemaining) : ''}</span>
+            </div>
+
+            <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
+              <div className="flex-1 min-w-0 text-right">
+                <p className="text-white text-xs font-semibold truncate">{activeMatchup.opponent?.username || activeMatchup.opponent?.name || 'Opponent'}</p>
+                <p className="text-sm font-bold" style={{ color: (activeMatchup.opponentBalance ?? 10000) >= 10000 ? '#4ade80' : '#ef4444' }}>
+                  ${(activeMatchup.opponentBalance ?? 10000).toLocaleString()}
+                </p>
+              </div>
+              <div className="w-9 h-9 rounded-full border-2 border-cyan-400 bg-gradient-to-br from-cyan-600 to-blue-900 flex items-center justify-center overflow-hidden flex-shrink-0">
+                {activeMatchup.opponent?.avatar ? (
+                  <img src={activeMatchup.opponent.avatar} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-sm">👤</span>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="px-3 pb-2.5 flex items-center justify-center gap-1.5 text-blue-400 text-[11px] font-medium">
+            <span>Place Your Picks</span>
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+          </div>
+        </div>
+      )}
+
+      {sortedBattles.length === 0 && !activeMatchup ? (
         <div
           className="rounded-xl p-6 text-center cursor-pointer group transition-all duration-300"
           style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }}
@@ -646,13 +704,13 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
             </div>
           </div>
         </div>
-      ) : (
+      ) : sortedBattles.length > 0 ? (
         <div className="space-y-3">
           {sortedBattles.map(battle => (
             <BattleCard key={battle.id} battle={battle} focused={battle.id === focusBattleId} />
           ))}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
