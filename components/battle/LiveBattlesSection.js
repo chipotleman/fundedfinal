@@ -130,9 +130,9 @@ function PickPill({ pick, compact = false }) {
         {isPending && <div className="pick-pending-dot" style={{ width: compact ? '5px' : '6px', height: compact ? '5px' : '6px', borderRadius: '50%', background: '#6b7280' }}></div>}
       </div>
 
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: compact ? '4px' : '6px', marginBottom: compact ? '0px' : '2px', whiteSpace: 'nowrap' }}>
-          <span style={{ color: '#ffffff', fontSize: compact ? '10px' : '12px', fontWeight: 700, flexShrink: 0, whiteSpace: 'nowrap' }}>{pick.team}</span>
+      <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: compact ? '4px' : '6px', marginBottom: compact ? '0px' : '2px', overflow: 'hidden' }}>
+          <span style={{ color: '#ffffff', fontSize: compact ? '10px' : '12px', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{pick.team}</span>
           <span
             style={{
               fontSize: compact ? '8px' : '9px',
@@ -517,8 +517,8 @@ function BattleCard({ battle, compact, focused }) {
 }
 
 export default function LiveBattlesSection({ compact = false, focusBattleId = null }) {
-  const [battles, setBattles] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [battles, setBattles] = useState(() => getSimulatedBattles([]));
+  const [loading, setLoading] = useState(false);
   const [avatars, setAvatars] = useState([]);
   const router = useRouter();
 
@@ -529,26 +529,28 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
         const all = data.avatars || [];
         const shuffled = [...all].sort(() => Math.random() - 0.5);
         setAvatars(shuffled.slice(0, 6));
+        setBattles(getSimulatedBattles(shuffled.slice(0, 6)));
       })
       .catch(() => {});
   }, []);
 
   const fetchBattles = useCallback(async () => {
     try {
-      const res = await fetch('/api/battles/live');
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000);
+      const res = await fetch('/api/battles/live', { signal: controller.signal });
+      clearTimeout(timeout);
       if (res.ok) {
         const data = await res.json();
-        let liveBattles = (data.battles || []).filter(b => b.user2 && b.remainingMs > 0);
-        if (liveBattles.length === 0) {
-          liveBattles = getSimulatedBattles(avatars);
+        const liveBattles = (data.battles || []).filter(b => b.user2 && b.remainingMs > 0);
+        if (liveBattles.length > 0) {
+          setBattles(liveBattles);
         }
-        setBattles(liveBattles);
       }
     } catch (err) {
-      console.error('Error fetching live battles:', err);
-      setBattles(getSimulatedBattles(avatars));
-    } finally {
-      setLoading(false);
+      if (err.name !== 'AbortError') {
+        console.error('Error fetching live battles:', err);
+      }
     }
   }, [avatars]);
 

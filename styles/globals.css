@@ -491,23 +491,12 @@ body {
   letter-spacing: -0.02em;
 }
 
-/* Modern Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
-
-::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Responsive Design */

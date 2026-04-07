@@ -45,6 +45,7 @@ export default function BattlePage() {
   const [showForfeitModal, setShowForfeitModal] = useState(false);
 
   const isGuest = status !== 'authenticated';
+  const isSessionLoaded = status !== 'loading';
   const userId = session?.user?.id;
 
   const fetchData = useCallback(async () => {
@@ -243,20 +244,6 @@ export default function BattlePage() {
       default: return 'text-blue-400';
     }
   };
-
-  if (status === 'loading' || loading) {
-    return (
-      <div className="min-h-screen bg-black">
-        <TopNavbar />
-        <div className="pt-20 flex items-center justify-center" style={{ minHeight: 'calc(100vh - 5rem)' }}>
-          <div className="text-center">
-            <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-400 text-sm">Loading Battle Arena...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   const totalBattles = (profile?.battleWins || 0) + (profile?.battleLosses || 0);
   const winRate = totalBattles > 0 ? Math.round(((profile?.battleWins || 0) / totalBattles) * 100) : 0;
