@@ -562,43 +562,43 @@ export default function BattlePage() {
                       <div className="p-3 grid grid-cols-3 gap-2 sm:gap-3">
                         <button
                           onClick={() => handleBattleOptionClick(setShowQuickMatch)}
-                          className="battle-mode-btn group flex flex-col items-center gap-2 sm:gap-3 py-4 sm:py-5 px-2 rounded-xl border border-[#1a1a1a] bg-[#111] transition-all duration-200"
+                          className="battle-mode-btn group flex flex-col items-center gap-2 sm:gap-3 py-4 sm:py-5 px-2 rounded-xl bg-blue-600 border border-blue-500/40 transition-all duration-200"
                           data-color="blue"
                         >
-                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20 transition-colors">
-                            <svg className="w-6 h-6 sm:w-7 sm:h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/15 flex items-center justify-center border border-white/20 transition-colors">
+                            <svg className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                           </div>
                           <div className="text-center">
                             <p className="text-white font-semibold text-xs sm:text-sm leading-tight">Quick Match</p>
-                            <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5 leading-tight hidden sm:block">Random opponent</p>
+                            <p className="text-blue-200/70 text-[10px] sm:text-xs mt-0.5 leading-tight hidden sm:block">Random opponent</p>
                           </div>
                         </button>
 
                         <button
                           onClick={() => handleBattleOptionClick(setShowPlayFriend)}
-                          className="battle-mode-btn group flex flex-col items-center gap-2 sm:gap-3 py-4 sm:py-5 px-2 rounded-xl border border-[#1a1a1a] bg-[#111] transition-all duration-200"
-                          data-color="emerald"
+                          className="battle-mode-btn group flex flex-col items-center gap-2 sm:gap-3 py-4 sm:py-5 px-2 rounded-xl bg-blue-600 border border-blue-500/40 transition-all duration-200"
+                          data-color="blue"
                         >
-                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 transition-colors">
-                            <svg className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/15 flex items-center justify-center border border-white/20 transition-colors">
+                            <svg className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                           </div>
                           <div className="text-center">
                             <p className="text-white font-semibold text-xs sm:text-sm leading-tight">Play a Friend</p>
-                            <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5 leading-tight hidden sm:block">Challenge a friend</p>
+                            <p className="text-blue-200/70 text-[10px] sm:text-xs mt-0.5 leading-tight hidden sm:block">Challenge a friend</p>
                           </div>
                         </button>
 
                         <button
                           onClick={() => handleBattleOptionClick(setShowPrivateMatch)}
-                          className="battle-mode-btn group flex flex-col items-center gap-2 sm:gap-3 py-4 sm:py-5 px-2 rounded-xl border border-[#1a1a1a] bg-[#111] transition-all duration-200"
-                          data-color="orange"
+                          className="battle-mode-btn group flex flex-col items-center gap-2 sm:gap-3 py-4 sm:py-5 px-2 rounded-xl bg-blue-600 border border-blue-500/40 transition-all duration-200"
+                          data-color="blue"
                         >
-                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-orange-500/10 flex items-center justify-center border border-orange-500/20 transition-colors">
-                            <svg className="w-6 h-6 sm:w-7 sm:h-7 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
+                          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-white/15 flex items-center justify-center border border-white/20 transition-colors">
+                            <svg className="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
                           </div>
                           <div className="text-center">
                             <p className="text-white font-semibold text-xs sm:text-sm leading-tight">Private Match</p>
-                            <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5 leading-tight hidden sm:block">Join with code</p>
+                            <p className="text-blue-200/70 text-[10px] sm:text-xs mt-0.5 leading-tight hidden sm:block">Join with code</p>
                           </div>
                         </button>
                       </div>
@@ -826,16 +826,10 @@ export default function BattlePage() {
             opacity: 1;
           }
           .battle-mode-btn[data-color="blue"]:hover {
-            border-color: rgba(59, 130, 246, 0.3) !important;
-            background: rgba(59, 130, 246, 0.05) !important;
-          }
-          .battle-mode-btn[data-color="emerald"]:hover {
-            border-color: rgba(16, 185, 129, 0.3) !important;
-            background: rgba(16, 185, 129, 0.05) !important;
-          }
-          .battle-mode-btn[data-color="orange"]:hover {
-            border-color: rgba(249, 115, 22, 0.3) !important;
-            background: rgba(249, 115, 22, 0.05) !important;
+            background: #2563eb !important;
+            border-color: rgba(59, 130, 246, 0.6) !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
           }
         }
         .battle-start-btn-hover-gradient {
