@@ -183,14 +183,12 @@ export default function MyBattle() {
       />
       
       <div className="pt-20 pb-24 px-4 max-w-6xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-black text-white mb-2">
-          MY <span className="text-green-400">BATTLE</span>
-        </h1>
-        <p className="text-gray-400 mb-8">Track your current matchup and battle history</p>
+        <h1 className="text-lg font-semibold text-white mb-1">My Battle</h1>
+        <p className="text-gray-500 text-sm mb-6">Track your current matchup and battle history</p>
 
         {currentMatchup && currentMatchup.status === 'waiting' && (
           <div className="mb-8">
-            <div className="bg-gradient-to-r from-orange-500/10 to-orange-400/5 rounded-2xl border border-orange-500/20 p-6 mb-6">
+            <div className="bg-[#0d0d0d] rounded-xl border border-[#1a1a1a] p-6 mb-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <div className="w-2.5 h-2.5 bg-orange-400 rounded-full animate-pulse"></div>
@@ -203,7 +201,7 @@ export default function MyBattle() {
 
               <div className="grid grid-cols-3 gap-4 items-center mb-6">
                 <div className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-2xl ring-2 ring-blue-500/30">
+                  <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-[#1e40af] flex items-center justify-center text-2xl">
                     {userProfile?.avatar ? (
                       <img src={userProfile.avatar} alt="You" className="w-full h-full rounded-full object-cover" />
                     ) : (
@@ -218,7 +216,7 @@ export default function MyBattle() {
                   <p className="text-gray-500 text-xs mt-1">POT ${parseFloat(currentMatchup.potSize || 0).toFixed(0)}</p>
                 </div>
                 <div className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-gradient-to-br from-gray-700 to-gray-800 flex items-center justify-center border-2 border-dashed border-gray-600">
+                  <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-[#1a1a1a] flex items-center justify-center border-2 border-dashed border-[#333]">
                     <div className="w-6 h-6 border-2 border-gray-500 border-t-orange-400 rounded-full animate-spin"></div>
                   </div>
                   <p className="text-gray-500 font-bold text-sm">Waiting...</p>
@@ -233,8 +231,8 @@ export default function MyBattle() {
               </div>
 
               {currentMatchup.privateCode && (
-                <div className="bg-black/30 rounded-xl p-4 mb-4">
-                  <p className="text-gray-400 text-xs text-center mb-2">Share this code with your opponent</p>
+                <div className="bg-[#111] border border-[#222] rounded-lg p-4 mb-4">
+                  <p className="text-gray-500 text-xs text-center mb-2">Share this code with your opponent</p>
                   <div className="text-3xl font-mono font-bold text-white text-center tracking-[0.3em] mb-3">
                     {currentMatchup.privateCode}
                   </div>
@@ -242,7 +240,7 @@ export default function MyBattle() {
                     onClick={() => {
                       navigator.clipboard.writeText(currentMatchup.privateCode);
                     }}
-                    className="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-2.5 rounded-xl transition-colors text-sm"
+                    className="w-full bg-[#1a1a1a] hover:bg-[#222] text-white font-medium py-2.5 rounded-lg transition-colors text-sm border border-[#333]"
                   >
                     Copy Code
                   </button>
@@ -267,7 +265,7 @@ export default function MyBattle() {
                       .catch(() => {});
                   }
                 }}
-                className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 font-bold py-3 rounded-xl transition-colors border border-red-500/20 text-sm"
+                className="w-full bg-[#1a1a1a] hover:bg-red-500/10 text-red-400 font-medium py-3 rounded-lg transition-colors border border-[#333] text-sm"
               >
                 Cancel Match
               </button>
@@ -277,7 +275,7 @@ export default function MyBattle() {
 
         {currentMatchup && currentMatchup.status !== 'waiting' ? (
           <div className="mb-8">
-            <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/20 p-6 mb-6">
+            <div className="bg-[#0d0d0d] rounded-xl border border-[#1a1a1a] p-6 mb-6">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-green-400 font-semibold text-sm uppercase tracking-wide">Active Battle</span>
                 <div className="flex items-center gap-2">
@@ -288,7 +286,7 @@ export default function MyBattle() {
 
               <div className="grid grid-cols-3 gap-4 items-center">
                 <div className="text-center">
-                  <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center text-2xl">
+                  <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-[#1e40af] flex items-center justify-center text-2xl overflow-hidden">
                     {userProfile?.avatar ? (
                       <img src={userProfile.avatar} alt="You" className="w-full h-full rounded-full object-cover" />
                     ) : (
@@ -309,7 +307,7 @@ export default function MyBattle() {
 
                 <div className="text-center">
                   <Link href={opponentProfile?.isFake ? '#' : `/profile/${opponentProfile?.id}`}>
-                    <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-2xl cursor-pointer hover:ring-2 hover:ring-white/50 transition-all">
+                    <div className="w-16 h-16 mx-auto mb-2 rounded-full bg-[#065f46] flex items-center justify-center text-2xl cursor-pointer overflow-hidden">
                       {opponentProfile?.avatar ? (
                         <img src={opponentProfile.avatar} alt="Opponent" className="w-full h-full rounded-full object-cover" />
                       ) : (
@@ -324,18 +322,18 @@ export default function MyBattle() {
                 </div>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-white/10">
+              <div className="mt-6 pt-4 border-t border-[#1a1a1a]">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-gray-400 text-sm mb-2">Your Bets ({userBets.length})</p>
                     {userBets.length > 0 ? (
                       <div className="space-y-2 max-h-40 overflow-y-auto">
                         {userBets.slice(0, 5).map((bet, idx) => (
-                          <div key={idx} className="bg-black/30 rounded-lg p-2 text-sm">
+                          <div key={idx} className="bg-[#111] border border-[#222] rounded-lg p-2 text-sm">
                             <p className="text-white truncate">{bet.selection}</p>
-                            <p className="text-gray-400 text-xs">{bet.matchupName}</p>
+                            <p className="text-gray-500 text-xs">{bet.matchupName}</p>
                             <div className="flex justify-between mt-1">
-                              <span className="text-gray-400">{formatCurrency(bet.stake)}</span>
+                              <span className="text-gray-500">{formatCurrency(bet.stake)}</span>
                               <span className={bet.status === 'won' ? 'text-green-400' : bet.status === 'lost' ? 'text-red-400' : 'text-yellow-400'}>
                                 {bet.status}
                               </span>
@@ -354,11 +352,11 @@ export default function MyBattle() {
                       opponentBets.length > 0 ? (
                         <div className="space-y-2 max-h-40 overflow-y-auto">
                           {opponentBets.slice(0, 5).map((bet, idx) => (
-                            <div key={idx} className="bg-black/30 rounded-lg p-2 text-sm">
+                            <div key={idx} className="bg-[#111] border border-[#222] rounded-lg p-2 text-sm">
                               <p className="text-white truncate">{bet.selection}</p>
-                              <p className="text-gray-400 text-xs">{bet.matchupName}</p>
+                              <p className="text-gray-500 text-xs">{bet.matchupName}</p>
                               <div className="flex justify-between mt-1">
-                                <span className="text-gray-400">{formatCurrency(bet.stake)}</span>
+                                <span className="text-gray-500">{formatCurrency(bet.stake)}</span>
                                 <span className={bet.status === 'won' ? 'text-green-400' : bet.status === 'lost' ? 'text-red-400' : 'text-yellow-400'}>
                                   {bet.status}
                                 </span>
@@ -370,23 +368,23 @@ export default function MyBattle() {
                         <p className="text-gray-500 text-sm">Opponent hasn't bet yet</p>
                       )
                     ) : (
-                      <div className="bg-black/30 rounded-lg p-4 text-center">
-                        <p className="text-gray-400 text-sm">Place a bet to reveal opponent's picks</p>
+                      <div className="bg-[#111] border border-[#222] rounded-lg p-4 text-center">
+                        <p className="text-gray-500 text-sm">Place a bet to reveal opponent's picks</p>
                       </div>
                     )}
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6 flex gap-4">
+              <div className="mt-6 flex gap-3">
                 <Link href="/" className="flex-1">
-                  <button className="w-full bg-green-500 hover:bg-green-600 text-black font-bold py-3 rounded-xl transition-all">
+                  <button className="w-full bg-white text-black font-semibold py-3 rounded-lg transition-colors hover:bg-gray-100">
                     Place Bets
                   </button>
                 </Link>
                 <button
                   onClick={() => setShowForfeitModal(true)}
-                  className="bg-red-500/20 hover:bg-red-500/30 text-red-400 font-bold py-3 px-6 rounded-xl transition-all border border-red-500/30"
+                  className="bg-[#1a1a1a] hover:bg-red-500/10 text-red-400 font-medium py-3 px-6 rounded-lg transition-colors border border-[#333]"
                 >
                   Forfeit
                 </button>
@@ -397,12 +395,11 @@ export default function MyBattle() {
 
         {!currentMatchup && (
           <div className="mb-8">
-            <div className="bg-gradient-to-r from-blue-600/20 to-emerald-600/20 border border-blue-500/30 rounded-2xl p-6 text-center">
-              <span className="text-4xl block mb-3">⚔️</span>
-              <h3 className="text-white font-bold text-lg mb-2">No Active Battle</h3>
-              <p className="text-gray-400 text-sm mb-4">Start a new battle to compete against other players</p>
+            <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-6 text-center">
+              <h3 className="text-white font-semibold text-sm mb-1">No Active Battle</h3>
+              <p className="text-gray-500 text-sm mb-4">Start a new battle to compete against other players</p>
               <Link href="/battle">
-                <button className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-8 rounded-xl transition-colors">
+                <button className="bg-white text-black font-semibold py-2.5 px-8 rounded-lg transition-colors hover:bg-gray-100 text-sm">
                   Go to Battle Arena
                 </button>
               </Link>
@@ -410,66 +407,66 @@ export default function MyBattle() {
           </div>
         )}
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4 text-center">
-            <p className="text-gray-400 text-sm mb-1">Total Battles</p>
-            <p className="text-2xl font-black text-white">{battleStats?.totalBattles || 0}</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          <div className="bg-[#0d0d0d] rounded-xl border border-[#1a1a1a] p-4 text-center">
+            <p className="text-gray-500 text-xs uppercase tracking-wider mb-1">Total Battles</p>
+            <p className="text-xl font-bold text-white">{battleStats?.totalBattles || 0}</p>
           </div>
-          <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4 text-center">
-            <p className="text-gray-400 text-sm mb-1">Wins</p>
-            <p className="text-2xl font-black text-green-400">{battleStats?.wins || 0}</p>
+          <div className="bg-[#0d0d0d] rounded-xl border border-[#1a1a1a] p-4 text-center">
+            <p className="text-gray-500 text-xs uppercase tracking-wider mb-1">Wins</p>
+            <p className="text-xl font-bold text-green-400">{battleStats?.wins || 0}</p>
           </div>
-          <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4 text-center">
-            <p className="text-gray-400 text-sm mb-1">Losses</p>
-            <p className="text-2xl font-black text-red-400">{battleStats?.losses || 0}</p>
+          <div className="bg-[#0d0d0d] rounded-xl border border-[#1a1a1a] p-4 text-center">
+            <p className="text-gray-500 text-xs uppercase tracking-wider mb-1">Losses</p>
+            <p className="text-xl font-bold text-red-400">{battleStats?.losses || 0}</p>
           </div>
-          <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4 text-center">
-            <p className="text-gray-400 text-sm mb-1">Total Winnings</p>
-            <p className="text-2xl font-black text-green-400">{formatCurrency(battleStats?.totalWinnings || 0)}</p>
+          <div className="bg-[#0d0d0d] rounded-xl border border-[#1a1a1a] p-4 text-center">
+            <p className="text-gray-500 text-xs uppercase tracking-wider mb-1">Winnings</p>
+            <p className="text-xl font-bold text-green-400">{formatCurrency(battleStats?.totalWinnings || 0)}</p>
           </div>
         </div>
 
         {opponentProfile && !opponentProfile.isFake && (
-          <div className="bg-slate-800/50 rounded-2xl border border-slate-700 p-6 mb-8">
-            <h2 className="text-xl font-bold text-white mb-4">Opponent Profile</h2>
+          <div className="bg-[#0d0d0d] rounded-xl border border-[#1a1a1a] p-5 mb-8">
+            <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-4">Opponent</h3>
             <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center text-3xl">
+              <div className="w-14 h-14 rounded-full bg-[#065f46] flex items-center justify-center text-2xl overflow-hidden">
                 {opponentProfile?.avatar ? (
                   <img src={opponentProfile.avatar} alt="Opponent" className="w-full h-full rounded-full object-cover" />
                 ) : (
                   '🎯'
                 )}
               </div>
-              <div className="flex-1">
-                <h3 className="text-xl font-bold text-white">{opponentProfile?.username || 'Opponent'}</h3>
-                <p className="text-gray-400 text-sm mb-2">{opponentProfile?.bio || 'No bio'}</p>
-                <div className="flex gap-4 text-sm">
-                  <span className="text-green-400">{opponentProfile?.battleWins || 0} Wins</span>
-                  <span className="text-red-400">{opponentProfile?.battleLosses || 0} Losses</span>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-white font-semibold text-sm truncate">{opponentProfile?.username || 'Opponent'}</h3>
+                <p className="text-gray-500 text-xs mb-1 truncate">{opponentProfile?.bio || 'No bio'}</p>
+                <div className="flex gap-3 text-xs">
+                  <span className="text-green-400 font-medium">{opponentProfile?.battleWins || 0}W</span>
+                  <span className="text-red-400 font-medium">{opponentProfile?.battleLosses || 0}L</span>
                 </div>
               </div>
               <Link href={`/profile/${opponentProfile?.id}`}>
-                <button className="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg transition-all">
-                  View Profile
+                <button className="bg-[#1a1a1a] hover:bg-[#222] text-white font-medium py-2 px-4 rounded-lg transition-colors text-xs border border-[#333]">
+                  Profile
                 </button>
               </Link>
             </div>
           </div>
         )}
 
-        <div className="bg-slate-800/50 rounded-2xl border border-slate-700 p-6">
-          <h2 className="text-xl font-bold text-white mb-4">Battle History</h2>
+        <div className="bg-[#0d0d0d] rounded-xl border border-[#1a1a1a] p-5">
+          <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-4">Battle History</h3>
           
           {battleHistory.length > 0 ? (
             <div className="space-y-3">
               {battleHistory.map((battle) => (
                 <div 
                   key={battle.id} 
-                  className={`rounded-xl border p-4 ${getResultBg(battle.result)}`}
+                  className="rounded-lg border border-[#1a1a1a] p-3 bg-[#111]"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
+                      <div className="w-9 h-9 rounded-full bg-[#1a1a1a] flex items-center justify-center overflow-hidden">
                         {battle.opponent?.avatar ? (
                           <img src={battle.opponent.avatar} alt="" className="w-full h-full rounded-full object-cover" />
                         ) : (
@@ -494,7 +491,7 @@ export default function MyBattle() {
                       </p>
                     </div>
                   </div>
-                  <div className="mt-2 pt-2 border-t border-white/10 flex justify-between text-sm text-gray-400">
+                  <div className="mt-2 pt-2 border-t border-[#1a1a1a] flex justify-between text-xs text-gray-500">
                     <span>Pot: {formatCurrency(battle.potSize)}</span>
                     <span>{new Date(battle.createdAt).toLocaleDateString()}</span>
                   </div>

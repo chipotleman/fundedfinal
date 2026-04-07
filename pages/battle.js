@@ -715,12 +715,12 @@ export default function BattlePage() {
         }}
       />
 
-      <style jsx>{`
+      <style>{`
         @keyframes slideIn {
           from { opacity: 0; transform: translateY(-10px); }
           to { opacity: 1; transform: translateY(0); }
         }
-        :global(.animate-slideIn) {
+        .animate-slideIn {
           animation: slideIn 0.3s ease-out;
         }
       `}</style>

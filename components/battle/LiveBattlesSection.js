@@ -132,7 +132,7 @@ function PickPill({ pick, compact = false }) {
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: compact ? '4px' : '6px', marginBottom: compact ? '0px' : '2px', ...(compact ? { whiteSpace: 'nowrap', overflow: 'hidden' } : {}) }}>
-          <span style={{ color: '#ffffff', fontSize: compact ? '10px' : '12px', fontWeight: 700, ...(compact ? { overflow: 'hidden', textOverflow: 'ellipsis' } : {}) }}>{pick.team}</span>
+          <span style={{ color: '#ffffff', fontSize: compact ? '10px' : '12px', fontWeight: 700, flexShrink: 0, whiteSpace: 'nowrap' }}>{pick.team}</span>
           <span
             style={{
               fontSize: compact ? '8px' : '9px',
@@ -144,8 +144,8 @@ function PickPill({ pick, compact = false }) {
               background: 'rgba(59, 130, 246, 0.15)',
               color: '#60a5fa',
               border: '1px solid rgba(59, 130, 246, 0.2)',
-              flexShrink: 0,
               whiteSpace: 'nowrap',
+              ...(compact ? { overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 } : { flexShrink: 0 }),
             }}
           >
             {pick.type}
@@ -443,14 +443,12 @@ function BattleCard({ battle, compact, focused }) {
         </div>
         <div className="flex items-center justify-between">
           <span className="text-gray-600 text-[10px]">{progress.toFixed(0)}% complete</span>
-          {!battle.simulated && (
-            <button
-              onClick={(e) => { e.stopPropagation(); router.push(`/battle?battle=${battle.id}`); }}
-              className="text-[11px] font-medium text-blue-400"
-            >
-              Watch
-            </button>
-          )}
+          <button
+            onClick={(e) => { e.stopPropagation(); router.push(`/battle?battle=${battle.id}`); }}
+            className="text-[11px] font-medium text-blue-400"
+          >
+            Watch
+          </button>
         </div>
       </div>
 

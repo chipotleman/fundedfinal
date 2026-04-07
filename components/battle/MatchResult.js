@@ -226,7 +226,7 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
           )}
 
           {showStats && (
-            <div className="mr-stats-card bg-gray-900/80 border border-gray-700/50 rounded-2xl p-5 mb-6 space-y-4">
+            <div className="mr-stats-card bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-5 mb-6 space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-gray-400 text-sm">Starting Balance</span>
                 <span className="text-white font-medium">${animatedStarting.toFixed(2)}</span>
@@ -235,7 +235,7 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
                 <span className="text-gray-400 text-sm">Final Balance</span>
                 <span className="text-white font-bold">${animatedFinal.toFixed(2)}</span>
               </div>
-              <div className="border-t border-gray-700/50 pt-3 flex justify-between items-center">
+              <div className="border-t border-[#1a1a1a] pt-3 flex justify-between items-center">
                 <span className="text-gray-400 text-sm">P&L</span>
                 <span className={`font-bold text-lg ${pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {pnl >= 0 ? '+' : '-'}${animatedPnl.toFixed(2)}
@@ -254,21 +254,21 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
             <div className="flex gap-3 mr-stats-card" style={{ animationDelay: '0.15s' }}>
               <button
                 onClick={onRematch}
-                className="flex-1 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-bold py-3 rounded-xl hover:from-blue-500 hover:to-cyan-400 transition-all mr-pulse-rematch"
+                className="flex-1 bg-white text-black font-semibold py-3 rounded-lg hover:bg-gray-100 transition-colors"
               >
-                ⚔️ Rematch
+                Rematch
               </button>
               {isWinner ? (
                 <button
                   onClick={handleShare}
-                  className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-bold py-3 rounded-xl hover:from-emerald-500 hover:to-emerald-400 transition-all"
+                  className="flex-1 bg-[#1a1a1a] text-emerald-400 font-semibold py-3 rounded-lg hover:bg-[#222] transition-colors border border-[#333]"
                 >
-                  {copied ? '✅ Copied!' : '🔥 Share Win'}
+                  {copied ? 'Copied!' : 'Share Win'}
                 </button>
               ) : (
                 <button
                   onClick={onClose}
-                  className="flex-1 bg-gray-800 text-gray-300 font-medium py-3 rounded-xl hover:bg-gray-700 transition-colors"
+                  className="flex-1 bg-[#1a1a1a] text-gray-300 font-medium py-3 rounded-lg hover:bg-[#222] transition-colors border border-[#333]"
                 >
                   Back to Battle
                 </button>
