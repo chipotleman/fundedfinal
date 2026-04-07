@@ -1,37 +1,84 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 
-const ALL_MESSAGES = [
-  { user: 'SharpBets', msg: 'Lakers ML looking solid tonight', color: 'text-blue-400' },
-  { user: 'OddsKing99', msg: 'BetMaster is crushing it rn', color: 'text-emerald-400' },
-  { user: 'PicksDaily', msg: 'That spread hit easy', color: 'text-cyan-400' },
-  { user: 'ProCapper', msg: 'GG on the over', color: 'text-yellow-400' },
-  { user: 'ValuePlay', msg: 'Going all in on moneylines', color: 'text-orange-400' },
-  { user: 'LockItIn', msg: 'Risky play taking the underdog there', color: 'text-cyan-400' },
-  { user: 'BetBoss', msg: 'That parlay is insane lol', color: 'text-blue-400' },
-  { user: 'StatMan', msg: 'The analytics say over hits 62% of the time', color: 'text-emerald-400' },
-  { user: 'CashOut', msg: 'Needs a comeback here', color: 'text-cyan-400' },
-  { user: 'DailyPicks', msg: 'This match is too close', color: 'text-yellow-400' },
-  { user: 'EdgeFinder', msg: 'The line moved from -3 to -5', color: 'text-orange-400' },
-  { user: 'ActionJunkie', msg: 'These two are going at it', color: 'text-cyan-400' },
-  { user: 'StreakKing', msg: "Let's gooo", color: 'text-blue-400' },
-  { user: 'BetSlayer', msg: 'Who else tailing?', color: 'text-emerald-400' },
-  { user: 'OddsShark', msg: 'Smart bet on the total there', color: 'text-cyan-400' },
-  { user: 'ParlayKid', msg: 'Need one more leg to hit', color: 'text-yellow-400' },
-  { user: 'RecordBets', msg: '3-0 run right now sheesh', color: 'text-orange-400' },
-  { user: 'ClutchBet', msg: 'Overtime would be crazy here', color: 'text-cyan-400' },
-  { user: 'FadeKing', msg: 'Fading the public on this one', color: 'text-blue-400' },
-  { user: 'UnitGrinder', msg: 'Slow and steady wins the race', color: 'text-emerald-400' },
-  { user: 'LiveBettor', msg: 'In-play is where the value is', color: 'text-cyan-400' },
-  { user: 'ChalkEater', msg: 'Favorites been hitting all week', color: 'text-yellow-400' },
-  { user: 'DogCatcher', msg: 'Underdog ML is the play', color: 'text-orange-400' },
-  { user: 'TotalsMaster', msg: 'Over looking good with the pace', color: 'text-cyan-400' },
-  { user: 'SpreadKing', msg: 'Cover city right now', color: 'text-blue-400' },
-  { user: 'PropBet', msg: 'Player props are the move', color: 'text-emerald-400' },
-  { user: 'SteamChaser', msg: 'Sharp money just came in', color: 'text-cyan-400' },
-  { user: 'CapperJoe', msg: 'Model has this at 58% win rate', color: 'text-yellow-400' },
-  { user: 'BankrollMgr', msg: 'Solid risk management here', color: 'text-orange-400' },
-  { user: 'CloserBets', msg: 'This one is coming down to the wire', color: 'text-cyan-400' },
+const CHATTER_FIRST = [
+  'Sharp', 'Bet', 'Odds', 'Lock', 'Cash', 'Pick', 'Edge', 'Streak',
+  'Clutch', 'Fade', 'Live', 'Chalk', 'Dog', 'Prop', 'Steam', 'Unit',
+  'Parlay', 'Capper', 'Action', 'Value', 'Bankroll', 'Record', 'Daily',
+  'Closer', 'Total', 'Spread', 'Grind', 'Ace', 'Ice', 'Gold', 'Nitro',
+  'Fire', 'Money', 'Stack', 'Pro', 'Crypto', 'Lucky', 'Shadow', 'Iron',
+  'Nova', 'Titan', 'Blitz', 'Viper', 'Hawk', 'Cobra', 'Storm', 'Snipe',
 ];
+
+const CHATTER_SECOND = [
+  'King', 'Boss', 'Master', 'Play', 'Man', 'Slayer', 'Shark', 'Kid',
+  'Joe', 'Mgr', 'Finder', 'Chaser', 'Eater', 'Catcher', 'Grinder', 'X',
+  'Bets', 'Picks', 'Line', 'Rush', 'Veins', 'High', 'Daily', 'Cash',
+  'Zone', 'Mode', 'Wave', 'Shot', 'Guru', 'Wiz', 'Pro', 'Dev',
+];
+
+const COLORS = [
+  'text-blue-400', 'text-emerald-400', 'text-cyan-400',
+  'text-yellow-400', 'text-orange-400',
+];
+
+const MESSAGE_TEMPLATES = [
+  'Lakers ML looking solid tonight',
+  'That spread hit easy',
+  'GG on the over',
+  'Going all in on moneylines',
+  'Risky play taking the underdog there',
+  'That parlay is insane lol',
+  'The analytics say over hits 62%',
+  'Needs a comeback here',
+  'This match is too close',
+  'The line moved from -3 to -5',
+  'These two are going at it',
+  "Let's gooo 🔥",
+  'Who else tailing?',
+  'Smart bet on the total there',
+  'Need one more leg to hit',
+  '3-0 run right now sheesh',
+  'Overtime would be crazy here',
+  'Fading the public on this one',
+  'In-play is where the value is',
+  'Favorites been hitting all week',
+  'Underdog ML is the play',
+  'Over looking good with the pace',
+  'Cover city right now',
+  'Player props are the move',
+  'Sharp money just came in',
+  'Model has this at 58% win rate',
+  'Solid risk management here',
+  'Coming down to the wire',
+  'What a pick that was',
+  'Been watching this one all day',
+  'The juice is worth it here',
+  'I hit a 5-legger earlier 💰',
+  'This pace is insane',
+  'Anyone on the under?',
+  'That was a sweat and a half',
+  'Already locked my bets in',
+  'Riding the hot hand tonight',
+  'This is about to get ugly',
+  'Defense wins bets 🧱',
+  'Took the points and running',
+  'He is on a heater rn',
+  'Unreal comeback brewing',
+  'The public is getting crushed',
+  'Line value is juicy here',
+  'Full send on the ML',
+  'W after W after W',
+  'Can feel the momentum shift',
+  'Big brain bet right there',
+];
+
+function seededRng(seed) {
+  let s = seed;
+  return () => {
+    s = (s * 1103515245 + 12345) & 0x7fffffff;
+    return s / 0x7fffffff;
+  };
+}
 
 function hashBattleId(id) {
   let hash = 0;
@@ -43,13 +90,50 @@ function hashBattleId(id) {
   return Math.abs(hash);
 }
 
-function getMessagesForBattle(battleId) {
-  const offset = hashBattleId(battleId);
-  const pool = [];
-  for (let i = 0; i < ALL_MESSAGES.length; i++) {
-    pool.push(ALL_MESSAGES[(i + offset) % ALL_MESSAGES.length]);
+function generateChattersForBattle(battleId) {
+  const seed = hashBattleId(battleId);
+  const rng = seededRng(seed);
+
+  const firstCopy = [...CHATTER_FIRST];
+  const secondCopy = [...CHATTER_SECOND];
+  for (let i = firstCopy.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [firstCopy[i], firstCopy[j]] = [firstCopy[j], firstCopy[i]];
   }
-  return pool;
+  for (let i = secondCopy.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [secondCopy[i], secondCopy[j]] = [secondCopy[j], secondCopy[i]];
+  }
+
+  const count = 8;
+  const chatters = [];
+  for (let i = 0; i < count; i++) {
+    const first = firstCopy[i % firstCopy.length];
+    const second = secondCopy[i % secondCopy.length];
+    const useNumber = rng() > 0.6;
+    const num = useNumber ? String(Math.floor(rng() * 99) + 1) : '';
+    chatters.push({
+      name: `${first}${second}${num}`,
+      color: COLORS[Math.floor(rng() * COLORS.length)],
+    });
+  }
+  return chatters;
+}
+
+function generateMessagesForBattle(battleId, chatters) {
+  const seed = hashBattleId(battleId) + 9999;
+  const rng = seededRng(seed);
+
+  const shuffled = [...MESSAGE_TEMPLATES];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  return shuffled.map((msg, i) => {
+    const chatter = chatters[i % chatters.length];
+    return { user: chatter.name, msg, color: chatter.color };
+  });
 }
 
 export default function BattleChat({ battleId, compact = false }) {
@@ -60,7 +144,11 @@ export default function BattleChat({ battleId, compact = false }) {
   const viewerCountRef = useRef(Math.floor(Math.random() * 40 + 15));
   const [compactMsgKey, setCompactMsgKey] = useState(0);
 
-  const battleMessages = useMemo(() => getMessagesForBattle(battleId), [battleId]);
+  const { chatters, battleMessages } = useMemo(() => {
+    const c = generateChattersForBattle(battleId);
+    const m = generateMessagesForBattle(battleId, c);
+    return { chatters: c, battleMessages: m };
+  }, [battleId]);
 
   useEffect(() => {
     const initial = battleMessages.slice(0, 3).map((m, i) => ({
@@ -121,7 +209,7 @@ export default function BattleChat({ battleId, compact = false }) {
   if (compact) {
     const lastMsg = messages.slice(-1)[0];
     return (
-      <div className="mt-2 border-t border-gray-700/30 pt-2">
+      <div className="mt-1.5" style={{ borderTop: '1px solid #1a1a1a', paddingTop: '5px' }}>
         <style>{`
           @keyframes chatSlideIn {
             0% { opacity: 0; transform: translateX(-12px); }
@@ -131,7 +219,7 @@ export default function BattleChat({ battleId, compact = false }) {
             animation: chatSlideIn 0.35s ease-out;
           }
         `}</style>
-        <div className="flex items-center gap-1 overflow-hidden h-5">
+        <div className="flex items-center gap-1 overflow-hidden" style={{ height: '16px' }}>
           <span className="text-gray-600 text-[9px] flex-shrink-0">💬</span>
           {lastMsg && (
             <span key={compactMsgKey} className="text-[10px] truncate chat-compact-slide">
@@ -145,33 +233,37 @@ export default function BattleChat({ battleId, compact = false }) {
   }
 
   return (
-    <div className="border-t border-gray-700/40 bg-black/30" onClick={e => e.stopPropagation()}>
-      <div className="flex items-center justify-between px-3 py-1.5 border-b border-gray-800/50">
-        <div className="flex items-center gap-1.5">
-          <span className="text-[10px]">💬</span>
-          <span className="text-gray-400 text-[10px] font-semibold uppercase tracking-wider">Live Chat</span>
+    <div style={{ borderTop: '1px solid #1a1a1a', backgroundColor: 'rgba(0,0,0,0.4)' }} onClick={e => e.stopPropagation()}>
+      <div className="flex items-center justify-between px-2.5 py-1" style={{ borderBottom: '1px solid #141414' }}>
+        <div className="flex items-center gap-1">
+          <span className="text-[9px]">💬</span>
+          <span className="text-gray-500 text-[9px] font-semibold uppercase tracking-wider">Chat</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-          <span className="text-gray-500 text-[9px]">{viewerCountRef.current} watching</span>
+          <div className="w-1 h-1 bg-green-500 rounded-full"></div>
+          <span className="text-gray-600 text-[8px]">{viewerCountRef.current}</span>
         </div>
       </div>
       <div
         ref={chatContainerRef}
-        className="chat-scroll h-[120px] overflow-y-auto px-3 py-1.5 space-y-0.5"
-        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+        className="chat-scroll overflow-y-auto px-2.5"
+        style={{ height: '88px', scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', paddingTop: '3px', paddingBottom: '3px' }}
       >
         <style>{`.chat-scroll::-webkit-scrollbar { display: none; }`}</style>
         {messages.map(m => (
-          <div key={m.id} className={`text-[11px] leading-relaxed ${m.isOwn ? 'bg-blue-500/10 rounded px-1 -mx-1' : ''}`}>
-            <span className={`font-semibold ${m.color}`}>{m.user}</span>
-            <span className="text-gray-300 ml-1">{m.msg}</span>
+          <div
+            key={m.id}
+            className={`leading-tight ${m.isOwn ? 'bg-blue-500/10 rounded px-1 -mx-1' : ''}`}
+            style={{ fontSize: '10px', paddingTop: '1px', paddingBottom: '1px' }}
+          >
+            <span className={`font-bold ${m.color}`}>{m.user}</span>
+            <span className="text-gray-400 ml-1">{m.msg}</span>
           </div>
         ))}
       </div>
-      <div className="px-3 pb-2 pt-1">
+      <div className="px-2.5 pb-1.5 pt-0.5">
         <form
-          className="flex items-center gap-2"
+          className="flex items-center gap-1.5"
           onSubmit={handleSend}
           onClick={e => e.stopPropagation()}
         >
@@ -181,17 +273,19 @@ export default function BattleChat({ battleId, compact = false }) {
             onChange={e => { e.stopPropagation(); setInputValue(e.target.value); }}
             onClick={e => e.stopPropagation()}
             onFocus={e => e.stopPropagation()}
-            placeholder="Send a message..."
-            className="flex-1 bg-gray-800/60 border border-gray-700/40 rounded-lg px-3 py-1.5 text-[11px] text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/40"
+            placeholder="Say something..."
+            className="flex-1 rounded-md text-white placeholder-gray-600 focus:outline-none"
+            style={{ backgroundColor: '#111', border: '1px solid #1a1a1a', padding: '4px 8px', fontSize: '10px' }}
             autoComplete="off"
           />
           <button
             type="submit"
             disabled={!inputValue.trim()}
-            className="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            className="bg-blue-600 text-white font-bold rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            style={{ fontSize: '9px', padding: '4px 8px' }}
             onClick={e => e.stopPropagation()}
           >
-            Chat
+            Send
           </button>
         </form>
       </div>
