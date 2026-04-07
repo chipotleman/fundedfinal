@@ -273,7 +273,7 @@ export default function MyBattle() {
           </div>
         )}
 
-        {currentMatchup && currentMatchup.status !== 'waiting' ? (
+        {currentMatchup && currentMatchup.status !== 'waiting' && currentMatchup.status !== 'completed' && currentMatchup.status !== 'forfeited' ? (
           <div className="mb-8">
             <div className="bg-[#0d0d0d] rounded-xl border border-[#1a1a1a] p-6 mb-6">
               <div className="flex items-center justify-between mb-4">
