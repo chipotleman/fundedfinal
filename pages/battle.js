@@ -11,7 +11,6 @@ import MatchLobby from '../components/battle/MatchLobby';
 import MatchResult from '../components/battle/MatchResult';
 import LiveBattlesSection from '../components/battle/LiveBattlesSection';
 import ForfeitModal from '../components/battle/ForfeitModal';
-import { generateSimulatedGames } from '../lib/simulated-games';
 
 function GuestAvatarRotator() {
   const [index, setIndex] = useState(0);
@@ -259,50 +258,91 @@ export default function BattlePage() {
     );
   }
 
+  const totalBattles = (profile?.battleWins || 0) + (profile?.battleLosses || 0);
+  const winRate = totalBattles > 0 ? Math.round(((profile?.battleWins || 0) / totalBattles) * 100) : 0;
+
   return (
     <div className="min-h-screen bg-black">
       <TopNavbar />
 
-      <div className="pt-20 pb-8 max-w-6xl mx-auto px-4">
-        <div className="flex flex-col lg:flex-row gap-6">
-
-          <div className="flex-1">
-            {!isGuest && (
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-11 h-11 rounded-full bg-[#1a1a1a] flex items-center justify-center overflow-hidden border border-[#333]">
-                  {profile?.avatar ? (
-                    <img src={profile.avatar} className="w-full h-full object-cover" alt="" />
-                  ) : (
-                    <span className="text-lg font-semibold text-white">{profile?.username?.[0]?.toUpperCase() || '?'}</span>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h1 className="text-lg font-semibold text-white truncate">{profile?.username || 'Player'}</h1>
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="text-green-400 font-medium">{profile?.battleWins || 0}W</span>
-                    <span className="text-gray-600">-</span>
-                    <span className="text-red-400 font-medium">{profile?.battleLosses || 0}L</span>
-                    {profile?.bankroll && (
-                      <>
-                        <span className="text-gray-700">·</span>
-                        <span className="text-gray-500">${parseFloat(profile.bankroll).toFixed(2)}</span>
-                      </>
-                    )}
+      <div className="pt-16">
+        <div className="battle-hero-section relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-b from-blue-950/20 via-black/50 to-black"></div>
+          <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse at 50% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 70%)' }}></div>
+          <div className="relative max-w-5xl mx-auto px-4 py-8 sm:py-10">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                {!isGuest && (
+                  <>
+                    <div className="w-12 h-12 rounded-full bg-[#1a1a1a] flex items-center justify-center overflow-hidden border-2 border-[#333]">
+                      {profile?.avatar ? (
+                        <img src={profile.avatar} className="w-full h-full object-cover" alt="" />
+                      ) : (
+                        <span className="text-lg font-bold text-white">{profile?.username?.[0]?.toUpperCase() || '?'}</span>
+                      )}
+                    </div>
+                    <div>
+                      <h1 className="text-lg font-bold text-white">{profile?.username || 'Player'}</h1>
+                      <div className="flex items-center gap-3 text-xs mt-0.5">
+                        <span className="text-green-400 font-semibold">{profile?.battleWins || 0}W</span>
+                        <span className="text-gray-600">-</span>
+                        <span className="text-red-400 font-semibold">{profile?.battleLosses || 0}L</span>
+                        {totalBattles > 0 && (
+                          <>
+                            <span className="text-gray-700">·</span>
+                            <span className="text-gray-400">{winRate}%</span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
+                {isGuest && (
+                  <div>
+                    <h1 className="text-xl font-bold text-white">Battle Arena</h1>
+                    <p className="text-gray-500 text-xs mt-0.5">Compete head-to-head in sports betting battles</p>
                   </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {!isGuest && (
+                  <button
+                    onClick={() => setShowSidebar(!showSidebar)}
+                    className="lg:hidden w-9 h-9 bg-[#1a1a1a] rounded-lg flex items-center justify-center text-gray-400 transition-colors relative border border-[#333]"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    {(invites.received?.length > 0) && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold flex items-center justify-center text-white">
+                        {invites.received.length}
+                      </span>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {!isGuest && totalBattles > 0 && (
+              <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="bg-[#0d0d0d]/80 border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-center">
+                  <p className="text-white text-base font-bold">{totalBattles}</p>
+                  <p className="text-gray-500 text-[10px] uppercase tracking-wider">Battles</p>
                 </div>
-                <button
-                  onClick={() => setShowSidebar(!showSidebar)}
-                  className="lg:hidden w-9 h-9 bg-[#1a1a1a] rounded-lg flex items-center justify-center text-gray-400 hover:text-white transition-colors relative border border-[#333]"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                  {(invites.received?.length > 0) && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold flex items-center justify-center text-white">
-                      {invites.received.length}
-                    </span>
-                  )}
-                </button>
+                <div className="bg-[#0d0d0d]/80 border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-center">
+                  <p className="text-green-400 text-base font-bold">{winRate}%</p>
+                  <p className="text-gray-500 text-[10px] uppercase tracking-wider">Win Rate</p>
+                </div>
+                <div className="bg-[#0d0d0d]/80 border border-[#1a1a1a] rounded-lg px-3 py-2.5 text-center">
+                  <p className="text-white text-base font-bold">${parseFloat(profile?.bankroll || 0).toFixed(0)}</p>
+                  <p className="text-gray-500 text-[10px] uppercase tracking-wider">Balance</p>
+                </div>
               </div>
             )}
+          </div>
+        </div>
+
+        <div className="max-w-5xl mx-auto px-4 pb-8">
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="flex-1">
 
             {activeMatchup && activeMatchup.status === 'waiting' && (
               <div className="mb-6 bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl overflow-hidden">
@@ -664,6 +704,7 @@ export default function BattlePage() {
             </div>
           </div>
 
+          </div>
         </div>
       </div>
 
