@@ -131,7 +131,7 @@ function PickPill({ pick, compact = false }) {
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: compact ? '4px' : '6px', marginBottom: compact ? '0px' : '2px', ...(compact ? { whiteSpace: 'nowrap', overflow: 'hidden' } : {}) }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: compact ? '4px' : '6px', marginBottom: compact ? '0px' : '2px', whiteSpace: 'nowrap' }}>
           <span style={{ color: '#ffffff', fontSize: compact ? '10px' : '12px', fontWeight: 700, flexShrink: 0, whiteSpace: 'nowrap' }}>{pick.team}</span>
           <span
             style={{
@@ -145,7 +145,7 @@ function PickPill({ pick, compact = false }) {
               color: '#60a5fa',
               border: '1px solid rgba(59, 130, 246, 0.2)',
               whiteSpace: 'nowrap',
-              ...(compact ? { overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 } : { flexShrink: 0 }),
+              flexShrink: 0,
             }}
           >
             {pick.type}
@@ -304,7 +304,7 @@ function BattleCard({ battle, compact, focused }) {
   if (compact) {
     return (
       <div
-        className="flex-shrink-0 w-[280px] rounded-xl p-3 cursor-pointer flex flex-col"
+        className="flex-shrink-0 w-[320px] rounded-xl p-3 cursor-pointer flex flex-col"
         onClick={() => router.push(`/battle?battle=${battle.id}`)}
         style={{
           backgroundColor: '#0d0d0d',

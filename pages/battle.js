@@ -11,6 +11,7 @@ import MatchLobby from '../components/battle/MatchLobby';
 import MatchResult from '../components/battle/MatchResult';
 import LiveBattlesSection from '../components/battle/LiveBattlesSection';
 import ForfeitModal from '../components/battle/ForfeitModal';
+import { generateSimulatedGames } from '../lib/simulated-games';
 
 function GuestAvatarRotator() {
   const [index, setIndex] = useState(0);
@@ -419,37 +420,52 @@ export default function BattlePage() {
               <button
                 onClick={() => requireAuth(() => setShowQuickMatch(true))}
                 disabled={!!activeMatchup}
-                className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-4 text-left transition-colors hover:border-[#333] disabled:opacity-30 disabled:cursor-not-allowed"
+                className="group bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-4 text-left transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{ '--hover-border': 'rgba(59, 130, 246, 0.4)' }}
               >
-                <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center mb-3">
-                  <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                <div className="flex items-start justify-between mb-3">
+                  <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  </div>
+                  <svg className="w-4 h-4 text-gray-600 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                 </div>
                 <h3 className="text-white font-semibold text-sm mb-0.5">Quick Match</h3>
-                <p className="text-gray-500 text-xs">Random opponent</p>
+                <p className="text-gray-500 text-xs mb-3">Random opponent, instant action</p>
+                <span className="text-blue-400 text-xs font-medium">Start Battle →</span>
               </button>
 
               <button
                 onClick={() => requireAuth(() => setShowPlayFriend(true))}
                 disabled={!!activeMatchup}
-                className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-4 text-left transition-colors hover:border-[#333] disabled:opacity-30 disabled:cursor-not-allowed"
+                className="group bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-4 text-left transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{ '--hover-border': 'rgba(16, 185, 129, 0.4)' }}
               >
-                <div className="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center mb-3">
-                  <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                <div className="flex items-start justify-between mb-3">
+                  <div className="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  </div>
+                  <svg className="w-4 h-4 text-gray-600 group-hover:text-emerald-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                 </div>
                 <h3 className="text-white font-semibold text-sm mb-0.5">Play a Friend</h3>
-                <p className="text-gray-500 text-xs">Challenge a friend</p>
+                <p className="text-gray-500 text-xs mb-3">Challenge someone you know</p>
+                <span className="text-emerald-400 text-xs font-medium">Send Challenge →</span>
               </button>
 
               <button
                 onClick={() => requireAuth(() => setShowPrivateMatch(true))}
                 disabled={!!activeMatchup}
-                className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-4 text-left transition-colors hover:border-[#333] disabled:opacity-30 disabled:cursor-not-allowed"
+                className="group bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-4 text-left transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                style={{ '--hover-border': 'rgba(249, 115, 22, 0.4)' }}
               >
-                <div className="w-10 h-10 bg-orange-500/10 rounded-lg flex items-center justify-center mb-3">
-                  <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
+                <div className="flex items-start justify-between mb-3">
+                  <div className="w-10 h-10 bg-orange-500/10 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
+                  </div>
+                  <svg className="w-4 h-4 text-gray-600 group-hover:text-orange-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                 </div>
                 <h3 className="text-white font-semibold text-sm mb-0.5">Private Match</h3>
-                <p className="text-gray-500 text-xs">Join with a code</p>
+                <p className="text-gray-500 text-xs mb-3">Create or join with a code</p>
+                <span className="text-orange-400 text-xs font-medium">Enter Code →</span>
               </button>
             </div>
 
@@ -723,7 +739,51 @@ export default function BattlePage() {
         .animate-slideIn {
           animation: slideIn 0.3s ease-out;
         }
+        @media (hover: hover) {
+          .group:hover {
+            border-color: var(--hover-border, #333) !important;
+          }
+        }
       `}</style>
     </div>
   );
+}
+
+export async function getServerSideProps() {
+  try {
+    const { getScheduledGamesForSSR } = require('../lib/goalserve-autostart');
+    const scheduledGames = getScheduledGamesForSSR();
+
+    if (scheduledGames && scheduledGames.length > 0) {
+      return {
+        props: {
+          initialApiGames: scheduledGames,
+        },
+      };
+    }
+
+    const { generateSimulatedGames } = require('../lib/simulated-games');
+    const simGames = generateSimulatedGames();
+    return {
+      props: {
+        initialApiGames: simGames,
+      },
+    };
+  } catch (error) {
+    try {
+      const { generateSimulatedGames } = require('../lib/simulated-games');
+      const simGames = generateSimulatedGames();
+      return {
+        props: {
+          initialApiGames: simGames,
+        },
+      };
+    } catch {
+      return {
+        props: {
+          initialApiGames: [],
+        },
+      };
+    }
+  }
 }
