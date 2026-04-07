@@ -130,9 +130,9 @@ function PickPill({ pick, compact = false }) {
         {isPending && <div className="pick-pending-dot" style={{ width: compact ? '5px' : '6px', height: compact ? '5px' : '6px', borderRadius: '50%', background: '#6b7280' }}></div>}
       </div>
 
-      <div style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: compact ? '4px' : '6px', marginBottom: compact ? '0px' : '2px', overflow: 'hidden' }}>
-          <span style={{ color: '#ffffff', fontSize: compact ? '10px' : '12px', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{pick.team}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: compact ? '4px' : '6px', marginBottom: compact ? '0px' : '2px' }}>
+          <span style={{ color: '#ffffff', fontSize: compact ? '10px' : '12px', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0 }}>{pick.team}</span>
           <span
             style={{
               fontSize: compact ? '8px' : '9px',
@@ -304,7 +304,7 @@ function BattleCard({ battle, compact, focused }) {
   if (compact) {
     return (
       <div
-        className="flex-shrink-0 w-[320px] rounded-xl p-3 cursor-pointer flex flex-col"
+        className="flex-shrink-0 w-[360px] rounded-xl p-3 cursor-pointer flex flex-col"
         onClick={() => router.push(`/battle?battle=${battle.id}`)}
         style={{
           backgroundColor: '#0d0d0d',
@@ -325,7 +325,7 @@ function BattleCard({ battle, compact, focused }) {
           <div className="flex items-center gap-1.5">
             <PlayerAvatar user={user1} isWinning={user1Winning} size={30} bgColor="#1e40af" />
             <div className="min-w-0">
-              <p className="text-white text-[11px] font-medium truncate max-w-[95px] flex items-center gap-0.5">
+              <p className="text-white text-[11px] font-medium truncate max-w-[120px] flex items-center gap-0.5">
                 {user1.username || 'Player 1'}
                 {user1OnFire && <MomentumIcon />}
               </p>
@@ -337,7 +337,7 @@ function BattleCard({ battle, compact, focused }) {
           </div>
           <div className="flex items-center gap-1.5">
             <div className="min-w-0 text-right">
-              <p className="text-white text-[11px] font-medium truncate max-w-[95px] flex items-center justify-end gap-0.5">
+              <p className="text-white text-[11px] font-medium truncate max-w-[120px] flex items-center justify-end gap-0.5">
                 {user2OnFire && <MomentumIcon />}
                 {user2.username || 'Player 2'}
               </p>
@@ -358,11 +358,6 @@ function BattleCard({ battle, compact, focused }) {
           </div>
         )}
         <BattleChat battleId={battle.id} compact />
-        <div className="mt-auto pt-2">
-          <div className="h-1 rounded-full overflow-hidden" style={{ background: '#1a1a1a' }}>
-            <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${progress}%`, backgroundColor: '#3b82f6' }}></div>
-          </div>
-        </div>
       </div>
     );
   }
