@@ -58,25 +58,28 @@ export default function MyBattle() {
   }, [currentMatchup]);
 
   useEffect(() => {
-    if (!currentMatchup || currentMatchup.status !== 'waiting') return;
+    if (!currentMatchup) return;
+    const isWaiting = currentMatchup.status === 'waiting';
+    const isActive = currentMatchup.status === 'active' || currentMatchup.status === 'matched';
+    if (!isWaiting && !isActive) return;
+
+    const pollInterval = isWaiting ? 5000 : 10000;
     const poll = setInterval(async () => {
       try {
         const res = await fetch('/api/matchups/current', { credentials: 'include' });
         if (res.ok) {
           const data = await res.json();
           if (data.matchup) {
-            if (data.matchup.status === 'active' || data.matchup.status === 'matched') {
-              setCurrentMatchup(data.matchup);
-              setOpponentProfile(data.opponent);
-              clearInterval(poll);
-            }
+            setCurrentMatchup(data.matchup);
+            setOpponentProfile(data.opponent);
+            setUserBets(data.userBets || []);
+            setOpponentBets(data.opponentBets || []);
           } else {
             setCurrentMatchup(null);
-            clearInterval(poll);
           }
         }
       } catch {}
-    }, 5000);
+    }, pollInterval);
     return () => clearInterval(poll);
   }, [currentMatchup?.status]);
 

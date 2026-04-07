@@ -42,15 +42,16 @@ export function MatchupProvider({ children }) {
     }
   }, [status, fetchCurrentMatchup]);
 
+  const hasActiveMatchup = matchupData?.status === 'active' || matchupData?.status === 'matched';
+  const isQueued = matchupData?.status === 'queued';
+
   useEffect(() => {
     if (status !== 'authenticated') return;
 
-    const interval = setInterval(fetchCurrentMatchup, 30000);
+    const pollInterval = hasActiveMatchup ? 5000 : 30000;
+    const interval = setInterval(fetchCurrentMatchup, pollInterval);
     return () => clearInterval(interval);
-  }, [status, fetchCurrentMatchup]);
-
-  const hasActiveMatchup = matchupData?.status === 'active' || matchupData?.status === 'matched';
-  const isQueued = matchupData?.status === 'queued';
+  }, [status, fetchCurrentMatchup, hasActiveMatchup]);
   const matchup = matchupData?.matchup;
   const opponent = matchupData?.opponent;
   const myBalance = matchupData?.myBalance;
