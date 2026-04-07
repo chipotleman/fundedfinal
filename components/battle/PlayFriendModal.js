@@ -139,7 +139,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-start justify-center pt-16 sm:pt-20 p-4" onClick={onClose}>
       <div className="rounded-2xl max-w-md w-full max-h-[85vh] overflow-hidden flex flex-col" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }} onClick={e => e.stopPropagation()}>
         <div className="p-5 flex-shrink-0" style={{ borderBottom: '1px solid #1a1a1a' }}>
           <div className="flex items-center justify-between">

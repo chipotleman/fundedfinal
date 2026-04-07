@@ -227,9 +227,21 @@ function MomentumIcon() {
   return <span className="live-momentum-flame text-[10px]" title="On fire!">🔥</span>;
 }
 
-function PlayerAvatar({ user, isWinning, size = 44, bgColor = '#1e40af' }) {
+function PlayerAvatar({ user, isWinning, size = 44, bgColor = '#1e40af', onClick }) {
+  const router = useRouter();
+  const handleClick = (e) => {
+    e.stopPropagation();
+    if (onClick) {
+      onClick(e);
+    } else if (user.id) {
+      router.push(`/profile/${user.id}`);
+    }
+  };
   return (
-    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
+    <div
+      style={{ position: 'relative', width: size, height: size, flexShrink: 0, cursor: user.id ? 'pointer' : 'default' }}
+      onClick={handleClick}
+    >
       <div
         style={{
           width: '100%',

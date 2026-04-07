@@ -233,14 +233,17 @@ export default function BattlePage() {
             <div className="flex items-center gap-3">
               {!isGuest && profile && (
                 <>
-                  <div className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center overflow-hidden border border-[#333]">
+                  <div
+                    className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center overflow-hidden border border-[#333] cursor-pointer"
+                    onClick={() => router.push(`/profile/${userId}`)}
+                  >
                     {profile?.avatar ? (
                       <img src={profile.avatar} className="w-full h-full object-cover" alt="" />
                     ) : (
                       <span className="text-sm font-bold text-white">{profile?.username?.[0]?.toUpperCase() || '?'}</span>
                     )}
                   </div>
-                  <div>
+                  <div className="cursor-pointer" onClick={() => router.push(`/profile/${userId}`)}>
                     <h1 className="text-base font-bold text-white leading-tight">{profile?.username || 'Player'}</h1>
                     <div className="flex items-center gap-2 text-xs mt-0.5">
                       <span className="text-green-400 font-semibold">{profile?.battleWins || 0}W</span>
@@ -526,7 +529,10 @@ export default function BattlePage() {
                     <div className="space-y-1.5 max-h-60 overflow-y-auto">
                       {friends.map(friend => (
                         <div key={friend.id} className="flex items-center gap-2.5 px-2 py-2 rounded-lg group transition-colors">
-                          <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                          <div
+                            className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer"
+                            onClick={() => router.push(`/profile/${friend.id}`)}
+                          >
                             {friend.avatar ? (
                               <img src={friend.avatar} className="w-full h-full object-cover" alt="" />
                             ) : (
@@ -534,7 +540,10 @@ export default function BattlePage() {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-white text-sm font-medium truncate">{friend.username}</div>
+                            <div
+                              className="text-white text-sm font-medium truncate cursor-pointer"
+                              onClick={() => router.push(`/profile/${friend.id}`)}
+                            >{friend.username}</div>
                             <div className="text-gray-500 text-[11px]">{friend.battleWins || 0}W-{friend.battleLosses || 0}L</div>
                           </div>
                           <button
