@@ -24,8 +24,46 @@ export default function Dashboard() {
   const { isDarkMode } = useTheme();
   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
   const { apiGames: contextApiGames, inplayEvents: contextInplayEvents, loading: gamesLoading, error: gamesError, lastUpdated, isDemoMode } = useGames();
-  const { matchup, opponent, myBalance: matchupBalance, opponentBalance, myBets, opponentBets, canSeeOpponentBets, hasActiveMatchup, refresh: refreshMatchup } = useMatchup();
+  const { matchup, opponent, myBalance: matchupBalance, opponentBalance, myBets, opponentBets, canSeeOpponentBets, hasActiveMatchup, timeRemaining, refresh: refreshMatchup } = useMatchup();
   const [selectedSport, setSelectedSport] = useState('Live');
+  const [showBattleWalkthrough, setShowBattleWalkthrough] = useState(false);
+  const [walkthroughDismissed, setWalkthroughDismissed] = useState(false);
+
+  const battleStartedRetryRef = useRef(null);
+
+  useEffect(() => {
+    if (router.query.battleStarted !== 'true') return;
+    
+    if (hasActiveMatchup) {
+      setShowBattleWalkthrough(true);
+      router.replace('/', undefined, { shallow: true });
+      if (battleStartedRetryRef.current) {
+        clearInterval(battleStartedRetryRef.current);
+        battleStartedRetryRef.current = null;
+      }
+      return;
+    }
+
+    refreshMatchup();
+    let retryCount = 0;
+    battleStartedRetryRef.current = setInterval(() => {
+      retryCount++;
+      refreshMatchup();
+      if (retryCount >= 10) {
+        clearInterval(battleStartedRetryRef.current);
+        battleStartedRetryRef.current = null;
+        router.replace('/', undefined, { shallow: true });
+      }
+    }, 1000);
+
+    return () => {
+      if (battleStartedRetryRef.current) {
+        clearInterval(battleStartedRetryRef.current);
+        battleStartedRetryRef.current = null;
+      }
+    };
+  }, [router.query.battleStarted, hasActiveMatchup]);
+
   // Note: games/allGames are derived at render time via useMemo for SSR compatibility
   // These state setters are kept for legacy compatibility but initial values come from SSR
   const [gamesState, setGames] = useState([]);
@@ -500,10 +538,10 @@ export default function Dashboard() {
       />
 
       <div className="pt-4 sm:pt-6 lg:pt-8 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
-        {hasActiveMatchup && matchup && opponent ? (
+        {hasActiveMatchup && matchup && !showBattleWalkthrough ? (
           <MatchupBanner
             matchup={matchup}
-            opponent={opponent}
+            opponent={opponent || { username: 'Opponent', avatar: null }}
             myBalance={matchupBalance}
             opponentBalance={opponentBalance}
             opponentBets={opponentBets}
@@ -525,13 +563,114 @@ export default function Dashboard() {
           <div className="mb-6">
             <div className="overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               <div className="flex gap-3" style={{ minWidth: 'max-content' }}>
-                
-                {/* Container 1: Fire Battle Container */}
                 <FireBattleContainer isDarkMode={isDarkMode} />
-
-                {/* Container 2: Pik Pool (same as MatchupBanner pool container) */}
                 <PoolContainer isDarkMode={isDarkMode} />
+              </div>
+            </div>
+          </div>
+        )}
 
+        {showBattleWalkthrough && hasActiveMatchup && matchup && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.85)' }}>
+            <style>{`
+              @keyframes walkthroughSlideUp {
+                from { opacity: 0; transform: translateY(30px) scale(0.95); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
+              }
+              @keyframes walkthroughPulse {
+                0%, 100% { box-shadow: 0 0 20px rgba(59,130,246,0.3); }
+                50% { box-shadow: 0 0 40px rgba(59,130,246,0.5); }
+              }
+            `}</style>
+            <div 
+              className="w-[90%] max-w-[380px] rounded-2xl overflow-hidden"
+              style={{ 
+                background: 'linear-gradient(180deg, #0a1628 0%, #0d0d0d 100%)',
+                border: '2px solid rgba(59, 130, 246, 0.4)',
+                animation: 'walkthroughSlideUp 0.4s ease-out, walkthroughPulse 3s ease-in-out infinite',
+              }}
+            >
+              <div className="px-5 pt-5 pb-3 text-center">
+                <div className="flex items-center justify-center gap-1.5 mb-3">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-green-400 text-xs font-bold uppercase tracking-wider">Battle Started</span>
+                </div>
+                <h2 className="text-white text-xl font-bold mb-1">You're In!</h2>
+                <p className="text-gray-400 text-sm">Your 1v1 battle is now live. Place your picks to win the pot.</p>
+              </div>
+
+              <div className="px-5 py-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{ backgroundColor: '#1a1a1a', border: '2px solid #3b82f6' }}>
+                      {user?.avatar ? (
+                        <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-white font-bold text-lg">{(user?.username || user?.name || 'Y')[0]?.toUpperCase()}</span>
+                      )}
+                    </div>
+                    <p className="text-white text-xs font-semibold truncate max-w-[90px]">{user?.username || user?.name || 'You'}</p>
+                    <p className="text-green-400 text-sm font-bold mt-0.5">${(matchupBalance ?? parseFloat(matchup.startingBalance || 10000)).toLocaleString()}</p>
+                  </div>
+
+                  <div className="flex flex-col items-center px-3">
+                    <span className="text-2xl font-black text-blue-400">VS</span>
+                    <div className="text-[10px] text-gray-500 mt-1">
+                      <span className="text-white font-bold">${parseFloat(matchup.potSize || matchup.startingBalance * 2 || 20000).toLocaleString()}</span> pot
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{ backgroundColor: '#1a1a1a', border: '2px solid #06b6d4' }}>
+                      {opponent?.avatar ? (
+                        <img src={opponent.avatar} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-white font-bold text-lg">{(opponent?.username || 'O')[0]?.toUpperCase()}</span>
+                      )}
+                    </div>
+                    <p className="text-white text-xs font-semibold truncate max-w-[90px]">{opponent?.username || 'Opponent'}</p>
+                    <p className="text-green-400 text-sm font-bold mt-0.5">${(opponentBalance ?? parseFloat(matchup.startingBalance || 10000)).toLocaleString()}</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-500">Game Mode</span>
+                    <span className="text-white font-semibold">
+                      {matchup.durationMinutes <= 200 ? 'RUSH' : matchup.durationMinutes <= 1500 ? 'ORIGINAL' : 'TOURNAMENT'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-500">Time Remaining</span>
+                    <span className="text-white font-semibold">
+                      {timeRemaining ? (() => {
+                        const s = Math.floor(timeRemaining / 1000);
+                        const m = Math.floor(s / 60);
+                        const h = Math.floor(m / 60);
+                        const d = Math.floor(h / 24);
+                        if (d > 0) return `${d}d ${h % 24}h`;
+                        if (h > 0) return `${h}h ${m % 60}m`;
+                        return `${m}m`;
+                      })() : 'Starting...'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-500">Winner Takes</span>
+                    <span className="text-emerald-400 font-bold">90% of pot</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-5 pb-5">
+                <button
+                  onClick={() => {
+                    setShowBattleWalkthrough(false);
+                    setWalkthroughDismissed(true);
+                  }}
+                  className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98]"
+                >
+                  Start Picking
+                </button>
               </div>
             </div>
           </div>

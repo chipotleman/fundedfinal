@@ -194,6 +194,7 @@ export default function BattlePage() {
         }
         fetchData();
         refreshGlobalMatchup();
+        setTimeout(() => router.push('/?battleStarted=true'), 2500);
       }
     } catch {}
   };
@@ -537,7 +538,7 @@ export default function BattlePage() {
             <div className="flex-1 min-w-0">
 
               <div className="mb-5">
-                <LiveBattlesSection focusBattleId={router.query.battle} activeMatchup={matchupData} />
+                <LiveBattlesSection focusBattleId={router.query.battle} />
               </div>
 
               {!activeMatchup && (
@@ -763,6 +764,7 @@ export default function BattlePage() {
           setShowLobby(matchup);
           fetchData();
           refreshGlobalMatchup();
+          router.push('/?battleStarted=true');
         }}
       />
       <PlayFriendModal
@@ -779,6 +781,7 @@ export default function BattlePage() {
           setShowLobby(matchup);
           fetchData();
           refreshGlobalMatchup();
+          router.push('/?battleStarted=true');
         }}
       />
       <MatchHistoryModal
