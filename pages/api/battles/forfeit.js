@@ -46,7 +46,7 @@ export default async function handler(req, res) {
     const user1Final = isUser1 ? '0' : (parseFloat(matchup.user1Balance) || 0).toString();
     const user2Final = isUser1 ? (parseFloat(matchup.user2Balance) || 0).toString() : '0';
 
-    const updateResult = await db
+    const updatedRows = await db
       .update(matchups)
       .set({
         status: 'completed',
@@ -62,9 +62,10 @@ export default async function handler(req, res) {
       .where(and(
         eq(matchups.id, matchup.id),
         inArray(matchups.status, ['active', 'matched'])
-      ));
+      ))
+      .returning({ id: matchups.id });
 
-    if (updateResult && typeof updateResult.rowCount === 'number' && updateResult.rowCount === 0) {
+    if (!updatedRows || updatedRows.length === 0) {
       return res.status(409).json({ error: 'Battle already completed or forfeited' });
     }
 

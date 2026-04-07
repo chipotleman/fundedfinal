@@ -182,7 +182,7 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
                 <div className="absolute -inset-1 rounded-full lobby-ring" style={{
                   background: 'conic-gradient(from 0deg, transparent, rgba(59,130,246,0.6), transparent, rgba(59,130,246,0.3), transparent)',
                 }} />
-                <div className="lobby-avatar-left w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center relative overflow-hidden border-2 border-blue-400/50">
+                <div className="lobby-avatar-left w-24 h-24 rounded-full bg-[#1e40af] flex items-center justify-center relative overflow-hidden border-2 border-blue-400/30">
                   {player1.avatar ? (
                     <img src={player1.avatar} className="w-full h-full object-cover" alt="" />
                   ) : (
@@ -195,14 +195,13 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
 
             <div className="flex flex-col items-center relative z-10">
               {showBattle ? (
-                <div className="lobby-battle-text text-4xl font-black bg-gradient-to-r from-emerald-400 via-cyan-300 to-emerald-400 bg-clip-text text-transparent">
+                <div className="lobby-battle-text text-4xl font-black text-emerald-400">
                   BATTLE!
                 </div>
               ) : (
                 <div className={`${entered ? 'lobby-vs' : 'opacity-0'}`}>
-                  <div className="text-5xl font-black bg-gradient-to-b from-white to-gray-400 bg-clip-text text-transparent" style={{
-                    textShadow: '0 0 30px rgba(59,130,246,0.3)',
-                    WebkitTextStroke: '1px rgba(255,255,255,0.1)',
+                  <div className="text-5xl font-black text-white" style={{
+                    textShadow: '0 0 20px rgba(59,130,246,0.2)',
                   }}>
                     VS
                   </div>
@@ -216,7 +215,7 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
                   background: 'conic-gradient(from 180deg, transparent, rgba(6,182,212,0.6), transparent, rgba(6,182,212,0.3), transparent)',
                   animationDirection: 'reverse',
                 }} />
-                <div className="lobby-avatar-right w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500 to-cyan-700 flex items-center justify-center relative overflow-hidden border-2 border-cyan-400/50">
+                <div className="lobby-avatar-right w-24 h-24 rounded-full bg-[#065f46] flex items-center justify-center relative overflow-hidden border-2 border-cyan-400/30">
                   {player2.avatar ? (
                     <img src={player2.avatar} className="w-full h-full object-cover" alt="" />
                   ) : (
@@ -255,7 +254,7 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
           {!showBattle && (
             <div className="mb-4">
               <div className="text-gray-400 text-xs uppercase tracking-widest mb-2">Starting in</div>
-              <div key={countdown} className="lobby-countdown text-6xl font-black bg-gradient-to-b from-white to-blue-200 bg-clip-text text-transparent">
+              <div key={countdown} className="lobby-countdown text-6xl font-black text-white">
                 {countdown}
               </div>
             </div>

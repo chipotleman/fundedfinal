@@ -72,7 +72,7 @@ export default function MyBattle() {
           if (data.matchup) {
             setCurrentMatchup(data.matchup);
             setOpponentProfile(data.opponent);
-            setUserBets(data.userBets || []);
+            setUserBets(data.myBets || data.userBets || []);
             setOpponentBets(data.opponentBets || []);
           } else {
             setCurrentMatchup(null);
@@ -96,7 +96,7 @@ export default function MyBattle() {
         if (matchupData.matchup) {
           setCurrentMatchup(matchupData.matchup);
           setOpponentProfile(matchupData.opponent);
-          setUserBets(matchupData.userBets || []);
+          setUserBets(matchupData.myBets || matchupData.userBets || []);
           setOpponentBets(matchupData.opponentBets || []);
         } else {
           setCurrentMatchup(null);
