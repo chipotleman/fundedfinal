@@ -214,25 +214,6 @@ export default function BattlePage() {
     callback();
   };
 
-  const formatDate = (date) => {
-    if (!date) return '';
-    const d = new Date(date);
-    const now = new Date();
-    const diff = now - d;
-    if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
-    if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-    return `${Math.floor(diff / 86400000)}d ago`;
-  };
-
-  const getResultColor = (result) => {
-    switch (result) {
-      case 'win': return 'text-green-400';
-      case 'loss': return 'text-red-400';
-      case 'tie': return 'text-yellow-400';
-      default: return 'text-blue-400';
-    }
-  };
-
   const totalBattles = (profile?.battleWins || 0) + (profile?.battleLosses || 0);
   const winRate = totalBattles > 0 ? Math.round(((profile?.battleWins || 0) / totalBattles) * 100) : 0;
 
@@ -245,10 +226,10 @@ export default function BattlePage() {
     <div className="min-h-screen bg-black">
       <TopNavbar />
 
-      <div className="pt-16">
+      <div className="pt-14">
         <div className="max-w-5xl mx-auto px-4">
 
-          <div className="flex items-center justify-between py-4 sm:py-5">
+          <div className="flex items-center justify-between py-2 sm:py-3">
             <div className="flex items-center gap-3">
               {!isGuest && profile && (
                 <>
@@ -513,53 +494,6 @@ export default function BattlePage() {
                   </button>
                 </div>
               )}
-
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-xs font-medium text-gray-400 uppercase tracking-wider">Recent Matches</h3>
-                  <button
-                    onClick={() => requireAuth(() => setShowHistory(true))}
-                    className="text-blue-400 text-xs transition-colors"
-                  >
-                    View All
-                  </button>
-                </div>
-
-                {recentMatches.length === 0 ? (
-                  <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-6 text-center">
-                    <p className="text-gray-500 text-sm">No matches yet</p>
-                    <p className="text-gray-600 text-xs mt-1">Start your first battle above</p>
-                  </div>
-                ) : (
-                  <div className="space-y-1">
-                    {recentMatches.map(match => (
-                      <div key={match.id} className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg px-4 py-3 flex items-center gap-3 transition-colors">
-                        <div className="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
-                          {match.opponent?.avatar ? (
-                            <img src={match.opponent.avatar} className="w-full h-full object-cover" alt="" />
-                          ) : (
-                            <span className="text-xs font-bold text-gray-300">{match.opponent?.username?.[0]?.toUpperCase() || '?'}</span>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-white text-sm font-medium truncate">{match.opponent?.username || 'Unknown'}</div>
-                          <div className="text-gray-500 text-xs">${match.buyIn} · {formatDate(match.createdAt)}</div>
-                        </div>
-                        <div className="text-right flex-shrink-0">
-                          <div className={`text-xs font-bold uppercase ${getResultColor(match.result)}`}>
-                            {match.result === 'pending' ? 'ACTIVE' : match.result?.toUpperCase()}
-                          </div>
-                          {match.result !== 'pending' && match.result !== 'cancelled' && (
-                            <div className={`text-xs ${match.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                              {match.pnl >= 0 ? '+' : ''}{match.pnl?.toFixed(2)}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
             </div>
 
             <div className={`lg:w-72 flex-shrink-0 ${showSidebar ? 'fixed inset-0 z-40 bg-black/80 lg:static lg:bg-transparent' : 'hidden lg:block'}`}>
