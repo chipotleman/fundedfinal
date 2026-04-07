@@ -184,12 +184,12 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
   );
 
   const emailBorderColor = () => {
-    if (!emailTouched || !email) return 'border-slate-700/50';
+    if (!emailTouched || !email) return 'border-[#1a1a1a]';
     if (emailChecking) return 'border-blue-500/50';
     if (emailStatus === 'invalid') return 'border-red-500/50';
     if (emailStatus === 'taken') return 'border-red-500/50';
     if (emailStatus === 'available' || emailStatus === 'valid_format') return 'border-green-500/50';
-    return 'border-slate-700/50';
+    return 'border-[#1a1a1a]';
   };
 
   return (
@@ -203,7 +203,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
+          className="absolute top-4 right-4 z-20 w-8 h-8 bg-[#111] hover:bg-[#1a1a1a] rounded-full flex items-center justify-center"
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,7 +249,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-700"></div>
+              <div className="w-full border-t border-[#1a1a1a]"></div>
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-4 bg-black text-gray-500">or continue with email</span>
@@ -264,7 +264,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                   value={email}
                   onChange={handleEmailChange}
                   onBlur={() => { setEmailTouched(true); checkEmail(email); }}
-                  className={`w-full bg-slate-800/50 border rounded-xl px-4 py-3 pr-10 text-white placeholder-gray-500 focus:outline-none transition-all duration-200 ${emailBorderColor()}`}
+                  className={`w-full bg-[#111] border rounded-xl px-4 py-3 pr-10 text-white placeholder-gray-500 focus:outline-none transition-all duration-200 ${emailBorderColor()}`}
                   placeholder="Email address"
                   required
                 />
@@ -302,7 +302,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); setPasswordTouched(true); }}
-                className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 pr-12 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all duration-200"
+                className="w-full bg-[#111] border border-[#1a1a1a] rounded-xl px-4 py-3 pr-12 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all duration-200"
                 placeholder="Password"
                 required
               />
@@ -347,10 +347,10 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => { setConfirmPassword(e.target.value); setConfirmTouched(true); }}
-                  className={`w-full bg-slate-800/50 border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none transition-all duration-200 ${
+                  className={`w-full bg-[#111] border rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none transition-all duration-200 ${
                     confirmTouched && confirmPassword
                       ? passwordsMatch ? 'border-green-500/50' : 'border-red-500/40'
-                      : 'border-slate-700/50 focus:border-blue-500'
+                      : 'border-[#1a1a1a] focus:border-blue-500'
                   }`}
                   placeholder="Confirm password"
                   required
@@ -372,7 +372,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                 id="rememberMePopup"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="w-4 h-4 bg-slate-700 border border-slate-600 rounded focus:ring-2 focus:ring-blue-500 text-blue-500"
+                className="w-4 h-4 bg-[#1a1a1a] border border-[#1a1a1a] rounded focus:ring-2 focus:ring-blue-500 text-blue-500"
               />
               <label htmlFor="rememberMePopup" className="ml-2 text-sm text-gray-400 cursor-pointer">
                 Remember my email

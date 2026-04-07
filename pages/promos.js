@@ -156,15 +156,15 @@ export default function Promos() {
         {/* Stats Cards */}
         <div className="max-w-7xl mx-auto px-6 mb-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-gray-800 text-center">
+            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-[#1a1a1a] text-center">
               <div className="text-4xl font-black text-green-400 mb-2">{userStats.referrals}</div>
               <div className="text-gray-300">Successful Referrals</div>
             </div>
-            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-gray-800 text-center">
+            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-[#1a1a1a] text-center">
               <div className="text-4xl font-black text-blue-400 mb-2">${userStats.earnings}</div>
               <div className="text-gray-300">Total Earned</div>
             </div>
-            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-gray-800 text-center">
+            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-[#1a1a1a] text-center">
               <div className="text-4xl font-black text-purple-400 mb-2">{userStats.tier}</div>
               <div className="text-gray-300">Member Status</div>
             </div>
@@ -173,7 +173,7 @@ export default function Promos() {
 
         {/* Tabs */}
         <div className="max-w-7xl mx-auto px-6 mb-8">
-          <div className="flex space-x-1 bg-black/90 rounded-xl p-1 border border-gray-800">
+          <div className="flex space-x-1 bg-black/90 rounded-xl p-1 border border-[#1a1a1a]">
             <button
               onClick={() => setActiveTab('referrals')}
               className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all ${
@@ -214,10 +214,10 @@ export default function Promos() {
             <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 backdrop-blur-lg rounded-2xl p-8 border border-green-500/30 mb-8">
               <div className="text-center">
                 <h2 className="text-3xl font-bold text-white mb-4">Your Referral Code</h2>
-                <div className="bg-slate-800 rounded-xl p-6 mb-6">
+                <div className="bg-[#0d0d0d] rounded-xl p-6 mb-6">
                   <div className="text-2xl font-mono text-green-400 mb-4">{userReferralCode}</div>
                   <div className="text-gray-300 mb-4">Share this link with friends:</div>
-                  <div className="bg-slate-700 rounded-lg p-3 text-gray-300 text-sm break-all mb-4">
+                  <div className="bg-[#1a1a1a] rounded-lg p-3 text-gray-300 text-sm break-all mb-4">
                     https://fundmybet.com/ref/{userReferralCode}
                   </div>
                   <button
@@ -237,7 +237,7 @@ export default function Promos() {
             {/* Available Promos */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {promos.map((promo) => (
-                <div key={promo.id} className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-gray-800">
+                <div key={promo.id} className="bg-black/90 backdrop-blur-lg rounded-2xl p-6 border border-[#1a1a1a]">
                   <div className="flex justify-between items-start mb-4">
                     <h3 className="text-xl font-bold text-white">{promo.title}</h3>
                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${
@@ -259,7 +259,7 @@ export default function Promos() {
                     </span>
                   </div>
 
-                  <div className="w-full bg-slate-700 rounded-full h-2 mb-4">
+                  <div className="w-full bg-[#1a1a1a] rounded-full h-2 mb-4">
                     <div 
                       className="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full transition-all"
                       style={{ width: `${(promo.progress.current / promo.progress.max) * 100}%` }}
@@ -270,7 +270,7 @@ export default function Promos() {
                     className={`w-full py-3 rounded-xl font-bold transition-all ${
                       promo.status === 'available' 
                         ? 'bg-green-500 hover:bg-green-600 text-white' 
-                        : 'bg-slate-700 text-gray-400 cursor-not-allowed'
+                        : 'bg-[#1a1a1a] text-gray-400 cursor-not-allowed'
                     }`}
                     disabled={promo.status !== 'available'}
                   >
@@ -289,7 +289,7 @@ export default function Promos() {
           <div className="max-w-7xl mx-auto px-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {challenges.map((challenge) => (
-                <div key={challenge.id} className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-gray-800">
+                <div key={challenge.id} className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-[#1a1a1a]">
                   <div className="text-center">
                     <h3 className="text-2xl font-bold text-white mb-4">{challenge.title}</h3>
                     <p className="text-gray-300 mb-6">{challenge.description}</p>
@@ -353,7 +353,7 @@ export default function Promos() {
                   <Link href="/" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg">
                     Start Challenges
                   </Link>
-                  <Link href="/rules" className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-slate-600">
+                  <Link href="/rules" className="bg-[#0d0d0d] hover:bg-[#1a1a1a] text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 text-lg border border-[#1a1a1a]">
                     Learn More
                   </Link>
                 </div>

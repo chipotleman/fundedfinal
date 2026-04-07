@@ -35,7 +35,7 @@ export default function Settings() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900">
+    <div className="min-h-screen bg-[#0d0d0d]">
       <TopNavbar 
         bankroll={15450}
         pnl={2450}
@@ -48,11 +48,11 @@ export default function Settings() {
           <h1 className="text-3xl font-bold text-white mb-8">Settings</h1>
 
           {/* Notifications */}
-          <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl border border-slate-700 p-8 mb-8">
+          <div className="bg-[#111] backdrop-blur-lg rounded-2xl border border-[#1a1a1a] p-8 mb-8">
             <h2 className="text-xl font-bold text-white mb-6">Notifications</h2>
             <div className="space-y-4">
               {Object.entries(settings.notifications).map(([key, value]) => (
-                <div key={key} className="flex items-center justify-between py-3 border-b border-slate-700">
+                <div key={key} className="flex items-center justify-between py-3 border-b border-[#1a1a1a]">
                   <div>
                     <div className="text-white font-medium">
                       {key === 'betResults' ? 'Bet Results' :
@@ -70,7 +70,7 @@ export default function Settings() {
                   <button
                     onClick={() => updateSetting('notifications', key, !value)}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      value ? 'bg-green-500' : 'bg-slate-600'
+                      value ? 'bg-green-500' : 'bg-[#222]'
                     }`}
                   >
                     <span
@@ -85,11 +85,11 @@ export default function Settings() {
           </div>
 
           {/* Privacy */}
-          <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl border border-slate-700 p-8 mb-8">
+          <div className="bg-[#111] backdrop-blur-lg rounded-2xl border border-[#1a1a1a] p-8 mb-8">
             <h2 className="text-xl font-bold text-white mb-6">Privacy</h2>
             <div className="space-y-4">
               {Object.entries(settings.privacy).map(([key, value]) => (
-                <div key={key} className="flex items-center justify-between py-3 border-b border-slate-700">
+                <div key={key} className="flex items-center justify-between py-3 border-b border-[#1a1a1a]">
                   <div>
                     <div className="text-white font-medium">
                       {key === 'profileVisible' ? 'Profile Visible' :
@@ -105,7 +105,7 @@ export default function Settings() {
                   <button
                     onClick={() => updateSetting('privacy', key, !value)}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      value ? 'bg-green-500' : 'bg-slate-600'
+                      value ? 'bg-green-500' : 'bg-[#222]'
                     }`}
                   >
                     <span
@@ -120,7 +120,7 @@ export default function Settings() {
           </div>
 
           {/* Betting Preferences */}
-          <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl border border-slate-700 p-8 mb-8">
+          <div className="bg-[#111] backdrop-blur-lg rounded-2xl border border-[#1a1a1a] p-8 mb-8">
             <h2 className="text-xl font-bold text-white mb-6">Betting Preferences</h2>
             <div className="space-y-6">
               <div className="flex items-center justify-between">
@@ -134,7 +134,7 @@ export default function Settings() {
                     type="number"
                     value={settings.betting.defaultStake}
                     onChange={(e) => updateSetting('betting', 'defaultStake', parseInt(e.target.value))}
-                    className="w-20 bg-slate-700 text-white px-3 py-2 rounded-lg border border-slate-600 focus:border-green-400 focus:outline-none"
+                    className="w-20 bg-[#1a1a1a] text-white px-3 py-2 rounded-lg border border-[#1a1a1a] focus:border-green-400 focus:outline-none"
                   />
                 </div>
               </div>
@@ -150,13 +150,13 @@ export default function Settings() {
                     type="number"
                     value={settings.betting.maxBetLimit}
                     onChange={(e) => updateSetting('betting', 'maxBetLimit', parseInt(e.target.value))}
-                    className="w-24 bg-slate-700 text-white px-3 py-2 rounded-lg border border-slate-600 focus:border-green-400 focus:outline-none"
+                    className="w-24 bg-[#1a1a1a] text-white px-3 py-2 rounded-lg border border-[#1a1a1a] focus:border-green-400 focus:outline-none"
                   />
                 </div>
               </div>
 
               {Object.entries(settings.betting).filter(([key]) => !['defaultStake', 'maxBetLimit'].includes(key)).map(([key, value]) => (
-                <div key={key} className="flex items-center justify-between py-3 border-b border-slate-700">
+                <div key={key} className="flex items-center justify-between py-3 border-b border-[#1a1a1a]">
                   <div>
                     <div className="text-white font-medium">
                       {key === 'autoPlaceBets' ? 'Auto Place Bets' : 'Confirm Bets'}
@@ -168,7 +168,7 @@ export default function Settings() {
                   <button
                     onClick={() => updateSetting('betting', key, !value)}
                     className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      value ? 'bg-green-500' : 'bg-slate-600'
+                      value ? 'bg-green-500' : 'bg-[#222]'
                     }`}
                   >
                     <span
@@ -183,13 +183,13 @@ export default function Settings() {
           </div>
 
           {/* Account Actions */}
-          <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl border border-slate-700 p-8">
+          <div className="bg-[#111] backdrop-blur-lg rounded-2xl border border-[#1a1a1a] p-8">
             <h2 className="text-xl font-bold text-white mb-6">Account</h2>
             <div className="space-y-4">
-              <button className="w-full bg-slate-700 hover:bg-slate-600 text-white font-medium py-3 px-4 rounded-lg transition-colors text-left">
+              <button className="w-full bg-[#1a1a1a] hover:bg-[#222] text-white font-medium py-3 px-4 rounded-lg transition-colors text-left">
                 Change Password
               </button>
-              <button className="w-full bg-slate-700 hover:bg-slate-600 text-white font-medium py-3 px-4 rounded-lg transition-colors text-left">
+              <button className="w-full bg-[#1a1a1a] hover:bg-[#222] text-white font-medium py-3 px-4 rounded-lg transition-colors text-left">
                 Download Data
               </button>
               <button className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition-colors text-left">

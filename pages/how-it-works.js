@@ -160,7 +160,7 @@ function CustomVideoPlayer() {
   };
 
   return (
-    <div className="relative md:aspect-[2.5/1] aspect-video bg-slate-800" style={{ minHeight: '240px', maxHeight: '380px' }}>
+    <div className="relative md:aspect-[2.5/1] aspect-video bg-[#0d0d0d]" style={{ minHeight: '240px', maxHeight: '380px' }}>
       {/* Video Element with Autoplay */}
       <video 
         ref={videoRef}
@@ -253,7 +253,7 @@ export default function Home() {
                 <div className="absolute -inset-1 rounded-2xl p-[2px] animate-pulse" style={{ backgroundColor: '#2563eb' }}></div>
 
                 {/* Video container - more rectangular */}
-                <div className="relative bg-slate-900 rounded-2xl overflow-hidden" style={{ boxShadow: isDarkMode ? 'none' : '0 4px 20px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.06)' }}>
+                <div className="relative bg-[#0d0d0d] rounded-2xl overflow-hidden" style={{ boxShadow: isDarkMode ? 'none' : '0 4px 20px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.06)' }}>
                   <CustomVideoPlayer />
                 </div>
               </div>

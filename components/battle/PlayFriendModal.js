@@ -172,7 +172,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                 <p className="text-yellow-400 text-sm">Invite expired. Your friend may be offline.</p>
                 <button
                   onClick={() => { setSent(false); setError(''); }}
-                  className="mt-3 px-4 py-2 bg-gray-800 text-gray-300 rounded-lg text-sm hover:bg-gray-700 transition-colors"
+                  className="mt-3 px-4 py-2 bg-[#111] text-gray-300 rounded-lg text-sm hover:bg-[#1a1a1a] transition-colors"
                 >
                   Try Again
                 </button>

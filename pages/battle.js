@@ -567,7 +567,7 @@ export default function BattlePage() {
                     <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Sent Invites</h3>
                     <div className="space-y-2">
                       {invites.sent.map(invite => (
-                        <div key={invite.id} className="flex items-center justify-between bg-gray-800/30 rounded-lg px-3 py-2">
+                        <div key={invite.id} className="flex items-center justify-between bg-[#111] rounded-lg px-3 py-2">
                           <div className="flex items-center gap-2 min-w-0">
                             <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
                               {invite.receiver?.avatar ? (
@@ -595,7 +595,7 @@ export default function BattlePage() {
                     <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Invite Updates</h3>
                     <div className="space-y-2">
                       {invites.recentlyClosed.map(invite => (
-                        <div key={invite.id} className="flex items-center justify-between bg-gray-800/30 rounded-lg px-3 py-2">
+                        <div key={invite.id} className="flex items-center justify-between bg-[#111] rounded-lg px-3 py-2">
                           <div className="flex items-center gap-2 min-w-0">
                             <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
                               {invite.receiver?.avatar ? (

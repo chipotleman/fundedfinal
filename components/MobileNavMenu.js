@@ -240,7 +240,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 Social
               </Link>
 
-              <div className="border-t border-gray-700 pt-4 mt-6">
+              <div className="border-t border-[#1a1a1a] pt-4 mt-6">
                 <div className="mb-4">
                   <p className="text-sm text-gray-400 mb-1">Signed in as</p>
                   <p className="text-white font-semibold text-sm truncate max-w-full" title={currentUser?.email || currentUser?.phone || 'User'}>

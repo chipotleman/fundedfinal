@@ -114,7 +114,7 @@ export default function Withdraw() {
                 type="text"
                 value={formData.accountHolderName}
                 onChange={(e) => handleInputChange('accountHolderName', e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Full name on account"
                 required
               />
@@ -125,7 +125,7 @@ export default function Withdraw() {
                 type="text"
                 value={formData.accountNumber}
                 onChange={(e) => handleInputChange('accountNumber', e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Account number"
                 required
               />
@@ -136,7 +136,7 @@ export default function Withdraw() {
                 type="text"
                 value={formData.routingNumber}
                 onChange={(e) => handleInputChange('routingNumber', e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="9-digit routing number"
                 required
               />
@@ -152,7 +152,7 @@ export default function Withdraw() {
                 type="text"
                 value={formData.cardHolderName}
                 onChange={(e) => handleInputChange('cardHolderName', e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Name on card"
                 required
               />
@@ -163,7 +163,7 @@ export default function Withdraw() {
                 type="text"
                 value={formData.cardNumber}
                 onChange={(e) => handleInputChange('cardNumber', e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="1234 5678 9012 3456"
                 required
               />
@@ -175,7 +175,7 @@ export default function Withdraw() {
                   type="text"
                   value={formData.expiryDate}
                   onChange={(e) => handleInputChange('expiryDate', e.target.value)}
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="MM/YY"
                   required
                 />
@@ -186,7 +186,7 @@ export default function Withdraw() {
                   type="text"
                   value={formData.cvv}
                   onChange={(e) => handleInputChange('cvv', e.target.value)}
-                  className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="123"
                   required
                 />
@@ -202,7 +202,7 @@ export default function Withdraw() {
               type="text"
               value={formData.venmoUsername}
               onChange={(e) => handleInputChange('venmoUsername', e.target.value)}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="@username"
               required
             />
@@ -216,7 +216,7 @@ export default function Withdraw() {
               type="text"
               value={formData.cashappTag}
               onChange={(e) => handleInputChange('cashappTag', e.target.value)}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="$cashtag"
               required
             />
@@ -230,7 +230,7 @@ export default function Withdraw() {
               type="email"
               value={formData.paypalEmail}
               onChange={(e) => handleInputChange('paypalEmail', e.target.value)}
-              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="your@email.com"
               required
             />
@@ -271,7 +271,7 @@ export default function Withdraw() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Amount Input */}
-          <div className="bg-slate-800 rounded-2xl p-6">
+          <div className="bg-[#0d0d0d] rounded-2xl p-6">
             <h2 className="text-xl font-bold text-white mb-4">Withdrawal Amount</h2>
             <div className="relative">
               <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl">$</span>
@@ -279,7 +279,7 @@ export default function Withdraw() {
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                className="w-full bg-slate-700 border border-slate-600 rounded-lg pl-8 pr-4 py-4 text-white text-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-[#1a1a1a] border border-[#1a1a1a] rounded-lg pl-8 pr-4 py-4 text-white text-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="0.00"
                 min="1"
                 max={bankroll}
@@ -300,7 +300,7 @@ export default function Withdraw() {
           </div>
 
           {/* Payment Method Selection */}
-          <div className="bg-slate-800 rounded-2xl p-6">
+          <div className="bg-[#0d0d0d] rounded-2xl p-6">
             <h2 className="text-xl font-bold text-white mb-4">Select Payment Method</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {paymentMethods.map((method) => (
@@ -311,12 +311,12 @@ export default function Withdraw() {
                   className={`p-4 rounded-xl border-2 transition-all duration-200 text-left ${
                     selectedMethod === method.id
                       ? 'border-green-500 bg-green-500/10'
-                      : 'border-slate-600 bg-slate-700 hover:border-slate-500'
+                      : 'border-[#1a1a1a] bg-[#1a1a1a] hover:border-slate-500'
                   }`}
                 >
                   <div className="flex items-center space-x-3 mb-2">
                     <div className={`p-2 rounded-lg ${
-                      selectedMethod === method.id ? 'bg-green-500 text-white' : 'bg-slate-600 text-gray-300'
+                      selectedMethod === method.id ? 'bg-green-500 text-white' : 'bg-[#222] text-gray-300'
                     }`}>
                       {method.icon}
                     </div>
@@ -332,7 +332,7 @@ export default function Withdraw() {
 
           {/* Payment Details Form */}
           {selectedMethod && (
-            <div className="bg-slate-800 rounded-2xl p-6">
+            <div className="bg-[#0d0d0d] rounded-2xl p-6">
               <h2 className="text-xl font-bold text-white mb-4">Payment Details</h2>
               {renderPaymentForm()}
             </div>
@@ -340,8 +340,8 @@ export default function Withdraw() {
 
           {/* Submit Button */}
           {selectedMethod && amount && (
-            <div className="bg-slate-800 rounded-2xl p-6">
-              <div className="mb-4 p-4 bg-slate-700 rounded-lg">
+            <div className="bg-[#0d0d0d] rounded-2xl p-6">
+              <div className="mb-4 p-4 bg-[#1a1a1a] rounded-lg">
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-gray-300">Withdrawal Amount:</span>
                   <span className="text-white font-medium">${amount}</span>
@@ -350,7 +350,7 @@ export default function Withdraw() {
                   <span className="text-gray-300">Processing Fee:</span>
                   <span className="text-white font-medium">$0.00</span>
                 </div>
-                <div className="border-t border-slate-600 pt-2 mt-2">
+                <div className="border-t border-[#1a1a1a] pt-2 mt-2">
                   <div className="flex justify-between">
                     <span className="text-white font-medium">Total to Receive:</span>
                     <span className="text-green-400 font-bold">${amount}</span>

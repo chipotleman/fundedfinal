@@ -87,7 +87,7 @@ export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
               </p>
             </div>
             {potSize > 0 && (
-              <div className="flex items-center gap-3 bg-gray-800/50 rounded-xl px-4 py-3 border border-gray-700/50">
+              <div className="flex items-center gap-3 rounded-xl px-4 py-3" style={{ backgroundColor: 'rgba(17,17,17,0.8)', border: '1px solid #1a1a1a' }}>
                 <span className="text-lg">🏆</span>
                 <p className="text-gray-300 text-sm">
                   Pot size: <span className="font-bold text-white">${potSize.toFixed(0)}</span>

@@ -5,7 +5,7 @@ import Head from 'next/head';
 import TopNavbar from '../components/TopNavbar';
 
 const SkeletonCard = () => (
-  <div className="animate-pulse bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
+  <div className="animate-pulse bg-[#111] rounded-xl p-4 border border-[#1a1a1a]">
     <div className="flex items-center gap-3">
       <div className="w-12 h-12 rounded-full bg-gray-700"></div>
       <div className="flex-1 space-y-2">
@@ -17,7 +17,7 @@ const SkeletonCard = () => (
 );
 
 const SkeletonBattle = () => (
-  <div className="animate-pulse min-w-[280px] bg-gray-800/50 rounded-xl p-4 border border-gray-700/50">
+  <div className="animate-pulse min-w-[280px] bg-[#111] rounded-xl p-4 border border-[#1a1a1a]">
     <div className="flex justify-between items-center mb-3">
       <div className="h-3 bg-gray-700 rounded w-16"></div>
       <div className="h-3 bg-gray-700 rounded w-12"></div>
@@ -68,7 +68,7 @@ const LiveBattleCard = ({ battle, onWatch, onUserClick }) => {
   return (
     <div 
       onClick={() => onWatch(battle)}
-      className="min-w-[280px] sm:min-w-[320px] bg-gray-900/80 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 hover:border-purple-500/50 cursor-pointer transition-all group"
+      className="min-w-[280px] sm:min-w-[320px] bg-[#0d0d0d] backdrop-blur-sm rounded-xl p-4 border border-[#1a1a1a] hover:border-blue-500/50 cursor-pointer transition-all group"
     >
       <div className="flex justify-between items-center mb-3">
         <div className="flex items-center gap-2">
@@ -120,7 +120,7 @@ const UserCard = ({ user, isFriend, session, onAction, compact = false }) => {
   const goToProfile = () => router.push(`/profile/${user.id}`);
   
   return (
-    <div className={`bg-gray-900/60 backdrop-blur-sm rounded-xl border border-gray-700/50 hover:border-purple-500/30 transition-all ${compact ? 'p-3' : 'p-4'}`}>
+    <div className={`bg-[#0d0d0d] backdrop-blur-sm rounded-xl border border-[#1a1a1a] hover:border-blue-500/30 transition-all ${compact ? 'p-3' : 'p-4'}`}>
       <div className="flex items-center gap-3">
         <UserAvatar user={user} size={compact ? 'md' : 'lg'} onClick={goToProfile} />
         <div className="flex-1 min-w-0">
@@ -140,7 +140,7 @@ const UserCard = ({ user, isFriend, session, onAction, compact = false }) => {
         <div className="flex items-center gap-1">
           <button
             onClick={goToProfile}
-            className="p-2 rounded-lg bg-gray-800 hover:bg-gray-700 transition"
+            className="p-2 rounded-lg bg-[#111] hover:bg-[#1a1a1a] transition"
             title="View Profile"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,7 +152,7 @@ const UserCard = ({ user, isFriend, session, onAction, compact = false }) => {
             <>
               <button
                 onClick={() => onAction('message', user)}
-                className="p-2 rounded-lg bg-gray-800 hover:bg-purple-600 transition"
+                className="p-2 rounded-lg bg-[#111] hover:bg-blue-600 transition"
                 title="Message"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -195,14 +195,14 @@ const ChatModal = ({ friend, messages, onClose, onSend, messageInput, setMessage
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-lg max-h-[80vh] flex flex-col">
-        <div className="flex items-center gap-3 p-4 border-b border-gray-800">
+      <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-2xl w-full max-w-lg max-h-[80vh] flex flex-col">
+        <div className="flex items-center gap-3 p-4 border-b border-[#1a1a1a]">
           <UserAvatar user={friend} />
           <div className="flex-1">
             <p className="font-semibold">{friend.username}</p>
             <p className="text-xs text-gray-400">{friend.battleWins || 0}W - {friend.battleLosses || 0}L</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-800 rounded-lg transition">
+          <button onClick={onClose} className="p-2 hover:bg-[#111] rounded-lg transition">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
@@ -234,14 +234,14 @@ const ChatModal = ({ friend, messages, onClose, onSend, messageInput, setMessage
         </div>
         
         {!messageError && (
-          <form onSubmit={onSend} className="p-4 border-t border-gray-800">
+          <form onSubmit={onSend} className="p-4 border-t border-[#1a1a1a]">
             <div className="flex gap-2">
               <input
                 type="text"
                 value={messageInput}
                 onChange={(e) => setMessageInput(e.target.value)}
                 placeholder="Type a message..."
-                className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-purple-500 text-sm"
+                className="flex-1 px-4 py-2 bg-[#111] border border-[#1a1a1a] rounded-xl focus:outline-none focus:border-purple-500 text-sm"
               />
               <button
                 type="submit"
@@ -389,7 +389,7 @@ const WatchBattleModal = ({ battle, onClose }) => {
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                   activeTab === tab.id 
                     ? 'bg-white text-black' 
-                    : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                    : 'bg-[#111] text-gray-400 hover:bg-[#1a1a1a]'
                 }`}
               >
                 {tab.label}
@@ -400,7 +400,7 @@ const WatchBattleModal = ({ battle, onClose }) => {
           <div className="p-4 pt-2 max-h-[50vh] overflow-y-auto">
             {activeTab === 'stakes' && (
               <div className="space-y-3">
-                <div className="bg-gray-900 rounded-2xl p-4 border border-gray-800">
+                <div className="bg-[#0d0d0d] rounded-2xl p-4 border border-[#1a1a1a]">
                   <div className="flex items-center gap-3">
                     <button onClick={() => handleProfileClick(user1.id)} className="shrink-0">
                       <div className="w-12 h-12 rounded-full border-2 border-blue-500 overflow-hidden bg-gray-800">
@@ -421,7 +421,7 @@ const WatchBattleModal = ({ battle, onClose }) => {
                         <span className="text-xs bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded">#{user1.battleWins || 0}</span>
                         <button 
                           onClick={() => handleMessageClick(user1.id, user1.username)}
-                          className="ml-auto p-1.5 hover:bg-gray-700 rounded-lg transition"
+                          className="ml-auto p-1.5 hover:bg-[#1a1a1a] rounded-lg transition"
                           title="Message"
                         >
                           <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -440,7 +440,7 @@ const WatchBattleModal = ({ battle, onClose }) => {
                   </div>
                 </div>
 
-                <div className="bg-gray-900 rounded-2xl p-4 border border-gray-800">
+                <div className="bg-[#0d0d0d] rounded-2xl p-4 border border-[#1a1a1a]">
                   <div className="flex items-center gap-3">
                     <button onClick={() => handleProfileClick(user2.id)} className="shrink-0">
                       <div className="w-12 h-12 rounded-full border-2 border-pink-500 overflow-hidden bg-gray-800">
@@ -461,7 +461,7 @@ const WatchBattleModal = ({ battle, onClose }) => {
                         <span className="text-xs bg-gray-700 text-gray-400 px-1.5 py-0.5 rounded">#{user2.battleWins || 0}</span>
                         <button 
                           onClick={() => handleMessageClick(user2.id, user2.username)}
-                          className="ml-auto p-1.5 hover:bg-gray-700 rounded-lg transition"
+                          className="ml-auto p-1.5 hover:bg-[#1a1a1a] rounded-lg transition"
                           title="Message"
                         >
                           <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -480,12 +480,12 @@ const WatchBattleModal = ({ battle, onClose }) => {
                   </div>
                 </div>
 
-                <div className="bg-gray-900/50 rounded-xl p-3 mt-4">
+                <div className="bg-[#0d0d0d] rounded-xl p-3 mt-4">
                   <div className="flex justify-between text-xs text-gray-500 mb-2">
                     <span>Battle Progress</span>
                     <span>{Math.round(battle.progressPercent || 0)}%</span>
                   </div>
-                  <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-[#111] rounded-full overflow-hidden">
                     <div 
                       className="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all" 
                       style={{ width: `${battle.progressPercent || 0}%` }}
@@ -497,10 +497,10 @@ const WatchBattleModal = ({ battle, onClose }) => {
 
             {activeTab === 'stats' && (
               <div className="space-y-4">
-                <div className="bg-gray-900 rounded-2xl p-4 border border-gray-800">
+                <div className="bg-[#0d0d0d] rounded-2xl p-4 border border-[#1a1a1a]">
                   <div className="flex items-center justify-between">
                     <button onClick={() => handleProfileClick(user1.id)} className="flex flex-col items-center">
-                      <div className="w-14 h-14 rounded-full border-2 border-blue-500 overflow-hidden bg-gray-800 mb-1">
+                      <div className="w-14 h-14 rounded-full border-2 border-blue-500 overflow-hidden bg-[#111] mb-1">
                         {user1.avatar ? (
                           <img src={user1.avatar} alt="" className="w-full h-full object-cover" />
                         ) : (
@@ -518,7 +518,7 @@ const WatchBattleModal = ({ battle, onClose }) => {
                     </div>
 
                     <button onClick={() => handleProfileClick(user2.id)} className="flex flex-col items-center">
-                      <div className="w-14 h-14 rounded-full border-2 border-pink-500 overflow-hidden bg-gray-800 mb-1">
+                      <div className="w-14 h-14 rounded-full border-2 border-pink-500 overflow-hidden bg-[#111] mb-1">
                         {user2.avatar ? (
                           <img src={user2.avatar} alt="" className="w-full h-full object-cover" />
                         ) : (
@@ -539,8 +539,8 @@ const WatchBattleModal = ({ battle, onClose }) => {
                       <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <div className="bg-gray-900 rounded-2xl border border-gray-800 overflow-hidden">
-                    <div className="grid grid-cols-3 gap-4 p-3 border-b border-gray-800">
+                  <div className="bg-[#0d0d0d] rounded-2xl border border-[#1a1a1a] overflow-hidden">
+                    <div className="grid grid-cols-3 gap-4 p-3 border-b border-[#1a1a1a]">
                       <div className="flex justify-center">
                         <div className="w-8 h-8 rounded-full border border-blue-500 overflow-hidden bg-gray-800">
                           {user1.avatar ? (
@@ -581,7 +581,7 @@ const WatchBattleModal = ({ battle, onClose }) => {
                       <div className="flex gap-1">
                         {[...Array(5)].map((_, i) => (
                           <div key={i} className="flex flex-col items-center gap-1">
-                            <div className="w-8 h-8 rounded-full border border-blue-500/50 overflow-hidden bg-gray-800 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full border border-blue-500/50 overflow-hidden bg-[#111] flex items-center justify-center">
                               {user1.avatar ? (
                                 <img src={user1.avatar} alt="" className="w-full h-full object-cover opacity-50" />
                               ) : (
@@ -598,7 +598,7 @@ const WatchBattleModal = ({ battle, onClose }) => {
                       <div className="flex gap-1">
                         {[...Array(5)].map((_, i) => (
                           <div key={i} className="flex flex-col items-center gap-1">
-                            <div className="w-8 h-8 rounded-full border border-pink-500/50 overflow-hidden bg-gray-800 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full border border-pink-500/50 overflow-hidden bg-[#111] flex items-center justify-center">
                               {user2.avatar ? (
                                 <img src={user2.avatar} alt="" className="w-full h-full object-cover opacity-50" />
                               ) : (
@@ -620,7 +620,7 @@ const WatchBattleModal = ({ battle, onClose }) => {
                 <div>
                   <h4 className="font-semibold text-lg mb-3">Match Specific Rules</h4>
                   <div className="space-y-2">
-                    <div className="bg-gray-900 rounded-2xl p-4 border border-gray-800 flex items-center justify-between">
+                    <div className="bg-[#0d0d0d] rounded-2xl p-4 border border-[#1a1a1a] flex items-center justify-between">
                       <div>
                         <p className="font-medium">Buy-In Amount</p>
                         <p className="text-sm text-gray-500">Entry fee per player</p>
@@ -629,8 +629,8 @@ const WatchBattleModal = ({ battle, onClose }) => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                       </svg>
                     </div>
-                    <div className="bg-gray-900 rounded-2xl p-4 border border-gray-800 flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full border border-green-500 overflow-hidden bg-gray-800 flex items-center justify-center">
+                    <div className="bg-[#0d0d0d] rounded-2xl p-4 border border-[#1a1a1a] flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full border border-green-500 overflow-hidden bg-[#111] flex items-center justify-center">
                         <span className="text-green-400 font-bold">$</span>
                       </div>
                       <div className="flex-1">
@@ -647,18 +647,18 @@ const WatchBattleModal = ({ battle, onClose }) => {
                 <div>
                   <h4 className="font-semibold text-lg mb-3">Battle Rules</h4>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-gray-900 rounded-2xl p-4 border border-gray-800 text-center">
+                    <div className="bg-[#0d0d0d] rounded-2xl p-4 border border-[#1a1a1a] text-center">
                       <p className="text-2xl font-bold">1v1</p>
                       <p className="text-sm text-gray-500">Number of Players</p>
                     </div>
-                    <div className="bg-gray-900 rounded-2xl p-4 border border-gray-800 text-center">
+                    <div className="bg-[#0d0d0d] rounded-2xl p-4 border border-[#1a1a1a] text-center">
                       <p className="text-2xl font-bold">{timeDisplay}</p>
                       <p className="text-sm text-gray-500">Time Remaining</p>
                     </div>
                   </div>
                 </div>
 
-                <button className="w-full bg-gray-800 hover:bg-gray-700 text-white font-medium py-3 rounded-2xl transition">
+                <button className="w-full bg-[#111] hover:bg-[#1a1a1a] text-white font-medium py-3 rounded-2xl transition">
                   View All Battle Rules
                 </button>
               </div>
@@ -1056,7 +1056,7 @@ export default function SocialPage() {
         <TopNavbar />
         <div className="max-w-6xl mx-auto px-4 pt-20">
           <div className="animate-pulse space-y-6">
-            <div className="h-8 bg-gray-800 rounded w-48"></div>
+            <div className="h-8 bg-[#111] rounded w-48"></div>
             <div className="flex gap-4 overflow-hidden">
               {[1, 2, 3].map(i => <SkeletonBattle key={i} />)}
             </div>
@@ -1105,7 +1105,7 @@ export default function SocialPage() {
                 {[1, 2, 3].map(i => <SkeletonBattle key={i} />)}
               </div>
             ) : liveBattles.length === 0 ? (
-              <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-8 text-center">
+              <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-8 text-center">
                 <p className="text-gray-400 mb-3">No live battles right now</p>
                 <button
                   onClick={() => router.push('/battle')}
@@ -1135,7 +1135,7 @@ export default function SocialPage() {
                 placeholder="Search users..."
                 value={searchQuery}
                 onChange={(e) => handleSearch(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-900/60 border border-gray-700 rounded-xl focus:outline-none focus:border-purple-500 placeholder-gray-500"
+                className="w-full px-4 py-3 bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl focus:outline-none focus:border-purple-500 placeholder-gray-500"
               />
             </div>
 
@@ -1168,13 +1168,13 @@ export default function SocialPage() {
             <div className="flex gap-2 mb-4">
               <button
                 onClick={() => setActiveTab('friends')}
-                className={`flex-1 py-2.5 rounded-xl font-medium transition text-sm ${activeTab === 'friends' ? 'bg-purple-600' : 'bg-gray-800/60 hover:bg-gray-700/60'}`}
+                className={`flex-1 py-2.5 rounded-xl font-medium transition text-sm ${activeTab === 'friends' ? 'bg-purple-600' : 'bg-gray-800/60 hover:bg-[#1a1a1a]/60'}`}
               >
                 Friends ({friends.length})
               </button>
               <button
                 onClick={() => setActiveTab('requests')}
-                className={`flex-1 py-2.5 rounded-xl font-medium transition text-sm relative ${activeTab === 'requests' ? 'bg-purple-600' : 'bg-gray-800/60 hover:bg-gray-700/60'}`}
+                className={`flex-1 py-2.5 rounded-xl font-medium transition text-sm relative ${activeTab === 'requests' ? 'bg-purple-600' : 'bg-gray-800/60 hover:bg-[#1a1a1a]/60'}`}
               >
                 Requests
                 {requests.length > 0 && (
@@ -1185,7 +1185,7 @@ export default function SocialPage() {
               </button>
               <button
                 onClick={() => setActiveTab('invites')}
-                className={`flex-1 py-2.5 rounded-xl font-medium transition text-sm relative ${activeTab === 'invites' ? 'bg-purple-600' : 'bg-gray-800/60 hover:bg-gray-700/60'}`}
+                className={`flex-1 py-2.5 rounded-xl font-medium transition text-sm relative ${activeTab === 'invites' ? 'bg-purple-600' : 'bg-gray-800/60 hover:bg-[#1a1a1a]/60'}`}
               >
                 Battle Invites
                 {pendingInvites.received.length > 0 && (
@@ -1202,7 +1202,7 @@ export default function SocialPage() {
                   {[1, 2, 3, 4, 5, 6].map(i => <SkeletonCard key={i} />)}
                 </div>
               ) : friends.length === 0 ? (
-                <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-8 text-center">
+                <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-8 text-center">
                   <p className="text-gray-400">No friends yet. Search for users above!</p>
                 </div>
               ) : (
@@ -1222,13 +1222,13 @@ export default function SocialPage() {
 
             {activeTab === 'requests' && (
               requests.length === 0 ? (
-                <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-8 text-center">
+                <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-8 text-center">
                   <p className="text-gray-400">No pending requests</p>
                 </div>
               ) : (
                 <div className="space-y-3">
                   {requests.map(request => (
-                    <div key={request.id} className="bg-gray-900/60 border border-gray-700/50 rounded-xl p-4 flex items-center gap-3">
+                    <div key={request.id} className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-4 flex items-center gap-3">
                       <UserAvatar user={request.sender} />
                       <div className="flex-1">
                         <p className="font-medium">{request.sender?.username}</p>
@@ -1297,7 +1297,7 @@ export default function SocialPage() {
                     <h3 className="text-sm font-medium text-gray-400 mb-3">Sent Challenges</h3>
                     <div className="space-y-3">
                       {pendingInvites.sent.map(invite => (
-                        <div key={invite.id} className="bg-gray-900/60 border border-gray-700/50 rounded-xl p-4 flex items-center gap-3">
+                        <div key={invite.id} className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-4 flex items-center gap-3">
                           <UserAvatar user={invite.receiver} />
                           <div className="flex-1">
                             <p className="font-medium">Challenged {invite.receiver?.username}</p>
@@ -1316,7 +1316,7 @@ export default function SocialPage() {
                 )}
 
                 {pendingInvites.received.length === 0 && pendingInvites.sent.length === 0 && (
-                  <div className="bg-gray-900/40 border border-gray-800 rounded-xl p-8 text-center">
+                  <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-8 text-center">
                     <p className="text-gray-400 mb-4">No pending battle invites</p>
                     <p className="text-sm text-gray-500">Challenge a friend to a battle or find a random opponent!</p>
                   </div>
@@ -1350,17 +1350,17 @@ export default function SocialPage() {
 
         {showInviteModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowInviteModal(null)}>
-            <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+            <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold">Challenge to Battle</h2>
-                <button onClick={() => setShowInviteModal(null)} className="p-2 hover:bg-gray-800 rounded-lg transition">
+                <button onClick={() => setShowInviteModal(null)} className="p-2 hover:bg-[#111] rounded-lg transition">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
               
-              <div className="flex items-center gap-3 p-4 bg-gray-800/50 rounded-xl mb-6">
+              <div className="flex items-center gap-3 p-4 bg-[#111] rounded-xl mb-6">
                 <UserAvatar user={showInviteModal} />
                 <div>
                   <p className="font-semibold">{showInviteModal.username}</p>
@@ -1374,7 +1374,7 @@ export default function SocialPage() {
                   <select 
                     value={inviteBuyIn} 
                     onChange={e => setInviteBuyIn(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-purple-500"
+                    className="w-full px-4 py-3 bg-[#111] border border-[#1a1a1a] rounded-xl focus:outline-none focus:border-purple-500"
                   >
                     <option value="50">$50</option>
                     <option value="100">$100</option>
@@ -1388,7 +1388,7 @@ export default function SocialPage() {
                   <select 
                     value={inviteDuration} 
                     onChange={e => setInviteDuration(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-purple-500"
+                    className="w-full px-4 py-3 bg-[#111] border border-[#1a1a1a] rounded-xl focus:outline-none focus:border-purple-500"
                   >
                     <option value="1">1 Hour</option>
                     <option value="3">3 Hours</option>
@@ -1424,10 +1424,10 @@ export default function SocialPage() {
 
         {showMatchmaking && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowMatchmaking(false)}>
-            <div className="bg-gray-900 border border-gray-700 rounded-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+            <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold">Find Random Opponent</h2>
-                <button onClick={() => setShowMatchmaking(false)} className="p-2 hover:bg-gray-800 rounded-lg transition">
+                <button onClick={() => setShowMatchmaking(false)} className="p-2 hover:bg-[#111] rounded-lg transition">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -1449,7 +1449,7 @@ export default function SocialPage() {
                   <select 
                     value={matchmakingBuyIn} 
                     onChange={e => setMatchmakingBuyIn(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-purple-500"
+                    className="w-full px-4 py-3 bg-[#111] border border-[#1a1a1a] rounded-xl focus:outline-none focus:border-purple-500"
                   >
                     <option value="50">$50</option>
                     <option value="100">$100</option>
@@ -1463,7 +1463,7 @@ export default function SocialPage() {
                   <select 
                     value={matchmakingDuration} 
                     onChange={e => setMatchmakingDuration(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-purple-500"
+                    className="w-full px-4 py-3 bg-[#111] border border-[#1a1a1a] rounded-xl focus:outline-none focus:border-purple-500"
                   >
                     <option value="1">1 Hour</option>
                     <option value="3">3 Hours</option>

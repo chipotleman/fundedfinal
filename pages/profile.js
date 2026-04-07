@@ -190,11 +190,11 @@ export default function Profile() {
 
         {/* Profile Content */}
         <div className="max-w-4xl mx-auto px-6">
-          <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
+          <div className="bg-[#0d0d0d] rounded-2xl border border-[#1a1a1a] overflow-hidden">
             {/* Profile Header */}
             <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-8 py-12">
               <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6">
-                <div className="w-24 h-24 bg-slate-700 rounded-full flex items-center justify-center text-3xl">
+                <div className="w-24 h-24 bg-[#1a1a1a] rounded-full flex items-center justify-center text-3xl">
                   {profile?.avatar ? (
                     <img src={profile.avatar} alt="Avatar" className="w-full h-full rounded-full object-cover" />
                   ) : (
@@ -219,7 +219,7 @@ export default function Profile() {
                       type="text"
                       value={formData.username}
                       onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#1a1a1a] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                       required
                     />
                   </div>
@@ -230,7 +230,7 @@ export default function Profile() {
                       value={formData.bio}
                       onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
                       rows={4}
-                      className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#1a1a1a] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                       placeholder="Tell us about yourself..."
                     />
                   </div>
@@ -238,7 +238,7 @@ export default function Profile() {
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Profile Picture</label>
                     <div className="flex items-center space-x-4 mb-3">
-                      <div className="w-20 h-20 bg-slate-700 rounded-full overflow-hidden flex items-center justify-center">
+                      <div className="w-20 h-20 bg-[#1a1a1a] rounded-full overflow-hidden flex items-center justify-center">
                         {formData.avatar ? (
                           <img src={formData.avatar} alt="Preview" className="w-full h-full object-cover" />
                         ) : (
@@ -268,7 +268,7 @@ export default function Profile() {
                       type="url"
                       value={formData.avatar}
                       onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-3 bg-[#1a1a1a] border border-[#1a1a1a] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
                       placeholder="Or paste an image URL..."
                     />
                   </div>
@@ -284,7 +284,7 @@ export default function Profile() {
                     <button
                       type="button"
                       onClick={() => setEditing(false)}
-                      className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                      className="bg-gray-600 hover:bg-[#1a1a1a] text-white font-bold py-3 px-6 rounded-lg transition-colors"
                     >
                       Cancel
                     </button>
@@ -293,7 +293,7 @@ export default function Profile() {
               ) : (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-slate-700/50 rounded-lg p-4">
+                    <div className="bg-[#1a1a1a] rounded-lg p-4">
                       <h3 className="text-lg font-semibold text-white mb-2">Account Info</h3>
                       <div className="space-y-2">
                         <p className="text-gray-300"><span className="font-medium">Email:</span> {user.email}</p>
@@ -302,7 +302,7 @@ export default function Profile() {
                       </div>
                     </div>
                     
-                    <div className="bg-slate-700/50 rounded-lg p-4">
+                    <div className="bg-[#1a1a1a] rounded-lg p-4">
                       <h3 className="text-lg font-semibold text-white mb-2">Stats</h3>
                       <div className="space-y-2">
                         <p className="text-gray-300"><span className="font-medium">Total Bets:</span> 0</p>

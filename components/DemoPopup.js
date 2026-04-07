@@ -241,7 +241,7 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-20 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
+          className="absolute top-4 right-4 z-20 w-8 h-8 bg-[#111] hover:bg-[#1a1a1a] rounded-full flex items-center justify-center"
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -252,7 +252,7 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
         {step === 'auth' && (
           <button
             onClick={handleBack}
-            className="absolute top-4 left-4 z-20 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
+            className="absolute top-4 left-4 z-20 w-8 h-8 bg-[#111] hover:bg-[#1a1a1a] rounded-full flex items-center justify-center"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -279,7 +279,7 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
               </p>
             </div>
 
-            <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4 mb-6">
+            <div className="bg-[#111] rounded-xl border border-[#1a1a1a] p-4 mb-6">
               <div className="flex items-center justify-between text-sm mb-2">
                 <span className="text-gray-400">Challenge:</span>
                 <span className="text-white font-medium">{existingTrial.name}</span>
@@ -312,7 +312,7 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
                   setExistingTrial(null);
                   setStep('selection');
                 }}
-                className="w-full bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
+                className="w-full bg-[#1a1a1a] hover:bg-[#222] text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
               >
                 Start New Trial
               </button>
@@ -346,7 +346,7 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
                     type="email"
                     value={authEmail}
                     onChange={(e) => setAuthEmail(e.target.value)}
-                    className="w-full px-4 py-3 pr-12 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all auth-input"
+                    className="w-full px-4 py-3 pr-12 bg-[#1a1a1a] border-2 border-[#1a1a1a] rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all auth-input"
                     style={{ '--focus-color': theme.borderColor }}
                     placeholder="Enter your email"
                     required
@@ -368,7 +368,7 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
                     type={showPassword ? 'text' : 'password'}
                     value={authPassword}
                     onChange={(e) => setAuthPassword(e.target.value)}
-                    className="w-full px-4 py-3 pr-20 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all auth-input"
+                    className="w-full px-4 py-3 pr-20 bg-[#1a1a1a] border-2 border-[#1a1a1a] rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all auth-input"
                     style={{ '--focus-color': theme.borderColor }}
                     placeholder="Enter your password"
                     minLength="6"
@@ -408,7 +408,7 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
                       type="password"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="w-full px-4 py-3 pr-12 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all auth-input"
+                      className="w-full px-4 py-3 pr-12 bg-[#1a1a1a] border-2 border-[#1a1a1a] rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all auth-input"
                       style={{ '--focus-color': theme.borderColor }}
                       placeholder="Confirm your password"
                       minLength="6"
@@ -455,7 +455,7 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
               </button>
             </div>
 
-            <div className="mt-4 p-3 bg-slate-800/30 rounded-xl border border-slate-700/50">
+            <div className="mt-4 p-3 bg-[#111] rounded-xl border border-[#1a1a1a]">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-gray-400">Selected:</span>
                 <span className={`${theme.text} font-medium`}>{currentChallenge.name}</span>
@@ -492,7 +492,7 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
               <div className="relative">
                 <div
                   onClick={() => setShowDropdown(!showDropdown)}
-                  className={`flex justify-between items-center py-3 px-4 bg-slate-800/50 rounded-xl border-2 ${theme.borderLight} cursor-pointer hover:${theme.border} transition-all duration-300 shadow-lg ${theme.shadow}`}
+                  className={`flex justify-between items-center py-3 px-4 bg-[#111] rounded-xl border-2 ${theme.borderLight} cursor-pointer hover:${theme.border} transition-all duration-300 shadow-lg ${theme.shadow}`}
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
                   <div>
@@ -508,12 +508,12 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
                 </div>
 
                 {showDropdown && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800 border border-slate-600 rounded-xl shadow-2xl z-20" style={{ WebkitTapHighlightColor: 'transparent' }}>
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl shadow-2xl z-20" style={{ WebkitTapHighlightColor: 'transparent' }}>
                     {challenges.map((challenge, index) => (
                       <div
                         key={challenge.id}
                         onClick={() => handleChallengeSelect(index)}
-                        className={`flex justify-between items-center py-3 px-4 cursor-pointer hover:bg-slate-700/50 transition-all duration-200 ${
+                        className={`flex justify-between items-center py-3 px-4 cursor-pointer hover:bg-[#1a1a1a] transition-all duration-200 ${
                           index === currentIndex ? `${theme.bg} border-l-4 ${theme.border}` : ''
                         } ${index === 0 ? 'rounded-t-xl' : ''} ${index === challenges.length - 1 ? 'rounded-b-xl' : ''}`}
                         style={{ WebkitTapHighlightColor: 'transparent' }}
@@ -529,7 +529,7 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
                 )}
               </div>
 
-              <div className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4" style={{ WebkitTapHighlightColor: 'transparent' }}>
+              <div className="bg-[#111] rounded-xl border border-[#1a1a1a] p-4" style={{ WebkitTapHighlightColor: 'transparent' }}>
                 <div 
                   className="flex items-center justify-between cursor-pointer"
                   onClick={() => setShowRules(!showRules)}
@@ -589,7 +589,7 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
               <div className={`p-4 bg-gradient-to-r ${theme.splitGradient} rounded-2xl border ${theme.splitBorder} mb-4 relative`} style={{ WebkitTapHighlightColor: 'transparent' }}>
                 <button
                   onClick={() => setUserSplit(70)}
-                  className="absolute top-2 right-2 w-6 h-6 bg-slate-700/80 hover:bg-slate-600 rounded-full flex items-center justify-center transition-colors"
+                  className="absolute top-2 right-2 w-6 h-6 bg-[#1a1a1a]/80 hover:bg-[#222] rounded-full flex items-center justify-center transition-colors"
                   title="Reset to 70%"
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
@@ -604,7 +604,7 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
                 </div>
 
                 <div
-                  className="flex h-10 rounded-xl overflow-hidden border border-slate-600 cursor-grab active:cursor-grabbing relative"
+                  className="flex h-10 rounded-xl overflow-hidden border border-[#1a1a1a] cursor-grab active:cursor-grabbing relative"
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                   onMouseDown={(e) => {
                     const rect = e.currentTarget.getBoundingClientRect();
@@ -664,7 +664,7 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
             )}
 
             {!showRules && (
-              <div className="text-center mb-4 p-3 bg-slate-800/30 rounded-xl border border-slate-600" style={{ WebkitTapHighlightColor: 'transparent' }}>
+              <div className="text-center mb-4 p-3 bg-[#111] rounded-xl border border-[#1a1a1a]" style={{ WebkitTapHighlightColor: 'transparent' }}>
                 <div className="flex items-center justify-center space-x-2">
                   <div className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-500">FREE</div>
                 </div>
@@ -697,7 +697,7 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
               ))}
             </div>
 
-            <div className="text-center pt-2 border-t border-slate-700/50">
+            <div className="text-center pt-2 border-t border-[#1a1a1a]">
               <p className="text-gray-500 text-xs mb-2">
                 This is a simulated experience with virtual funds.
               </p>

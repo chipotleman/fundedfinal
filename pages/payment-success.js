@@ -70,7 +70,7 @@ export default function PaymentSuccess() {
       </Head>
       
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-slate-900 rounded-3xl p-8 border border-slate-700">
+        <div className="max-w-md w-full bg-[#0d0d0d] rounded-3xl p-8 border border-[#1a1a1a]">
           <div className="text-center mb-8">
             <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-10 h-10 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,7 +82,7 @@ export default function PaymentSuccess() {
           </div>
 
           {challengeData && (
-            <div className="bg-slate-800/50 rounded-xl p-6 mb-6 border border-slate-700">
+            <div className="bg-[#111] rounded-xl p-6 mb-6 border border-[#1a1a1a]">
               <h3 className="text-lg font-semibold text-white mb-4">{challengeData.name}</h3>
               
               <div className="space-y-3 text-sm">
@@ -103,7 +103,7 @@ export default function PaymentSuccess() {
           )}
 
           {licenseKey && (
-            <div className="bg-slate-800/50 rounded-xl p-4 mb-6 border border-slate-700">
+            <div className="bg-[#111] rounded-xl p-4 mb-6 border border-[#1a1a1a]">
               <div className="text-xs text-gray-400 mb-2">Your License Key</div>
               <div className="font-mono text-green-400 text-sm break-all">{licenseKey}</div>
             </div>

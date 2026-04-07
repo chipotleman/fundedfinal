@@ -289,7 +289,7 @@ export default function PublicProfile() {
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-green-400 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -300,7 +300,7 @@ export default function PublicProfile() {
         <div className="text-center">
           <h2 className="text-2xl font-bold text-white mb-4">Profile not found</h2>
           <Link href="/">
-            <button className="bg-green-500 hover:bg-green-600 text-black font-bold py-3 px-6 rounded-lg">
+            <button className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg">
               Go to Dashboard
             </button>
           </Link>
@@ -318,18 +318,18 @@ export default function PublicProfile() {
         betSlipCount={betSlip?.length || 0}
       />
       
-      <div className="pt-20 pb-24 px-4 max-w-4xl mx-auto">
-        <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/20 overflow-hidden mb-8">
-          <div className="bg-gradient-to-r from-slate-800 to-slate-900 p-8">
-            <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+      <div className="pt-16 pb-24 px-4 max-w-4xl mx-auto">
+        <div className="rounded-2xl overflow-hidden mb-6" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }}>
+          <div className="p-6 sm:p-8">
+            <div className="flex flex-col md:flex-row items-center md:items-start gap-5">
               <div className="relative">
-                <div className="w-28 h-28 rounded-full bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center text-4xl overflow-hidden">
+                <div className="w-24 h-24 rounded-full flex items-center justify-center text-4xl overflow-hidden" style={{ backgroundColor: '#1a1a1a', border: '2px solid #333' }}>
                   {editing ? (
                     <label className="cursor-pointer w-full h-full flex items-center justify-center">
                       {formData.avatar ? (
                         <img src={formData.avatar} alt="Avatar" className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-white/50 text-sm">Click to upload</span>
+                        <span className="text-gray-500 text-xs">Upload</span>
                       )}
                       <input
                         type="file"
@@ -341,12 +341,12 @@ export default function PublicProfile() {
                   ) : profile.avatar ? (
                     <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
-                    '👤'
+                    <span className="text-white font-bold text-2xl">{profile.username?.[0]?.toUpperCase() || '?'}</span>
                   )}
                 </div>
                 {winRate >= 60 && (
-                  <div className="absolute -bottom-1 -right-1 bg-yellow-500 text-black text-xs font-bold px-2 py-1 rounded-full">
-                    TOP PLAYER
+                  <div className="absolute -bottom-1 -right-1 bg-yellow-500 text-black text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                    TOP
                   </div>
                 )}
               </div>
@@ -355,30 +355,32 @@ export default function PublicProfile() {
                 {editing ? (
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm text-gray-400 mb-1">Username</label>
+                      <label className="block text-xs text-gray-500 mb-1 uppercase tracking-wider">Username</label>
                       <input
                         type="text"
                         value={formData.username}
                         onChange={handleUsernameChange}
-                        className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        style={{ backgroundColor: '#111', border: '1px solid #1a1a1a', fontSize: '16px' }}
                         maxLength={20}
                       />
                       {usernameStatus.checking && (
-                        <p className="text-gray-400 text-sm mt-1">Checking...</p>
+                        <p className="text-gray-400 text-xs mt-1">Checking...</p>
                       )}
                       {usernameStatus.available === true && formData.username !== profile.username && (
-                        <p className="text-green-400 text-sm mt-1">Username available!</p>
+                        <p className="text-green-400 text-xs mt-1">Available</p>
                       )}
                       {usernameStatus.error && (
-                        <p className="text-red-400 text-sm mt-1">{usernameStatus.error}</p>
+                        <p className="text-red-400 text-xs mt-1">{usernameStatus.error}</p>
                       )}
                     </div>
                     <div>
-                      <label className="block text-sm text-gray-400 mb-1">Bio</label>
+                      <label className="block text-xs text-gray-500 mb-1 uppercase tracking-wider">Bio</label>
                       <textarea
                         value={formData.bio}
                         onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                        className="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        style={{ backgroundColor: '#111', border: '1px solid #1a1a1a', fontSize: '16px' }}
                         rows={3}
                         maxLength={200}
                         placeholder="Tell others about yourself..."
@@ -388,7 +390,7 @@ export default function PublicProfile() {
                       <button
                         onClick={handleSave}
                         disabled={saving || usernameStatus.available === false}
-                        className="bg-green-500 hover:bg-green-600 disabled:bg-gray-600 text-black font-bold py-2 px-6 rounded-lg transition-all"
+                        className="bg-blue-600 disabled:opacity-40 text-white font-bold py-2 px-6 rounded-lg transition-all text-sm"
                       >
                         {saving ? 'Saving...' : 'Save'}
                       </button>
@@ -401,7 +403,8 @@ export default function PublicProfile() {
                             avatar: profile.avatar || '',
                           });
                         }}
-                        className="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-6 rounded-lg transition-all"
+                        className="text-gray-400 font-semibold py-2 px-6 rounded-lg transition-all text-sm"
+                        style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}
                       >
                         Cancel
                       </button>
@@ -409,26 +412,27 @@ export default function PublicProfile() {
                   </div>
                 ) : (
                   <>
-                    <h1 className="text-3xl font-black text-white mb-2">
+                    <h1 className="text-2xl font-black text-white mb-1">
                       {profile.username || 'Anonymous'}
                     </h1>
-                    <p className="text-gray-400 mb-4">{profile.bio || 'No bio yet'}</p>
+                    <p className="text-gray-500 text-sm mb-3">{profile.bio || 'No bio yet'}</p>
                     {isOwnProfile && (
                       <button
                         onClick={() => setEditing(true)}
-                        className="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg transition-all text-sm"
+                        className="text-gray-400 font-medium py-1.5 px-4 rounded-lg transition-all text-xs"
+                        style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}
                       >
                         Edit Profile
                       </button>
                     )}
                     
                     {!isOwnProfile && session?.user && (
-                      <div className="flex gap-3 mt-4">
+                      <div className="flex flex-wrap gap-2 mt-3">
                         {friendStatus === 'none' && (
                           <button
                             onClick={handleAddFriend}
                             disabled={friendActionLoading}
-                            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-all text-sm flex items-center gap-2"
+                            className="bg-blue-600 disabled:opacity-40 text-white font-semibold py-2 px-4 rounded-lg transition-all text-sm flex items-center gap-2"
                           >
                             {friendActionLoading ? 'Sending...' : (
                               <>
@@ -445,7 +449,7 @@ export default function PublicProfile() {
                           <button
                             onClick={handleWithdrawRequest}
                             disabled={friendActionLoading}
-                            className="bg-red-600/20 hover:bg-red-600/40 disabled:bg-gray-600 text-red-400 font-semibold py-2 px-4 rounded-lg transition-all text-sm flex items-center gap-2"
+                            className="bg-red-600/20 disabled:opacity-40 text-red-400 font-semibold py-2 px-4 rounded-lg transition-all text-sm flex items-center gap-2"
                           >
                             {friendActionLoading ? 'Cancelling...' : (
                               <>
@@ -462,7 +466,7 @@ export default function PublicProfile() {
                           <button
                             onClick={handleAddFriend}
                             disabled={friendActionLoading}
-                            className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition-all text-sm"
+                            className="bg-green-600 disabled:opacity-40 text-white font-semibold py-2 px-4 rounded-lg transition-all text-sm"
                           >
                             {friendActionLoading ? 'Accepting...' : 'Accept Request'}
                           </button>
@@ -472,18 +476,17 @@ export default function PublicProfile() {
                           <>
                             <button
                               onClick={() => setShowBattleInvite(true)}
-                              className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition-all text-sm flex items-center gap-2"
+                              className="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-all text-sm flex items-center gap-2"
                             >
                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                               </svg>
                               Challenge to Battle
                             </button>
                             <button
                               onClick={handleRemoveFriend}
                               disabled={friendActionLoading}
-                              className="bg-red-600/20 hover:bg-red-600/40 text-red-400 font-semibold py-2 px-4 rounded-lg transition-all text-sm"
+                              className="bg-red-600/20 text-red-400 font-semibold py-2 px-4 rounded-lg transition-all text-sm"
                             >
                               {friendActionLoading ? '...' : 'Remove Friend'}
                             </button>
@@ -497,60 +500,61 @@ export default function PublicProfile() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-slate-700/50">
-            <div className="p-4 text-center">
-              <p className="text-gray-400 text-sm">Battles</p>
-              <p className="text-2xl font-black text-white">{battleStats?.totalBattles || 0}</p>
+          <div className="grid grid-cols-2 md:grid-cols-4" style={{ borderTop: '1px solid #1a1a1a' }}>
+            <div className="p-4 text-center" style={{ borderRight: '1px solid #1a1a1a' }}>
+              <p className="text-gray-500 text-xs uppercase tracking-wider">Battles</p>
+              <p className="text-xl font-black text-white mt-1">{battleStats?.totalBattles || 0}</p>
+            </div>
+            <div className="p-4 text-center" style={{ borderRight: '1px solid #1a1a1a' }}>
+              <p className="text-gray-500 text-xs uppercase tracking-wider">Win Rate</p>
+              <p className="text-xl font-black text-green-400 mt-1">{winRate}%</p>
+            </div>
+            <div className="p-4 text-center" style={{ borderRight: '1px solid #1a1a1a' }}>
+              <p className="text-gray-500 text-xs uppercase tracking-wider">Wins</p>
+              <p className="text-xl font-black text-green-400 mt-1">{battleStats?.wins || 0}</p>
             </div>
             <div className="p-4 text-center">
-              <p className="text-gray-400 text-sm">Win Rate</p>
-              <p className="text-2xl font-black text-green-400">{winRate}%</p>
-            </div>
-            <div className="p-4 text-center">
-              <p className="text-gray-400 text-sm">Wins</p>
-              <p className="text-2xl font-black text-green-400">{battleStats?.wins || 0}</p>
-            </div>
-            <div className="p-4 text-center">
-              <p className="text-gray-400 text-sm">Total Winnings</p>
-              <p className="text-2xl font-black text-green-400">{formatCurrency(battleStats?.totalWinnings)}</p>
+              <p className="text-gray-500 text-xs uppercase tracking-wider">Winnings</p>
+              <p className="text-xl font-black text-green-400 mt-1">{formatCurrency(battleStats?.totalWinnings)}</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-slate-800/50 rounded-2xl border border-slate-700 p-6">
-          <h2 className="text-xl font-bold text-white mb-4">Battle History</h2>
+        <div className="rounded-2xl p-5" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }}>
+          <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Battle History</h2>
           
           {battleHistory.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2">
               {battleHistory.map((battle) => (
                 <div 
                   key={battle.id} 
-                  className="bg-slate-900/50 rounded-xl border border-slate-700 p-4"
+                  className="rounded-xl p-3.5"
+                  style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center">
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
                         {battle.opponent?.avatar ? (
                           <img src={battle.opponent.avatar} alt="" className="w-full h-full rounded-full object-cover" />
                         ) : (
-                          '🎯'
+                          <span className="text-white font-bold text-xs">{battle.opponent?.username?.[0]?.toUpperCase() || '?'}</span>
                         )}
                       </div>
                       <div>
-                        <p className="text-white font-semibold">
+                        <p className="text-white font-semibold text-sm">
                           vs {battle.opponent?.username || battle.opponent?.displayName || 'Unknown'}
                         </p>
-                        <p className="text-gray-400 text-sm">
-                          {battle.challengeType?.toUpperCase()} • {battle.durationType?.replace('_', ' ')}
+                        <p className="text-gray-600 text-xs">
+                          {battle.challengeType?.toUpperCase()} {battle.durationType && `\u00B7 ${battle.durationType.replace('_', ' ')}`}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className={`font-bold uppercase ${getResultColor(battle.result)}`}>
+                      <p className={`text-xs font-bold uppercase ${getResultColor(battle.result)}`}>
                         {battle.result === 'pending' ? 'In Progress' : battle.result}
                       </p>
                       {battle.result !== 'pending' && (
-                        <p className={`text-lg font-bold ${battle.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        <p className={`text-sm font-bold ${battle.pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                           {battle.pnl >= 0 ? '+' : ''}{formatCurrency(battle.pnl)}
                         </p>
                       )}
@@ -560,25 +564,25 @@ export default function PublicProfile() {
               ))}
             </div>
           ) : (
-            <p className="text-gray-400 text-center py-8">No battle history yet</p>
+            <p className="text-gray-600 text-center py-8 text-sm">No battle history yet</p>
           )}
         </div>
       </div>
 
       {showBattleInvite && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-20 p-4">
           <div 
             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             onClick={() => setShowBattleInvite(false)}
           />
-          <div className="relative bg-slate-900 rounded-2xl border border-slate-700 p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold text-white mb-4">
-              Challenge {profile?.username || 'User'} to Battle
+          <div className="relative rounded-2xl p-5 max-w-md w-full" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }}>
+            <h3 className="text-lg font-bold text-white mb-4">
+              Challenge {profile?.username || 'User'}
             </h3>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-400 mb-2">Buy-in Amount</label>
+                <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wider">Buy-in</label>
                 <div className="grid grid-cols-4 gap-2">
                   {[50, 100, 250, 500].map(amount => (
                     <button
@@ -586,9 +590,10 @@ export default function PublicProfile() {
                       onClick={() => setInviteBuyIn(amount)}
                       className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
                         inviteBuyIn === amount 
-                          ? 'bg-green-600 text-white' 
-                          : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
+                          ? 'bg-blue-600 text-white' 
+                          : 'text-gray-300'
                       }`}
+                      style={inviteBuyIn !== amount ? { backgroundColor: '#111', border: '1px solid #1a1a1a' } : {}}
                     >
                       ${amount}
                     </button>
@@ -597,7 +602,7 @@ export default function PublicProfile() {
               </div>
               
               <div>
-                <label className="block text-sm text-gray-400 mb-2">Duration</label>
+                <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wider">Duration</label>
                 <div className="grid grid-cols-3 gap-2">
                   {[{ value: 1, label: '1 Hour' }, { value: 24, label: '24 Hours' }, { value: 72, label: '3 Days' }].map(opt => (
                     <button
@@ -605,9 +610,10 @@ export default function PublicProfile() {
                       onClick={() => setInviteDuration(opt.value)}
                       className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
                         inviteDuration === opt.value 
-                          ? 'bg-green-600 text-white' 
-                          : 'bg-slate-800 text-gray-300 hover:bg-slate-700'
+                          ? 'bg-blue-600 text-white' 
+                          : 'text-gray-300'
                       }`}
+                      style={inviteDuration !== opt.value ? { backgroundColor: '#111', border: '1px solid #1a1a1a' } : {}}
                     >
                       {opt.label}
                     </button>
@@ -615,28 +621,29 @@ export default function PublicProfile() {
                 </div>
               </div>
               
-              <div className="bg-slate-800 rounded-lg p-4">
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-400">Prize Pool</span>
+              <div className="rounded-lg p-3" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
+                <div className="flex justify-between text-sm mb-1.5">
+                  <span className="text-gray-500">Prize Pool</span>
                   <span className="text-white font-bold">${inviteBuyIn * 2}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Winner Takes (90%)</span>
+                  <span className="text-gray-500">Winner Takes (90%)</span>
                   <span className="text-green-400 font-bold">${(inviteBuyIn * 2 * 0.9).toFixed(0)}</span>
                 </div>
               </div>
               
-              <div className="flex gap-3 mt-6">
+              <div className="flex gap-3 mt-4">
                 <button
                   onClick={() => setShowBattleInvite(false)}
-                  className="flex-1 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-lg transition-all"
+                  className="flex-1 py-2.5 text-gray-400 font-semibold rounded-lg transition-all text-sm"
+                  style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSendBattleInvite}
                   disabled={battleInviteLoading}
-                  className="flex-1 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white font-semibold rounded-lg transition-all"
+                  className="flex-1 py-2.5 bg-blue-600 disabled:opacity-40 text-white font-semibold rounded-lg transition-all text-sm"
                 >
                   {battleInviteLoading ? 'Sending...' : 'Send Challenge'}
                 </button>

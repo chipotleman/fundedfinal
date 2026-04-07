@@ -86,7 +86,7 @@ export default function BetaLanding({ onAuthenticated }) {
       {/* Terms of Service Modal */}
       {showTerms && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => setShowTerms(false)}>
-          <div className="bg-slate-800 rounded-2xl p-8 max-w-2xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-[#0d0d0d] rounded-2xl p-8 max-w-2xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-white">Terms of Service</h2>
               <button onClick={() => setShowTerms(false)} className="text-gray-400 hover:text-white text-2xl">×</button>
@@ -128,7 +128,7 @@ export default function BetaLanding({ onAuthenticated }) {
       {/* Privacy Policy Modal */}
       {showPrivacy && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => setShowPrivacy(false)}>
-          <div className="bg-slate-800 rounded-2xl p-8 max-w-2xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-[#0d0d0d] rounded-2xl p-8 max-w-2xl max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-white">Privacy Policy</h2>
               <button onClick={() => setShowPrivacy(false)} className="text-gray-400 hover:text-white text-2xl">×</button>
@@ -171,7 +171,7 @@ export default function BetaLanding({ onAuthenticated }) {
       )}
 
       <div className="relative max-w-md w-full">
-        <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-slate-700/50 shadow-2xl">
+        <div className="bg-[#0d0d0d] backdrop-blur-xl rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-[#1a1a1a] shadow-2xl">
           {!showSignup ? (
             <>
               <div className="text-center mb-6">
@@ -197,7 +197,7 @@ export default function BetaLanding({ onAuthenticated }) {
                       setPassword(e.target.value);
                       setError('');
                     }}
-                    className="w-full px-4 py-4 bg-black border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all font-medium text-center text-lg tracking-widest"
+                    className="w-full px-4 py-4 bg-black border-2 border-[#1a1a1a] rounded-xl text-white placeholder-gray-400 focus:outline-none transition-all font-medium text-center text-lg tracking-widest"
                     placeholder="Enter access code"
                     required
                     autoFocus
@@ -214,7 +214,7 @@ export default function BetaLanding({ onAuthenticated }) {
                       setAgreedToTerms(e.target.checked);
                       setError('');
                     }}
-                    className="h-4 w-4 rounded border-gray-600 bg-slate-700 text-blue-500 focus:ring-2 focus:ring-blue-400 focus:ring-offset-0 cursor-pointer flex-shrink-0"
+                    className="h-4 w-4 rounded border-[#1a1a1a] bg-[#111] text-blue-500 focus:ring-2 focus:ring-blue-400 focus:ring-offset-0 cursor-pointer flex-shrink-0"
                   />
                   <label htmlFor="terms" className="text-gray-400 text-xs whitespace-nowrap cursor-pointer select-none flex items-center">
                     I agree to the{' '}
@@ -263,7 +263,7 @@ export default function BetaLanding({ onAuthenticated }) {
               </form>
 
               <div className="mt-8 text-center">
-                <div className="w-full border-t border-gray-600 mb-4"></div>
+                <div className="w-full border-t border-[#1a1a1a] mb-4"></div>
                 <p className="text-gray-400 text-sm mb-3">Don't have access?</p>
                 <button
                   onClick={() => setShowSignup(true)}
@@ -314,7 +314,7 @@ export default function BetaLanding({ onAuthenticated }) {
                       setEmail(e.target.value);
                       setError('');
                     }}
-                    className="w-full px-4 py-4 bg-slate-700/50 border-2 border-slate-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 transition-all font-medium"
+                    className="w-full px-4 py-4 bg-[#111] border-2 border-[#1a1a1a] rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 transition-all font-medium"
                     placeholder="Enter your email"
                     required
                     disabled={signupSuccess}

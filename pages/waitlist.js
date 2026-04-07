@@ -111,7 +111,7 @@ export default function Waitlist() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
+                    className="w-full bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-colors"
                   />
                 </div>
                 <button
@@ -126,7 +126,7 @@ export default function Waitlist() {
               </p>
             </div>
           ) : (
-            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-gray-700 text-center">
+            <div className="bg-black/90 backdrop-blur-lg rounded-2xl p-8 border border-[#1a1a1a] text-center">
               <h2 className="text-2xl font-bold text-white mb-2">You're on the Waitlist!</h2>
               <p className="text-gray-400 mb-6">
                 We'll notify <span className="text-white">{savedEmail || email}</span> when production begins

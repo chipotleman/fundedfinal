@@ -327,7 +327,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                                   updateBetStake(bet.id, e.target.value);
                                 }
                               }}
-                              className="w-full bg-[#1a1a1a] text-white font-bold text-base lg:text-lg pl-10 lg:pl-12 pr-4 lg:pr-6 py-3 lg:py-4 rounded-lg border border-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all duration-200"
+                              className="w-full bg-[#1a1a1a] text-white font-bold text-base lg:text-lg pl-10 lg:pl-12 pr-4 lg:pr-6 py-3 lg:py-4 rounded-lg border border-[#1a1a1a] focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none transition-all duration-200"
                             />
                           </div>
                           {((betType === 'single' && bet.stake > 0) || (betType === 'parlay' && selectedBets[0]?.stake > 0)) && (
@@ -485,7 +485,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
       {showStatsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="fixed inset-0 bg-black/70" onClick={() => setShowStatsModal(false)}></div>
-          <div className="relative bg-slate-800 rounded-2xl border border-slate-700 p-6 w-full max-w-md">
+          <div className="relative bg-[#0d0d0d] rounded-2xl border border-[#1a1a1a] p-6 w-full max-w-md">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-white">Challenge Details</h3>
               <button
@@ -499,51 +499,51 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
             </div>
 
             <div className="space-y-4">
-              <div className="bg-slate-700/30 rounded-xl p-4">
+              <div className="bg-[#111] rounded-xl p-4">
                 <div className="text-gray-400 text-sm mb-1">Starting Balance</div>
                 <div className="text-2xl font-bold text-green-400">$10,000</div>
               </div>
 
-              <div className="bg-slate-700/30 rounded-xl p-4">
+              <div className="bg-[#111] rounded-xl p-4">
                 <div className="text-gray-400 text-sm mb-1">Current Balance</div>
                 <div className="text-2xl font-bold text-green-400">${demoBalance.toLocaleString()}</div>
               </div>
 
-              <div className="bg-slate-700/30 rounded-xl p-4">
+              <div className="bg-[#111] rounded-xl p-4">
                 <div className="text-gray-400 text-sm mb-1">Total P&L</div>
                 <div className="text-2xl font-bold text-green-400">+$0</div>
               </div>
 
-              <div className="bg-slate-700/30 rounded-xl p-4">
+              <div className="bg-[#111] rounded-xl p-4">
                 <div className="text-gray-400 text-sm mb-1">Target Goal</div>
                 <div className="text-2xl font-bold text-blue-400">$12,800</div>
               </div>
 
-              <div className="bg-slate-700/30 rounded-xl p-4">
+              <div className="bg-[#111] rounded-xl p-4">
                 <div className="text-gray-400 text-sm mb-1">Progress</div>
                 <div className="text-2xl font-bold text-blue-400">78%</div>
-                <div className="w-full bg-slate-600 rounded-full h-3 mt-2">
+                <div className="w-full bg-[#222] rounded-full h-3 mt-2">
                   <div className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full" style={{ width: '78%' }}></div>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-700/30 rounded-xl p-4 text-center">
+                <div className="bg-[#111] rounded-xl p-4 text-center">
                   <div className="text-gray-400 text-sm">Bets Placed</div>
                   <div className="text-xl font-bold text-white">12</div>
                 </div>
-                <div className="bg-slate-700/30 rounded-xl p-4 text-center">
+                <div className="bg-[#111] rounded-xl p-4 text-center">
                   <div className="text-gray-400 text-sm">Win Rate</div>
                   <div className="text-xl font-bold text-green-400">67%</div>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-slate-700/30 rounded-xl p-4 text-center">
+                <div className="bg-[#111] rounded-xl p-4 text-center">
                   <div className="text-gray-400 text-sm">Days Left</div>
                   <div className="text-xl font-bold text-orange-400">14</div>
                 </div>
-                <div className="bg-slate-700/30 rounded-xl p-4 text-center">
+                <div className="bg-[#111] rounded-xl p-4 text-center">
                   <div className="text-gray-400 text-sm">Max Loss</div>
                   <div className="text-xl font-bold text-red-400">$1,000</div>
                 </div>
@@ -736,11 +736,11 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
 
             {/* Static Bet Slip */}
             <div className="lg:col-span-1">
-              <div className="bg-slate-800/50 backdrop-blur-lg rounded-xl sm:rounded-2xl border border-slate-700 p-4 sm:p-6 sticky top-6">
+              <div className="bg-[#0d0d0d] backdrop-blur-lg rounded-xl sm:rounded-2xl border border-[#1a1a1a] p-4 sm:p-6 sticky top-6">
                 <h3 className="text-xl font-bold text-white mb-6">How to Use</h3>
 
                 {/* Demo Balance */}
-                <div className="bg-slate-700/30 rounded-xl p-4 mb-6">
+                <div className="bg-[#111] rounded-xl p-4 mb-6">
                   <div className="text-gray-400 text-sm">Demo Balance</div>
                   <div className="text-2xl font-bold text-green-400">${demoBalance.toLocaleString()}</div>
                 </div>
@@ -765,7 +765,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                 </div>
 
                 {/* CTA */}
-                <div className="mt-8 pt-6 border-t border-slate-700">
+                <div className="mt-8 pt-6 border-t border-[#1a1a1a]">
                   <Link href="/auth" className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 text-center block">
                     Start Betting for Real
                   </Link>

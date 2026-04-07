@@ -611,7 +611,7 @@ export default function MatchupBanner({
               style={{ width: '6px', height: '6px', minWidth: '6px', minHeight: '6px' }}
               className={`block rounded-full cursor-pointer transition-all duration-200 ${
                 currentSlide === i 
-                  ? (isDarkMode ? 'bg-white' : 'bg-gray-900')
+                  ? (isDarkMode ? 'bg-white' : 'bg-black')
                   : (isDarkMode ? 'bg-white/30' : 'bg-gray-300')
               }`}
             />

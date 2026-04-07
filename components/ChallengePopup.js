@@ -633,7 +633,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 <div className="relative">
                   <div
                     onClick={() => setShowDropdown(!showDropdown)}
-                    className={`flex justify-between items-center py-3 px-4 bg-slate-800/50 rounded-xl border-2 ${theme.borderLight} cursor-pointer hover:${theme.border} transition-all duration-300 shadow-lg ${theme.shadow}`}
+                    className={`flex justify-between items-center py-3 px-4 bg-[#111] rounded-xl border-2 ${theme.borderLight} cursor-pointer hover:${theme.border} transition-all duration-300 shadow-lg ${theme.shadow}`}
                     style={{ WebkitTapHighlightColor: 'transparent' }}
                   >
                     <div>
@@ -650,12 +650,12 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
 
                   {/* Dropdown */}
                   {showDropdown && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800 border border-slate-600 rounded-xl shadow-2xl z-20" style={{ WebkitTapHighlightColor: 'transparent' }}>
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-[#111] border border-[#1a1a1a] rounded-xl shadow-2xl z-20" style={{ WebkitTapHighlightColor: 'transparent' }}>
                       {challenges.map((challenge, index) => (
                         <div
                           key={challenge.id}
                           onClick={() => handleChallengeSelect(index)}
-                          className={`flex justify-between items-center py-3 px-4 cursor-pointer hover:bg-slate-700/50 transition-all duration-200 ${
+                          className={`flex justify-between items-center py-3 px-4 cursor-pointer hover:bg-[#1a1a1a] transition-all duration-200 ${
                             index === currentIndex ? `${theme.bg} border-l-4` : ''
                           } ${index === 0 ? 'rounded-t-xl' : ''} ${index === challenges.length - 1 ? 'rounded-b-xl' : ''}`}
                           style={{ 
@@ -676,7 +676,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
 
                 {/* Challenge Rules */}
                 <div 
-                  className="bg-slate-800/50 rounded-xl border border-slate-700/50 p-4 mb-4" 
+                  className="bg-[#111] rounded-xl border border-[#1a1a1a] p-4 mb-4" 
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                 >
                   <div 
@@ -782,7 +782,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   <div className="relative px-2">
                     {/* Track Background */}
                     <div 
-                      className="h-2 rounded-full bg-slate-700 relative cursor-pointer"
+                      className="h-2 rounded-full bg-[#1a1a1a] relative cursor-pointer"
                       style={{ WebkitTapHighlightColor: 'transparent' }}
                       onMouseDown={(e) => {
                         const rect = e.currentTarget.getBoundingClientRect();
@@ -978,7 +978,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
 
             {/* Challenge Details */}
             <div className="space-y-3 mb-6">
-              <div className="bg-slate-800/50 rounded-xl border border-slate-700 p-4">
+              <div className="bg-[#111] rounded-xl border border-[#1a1a1a] p-4">
                 <h3 className="text-white font-bold text-lg mb-3">{currentChallenge.name}</h3>
                 
                 <div className="space-y-2">
@@ -997,7 +997,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                     <span className={`${theme.text} font-bold`}>${(currentChallenge.startingBalance + currentChallenge.target * 2).toLocaleString()}</span>
                   </div>
 
-                  <div className="border-t border-slate-600 pt-2 mt-3">
+                  <div className="border-t border-[#1a1a1a] pt-2 mt-3">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-300 text-sm">Minimum Balance (Phase 1)</span>
                       <span className="text-red-400 font-bold">${(currentChallenge.startingBalance * 0.85).toLocaleString()}</span>
@@ -1009,7 +1009,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                     </div>
                   </div>
 
-                  <div className="border-t border-slate-600 pt-2 mt-3">
+                  <div className="border-t border-[#1a1a1a] pt-2 mt-3">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-300 text-sm">Max Bet Size</span>
                       <span className="text-white font-bold">${currentChallenge.maxBet}</span>
@@ -1040,7 +1040,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   id="gambling-terms"
                   checked={termsAccepted.gambling}
                   onChange={(e) => setTermsAccepted(prev => ({ ...prev, gambling: e.target.checked }))}
-                  className="mt-1 w-4 h-4 bg-slate-800 border-slate-600 rounded"
+                  className="mt-1 w-4 h-4 bg-[#111] border-[#1a1a1a] rounded"
                 />
                 <div className="flex-1">
                   <label htmlFor="gambling-terms" className="text-gray-300 text-sm cursor-pointer">
@@ -1062,7 +1062,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   id="propfirm-terms"
                   checked={termsAccepted.propFirm}
                   onChange={(e) => setTermsAccepted(prev => ({ ...prev, propFirm: e.target.checked }))}
-                  className="mt-1 w-4 h-4 bg-slate-800 border-slate-600 rounded"
+                  className="mt-1 w-4 h-4 bg-[#111] border-[#1a1a1a] rounded"
                 />
                 <div className="flex-1">
                   <label htmlFor="propfirm-terms" className="text-gray-300 text-sm cursor-pointer">
@@ -1100,7 +1100,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
             {/* Close Button */}
             <button
               onClick={() => setShowAccountInfo(false)}
-              className="absolute top-4 right-4 w-8 h-8 bg-gray-900/70 hover:bg-gray-800 rounded-full flex items-center justify-center transition-colors"
+              className="absolute top-4 right-4 w-8 h-8 bg-[#111] hover:bg-[#1a1a1a] rounded-full flex items-center justify-center transition-colors"
             >
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1117,7 +1117,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
 
             {/* Content */}
             <div className="space-y-4 text-gray-300">
-              <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-800">
+              <div className="bg-[#0d0d0d] rounded-xl p-4 border border-[#1a1a1a]">
                 <div className="flex items-start space-x-3">
                   <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1131,7 +1131,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 </div>
               </div>
 
-              <div className="bg-gray-900/50 rounded-xl p-4 border border-gray-800">
+              <div className="bg-[#0d0d0d] rounded-xl p-4 border border-[#1a1a1a]">
                 <div className="flex items-start space-x-3">
                   <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1166,11 +1166,11 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
       {/* Gambling Terms Modal */}
       {showGamblingTerms && (
         <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-900 border-2 border-slate-700 rounded-2xl max-w-md w-full p-6 max-h-[80vh] overflow-y-auto">
+          <div className="bg-[#0d0d0d] border-2 border-[#1a1a1a] rounded-2xl max-w-md w-full p-6 max-h-[80vh] overflow-y-auto">
             {/* Close Button */}
             <button
               onClick={() => setShowGamblingTerms(false)}
-              className="absolute top-4 right-4 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
+              className="absolute top-4 right-4 w-8 h-8 bg-[#111] hover:bg-[#1a1a1a] rounded-full flex items-center justify-center"
             >
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1214,7 +1214,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 <p>Funder is not responsible for any financial losses you may incur. This is a skill-based challenge with inherent risks.</p>
               </div>
 
-              <div className="bg-slate-800/50 border border-slate-600 rounded-lg p-3">
+              <div className="bg-[#111] border border-[#1a1a1a] rounded-lg p-3">
                 <p className="text-xs text-gray-400">
                   If you or someone you know has a gambling problem, please seek help:
                   <br />• National Problem Gambling Helpline: 1-800-522-4700
@@ -1237,11 +1237,11 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
       {/* Prop Firm Terms Modal */}
       {showPropFirmTerms && (
         <div className="absolute inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-900 border-2 border-slate-700 rounded-2xl max-w-md w-full p-6 max-h-[80vh] overflow-y-auto">
+          <div className="bg-[#0d0d0d] border-2 border-[#1a1a1a] rounded-2xl max-w-md w-full p-6 max-h-[80vh] overflow-y-auto">
             {/* Close Button */}
             <button
               onClick={() => setShowPropFirmTerms(false)}
-              className="absolute top-4 right-4 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
+              className="absolute top-4 right-4 w-8 h-8 bg-[#111] hover:bg-[#1a1a1a] rounded-full flex items-center justify-center"
             >
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1317,7 +1317,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
             {/* Close Button */}
             <button
               onClick={() => setShowTargetExplainer(false)}
-              className="absolute top-4 right-4 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
+              className="absolute top-4 right-4 w-8 h-8 bg-[#111] hover:bg-[#1a1a1a] rounded-full flex items-center justify-center"
             >
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1346,11 +1346,11 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   <span>Minimum: ${(currentChallenge.startingBalance * 0.85).toLocaleString()}</span>
                   <span>Target: ${(currentChallenge.startingBalance + currentChallenge.target).toLocaleString()}</span>
                 </div>
-                <div className="w-full bg-slate-700 rounded-full h-4 relative overflow-hidden">
+                <div className="w-full bg-[#1a1a1a] rounded-full h-4 relative overflow-hidden">
                   {/* Danger Zone (Red) */}
                   <div className="absolute left-0 top-0 h-full bg-gradient-to-r from-red-600 to-red-500 w-[15%]"></div>
                   {/* Safe Zone (Gray) */}
-                  <div className="absolute left-[15%] top-0 h-full bg-slate-600 w-[65%]"></div>
+                  <div className="absolute left-[15%] top-0 h-full bg-[#222] w-[65%]"></div>
                   {/* Target Zone (Themed) */}
                   <div className={`absolute right-0 top-0 h-full bg-gradient-to-r ${theme.splitBar} w-[20%]`}></div>
                   {/* Current Position Indicator */}
@@ -1388,11 +1388,11 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   <span>Minimum: ${(currentChallenge.startingBalance + currentChallenge.target * 0.85).toLocaleString()}</span>
                   <span>Target: ${(currentChallenge.startingBalance + currentChallenge.target * 2).toLocaleString()}</span>
                 </div>
-                <div className="w-full bg-slate-700 rounded-full h-4 relative overflow-hidden">
+                <div className="w-full bg-[#1a1a1a] rounded-full h-4 relative overflow-hidden">
                   {/* Danger Zone (Red) */}
                   <div className="absolute left-0 top-0 h-full bg-gradient-to-r from-red-600 to-red-500 w-[15%]"></div>
                   {/* Safe Zone (Gray) */}
-                  <div className="absolute left-[15%] top-0 h-full bg-slate-600 w-[65%]"></div>
+                  <div className="absolute left-[15%] top-0 h-full bg-[#222] w-[65%]"></div>
                   {/* Target Zone (Themed) */}
                   <div className={`absolute right-0 top-0 h-full bg-gradient-to-r ${theme.splitBar} w-[20%]`}></div>
                 </div>

@@ -181,7 +181,7 @@ export default function FindingMatchup({ userId, profile, durationType = '1_day'
         <div className="text-center p-8">
           <div className="text-green-500 text-6xl mb-6 animate-pulse">VS</div>
           <h2 className="text-white text-3xl font-bold mb-4">OPPONENT FOUND!</h2>
-          <div className="bg-gray-900 rounded-xl p-6 mb-6 border border-gray-700">
+          <div className="rounded-xl p-6 mb-6" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }}>
             {opponent.avatar && (
               <img 
                 src={opponent.avatar} 
@@ -190,7 +190,7 @@ export default function FindingMatchup({ userId, profile, durationType = '1_day'
               />
             )}
             {!opponent.avatar && (
-              <div className="w-20 h-20 rounded-full mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-3xl font-bold text-white">
+              <div className="w-20 h-20 rounded-full mx-auto mb-4 bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center text-3xl font-bold text-white">
                 {opponent.username?.charAt(0)?.toUpperCase() || 'O'}
               </div>
             )}
@@ -242,7 +242,7 @@ export default function FindingMatchup({ userId, profile, durationType = '1_day'
 
         <button
           onClick={handleCancel}
-          className="px-6 py-3 bg-gray-800 text-gray-400 rounded-lg hover:bg-gray-700 hover:text-white transition text-sm"
+          className="px-6 py-3 text-gray-400 rounded-lg hover:text-white transition text-sm" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}
         >
           Cancel
         </button>

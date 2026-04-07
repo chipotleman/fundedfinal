@@ -47,12 +47,12 @@ export default function MatchHistoryModal({ isOpen, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-gray-900 border border-gray-700/50 rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
-        <div className="p-5 border-b border-gray-800 flex-shrink-0">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-start justify-center pt-16 sm:pt-20 p-4" onClick={onClose}>
+      <div className="rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }} onClick={e => e.stopPropagation()}>
+        <div className="p-5 flex-shrink-0" style={{ borderBottom: '1px solid #1a1a1a' }}>
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-white">Match History</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+            <button onClick={onClose} className="text-gray-500 hover:text-white transition-colors">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
             </button>
           </div>
@@ -62,12 +62,12 @@ export default function MatchHistoryModal({ isOpen, onClose }) {
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3].map(i => (
-                <div key={i} className="bg-gray-800/50 rounded-xl p-4 animate-pulse">
+                <div key={i} className="rounded-xl p-4 animate-pulse" style={{ backgroundColor: '#111' }}>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gray-700"></div>
+                    <div className="w-10 h-10 rounded-full" style={{ backgroundColor: '#1a1a1a' }}></div>
                     <div className="flex-1">
-                      <div className="h-4 bg-gray-700 rounded w-32 mb-2"></div>
-                      <div className="h-3 bg-gray-700 rounded w-24"></div>
+                      <div className="h-4 rounded w-32 mb-2" style={{ backgroundColor: '#1a1a1a' }}></div>
+                      <div className="h-3 rounded w-24" style={{ backgroundColor: '#1a1a1a' }}></div>
                     </div>
                   </div>
                 </div>
@@ -77,20 +77,20 @@ export default function MatchHistoryModal({ isOpen, onClose }) {
             <div className="text-center py-12">
               <span className="text-4xl block mb-3">🏟️</span>
               <p className="text-gray-400 text-sm">No matches yet</p>
-              <p className="text-gray-500 text-xs mt-1">Start a battle to see your history here</p>
+              <p className="text-gray-600 text-xs mt-1">Start a battle to see your history here</p>
             </div>
           ) : (
             <div className="space-y-2">
               {matches.map(match => {
                 const badge = getResultBadge(match.result);
                 return (
-                  <div key={match.id} className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-3.5 hover:bg-gray-800/50 transition-colors">
+                  <div key={match.id} className="rounded-xl p-3.5 transition-colors" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ backgroundColor: '#1a1a1a' }}>
                         {match.opponent?.avatar ? (
                           <img src={match.opponent.avatar} className="w-full h-full object-cover" alt="" />
                         ) : (
-                          <span className="text-sm font-bold">{match.opponent?.username?.[0]?.toUpperCase() || '?'}</span>
+                          <span className="text-sm font-bold text-white">{match.opponent?.username?.[0]?.toUpperCase() || '?'}</span>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -98,7 +98,7 @@ export default function MatchHistoryModal({ isOpen, onClose }) {
                           <span className="text-white text-sm font-medium truncate">{match.opponent?.username || 'Unknown'}</span>
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${badge.color}`}>{badge.text}</span>
                         </div>
-                        <div className="text-gray-500 text-xs mt-0.5">
+                        <div className="text-gray-600 text-xs mt-0.5">
                           ${match.buyIn} buy-in · {formatDate(match.createdAt)}
                         </div>
                       </div>

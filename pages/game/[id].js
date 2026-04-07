@@ -225,11 +225,11 @@ export default function GameDetail() {
       </Head>
 
       <div className="min-h-screen bg-black text-white pb-32">
-        <div className="sticky top-0 z-50 bg-black border-b border-gray-800">
+        <div className="sticky top-0 z-50 bg-black border-b border-[#1a1a1a]">
           <div className="flex items-center justify-between px-4 py-3">
             <button 
               onClick={() => router.back()}
-              className="p-2 -ml-2 rounded-full hover:bg-gray-800"
+              className="p-2 -ml-2 rounded-full hover:bg-[#111]"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -239,7 +239,7 @@ export default function GameDetail() {
               <div className="font-semibold">{game.sportName}</div>
               <div className="text-xs text-gray-400">Game Details</div>
             </div>
-            <button className="p-2 -mr-2 rounded-full hover:bg-gray-800">
+            <button className="p-2 -mr-2 rounded-full hover:bg-[#111]">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
@@ -247,7 +247,7 @@ export default function GameDetail() {
           </div>
         </div>
 
-        <div className="bg-[#0a0a0a] border-b border-gray-800">
+        <div className="bg-[#0a0a0a] border-b border-[#1a1a1a]">
           <div className="px-4 py-4">
             <div className="flex items-center justify-between mb-4">
               <div className="flex-1">
@@ -297,7 +297,7 @@ export default function GameDetail() {
             </div>
 
             <div className="flex gap-2">
-              <button className="flex-1 bg-[#1a1a1a] rounded-lg py-2.5 px-4 flex items-center justify-center gap-2 border border-gray-700">
+              <button className="flex-1 bg-[#1a1a1a] rounded-lg py-2.5 px-4 flex items-center justify-center gap-2 border border-[#1a1a1a]">
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z"/>
                 </svg>
@@ -305,14 +305,14 @@ export default function GameDetail() {
               </button>
               <button 
                 onClick={() => setShowTracker(!showTracker)}
-                className={`flex-1 rounded-lg py-2.5 px-4 flex items-center justify-center gap-2 border ${showTracker ? 'bg-blue-600 border-blue-500' : 'bg-[#1a1a1a] border-gray-700'}`}
+                className={`flex-1 rounded-lg py-2.5 px-4 flex items-center justify-center gap-2 border ${showTracker ? 'bg-blue-600 border-blue-500' : 'bg-[#1a1a1a] border-[#1a1a1a]'}`}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={showTracker ? "M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L15 15.121M21 21l-6-6" : "M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"} />
                 </svg>
                 <span className="text-sm font-medium">{showTracker ? 'Hide' : 'Show'} Tracker</span>
               </button>
-              <button className="flex-1 bg-[#1a1a1a] rounded-lg py-2.5 px-4 flex items-center justify-center gap-2 border border-gray-700">
+              <button className="flex-1 bg-[#1a1a1a] rounded-lg py-2.5 px-4 flex items-center justify-center gap-2 border border-[#1a1a1a]">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
@@ -324,7 +324,7 @@ export default function GameDetail() {
           {isLive && (
             <div className="px-4 pb-4 space-y-3">
               {/* Live Possession Panel */}
-              <div className="bg-[#1a1a1a] rounded-xl p-4 border border-gray-800">
+              <div className="bg-[#1a1a1a] rounded-xl p-4 border border-[#1a1a1a]">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
@@ -338,7 +338,7 @@ export default function GameDetail() {
                 <div className="space-y-3">
                   {/* Away Team Row */}
                   <div className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 ${
-                    possession?.awayHasPossession ? 'bg-orange-500/20 border border-orange-500/50' : 'bg-gray-800/50'
+                    possession?.awayHasPossession ? 'bg-orange-500/20 border border-orange-500/50' : 'bg-[#111]'
                   }`}>
                     <div className="flex items-center gap-3">
                       {possession?.awayHasPossession && (
@@ -358,7 +358,7 @@ export default function GameDetail() {
                   
                   {/* Home Team Row */}
                   <div className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 ${
-                    possession?.homeHasPossession ? 'bg-orange-500/20 border border-orange-500/50' : 'bg-gray-800/50'
+                    possession?.homeHasPossession ? 'bg-orange-500/20 border border-orange-500/50' : 'bg-[#111]'
                   }`}>
                     <div className="flex items-center gap-3">
                       {possession?.homeHasPossession && (
@@ -378,7 +378,7 @@ export default function GameDetail() {
                 </div>
                 
                 {game.quarter && (
-                  <div className="mt-3 pt-3 border-t border-gray-700 flex items-center justify-center">
+                  <div className="mt-3 pt-3 border-t border-[#1a1a1a] flex items-center justify-center">
                     <span className="text-sm text-gray-400">{game.quarter}</span>
                     {game.displayClock && <span className="text-sm text-gray-400 ml-2">• {game.displayClock}</span>}
                   </div>
@@ -402,7 +402,7 @@ export default function GameDetail() {
           )}
         </div>
 
-        <div className="sticky top-[57px] z-40 bg-black border-b border-gray-800">
+        <div className="sticky top-[57px] z-40 bg-black border-b border-[#1a1a1a]">
           <div className="flex overflow-x-auto scrollbar-hide">
             {betTabs.map((tab) => (
               <button
@@ -422,10 +422,10 @@ export default function GameDetail() {
 
         <div className="px-4 py-4 space-y-4">
           {(activeTab === 'Popular' || activeTab === 'Moneyline') && (
-            <div className="bg-[#111111] rounded-xl border border-gray-800 overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+            <div className="bg-[#111111] rounded-xl border border-[#1a1a1a] overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-[#1a1a1a]">
                 <span className="font-semibold">Moneyline</span>
-                <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">SGP</span>
+                <span className="text-xs text-gray-500 bg-[#111] px-2 py-1 rounded">SGP</span>
               </div>
               <div className="p-3">
                 <div className="text-xs text-gray-500 mb-2">Wager is graded on the result after regulation.</div>
@@ -437,7 +437,7 @@ export default function GameDetail() {
                       !hasLines ? 'opacity-50 cursor-not-allowed' :
                       checkBetInSlip('moneyline', game.awayTeamFull || game.awayTeam)
                         ? 'bg-blue-600 border-2 border-blue-500'
-                        : 'bg-[#1a1a1a] border border-gray-700 hover:border-gray-500'
+                        : 'bg-[#1a1a1a] border border-[#1a1a1a] hover:border-gray-500'
                     }`}
                   >
                     <div className="text-sm text-gray-400 mb-1">{game.awayTeamFull || game.awayTeam}</div>
@@ -452,7 +452,7 @@ export default function GameDetail() {
                       !hasLines ? 'opacity-50 cursor-not-allowed' :
                       checkBetInSlip('moneyline', game.homeTeamFull || game.homeTeam)
                         ? 'bg-blue-600 border-2 border-blue-500'
-                        : 'bg-[#1a1a1a] border border-gray-700 hover:border-gray-500'
+                        : 'bg-[#1a1a1a] border border-[#1a1a1a] hover:border-gray-500'
                     }`}
                   >
                     <div className="text-sm text-gray-400 mb-1">{game.homeTeamFull || game.homeTeam}</div>
@@ -466,10 +466,10 @@ export default function GameDetail() {
           )}
 
           {(activeTab === 'Popular' || activeTab === 'Spread') && (
-            <div className="bg-[#111111] rounded-xl border border-gray-800 overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+            <div className="bg-[#111111] rounded-xl border border-[#1a1a1a] overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-[#1a1a1a]">
                 <span className="font-semibold">Spread</span>
-                <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">SGP</span>
+                <span className="text-xs text-gray-500 bg-[#111] px-2 py-1 rounded">SGP</span>
               </div>
               <div className="p-3">
                 <div className="grid grid-cols-2 gap-2">
@@ -480,7 +480,7 @@ export default function GameDetail() {
                       !hasLines ? 'opacity-50 cursor-not-allowed' :
                       checkBetInSlip('spread', `${game.awayTeamFull || game.awayTeam} ${spread.away.point}`)
                         ? 'bg-blue-600 border-2 border-blue-500'
-                        : 'bg-[#1a1a1a] border border-gray-700 hover:border-gray-500'
+                        : 'bg-[#1a1a1a] border border-[#1a1a1a] hover:border-gray-500'
                     }`}
                   >
                     <div className="text-sm text-gray-400 mb-1">{game.awayTeamFull || game.awayTeam}</div>
@@ -496,7 +496,7 @@ export default function GameDetail() {
                       !hasLines ? 'opacity-50 cursor-not-allowed' :
                       checkBetInSlip('spread', `${game.homeTeamFull || game.homeTeam} ${spread.home.point}`)
                         ? 'bg-blue-600 border-2 border-blue-500'
-                        : 'bg-[#1a1a1a] border border-gray-700 hover:border-gray-500'
+                        : 'bg-[#1a1a1a] border border-[#1a1a1a] hover:border-gray-500'
                     }`}
                   >
                     <div className="text-sm text-gray-400 mb-1">{game.homeTeamFull || game.homeTeam}</div>
@@ -511,10 +511,10 @@ export default function GameDetail() {
           )}
 
           {(activeTab === 'Popular' || activeTab === 'Total') && (
-            <div className="bg-[#111111] rounded-xl border border-gray-800 overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-800">
+            <div className="bg-[#111111] rounded-xl border border-[#1a1a1a] overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-[#1a1a1a]">
                 <span className="font-semibold">Total Points</span>
-                <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">SGP</span>
+                <span className="text-xs text-gray-500 bg-[#111] px-2 py-1 rounded">SGP</span>
               </div>
               <div className="p-3">
                 <div className="grid grid-cols-2 gap-2">
@@ -525,7 +525,7 @@ export default function GameDetail() {
                       !hasLines ? 'opacity-50 cursor-not-allowed' :
                       checkBetInSlip('total', `Over ${total.over.point}`)
                         ? 'bg-blue-600 border-2 border-blue-500'
-                        : 'bg-[#1a1a1a] border border-gray-700 hover:border-gray-500'
+                        : 'bg-[#1a1a1a] border border-[#1a1a1a] hover:border-gray-500'
                     }`}
                   >
                     <div className="text-sm text-gray-400 mb-1">Over</div>
@@ -541,7 +541,7 @@ export default function GameDetail() {
                       !hasLines ? 'opacity-50 cursor-not-allowed' :
                       checkBetInSlip('total', `Under ${total.under.point}`)
                         ? 'bg-blue-600 border-2 border-blue-500'
-                        : 'bg-[#1a1a1a] border border-gray-700 hover:border-gray-500'
+                        : 'bg-[#1a1a1a] border border-[#1a1a1a] hover:border-gray-500'
                     }`}
                   >
                     <div className="text-sm text-gray-400 mb-1">Under</div>
@@ -568,7 +568,7 @@ export default function GameDetail() {
         </div>
 
         {betSlip.length > 0 && (
-          <div className="fixed bottom-0 left-0 right-0 bg-[#111111] border-t border-gray-800 p-4 z-40">
+          <div className="fixed bottom-0 left-0 right-0 bg-[#111111] border-t border-[#1a1a1a] p-4 z-40">
             <button
               onClick={() => router.push(demo ? '/demo-dashboard' : '/dashboard')}
               className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2"

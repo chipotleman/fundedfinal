@@ -224,7 +224,7 @@ export default function FriendsPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1">
-              <div className="flex gap-2 mb-4 bg-gray-900/50 border border-gray-800/50 rounded-xl p-1">
+              <div className="flex gap-2 mb-4 bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-1">
                 <button
                   onClick={() => setActiveTab('friends')}
                   className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${activeTab === 'friends' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
@@ -257,12 +257,12 @@ export default function FriendsPage() {
                     placeholder="Search users..."
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
-                    className="w-full px-4 py-3 bg-gray-900/60 border border-gray-700/50 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50"
+                    className="w-full px-4 py-3 bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50"
                   />
                 </div>
               )}
 
-              <div className="bg-gray-900/40 border border-gray-800/50 rounded-xl overflow-hidden">
+              <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl overflow-hidden">
                 {activeTab === 'friends' && (
                   <>
                     {friends.length === 0 ? (
@@ -273,7 +273,7 @@ export default function FriendsPage() {
                           <div
                             key={friend.id}
                             onClick={() => setSelectedChat(friend)}
-                            className={`flex items-center gap-3 p-4 cursor-pointer transition ${selectedChat?.id === friend.id ? 'bg-blue-600/20' : 'hover:bg-gray-800'}`}
+                            className={`flex items-center gap-3 p-4 cursor-pointer transition ${selectedChat?.id === friend.id ? 'bg-blue-600/20' : 'hover:bg-[#1a1a1a]'}`}
                           >
                             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center overflow-hidden">
                               {friend.avatar ? (
@@ -387,10 +387,10 @@ export default function FriendsPage() {
             </div>
 
             <div className="lg:col-span-2">
-              <div className="bg-gray-900/50 border border-gray-800 rounded-xl h-[600px] flex flex-col">
+              <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl h-[600px] flex flex-col">
                 {selectedChat ? (
                   <>
-                    <div className="flex items-center gap-3 p-4 border-b border-gray-800">
+                    <div className="flex items-center gap-3 p-4 border-b border-[#1a1a1a]">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center overflow-hidden">
                         {selectedChat.avatar ? (
                           <img src={selectedChat.avatar} alt="" className="w-full h-full object-cover" />
@@ -435,14 +435,14 @@ export default function FriendsPage() {
                       )}
                       <div ref={messagesEndRef} />
                     </div>
-                    <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-800">
+                    <form onSubmit={handleSendMessage} className="p-4 border-t border-[#1a1a1a]">
                       <div className="flex gap-2">
                         <input
                           type="text"
                           value={messageInput}
                           onChange={(e) => setMessageInput(e.target.value)}
                           placeholder="Type a message..."
-                          className="flex-1 px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl focus:outline-none focus:border-blue-500"
+                          className="flex-1 px-4 py-3 bg-[#111] border border-[#1a1a1a] rounded-xl focus:outline-none focus:border-blue-500"
                         />
                         <button
                           type="submit"

@@ -96,7 +96,7 @@ const Leaderboard = () => {
       case 1: return 'from-yellow-500/20 to-yellow-600/10 border-yellow-500/40';
       case 2: return 'from-gray-400/20 to-gray-500/10 border-gray-400/40';
       case 3: return 'from-orange-600/20 to-orange-700/10 border-orange-600/40';
-      default: return 'from-transparent to-transparent border-gray-800/50';
+      default: return 'from-transparent to-transparent border-[#1a1a1a]';
     }
   };
 
@@ -115,7 +115,7 @@ const Leaderboard = () => {
           <p className="text-gray-400 text-sm sm:text-base">Top performers across all challenges</p>
         </div>
 
-        <div className="bg-[#111111] rounded-xl p-4 border border-gray-800/50 mb-6">
+        <div className="bg-[#111111] rounded-xl p-4 border border-[#1a1a1a] mb-6">
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between">
             <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
               {['weekly', 'monthly', 'alltime'].map((tf) => (
@@ -125,7 +125,7 @@ const Leaderboard = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
                     timeframe === tf 
                       ? 'bg-green-600 text-white' 
-                      : 'bg-[#1a1a1a] text-gray-400 border border-gray-700 hover:border-gray-600'
+                      : 'bg-[#1a1a1a] text-gray-400 border border-[#1a1a1a] hover:border-[#333]'
                   }`}
                 >
                   {tf === 'weekly' ? 'Weekly' : tf === 'monthly' ? 'Monthly' : 'All Time'}
@@ -141,7 +141,7 @@ const Leaderboard = () => {
                   className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
                     category === cat 
                       ? 'bg-blue-600 text-white' 
-                      : 'bg-[#1a1a1a] text-gray-400 border border-gray-700 hover:border-gray-600'
+                      : 'bg-[#1a1a1a] text-gray-400 border border-[#1a1a1a] hover:border-[#333]'
                   }`}
                 >
                   {cat === 'all' ? 'All Tiers' : cat.charAt(0).toUpperCase() + cat.slice(1)}
@@ -177,8 +177,8 @@ const Leaderboard = () => {
           ))}
         </div>
 
-        <div className="bg-[#111111] rounded-xl border border-gray-800/50 overflow-hidden">
-          <div className="p-4 sm:p-6 border-b border-gray-800/50">
+        <div className="bg-[#111111] rounded-xl border border-[#1a1a1a] overflow-hidden">
+          <div className="p-4 sm:p-6 border-b border-[#1a1a1a]">
             <h2 className="text-lg sm:text-xl font-bold text-white">Full Rankings</h2>
           </div>
 
@@ -271,33 +271,33 @@ const Leaderboard = () => {
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
-          <div className="bg-[#111111] rounded-xl p-4 sm:p-6 border border-gray-800/50 text-center">
+          <div className="bg-[#111111] rounded-xl p-4 sm:p-6 border border-[#1a1a1a] text-center">
             <div className="text-2xl sm:text-3xl font-black text-green-400 mb-1">2,847</div>
             <div className="text-gray-400 text-xs sm:text-sm">Active Bettors</div>
           </div>
-          <div className="bg-[#111111] rounded-xl p-4 sm:p-6 border border-gray-800/50 text-center">
+          <div className="bg-[#111111] rounded-xl p-4 sm:p-6 border border-[#1a1a1a] text-center">
             <div className="text-2xl sm:text-3xl font-black text-green-400 mb-1">$1.2M</div>
             <div className="text-gray-400 text-xs sm:text-sm">Total Profits</div>
           </div>
-          <div className="bg-[#111111] rounded-xl p-4 sm:p-6 border border-gray-800/50 text-center">
+          <div className="bg-[#111111] rounded-xl p-4 sm:p-6 border border-[#1a1a1a] text-center">
             <div className="text-2xl sm:text-3xl font-black text-blue-400 mb-1">68.4%</div>
             <div className="text-gray-400 text-xs sm:text-sm">Avg Win Rate</div>
           </div>
-          <div className="bg-[#111111] rounded-xl p-4 sm:p-6 border border-gray-800/50 text-center">
+          <div className="bg-[#111111] rounded-xl p-4 sm:p-6 border border-[#1a1a1a] text-center">
             <div className="text-2xl sm:text-3xl font-black text-yellow-400 mb-1">24/7</div>
             <div className="text-gray-400 text-xs sm:text-sm">Live Updates</div>
           </div>
         </div>
 
         <div className="mt-8">
-          <div className="bg-[#111111] rounded-xl p-6 sm:p-8 border border-gray-800/50 text-center">
+          <div className="bg-[#111111] rounded-xl p-6 sm:p-8 border border-[#1a1a1a] text-center">
             <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">Ready to Climb the Rankings?</h2>
             <p className="text-gray-400 mb-6 text-sm sm:text-base">Join the competition and prove you belong among the elite bettors.</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link href="/auth" className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition-all text-sm sm:text-base">
                 Start Your Journey
               </Link>
-              <Link href="/" className="bg-[#1a1a1a] hover:bg-[#222] text-white font-bold py-3 px-6 rounded-xl transition-all text-sm sm:text-base border border-gray-700">
+              <Link href="/" className="bg-[#1a1a1a] hover:bg-[#222] text-white font-bold py-3 px-6 rounded-xl transition-all text-sm sm:text-base border border-[#1a1a1a]">
                 View Dashboard
               </Link>
             </div>

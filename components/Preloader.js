@@ -61,7 +61,7 @@ export default function Preloader({ onComplete }) {
 
         {/* Progress bar */}
         <div className="w-full max-w-md mx-auto mb-4">
-          <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+          <div className="h-2 bg-[#111] rounded-full overflow-hidden">
             <div 
               className="h-full bg-gradient-to-r from-green-400 to-blue-500 transition-all duration-300 ease-out"
               style={{ width: `${progress}%` }}

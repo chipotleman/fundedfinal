@@ -70,12 +70,12 @@ export default function SessionSummaryPopup({ isOpen, onClose, sessionData }) {
       className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-start justify-center z-50 p-4 pt-10 overflow-y-auto"
     >
       <div 
-        className="relative bg-black rounded-3xl max-w-md w-full my-auto border border-gray-800/50"
+        className="relative bg-black rounded-3xl max-w-md w-full my-auto border border-[#1a1a1a]/50"
         style={{ WebkitTapHighlightColor: 'transparent' }}
       >
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 z-20 w-8 h-8 bg-slate-800/70 hover:bg-slate-700 rounded-full flex items-center justify-center"
+          className="absolute top-4 right-4 z-20 w-8 h-8 bg-[#111] hover:bg-[#1a1a1a] rounded-full flex items-center justify-center"
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,7 +97,7 @@ export default function SessionSummaryPopup({ isOpen, onClose, sessionData }) {
             <p className="text-gray-400 text-sm">Here's what you accomplished</p>
           </div>
 
-          <div className="bg-slate-800/30 rounded-2xl p-4 mb-4 border border-slate-700/50">
+          <div className="bg-[#111] rounded-2xl p-4 mb-4 border border-[#1a1a1a]">
             <div className="flex items-center justify-between mb-3">
               <span className="text-gray-400 text-sm">Session Duration</span>
               <span className="text-white font-bold text-lg">{formatDuration(duration)}</span>
@@ -116,7 +116,7 @@ export default function SessionSummaryPopup({ isOpen, onClose, sessionData }) {
             )}
 
             {startingBalance !== null && endingBalance !== null && (
-              <div className="border-t border-slate-700/50 pt-3 mt-3 space-y-2">
+              <div className="border-t border-[#1a1a1a] pt-3 mt-3 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-gray-400 text-sm">Starting Balance</span>
                   <span className="text-white font-medium">${startingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
@@ -130,7 +130,7 @@ export default function SessionSummaryPopup({ isOpen, onClose, sessionData }) {
           </div>
 
           <div className="space-y-3 mb-6">
-            <div className="flex justify-between items-center py-3 px-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+            <div className="flex justify-between items-center py-3 px-4 bg-[#111] rounded-xl border border-[#1a1a1a]">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
                   <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
@@ -159,7 +159,7 @@ export default function SessionSummaryPopup({ isOpen, onClose, sessionData }) {
             </div>
 
             {betsPlaced > 0 && (
-              <div className="flex justify-between items-center py-3 px-4 bg-slate-800/50 rounded-xl border border-slate-700/50">
+              <div className="flex justify-between items-center py-3 px-4 bg-[#111] rounded-xl border border-[#1a1a1a]">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
                     <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">

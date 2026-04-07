@@ -188,7 +188,7 @@ export default function OnboardingPopup({ isOpen, onClose }) {
                   className={`p-4 rounded-xl border-2 transition-all ${
                     selectedSports.includes(sport.id)
                       ? 'border-blue-500 bg-blue-500/10'
-                      : 'border-gray-700 hover:border-gray-600'
+                      : 'border-[#1a1a1a] hover:border-[#333]'
                   }`}
                   style={{
                     backgroundColor: selectedSports.includes(sport.id) 
@@ -227,7 +227,7 @@ export default function OnboardingPopup({ isOpen, onClose }) {
                   className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
                     bettingStyle === style.id
                       ? 'border-blue-500 bg-blue-500/10'
-                      : 'border-gray-700 hover:border-gray-600'
+                      : 'border-[#1a1a1a] hover:border-[#333]'
                   }`}
                   style={{
                     backgroundColor: bettingStyle === style.id 
@@ -266,7 +266,7 @@ export default function OnboardingPopup({ isOpen, onClose }) {
                   className={`w-full p-4 rounded-xl border-2 transition-all text-left ${
                     experienceLevel === level.id
                       ? 'border-blue-500 bg-blue-500/10'
-                      : 'border-gray-700 hover:border-gray-600'
+                      : 'border-[#1a1a1a] hover:border-[#333]'
                   }`}
                   style={{
                     backgroundColor: experienceLevel === level.id 

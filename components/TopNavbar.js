@@ -611,9 +611,9 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                         />
                         
                         {/* Menu */}
-                        <div className="absolute right-0 mt-2 w-56 bg-[#0a0a0a] border border-gray-800/50 rounded-xl shadow-2xl z-50 overflow-hidden">
+                        <div className="absolute right-0 mt-2 w-56 bg-[#0a0a0a] border border-[#1a1a1a]/50 rounded-xl shadow-2xl z-50 overflow-hidden">
                           {/* User Info */}
-                          <div className="px-4 py-3 border-b border-gray-800/50 bg-[#111111]">
+                          <div className="px-4 py-3 border-b border-[#1a1a1a]/50 bg-[#111111]">
                             <p className="text-sm text-gray-500">Signed in as</p>
                             <p className="text-sm font-semibold text-white truncate">{currentUser?.email}</p>
                           </div>
@@ -658,7 +658,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                           </div>
 
                           {/* Sign Out */}
-                          <div className="border-t border-gray-800/50">
+                          <div className="border-t border-[#1a1a1a]/50">
                             <button
                               onClick={() => {
                                 setShowUserMenu(false);
@@ -680,7 +680,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                   <>
                     <button
                       onClick={() => window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signin' } }))}
-                      className="bg-[#111111] hover:bg-[#1a1a1a] text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm border border-gray-700 hover:border-gray-600"
+                      className="bg-[#111111] hover:bg-[#1a1a1a] text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 text-sm border border-[#1a1a1a] hover:border-[#333]"
                       style={{ height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                       SIGN IN

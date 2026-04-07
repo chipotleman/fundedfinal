@@ -317,12 +317,12 @@ export default function AuthPage() {
                   }`}
                   onClick={() => setSelectedChallenge(challenge)}
                 >
-                  <div className={`relative bg-slate-800/50 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-6 sm:p-8 border-2 transition-all duration-300 ${
+                  <div className={`relative bg-[#111] backdrop-blur-lg rounded-2xl sm:rounded-3xl p-6 sm:p-8 border-2 transition-all duration-300 ${
                     challenge.popular
                       ? 'border-green-400 shadow-2xl shadow-green-400/20'
                       : selectedChallenge?.id === challenge.id
                       ? 'border-blue-400 shadow-2xl shadow-blue-400/20'
-                      : 'border-slate-700 hover:border-slate-600 group-hover:shadow-xl'
+                      : 'border-[#1a1a1a] hover:border-[#1a1a1a] group-hover:shadow-xl'
                   }`}>
 
                     {challenge.popular && (
@@ -348,15 +348,15 @@ export default function AuthPage() {
                       <p className="text-gray-400 mb-6 sm:mb-8 text-base sm:text-lg">{challenge.description}</p>
 
                       <div className="space-y-4 mb-6 sm:mb-8">
-                        <div className="flex justify-between items-center py-3 px-4 bg-slate-700/50 rounded-xl">
+                        <div className="flex justify-between items-center py-3 px-4 bg-[#1a1a1a] rounded-xl">
                           <span className="text-gray-300 font-medium text-sm sm:text-base">Starting Balance</span>
                           <span className="text-green-400 font-bold text-base sm:text-lg">${challenge.startingBalance.toLocaleString()}</span>
                         </div>
-                        <div className="flex justify-between items-center py-3 px-4 bg-slate-700/50 rounded-xl">
+                        <div className="flex justify-between items-center py-3 px-4 bg-[#1a1a1a] rounded-xl">
                           <span className="text-gray-300 font-medium text-sm sm:text-base">Profit Target</span>
                           <span className="text-blue-400 font-bold text-base sm:text-lg">${challenge.target.toLocaleString()}</span>
                         </div>
-                        <div className="flex justify-between items-center py-3 px-4 bg-slate-700/50 rounded-xl">
+                        <div className="flex justify-between items-center py-3 px-4 bg-[#1a1a1a] rounded-xl">
                           <span className="text-gray-300 font-medium text-sm sm:text-base">Max Bet Size</span>
                           <span className="text-white font-bold text-base sm:text-lg">${challenge.maxBet}</span>
                         </div>
@@ -421,7 +421,7 @@ export default function AuthPage() {
             </div>
 
             {/* Toggle Tabs */}
-            <div className="flex bg-slate-800/50 rounded-xl p-1 mb-6">
+            <div className="flex bg-[#111] rounded-xl p-1 mb-6">
               <button
                 type="button"
                 onClick={() => {
@@ -471,7 +471,7 @@ export default function AuthPage() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all duration-200"
+                  className="w-full bg-[#111] border border-[#1a1a1a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all duration-200"
                   placeholder="Enter your email"
                   required
                 />
@@ -486,7 +486,7 @@ export default function AuthPage() {
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 pr-12 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all duration-200"
+                    className="w-full bg-[#111] border border-[#1a1a1a] rounded-xl px-4 py-3 pr-12 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all duration-200"
                     placeholder="Enter your password"
                     minLength="6"
                     required
@@ -524,7 +524,7 @@ export default function AuthPage() {
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all duration-200"
+                    className="w-full bg-[#111] border border-[#1a1a1a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all duration-200"
                     placeholder="Confirm your password"
                     minLength="6"
                     required
@@ -544,7 +544,7 @@ export default function AuthPage() {
                   id="rememberMe"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 bg-slate-700 border border-slate-600 rounded focus:ring-2 focus:ring-blue-500 text-green-500"
+                  className="w-4 h-4 bg-[#1a1a1a] border border-[#1a1a1a] rounded focus:ring-2 focus:ring-blue-500 text-green-500"
                 />
                 <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-400 cursor-pointer">
                   Remember my email
@@ -567,7 +567,7 @@ export default function AuthPage() {
               </button>
             </form>
 
-            <div className="mt-6 pt-4 border-t border-slate-700/50 text-center">
+            <div className="mt-6 pt-4 border-t border-[#1a1a1a] text-center">
               <Link
                 href="/"
                 className="text-gray-500 hover:text-gray-400 font-medium transition-colors text-sm"

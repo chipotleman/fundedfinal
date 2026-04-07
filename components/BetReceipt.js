@@ -223,7 +223,7 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                       const gameTime = formatGameTime(leg.gameStart);
                       
                       return (
-                        <div key={index} className="bg-slate-800/50 rounded p-2">
+                        <div key={index} className="bg-[#111] rounded p-2">
                           <div className="flex justify-between items-start mb-1">
                             <div className="flex-1">
                               <div className="text-white font-bold text-xs">{leg.selection}</div>
@@ -281,7 +281,7 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                     </div>
                   </div>
 
-                  <div className="mt-1 bg-slate-800/50 rounded p-2">
+                  <div className="mt-1 bg-[#111] rounded p-2">
                     <div className="text-gray-400 text-[10px] uppercase mb-1">Game</div>
                     {showLiveDisplay ? (
                       <div className="space-y-1">
@@ -364,7 +364,7 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
             <div className="mt-3 flex gap-2">
               <button
                 onClick={handleClose}
-                className="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-3 rounded-lg text-sm transition-colors"
+                className="flex-1 bg-[#1a1a1a] hover:bg-[#222] text-white font-bold py-2 px-3 rounded-lg text-sm transition-colors"
               >
                 Close
               </button>

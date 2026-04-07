@@ -104,9 +104,9 @@ export default function LiveFeed() {
     
     return (
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div className="bg-slate-800 rounded-2xl border border-slate-700 max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="bg-[#0d0d0d] rounded-2xl border border-[#1a1a1a] max-w-md w-full max-h-[90vh] overflow-y-auto">
           {/* Header */}
-          <div className="p-6 border-b border-slate-700">
+          <div className="p-6 border-b border-[#1a1a1a]">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-blue-500 rounded-full flex items-center justify-center text-2xl">
@@ -135,19 +135,19 @@ export default function LiveFeed() {
           {/* Stats */}
           <div className="p-6">
             <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-slate-700/50 rounded-xl p-4 text-center">
+              <div className="bg-[#1a1a1a] rounded-xl p-4 text-center">
                 <div className="text-2xl font-bold text-green-400">${userData.totalProfit.toLocaleString()}</div>
                 <div className="text-gray-300 text-sm">Total Profit</div>
               </div>
-              <div className="bg-slate-700/50 rounded-xl p-4 text-center">
+              <div className="bg-[#1a1a1a] rounded-xl p-4 text-center">
                 <div className="text-2xl font-bold text-blue-400">{userData.winRate}%</div>
                 <div className="text-gray-300 text-sm">Win Rate</div>
               </div>
-              <div className="bg-slate-700/50 rounded-xl p-4 text-center">
+              <div className="bg-[#1a1a1a] rounded-xl p-4 text-center">
                 <div className="text-2xl font-bold text-purple-400">{userData.currentStreak}</div>
                 <div className="text-gray-300 text-sm">Win Streak</div>
               </div>
-              <div className="bg-slate-700/50 rounded-xl p-4 text-center">
+              <div className="bg-[#1a1a1a] rounded-xl p-4 text-center">
                 <div className="text-2xl font-bold text-orange-400">Phase {userData.challengePhase}</div>
                 <div className="text-gray-300 text-sm">Challenge</div>
               </div>
@@ -158,7 +158,7 @@ export default function LiveFeed() {
               <h4 className="text-white font-semibold mb-3">Recent Bets</h4>
               <div className="space-y-2">
                 {userData.recentBets.map((bet, index) => (
-                  <div key={index} className="bg-slate-700/30 rounded-lg p-3 flex justify-between items-center">
+                  <div key={index} className="bg-[#1a1a1a] rounded-lg p-3 flex justify-between items-center">
                     <div>
                       <div className="text-white text-sm font-medium">{bet.game}</div>
                       <div className="text-gray-300 text-xs">{bet.bet}</div>
@@ -186,9 +186,9 @@ export default function LiveFeed() {
 
   return (
     <>
-      <div className="bg-slate-800/50 backdrop-blur-lg rounded-2xl border border-slate-700 h-96 flex flex-col">
+      <div className="bg-[#111] backdrop-blur-lg rounded-2xl border border-[#1a1a1a] h-96 flex flex-col">
         {/* Header */}
-        <div className="p-4 border-b border-slate-700 flex items-center space-x-3">
+        <div className="p-4 border-b border-[#1a1a1a] flex items-center space-x-3">
           <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
           <h3 className="text-white font-bold">Live Wins</h3>
           <span className="text-gray-400 text-sm">Real-time updates</span>
@@ -199,7 +199,7 @@ export default function LiveFeed() {
           {wins.map((win) => (
             <div
               key={win.id}
-              className="bg-slate-700/30 hover:bg-slate-700/50 rounded-lg p-3 border-l-4 border-green-400 transition-all duration-300 animate-pulse cursor-pointer"
+              className="bg-[#1a1a1a] hover:bg-[#1a1a1a] rounded-lg p-3 border-l-4 border-green-400 transition-all duration-300 animate-pulse cursor-pointer"
               onClick={() => setSelectedUser(win)}
             >
               <div className="flex items-center justify-between">
@@ -231,7 +231,7 @@ export default function LiveFeed() {
         </div>
 
         {/* Footer */}
-        <div className="p-3 border-t border-slate-700 text-center">
+        <div className="p-3 border-t border-[#1a1a1a] text-center">
           <div className="text-gray-400 text-xs">
             {wins.length} wins in the last hour • Click any user to view profile
           </div>
