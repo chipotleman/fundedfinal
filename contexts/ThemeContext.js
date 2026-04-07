@@ -1,17 +1,23 @@
-import { createContext, useContext, useState, useLayoutEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useLayoutEffect } from 'react';
 
 const ThemeContext = createContext();
 
-function getInitialTheme() {
-  if (typeof window === 'undefined') return true;
-  const saved = window.localStorage.getItem('piks-theme');
-  return saved ? saved === 'dark' : true;
-}
+const useIsomorphicLayoutEffect = typeof window !== 'undefined' ? useLayoutEffect : useEffect;
 
 export function ThemeProvider({ children }) {
-  const [isDarkMode, setIsDarkMode] = useState(getInitialTheme);
+  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
+    const saved = localStorage.getItem('piks-theme');
+    if (saved === 'light') {
+      setIsDarkMode(false);
+    }
+    setMounted(true);
+  }, []);
+
+  useIsomorphicLayoutEffect(() => {
+    if (!mounted) return;
     localStorage.setItem('piks-theme', isDarkMode ? 'dark' : 'light');
     if (isDarkMode) {
       document.documentElement.classList.add('dark');
@@ -20,7 +26,7 @@ export function ThemeProvider({ children }) {
       document.documentElement.classList.add('light');
       document.documentElement.classList.remove('dark');
     }
-  }, [isDarkMode]);
+  }, [isDarkMode, mounted]);
 
   const toggleTheme = () => {
     setIsDarkMode(!isDarkMode);
