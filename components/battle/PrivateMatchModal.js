@@ -136,8 +136,8 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-gray-900 border border-gray-700/50 rounded-2xl max-w-md w-full overflow-hidden" onClick={e => e.stopPropagation()}>
-        <div className="p-5 border-b border-gray-800">
+      <div className="rounded-2xl max-w-md w-full overflow-hidden" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }} onClick={e => e.stopPropagation()}>
+        <div className="p-5" style={{ borderBottom: '1px solid #1a1a1a' }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {mode !== 'choose' && (
@@ -160,7 +160,8 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
             <div className="space-y-3">
               <button
                 onClick={() => setMode('create')}
-                className="w-full bg-gray-800/50 border border-gray-700/50 hover:border-orange-500/40 rounded-xl p-5 text-left transition-all group"
+                className="w-full rounded-xl p-5 text-left transition-all group"
+                style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}
               >
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-orange-500/20 rounded-xl flex items-center justify-center group-hover:bg-orange-500/30 transition-colors">
@@ -174,7 +175,8 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
               </button>
               <button
                 onClick={() => setMode('join')}
-                className="w-full bg-gray-800/50 border border-gray-700/50 hover:border-green-500/40 rounded-xl p-5 text-left transition-all group"
+                className="w-full rounded-xl p-5 text-left transition-all group"
+                style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}
               >
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center group-hover:bg-green-500/30 transition-colors">
@@ -198,7 +200,8 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
                     <button
                       key={amount}
                       onClick={() => setBuyIn(amount)}
-                      className={`py-2 rounded-xl text-sm font-bold transition-all ${buyIn === amount ? 'bg-orange-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
+                      className={`py-2 rounded-xl text-sm font-bold transition-all ${buyIn === amount ? 'bg-orange-600 text-white' : 'text-gray-300'}`}
+                      style={buyIn !== amount ? { backgroundColor: '#111', border: '1px solid #1a1a1a' } : {}}
                     >
                       ${amount}
                     </button>
@@ -212,7 +215,8 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
                     <button
                       key={opt.value}
                       onClick={() => setDuration(opt.value)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${duration === opt.value ? 'bg-orange-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${duration === opt.value ? 'bg-orange-600 text-white' : 'text-gray-300'}`}
+                      style={duration !== opt.value ? { backgroundColor: '#111', border: '1px solid #1a1a1a' } : {}}
                     >
                       {opt.label}
                     </button>
@@ -232,12 +236,13 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
           {mode === 'created' && (
             <div className="text-center py-4">
               <p className="text-gray-400 text-sm mb-4">Share this code with your opponent</p>
-              <div className="bg-gray-800 rounded-xl p-6 mb-4">
+              <div className="rounded-xl p-6 mb-4" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
                 <div className="text-4xl font-mono font-bold text-white tracking-[0.3em]">{generatedCode}</div>
               </div>
               <button
                 onClick={copyCode}
-                className={`w-full py-3 rounded-xl font-bold transition-all ${copied ? 'bg-green-600 text-white' : 'bg-gray-800 text-white hover:bg-gray-700'}`}
+                className={`w-full py-3 rounded-xl font-bold transition-all ${copied ? 'bg-green-600 text-white' : 'text-white'}`}
+                style={!copied ? { backgroundColor: '#111', border: '1px solid #1a1a1a' } : {}}
               >
                 {copied ? 'Copied!' : 'Copy Code'}
               </button>
@@ -285,7 +290,8 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
                   type="text"
                   value={joinCode}
                   onChange={e => setJoinCode(e.target.value.toUpperCase().slice(0, 6))}
-                  className="w-full bg-gray-800 border border-gray-700/50 rounded-xl px-4 py-4 text-center text-2xl font-mono font-bold text-white tracking-[0.3em] placeholder-gray-600 focus:outline-none focus:border-green-500/50"
+                  className="w-full rounded-xl px-4 py-4 text-center font-mono font-bold text-white tracking-[0.3em] placeholder-gray-600 focus:outline-none focus:border-green-500/50"
+                  style={{ backgroundColor: '#111', border: '1px solid #1a1a1a', fontSize: '24px' }}
                   placeholder="______"
                   maxLength={6}
                 />

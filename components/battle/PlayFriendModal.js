@@ -140,8 +140,8 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-gray-900 border border-gray-700/50 rounded-2xl max-w-md w-full max-h-[85vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
-        <div className="p-5 border-b border-gray-800 flex-shrink-0">
+      <div className="rounded-2xl max-w-md w-full max-h-[85vh] overflow-hidden flex flex-col" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }} onClick={e => e.stopPropagation()}>
+        <div className="p-5 flex-shrink-0" style={{ borderBottom: '1px solid #1a1a1a' }}>
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-white">Play a Friend</h2>
             <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
@@ -159,7 +159,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
             <p className="text-gray-400 text-sm mt-1">Waiting for {selectedFriend?.username} to accept</p>
             {inviteCountdown > 0 ? (
               <div className="mt-4">
-                <div className="w-full bg-gray-800 rounded-full h-1.5 mb-2">
+                <div className="w-full rounded-full h-1.5 mb-2" style={{ backgroundColor: '#1a1a1a' }}>
                   <div
                     className="bg-blue-500 h-1.5 rounded-full transition-all duration-1000"
                     style={{ width: `${(inviteCountdown / (INVITE_EXPIRY_HOURS * 3600)) * 100}%` }}
@@ -194,7 +194,8 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                 type="text"
                 value={searchQuery}
                 onChange={e => handleSearch(e.target.value)}
-                className="w-full bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-2.5 pl-10 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-blue-500/50"
+                className="w-full rounded-xl px-4 py-2.5 pl-10 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500/50"
+                style={{ backgroundColor: '#111', border: '1px solid #1a1a1a', fontSize: '16px' }}
                 placeholder="Search friends or find users..."
               />
               <svg className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
@@ -213,11 +214,12 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                     <button
                       key={user.id}
                       onClick={() => setSelectedFriend(user)}
-                      className={`w-full flex items-center gap-2.5 bg-gray-800/30 rounded-lg px-3 py-2 transition-all ${
+                      className={`w-full flex items-center gap-2.5 rounded-lg px-3 py-2 transition-all ${
                         selectedFriend?.id === user.id
                           ? 'bg-blue-600/20 border border-blue-500/40'
-                          : 'border border-transparent hover:bg-gray-800/60'
+                          : 'border border-transparent'
                       }`}
+                      style={selectedFriend?.id !== user.id ? { backgroundColor: '#111' } : {}}
                     >
                       <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
                         {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-sm">{user.username?.[0]?.toUpperCase()}</span>}
@@ -237,7 +239,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                 <label className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 block">Other Users</label>
                 <div className="space-y-1.5">
                   {nonFriendResults.map(user => (
-                    <div key={user.id} className="bg-gray-800/30 rounded-lg px-3 py-2.5 border border-gray-700/30">
+                    <div key={user.id} className="rounded-lg px-3 py-2.5" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
                           <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden">
@@ -257,7 +259,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                         </button>
                       </div>
                       {!user.requestSent && (
-                        <div className="mt-2 pt-2 border-t border-gray-700/30">
+                        <div className="mt-2 pt-2" style={{ borderTop: '1px solid #1a1a1a' }}>
                           <p className="text-gray-500 text-xs mb-1.5">Want to play now without adding?</p>
                           <button
                             onClick={handleSwitchToPrivate}
@@ -269,7 +271,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                         </div>
                       )}
                       {user.requestSent && (
-                        <div className="mt-2 pt-2 border-t border-gray-700/30">
+                        <div className="mt-2 pt-2" style={{ borderTop: '1px solid #1a1a1a' }}>
                           <p className="text-gray-500 text-xs">Friend request sent! Once accepted, you can challenge them. Or use a Private Match code instead:</p>
                           <button
                             onClick={handleSwitchToPrivate}
@@ -317,8 +319,9 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                       className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
                         selectedFriend?.id === friend.id
                           ? 'bg-blue-600/20 border border-blue-500/40'
-                          : 'bg-gray-800/30 border border-transparent hover:bg-gray-800/60'
+                          : 'border border-transparent'
                       }`}
+                      style={selectedFriend?.id !== friend.id ? { backgroundColor: '#111' } : {}}
                     >
                       <div className="w-9 h-9 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
                         {friend.avatar ? <img src={friend.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-sm">{friend.username?.[0]?.toUpperCase()}</span>}
@@ -345,7 +348,8 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                       <button
                         key={amount}
                         onClick={() => setBuyIn(amount)}
-                        className={`py-2 rounded-xl text-sm font-bold transition-all ${buyIn === amount ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
+                        className={`py-2 rounded-xl text-sm font-bold transition-all ${buyIn === amount ? 'bg-blue-600 text-white' : 'text-gray-300'}`}
+                        style={buyIn !== amount ? { backgroundColor: '#111', border: '1px solid #1a1a1a' } : {}}
                       >
                         ${amount}
                       </button>
@@ -360,7 +364,8 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                       <button
                         key={opt.value}
                         onClick={() => setDuration(opt.value)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${duration === opt.value ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${duration === opt.value ? 'bg-blue-600 text-white' : 'text-gray-300'}`}
+                        style={duration !== opt.value ? { backgroundColor: '#111', border: '1px solid #1a1a1a' } : {}}
                       >
                         {opt.label}
                       </button>

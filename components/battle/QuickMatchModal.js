@@ -274,10 +274,10 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
         }
       `}</style>
       <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
-        <div className="bg-gray-900 border border-gray-700/50 rounded-2xl max-w-md w-full overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="rounded-2xl max-w-md w-full overflow-hidden" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }} onClick={e => e.stopPropagation()}>
           {step === 'config' && (
             <>
-              <div className="p-5 border-b border-gray-800">
+              <div className="p-5" style={{ borderBottom: '1px solid #1a1a1a' }}>
                 <div className="flex items-center justify-between">
                   <h2 className="text-lg font-bold text-white">Quick Match</h2>
                   <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
@@ -300,8 +300,9 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                         className={`py-2.5 rounded-xl text-sm font-bold transition-all ${
                           buyIn === amount
                             ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
-                            : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                            : 'text-gray-300'
                         }`}
+                        style={buyIn !== amount ? { backgroundColor: '#111', border: '1px solid #1a1a1a' } : {}}
                       >
                         ${amount}
                       </button>
@@ -319,8 +320,9 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                         className={`w-full flex items-center px-3 py-2.5 rounded-xl text-sm transition-all ${
                           duration === opt.value
                             ? 'bg-blue-600/20 border border-blue-500/40 text-white'
-                            : 'bg-gray-800/50 border border-transparent text-gray-300 hover:bg-gray-800'
+                            : 'text-gray-300'
                         }`}
+                        style={duration !== opt.value ? { backgroundColor: '#111', border: '1px solid transparent' } : {}}
                       >
                         <span className="mr-2">{opt.icon}</span>
                         <span className="font-medium">{opt.label}</span>
@@ -330,7 +332,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                   </div>
                 </div>
 
-                <div className="bg-gray-800/50 rounded-xl p-3 flex items-center justify-between">
+                <div className="rounded-xl p-3 flex items-center justify-between" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
                   <div>
                     <div className="text-gray-400 text-xs">Prize Pool</div>
                     <div className="text-white font-bold">${potSize}</div>
@@ -448,7 +450,8 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
               </p>
               <button
                 onClick={cancelSearch}
-                className="px-6 py-2.5 bg-gray-800 text-gray-300 rounded-xl hover:bg-gray-700 transition-colors text-sm font-medium"
+                className="px-6 py-2.5 text-gray-300 rounded-xl transition-colors text-sm font-medium"
+                style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}
               >
                 Cancel
               </button>
