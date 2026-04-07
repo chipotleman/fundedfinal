@@ -586,11 +586,20 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
         </div>
         {sortedBattles.length === 0 ? (
           <div
-            className="rounded-xl p-4 cursor-pointer"
+            className="rounded-xl p-4 cursor-pointer group transition-all duration-300"
             onClick={() => router.push('/battle')}
             style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }}
           >
-            <p className="text-gray-500 text-xs text-center">No live battles right now</p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20 flex-shrink-0 group-hover:bg-blue-500/20 transition-colors">
+                <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white text-sm font-medium">Start a 1v1 Battle</p>
+                <p className="text-gray-500 text-[11px]">Challenge an opponent</p>
+              </div>
+              <svg className="w-4 h-4 text-gray-500 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            </div>
           </div>
         ) : (
           <div className="flex gap-3 items-stretch overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
@@ -615,8 +624,27 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
       </div>
 
       {sortedBattles.length === 0 ? (
-        <div className="rounded-xl p-6 text-center" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }}>
-          <p className="text-gray-500 text-sm">No live battles right now</p>
+        <div
+          className="rounded-xl p-6 text-center cursor-pointer group transition-all duration-300"
+          style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }}
+          onClick={() => {
+            const startBtn = document.querySelector('.battle-start-btn');
+            if (startBtn) startBtn.click();
+          }}
+        >
+          <div className="flex flex-col items-center gap-3">
+            <div className="w-14 h-14 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:bg-blue-500/20 transition-colors">
+              <svg className="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+            </div>
+            <div>
+              <p className="text-white font-semibold text-sm mb-0.5">No live battles yet</p>
+              <p className="text-gray-500 text-xs">Tap to start one and be the first</p>
+            </div>
+            <div className="flex items-center gap-1.5 text-blue-400 text-xs font-medium group-hover:gap-2.5 transition-all">
+              <span>Start a Battle</span>
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="space-y-3">
