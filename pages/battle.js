@@ -208,7 +208,7 @@ export default function BattlePage() {
 
   const requireAuth = (callback) => {
     if (isGuest) {
-      window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signup' } }));
+      window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signin' } }));
       return;
     }
     callback();
