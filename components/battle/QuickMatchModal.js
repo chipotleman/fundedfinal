@@ -1,12 +1,38 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 
-const DURATION_OPTIONS = [
-  { label: '30 Min', value: 30, minutes: 30, icon: '⚡' },
-  { label: '1 Hour', value: 1, minutes: 60, icon: '🔥' },
-  { label: '1 Day', value: 24, minutes: 1440, icon: '☀️', recommended: true },
-  { label: '3 Days', value: 72, minutes: 4320, icon: '📅' },
-  { label: '1 Week', value: 168, minutes: 10080, icon: '🗓️' },
+const GAME_MODE_OPTIONS = [
+  {
+    id: 'rush',
+    label: 'RUSH',
+    icon: '⚡',
+    description: 'Pick 6 props from a live game',
+    coins: 10000,
+    durationMinutes: 180,
+    durationType: 'rush',
+    color: '#f59e0b',
+  },
+  {
+    id: 'original',
+    label: 'ORIGINAL',
+    icon: '🏆',
+    description: 'Highest balance after all games end wins',
+    coins: 10000,
+    durationMinutes: 1440,
+    durationType: 'original',
+    recommended: true,
+    color: '#3b82f6',
+  },
+  {
+    id: 'tournament',
+    label: 'TOURNAMENT',
+    icon: '👑',
+    description: '3-day battle with a massive bankroll',
+    coins: 100000,
+    durationMinutes: 4320,
+    durationType: 'tournament',
+    color: '#10b981',
+  },
 ];
 
 const BUY_IN_OPTIONS = [5, 10, 25, 50, 100];
@@ -25,7 +51,7 @@ const FAKE_RECORDS = [
 export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound }) {
   const [step, setStep] = useState('config');
   const [buyIn, setBuyIn] = useState(10);
-  const [duration, setDuration] = useState(24);
+  const [gameMode, setGameMode] = useState('original');
   const [searchTime, setSearchTime] = useState(0);
   const [error, setError] = useState('');
   const [avatars, setAvatars] = useState([]);
@@ -107,7 +133,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
       const res = await fetch('/api/battles/matchmaking', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ buyIn, duration }),
+        body: JSON.stringify({ buyIn, gameMode }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -311,24 +337,35 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                 </div>
 
                 <div>
-                  <label className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 block">Duration</label>
-                  <div className="space-y-1.5">
-                    {DURATION_OPTIONS.map(opt => (
-                      <button
-                        key={opt.value}
-                        onClick={() => setDuration(opt.value)}
-                        className={`w-full flex items-center px-3 py-2.5 rounded-xl text-sm transition-all ${
-                          duration === opt.value
-                            ? 'bg-blue-600/20 border border-blue-500/40 text-white'
-                            : 'text-gray-300'
-                        }`}
-                        style={duration !== opt.value ? { backgroundColor: '#111', border: '1px solid transparent' } : {}}
-                      >
-                        <span className="mr-2">{opt.icon}</span>
-                        <span className="font-medium">{opt.label}</span>
-                        {opt.recommended && <span className="ml-auto text-[10px] bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full">POPULAR</span>}
-                      </button>
-                    ))}
+                  <label className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 block">Game Mode</label>
+                  <div className="space-y-2">
+                    {GAME_MODE_OPTIONS.map(mode => {
+                      const selected = gameMode === mode.id;
+                      return (
+                        <button
+                          key={mode.id}
+                          onClick={() => setGameMode(mode.id)}
+                          className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-left transition-all"
+                          style={{
+                            backgroundColor: selected ? `${mode.color}15` : '#111',
+                            border: `1px solid ${selected ? `${mode.color}60` : 'transparent'}`,
+                          }}
+                        >
+                          <span className="text-xl flex-shrink-0">{mode.icon}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-sm text-white tracking-wide">{mode.label}</span>
+                              {mode.recommended && <span className="text-[9px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full font-semibold">POPULAR</span>}
+                            </div>
+                            <p className="text-gray-500 text-[11px] mt-0.5">{mode.description}</p>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <div className="text-white font-bold text-xs">{mode.coins.toLocaleString()}</div>
+                            <div className="text-gray-500 text-[10px]">coins</div>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -345,7 +382,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
 
                 <button
                   onClick={startSearch}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold py-3.5 rounded-xl hover:from-blue-500 hover:to-blue-400 transition-all shadow-lg shadow-blue-500/20"
+                  className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl transition-all shadow-lg shadow-blue-600/25"
                 >
                   Find Opponent
                 </button>
@@ -441,7 +478,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
               </div>
 
               <h3 className="text-xl font-bold text-white mb-2">Scanning Opponents</h3>
-              <p className="text-gray-400 text-sm mb-1">${buyIn} Buy-In</p>
+              <p className="text-gray-400 text-sm mb-1">${buyIn} Buy-In · {GAME_MODE_OPTIONS.find(m => m.id === gameMode)?.label || 'Original'}</p>
               <p
                 className="text-cyan-400 text-sm font-mono mb-6"
                 style={{ animation: 'qm-timer-pulse 1s ease-in-out infinite' }}

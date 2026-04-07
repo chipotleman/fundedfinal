@@ -15,10 +15,18 @@ export default async function handler(req, res) {
   }
 
   const userId = session.user.id;
-  const { buyIn, duration } = req.body;
+  const { buyIn, gameMode, duration } = req.body;
+
+  const GAME_MODES = {
+    rush: { durationMinutes: 180, durationType: 'rush', coins: 10000 },
+    original: { durationMinutes: 1440, durationType: 'original', coins: 10000 },
+    tournament: { durationMinutes: 4320, durationType: 'tournament', coins: 100000 },
+  };
 
   const parsedBuyIn = parseFloat(buyIn) || 100;
-  const parsedDuration = parseInt(duration) || 24;
+  const validGameMode = GAME_MODES[gameMode] ? gameMode : 'original';
+  const mode = GAME_MODES[validGameMode];
+  const parsedDuration = Math.round(mode.durationMinutes / 60);
 
   try {
     await db
@@ -37,7 +45,7 @@ export default async function handler(req, res) {
         and(
           ne(matchmakingQueue.userId, userId),
           eq(matchmakingQueue.buyIn, parsedBuyIn.toString()),
-          eq(matchmakingQueue.duration, parsedDuration),
+          eq(matchmakingQueue.gameMode, validGameMode),
           eq(matchmakingQueue.status, 'waiting')
         )
       )
@@ -54,7 +62,8 @@ export default async function handler(req, res) {
       const potSize = parsedBuyIn * 2;
       const platformFee = potSize * 0.1;
       const winnerPayout = potSize - platformFee;
-      const durationMinutes = parsedDuration * 60;
+      const durationMinutes = mode.durationMinutes;
+      const startingCoins = mode.coins;
       const now = new Date();
       const endsAt = new Date(Date.now() + durationMinutes * 60 * 1000);
 
@@ -62,16 +71,16 @@ export default async function handler(req, res) {
         .insert(matchups)
         .values({
           challengeType: 'random_battle',
-          startingBalance: parsedBuyIn.toString(),
+          startingBalance: startingCoins.toString(),
           potSize: potSize.toString(),
           platformFee: platformFee.toString(),
           winnerPayout: winnerPayout.toString(),
           user1Id: opponent.userId,
           user2Id: userId,
-          user1Balance: parsedBuyIn.toString(),
-          user2Balance: parsedBuyIn.toString(),
+          user1Balance: startingCoins.toString(),
+          user2Balance: startingCoins.toString(),
           durationMinutes,
-          durationType: `${parsedDuration}_hours`,
+          durationType: mode.durationType,
           startsAt: now,
           endsAt,
           status: 'active',
@@ -91,6 +100,7 @@ export default async function handler(req, res) {
         userId,
         buyIn: parsedBuyIn.toString(),
         duration: parsedDuration,
+        gameMode: validGameMode,
         status: 'waiting',
       });
 

@@ -1,12 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 
 const BUY_IN_OPTIONS = [5, 10, 25, 50, 100];
-const DURATION_OPTIONS = [
-  { label: '30 Min', value: 30 },
-  { label: '1 Hour', value: 1 },
-  { label: '1 Day', value: 24 },
-  { label: '3 Days', value: 72 },
-  { label: '1 Week', value: 168 },
+const GAME_MODE_OPTIONS = [
+  { id: 'rush', label: 'RUSH', icon: '⚡', description: 'Pick 6 props from a live game', coins: 10000, color: '#f59e0b' },
+  { id: 'original', label: 'ORIGINAL', icon: '🏆', description: 'Highest balance after all games end', coins: 10000, recommended: true, color: '#3b82f6' },
+  { id: 'tournament', label: 'TOURNAMENT', icon: '👑', description: '3-day battle, massive bankroll', coins: 100000, color: '#10b981' },
 ];
 
 const INVITE_EXPIRY_HOURS = 24;
@@ -14,7 +12,7 @@ const INVITE_EXPIRY_HOURS = 24;
 export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onSwitchToPrivate }) {
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [buyIn, setBuyIn] = useState(10);
-  const [duration, setDuration] = useState(24);
+  const [gameMode, setGameMode] = useState('original');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -75,7 +73,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
         body: JSON.stringify({
           receiverId: selectedFriend.id,
           buyIn,
-          duration,
+          gameMode,
         }),
       });
       const data = await res.json();
@@ -358,18 +356,35 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                 </div>
 
                 <div>
-                  <label className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 block">Duration</label>
-                  <div className="flex gap-1.5 flex-wrap">
-                    {DURATION_OPTIONS.map(opt => (
-                      <button
-                        key={opt.value}
-                        onClick={() => setDuration(opt.value)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${duration === opt.value ? 'bg-blue-600 text-white' : 'text-gray-300'}`}
-                        style={duration !== opt.value ? { backgroundColor: '#111', border: '1px solid #1a1a1a' } : {}}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
+                  <label className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 block">Game Mode</label>
+                  <div className="space-y-1.5">
+                    {GAME_MODE_OPTIONS.map(mode => {
+                      const selected = gameMode === mode.id;
+                      return (
+                        <button
+                          key={mode.id}
+                          onClick={() => setGameMode(mode.id)}
+                          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all"
+                          style={{
+                            backgroundColor: selected ? `${mode.color}15` : '#111',
+                            border: `1px solid ${selected ? `${mode.color}60` : 'transparent'}`,
+                          }}
+                        >
+                          <span className="text-base">{mode.icon}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-bold text-xs text-white">{mode.label}</span>
+                              {mode.recommended && <span className="text-[8px] bg-blue-500/20 text-blue-400 px-1 py-0.5 rounded-full font-semibold">POPULAR</span>}
+                            </div>
+                            <p className="text-gray-500 text-[10px]">{mode.description}</p>
+                          </div>
+                          <div className="text-right flex-shrink-0">
+                            <div className="text-white font-bold text-[11px]">{mode.coins.toLocaleString()}</div>
+                            <div className="text-gray-500 text-[9px]">coins</div>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 

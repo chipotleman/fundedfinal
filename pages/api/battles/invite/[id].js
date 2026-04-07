@@ -79,9 +79,23 @@ export default async function handler(req, res) {
           return res.status(409).json({ error: 'This invite has already been handled' });
         }
 
+        const GAME_MODES = {
+          rush: { durationMinutes: 180, durationType: 'rush', coins: 10000 },
+          original: { durationMinutes: 1440, durationType: 'original', coins: 10000 },
+          tournament: { durationMinutes: 4320, durationType: 'tournament', coins: 100000 },
+        };
+
         const buyIn = parseFloat(battleInvite.buyIn);
-        const duration = battleInvite.duration;
-        const durationMinutes = duration * 60;
+        let inviteGameMode = battleInvite.gameMode;
+        if (!inviteGameMode || !GAME_MODES[inviteGameMode]) {
+          const legacyDuration = battleInvite.duration;
+          if (legacyDuration <= 3) inviteGameMode = 'rush';
+          else if (legacyDuration <= 24) inviteGameMode = 'original';
+          else inviteGameMode = 'tournament';
+        }
+        const mode = GAME_MODES[inviteGameMode];
+        const durationMinutes = mode.durationMinutes;
+        const startingCoins = mode.coins;
 
         const now = new Date();
         const endsAt = new Date(Date.now() + durationMinutes * 60 * 1000);
@@ -96,16 +110,16 @@ export default async function handler(req, res) {
             .values({
               challengeType: 'friend_battle',
               matchType: 'friend',
-              startingBalance: buyIn.toString(),
+              startingBalance: startingCoins.toString(),
               potSize: potSize.toString(),
               platformFee: platformFee.toString(),
               winnerPayout: winnerPayout.toString(),
               user1Id: battleInvite.senderId,
               user2Id: battleInvite.receiverId,
-              user1Balance: buyIn.toString(),
-              user2Balance: buyIn.toString(),
+              user1Balance: startingCoins.toString(),
+              user2Balance: startingCoins.toString(),
               durationMinutes,
-              durationType: `${duration}_hours`,
+              durationType: mode.durationType,
               startsAt: now,
               endsAt,
               status: 'active',

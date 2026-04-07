@@ -107,7 +107,7 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    const { receiverId, buyIn, duration } = req.body;
+    const { receiverId, buyIn, gameMode, duration } = req.body;
 
     if (!receiverId) {
       return res.status(400).json({ error: 'Receiver ID is required' });
@@ -117,8 +117,16 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'You cannot challenge yourself' });
     }
 
+    const GAME_MODES = {
+      rush: { durationMinutes: 180, durationType: 'rush', coins: 10000 },
+      original: { durationMinutes: 1440, durationType: 'original', coins: 10000 },
+      tournament: { durationMinutes: 4320, durationType: 'tournament', coins: 100000 },
+    };
+
     const parsedBuyIn = parseFloat(buyIn) || 100;
-    const parsedDuration = parseInt(duration) || 24;
+    const validGameMode = GAME_MODES[gameMode] ? gameMode : 'original';
+    const mode = GAME_MODES[validGameMode];
+    const parsedDuration = Math.round(mode.durationMinutes / 60);
 
     try {
       const areFriends = await db
@@ -166,6 +174,7 @@ export default async function handler(req, res) {
           receiverId,
           buyIn: parsedBuyIn.toString(),
           duration: parsedDuration,
+          gameMode: validGameMode,
           status: 'pending',
           expiresAt,
         })

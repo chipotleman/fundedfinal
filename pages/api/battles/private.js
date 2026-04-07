@@ -24,12 +24,20 @@ export default async function handler(req, res) {
   }
 
   const userId = session.user.id;
-  const { action, buyIn, duration, code } = req.body;
+  const { action, buyIn, duration, gameMode, code } = req.body;
+
+  const GAME_MODES = {
+    rush: { durationMinutes: 180, durationType: 'rush', coins: 10000 },
+    original: { durationMinutes: 1440, durationType: 'original', coins: 10000 },
+    tournament: { durationMinutes: 4320, durationType: 'tournament', coins: 100000 },
+  };
 
   if (action === 'create') {
     const parsedBuyIn = parseFloat(buyIn) || 10;
-    const parsedDuration = parseInt(duration) || 24;
-    const durationMinutes = parsedDuration * 60;
+    const validGameMode = GAME_MODES[gameMode] ? gameMode : 'original';
+    const mode = GAME_MODES[validGameMode];
+    const durationMinutes = mode.durationMinutes;
+    const startingCoins = mode.coins;
     const potSize = parsedBuyIn * 2;
     const platformFee = potSize * 0.1;
     const winnerPayout = potSize - platformFee;
@@ -52,14 +60,14 @@ export default async function handler(req, res) {
         .insert(matchups)
         .values({
           challengeType: 'private_battle',
-          startingBalance: parsedBuyIn.toString(),
+          startingBalance: startingCoins.toString(),
           potSize: potSize.toString(),
           platformFee: platformFee.toString(),
           winnerPayout: winnerPayout.toString(),
           user1Id: userId,
-          user1Balance: parsedBuyIn.toString(),
+          user1Balance: startingCoins.toString(),
           durationMinutes,
-          durationType: `${parsedDuration}_hours`,
+          durationType: mode.durationType,
           status: 'waiting',
           privateCode,
           matchType: 'private',
