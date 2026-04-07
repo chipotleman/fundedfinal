@@ -22,6 +22,7 @@ export default function BattlePage() {
   const [invites, setInvites] = useState({ received: [], sent: [] });
   const [recentMatches, setRecentMatches] = useState([]);
   const [activeMatchup, setActiveMatchup] = useState(null);
+  const [matchupData, setMatchupData] = useState(null);
 
   const [showQuickMatch, setShowQuickMatch] = useState(false);
   const [showPlayFriend, setShowPlayFriend] = useState(false);
@@ -70,6 +71,7 @@ export default function BattlePage() {
         const data = await matchupRes.value.json();
         if (data.matchup && (data.matchup.status === 'active' || data.matchup.status === 'matched' || data.matchup.status === 'waiting')) {
           setActiveMatchup(data.matchup);
+          setMatchupData(data);
         }
       }
     } catch (err) {
@@ -106,9 +108,15 @@ export default function BattlePage() {
           if (hadPendingSent && !hasPendingSent && matchData?.matchup) {
             if (matchData.matchup.status === 'active' || matchData.matchup.status === 'matched') {
               setActiveMatchup(matchData.matchup);
+              setMatchupData(matchData);
               setShowLobby(matchData.matchup);
             }
           }
+        }
+
+        if (matchData?.matchup && (matchData.matchup.status === 'active' || matchData.matchup.status === 'matched')) {
+          setMatchupData(matchData);
+          setActiveMatchup(matchData.matchup);
         }
 
         if (activeMatchup && (activeMatchup.status === 'active' || activeMatchup.status === 'matched')) {
@@ -379,31 +387,145 @@ export default function BattlePage() {
             </div>
           )}
 
-          {activeMatchup && (activeMatchup.status === 'active' || activeMatchup.status === 'matched') && (
-            <div className="mb-4 bg-[#0d0d0d] border border-green-500/20 rounded-xl overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#1a1a1a]">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-white text-sm font-semibold">Active Battle</span>
+          {activeMatchup && (activeMatchup.status === 'active' || activeMatchup.status === 'matched') && (() => {
+            const startBal = parseFloat(activeMatchup.startingBalance || 0);
+            const myBal = matchupData?.myBalance ?? startBal;
+            const oppBal = matchupData?.opponentBalance ?? startBal;
+            const myPnl = myBal - startBal;
+            const oppPnl = oppBal - startBal;
+            const pot = parseFloat(activeMatchup.potSize || startBal * 2 || 0);
+            const opp = matchupData?.opponent;
+            const myName = profile?.username || session?.user?.name || 'You';
+            const myAvatar = profile?.avatar;
+            const oppName = opp?.username || opp?.displayName || 'Opponent';
+            const oppAvatar = opp?.avatar;
+            const totalBal = myBal + oppBal;
+            const myPercent = totalBal > 0 ? Math.max(5, Math.min(95, (myBal / totalBal) * 100)) : 50;
+            const endsAt = activeMatchup.endsAt;
+            const startsAt = activeMatchup.startsAt || activeMatchup.createdAt;
+            const totalDuration = endsAt && startsAt ? new Date(endsAt) - new Date(startsAt) : 0;
+            const elapsed = startsAt ? Date.now() - new Date(startsAt).getTime() : 0;
+            const timeProgress = totalDuration > 0 ? Math.min(100, (elapsed / totalDuration) * 100) : 0;
+            const timeLeft = endsAt ? Math.max(0, new Date(endsAt).getTime() - Date.now()) : null;
+            const formatTime = (ms) => {
+              if (!ms || ms <= 0) return 'Ended';
+              const s = Math.floor(ms / 1000);
+              const m = Math.floor(s / 60);
+              const h = Math.floor(m / 60);
+              const d = Math.floor(h / 24);
+              if (d > 0) return `${d}d ${h % 24}h left`;
+              if (h > 0) return `${h}h ${m % 60}m left`;
+              if (m > 0) return `${m}m left`;
+              return `${s}s left`;
+            };
+
+            return (
+              <div className="mb-4 rounded-xl overflow-hidden cursor-pointer" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }} onClick={() => router.push('/')}>
+                <style>{`
+                  @keyframes battlePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+                  @keyframes vsGlow { 0%, 100% { text-shadow: 0 0 10px rgba(59,130,246,0.5); } 50% { text-shadow: 0 0 20px rgba(59,130,246,0.8); } }
+                  .battle-hero-pulse { animation: battlePulse 2s ease-in-out infinite; }
+                  .vs-glow { animation: vsGlow 2s ease-in-out infinite; }
+                `}</style>
+
+                <div className="flex items-center justify-between px-3 py-1.5" style={{ borderBottom: '1px solid #1a1a1a' }}>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 bg-green-500 rounded-full battle-hero-pulse"></div>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-green-400">Live Battle</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] text-gray-500">{formatTime(timeLeft)}</span>
+                    <span className="text-blue-400 text-[10px] font-medium">Place Picks →</span>
+                  </div>
                 </div>
-                <button
-                  onClick={() => router.push('/')}
-                  className="text-blue-400 text-xs font-medium"
-                >
-                  Dashboard →
-                </button>
+
+                <div className="relative px-4 py-4">
+                  <div className="flex items-center">
+                    <div className="flex-1 flex flex-col items-center text-center">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{ backgroundColor: '#1a1a1a', border: '2px solid #333' }}>
+                        {myAvatar ? (
+                          <img src={myAvatar} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-white font-bold text-lg">{myName[0]?.toUpperCase()}</span>
+                        )}
+                      </div>
+                      <p className="text-white font-semibold text-xs truncate max-w-[100px]">{myName}</p>
+                      <p className={`text-sm font-bold mt-0.5 ${myPnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        ${myBal.toFixed(0)}
+                      </p>
+                      <p className={`text-[10px] font-medium ${myPnl >= 0 ? 'text-green-400/70' : 'text-red-400/70'}`}>
+                        {myPnl >= 0 ? '+' : ''}{myPnl.toFixed(0)}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col items-center px-3">
+                      <span className="text-xl sm:text-2xl font-black text-blue-400 vs-glow">VS</span>
+                      <div className="text-[9px] text-gray-500 font-medium mt-1 text-center">
+                        <span className="text-white font-bold">${pot.toFixed(0)}</span> pot
+                      </div>
+                    </div>
+
+                    <div className="flex-1 flex flex-col items-center text-center">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{ backgroundColor: '#1a1a1a', border: '2px solid #333' }}>
+                        {oppAvatar ? (
+                          <img src={oppAvatar} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-white font-bold text-lg">{oppName[0]?.toUpperCase()}</span>
+                        )}
+                      </div>
+                      <p className="text-white font-semibold text-xs truncate max-w-[100px]">{oppName}</p>
+                      <p className={`text-sm font-bold mt-0.5 ${oppPnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        ${oppBal.toFixed(0)}
+                      </p>
+                      <p className={`text-[10px] font-medium ${oppPnl >= 0 ? 'text-green-400/70' : 'text-red-400/70'}`}>
+                        {oppPnl >= 0 ? '+' : ''}{oppPnl.toFixed(0)}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-3">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[10px] text-gray-500 w-8 text-right">{myPercent.toFixed(0)}%</span>
+                      <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
+                        <div className="h-full rounded-full transition-all duration-1000 ease-out" style={{
+                          width: `${myPercent}%`,
+                          background: myPnl >= oppPnl
+                            ? 'linear-gradient(90deg, #22c55e, #10b981)'
+                            : 'linear-gradient(90deg, #ef4444, #dc2626)',
+                        }}></div>
+                      </div>
+                      <span className="text-[10px] text-gray-500 w-8">{(100 - myPercent).toFixed(0)}%</span>
+                    </div>
+                  </div>
+
+                  <div className="mt-2">
+                    <div className="h-1 rounded-full overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
+                      <div className="h-full rounded-full transition-all duration-1000" style={{
+                        width: `${timeProgress}%`,
+                        background: 'linear-gradient(90deg, #3b82f6, #06b6d4)',
+                      }}></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between px-4 py-2" style={{ borderTop: '1px solid #1a1a1a' }}>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowForfeitModal(true); }}
+                    className="text-gray-600 text-[10px] font-medium hover:text-red-400 transition-colors"
+                  >
+                    Forfeit
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); router.push('/'); }}
+                    className="flex items-center gap-1 text-blue-400 text-xs font-medium"
+                  >
+                    Go to Dashboard
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                  </button>
+                </div>
               </div>
-              <div className="px-4 py-3">
-                <p className="text-gray-400 text-sm mb-2">Battle in progress. Head to the dashboard to place picks.</p>
-                <button
-                  onClick={() => setShowForfeitModal(true)}
-                  className="text-gray-500 text-xs font-medium transition-colors"
-                >
-                  Forfeit
-                </button>
-              </div>
-            </div>
-          )}
+            );
+          })()}
 
           <div className="flex flex-col lg:flex-row gap-6 pb-8">
             <div className="flex-1 min-w-0">
