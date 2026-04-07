@@ -63,7 +63,7 @@ export default function MyBattle() {
     const isActive = currentMatchup.status === 'active' || currentMatchup.status === 'matched';
     if (!isWaiting && !isActive) return;
 
-    const pollInterval = isWaiting ? 5000 : 10000;
+    const pollInterval = 5000;
     const poll = setInterval(async () => {
       try {
         const res = await fetch('/api/matchups/current', { credentials: 'include' });
