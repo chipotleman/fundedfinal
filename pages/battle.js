@@ -460,7 +460,7 @@ export default function BattlePage() {
               <button
                 onClick={() => requireAuth(() => setShowQuickMatch(true))}
                 disabled={!!activeMatchup}
-                className="group bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-4 text-left transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="battle-action-card group bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-4 text-left transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
                 style={{ '--hover-border': 'rgba(59, 130, 246, 0.4)' }}
               >
                 <div className="flex items-start justify-between mb-3">
@@ -477,7 +477,7 @@ export default function BattlePage() {
               <button
                 onClick={() => requireAuth(() => setShowPlayFriend(true))}
                 disabled={!!activeMatchup}
-                className="group bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-4 text-left transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="battle-action-card group bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-4 text-left transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
                 style={{ '--hover-border': 'rgba(16, 185, 129, 0.4)' }}
               >
                 <div className="flex items-start justify-between mb-3">
@@ -494,7 +494,7 @@ export default function BattlePage() {
               <button
                 onClick={() => requireAuth(() => setShowPrivateMatch(true))}
                 disabled={!!activeMatchup}
-                className="group bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-4 text-left transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                className="battle-action-card group bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-4 text-left transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
                 style={{ '--hover-border': 'rgba(249, 115, 22, 0.4)' }}
               >
                 <div className="flex items-start justify-between mb-3">
@@ -781,7 +781,7 @@ export default function BattlePage() {
           animation: slideIn 0.3s ease-out;
         }
         @media (hover: hover) {
-          .group:hover {
+          .battle-action-card:hover {
             border-color: var(--hover-border, #333) !important;
           }
         }
