@@ -240,7 +240,7 @@ function BattleCard({ battle, compact, focused }) {
   const user2Winning = (user2.balance || 0) > (user1.balance || 0);
   const potSize = parseFloat(battle.potSize) || 0;
   const progress = battle.progressPercent || 0;
-  const picks = SIMULATED_PICKS[battle.id];
+  const picks = battle.picks || SIMULATED_PICKS[battle.id] || null;
 
   const user1OnFire = parseFloat(user1.pnlPercent) > 10;
   const user2OnFire = parseFloat(user2.pnlPercent) > 10;
