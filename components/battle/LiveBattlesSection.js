@@ -46,12 +46,6 @@ const SIMULATED_PICKS = {
   },
 };
 
-const REACTIONS = [
-  { emoji: '🔥', label: 'Fire' },
-  { emoji: '💰', label: 'Money' },
-  { emoji: '😤', label: 'Intense' },
-  { emoji: '👀', label: 'Eyes' },
-];
 
 function getSimulatedBattles(avatars) {
   const avatarPool = avatars.length >= 6 ? avatars : [];
@@ -160,68 +154,6 @@ function PickPill({ pick, compact = false }) {
   );
 }
 
-function FloatingReaction({ emoji, id, onDone }) {
-  useEffect(() => {
-    const timer = setTimeout(() => onDone(id), 1200);
-    return () => clearTimeout(timer);
-  }, [id, onDone]);
-
-  const left = 20 + Math.random() * 60;
-
-  return (
-    <span
-      className="live-reaction-float"
-      style={{ left: `${left}%`, position: 'absolute', bottom: 0, fontSize: '20px', pointerEvents: 'none' }}
-    >
-      {emoji}
-    </span>
-  );
-}
-
-function ReactionBar({ battleId }) {
-  const [counts, setCounts] = useState(() => {
-    const initial = {};
-    REACTIONS.forEach(r => {
-      initial[r.label] = Math.floor(Math.random() * 30) + 5;
-    });
-    return initial;
-  });
-  const [floatingEmojis, setFloatingEmojis] = useState([]);
-  const idCounter = useRef(0);
-
-  const handleReaction = (reaction) => {
-    setCounts(prev => ({ ...prev, [reaction.label]: (prev[reaction.label] || 0) + 1 }));
-    const newId = `float-${idCounter.current++}`;
-    setFloatingEmojis(prev => [...prev, { id: newId, emoji: reaction.emoji }]);
-  };
-
-  const removeFloating = useCallback((id) => {
-    setFloatingEmojis(prev => prev.filter(f => f.id !== id));
-  }, []);
-
-  return (
-    <div className="relative px-3 py-2" onClick={e => e.stopPropagation()}>
-      <div className="flex items-center gap-2 justify-center">
-        {REACTIONS.map(r => (
-          <button
-            key={r.label}
-            onClick={(e) => { e.stopPropagation(); handleReaction(r); }}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 transition-all active:scale-90"
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-          >
-            <span className="text-sm">{r.emoji}</span>
-            <span className="text-[10px] text-gray-400 font-medium">{counts[r.label]}</span>
-          </button>
-        ))}
-      </div>
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {floatingEmojis.map(f => (
-          <FloatingReaction key={f.id} id={f.id} emoji={f.emoji} onDone={removeFloating} />
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function MomentumIcon() {
   return <span className="live-momentum-flame text-[10px]" title="On fire!">🔥</span>;
@@ -489,20 +421,11 @@ function BattleCard({ battle, compact, focused }) {
               </div>
             </div>
           )}
-          <ReactionBar battleId={battle.id} />
           <BattleChat battleId={battle.id} />
         </>
       )}
 
       <style>{`
-        @keyframes liveReactionFloat {
-          0% { opacity: 1; transform: translateY(0) scale(1); }
-          50% { opacity: 0.8; transform: translateY(-40px) scale(1.2); }
-          100% { opacity: 0; transform: translateY(-80px) scale(0.8); }
-        }
-        .live-reaction-float {
-          animation: liveReactionFloat 1.2s ease-out forwards;
-        }
         @keyframes liveMomentumPulse {
           0%, 100% { opacity: 1; transform: scale(1); }
           50% { opacity: 0.7; transform: scale(1.3); }
