@@ -29,18 +29,23 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
   useEffect(() => {
     if (countdown === 0) {
       setShowBattle(true);
-      const t = setTimeout(() => router.push('/'), 1500);
+      const t = setTimeout(() => {
+        if (onDismiss) {
+          onDismiss();
+        } else {
+          router.push('/');
+        }
+      }, 1500);
       return () => clearTimeout(t);
     }
-  }, [countdown, router]);
+  }, [countdown, router, onDismiss]);
 
   if (!matchup) return null;
 
   const isUser1 = matchup.user1Id === currentUser?.id;
-  const myBalance = isUser1 ? matchup.user1Balance : matchup.user2Balance;
-  const buyIn = matchup.startingBalance || myBalance;
+  const buyIn = matchup.startingBalance || (isUser1 ? matchup.user1Balance : matchup.user2Balance);
   const potSize = matchup.potSize;
-  const payout = matchup.winnerPayout;
+  const payout = parseFloat(matchup.winnerPayout ?? 0);
 
   const player1 = matchup.player1 || { username: matchup.user1Info?.username || 'Player 1', avatar: matchup.user1Info?.avatar };
   const player2 = matchup.player2 || { username: matchup.user2Info?.username || 'Player 2', avatar: matchup.user2Info?.avatar };
@@ -49,63 +54,73 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
     random: 'Quick Match',
     friend: 'Friend Battle',
     private: 'Private Match',
-  }[matchup.matchType] || 'Battle';
+  }[matchup.matchType] || '1v1 Battle';
 
   return (
     <>
       <style>{`
         @keyframes slideInLeft {
-          0% { transform: translateX(-120vw); opacity: 0; }
-          60% { transform: translateX(10px); opacity: 1; }
-          100% { transform: translateX(0); }
+          0% { transform: translateX(-120vw) rotate(-5deg); opacity: 0; }
+          60% { transform: translateX(8px) rotate(1deg); opacity: 1; }
+          100% { transform: translateX(0) rotate(0deg); }
         }
         @keyframes slideInRight {
-          0% { transform: translateX(120vw); opacity: 0; }
-          60% { transform: translateX(-10px); opacity: 1; }
-          100% { transform: translateX(0); }
+          0% { transform: translateX(120vw) rotate(5deg); opacity: 0; }
+          60% { transform: translateX(-8px) rotate(-1deg); opacity: 1; }
+          100% { transform: translateX(0) rotate(0deg); }
         }
         @keyframes vsSlam {
-          0% { transform: scale(0); opacity: 0; }
-          50% { transform: scale(1.3); opacity: 1; }
-          100% { transform: scale(1); }
+          0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+          50% { transform: scale(1.4) rotate(5deg); opacity: 1; }
+          70% { transform: scale(0.9) rotate(-2deg); }
+          100% { transform: scale(1) rotate(0deg); }
         }
         @keyframes countdownPop {
-          0% { transform: scale(2); opacity: 0; }
-          50% { transform: scale(0.95); opacity: 1; }
+          0% { transform: scale(2.5); opacity: 0; }
+          40% { transform: scale(0.9); opacity: 1; }
+          60% { transform: scale(1.1); }
           100% { transform: scale(1); }
         }
         @keyframes battleReveal {
-          0% { transform: scale(0.5); opacity: 0; }
-          50% { transform: scale(1.1); opacity: 1; }
-          100% { transform: scale(1); }
+          0% { transform: scale(0.3); opacity: 0; letter-spacing: 0.5em; }
+          50% { transform: scale(1.15); opacity: 1; }
+          100% { transform: scale(1); letter-spacing: 0.1em; }
         }
-        @keyframes stakesSlideUp {
-          0% { transform: translateY(40px); opacity: 0; }
+        @keyframes prizeSlideUp {
+          0% { transform: translateY(30px); opacity: 0; }
           100% { transform: translateY(0); opacity: 1; }
         }
         @keyframes labelFade {
-          0% { opacity: 0; transform: translateY(-10px); }
+          0% { opacity: 0; transform: translateY(-15px); }
           100% { opacity: 1; transform: translateY(0); }
         }
+        @keyframes ringPulse {
+          0%, 100% { box-shadow: 0 0 20px rgba(59,130,246,0.4); }
+          50% { box-shadow: 0 0 40px rgba(59,130,246,0.6), 0 0 60px rgba(59,130,246,0.2); }
+        }
+        @keyframes bgPulse {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 0.7; }
+        }
         .lobby-player-left {
-          animation: slideInLeft 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+          animation: slideInLeft 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
         .lobby-player-right {
-          animation: slideInRight 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s forwards;
+          animation: slideInRight 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s forwards;
           opacity: 0;
         }
         .lobby-vs {
-          animation: vsSlam 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s forwards;
+          animation: vsSlam 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.7s forwards;
           opacity: 0;
         }
         .lobby-countdown {
-          animation: countdownPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+          animation: countdownPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
         .lobby-battle-text {
-          animation: battleReveal 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+          animation: battleReveal 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
-        .lobby-stakes {
-          animation: stakesSlideUp 0.6s ease-out 1s forwards;
+        .lobby-prize {
+          animation: prizeSlideUp 0.6s ease-out 1.1s forwards;
           opacity: 0;
         }
         .lobby-label {
@@ -114,34 +129,49 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
         }
       `}</style>
 
-      <div className="fixed inset-0 bg-black z-50 flex items-center justify-center p-4 overflow-hidden">
-        <div className="max-w-md w-full text-center relative">
-          <div className="lobby-label text-xs font-medium text-gray-400 uppercase tracking-[0.3em] mb-2">
-            {matchTypeLabel}
-          </div>
+      <div className="fixed inset-0 bg-[#050a15] z-50 flex items-center justify-center p-4 overflow-hidden">
+        <div className="absolute inset-0" style={{
+          background: 'radial-gradient(ellipse at 25% 50%, rgba(59,130,246,0.08) 0%, transparent 50%), radial-gradient(ellipse at 75% 50%, rgba(251,146,60,0.08) 0%, transparent 50%)',
+          animation: 'bgPulse 3s ease-in-out infinite',
+        }} />
 
-          <div className="flex items-center justify-center gap-4 mb-6 relative" style={{ minHeight: '160px' }}>
+        <div className="max-w-lg w-full text-center relative z-10">
+          <div className="lobby-label mb-1">
+            <span className="text-xs font-bold uppercase tracking-[0.3em] text-gray-500">{matchTypeLabel}</span>
+          </div>
+          <div className="lobby-label text-2xl md:text-3xl font-black text-white mb-1">1v1 MATCH</div>
+          <div className="lobby-label text-xs text-gray-500 mb-8">Get ready. The game is about to begin.</div>
+
+          <div className="flex items-center justify-center gap-0 mb-8 relative" style={{ minHeight: '200px' }}>
             <div className={`text-center flex-1 ${entered ? 'lobby-player-left' : 'opacity-0'}`}>
               <div className="relative inline-block mb-3">
-                <div className="w-24 h-24 rounded-full bg-[#1e40af] flex items-center justify-center relative overflow-hidden border-2 border-[#333]">
+                <div
+                  className="w-28 h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center overflow-hidden relative"
+                  style={{
+                    border: '4px solid #3b82f6',
+                    boxShadow: '0 0 30px rgba(59,130,246,0.4), inset 0 0 20px rgba(59,130,246,0.1)',
+                    background: '#0c1a35',
+                    animation: 'ringPulse 2s ease-in-out infinite',
+                  }}
+                >
                   {player1.avatar ? (
                     <img src={player1.avatar} className="w-full h-full object-cover" alt="" />
                   ) : (
-                    <span className="text-3xl font-black text-white">{player1.username?.[0]?.toUpperCase() || 'P1'}</span>
+                    <span className="text-4xl font-black text-white/60">{player1.username?.[0]?.toUpperCase() || 'P'}</span>
                   )}
                 </div>
               </div>
-              <div className="text-white text-sm font-bold truncate max-w-[110px] mx-auto">{player1.username || 'Player 1'}</div>
+              <div className="text-white text-sm md:text-base font-bold">{player1.username || 'Player 1'}</div>
             </div>
 
-            <div className="flex flex-col items-center relative z-10">
+            <div className="flex flex-col items-center relative z-10 -mx-4">
               {showBattle ? (
-                <div className="lobby-battle-text text-4xl font-black text-emerald-400">
+                <div className="lobby-battle-text text-3xl md:text-4xl font-black text-emerald-400" style={{ textShadow: '0 0 30px rgba(16,185,129,0.5)' }}>
                   BATTLE!
                 </div>
               ) : (
                 <div className={`${entered ? 'lobby-vs' : 'opacity-0'}`}>
-                  <div className="text-5xl font-black text-white">
+                  <div className="text-5xl md:text-6xl font-black italic text-white" style={{ textShadow: '0 0 20px rgba(255,255,255,0.3)' }}>
                     VS
                   </div>
                 </div>
@@ -150,44 +180,40 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
 
             <div className={`text-center flex-1 ${entered ? 'lobby-player-right' : 'opacity-0'}`}>
               <div className="relative inline-block mb-3">
-                <div className="w-24 h-24 rounded-full bg-[#065f46] flex items-center justify-center relative overflow-hidden border-2 border-[#333]">
+                <div
+                  className="w-28 h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center overflow-hidden relative"
+                  style={{
+                    border: '4px solid #fb923c',
+                    boxShadow: '0 0 30px rgba(251,146,60,0.4), inset 0 0 20px rgba(251,146,60,0.1)',
+                    background: '#1a0a00',
+                  }}
+                >
                   {player2.avatar ? (
                     <img src={player2.avatar} className="w-full h-full object-cover" alt="" />
                   ) : (
-                    <span className="text-3xl font-black text-white">{player2.username?.[0]?.toUpperCase() || 'P2'}</span>
+                    <span className="text-4xl font-black text-white/60">{player2.username?.[0]?.toUpperCase() || 'P'}</span>
                   )}
                 </div>
               </div>
-              <div className="text-white text-sm font-bold truncate max-w-[110px] mx-auto">{player2.username || 'Player 2'}</div>
+              <div className="text-white text-sm md:text-base font-bold">{player2.username || 'Player 2'}</div>
             </div>
-
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3/4 h-px bg-[#1a1a1a] z-0 pointer-events-none" />
           </div>
 
-          <div className="lobby-stakes">
-            <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-5 mb-6 space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Buy-In</span>
-                <span className="text-white font-semibold">${parseFloat(buyIn || 0).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Prize Pool</span>
-                <span className="text-cyan-400 font-semibold">${parseFloat(potSize || 0).toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-400">Winner Gets</span>
-                <span className="text-emerald-400 font-bold text-base">${parseFloat(payout || 0).toFixed(2)}</span>
-              </div>
-              <div className="border-t border-[#222] pt-3">
-                <p className="text-gray-500 text-xs text-center">Higher ending balance wins · 10% platform fee</p>
-              </div>
+          <div className="lobby-prize">
+            <div className="inline-flex flex-col items-center bg-[#0a0a0a]/80 border border-[#222] rounded-xl px-6 py-3 mb-6 backdrop-blur-sm">
+              <span className="text-[10px] uppercase tracking-widest text-gray-500 mb-0.5">Prize Pot</span>
+              <span className="text-2xl md:text-3xl font-black text-emerald-400" style={{ textShadow: '0 0 15px rgba(16,185,129,0.4)' }}>
+                ${payout > 0 ? payout.toLocaleString() : parseFloat(potSize || 0).toLocaleString()}
+              </span>
+              <span className="text-[10px] text-gray-600 mt-0.5">🏆 Winner payout · 10% fee 🏆</span>
             </div>
           </div>
 
           {!showBattle && (
             <div className="mb-4">
-              <div className="text-gray-400 text-xs uppercase tracking-widest mb-2">Starting in</div>
-              <div key={countdown} className="lobby-countdown text-6xl font-black text-white">
+              <div className="text-emerald-400 text-xs font-bold uppercase tracking-[0.25em] mb-2">Match Found</div>
+              <div className="text-gray-500 text-xs mb-2">Starting in</div>
+              <div key={countdown} className="lobby-countdown text-5xl md:text-6xl font-black text-white">
                 {countdown}
               </div>
             </div>
