@@ -8,7 +8,7 @@ export default function WaitingBattleCard({ matchup }) {
   const matchTypeLabel = matchup.matchType === 'private' ? 'Private Match' : matchup.matchType === 'friend' ? 'Friend Match' : 'Quick Match';
   const modeLabel = matchup.durationMinutes <= 200 ? 'RUSH' : matchup.durationMinutes <= 1500 ? 'ORIGINAL' : 'TOURNAMENT';
   const buyIn = parseFloat(matchup.startingBalance ?? 0);
-  const pot = parseFloat(matchup.potSize ?? matchup.startingBalance * 2 ?? 0);
+  const pot = parseFloat(matchup.potSize ?? 0) || (buyIn * 2);
 
   return (
     <>
