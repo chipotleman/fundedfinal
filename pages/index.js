@@ -565,7 +565,7 @@ export default function Dashboard() {
                   }}
                 />
               ) : isWaiting && matchup ? (
-                <WaitingBattleCard matchup={matchup} myProfile={myProfile} />
+                <WaitingBattleCard matchup={matchup} myProfile={myProfile} opponent={opponent} />
               ) : isQueued && queueEntry ? (
                 <WaitingBattleCard queueEntry={queueEntry} myProfile={myProfile} />
               ) : (

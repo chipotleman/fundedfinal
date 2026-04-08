@@ -60,6 +60,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
   const [currentRecord, setCurrentRecord] = useState(FAKE_RECORDS[0]);
   const [avatarFlip, setAvatarFlip] = useState(false);
   const [radarAngle, setRadarAngle] = useState(0);
+  const [matchedOpponent, setMatchedOpponent] = useState(null);
   const router = useRouter();
   const intervalRef = useRef(null);
   const pollRef = useRef(null);
@@ -84,6 +85,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
       setError('');
       setAvatarFlip(false);
       setCurrentAvatarIdx(0);
+      setMatchedOpponent(null);
       if (intervalRef.current) clearInterval(intervalRef.current);
       if (pollRef.current) clearTimeout(pollRef.current);
       if (avatarCycleRef.current) clearInterval(avatarCycleRef.current);
@@ -148,6 +150,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
         if (intervalRef.current) clearInterval(intervalRef.current);
         if (avatarCycleRef.current) clearInterval(avatarCycleRef.current);
         if (radarRef.current) clearInterval(radarRef.current);
+        if (data.opponent) setMatchedOpponent(data.opponent);
         setStep('found');
         setTimeout(() => {
           onClose();
@@ -176,6 +179,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
           if (intervalRef.current) clearInterval(intervalRef.current);
           if (avatarCycleRef.current) clearInterval(avatarCycleRef.current);
           if (radarRef.current) clearInterval(radarRef.current);
+          if (data.opponent) setMatchedOpponent(data.opponent);
           setStep('found');
           setTimeout(() => {
             onClose();
@@ -199,6 +203,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
           if (intervalRef.current) clearInterval(intervalRef.current);
           if (avatarCycleRef.current) clearInterval(avatarCycleRef.current);
           if (radarRef.current) clearInterval(radarRef.current);
+          if (fakeData?.opponent) setMatchedOpponent(fakeData.opponent);
           setStep('found');
           setTimeout(() => {
             onClose();
@@ -517,19 +522,23 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                     className="relative w-full h-full rounded-full overflow-hidden border-3 border-emerald-400"
                     style={{ animation: 'qm-avatar-lock 0.6s ease-out forwards' }}
                   >
-                    {currentAvatar ? (
+                    {(matchedOpponent?.avatar || currentAvatar) ? (
                       <img
-                        src={currentAvatar}
+                        src={matchedOpponent?.avatar || currentAvatar}
                         alt="matched opponent"
                         className="w-full h-full object-cover"
                       />
                     ) : (
                       <div className="w-full h-full bg-emerald-500/20 flex items-center justify-center">
-                        <span className="text-4xl">⚔️</span>
+                        <span className="text-2xl font-black text-emerald-300">{(matchedOpponent?.username || 'O')[0].toUpperCase()}</span>
                       </div>
                     )}
                   </div>
                 </div>
+
+                {matchedOpponent?.username && (
+                  <p className="text-white font-bold text-sm mb-1">{matchedOpponent.username}</p>
+                )}
 
                 <h3
                   className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-2"

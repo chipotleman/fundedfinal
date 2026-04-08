@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { matchmakingQueue, matchups } from '../../../shared/schema';
+import { matchmakingQueue, matchups, profiles } from '../../../shared/schema';
 import { eq, and, ne } from 'drizzle-orm';
 
 export default async function handler(req, res) {
@@ -108,9 +108,19 @@ export default async function handler(req, res) {
         })
         .returning();
 
+      const [opponentProfile] = await db
+        .select({ username: profiles.username, avatar: profiles.avatar })
+        .from(profiles)
+        .where(eq(profiles.id, opponent.userId));
+
       return res.status(200).json({
         matched: true,
         matchup: newMatchup,
+        opponent: {
+          id: opponent.userId,
+          username: opponentProfile?.username || 'Opponent',
+          avatar: opponentProfile?.avatar || null,
+        },
         message: 'Match found! Battle starting now.',
       });
     }

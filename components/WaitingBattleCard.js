@@ -63,7 +63,7 @@ function getMode(data, isQueueEntry) {
   return 'original';
 }
 
-export default function WaitingBattleCard({ matchup, queueEntry, myProfile }) {
+export default function WaitingBattleCard({ matchup, queueEntry, myProfile, opponent }) {
   const { refresh: refreshMatchup } = useMatchup();
   const { data: session } = useSession();
 
@@ -201,22 +201,40 @@ export default function WaitingBattleCard({ matchup, queueEntry, myProfile }) {
               <div
                 className="w-14 h-14 md:w-[72px] md:h-[72px] rounded-full flex items-center justify-center overflow-hidden relative z-10"
                 style={{
-                  border: '3px solid #333',
-                  background: '#0a0a0a',
+                  border: opponent ? `3px solid ${theme.avatarRing}` : '3px solid #333',
+                  background: opponent ? '#111' : '#0a0a0a',
+                  boxShadow: opponent ? theme.avatarGlow : 'none',
                 }}
               >
-                <div className="absolute inset-0 rounded-full" style={{
-                  background: `conic-gradient(${theme.accentColor}, transparent, ${theme.accentColor})`,
-                  animation: 'search-ring 2s linear infinite',
-                  opacity: 0.3,
-                }} />
-                <span className="text-xl md:text-2xl text-gray-600 relative z-10">?</span>
+                {opponent ? (
+                  opponent.avatar ? (
+                    <img src={opponent.avatar} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xl md:text-2xl font-black text-white/70">{(opponent.username || 'O')[0].toUpperCase()}</span>
+                  )
+                ) : (
+                  <>
+                    <div className="absolute inset-0 rounded-full" style={{
+                      background: `conic-gradient(${theme.accentColor}, transparent, ${theme.accentColor})`,
+                      animation: 'search-ring 2s linear infinite',
+                      opacity: 0.3,
+                    }} />
+                    <span className="text-xl md:text-2xl text-gray-600 relative z-10">?</span>
+                  </>
+                )}
               </div>
             </div>
-            <div className="flex items-center gap-1">
-              <div className={`w-1 h-1 ${theme.dotColor} rounded-full animate-pulse`}></div>
-              <p className="text-gray-500 text-[10px] md:text-[11px]">Searching...</p>
-            </div>
+            {opponent ? (
+              <>
+                <p className="text-white text-[11px] md:text-xs font-bold truncate max-w-[80px] md:max-w-[100px] text-center">{opponent.username || 'Opponent'}</p>
+                <p className="text-[10px]" style={{ color: theme.accentColor }}>Joined</p>
+              </>
+            ) : (
+              <div className="flex items-center gap-1">
+                <div className={`w-1 h-1 ${theme.dotColor} rounded-full animate-pulse`}></div>
+                <p className="text-gray-500 text-[10px] md:text-[11px]">Searching...</p>
+              </div>
+            )}
           </div>
         </div>
 
