@@ -297,138 +297,298 @@ export default function ActiveBattleCard({
         </div>
       </div>
 
-      {showModal && (
-        <div
-          className="fixed inset-0 z-50 overflow-y-auto"
-          onClick={() => setShowModal(false)}
-        >
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" />
-          <div className="flex min-h-full items-start justify-center p-4 pt-4 md:pt-8">
-            <div
-              className={`relative w-full max-w-2xl rounded-2xl overflow-hidden ${isDarkMode ? 'bg-[#111] border border-gray-800' : 'bg-white border border-gray-200'}`}
-              onClick={e => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: theme.accentColor + '33' }}>
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{theme.icon}</span>
-                  <h2 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{theme.label} Battle</h2>
-                </div>
-                <button
-                  onClick={() => setShowModal(false)}
-                  className={`p-2 rounded-full ${isDarkMode ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
-                >
-                  <svg className={`w-5 h-5 ${isDarkMode ? 'text-white' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
+      {showModal && (() => {
+        const totalBalance = myBalanceNum + oppBalanceNum;
+        const myDomPercent = totalBalance > 0 ? Math.round((myBalanceNum / totalBalance) * 100) : 50;
+        const oppDomPercent = 100 - myDomPercent;
+        const oppStaked = settledBets.reduce((sum, b) => sum + parseFloat(b.stake || 0), 0);
 
-              <div className="p-4 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
-                    <h4 className="font-semibold text-sm mb-3 text-green-400">Your Stats</h4>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <p className="text-xs text-gray-500">Balance</p>
-                        <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${myBalanceNum.toLocaleString()}</p>
+        return (
+          <div
+            className="fixed inset-0 z-50 overflow-y-auto"
+            onClick={() => setShowModal(false)}
+          >
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-md" />
+            <div className="flex min-h-full items-start justify-center p-4 pt-4 md:pt-8">
+              <div
+                className="relative w-full max-w-lg rounded-2xl overflow-hidden"
+                style={{ background: '#0a0a0a', border: `1px solid rgba(${theme.accentRgb},0.2)` }}
+                onClick={e => e.stopPropagation()}
+              >
+                <div className="relative overflow-hidden" style={{ background: theme.cardBg }}>
+                  <div 
+                    className="absolute inset-0 opacity-25 pointer-events-none"
+                    style={{ background: `radial-gradient(ellipse at center bottom, ${theme.glowColor} 0%, transparent 60%)` }}
+                  />
+                  <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                    {[...Array(15)].map((_, i) => (
+                      <div
+                        key={`m-ember-${i}`}
+                        className="absolute rounded-full"
+                        style={{
+                          width: `${2 + (i % 3) * 2}px`,
+                          height: `${2 + (i % 3) * 2}px`,
+                          left: `${3 + (i * 6.5)}%`,
+                          bottom: `-5%`,
+                          background: theme.emberColors[i % 3],
+                          boxShadow: `0 0 ${6 + (i % 3) * 3}px ${theme.emberColors[i % 3]}`,
+                          animation: `abc-ember-float ${2.5 + (i % 5) * 0.4}s linear infinite`,
+                          animationDelay: `${(i * 0.15)}s`,
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="relative z-10 pt-4 pb-3 px-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: theme.badgeBg }}>
+                        <span className="text-xs">{theme.icon}</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: theme.accentColor }}>{theme.label}</span>
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500">P&L</p>
-                        <p className={`font-bold ${myPnL >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                          {myPnL >= 0 ? '+' : ''}${myPnL.toLocaleString()}
-                        </p>
+                      <button
+                        onClick={() => setShowModal(false)}
+                        className="w-7 h-7 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/10 transition-colors"
+                      >
+                        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+
+                    <div className="flex items-start justify-between">
+                      <div className="flex flex-col items-center" style={{ width: '38%' }}>
+                        <div
+                          className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center overflow-hidden mb-2"
+                          style={{
+                            border: `3px solid ${theme.avatarRing}`,
+                            boxShadow: theme.avatarGlow,
+                            background: '#111',
+                            animation: 'abc-glow 2s ease-in-out infinite',
+                          }}
+                        >
+                          {userAvatar ? (
+                            <img src={userAvatar} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-2xl font-black text-white/70">{userName?.[0]?.toUpperCase() || 'Y'}</span>
+                          )}
+                        </div>
+                        <p className="text-white text-xs font-bold truncate max-w-[120px] text-center">{userName}</p>
+                        <p className="text-[10px] text-gray-500 mt-0.5">YOU</p>
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Total Bets</p>
-                        <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{myBetsCount}</p>
+
+                      <div className="flex flex-col items-center justify-center pt-3" style={{ width: '24%' }}>
+                        <div
+                          className="text-2xl md:text-3xl font-black italic text-transparent bg-clip-text mb-1"
+                          style={{
+                            backgroundImage: theme.vsGradient,
+                            WebkitBackgroundClip: 'text',
+                            animation: 'abc-vs-pulse 2s ease-in-out infinite',
+                          }}
+                        >
+                          VS
+                        </div>
+                        <div className="text-center">
+                          <p className="text-[7px] text-gray-500 uppercase tracking-widest leading-none mb-0.5">Prize</p>
+                          <p className="text-lg md:text-xl font-black leading-none" style={{
+                            color: theme.prizeColor,
+                            textShadow: `0 0 15px rgba(${theme.accentRgb},0.5)`,
+                          }}>
+                            ${winnerPayout.toLocaleString()}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Time Left</p>
-                        <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatTimer(timeRemaining)}</p>
+
+                      <div className="flex flex-col items-center" style={{ width: '38%' }}>
+                        <div
+                          className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center overflow-hidden mb-2"
+                          style={{
+                            border: '3px solid #ef4444',
+                            boxShadow: '0 0 20px rgba(239,68,68,0.3)',
+                            background: '#111',
+                          }}
+                        >
+                          {opponent.avatar ? (
+                            <img src={opponent.avatar} alt={opponent.username} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-2xl font-black text-white/70">{(opponent.username || 'O')[0].toUpperCase()}</span>
+                          )}
+                        </div>
+                        <p className="text-white text-xs font-bold truncate max-w-[120px] text-center">{opponent.username || 'Opponent'}</p>
+                        <p className="text-[10px] text-red-400/60 mt-0.5">OPP</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 mb-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className={`text-[10px] font-bold ${isWinning ? 'text-green-400' : isLosing ? 'text-red-400' : 'text-yellow-400'}`}>
+                          {myDomPercent}%
+                        </span>
+                        <span className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                          isWinning ? 'bg-green-500/15 text-green-400'
+                          : isLosing ? 'bg-red-500/15 text-red-400'
+                          : 'bg-yellow-500/15 text-yellow-400'
+                        }`}>
+                          {isTied ? 'TIED' : isWinning ? 'DOMINATING' : 'BEHIND'}
+                        </span>
+                        <span className={`text-[10px] font-bold ${oppBalanceNum > myBalanceNum ? 'text-green-400' : oppBalanceNum < myBalanceNum ? 'text-red-400' : 'text-yellow-400'}`}>
+                          {oppDomPercent}%
+                        </span>
+                      </div>
+                      <div className="w-full h-2 rounded-full overflow-hidden bg-black/40 flex">
+                        <div
+                          className="h-full rounded-l-full transition-all duration-500"
+                          style={{
+                            width: `${myDomPercent}%`,
+                            background: isWinning ? 'linear-gradient(90deg, #22c55e, #4ade80)' : isLosing ? 'linear-gradient(90deg, #ef4444, #f87171)' : `linear-gradient(90deg, rgba(${theme.accentRgb},0.8), rgba(${theme.accentRgb},1))`,
+                          }}
+                        />
+                        <div
+                          className="h-full rounded-r-full transition-all duration-500"
+                          style={{
+                            width: `${oppDomPercent}%`,
+                            background: oppBalanceNum > myBalanceNum ? 'linear-gradient(90deg, #4ade80, #22c55e)' : oppBalanceNum < myBalanceNum ? 'linear-gradient(90deg, #f87171, #ef4444)' : `linear-gradient(90deg, rgba(${theme.accentRgb},1), rgba(${theme.accentRgb},0.8))`,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="px-4 pt-3 pb-4 space-y-3" style={{ background: '#0a0a0a' }}>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-xl p-3" style={{ background: '#111', border: '1px solid #1a1a1a' }}>
+                      <div className="flex items-center gap-1.5 mb-2.5">
+                        <div className="w-1.5 h-1.5 rounded-full" style={{ background: theme.accentColor }} />
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{userName}</span>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-[10px] text-gray-500">Balance</span>
+                          <span className="text-sm font-bold text-white">${myBalanceNum.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-[10px] text-gray-500">P&L</span>
+                          <span className={`text-sm font-bold ${myPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {myPnL >= 0 ? '+' : ''}${myPnL.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-[10px] text-gray-500">Piks</span>
+                          <span className="text-sm font-bold text-white">{myBetsCount}</span>
+                        </div>
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-[10px] text-gray-500">Min Piks Left</span>
+                          <span className={`text-sm font-bold ${piksRemaining > 0 ? 'text-yellow-400' : 'text-green-400'}`}>
+                            {piksRemaining > 0 ? piksRemaining : '✓'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl p-3" style={{ background: '#111', border: '1px solid #1a1a1a' }}>
+                      <div className="flex items-center gap-1.5 mb-2.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider truncate">{opponent.username || 'Opponent'}</span>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-[10px] text-gray-500">Balance</span>
+                          <span className="text-sm font-bold text-white">${oppBalanceNum.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-[10px] text-gray-500">P&L</span>
+                          <span className={`text-sm font-bold ${oppPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {oppPnL >= 0 ? '+' : ''}${oppPnL.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-[10px] text-gray-500">Piks</span>
+                          <span className="text-sm font-bold text-white">{opponentBets.length}</span>
+                        </div>
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-[10px] text-gray-500">Staked</span>
+                          <span className="text-sm font-bold text-white">${oppStaked.toLocaleString()}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
-                    <h4 className="font-semibold text-sm mb-3 text-red-400">{opponent.username}'s Stats</h4>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      <div>
-                        <p className="text-xs text-gray-500">Balance</p>
-                        <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${oppBalanceNum.toLocaleString()}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">P&L</p>
-                        <p className={`font-bold ${oppPnL >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                          {oppPnL >= 0 ? '+' : ''}${oppPnL.toLocaleString()}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Total Bets</p>
-                        <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponentBets.length}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Total Staked</p>
-                        <p className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${settledBets.reduce((sum, b) => sum + parseFloat(b.stake || 0), 0).toLocaleString()}</p>
-                      </div>
-                    </div>
+                  <div className="flex items-center justify-center gap-2 py-1">
+                    <svg className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-xs font-bold text-white">{formatTimer(timeRemaining)}</span>
+                    <span className="text-[10px] text-gray-500">remaining</span>
                   </div>
-                </div>
 
-                <div className={`p-4 rounded-xl ${isDarkMode ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
-                  <h4 className={`font-semibold text-sm mb-3 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Opponent's Bets</h4>
-                  {canSeeBets ? (
-                    <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                      {opponentBets.length === 0 ? (
-                        <p className={`text-center text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>No bets placed yet</p>
-                      ) : (
-                        opponentBets.map((bet, i) => (
-                          <div key={i} className={`flex justify-between items-center p-3 rounded-lg text-sm ${isDarkMode ? 'bg-black/30' : 'bg-white'}`}>
-                            <div className="flex-1 truncate">
-                              <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>{bet.selection}</span>
-                              <span className={`ml-2 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>({bet.odds})</span>
-                            </div>
-                            <div className="flex items-center gap-3">
-                              <span className="text-gray-400">${parseFloat(bet.stake).toFixed(0)}</span>
-                              <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                bet.status === 'won' ? 'bg-green-500/20 text-green-400' :
-                                bet.status === 'lost' ? 'bg-red-500/20 text-red-400' :
-                                'bg-yellow-500/20 text-yellow-400'
-                              }`}>
-                                {bet.status.toUpperCase()}
-                              </span>
-                            </div>
-                          </div>
-                        ))
+                  <div className="rounded-xl overflow-hidden" style={{ background: '#111', border: '1px solid #1a1a1a' }}>
+                    <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: '1px solid #1a1a1a' }}>
+                      <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Opponent's Piks</span>
+                      {!canSeeBets && (
+                        <span className="text-[9px] text-gray-600 flex items-center gap-1">
+                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>
+                          Locked
+                        </span>
                       )}
                     </div>
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-6">
-                      <div className="text-4xl mb-2">🔒</div>
-                      <p className="text-sm text-center text-gray-500">
-                        Place a bet to reveal opponent's bets
-                      </p>
+                    {canSeeBets ? (
+                      <div className="max-h-[180px] overflow-y-auto">
+                        {opponentBets.length === 0 ? (
+                          <div className="py-6 text-center">
+                            <p className="text-xs text-gray-600">No piks placed yet</p>
+                          </div>
+                        ) : (
+                          <div className="divide-y divide-[#1a1a1a]">
+                            {opponentBets.map((bet, i) => (
+                              <div key={i} className="flex justify-between items-center px-3 py-2.5">
+                                <div className="flex-1 truncate mr-2">
+                                  <span className="text-xs text-white">{bet.selection}</span>
+                                  <span className="text-[10px] text-gray-500 ml-1.5">({bet.odds})</span>
+                                </div>
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                  <span className="text-[10px] text-gray-500">${parseFloat(bet.stake).toFixed(0)}</span>
+                                  <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
+                                    bet.status === 'won' ? 'bg-green-500/15 text-green-400' :
+                                    bet.status === 'lost' ? 'bg-red-500/15 text-red-400' :
+                                    'bg-yellow-500/15 text-yellow-400'
+                                  }`}>
+                                    {bet.status.toUpperCase()}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="py-8 flex flex-col items-center justify-center">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid #1a1a1a' }}>
+                          <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>
+                        </div>
+                        <p className="text-[11px] text-gray-500 text-center">Place a pik to reveal opponent's piks</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {onForfeit && (
+                    <div className="pt-1 text-center">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowForfeitModal(true);
+                        }}
+                        className="text-red-500/60 hover:text-red-400 text-[10px] font-medium transition-colors"
+                      >
+                        Forfeit Battle
+                      </button>
                     </div>
                   )}
                 </div>
-
-                {onForfeit && (
-                  <div className="pt-2 text-center">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowForfeitModal(true);
-                      }}
-                      className="text-red-400 hover:text-red-300 text-xs font-medium transition-colors"
-                    >
-                      Forfeit Battle
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       <ForfeitModal
         isOpen={showForfeitModal}
