@@ -62,6 +62,25 @@ export default async function handler(req, res) {
           return false;
         }
       }
+      if (m.status === 'waiting') {
+        if (m.user1Id && m.user2Id) {
+          db.update(matchups)
+            .set({ status: 'active' })
+            .where(eq(matchups.id, m.id))
+            .catch(() => {});
+          m.status = 'active';
+          return true;
+        }
+        const createdTime = new Date(m.createdAt || m.startsAt).getTime();
+        const hoursSinceCreated = (Date.now() - createdTime) / (1000 * 60 * 60);
+        if (hoursSinceCreated > 24) {
+          db.update(matchups)
+            .set({ status: 'expired' })
+            .where(eq(matchups.id, m.id))
+            .catch(() => {});
+          return false;
+        }
+      }
       return true;
     });
 

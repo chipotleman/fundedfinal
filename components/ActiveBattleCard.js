@@ -118,12 +118,12 @@ export default function ActiveBattleCard({
           }}
         />
 
-        <div className="relative z-10 h-full flex items-center px-3 md:px-6">
+        <div className="relative z-10 h-full flex items-center px-3 md:px-5">
           <div className="flex items-center justify-between w-full">
 
-            <div className="flex flex-col items-center flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
               <div
-                className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center overflow-hidden border-2 shadow-lg mb-1"
+                className="w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center overflow-hidden border-2 shadow-lg flex-shrink-0"
                 style={{
                   borderColor: isWinning ? '#22c55e' : isLosing ? '#ef4444' : '#facc15',
                   boxShadow: isWinning ? '0 0 12px rgba(34,197,94,0.4)' : isLosing ? '0 0 12px rgba(239,68,68,0.4)' : '0 0 12px rgba(250,204,21,0.4)',
@@ -133,29 +133,31 @@ export default function ActiveBattleCard({
                 {userAvatar ? (
                   <img src={userAvatar} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-lg md:text-xl">👤</span>
+                  <span className="text-base md:text-lg">👤</span>
                 )}
               </div>
-              <span className="text-[9px] md:text-[10px] uppercase tracking-wider text-gray-400 font-semibold">You</span>
-              <p className={`text-base md:text-xl font-extrabold ${isWinning ? 'text-green-400' : isLosing ? 'text-red-400' : 'text-yellow-400'}`}>
-                ${myBalanceNum.toLocaleString()}
-              </p>
-              <p className="text-[10px] text-gray-500">
-                {piksRemaining > 0 ? `${piksRemaining} piks left` : `${myBetsCount} piks`}
-              </p>
+              <div className="min-w-0">
+                <span className="text-[9px] uppercase tracking-wider text-gray-400 font-semibold block">You</span>
+                <p className={`text-sm md:text-lg font-extrabold leading-tight ${isWinning ? 'text-green-400' : isLosing ? 'text-red-400' : 'text-yellow-400'}`}>
+                  ${myBalanceNum.toLocaleString()}
+                </p>
+                <p className="text-[9px] text-gray-500 leading-tight">
+                  {piksRemaining > 0 ? `${piksRemaining} piks left` : `${myBetsCount} piks`}
+                </p>
+              </div>
             </div>
 
-            <div className="flex flex-col items-center flex-1 min-w-0">
-              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 mb-1">
-                <span className="text-[9px] font-bold uppercase tracking-wide text-white whitespace-nowrap">
+            <div className="flex flex-col items-center flex-shrink-0 px-2">
+              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 mb-0.5">
+                <span className="text-[8px] md:text-[9px] font-bold uppercase tracking-wide text-white whitespace-nowrap">
                   {getDurationLabel(matchup.durationType)}
                 </span>
               </div>
-              <span className="text-lg md:text-2xl mb-0.5">🏆</span>
-              <p className="text-lg md:text-2xl font-black text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.4)]">
+              <span className="text-base md:text-xl">🏆</span>
+              <p className="text-base md:text-xl font-black text-yellow-400 leading-tight drop-shadow-[0_0_8px_rgba(250,204,21,0.4)]">
                 ${winnerPayout.toLocaleString()}
               </p>
-              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold ${
+              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] md:text-[9px] font-bold ${
                 isWinning
                   ? 'bg-green-500/20 text-green-400'
                   : isLosing
@@ -167,30 +169,32 @@ export default function ActiveBattleCard({
               </div>
             </div>
 
-            <div className="flex flex-col items-center flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-1 min-w-0 justify-end">
+              <div className="min-w-0 text-right">
+                <span className="text-[9px] uppercase tracking-wider text-gray-400 font-semibold block truncate max-w-[70px] ml-auto">
+                  {opponent.username || 'Opponent'}
+                </span>
+                <p className="text-sm md:text-lg font-extrabold text-red-400 leading-tight">
+                  ${oppBalanceNum.toLocaleString()}
+                </p>
+                <p className="text-[9px] text-gray-500 leading-tight">
+                  {opponentBets.length} piks
+                </p>
+              </div>
               {opponent.avatar ? (
                 <img
                   src={opponent.avatar}
                   alt={opponent.username}
-                  className="w-10 h-10 md:w-12 md:h-12 rounded-full border-2 border-red-400/50 shadow-lg shadow-red-500/20 mb-1"
+                  className="w-9 h-9 md:w-11 md:h-11 rounded-full border-2 border-red-400/50 shadow-lg shadow-red-500/20 flex-shrink-0"
                 />
               ) : (
                 <div
-                  className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center border-2 border-red-400/50 shadow-lg shadow-red-500/20 mb-1"
+                  className="w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center border-2 border-red-400/50 shadow-lg shadow-red-500/20 flex-shrink-0"
                   style={{ background: 'linear-gradient(135deg, #5f1e1e, #301a0d)' }}
                 >
-                  <span className="text-lg md:text-xl">👤</span>
+                  <span className="text-base md:text-lg">👤</span>
                 </div>
               )}
-              <span className="text-[9px] md:text-[10px] uppercase tracking-wider text-gray-400 font-semibold truncate max-w-[80px]">
-                {opponent.username || 'Opponent'}
-              </span>
-              <p className="text-base md:text-xl font-extrabold text-red-400">
-                ${oppBalanceNum.toLocaleString()}
-              </p>
-              <p className="text-[10px] text-gray-500">
-                {opponentBets.length} piks
-              </p>
             </div>
           </div>
         </div>
