@@ -317,8 +317,8 @@ function BattleCard({ battle, compact, focused }) {
               <div className={`flex-1 flex items-center gap-1 py-1 px-1.5 rounded text-[9px] font-medium truncate ${onlyUser1 ? 'text-green-400' : 'text-gray-600'}`} style={{ background: onlyUser1 ? 'rgba(16,185,129,0.08)' : 'transparent' }}>
                 {onlyUser1 ? '✓' : '○'} {user1.username || 'Player 1'}
               </div>
-              <div className={`flex-1 flex items-center gap-1 py-1 px-1.5 rounded text-[9px] font-medium truncate ${onlyUser2 ? 'text-green-400' : 'text-gray-600'}`} style={{ background: onlyUser2 ? 'rgba(16,185,129,0.08)' : 'transparent' }}>
-                {onlyUser2 ? '✓' : '○'} {user2.username || 'Player 2'}
+              <div className={`flex-1 flex items-center justify-end gap-1 py-1 px-1.5 rounded text-[9px] font-medium truncate ${onlyUser2 ? 'text-green-400' : 'text-gray-600'}`} style={{ background: onlyUser2 ? 'rgba(16,185,129,0.08)' : 'transparent' }}>
+                {user2.username || 'Player 2'} {onlyUser2 ? '✓' : '○'}
               </div>
             </div>
           </div>
