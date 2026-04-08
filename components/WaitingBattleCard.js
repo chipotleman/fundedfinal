@@ -6,6 +6,49 @@ const GAME_MODES = {
   tournament: { durationMinutes: 4320, label: 'TOURNAMENT' },
 };
 
+const MODE_THEMES = {
+  rush: {
+    label: 'RUSH',
+    icon: '⚡',
+    bg: 'linear-gradient(135deg, #1a0a00 0%, #1f0e00 50%, #1a0a00 100%)',
+    border: 'rgba(251, 146, 60, 0.3)',
+    scanColor: 'rgba(251,146,60,0.4)',
+    dotColor: 'bg-orange-400',
+    modeTextColor: 'text-orange-400',
+    labelColor: '#fb923c',
+  },
+  original: {
+    label: 'ORIGINAL',
+    icon: '🏆',
+    bg: 'linear-gradient(135deg, #020a18 0%, #0a1225 50%, #020a18 100%)',
+    border: 'rgba(59, 130, 246, 0.3)',
+    scanColor: 'rgba(59,130,246,0.4)',
+    dotColor: 'bg-blue-400',
+    modeTextColor: 'text-blue-400',
+    labelColor: '#3b82f6',
+  },
+  tournament: {
+    label: 'TOURNAMENT',
+    icon: '👑',
+    bg: 'linear-gradient(135deg, #0a0f00 0%, #0d1a0a 50%, #0a0f00 100%)',
+    border: 'rgba(16, 185, 129, 0.3)',
+    scanColor: 'rgba(16,185,129,0.4)',
+    dotColor: 'bg-emerald-400',
+    modeTextColor: 'text-emerald-400',
+    labelColor: '#10b981',
+  },
+};
+
+function getMode(data, isQueueEntry) {
+  if (isQueueEntry) {
+    return data.gameMode || 'original';
+  }
+  const dm = data.durationMinutes;
+  if (dm && dm <= 200) return 'rush';
+  if (dm && dm > 1500) return 'tournament';
+  return 'original';
+}
+
 export default function WaitingBattleCard({ matchup, queueEntry }) {
   const { refresh: refreshMatchup } = useMatchup();
 
@@ -18,9 +61,8 @@ export default function WaitingBattleCard({ matchup, queueEntry }) {
     ? 'Quick Match'
     : (data.matchType === 'private' ? 'Private Match' : data.matchType === 'friend' ? 'Friend Match' : 'Quick Match');
 
-  const modeLabel = isQueueEntry
-    ? (GAME_MODES[data.gameMode]?.label || 'ORIGINAL')
-    : (data.durationMinutes <= 200 ? 'RUSH' : data.durationMinutes <= 1500 ? 'ORIGINAL' : 'TOURNAMENT');
+  const mode = getMode(data, isQueueEntry);
+  const theme = MODE_THEMES[mode] || MODE_THEMES.original;
 
   const buyIn = isQueueEntry
     ? parseFloat(data.buyIn ?? 0)
@@ -69,8 +111,8 @@ export default function WaitingBattleCard({ matchup, queueEntry }) {
       <div
         className="w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 rounded-2xl overflow-hidden relative h-[140px] md:h-[180px]"
         style={{
-          background: 'linear-gradient(135deg, #0d0d0d 0%, #111 50%, #0d0d0d 100%)',
-          border: '2px solid rgba(251, 146, 60, 0.3)',
+          background: theme.bg,
+          border: `2px solid ${theme.border}`,
         }}
       >
         <div
@@ -80,7 +122,7 @@ export default function WaitingBattleCard({ matchup, queueEntry }) {
           <div
             className="absolute inset-0"
             style={{
-              background: 'linear-gradient(90deg, transparent, rgba(251,146,60,0.4), transparent)',
+              background: `linear-gradient(90deg, transparent, ${theme.scanColor}, transparent)`,
               animation: 'waiting-scan 2.5s ease-in-out infinite',
             }}
           />
@@ -89,10 +131,14 @@ export default function WaitingBattleCard({ matchup, queueEntry }) {
         <div className="relative z-10 h-full flex flex-col justify-between p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
+              <div className={`w-2 h-2 ${theme.dotColor} rounded-full animate-pulse`}></div>
               <span className="text-white text-sm font-semibold">Waiting for Opponent</span>
             </div>
-            <span className="text-gray-500 text-xs font-medium">{matchTypeLabel}</span>
+            <div className="flex items-center gap-2">
+              <span style={{ color: theme.labelColor }} className="text-xs font-bold">{theme.icon} {theme.label}</span>
+              <span className="text-gray-600 text-[10px]">|</span>
+              <span className="text-gray-500 text-xs font-medium">{matchTypeLabel}</span>
+            </div>
           </div>
 
           {privateCode ? (
@@ -103,8 +149,8 @@ export default function WaitingBattleCard({ matchup, queueEntry }) {
                   <p className="text-white font-bold text-sm">${buyIn.toLocaleString()}</p>
                 </div>
                 <div>
-                  <p className="text-gray-500 text-[9px] uppercase tracking-wider">Mode</p>
-                  <p className="text-white font-bold text-sm">{modeLabel}</p>
+                  <p className="text-gray-500 text-[9px] uppercase tracking-wider">Pot</p>
+                  <p className="text-white font-bold text-sm">${pot.toLocaleString()}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-1.5">
@@ -130,10 +176,6 @@ export default function WaitingBattleCard({ matchup, queueEntry }) {
                 <p className="text-white font-bold text-sm">${buyIn.toLocaleString()}</p>
               </div>
               <div>
-                <p className="text-gray-500 text-[9px] uppercase tracking-wider">Mode</p>
-                <p className="text-white font-bold text-sm">{modeLabel}</p>
-              </div>
-              <div>
                 <p className="text-gray-500 text-[9px] uppercase tracking-wider">Pot</p>
                 <p className="text-white font-bold text-sm">${pot.toLocaleString()}</p>
               </div>
@@ -142,7 +184,7 @@ export default function WaitingBattleCard({ matchup, queueEntry }) {
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse"></div>
+              <div className={`w-1.5 h-1.5 ${theme.dotColor} rounded-full animate-pulse`}></div>
               <span className="text-gray-500 text-xs">Searching for opponent...</span>
             </div>
             <button

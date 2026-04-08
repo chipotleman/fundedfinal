@@ -15,6 +15,61 @@ function formatTimer(ms) {
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
+const MODE_THEMES = {
+  rush: {
+    label: 'RUSH',
+    icon: '⚡',
+    bg: 'linear-gradient(135deg, #1a0a00 0%, #2d1000 25%, #3d1800 50%, #2a0f00 75%, #140700 100%)',
+    border: 'rgba(251, 146, 60, 0.5)',
+    glow: 'radial-gradient(ellipse at center bottom, rgba(251,146,60,0.2) 0%, transparent 60%)',
+    badgeBg: 'rgba(251,146,60,0.2)',
+    badgeText: '#fb923c',
+    avatarBg: 'linear-gradient(135deg, #5f3a1e, #301a0d)',
+    oppAvatarBg: 'linear-gradient(135deg, #5f1e1e, #301a0d)',
+    prizeColor: 'text-orange-400',
+    prizeShadow: 'drop-shadow-[0_0_8px_rgba(251,146,60,0.5)]',
+    scanColor: 'rgba(251,146,60,0.3)',
+    scanSpeed: '1.5s',
+  },
+  original: {
+    label: 'ORIGINAL',
+    icon: '🏆',
+    bg: 'linear-gradient(135deg, #020a18 0%, #0a1628 25%, #122240 50%, #0d1a30 75%, #050d1a 100%)',
+    border: 'rgba(59, 130, 246, 0.4)',
+    glow: 'radial-gradient(ellipse at center bottom, rgba(59,130,246,0.15) 0%, transparent 60%)',
+    badgeBg: 'rgba(59,130,246,0.2)',
+    badgeText: '#3b82f6',
+    avatarBg: 'linear-gradient(135deg, #1e3a5f, #0d1a30)',
+    oppAvatarBg: 'linear-gradient(135deg, #5f1e1e, #301a0d)',
+    prizeColor: 'text-yellow-400',
+    prizeShadow: 'drop-shadow-[0_0_8px_rgba(250,204,21,0.4)]',
+    scanColor: 'rgba(59,130,246,0.2)',
+    scanSpeed: '3s',
+  },
+  tournament: {
+    label: 'TOURNAMENT',
+    icon: '👑',
+    bg: 'linear-gradient(135deg, #0a0f00 0%, #1a2800 25%, #0d2618 50%, #0a1f10 75%, #050d08 100%)',
+    border: 'rgba(16, 185, 129, 0.4)',
+    glow: 'radial-gradient(ellipse at center bottom, rgba(16,185,129,0.15) 0%, transparent 60%)',
+    badgeBg: 'rgba(16,185,129,0.2)',
+    badgeText: '#10b981',
+    avatarBg: 'linear-gradient(135deg, #1e5f3a, #0d301a)',
+    oppAvatarBg: 'linear-gradient(135deg, #5f1e1e, #301a0d)',
+    prizeColor: 'text-emerald-400',
+    prizeShadow: 'drop-shadow-[0_0_8px_rgba(16,185,129,0.4)]',
+    scanColor: 'rgba(16,185,129,0.2)',
+    scanSpeed: '4s',
+  },
+};
+
+function getGameMode(matchup) {
+  const dm = matchup?.durationMinutes;
+  if (dm && dm <= 200) return 'rush';
+  if (dm && dm > 1500) return 'tournament';
+  return 'original';
+}
+
 export default function ActiveBattleCard({
   matchup,
   opponent,
@@ -56,6 +111,9 @@ export default function ActiveBattleCard({
 
   if (!matchup || !opponent) return null;
 
+  const mode = getGameMode(matchup);
+  const theme = MODE_THEMES[mode];
+
   const myBalanceNum = parseFloat(myBalance ?? 0);
   const oppBalanceNum = parseFloat(opponentBalance ?? 0);
   const startingBalance = parseFloat(matchup.startingBalance ?? 0);
@@ -70,28 +128,11 @@ export default function ActiveBattleCard({
   const minPicks = 4;
   const piksRemaining = Math.max(0, minPicks - myBetsCount);
 
-  const getDurationLabel = (durationType) => {
-    const labels = {
-      '30_min': 'FLASH',
-      '1_hour': '1HR',
-      '1_day': '24HR',
-      '3_days': '3 DAY',
-      '1_week': '1 WEEK'
-    };
-    return labels[durationType] || durationType?.replace(/_/g, ' ')?.toUpperCase() || 'BATTLE';
-  };
-
-  const borderColor = isWinning
-    ? 'rgba(34, 197, 94, 0.4)'
+  const statusBorderColor = isWinning
+    ? 'rgba(34, 197, 94, 0.5)'
     : isLosing
-      ? 'rgba(239, 68, 68, 0.4)'
-      : 'rgba(250, 204, 21, 0.4)';
-
-  const glowColor = isWinning
-    ? 'rgba(34, 197, 94, 0.15)'
-    : isLosing
-      ? 'rgba(239, 68, 68, 0.15)'
-      : 'rgba(250, 204, 21, 0.15)';
+      ? 'rgba(239, 68, 68, 0.5)'
+      : 'rgba(250, 204, 21, 0.5)';
 
   return (
     <>
@@ -100,23 +141,61 @@ export default function ActiveBattleCard({
           0%, 100% { opacity: 0.4; }
           50% { opacity: 0.8; }
         }
+        @keyframes mode-scan-rush {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
+        }
+        @keyframes mode-scan-original {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 0.7; }
+        }
+        @keyframes mode-scan-tournament {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
       `}</style>
 
       <div
         className="w-[calc(100vw-32px)] md:w-[864px] flex-shrink-0 rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 relative h-[140px] md:h-[180px] active:scale-[0.98]"
         style={{
-          background: 'linear-gradient(135deg, #020a18 0%, #0a1628 25%, #122240 50%, #0d1a30 75%, #050d1a 100%)',
-          border: `2px solid ${borderColor}`,
+          background: theme.bg,
+          border: `2px solid ${statusBorderColor}`,
         }}
         onClick={() => setShowModal(true)}
       >
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `radial-gradient(ellipse at center bottom, ${glowColor} 0%, transparent 60%)`,
-            animation: 'active-battle-glow 3s ease-in-out infinite',
-          }}
-        />
+        {mode === 'rush' && (
+          <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ opacity: 0.12 }}>
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(90deg, transparent, ${theme.scanColor}, transparent)`,
+                animation: `mode-scan-rush ${theme.scanSpeed} linear infinite`,
+              }}
+            />
+          </div>
+        )}
+
+        {mode === 'original' && (
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: theme.glow,
+              animation: `active-battle-glow 3s ease-in-out infinite`,
+            }}
+          />
+        )}
+
+        {mode === 'tournament' && (
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: `linear-gradient(270deg, rgba(16,185,129,0.05), rgba(250,204,21,0.08), rgba(16,185,129,0.05))`,
+              backgroundSize: '200% 200%',
+              animation: `mode-scan-tournament 6s ease infinite`,
+            }}
+          />
+        )}
 
         <div className="relative z-10 h-full flex items-center px-3 md:px-5">
           <div className="flex items-center justify-between w-full">
@@ -127,7 +206,7 @@ export default function ActiveBattleCard({
                 style={{
                   borderColor: isWinning ? '#22c55e' : isLosing ? '#ef4444' : '#facc15',
                   boxShadow: isWinning ? '0 0 12px rgba(34,197,94,0.4)' : isLosing ? '0 0 12px rgba(239,68,68,0.4)' : '0 0 12px rgba(250,204,21,0.4)',
-                  background: 'linear-gradient(135deg, #1e3a5f, #0d1a30)',
+                  background: theme.avatarBg,
                 }}
               >
                 {userAvatar ? (
@@ -148,13 +227,13 @@ export default function ActiveBattleCard({
             </div>
 
             <div className="flex flex-col items-center flex-shrink-0 px-2">
-              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 mb-0.5">
-                <span className="text-[8px] md:text-[9px] font-bold uppercase tracking-wide text-white whitespace-nowrap">
-                  {getDurationLabel(matchup.durationType)}
+              <div className="flex items-center gap-1 px-2 py-0.5 rounded-full mb-0.5" style={{ background: theme.badgeBg }}>
+                <span className="text-[8px] md:text-[9px] font-bold uppercase tracking-wide whitespace-nowrap" style={{ color: theme.badgeText }}>
+                  {theme.label}
                 </span>
               </div>
-              <span className="text-base md:text-xl">🏆</span>
-              <p className="text-base md:text-xl font-black text-yellow-400 leading-tight drop-shadow-[0_0_8px_rgba(250,204,21,0.4)]">
+              <span className="text-base md:text-xl">{theme.icon}</span>
+              <p className={`text-base md:text-xl font-black leading-tight ${theme.prizeColor} ${theme.prizeShadow}`}>
                 ${winnerPayout.toLocaleString()}
               </p>
               <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-[8px] md:text-[9px] font-bold ${
@@ -190,7 +269,7 @@ export default function ActiveBattleCard({
               ) : (
                 <div
                   className="w-9 h-9 md:w-11 md:h-11 rounded-full flex items-center justify-center border-2 border-red-400/50 shadow-lg shadow-red-500/20 flex-shrink-0"
-                  style={{ background: 'linear-gradient(135deg, #5f1e1e, #301a0d)' }}
+                  style={{ background: theme.oppAvatarBg }}
                 >
                   <span className="text-base md:text-lg">👤</span>
                 </div>
@@ -211,8 +290,11 @@ export default function ActiveBattleCard({
               className={`relative w-full max-w-2xl rounded-2xl overflow-hidden ${isDarkMode ? 'bg-[#111] border border-gray-800' : 'bg-white border border-gray-200'}`}
               onClick={e => e.stopPropagation()}
             >
-              <div className={`flex items-center justify-between p-4 border-b ${isDarkMode ? 'border-gray-800' : 'border-gray-200'}`}>
-                <h2 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Battle Details</h2>
+              <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: theme.badgeText + '33' }}>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{theme.icon}</span>
+                  <h2 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{theme.label} Battle</h2>
+                </div>
                 <button
                   onClick={() => setShowModal(false)}
                   className={`p-2 rounded-full ${isDarkMode ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
