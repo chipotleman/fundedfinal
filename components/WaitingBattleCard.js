@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useMatchup } from '../contexts/MatchupContext';
 
@@ -64,25 +63,14 @@ function getMode(data, isQueueEntry) {
   return 'original';
 }
 
-export default function WaitingBattleCard({ matchup, queueEntry }) {
+export default function WaitingBattleCard({ matchup, queueEntry, myProfile }) {
   const { refresh: refreshMatchup } = useMatchup();
   const { data: session } = useSession();
-  const [userAvatar, setUserAvatar] = useState(null);
-  const [userName, setUserName] = useState('You');
 
   const data = matchup || queueEntry;
 
-  useEffect(() => {
-    if (session?.user?.id) {
-      fetch(`/api/profiles/${session.user.id}`)
-        .then(res => res.ok ? res.json() : null)
-        .then(d => {
-          if (d?.avatar) setUserAvatar(d.avatar);
-          if (d?.username) setUserName(d.username);
-        })
-        .catch(() => {});
-    }
-  }, [session?.user?.id]);
+  const userAvatar = myProfile?.avatar || null;
+  const userName = myProfile?.username || session?.user?.name || 'You';
 
   if (!data) return null;
 
@@ -168,7 +156,7 @@ export default function WaitingBattleCard({ matchup, queueEntry }) {
                 {userAvatar ? (
                   <img src={userAvatar} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-2xl md:text-3xl">👤</span>
+                  <span className="text-xl md:text-2xl font-black text-white/70">{userName?.[0]?.toUpperCase() || 'Y'}</span>
                 )}
               </div>
             </div>

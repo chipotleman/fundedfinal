@@ -25,7 +25,7 @@ export default function Dashboard() {
   const { isDarkMode } = useTheme();
   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
   const { apiGames: contextApiGames, inplayEvents: contextInplayEvents, loading: gamesLoading, error: gamesError, lastUpdated, isDemoMode } = useGames();
-  const { matchup, opponent, myBalance: matchupBalance, opponentBalance, myBets, opponentBets, canSeeOpponentBets, hasActiveMatchup, isWaiting, isQueued, queueEntry, hasAnyMatchup, timeRemaining, refresh: refreshMatchup } = useMatchup();
+  const { matchup, opponent, myProfile, myBalance: matchupBalance, opponentBalance, myBets, opponentBets, canSeeOpponentBets, hasActiveMatchup, isWaiting, isQueued, queueEntry, hasAnyMatchup, timeRemaining, refresh: refreshMatchup } = useMatchup();
   const [selectedSport, setSelectedSport] = useState('Live');
   const [showBattleWalkthrough, setShowBattleWalkthrough] = useState(false);
   const [walkthroughStep, setWalkthroughStep] = useState(0);
@@ -552,6 +552,7 @@ export default function Dashboard() {
                   opponentBets={opponentBets}
                   canSeeBets={canSeeOpponentBets}
                   myBetsCount={myBets?.length || 0}
+                  myProfile={myProfile}
                   onForfeit={() => {
                     fetch('/api/battles/forfeit', { method: 'POST' })
                       .then(r => r.json())
@@ -564,9 +565,9 @@ export default function Dashboard() {
                   }}
                 />
               ) : isWaiting && matchup ? (
-                <WaitingBattleCard matchup={matchup} />
+                <WaitingBattleCard matchup={matchup} myProfile={myProfile} />
               ) : isQueued && queueEntry ? (
-                <WaitingBattleCard queueEntry={queueEntry} />
+                <WaitingBattleCard queueEntry={queueEntry} myProfile={myProfile} />
               ) : (
                 <FireBattleContainer isDarkMode={isDarkMode} />
               )}

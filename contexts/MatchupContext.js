@@ -64,11 +64,13 @@ export function MatchupProvider({ children }) {
   const timeRemaining = matchupData?.timeRemaining;
   const endsAt = matchupData?.endsAt;
   const queueEntry = matchupData?.queueEntry;
+  const myProfile = matchupData?.myProfile;
 
   const value = {
     matchupData,
     matchup,
     opponent,
+    myProfile,
     myBalance,
     opponentBalance,
     myBets,

@@ -85,6 +85,19 @@ export default async function handler(req, res) {
     });
 
     if (validMatchups.length === 0) {
+      let queueMyProfile = null;
+      const [queueProfileRow] = await db
+        .select()
+        .from(profiles)
+        .where(eq(profiles.id, userId));
+      if (queueProfileRow) {
+        queueMyProfile = {
+          id: queueProfileRow.id,
+          username: queueProfileRow.username,
+          avatar: queueProfileRow.avatar,
+        };
+      }
+
       const [queueEntry] = await db
         .select()
         .from(matchupQueue)
@@ -105,6 +118,7 @@ export default async function handler(req, res) {
           return res.status(200).json({
             status: 'queued',
             queueEntry,
+            myProfile: queueMyProfile,
             matchup: null,
           });
         }
@@ -131,6 +145,7 @@ export default async function handler(req, res) {
           return res.status(200).json({
             status: 'queued',
             queueEntry: mmQueueEntry,
+            myProfile: queueMyProfile,
             matchup: null,
           });
         }
@@ -153,6 +168,19 @@ export default async function handler(req, res) {
     let opponent = null;
     let opponentBets = [];
     let myBets = [];
+    let myProfile = null;
+
+    const [myProfileRow] = await db
+      .select()
+      .from(profiles)
+      .where(eq(profiles.id, userId));
+    if (myProfileRow) {
+      myProfile = {
+        id: myProfileRow.id,
+        username: myProfileRow.username,
+        avatar: myProfileRow.avatar,
+      };
+    }
 
     if (isFakeOpponentUser) {
       console.log('[Matchups Current] User is fake opponent, fakeOpponentId:', fakeOpponentEntry.id);
@@ -193,17 +221,27 @@ export default async function handler(req, res) {
       myBets = fakeBets;
       console.log('[Matchups Current] My fake bets count:', fakeBets.length, 'for matchup:', matchup.id);
     } else if (matchup.isFakeOpponent && matchup.fakeOpponentId) {
-      // Current user is user1, opponent is fake
       const [fake] = await db
         .select()
         .from(fakeOpponents)
         .where(eq(fakeOpponents.id, matchup.fakeOpponentId));
       
       if (fake) {
+        let avatarUrl = fake.avatar;
+        if (!avatarUrl) {
+          const profileId = fake.userId || fake.id;
+          const [fakeProfile] = await db
+            .select({ avatar: profiles.avatar })
+            .from(profiles)
+            .where(eq(profiles.id, profileId));
+          if (fakeProfile?.avatar) {
+            avatarUrl = fakeProfile.avatar;
+          }
+        }
         opponent = {
           id: fake.id,
           username: fake.displayName,
-          avatar: fake.avatar,
+          avatar: avatarUrl,
           winRate: fake.winRate,
           totalBattles: fake.totalBattles,
           bio: fake.bio,
@@ -286,6 +324,7 @@ export default async function handler(req, res) {
       status: matchup.status,
       matchup,
       opponent,
+      myProfile,
       myBets,
       opponentBets: canSeeOpponentBets ? opponentBets : [],
       canSeeOpponentBets,

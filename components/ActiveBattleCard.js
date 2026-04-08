@@ -82,26 +82,16 @@ export default function ActiveBattleCard({
   opponentBets = [],
   canSeeBets = false,
   onForfeit,
+  myProfile,
 }) {
   const [timeRemaining, setTimeRemaining] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showForfeitModal, setShowForfeitModal] = useState(false);
-  const [userAvatar, setUserAvatar] = useState(null);
-  const [userName, setUserName] = useState('You');
   const { data: session } = useSession();
   const { isDarkMode } = useTheme();
 
-  useEffect(() => {
-    if (session?.user?.id) {
-      fetch(`/api/profiles/${session.user.id}`)
-        .then(res => res.ok ? res.json() : null)
-        .then(data => {
-          if (data?.avatar) setUserAvatar(data.avatar);
-          if (data?.username) setUserName(data.username);
-        })
-        .catch(() => {});
-    }
-  }, [session?.user?.id]);
+  const userAvatar = myProfile?.avatar || null;
+  const userName = myProfile?.username || session?.user?.name || 'You';
 
   useEffect(() => {
     if (!matchup?.endsAt) return;
@@ -202,7 +192,7 @@ export default function ActiveBattleCard({
                 {userAvatar ? (
                   <img src={userAvatar} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-2xl md:text-3xl">👤</span>
+                  <span className="text-xl md:text-2xl font-black text-white/70">{userName?.[0]?.toUpperCase() || 'Y'}</span>
                 )}
               </div>
             </div>
@@ -262,7 +252,7 @@ export default function ActiveBattleCard({
                 {opponent.avatar ? (
                   <img src={opponent.avatar} alt={opponent.username} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-2xl md:text-3xl">👤</span>
+                  <span className="text-xl md:text-2xl font-black text-white/70">{(opponent.username || 'O')[0].toUpperCase()}</span>
                 )}
               </div>
             </div>
