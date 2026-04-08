@@ -1,14 +1,61 @@
 import { useMatchup } from '../contexts/MatchupContext';
 
-export default function WaitingBattleCard({ matchup }) {
+const GAME_MODES = {
+  rush: { durationMinutes: 180, label: 'RUSH' },
+  original: { durationMinutes: 1440, label: 'ORIGINAL' },
+  tournament: { durationMinutes: 4320, label: 'TOURNAMENT' },
+};
+
+export default function WaitingBattleCard({ matchup, queueEntry }) {
   const { refresh: refreshMatchup } = useMatchup();
 
-  if (!matchup) return null;
+  const data = matchup || queueEntry;
+  if (!data) return null;
 
-  const matchTypeLabel = matchup.matchType === 'private' ? 'Private Match' : matchup.matchType === 'friend' ? 'Friend Match' : 'Quick Match';
-  const modeLabel = matchup.durationMinutes <= 200 ? 'RUSH' : matchup.durationMinutes <= 1500 ? 'ORIGINAL' : 'TOURNAMENT';
-  const buyIn = parseFloat(matchup.startingBalance ?? 0);
-  const pot = parseFloat(matchup.potSize ?? 0) || (buyIn * 2);
+  const isQueueEntry = !matchup && !!queueEntry;
+
+  const matchTypeLabel = isQueueEntry
+    ? 'Quick Match'
+    : (data.matchType === 'private' ? 'Private Match' : data.matchType === 'friend' ? 'Friend Match' : 'Quick Match');
+
+  const modeLabel = isQueueEntry
+    ? (GAME_MODES[data.gameMode]?.label || 'ORIGINAL')
+    : (data.durationMinutes <= 200 ? 'RUSH' : data.durationMinutes <= 1500 ? 'ORIGINAL' : 'TOURNAMENT');
+
+  const buyIn = isQueueEntry
+    ? parseFloat(data.buyIn ?? 0)
+    : parseFloat(data.startingBalance ?? 0);
+
+  const pot = isQueueEntry
+    ? buyIn * 2
+    : (parseFloat(data.potSize ?? 0) || (buyIn * 2));
+
+  const privateCode = !isQueueEntry ? data.privateCode : null;
+
+  const handleCancel = (e) => {
+    e.stopPropagation();
+    if (window.confirm('Cancel this match?')) {
+      if (isQueueEntry) {
+        fetch('/api/battles/cancel-queue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ queueId: data.id }),
+        })
+          .then(r => r.json())
+          .then(d => { if (d.success) refreshMatchup(); })
+          .catch(() => {});
+      } else {
+        fetch('/api/battles/private', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'cancel' }),
+        })
+          .then(r => r.json())
+          .then(d => { if (d.success) refreshMatchup(); })
+          .catch(() => {});
+      }
+    }
+  };
 
   return (
     <>
@@ -48,7 +95,7 @@ export default function WaitingBattleCard({ matchup }) {
             <span className="text-gray-500 text-xs font-medium">{matchTypeLabel}</span>
           </div>
 
-          {matchup.privateCode ? (
+          {privateCode ? (
             <div className="flex items-center justify-between gap-3">
               <div className="flex gap-4">
                 <div>
@@ -61,11 +108,11 @@ export default function WaitingBattleCard({ matchup }) {
                 </div>
               </div>
               <div className="flex items-center gap-2 bg-[#1a1a1a] border border-[#333] rounded-lg px-3 py-1.5">
-                <span className="text-white font-mono font-bold text-sm tracking-[0.2em]">{matchup.privateCode}</span>
+                <span className="text-white font-mono font-bold text-sm tracking-[0.2em]">{privateCode}</span>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    navigator.clipboard.writeText(matchup.privateCode);
+                    navigator.clipboard.writeText(privateCode);
                     const el = e.currentTarget;
                     el.textContent = '✓';
                     setTimeout(() => { el.textContent = 'Copy'; }, 1500);
@@ -99,19 +146,7 @@ export default function WaitingBattleCard({ matchup }) {
               <span className="text-gray-500 text-xs">Searching for opponent...</span>
             </div>
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (window.confirm('Cancel this match?')) {
-                  fetch('/api/battles/private', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'cancel' }),
-                  })
-                    .then(r => r.json())
-                    .then(data => { if (data.success) refreshMatchup(); })
-                    .catch(() => {});
-                }
-              }}
+              onClick={handleCancel}
               className="text-gray-500 text-xs font-medium hover:text-red-400 transition-colors"
             >
               Cancel

@@ -1,8 +1,8 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { matchups, fakeOpponents, profiles, userBets, fakeOpponentBets, matchupQueue } from '../../../shared/schema';
-import { eq, and, or, inArray, sql, gte, lte } from 'drizzle-orm';
+import { matchups, fakeOpponents, profiles, userBets, fakeOpponentBets, matchupQueue, matchmakingQueue } from '../../../shared/schema';
+import { eq, and, or, inArray, sql, gte, lte, desc } from 'drizzle-orm';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -78,6 +78,24 @@ export default async function handler(req, res) {
         return res.status(200).json({
           status: 'queued',
           queueEntry,
+          matchup: null,
+        });
+      }
+
+      const [mmQueueEntry] = await db
+        .select()
+        .from(matchmakingQueue)
+        .where(and(
+          eq(matchmakingQueue.userId, userId),
+          eq(matchmakingQueue.status, 'waiting')
+        ))
+        .orderBy(desc(matchmakingQueue.createdAt))
+        .limit(1);
+
+      if (mmQueueEntry) {
+        return res.status(200).json({
+          status: 'queued',
+          queueEntry: mmQueueEntry,
           matchup: null,
         });
       }

@@ -50,10 +50,10 @@ export function MatchupProvider({ children }) {
   useEffect(() => {
     if (status !== 'authenticated') return;
 
-    const pollInterval = hasActiveMatchup ? 5000 : isWaiting ? 10000 : 30000;
+    const pollInterval = hasActiveMatchup ? 5000 : (isWaiting || isQueued) ? 10000 : 30000;
     const interval = setInterval(fetchCurrentMatchup, pollInterval);
     return () => clearInterval(interval);
-  }, [status, fetchCurrentMatchup, hasActiveMatchup, isWaiting]);
+  }, [status, fetchCurrentMatchup, hasActiveMatchup, isWaiting, isQueued]);
   const matchup = matchupData?.matchup;
   const opponent = matchupData?.opponent;
   const myBalance = matchupData?.myBalance;
@@ -63,6 +63,7 @@ export function MatchupProvider({ children }) {
   const canSeeOpponentBets = matchupData?.canSeeOpponentBets || false;
   const timeRemaining = matchupData?.timeRemaining;
   const endsAt = matchupData?.endsAt;
+  const queueEntry = matchupData?.queueEntry;
 
   const value = {
     matchupData,
@@ -75,6 +76,7 @@ export function MatchupProvider({ children }) {
     canSeeOpponentBets,
     timeRemaining,
     endsAt,
+    queueEntry,
     hasActiveMatchup,
     isWaiting,
     hasAnyMatchup,

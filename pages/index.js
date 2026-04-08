@@ -25,7 +25,7 @@ export default function Dashboard() {
   const { isDarkMode } = useTheme();
   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
   const { apiGames: contextApiGames, inplayEvents: contextInplayEvents, loading: gamesLoading, error: gamesError, lastUpdated, isDemoMode } = useGames();
-  const { matchup, opponent, myBalance: matchupBalance, opponentBalance, myBets, opponentBets, canSeeOpponentBets, hasActiveMatchup, isWaiting, hasAnyMatchup, timeRemaining, refresh: refreshMatchup } = useMatchup();
+  const { matchup, opponent, myBalance: matchupBalance, opponentBalance, myBets, opponentBets, canSeeOpponentBets, hasActiveMatchup, isWaiting, isQueued, queueEntry, hasAnyMatchup, timeRemaining, refresh: refreshMatchup } = useMatchup();
   const [selectedSport, setSelectedSport] = useState('Live');
   const [showBattleWalkthrough, setShowBattleWalkthrough] = useState(false);
   const [walkthroughStep, setWalkthroughStep] = useState(0);
@@ -565,6 +565,8 @@ export default function Dashboard() {
                 />
               ) : isWaiting && matchup ? (
                 <WaitingBattleCard matchup={matchup} />
+              ) : isQueued && queueEntry ? (
+                <WaitingBattleCard queueEntry={queueEntry} />
               ) : (
                 <FireBattleContainer isDarkMode={isDarkMode} />
               )}

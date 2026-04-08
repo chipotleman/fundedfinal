@@ -5,6 +5,27 @@ import { matchmakingQueue, matchups } from '../../../shared/schema';
 import { eq, and, ne } from 'drizzle-orm';
 
 export default async function handler(req, res) {
+  if (req.method === 'DELETE') {
+    const session = await getServerSession(req, res, authOptions);
+    if (!session?.user?.id) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    try {
+      await db
+        .delete(matchmakingQueue)
+        .where(
+          and(
+            eq(matchmakingQueue.userId, session.user.id),
+            eq(matchmakingQueue.status, 'waiting')
+          )
+        );
+      return res.status(200).json({ success: true, cancelled: true });
+    } catch (error) {
+      console.error('Cancel matchmaking error:', error);
+      return res.status(500).json({ error: 'Failed to cancel matchmaking' });
+    }
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
