@@ -38,6 +38,17 @@ const GAME_MODE_OPTIONS = [
 
 const BUY_IN_OPTIONS = [5, 10, 25, 50, 100];
 
+const FAKE_NAMES = [
+  'ShadowBet', 'CryptoKing', 'LuckyDraw', 'BetMaster', 'SharpShooter',
+  'OddsWizard', 'ClutchPlay', 'BigStack', 'IceVeins', 'MoneyLine',
+  'ParlayCash', 'UnderdogX', 'GoldRush', 'NitroPickz', 'AceHigh',
+];
+
+const FAKE_RECORDS = [
+  '12-3', '8-5', '15-7', '10-4', '6-2', '20-9', '9-6', '14-3', '11-8', '7-1',
+  '18-5', '13-6', '5-3', '16-4', '22-10',
+];
+
 const TIPS = [
   'Diversify your picks across different sports',
   'Best players win about 60% of their battles',
@@ -60,6 +71,8 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
   const [avatars, setAvatars] = useState([]);
   const [currentAvatarIdx, setCurrentAvatarIdx] = useState(0);
   const [avatarFlip, setAvatarFlip] = useState(false);
+  const [currentName, setCurrentName] = useState('');
+  const [currentRecord, setCurrentRecord] = useState('');
   const [matchedOpponent, setMatchedOpponent] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [tipIndex, setTipIndex] = useState(0);
@@ -107,15 +120,6 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
           }
         })
         .catch(() => {});
-
-      if (session?.user?.id) {
-        fetch(`/api/profiles/${session.user.id}`)
-          .then(r => r.ok ? r.json() : null)
-          .then(data => {
-            if (data) setUserProfile(data.profile || data);
-          })
-          .catch(() => {});
-      }
     }
     if (!isOpen) {
       cancelledRef.current = true;
@@ -125,15 +129,31 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
       setError('');
       setAvatarFlip(false);
       setCurrentAvatarIdx(0);
+      setCurrentName('');
+      setCurrentRecord('');
       setMatchedOpponent(null);
       setTipIndex(0);
       setCountdown(3);
     }
     return () => { cleanupAllTimers(); };
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (isOpen && session?.user?.id) {
+      fetch(`/api/profiles/${session.user.id}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data) setUserProfile(data.profile || data);
+        })
+        .catch(() => {});
+    }
   }, [isOpen, session?.user?.id]);
 
   useEffect(() => {
     if (step === 'searching') {
+      setCurrentName(FAKE_NAMES[Math.floor(Math.random() * FAKE_NAMES.length)]);
+      setCurrentRecord(FAKE_RECORDS[Math.floor(Math.random() * FAKE_RECORDS.length)]);
+
       avatarCycleRef.current = setInterval(() => {
         setAvatarFlip(true);
         if (flipTimeoutRef.current) clearTimeout(flipTimeoutRef.current);
@@ -142,6 +162,8 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
             const pool = avatars.length > 0 ? avatars.length : 1;
             return (prev + 1 + Math.floor(Math.random() * Math.max(pool - 1, 1))) % pool;
           });
+          setCurrentName(FAKE_NAMES[Math.floor(Math.random() * FAKE_NAMES.length)]);
+          setCurrentRecord(FAKE_RECORDS[Math.floor(Math.random() * FAKE_RECORDS.length)]);
           setAvatarFlip(false);
         }, 250);
       }, 1000);
@@ -369,6 +391,10 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
           0%, 100% { opacity: 0.6; }
           50% { opacity: 1; }
         }
+        @keyframes qm-name-slide {
+          0% { transform: translateX(15px); opacity: 0; }
+          100% { transform: translateX(0); opacity: 1; }
+        }
         @keyframes qm-topo-shift {
           0% { background-position: 0% 0%; }
           100% { background-position: 100% 100%; }
@@ -576,7 +602,14 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                       </div>
                     </div>
                   </div>
-                  <p className="text-gray-500 text-xs md:text-sm font-bold mt-1">Searching...</p>
+                  {currentName ? (
+                    <div key={currentName} style={{ animation: 'qm-name-slide 0.3s ease-out' }}>
+                      <p className="text-orange-300 text-xs md:text-sm font-bold mt-1 truncate max-w-[100px] text-center">{currentName}</p>
+                      <p className="text-gray-600 text-[10px] text-center">({currentRecord})</p>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-xs md:text-sm font-bold mt-1">Searching...</p>
+                  )}
                   <div className="flex items-center gap-1 mt-0.5">
                     {[0, 1, 2].map(i => (
                       <div
