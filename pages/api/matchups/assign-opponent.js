@@ -64,7 +64,9 @@ export default async function handler(req, res) {
       });
     }
 
-    const randomFake = validFakeOpponents[Math.floor(Math.random() * validFakeOpponents.length)].fo;
+    const randomRow = validFakeOpponents[Math.floor(Math.random() * validFakeOpponents.length)];
+    const randomFake = randomRow.fo;
+    const fakeProfileAvatar = randomRow.profile?.avatar || null;
     const startingBalance = parseFloat(queueEntry.startingBalance) || 5000;
     const potSize = startingBalance * 2;
     const platformFee = potSize * PLATFORM_FEE_PERCENT;
@@ -104,7 +106,7 @@ export default async function handler(req, res) {
       opponent: {
         id: randomFake.id,
         username: randomFake.displayName,
-        avatar: randomFake.avatar,
+        avatar: randomFake.avatar || fakeProfileAvatar,
         winRate: randomFake.winRate,
         totalBattles: randomFake.totalBattles,
         isReal: false,
