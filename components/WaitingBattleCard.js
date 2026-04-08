@@ -205,37 +205,35 @@ export default function WaitingBattleCard({ matchup, queueEntry, myProfile, oppo
           ))}
         </div>
 
-        <div className="relative z-10 h-full flex items-center px-3 md:px-6">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex flex-col items-center flex-1">
-              <div className="flex flex-col items-center h-[90px] md:h-[110px]">
-                <div 
-                  className="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 shadow-lg flex items-center justify-center overflow-hidden"
-                  style={{ 
-                    borderColor: theme.avatarRing,
-                    animation: 'wbc-glow 2s ease-in-out infinite',
-                    background: '#111',
-                  }}
-                >
-                  {userAvatar ? (
-                    <img src={userAvatar} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-xl md:text-2xl font-black text-white/70">{userName?.[0]?.toUpperCase() || 'Y'}</span>
-                  )}
-                </div>
-                <span className="text-white text-[11px] md:text-xs font-bold mt-1 truncate max-w-[80px] md:max-w-[100px] text-center">{userName}</span>
-                <span className="text-[10px] mt-0.5" style={{ color: theme.accentColor }}>Ready</span>
+        <div className="relative z-10 h-full flex items-center px-4 md:px-8">
+          <div className="flex items-center w-full">
+            <div className="flex flex-col items-center" style={{ width: '25%' }}>
+              <div 
+                className="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 shadow-lg flex items-center justify-center overflow-hidden"
+                style={{ 
+                  borderColor: theme.avatarRing,
+                  animation: 'wbc-glow 2s ease-in-out infinite',
+                  background: '#111',
+                }}
+              >
+                {userAvatar ? (
+                  <img src={userAvatar} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-xl md:text-2xl font-black text-white/70">{userName?.[0]?.toUpperCase() || 'Y'}</span>
+                )}
               </div>
+              <span className="text-white text-[11px] md:text-xs font-bold mt-1.5 truncate max-w-[80px] md:max-w-[100px] text-center">{userName}</span>
+              <span className="text-[10px] mt-0.5" style={{ color: theme.accentColor }}>Ready</span>
             </div>
 
-            <div className="flex flex-col items-center justify-center flex-1">
-              <div className="flex items-center gap-0.5 px-2 py-0.5 rounded-full mb-1" style={{ background: theme.badgeBg }}>
-                <span className="text-[8px] md:text-[9px]">{theme.icon}</span>
-                <span className="text-[7px] md:text-[8px] font-bold uppercase tracking-wider" style={{ color: theme.accentColor }}>{theme.label}</span>
+            <div className="flex flex-col items-center justify-center" style={{ width: '50%' }}>
+              <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full mb-1" style={{ background: theme.badgeBg }}>
+                <span className="text-[9px] md:text-[10px]">{theme.icon}</span>
+                <span className="text-[8px] md:text-[9px] font-bold uppercase tracking-wider" style={{ color: theme.accentColor }}>{theme.label}</span>
               </div>
 
               <div 
-                className="text-2xl md:text-4xl font-black text-transparent bg-clip-text"
+                className="text-xl md:text-2xl font-black text-transparent bg-clip-text mb-0.5"
                 style={{ 
                   backgroundImage: theme.vsGradient,
                   WebkitBackgroundClip: 'text',
@@ -245,15 +243,18 @@ export default function WaitingBattleCard({ matchup, queueEntry, myProfile, oppo
                 VS
               </div>
 
-              <div className="text-center mt-0.5">
-                <p className="text-[8px] text-gray-500 uppercase tracking-wider leading-none">Prize</p>
-                <p className="text-sm md:text-lg font-black leading-tight" style={{ color: theme.accentColor }}>
+              <div className="text-center">
+                <p className="text-[7px] md:text-[8px] text-gray-500 uppercase tracking-widest leading-none mb-0.5">Win Up To</p>
+                <p className="text-2xl md:text-3xl font-black leading-none tracking-tight" style={{ 
+                  color: theme.accentColor,
+                  textShadow: `0 0 20px rgba(${theme.accentRgb},0.5)`,
+                }}>
                   ${pot.toLocaleString()}
                 </p>
               </div>
 
               {privateCode && (
-                <div className="flex items-center gap-1 mt-1 bg-[#1a1a1a] border border-[#333] rounded px-1.5 py-0.5">
+                <div className="flex items-center gap-1 mt-1.5 bg-[#1a1a1a] border border-[#333] rounded px-1.5 py-0.5">
                   <span className="text-white font-mono font-bold text-[10px] tracking-wider">{privateCode}</span>
                   <button
                     onClick={(e) => {
@@ -269,52 +270,46 @@ export default function WaitingBattleCard({ matchup, queueEntry, myProfile, oppo
               )}
             </div>
 
-            <div className="flex flex-col items-center flex-1">
-              <div className="flex flex-col items-center h-[90px] md:h-[110px]">
-                <div className="relative">
-                  <div
-                    className="w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center overflow-hidden border-2 shadow-lg"
-                    style={{
-                      borderColor: opponent ? theme.avatarRing : '#333',
-                      background: opponent ? '#111' : '#0a0a0a',
-                      boxShadow: opponent ? theme.avatarGlow : 'none',
-                      animation: opponent ? 'wbc-glow 2s ease-in-out infinite' : 'wbc-pulse 2s ease-in-out infinite',
-                    }}
-                  >
-                    {opponent ? (
-                      opponent.avatar ? (
-                        <img src={opponent.avatar} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-xl md:text-2xl font-black text-white/70">{(opponent.username || 'O')[0].toUpperCase()}</span>
-                      )
+            <div className="flex flex-col items-center" style={{ width: '25%' }}>
+              <div className="relative">
+                <div
+                  className="w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center overflow-hidden border-2 shadow-lg"
+                  style={{
+                    borderColor: opponent ? theme.avatarRing : '#333',
+                    background: opponent ? '#111' : '#0a0a0a',
+                    boxShadow: opponent ? theme.avatarGlow : 'none',
+                    animation: opponent ? 'wbc-glow 2s ease-in-out infinite' : 'wbc-pulse 2s ease-in-out infinite',
+                  }}
+                >
+                  {opponent ? (
+                    opponent.avatar ? (
+                      <img src={opponent.avatar} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <>
-                        <div className="absolute inset-0 rounded-full" style={{
-                          background: `conic-gradient(${theme.accentColor}, transparent, ${theme.accentColor})`,
-                          animation: 'wbc-search-ring 2s linear infinite',
-                          opacity: 0.3,
-                        }} />
-                        <span className="text-xl md:text-2xl text-gray-600 relative z-10">?</span>
-                      </>
-                    )}
-                  </div>
+                      <span className="text-xl md:text-2xl font-black text-white/70">{(opponent.username || 'O')[0].toUpperCase()}</span>
+                    )
+                  ) : (
+                    <>
+                      <div className="absolute inset-0 rounded-full" style={{
+                        background: `conic-gradient(${theme.accentColor}, transparent, ${theme.accentColor})`,
+                        animation: 'wbc-search-ring 2s linear infinite',
+                        opacity: 0.3,
+                      }} />
+                      <span className="text-xl md:text-2xl text-gray-600 relative z-10">?</span>
+                    </>
+                  )}
                 </div>
-                {opponent ? (
-                  <div className="flex flex-col items-center mt-1">
-                    <span className="text-white text-[11px] md:text-xs font-bold truncate max-w-[80px] md:max-w-[100px] text-center">{opponent.username || 'Opponent'}</span>
-                    <span className="text-[10px]" style={{ color: theme.accentColor }}>Joined</span>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center mt-0.5">
-                    <svg className="w-4 h-4 md:w-5 md:h-5 animate-bounce" viewBox="0 0 24 24" fill={theme.accentColor}>
-                      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z" transform="rotate(-90 12 12)"/>
-                    </svg>
-                    <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-center leading-tight" style={{ color: theme.accentColor }}>
-                      Finding<br/>Opponent
-                    </span>
-                  </div>
-                )}
               </div>
+              {opponent ? (
+                <div className="flex flex-col items-center mt-1.5">
+                  <span className="text-white text-[11px] md:text-xs font-bold truncate max-w-[80px] md:max-w-[100px] text-center">{opponent.username || 'Opponent'}</span>
+                  <span className="text-[10px]" style={{ color: theme.accentColor }}>Matched</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 mt-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: theme.accentColor }} />
+                  <span className="text-[10px] md:text-[11px] text-gray-400">Searching...</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

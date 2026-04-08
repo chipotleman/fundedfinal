@@ -493,7 +493,9 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
           )}
 
           {step === 'searching' && (
-            <div className="relative overflow-hidden">
+            <div className="relative overflow-hidden" style={{
+              background: 'linear-gradient(135deg, #020a18 0%, #0a1628 30%, #0d1a30 60%, #050d1a 100%)',
+            }}>
               <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ opacity: 0.06 }}>
                 <div className="absolute inset-0" style={{
                   background: 'linear-gradient(90deg, transparent, rgba(59,130,246,0.4), transparent)',
@@ -501,16 +503,8 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                 }} />
               </div>
 
-              <div className="flex items-stretch relative" style={{ minHeight: '280px' }}>
-                <div className="flex-1 flex flex-col items-center justify-center px-3 py-6 relative" style={{
-                  background: 'linear-gradient(160deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.02) 100%)',
-                }}>
-                  <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 Q45 20 30 35 Q15 20 30 5' fill='none' stroke='%233b82f6' stroke-width='0.5'/%3E%3Cpath d='M10 25 Q25 40 10 55' fill='none' stroke='%233b82f6' stroke-width='0.3'/%3E%3Cpath d='M50 25 Q35 40 50 55' fill='none' stroke='%233b82f6' stroke-width='0.3'/%3E%3C/svg%3E")`,
-                    backgroundSize: '60px 60px',
-                    animation: 'qm-topo-shift 20s linear infinite',
-                  }} />
-
+              <div className="flex items-center justify-center gap-4 md:gap-8 relative px-4" style={{ minHeight: '280px' }}>
+                <div className="flex flex-col items-center justify-center">
                   <div className="relative mb-2">
                     <div
                       className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
@@ -531,11 +525,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                   <p className="text-blue-400 text-[10px] font-medium mt-0.5">Ready</p>
                 </div>
 
-                <div className="flex flex-col items-center justify-center w-[80px] md:w-[100px] flex-shrink-0 relative z-20">
-                  <div className="absolute inset-0" style={{
-                    background: 'radial-gradient(circle at center, rgba(250,204,21,0.06) 0%, transparent 70%)',
-                  }} />
-
+                <div className="flex flex-col items-center justify-center flex-shrink-0 relative z-20">
                   <div className="relative">
                     <svg className="w-4 h-4 text-yellow-400 mb-1" viewBox="0 0 24 24" fill="currentColor" style={{
                       animation: 'qm-bolt-flicker 1.5s ease-in-out infinite',
@@ -565,9 +555,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                   </div>
                 </div>
 
-                <div className="flex-1 flex flex-col items-center justify-center px-3 py-6 relative" style={{
-                  background: 'linear-gradient(200deg, rgba(251,146,60,0.08) 0%, rgba(251,146,60,0.02) 100%)',
-                }}>
+                <div className="flex flex-col items-center justify-center">
                   <div className="relative mb-2" style={{ perspective: '400px' }}>
                     <div
                       className="absolute -inset-3 rounded-full border border-orange-500/20"
@@ -626,23 +614,17 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                 </div>
               </div>
 
-              <div className="px-5 pb-2">
-                <div className="rounded-xl p-2.5 flex items-center justify-between" style={{ backgroundColor: '#0a0a0a', border: '1px solid #1a1a1a' }}>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px]">{selectedMode?.icon}</span>
-                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{selectedMode?.label}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-center">
-                      <span className="text-[9px] text-gray-600 block">Pot</span>
-                      <span className="text-xs font-bold text-white">${potSize}</span>
-                    </div>
-                    <div className="text-center">
-                      <span className="text-[9px] text-gray-600 block">Wins</span>
-                      <span className="text-xs font-bold text-emerald-400">${payout}</span>
-                    </div>
-                  </div>
+              <div className="text-center pb-2 pt-1">
+                <div className="flex items-center justify-center gap-1 mb-1">
+                  <span className="text-[10px]">{selectedMode?.icon}</span>
+                  <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{selectedMode?.label}</span>
                 </div>
+                <p className="text-[8px] text-gray-500 uppercase tracking-widest mb-0.5">Win Up To</p>
+                <p className="text-2xl md:text-3xl font-black text-emerald-400 leading-none" style={{
+                  textShadow: '0 0 20px rgba(16,185,129,0.5)',
+                }}>
+                  ${payout}
+                </p>
               </div>
 
               <div className="px-5 pb-3 pt-1">
@@ -681,17 +663,20 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
           )}
 
           {step === 'found' && (
-            <div className="relative overflow-hidden">
+            <div className="relative overflow-hidden" style={{
+              background: 'linear-gradient(135deg, #020a18 0%, #0a1628 30%, #0d1a30 60%, #050d1a 100%)',
+            }}>
               <div
-                className="absolute inset-0 bg-emerald-500/20"
-                style={{ animation: 'qm-green-flash 1s ease-out forwards' }}
+                className="absolute inset-0"
+                style={{ 
+                  background: 'radial-gradient(ellipse at center, rgba(16,185,129,0.12) 0%, transparent 70%)',
+                  animation: 'qm-green-flash 1s ease-out forwards',
+                }}
               />
 
               <div className="relative z-10">
-                <div className="flex items-stretch relative" style={{ minHeight: '260px' }}>
-                  <div className="flex-1 flex flex-col items-center justify-center px-3 py-6 relative" style={{
-                    background: 'linear-gradient(160deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.02) 100%)',
-                  }}>
+                <div className="flex items-center justify-center gap-6 md:gap-10 pt-8 pb-4 px-4">
+                  <div className="flex flex-col items-center">
                     <div className="relative mb-2">
                       <div
                         className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
@@ -709,24 +694,22 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                       </div>
                     </div>
                     <p className="text-white text-xs md:text-sm font-bold truncate max-w-[100px] text-center">{userName}</p>
+                    <p className="text-[10px] text-blue-400">Ready</p>
                   </div>
 
-                  <div className="flex flex-col items-center justify-center w-[80px] md:w-[100px] flex-shrink-0 relative z-20">
+                  <div className="flex flex-col items-center relative z-20">
                     <div
                       className="text-3xl md:text-4xl font-black italic text-transparent bg-clip-text"
                       style={{
                         backgroundImage: 'linear-gradient(180deg, #fef08a 0%, #facc15 50%, #eab308 100%)',
                         WebkitBackgroundClip: 'text',
-                        textShadow: '0 0 20px rgba(250,204,21,0.4)',
                       }}
                     >
                       VS
                     </div>
                   </div>
 
-                  <div className="flex-1 flex flex-col items-center justify-center px-3 py-6 relative" style={{
-                    background: 'linear-gradient(200deg, rgba(251,146,60,0.08) 0%, rgba(251,146,60,0.02) 100%)',
-                  }}>
+                  <div className="flex flex-col items-center">
                     <div className="relative mb-2">
                       <div
                         className="absolute inset-0 rounded-full border-2 border-emerald-400"
@@ -757,21 +740,17 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                     <p className="text-white text-xs md:text-sm font-bold truncate max-w-[100px] text-center">
                       {matchedOpponent?.username || 'Opponent'}
                     </p>
+                    <p className="text-[10px] text-emerald-400">Matched</p>
                   </div>
                 </div>
 
-                <div className="px-5 pb-2">
-                  <div className="rounded-xl p-2.5 flex items-center justify-center gap-4" style={{ backgroundColor: '#0a0a0a', border: '1px solid #1a1a1a' }}>
-                    <div className="text-center">
-                      <span className="text-[9px] text-gray-600 block uppercase tracking-wider">Prize Pot</span>
-                      <span className="text-sm font-black text-emerald-400">${payout}</span>
-                    </div>
-                    <div className="w-px h-6 bg-gray-800" />
-                    <div className="text-center">
-                      <span className="text-[9px] text-gray-600 block uppercase tracking-wider">10% Fee</span>
-                      <span className="text-sm font-bold text-gray-500">${(potSize * 0.1).toFixed(0)}</span>
-                    </div>
-                  </div>
+                <div className="text-center pb-2">
+                  <p className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">Winner Takes</p>
+                  <p className="text-3xl md:text-4xl font-black text-emerald-400 leading-none" style={{
+                    textShadow: '0 0 25px rgba(16,185,129,0.5)',
+                  }}>
+                    ${payout}
+                  </p>
                 </div>
 
                 <div className="text-center py-4 pb-6">
