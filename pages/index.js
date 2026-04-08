@@ -539,8 +539,8 @@ export default function Dashboard() {
         onBetSlipClick={handleBetSlipClick}
       />
 
-      <div className="pt-4 sm:pt-6 lg:pt-8 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
-        <div className="mb-6">
+      <div className="pt-2 sm:pt-3 lg:pt-4 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
+        <div className="mb-4">
           <div className="overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <div className="flex gap-3" style={{ minWidth: 'max-content' }}>
               {hasActiveMatchup && matchup && !showBattleWalkthrough ? (
@@ -767,7 +767,7 @@ export default function Dashboard() {
           </div>
         )}
         <div 
-          className="sticky z-40 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-3 mb-4"
+          className="sticky z-40 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-2 mb-3"
           style={{ 
             top: 'var(--top-nav-height, 70px)',
             backgroundColor: isDarkMode ? '#000000' : '#f5f5f5',
