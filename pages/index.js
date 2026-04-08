@@ -4,7 +4,8 @@ import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import TapSurface from '../components/TapSurface';
 import LiveGameTimer from '../components/LiveGameTimer';
-import MatchupBanner from '../components/MatchupBanner';
+import ActiveBattleCard from '../components/ActiveBattleCard';
+import WaitingBattleCard from '../components/WaitingBattleCard';
 import PoolContainer from '../components/PoolContainer';
 import FireBattleContainer from '../components/FireBattleContainer';
 import LiveBattlesSection from '../components/battle/LiveBattlesSection';
@@ -539,111 +540,38 @@ export default function Dashboard() {
       />
 
       <div className="pt-4 sm:pt-6 lg:pt-8 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
-        {hasActiveMatchup && matchup && !showBattleWalkthrough ? (
-          <MatchupBanner
-            matchup={matchup}
-            opponent={opponent || { username: 'Opponent', avatar: null }}
-            myBalance={matchupBalance}
-            opponentBalance={opponentBalance}
-            opponentBets={opponentBets}
-            canSeeBets={canSeeOpponentBets}
-            onRefreshOpponentBets={refreshMatchup}
-            myBetsCount={myBets?.length || 0}
-            onForfeit={() => {
-              fetch('/api/battles/forfeit', { method: 'POST' })
-                .then(r => r.json())
-                .then(data => {
-                  if (data.success) {
-                    refreshMatchup();
-                  }
-                })
-                .catch(() => {});
-            }}
-          />
-        ) : isWaiting && matchup ? (
-          <div className="mb-6">
-            <div className="bg-[#0d0d0d] border border-orange-500/20 rounded-xl overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#1a1a1a]">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
-                  <span className="text-white text-sm font-semibold">Waiting for Opponent</span>
-                </div>
-                <span className="text-gray-500 text-xs font-medium">
-                  {matchup.matchType === 'private' ? 'Private Match' : matchup.matchType === 'friend' ? 'Friend Match' : 'Quick Match'}
-                </span>
-              </div>
-              <div className="px-4 py-3">
-                <div className="flex gap-5 mb-3">
-                  <div>
-                    <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Buy-In</p>
-                    <p className="text-white font-semibold text-sm">${parseFloat(matchup.startingBalance || 0).toLocaleString()}</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Mode</p>
-                    <p className="text-white font-semibold text-sm">
-                      {matchup.durationMinutes <= 200 ? 'RUSH' : matchup.durationMinutes <= 1500 ? 'ORIGINAL' : 'TOURNAMENT'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Pot</p>
-                    <p className="text-white font-semibold text-sm">${parseFloat(matchup.potSize || matchup.startingBalance * 2 || 0).toLocaleString()}</p>
-                  </div>
-                </div>
-                {matchup.privateCode && (
-                  <div className="bg-[#111] border border-[#222] rounded-lg p-3 mb-3">
-                    <p className="text-gray-500 text-xs text-center mb-1.5">Share this code with your opponent</p>
-                    <div className="text-xl font-mono font-bold text-white text-center tracking-[0.3em] mb-2">
-                      {matchup.privateCode}
-                    </div>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(matchup.privateCode);
-                        const btn = document.getElementById('dash-copy-code-btn');
-                        if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy Code'; }, 2000); }
-                      }}
-                      id="dash-copy-code-btn"
-                      className="w-full bg-[#1a1a1a] text-white font-medium py-2 rounded-lg text-sm border border-[#333]"
-                    >
-                      Copy Code
-                    </button>
-                  </div>
-                )}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-pulse"></div>
-                    <span className="text-gray-500 text-xs">Searching for opponent...</span>
-                  </div>
-                  <button
-                    onClick={() => {
-                      if (window.confirm('Cancel this match?')) {
-                        fetch('/api/battles/private', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ action: 'cancel' }),
-                        })
-                          .then(r => r.json())
-                          .then(data => { if (data.success) refreshMatchup(); })
-                          .catch(() => {});
-                      }
-                    }}
-                    className="text-gray-500 text-xs font-medium"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="mb-6">
-            <div className="overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              <div className="flex gap-3" style={{ minWidth: 'max-content' }}>
+        <div className="mb-6">
+          <div className="overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <div className="flex gap-3" style={{ minWidth: 'max-content' }}>
+              {hasActiveMatchup && matchup && !showBattleWalkthrough ? (
+                <ActiveBattleCard
+                  matchup={matchup}
+                  opponent={opponent || { username: 'Opponent', avatar: null }}
+                  myBalance={matchupBalance}
+                  opponentBalance={opponentBalance}
+                  opponentBets={opponentBets}
+                  canSeeBets={canSeeOpponentBets}
+                  myBetsCount={myBets?.length || 0}
+                  onForfeit={() => {
+                    fetch('/api/battles/forfeit', { method: 'POST' })
+                      .then(r => r.json())
+                      .then(data => {
+                        if (data.success) {
+                          refreshMatchup();
+                        }
+                      })
+                      .catch(() => {});
+                  }}
+                />
+              ) : isWaiting && matchup ? (
+                <WaitingBattleCard matchup={matchup} />
+              ) : (
                 <FireBattleContainer isDarkMode={isDarkMode} />
-                <PoolContainer isDarkMode={isDarkMode} />
-              </div>
+              )}
+              <PoolContainer isDarkMode={isDarkMode} />
             </div>
           </div>
-        )}
+        </div>
 
         {showBattleWalkthrough && hasActiveMatchup && matchup && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.88)' }}>
