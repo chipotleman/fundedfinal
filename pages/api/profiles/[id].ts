@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { db } from "../../../lib/db";
-import { profiles, userBets } from "../../../shared/schema";
+import { profiles, userBets, fakeOpponents } from "../../../shared/schema";
 import { eq } from "drizzle-orm";
 
 export default async function handler(
@@ -21,6 +21,27 @@ export default async function handler(
         .where(eq(profiles.id, id));
 
       if (!profile) {
+        const [fakeOpp] = await db
+          .select()
+          .from(fakeOpponents)
+          .where(eq(fakeOpponents.id, id));
+
+        if (fakeOpp) {
+          return res.status(200).json({
+            id: fakeOpp.id,
+            username: fakeOpp.displayName,
+            avatar: fakeOpp.avatar,
+            bio: fakeOpp.bio || '',
+            isFakeOpponent: true,
+            battleWins: fakeOpp.totalBattles ? Math.floor(fakeOpp.totalBattles * (parseFloat(String(fakeOpp.winRate || '50')) / 100)) : 0,
+            battleLosses: fakeOpp.totalBattles ? fakeOpp.totalBattles - Math.floor(fakeOpp.totalBattles * (parseFloat(String(fakeOpp.winRate || '50')) / 100)) : 0,
+            winRate: fakeOpp.winRate,
+            total_bets: 0,
+            wins: 0,
+            losses: 0,
+          });
+        }
+
         return res.status(404).json({ message: "Profile not found" });
       }
 
