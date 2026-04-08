@@ -94,11 +94,20 @@ export default async function handler(req, res) {
         ));
 
       if (queueEntry) {
-        return res.status(200).json({
-          status: 'queued',
-          queueEntry,
-          matchup: null,
-        });
+        const queueAge = Date.now() - new Date(queueEntry.queuedAt).getTime();
+        const maxQueueAge = 10 * 60 * 1000;
+        if (queueAge > maxQueueAge) {
+          await db
+            .update(matchupQueue)
+            .set({ status: 'expired' })
+            .where(eq(matchupQueue.id, queueEntry.id));
+        } else {
+          return res.status(200).json({
+            status: 'queued',
+            queueEntry,
+            matchup: null,
+          });
+        }
       }
 
       const [mmQueueEntry] = await db
@@ -112,11 +121,19 @@ export default async function handler(req, res) {
         .limit(1);
 
       if (mmQueueEntry) {
-        return res.status(200).json({
-          status: 'queued',
-          queueEntry: mmQueueEntry,
-          matchup: null,
-        });
+        const queueAge = Date.now() - new Date(mmQueueEntry.createdAt).getTime();
+        const maxQueueAge = 10 * 60 * 1000;
+        if (queueAge > maxQueueAge) {
+          await db
+            .delete(matchmakingQueue)
+            .where(eq(matchmakingQueue.id, mmQueueEntry.id));
+        } else {
+          return res.status(200).json({
+            status: 'queued',
+            queueEntry: mmQueueEntry,
+            matchup: null,
+          });
+        }
       }
 
       return res.status(200).json({

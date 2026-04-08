@@ -539,10 +539,10 @@ export default function Dashboard() {
         onBetSlipClick={handleBetSlipClick}
       />
 
-      <div className="pt-2 sm:pt-3 lg:pt-4 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
+      <div className="pt-3 sm:pt-4 lg:pt-5 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
         <div className="mb-4">
-          <div className="overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <div className="flex gap-3" style={{ minWidth: 'max-content' }}>
+          <div className="overflow-x-auto overflow-y-visible scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <div className="flex gap-3 py-1" style={{ minWidth: 'max-content' }}>
               {hasActiveMatchup && matchup && !showBattleWalkthrough ? (
                 <ActiveBattleCard
                   matchup={matchup}
