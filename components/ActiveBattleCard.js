@@ -94,7 +94,7 @@ export default function ActiveBattleCard({
   const { isDarkMode } = useTheme();
 
   const userAvatar = myProfile?.avatar || null;
-  const userName = myProfile?.username || session?.user?.name || 'You';
+  const userName = myProfile?.username || session?.user?.name || '';
 
   useEffect(() => {
     if (!matchup?.endsAt) return;

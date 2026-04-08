@@ -472,8 +472,14 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
       if (res.ok) {
         const data = await res.json();
         const liveBattles = (data.battles || []).filter(b => b.user2 && b.remainingMs > 0);
-        if (liveBattles.length > 0) {
+        const simulated = getSimulatedBattles(avatars);
+        if (liveBattles.length >= 3) {
           setBattles(liveBattles);
+        } else if (liveBattles.length > 0) {
+          const remaining = simulated.slice(0, 3 - liveBattles.length);
+          setBattles([...liveBattles, ...remaining]);
+        } else {
+          setBattles(simulated);
         }
       }
     } catch (err) {

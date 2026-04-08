@@ -416,7 +416,7 @@ export default function BattlePage() {
             const oppPnl = oppBal - startBal;
             const pot = parseFloat(activeMatchup.potSize || startBal * 2 || 0);
             const opp = matchupData?.opponent;
-            const myName = profile?.username || session?.user?.name || 'You';
+            const myName = profile?.username || session?.user?.name || '';
             const myAvatar = profile?.avatar;
             const oppName = opp?.username || opp?.displayName || 'Opponent';
             const oppAvatar = opp?.avatar;
@@ -467,7 +467,7 @@ export default function BattlePage() {
                         {myAvatar ? (
                           <img src={myAvatar} alt="" className="w-full h-full object-cover" />
                         ) : (
-                          <span className="text-white font-bold text-lg">{myName[0]?.toUpperCase()}</span>
+                          <span className="text-white font-bold text-lg">{(myName || 'Y')[0]?.toUpperCase()}</span>
                         )}
                       </div>
                       <p className="text-white font-semibold text-xs truncate max-w-[100px]">{myName}</p>
