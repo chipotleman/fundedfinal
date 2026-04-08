@@ -775,10 +775,9 @@ export default function BattlePage() {
         onClose={() => setShowQuickMatch(false)}
         userId={userId}
         onMatchFound={(matchup) => {
-          setShowLobby(matchup);
           fetchData();
           refreshGlobalMatchup();
-          setTimeout(() => router.push('/?battleStarted=true'), 2500);
+          router.push('/?battleStarted=true');
         }}
       />
       <PlayFriendModal

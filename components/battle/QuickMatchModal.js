@@ -74,10 +74,10 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
   const [currentName, setCurrentName] = useState('');
   const [currentRecord, setCurrentRecord] = useState('');
   const [matchedOpponent, setMatchedOpponent] = useState(null);
+  const [matchedMatchup, setMatchedMatchup] = useState(null);
   const [userProfile, setUserProfile] = useState(null);
   const [tipIndex, setTipIndex] = useState(0);
   const [tipFade, setTipFade] = useState(false);
-  const [countdown, setCountdown] = useState(3);
   const { data: session } = useSession();
   const router = useRouter();
   const intervalRef = useRef(null);
@@ -86,8 +86,6 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
   const flipTimeoutRef = useRef(null);
   const tipCycleRef = useRef(null);
   const tipFadeTimeoutRef = useRef(null);
-  const countdownRef = useRef(null);
-  const matchFoundTimeoutRef = useRef(null);
   const cancelledRef = useRef(false);
 
   const cleanupAllTimers = () => {
@@ -97,16 +95,12 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
     if (flipTimeoutRef.current) clearTimeout(flipTimeoutRef.current);
     if (tipCycleRef.current) clearInterval(tipCycleRef.current);
     if (tipFadeTimeoutRef.current) clearTimeout(tipFadeTimeoutRef.current);
-    if (countdownRef.current) clearInterval(countdownRef.current);
-    if (matchFoundTimeoutRef.current) clearTimeout(matchFoundTimeoutRef.current);
     intervalRef.current = null;
     pollRef.current = null;
     avatarCycleRef.current = null;
     flipTimeoutRef.current = null;
     tipCycleRef.current = null;
     tipFadeTimeoutRef.current = null;
-    countdownRef.current = null;
-    matchFoundTimeoutRef.current = null;
   };
 
   useEffect(() => {
@@ -132,8 +126,8 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
       setCurrentName('');
       setCurrentRecord('');
       setMatchedOpponent(null);
+      setMatchedMatchup(null);
       setTipIndex(0);
-      setCountdown(3);
     }
     return () => { cleanupAllTimers(); };
   }, [isOpen]);
@@ -186,24 +180,6 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
     }
   }, [step, avatars]);
 
-  useEffect(() => {
-    if (step === 'found') {
-      setCountdown(3);
-      countdownRef.current = setInterval(() => {
-        setCountdown(prev => {
-          if (prev <= 1) {
-            clearInterval(countdownRef.current);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      return () => {
-        if (countdownRef.current) clearInterval(countdownRef.current);
-      };
-    }
-  }, [step]);
-
   const handleMatchFound = (opponent, matchup) => {
     if (cancelledRef.current) return;
     cleanupAllTimers();
@@ -213,13 +189,14 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
       return;
     }
     if (opponent) setMatchedOpponent(opponent);
+    setMatchedMatchup(matchup);
     setStep('found');
-    matchFoundTimeoutRef.current = setTimeout(() => {
-      if (cancelledRef.current) return;
-      onClose();
-      if (onMatchFound && matchup) onMatchFound(matchup);
-      else router.push('/');
-    }, 3500);
+  };
+
+  const handleContinue = () => {
+    onClose();
+    if (onMatchFound && matchedMatchup) onMatchFound(matchedMatchup);
+    else router.push('/?battleStarted=true');
   };
 
   const startSearch = async () => {
@@ -372,12 +349,6 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
           0% { transform: scale(1.2); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.8); }
           50% { transform: scale(1.02); box-shadow: 0 0 30px 8px rgba(16, 185, 129, 0.4); }
           100% { transform: scale(1); box-shadow: 0 0 15px 4px rgba(16, 185, 129, 0.2); }
-        }
-        @keyframes qm-countdown-pop {
-          0% { transform: scale(2); opacity: 0; }
-          40% { transform: scale(0.9); opacity: 1; }
-          60% { transform: scale(1.1); }
-          100% { transform: scale(1); }
         }
         @keyframes qm-found-ring-expand {
           0% { transform: scale(0.8); opacity: 1; }
@@ -762,19 +733,21 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
 
                 <div className="text-center py-4 pb-6">
                   <h3
-                    className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-2"
+                    className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-4"
                     style={{ animation: 'qm-matched-slam 0.6s ease-out forwards 0.2s', opacity: 0, transform: 'scale(0.3)' }}
                   >
                     MATCH FOUND
                   </h3>
-                  <p className="text-gray-500 text-xs mb-1.5">Starting in</p>
-                  <div
-                    key={countdown}
-                    className="text-4xl md:text-5xl font-black text-white"
-                    style={{ animation: 'qm-countdown-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}
+                  <button
+                    onClick={handleContinue}
+                    className="px-8 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200 active:scale-95"
+                    style={{
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      boxShadow: '0 0 20px rgba(16,185,129,0.4)',
+                    }}
                   >
-                    {countdown}
-                  </div>
+                    Continue
+                  </button>
                 </div>
               </div>
             </div>
