@@ -43,15 +43,17 @@ export function MatchupProvider({ children }) {
   }, [status, fetchCurrentMatchup]);
 
   const hasActiveMatchup = matchupData?.status === 'active' || matchupData?.status === 'matched';
+  const isWaiting = matchupData?.status === 'waiting';
+  const hasAnyMatchup = hasActiveMatchup || isWaiting;
   const isQueued = matchupData?.status === 'queued';
 
   useEffect(() => {
     if (status !== 'authenticated') return;
 
-    const pollInterval = hasActiveMatchup ? 5000 : 30000;
+    const pollInterval = hasActiveMatchup ? 5000 : isWaiting ? 10000 : 30000;
     const interval = setInterval(fetchCurrentMatchup, pollInterval);
     return () => clearInterval(interval);
-  }, [status, fetchCurrentMatchup, hasActiveMatchup]);
+  }, [status, fetchCurrentMatchup, hasActiveMatchup, isWaiting]);
   const matchup = matchupData?.matchup;
   const opponent = matchupData?.opponent;
   const myBalance = matchupData?.myBalance;
@@ -74,6 +76,8 @@ export function MatchupProvider({ children }) {
     timeRemaining,
     endsAt,
     hasActiveMatchup,
+    isWaiting,
+    hasAnyMatchup,
     isQueued,
     loading,
     error,

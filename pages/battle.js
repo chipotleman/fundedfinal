@@ -16,7 +16,7 @@ import { useMatchup } from '../contexts/MatchupContext';
 export default function BattlePage() {
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { refresh: refreshGlobalMatchup } = useMatchup();
+  const { matchup: globalMatchup, matchupData: globalMatchupData, hasActiveMatchup: globalHasActive, isWaiting: globalIsWaiting, hasAnyMatchup: globalHasAny, refresh: refreshGlobalMatchup } = useMatchup();
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -86,6 +86,16 @@ export default function BattlePage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    if (globalMatchup && globalHasAny) {
+      setActiveMatchup(globalMatchup);
+      if (globalMatchupData) setMatchupData(globalMatchupData);
+    } else if (!globalHasAny && !globalIsWaiting && activeMatchup) {
+      setActiveMatchup(null);
+      setMatchupData(null);
+    }
+  }, [globalMatchup, globalHasAny, globalIsWaiting, globalMatchupData]);
 
   useEffect(() => {
     if (!userId) return;

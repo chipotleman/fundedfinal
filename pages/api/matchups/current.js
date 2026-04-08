@@ -175,39 +175,41 @@ export default async function handler(req, res) {
           lte(userBets.placedAt, battleEnd)
         ));
     } else {
-      // Real user vs real user
       const opponentId = isUser1 ? matchup.user2Id : matchup.user1Id;
-      const [profile] = await db
-        .select()
-        .from(profiles)
-        .where(eq(profiles.id, opponentId));
+      
+      if (opponentId) {
+        const [profile] = await db
+          .select()
+          .from(profiles)
+          .where(eq(profiles.id, opponentId));
 
-      opponent = {
-        id: opponentId,
-        username: profile?.username || 'Opponent',
-        avatar: profile?.avatar,
-        winRate: profile?.winRate,
-        isReal: true,
-      };
+        opponent = {
+          id: opponentId,
+          username: profile?.username || 'Opponent',
+          avatar: profile?.avatar,
+          winRate: profile?.winRate,
+          isReal: true,
+        };
 
-      const rawStart = matchup.startsAt || matchup.createdAt;
-      const battleStart = new Date(new Date(rawStart).getTime() - 30000);
-      const battleEnd = matchup.endsAt || new Date();
+        const rawStart = matchup.startsAt || matchup.createdAt;
+        const battleStart = new Date(new Date(rawStart).getTime() - 30000);
+        const battleEnd = matchup.endsAt || new Date();
 
-      const [realOpponentBets, realMyBets] = await Promise.all([
-        db.select().from(userBets).where(and(
-          eq(userBets.userId, opponentId),
-          gte(userBets.placedAt, battleStart),
-          lte(userBets.placedAt, battleEnd)
-        )),
-        db.select().from(userBets).where(and(
-          eq(userBets.userId, userId),
-          gte(userBets.placedAt, battleStart),
-          lte(userBets.placedAt, battleEnd)
-        )),
-      ]);
-      opponentBets = realOpponentBets;
-      myBets = realMyBets;
+        const [realOpponentBets, realMyBets] = await Promise.all([
+          db.select().from(userBets).where(and(
+            eq(userBets.userId, opponentId),
+            gte(userBets.placedAt, battleStart),
+            lte(userBets.placedAt, battleEnd)
+          )),
+          db.select().from(userBets).where(and(
+            eq(userBets.userId, userId),
+            gte(userBets.placedAt, battleStart),
+            lte(userBets.placedAt, battleEnd)
+          )),
+        ]);
+        opponentBets = realOpponentBets;
+        myBets = realMyBets;
+      }
     }
 
     const hasPlacedBets = myBets.length > 0;
