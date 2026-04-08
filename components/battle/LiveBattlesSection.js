@@ -339,10 +339,12 @@ function BattleCard({ battle, compact, focused }) {
               </div>
               <div className="flex items-center gap-2 mt-0.5">
                 <PnlBadge pnlPercent={user1.pnlPercent} />
-                {picks && (
+                {picks ? (
                   <span className="text-gray-500 text-[10px]">
                     {picks.user1.length}P · <span className="text-green-400">{picks.user1.filter(p => p.status === 'won').length}W</span> <span className="text-red-400">{picks.user1.filter(p => p.status === 'lost').length}L</span>
                   </span>
+                ) : (
+                  <span className="text-gray-600 text-[10px]">0P</span>
                 )}
               </div>
             </div>
@@ -350,9 +352,9 @@ function BattleCard({ battle, compact, focused }) {
 
           <div className="px-3 flex flex-col items-center">
             <span className="text-xs font-bold text-gray-600">VS</span>
-            {picks && (
-              <span className="text-gray-600 text-[9px] mt-0.5">{expanded ? 'Hide' : 'View'}</span>
-            )}
+            <span className="text-gray-600 text-[9px] mt-0.5">
+              {picks ? (expanded ? 'Hide' : 'View') : ''}
+            </span>
           </div>
 
           <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
@@ -365,10 +367,12 @@ function BattleCard({ battle, compact, focused }) {
                 <span className="text-white text-sm font-bold tabular-nums">${(user2.balance || 0).toLocaleString()}</span>
               </div>
               <div className="flex items-center gap-2 justify-end mt-0.5">
-                {picks && (
+                {picks ? (
                   <span className="text-gray-500 text-[10px]">
                     {picks.user2.length}P · <span className="text-green-400">{picks.user2.filter(p => p.status === 'won').length}W</span> <span className="text-red-400">{picks.user2.filter(p => p.status === 'lost').length}L</span>
                   </span>
+                ) : (
+                  <span className="text-gray-600 text-[10px]">0P</span>
                 )}
                 <PnlBadge pnlPercent={user2.pnlPercent} />
               </div>
@@ -376,6 +380,16 @@ function BattleCard({ battle, compact, focused }) {
             <PlayerAvatar user={user2} isWinning={user2Winning} size={40} bgColor="#065f46" />
           </div>
         </div>
+
+        {!picks && (
+          <div className="mb-2 flex items-center gap-2 py-2 px-3 rounded-lg" style={{ background: '#111', border: '1px solid #1a1a1a' }}>
+            <div className="flex items-center gap-1.5 flex-1">
+              <div className="w-1.5 h-1.5 rounded-full bg-yellow-500/50 pick-pending-dot"></div>
+              <span className="text-[10px] text-gray-500 font-medium">Awaiting picks from both players...</span>
+            </div>
+            <span className="text-[9px] text-gray-600">0P vs 0P</span>
+          </div>
+        )}
 
         <div className="h-1 rounded-full overflow-hidden mb-2" style={{ background: '#1a1a1a' }}>
           <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${progress}%`, backgroundColor: '#3b82f6' }}></div>
