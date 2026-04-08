@@ -315,10 +315,10 @@ function BattleCard({ battle, compact, focused }) {
             </div>
             <div className="flex gap-1.5 px-2 pb-1.5">
               <div className={`flex-1 flex items-center gap-1 py-1 px-1.5 rounded text-[9px] font-medium truncate ${onlyUser1 ? 'text-green-400' : 'text-gray-600'}`} style={{ background: onlyUser1 ? 'rgba(16,185,129,0.08)' : 'transparent' }}>
-                {onlyUser1 ? '✓' : '○'} {(user1.username || 'P1').slice(0, 8)}
+                {onlyUser1 ? '✓' : '○'} {user1.username || 'Player 1'}
               </div>
               <div className={`flex-1 flex items-center gap-1 py-1 px-1.5 rounded text-[9px] font-medium truncate ${onlyUser2 ? 'text-green-400' : 'text-gray-600'}`} style={{ background: onlyUser2 ? 'rgba(16,185,129,0.08)' : 'transparent' }}>
-                {onlyUser2 ? '✓' : '○'} {(user2.username || 'P2').slice(0, 8)}
+                {onlyUser2 ? '✓' : '○'} {user2.username || 'Player 2'}
               </div>
             </div>
           </div>
