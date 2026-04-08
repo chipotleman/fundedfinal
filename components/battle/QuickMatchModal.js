@@ -522,9 +522,9 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                     className="relative w-full h-full rounded-full overflow-hidden border-3 border-emerald-400"
                     style={{ animation: 'qm-avatar-lock 0.6s ease-out forwards' }}
                   >
-                    {(matchedOpponent?.avatar || currentAvatar) ? (
+                    {matchedOpponent?.avatar ? (
                       <img
-                        src={matchedOpponent?.avatar || currentAvatar}
+                        src={matchedOpponent.avatar}
                         alt="matched opponent"
                         className="w-full h-full object-cover"
                       />

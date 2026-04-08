@@ -159,6 +159,7 @@ export default async function handler(req, res) {
           opponent: {
             id: potentialMatch.userId,
             username: matchedProfile?.username || 'Opponent',
+            avatar: matchedProfile?.avatar || null,
             isReal: true,
           }
         });
@@ -224,10 +225,19 @@ export default async function handler(req, res) {
             .where(eq(fakeOpponents.id, matchup.fakeOpponentId));
           
           if (fake) {
+            let avatarUrl = fake.avatar;
+            if (!avatarUrl) {
+              const profileId = fake.userId || fake.id;
+              const [fakeProfile] = await db
+                .select({ avatar: profiles.avatar })
+                .from(profiles)
+                .where(eq(profiles.id, profileId));
+              if (fakeProfile?.avatar) avatarUrl = fakeProfile.avatar;
+            }
             opponent = {
               id: fake.id,
               username: fake.displayName,
-              avatar: fake.avatar,
+              avatar: avatarUrl,
               winRate: fake.winRate,
               isReal: false,
             };
@@ -241,6 +251,7 @@ export default async function handler(req, res) {
           opponent = {
             id: opponentId,
             username: profile?.username || 'Opponent',
+            avatar: profile?.avatar || null,
             isReal: true,
           };
         }
