@@ -400,7 +400,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
           100% { background-position: 100% 100%; }
         }
       `}</style>
-      <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => { if (step === 'searching') { cancelSearch(); } onClose(); }}>
+      <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => { if (step === 'found') return; if (step === 'searching') { cancelSearch(); } onClose(); }}>
         <div className="rounded-2xl max-w-md w-full overflow-hidden" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }} onClick={e => e.stopPropagation()}>
           {step === 'config' && (
             <>
