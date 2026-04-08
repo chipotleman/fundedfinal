@@ -240,7 +240,13 @@ function BattleCard({ battle, compact, focused }) {
   const user2Winning = (user2.balance || 0) > (user1.balance || 0);
   const potSize = parseFloat(battle.potSize) || 0;
   const progress = battle.progressPercent || 0;
-  const picks = battle.picks || SIMULATED_PICKS[battle.id] || null;
+  const rawPicks = battle.picks || SIMULATED_PICKS[battle.id] || null;
+  const isSimulated = !battle.picks && !!SIMULATED_PICKS[battle.id];
+  const bothHavePicks = rawPicks && rawPicks.user1.length > 0 && rawPicks.user2.length > 0;
+  const onlyUser1 = rawPicks && rawPicks.user1.length > 0 && rawPicks.user2.length === 0;
+  const onlyUser2 = rawPicks && rawPicks.user2.length > 0 && rawPicks.user1.length === 0;
+  const picksLocked = !isSimulated && (onlyUser1 || onlyUser2);
+  const picks = (isSimulated || bothHavePicks) ? rawPicks : null;
 
   const user1OnFire = parseFloat(user1.pnlPercent) > 10;
   const user2OnFire = parseFloat(user2.pnlPercent) > 10;
@@ -299,6 +305,12 @@ function BattleCard({ battle, compact, focused }) {
             <div className="flex-1 min-w-0">
               {picks.user2.slice(0, 1).map((p, i) => <PickPill key={i} pick={p} compact />)}
             </div>
+          </div>
+        )}
+        {picksLocked && (
+          <div className="mt-2 flex items-center gap-1.5 py-1.5 px-2 rounded-md" style={{ background: '#111', border: '1px solid #1a1a1a' }}>
+            <svg className="w-3 h-3 text-gray-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>
+            <span className="text-[9px] text-gray-500">Reveals when both lock in</span>
           </div>
         )}
         <BattleChat battleId={battle.id} compact />
@@ -381,13 +393,25 @@ function BattleCard({ battle, compact, focused }) {
           </div>
         </div>
 
-        {!picks && (
+        {!picks && !picksLocked && (
           <div className="mb-2 flex items-center gap-2 py-2 px-3 rounded-lg" style={{ background: '#111', border: '1px solid #1a1a1a' }}>
             <div className="flex items-center gap-1.5 flex-1">
               <div className="w-1.5 h-1.5 rounded-full bg-yellow-500/50 pick-pending-dot"></div>
               <span className="text-[10px] text-gray-500 font-medium">Awaiting picks from both players...</span>
             </div>
             <span className="text-[9px] text-gray-600">0P vs 0P</span>
+          </div>
+        )}
+
+        {picksLocked && (
+          <div className="mb-2 flex items-center gap-2 py-2 px-3 rounded-lg" style={{ background: '#111', border: '1px solid #1a1a1a' }}>
+            <div className="flex items-center gap-1.5 flex-1">
+              <svg className="w-3.5 h-3.5 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>
+              <span className="text-[10px] text-gray-500 font-medium">Picks hidden until both players lock in</span>
+            </div>
+            <span className="text-[9px] text-gray-600">
+              {onlyUser1 ? `${rawPicks.user1.length}P vs ?` : `? vs ${rawPicks.user2.length}P`}
+            </span>
           </div>
         )}
 

@@ -2,6 +2,48 @@ import { db } from '../../../lib/db';
 import { matchups, profiles, userBets, fakeOpponentBets } from '../../../shared/schema';
 import { eq, or, and, gte, lte, desc } from 'drizzle-orm';
 
+function shortenTeamName(name) {
+  if (!name) return 'Pick';
+  const cityTeamMap = {
+    'Los Angeles Lakers': 'Lakers', 'Los Angeles Clippers': 'Clippers',
+    'Golden State Warriors': 'Warriors', 'Boston Celtics': 'Celtics',
+    'New York Knicks': 'Knicks', 'Brooklyn Nets': 'Nets',
+    'Philadelphia 76ers': '76ers', 'Milwaukee Bucks': 'Bucks',
+    'Miami Heat': 'Heat', 'Denver Nuggets': 'Nuggets',
+    'Phoenix Suns': 'Suns', 'Dallas Mavericks': 'Mavericks',
+    'Cleveland Cavaliers': 'Cavaliers', 'Sacramento Kings': 'Kings',
+    'Minnesota Timberwolves': 'Timberwolves', 'New Orleans Pelicans': 'Pelicans',
+    'Oklahoma City Thunder': 'Thunder', 'Indiana Pacers': 'Pacers',
+    'Orlando Magic': 'Magic', 'Toronto Raptors': 'Raptors',
+    'Chicago Bulls': 'Bulls', 'Atlanta Hawks': 'Hawks',
+    'Houston Rockets': 'Rockets', 'Memphis Grizzlies': 'Grizzlies',
+    'Utah Jazz': 'Jazz', 'San Antonio Spurs': 'Spurs',
+    'Portland Trail Blazers': 'Blazers', 'Charlotte Hornets': 'Hornets',
+    'Detroit Pistons': 'Pistons', 'Washington Wizards': 'Wizards',
+    'Kansas City Chiefs': 'Chiefs', 'San Francisco 49ers': '49ers',
+    'Philadelphia Eagles': 'Eagles', 'Dallas Cowboys': 'Cowboys',
+    'New England Patriots': 'Patriots', 'Green Bay Packers': 'Packers',
+    'Buffalo Bills': 'Bills', 'Baltimore Ravens': 'Ravens',
+    'Tampa Bay Buccaneers': 'Buccaneers', 'New York Giants': 'Giants',
+    'New York Jets': 'Jets', 'Los Angeles Rams': 'Rams',
+    'Los Angeles Chargers': 'Chargers', 'Seattle Seahawks': 'Seahawks',
+    'Pittsburgh Steelers': 'Steelers', 'Cincinnati Bengals': 'Bengals',
+    'Minnesota Vikings': 'Vikings', 'Detroit Lions': 'Lions',
+    'Chicago Bears': 'Bears', 'Arizona Cardinals': 'Cardinals',
+    'New York Yankees': 'Yankees', 'New York Mets': 'Mets',
+    'Los Angeles Dodgers': 'Dodgers', 'Los Angeles Angels': 'Angels',
+    'Boston Red Sox': 'Red Sox', 'Chicago Cubs': 'Cubs',
+    'Chicago White Sox': 'White Sox', 'San Francisco Giants': 'SF Giants',
+    'St. Louis Cardinals': 'Cardinals', 'San Diego Padres': 'Padres',
+  };
+  for (const [full, short] of Object.entries(cityTeamMap)) {
+    if (name.startsWith(full)) return name.replace(full, short);
+  }
+  const parts = name.split(' ');
+  if (parts.length > 2) return parts.slice(-1)[0];
+  return name;
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -107,7 +149,7 @@ export default async function handler(req, res) {
             ))
             .limit(5);
           user1Picks = u1Bets.map(b => ({
-            team: b.selection || 'Pick',
+            team: shortenTeamName(b.selection || 'Pick'),
             type: b.marketType || '',
             odds: b.odds || '',
             status: b.status || 'pending',
@@ -128,7 +170,7 @@ export default async function handler(req, res) {
             .where(eq(fakeOpponentBets.matchupId, battle.id))
             .limit(5);
           user2Picks = fakeBets.map(b => ({
-            team: b.selection || 'Pick',
+            team: shortenTeamName(b.selection || 'Pick'),
             type: b.marketType || '',
             odds: b.odds || '',
             status: b.status || 'pending',
@@ -151,7 +193,7 @@ export default async function handler(req, res) {
             ))
             .limit(5);
           user2Picks = u2Bets.map(b => ({
-            team: b.selection || 'Pick',
+            team: shortenTeamName(b.selection || 'Pick'),
             type: b.marketType || '',
             odds: b.odds || '',
             status: b.status || 'pending',
