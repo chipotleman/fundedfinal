@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 
 const GAME_MODE_OPTIONS = [
   {
@@ -37,15 +38,17 @@ const GAME_MODE_OPTIONS = [
 
 const BUY_IN_OPTIONS = [5, 10, 25, 50, 100];
 
-const FAKE_NAMES = [
-  'ShadowBet', 'CryptoKing', 'LuckyDraw', 'BetMaster', 'SharpShooter',
-  'OddsWizard', 'ClutchPlay', 'BigStack', 'IceVeins', 'MoneyLine',
-  'ParlayCash', 'UnderdogX', 'GoldRush', 'NitroPickz', 'AceHigh',
-];
-
-const FAKE_RECORDS = [
-  '12-3', '8-5', '15-7', '10-4', '6-2', '20-9', '9-6', '14-3', '11-8', '7-1',
-  '18-5', '13-6', '5-3', '16-4', '22-10',
+const TIPS = [
+  'Diversify your picks across different sports',
+  'Best players win about 60% of their battles',
+  "Don't chase losses — stick to your strategy",
+  'Higher-odds picks = higher potential payout',
+  'Parlays are risky but can swing a battle fast',
+  'Check injury reports before locking in picks',
+  'Underdogs hit more often than you think',
+  'Bankroll management is key to winning long-term',
+  'Watch line movement for sharp money signals',
+  'Live betting can turn a losing battle around',
 ];
 
 export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound }) {
@@ -56,20 +59,46 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
   const [error, setError] = useState('');
   const [avatars, setAvatars] = useState([]);
   const [currentAvatarIdx, setCurrentAvatarIdx] = useState(0);
-  const [currentName, setCurrentName] = useState(FAKE_NAMES[0]);
-  const [currentRecord, setCurrentRecord] = useState(FAKE_RECORDS[0]);
   const [avatarFlip, setAvatarFlip] = useState(false);
-  const [radarAngle, setRadarAngle] = useState(0);
   const [matchedOpponent, setMatchedOpponent] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
+  const [tipIndex, setTipIndex] = useState(0);
+  const [tipFade, setTipFade] = useState(false);
+  const [countdown, setCountdown] = useState(3);
+  const { data: session } = useSession();
   const router = useRouter();
   const intervalRef = useRef(null);
   const pollRef = useRef(null);
   const avatarCycleRef = useRef(null);
-  const radarRef = useRef(null);
   const flipTimeoutRef = useRef(null);
+  const tipCycleRef = useRef(null);
+  const tipFadeTimeoutRef = useRef(null);
+  const countdownRef = useRef(null);
+  const matchFoundTimeoutRef = useRef(null);
+  const cancelledRef = useRef(false);
+
+  const cleanupAllTimers = () => {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (pollRef.current) clearTimeout(pollRef.current);
+    if (avatarCycleRef.current) clearInterval(avatarCycleRef.current);
+    if (flipTimeoutRef.current) clearTimeout(flipTimeoutRef.current);
+    if (tipCycleRef.current) clearInterval(tipCycleRef.current);
+    if (tipFadeTimeoutRef.current) clearTimeout(tipFadeTimeoutRef.current);
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    if (matchFoundTimeoutRef.current) clearTimeout(matchFoundTimeoutRef.current);
+    intervalRef.current = null;
+    pollRef.current = null;
+    avatarCycleRef.current = null;
+    flipTimeoutRef.current = null;
+    tipCycleRef.current = null;
+    tipFadeTimeoutRef.current = null;
+    countdownRef.current = null;
+    matchFoundTimeoutRef.current = null;
+  };
 
   useEffect(() => {
     if (isOpen) {
+      cancelledRef.current = false;
       fetch('/api/admin/battle-avatars')
         .then(r => r.json())
         .then(data => {
@@ -78,21 +107,30 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
           }
         })
         .catch(() => {});
+
+      if (session?.user?.id) {
+        fetch(`/api/profiles/${session.user.id}`)
+          .then(r => r.ok ? r.json() : null)
+          .then(data => {
+            if (data) setUserProfile(data.profile || data);
+          })
+          .catch(() => {});
+      }
     }
     if (!isOpen) {
+      cancelledRef.current = true;
+      cleanupAllTimers();
       setStep('config');
       setSearchTime(0);
       setError('');
       setAvatarFlip(false);
       setCurrentAvatarIdx(0);
       setMatchedOpponent(null);
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      if (pollRef.current) clearTimeout(pollRef.current);
-      if (avatarCycleRef.current) clearInterval(avatarCycleRef.current);
-      if (radarRef.current) clearInterval(radarRef.current);
-      if (flipTimeoutRef.current) clearTimeout(flipTimeoutRef.current);
+      setTipIndex(0);
+      setCountdown(3);
     }
-  }, [isOpen]);
+    return () => { cleanupAllTimers(); };
+  }, [isOpen, session?.user?.id]);
 
   useEffect(() => {
     if (step === 'searching') {
@@ -104,25 +142,61 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
             const pool = avatars.length > 0 ? avatars.length : 1;
             return (prev + 1 + Math.floor(Math.random() * Math.max(pool - 1, 1))) % pool;
           });
-          setCurrentName(FAKE_NAMES[Math.floor(Math.random() * FAKE_NAMES.length)]);
-          setCurrentRecord(FAKE_RECORDS[Math.floor(Math.random() * FAKE_RECORDS.length)]);
           setAvatarFlip(false);
-        }, 300);
-      }, 1200);
+        }, 250);
+      }, 1000);
 
-      radarRef.current = setInterval(() => {
-        setRadarAngle(prev => (prev + 6) % 360);
-      }, 30);
+      tipCycleRef.current = setInterval(() => {
+        setTipFade(true);
+        if (tipFadeTimeoutRef.current) clearTimeout(tipFadeTimeoutRef.current);
+        tipFadeTimeoutRef.current = setTimeout(() => {
+          setTipIndex(prev => (prev + 1) % TIPS.length);
+          setTipFade(false);
+        }, 300);
+      }, 4000);
 
       return () => {
         if (avatarCycleRef.current) clearInterval(avatarCycleRef.current);
-        if (radarRef.current) clearInterval(radarRef.current);
         if (flipTimeoutRef.current) clearTimeout(flipTimeoutRef.current);
+        if (tipCycleRef.current) clearInterval(tipCycleRef.current);
+        if (tipFadeTimeoutRef.current) clearTimeout(tipFadeTimeoutRef.current);
       };
     }
   }, [step, avatars]);
 
+  useEffect(() => {
+    if (step === 'found') {
+      setCountdown(3);
+      countdownRef.current = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(countdownRef.current);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+      return () => {
+        if (countdownRef.current) clearInterval(countdownRef.current);
+      };
+    }
+  }, [step]);
+
+  const handleMatchFound = (opponent, matchup) => {
+    if (cancelledRef.current) return;
+    cleanupAllTimers();
+    if (opponent) setMatchedOpponent(opponent);
+    setStep('found');
+    matchFoundTimeoutRef.current = setTimeout(() => {
+      if (cancelledRef.current) return;
+      onClose();
+      if (onMatchFound && matchup) onMatchFound(matchup);
+      else router.push('/');
+    }, 3500);
+  };
+
   const startSearch = async () => {
+    cancelledRef.current = false;
     setStep('searching');
     setSearchTime(0);
     setError('');
@@ -137,6 +211,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ buyIn, gameMode }),
       });
+      if (cancelledRef.current) return;
       if (!res.ok) {
         const data = await res.json();
         setError(data.error || 'Matchmaking failed');
@@ -147,20 +222,12 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
       const data = await res.json();
 
       if (data.matched) {
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        if (avatarCycleRef.current) clearInterval(avatarCycleRef.current);
-        if (radarRef.current) clearInterval(radarRef.current);
-        if (data.opponent) setMatchedOpponent(data.opponent);
-        setStep('found');
-        setTimeout(() => {
-          onClose();
-          if (onMatchFound && data.matchup) onMatchFound(data.matchup);
-          else router.push('/');
-        }, 2500);
+        handleMatchFound(data.opponent, data.matchup);
       } else {
         pollForMatch();
       }
     } catch {
+      if (cancelledRef.current) return;
       setError('Failed to start matchmaking');
       setStep('config');
       if (intervalRef.current) clearInterval(intervalRef.current);
@@ -170,25 +237,20 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
   const pollForMatch = () => {
     let attempts = 0;
     const poll = async () => {
+      if (cancelledRef.current) return;
       attempts++;
       try {
         const res = await fetch('/api/matchups/queue');
+        if (cancelledRef.current) return;
         if (!res.ok) return;
         const data = await res.json();
         if (data.matchup && data.matchup.status === 'active') {
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          if (avatarCycleRef.current) clearInterval(avatarCycleRef.current);
-          if (radarRef.current) clearInterval(radarRef.current);
-          if (data.opponent) setMatchedOpponent(data.opponent);
-          setStep('found');
-          setTimeout(() => {
-            onClose();
-            if (onMatchFound) onMatchFound(data.matchup);
-            else router.push('/');
-          }, 2500);
+          handleMatchFound(data.opponent, data.matchup);
           return;
         }
       } catch {}
+
+      if (cancelledRef.current) return;
 
       if (attempts < 16) {
         pollRef.current = setTimeout(poll, 2000);
@@ -199,21 +261,14 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ userId }),
           });
+          if (cancelledRef.current) return;
           const fakeData = fakeRes.ok ? await fakeRes.json() : null;
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          if (avatarCycleRef.current) clearInterval(avatarCycleRef.current);
-          if (radarRef.current) clearInterval(radarRef.current);
-          if (fakeData?.opponent) setMatchedOpponent(fakeData.opponent);
-          setStep('found');
-          setTimeout(() => {
-            onClose();
-            if (onMatchFound && fakeData?.matchup) onMatchFound(fakeData.matchup);
-            else router.push('/');
-          }, 2500);
+          handleMatchFound(fakeData?.opponent, fakeData?.matchup);
         } catch {
+          if (cancelledRef.current) return;
           setError('Matchmaking timed out. Please try again.');
           setStep('config');
-          if (intervalRef.current) clearInterval(intervalRef.current);
+          cleanupAllTimers();
         }
       }
     };
@@ -221,11 +276,10 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
   };
 
   const cancelSearch = async () => {
-    if (intervalRef.current) clearInterval(intervalRef.current);
-    if (pollRef.current) clearTimeout(pollRef.current);
-    if (avatarCycleRef.current) clearInterval(avatarCycleRef.current);
-    if (radarRef.current) clearInterval(radarRef.current);
+    cancelledRef.current = true;
+    cleanupAllTimers();
     try {
+      await fetch('/api/battles/matchmaking', { method: 'DELETE' });
       await fetch('/api/matchups/queue', { method: 'DELETE' });
     } catch {}
     setStep('config');
@@ -237,18 +291,17 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
   const potSize = buyIn * 2;
   const payout = potSize * 0.9;
   const currentAvatar = avatars.length > 0 ? avatars[currentAvatarIdx % avatars.length] : null;
+  const userName = userProfile?.username || session?.user?.name || 'You';
+  const userAvatar = userProfile?.avatar || null;
+  const selectedMode = GAME_MODE_OPTIONS.find(m => m.id === gameMode);
 
   return (
     <>
       <style>{`
-        @keyframes qm-radar-sweep {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
         @keyframes qm-pulse-ring {
-          0% { transform: scale(1); opacity: 0.6; }
-          50% { transform: scale(1.15); opacity: 0.2; }
-          100% { transform: scale(1); opacity: 0.6; }
+          0% { transform: scale(1); opacity: 0.5; }
+          50% { transform: scale(1.12); opacity: 0.15; }
+          100% { transform: scale(1); opacity: 0.5; }
         }
         @keyframes qm-avatar-flip-in {
           0% { transform: rotateY(90deg) scale(0.8); opacity: 0; }
@@ -258,53 +311,70 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
           0% { transform: rotateY(0deg) scale(1); opacity: 1; }
           100% { transform: rotateY(-90deg) scale(0.8); opacity: 0; }
         }
-        @keyframes qm-timer-pulse {
-          0%, 100% { transform: scale(1); opacity: 0.7; }
-          50% { transform: scale(1.08); opacity: 1; }
+        @keyframes qm-vs-pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.08); }
         }
-        @keyframes qm-name-slide {
-          0% { transform: translateX(20px); opacity: 0; }
-          100% { transform: translateX(0); opacity: 1; }
+        @keyframes qm-bolt-flicker {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
+        }
+        @keyframes qm-scan-sweep {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
+        }
+        @keyframes qm-ring-spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
         @keyframes qm-matched-slam {
           0% { transform: scale(0.3); opacity: 0; }
-          50% { transform: scale(1.2); opacity: 1; }
+          50% { transform: scale(1.15); opacity: 1; }
           70% { transform: scale(0.95); }
           100% { transform: scale(1); opacity: 1; }
         }
         @keyframes qm-green-flash {
           0% { opacity: 0; }
-          30% { opacity: 0.5; }
+          25% { opacity: 0.4; }
           100% { opacity: 0; }
         }
         @keyframes qm-avatar-lock {
-          0% { transform: scale(1.3); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.8); }
-          50% { transform: scale(1.05); box-shadow: 0 0 30px 10px rgba(16, 185, 129, 0.4); }
-          100% { transform: scale(1); box-shadow: 0 0 20px 5px rgba(16, 185, 129, 0.2); }
+          0% { transform: scale(1.2); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.8); }
+          50% { transform: scale(1.02); box-shadow: 0 0 30px 8px rgba(16, 185, 129, 0.4); }
+          100% { transform: scale(1); box-shadow: 0 0 15px 4px rgba(16, 185, 129, 0.2); }
         }
-        @keyframes qm-dot-scan {
-          0%, 20% { opacity: 0.3; }
-          50% { opacity: 1; }
-          80%, 100% { opacity: 0.3; }
-        }
-        @keyframes qm-scan-line {
-          0% { top: 0%; opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { top: 100%; opacity: 0; }
+        @keyframes qm-countdown-pop {
+          0% { transform: scale(2); opacity: 0; }
+          40% { transform: scale(0.9); opacity: 1; }
+          60% { transform: scale(1.1); }
+          100% { transform: scale(1); }
         }
         @keyframes qm-found-ring-expand {
-          0% { transform: scale(0.5); opacity: 1; border-color: rgba(16, 185, 129, 0.8); }
-          100% { transform: scale(2.5); opacity: 0; border-color: rgba(16, 185, 129, 0); }
+          0% { transform: scale(0.8); opacity: 1; }
+          100% { transform: scale(2.5); opacity: 0; }
         }
-        @keyframes qm-stats-flash {
-          0% { opacity: 0; transform: translateY(5px); }
-          30% { opacity: 1; transform: translateY(0); }
-          70% { opacity: 1; transform: translateY(0); }
-          100% { opacity: 0; transform: translateY(-5px); }
+        @keyframes qm-tip-fade-in {
+          0% { opacity: 0; transform: translateY(6px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes qm-user-glow {
+          0%, 100% { box-shadow: 0 0 15px rgba(59,130,246,0.4); }
+          50% { box-shadow: 0 0 30px rgba(59,130,246,0.6); }
+        }
+        @keyframes qm-opp-glow {
+          0%, 100% { box-shadow: 0 0 15px rgba(251,146,60,0.4); }
+          50% { box-shadow: 0 0 30px rgba(251,146,60,0.6); }
+        }
+        @keyframes qm-timer-tick {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 1; }
+        }
+        @keyframes qm-topo-shift {
+          0% { background-position: 0% 0%; }
+          100% { background-position: 100% 100%; }
         }
       `}</style>
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
         <div className="rounded-2xl max-w-md w-full overflow-hidden" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }} onClick={e => e.stopPropagation()}>
           {step === 'config' && (
             <>
@@ -396,157 +466,296 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
           )}
 
           {step === 'searching' && (
-            <div className="p-8 text-center">
-              <div className="relative w-32 h-32 mx-auto mb-6">
-                <div
-                  className="absolute inset-0 rounded-full border-2 border-cyan-500/20"
-                  style={{ animation: 'qm-pulse-ring 2s ease-in-out infinite' }}
-                ></div>
-                <div
-                  className="absolute -inset-2 rounded-full border border-blue-500/10"
-                  style={{ animation: 'qm-pulse-ring 2s ease-in-out infinite 0.5s' }}
-                ></div>
+            <div className="relative overflow-hidden">
+              <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ opacity: 0.06 }}>
+                <div className="absolute inset-0" style={{
+                  background: 'linear-gradient(90deg, transparent, rgba(59,130,246,0.4), transparent)',
+                  animation: 'qm-scan-sweep 3s ease-in-out infinite',
+                }} />
+              </div>
 
-                <div className="absolute inset-0 rounded-full overflow-hidden">
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '50%',
-                      left: '50%',
-                      width: '100%',
-                      height: '100%',
-                      background: 'conic-gradient(from 0deg, transparent 0deg, rgba(6, 182, 212, 0.3) 30deg, transparent 60deg)',
-                      transformOrigin: '0% 0%',
-                      transform: `rotate(${radarAngle}deg)`,
-                    }}
-                  ></div>
+              <div className="flex items-stretch relative" style={{ minHeight: '280px' }}>
+                <div className="flex-1 flex flex-col items-center justify-center px-3 py-6 relative" style={{
+                  background: 'linear-gradient(160deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.02) 100%)',
+                }}>
+                  <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 Q45 20 30 35 Q15 20 30 5' fill='none' stroke='%233b82f6' stroke-width='0.5'/%3E%3Cpath d='M10 25 Q25 40 10 55' fill='none' stroke='%233b82f6' stroke-width='0.3'/%3E%3Cpath d='M50 25 Q35 40 50 55' fill='none' stroke='%233b82f6' stroke-width='0.3'/%3E%3C/svg%3E")`,
+                    backgroundSize: '60px 60px',
+                    animation: 'qm-topo-shift 20s linear infinite',
+                  }} />
+
+                  <div className="relative mb-2">
+                    <div
+                      className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
+                      style={{
+                        border: '3px solid #3b82f6',
+                        background: '#0c1a35',
+                        animation: 'qm-user-glow 2s ease-in-out infinite',
+                      }}
+                    >
+                      {userAvatar ? (
+                        <img src={userAvatar} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-2xl md:text-3xl font-black text-white/60">{userName[0]?.toUpperCase() || 'Y'}</span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-white text-xs md:text-sm font-bold truncate max-w-[100px] text-center">{userName}</p>
+                  <p className="text-blue-400 text-[10px] font-medium mt-0.5">Ready</p>
                 </div>
 
-                <div className="absolute inset-0 border-4 border-blue-500/20 rounded-full"></div>
-                <div
-                  className="absolute inset-0 border-4 border-transparent border-t-cyan-400 rounded-full"
-                  style={{ animation: 'qm-radar-sweep 2s linear infinite' }}
-                ></div>
-                <div
-                  className="absolute inset-3 border-2 border-transparent border-t-blue-400 rounded-full"
-                  style={{ animation: 'qm-radar-sweep 3s linear infinite reverse' }}
-                ></div>
+                <div className="flex flex-col items-center justify-center w-[80px] md:w-[100px] flex-shrink-0 relative z-20">
+                  <div className="absolute inset-0" style={{
+                    background: 'radial-gradient(circle at center, rgba(250,204,21,0.06) 0%, transparent 70%)',
+                  }} />
 
-                <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: '400px' }}>
-                  {currentAvatar ? (
+                  <div className="relative">
+                    <svg className="w-4 h-4 text-yellow-400 mb-1" viewBox="0 0 24 24" fill="currentColor" style={{
+                      animation: 'qm-bolt-flicker 1.5s ease-in-out infinite',
+                      filter: 'drop-shadow(0 0 6px rgba(250,204,21,0.6))',
+                    }}>
+                      <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
+                    </svg>
+
+                    <div
+                      className="text-3xl md:text-4xl font-black italic text-transparent bg-clip-text"
+                      style={{
+                        backgroundImage: 'linear-gradient(180deg, #fef08a 0%, #facc15 50%, #eab308 100%)',
+                        WebkitBackgroundClip: 'text',
+                        animation: 'qm-vs-pulse 1.5s ease-in-out infinite',
+                        textShadow: '0 0 20px rgba(250,204,21,0.4)',
+                      }}
+                    >
+                      VS
+                    </div>
+
+                    <svg className="w-4 h-4 text-yellow-400 mt-1 mx-auto" viewBox="0 0 24 24" fill="currentColor" style={{
+                      animation: 'qm-bolt-flicker 1.5s ease-in-out infinite 0.5s',
+                      filter: 'drop-shadow(0 0 6px rgba(250,204,21,0.6))',
+                    }}>
+                      <path d="M13 3L4 14h7l-2 7 9-11h-7l2-7z" />
+                    </svg>
+                  </div>
+                </div>
+
+                <div className="flex-1 flex flex-col items-center justify-center px-3 py-6 relative" style={{
+                  background: 'linear-gradient(200deg, rgba(251,146,60,0.08) 0%, rgba(251,146,60,0.02) 100%)',
+                }}>
+                  <div className="relative mb-2" style={{ perspective: '400px' }}>
+                    <div
+                      className="absolute -inset-3 rounded-full border border-orange-500/20"
+                      style={{ animation: 'qm-ring-spin 3s linear infinite' }}
+                    />
+                    <div
+                      className="absolute -inset-3 rounded-full"
+                      style={{
+                        background: 'conic-gradient(from 0deg, transparent 0deg, rgba(251,146,60,0.25) 40deg, transparent 80deg)',
+                        animation: 'qm-ring-spin 2s linear infinite',
+                      }}
+                    />
+
                     <div
                       key={currentAvatarIdx}
                       style={{
-                        animation: avatarFlip ? 'qm-avatar-flip-out 0.3s ease-in forwards' : 'qm-avatar-flip-in 0.3s ease-out forwards',
+                        animation: avatarFlip ? 'qm-avatar-flip-out 0.25s ease-in forwards' : 'qm-avatar-flip-in 0.25s ease-out forwards',
                       }}
                     >
-                      <img
-                        src={currentAvatar}
-                        alt="opponent"
-                        className="w-14 h-14 rounded-full object-cover border-2 border-cyan-500/50"
-                      />
+                      <div
+                        className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
+                        style={{
+                          border: '3px solid #fb923c',
+                          background: '#1a0a00',
+                          animation: 'qm-opp-glow 2s ease-in-out infinite',
+                        }}
+                      >
+                        {currentAvatar ? (
+                          <img src={currentAvatar} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-2xl md:text-3xl text-orange-300/60">?</span>
+                        )}
+                      </div>
                     </div>
-                  ) : (
-                    <span className="text-3xl">⚔️</span>
-                  )}
+                  </div>
+                  <p className="text-gray-500 text-xs md:text-sm font-bold mt-1">Searching...</p>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    {[0, 1, 2].map(i => (
+                      <div
+                        key={i}
+                        className="w-1 h-1 rounded-full bg-orange-400"
+                        style={{
+                          animation: 'qm-bolt-flicker 1s ease-in-out infinite',
+                          animationDelay: `${i * 0.25}s`,
+                        }}
+                      />
+                    ))}
+                  </div>
                 </div>
-
-                <div
-                  className="absolute inset-0 rounded-full"
-                  style={{
-                    background: 'linear-gradient(to bottom, transparent, rgba(6, 182, 212, 0.15), transparent)',
-                    animation: 'qm-scan-line 1.5s ease-in-out infinite',
-                  }}
-                ></div>
               </div>
 
-              <div
-                className="mb-1"
-                key={currentName}
-                style={{ animation: 'qm-name-slide 0.4s ease-out' }}
-              >
-                <span className="text-cyan-300 font-bold text-sm tracking-wide">{currentName}</span>
-                <span className="text-gray-500 text-xs ml-2">({currentRecord})</span>
+              <div className="px-5 pb-2">
+                <div className="rounded-xl p-2.5 flex items-center justify-between" style={{ backgroundColor: '#0a0a0a', border: '1px solid #1a1a1a' }}>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px]">{selectedMode?.icon}</span>
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{selectedMode?.label}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-center">
+                      <span className="text-[9px] text-gray-600 block">Pot</span>
+                      <span className="text-xs font-bold text-white">${potSize}</span>
+                    </div>
+                    <div className="text-center">
+                      <span className="text-[9px] text-gray-600 block">Wins</span>
+                      <span className="text-xs font-bold text-emerald-400">${payout}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="flex justify-center gap-3 mb-4">
-                {[0, 1, 2].map(i => (
-                  <div
-                    key={i}
-                    className="w-1.5 h-1.5 rounded-full bg-cyan-400"
+              <div className="px-5 pb-3 pt-1">
+                <div className="flex items-center gap-2 min-h-[36px]">
+                  <svg className="w-3.5 h-3.5 text-cyan-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <p
+                    className="text-gray-500 text-[11px] leading-snug flex-1 transition-opacity duration-300"
                     style={{
-                      animation: 'qm-dot-scan 1.2s ease-in-out infinite',
-                      animationDelay: `${i * 0.3}s`,
+                      opacity: tipFade ? 0 : 1,
+                      animation: tipFade ? 'none' : 'qm-tip-fade-in 0.3s ease-out',
                     }}
-                  ></div>
-                ))}
+                  >
+                    {TIPS[tipIndex]}
+                  </p>
+                </div>
               </div>
 
-              <h3 className="text-xl font-bold text-white mb-2">Scanning Opponents</h3>
-              <p className="text-gray-400 text-sm mb-1">${buyIn} Buy-In · {GAME_MODE_OPTIONS.find(m => m.id === gameMode)?.label || 'Original'}</p>
-              <p
-                className="text-cyan-400 text-sm font-mono mb-6"
-                style={{ animation: 'qm-timer-pulse 1s ease-in-out infinite' }}
-              >
-                {searchTime}s elapsed
-              </p>
-              <button
-                onClick={cancelSearch}
-                className="px-6 py-2.5 text-gray-300 rounded-xl transition-colors text-sm font-medium"
-                style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}
-              >
-                Cancel
-              </button>
+              <div className="px-5 pb-5 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse" />
+                  <span className="text-cyan-400 text-xs font-mono" style={{ animation: 'qm-timer-tick 1s ease-in-out infinite' }}>
+                    {searchTime}s
+                  </span>
+                </div>
+                <button
+                  onClick={cancelSearch}
+                  className="px-5 py-2 text-gray-300 rounded-xl transition-colors text-xs font-medium"
+                  style={{ backgroundColor: '#111', border: '1px solid #222' }}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           )}
 
           {step === 'found' && (
-            <div className="p-8 text-center relative overflow-hidden">
+            <div className="relative overflow-hidden">
               <div
                 className="absolute inset-0 bg-emerald-500/20"
-                style={{ animation: 'qm-green-flash 0.8s ease-out forwards' }}
-              ></div>
+                style={{ animation: 'qm-green-flash 1s ease-out forwards' }}
+              />
 
               <div className="relative z-10">
-                <div className="relative w-24 h-24 mx-auto mb-5">
-                  <div
-                    className="absolute inset-0 rounded-full border-2 border-emerald-400"
-                    style={{ animation: 'qm-found-ring-expand 1s ease-out forwards' }}
-                  ></div>
-                  <div
-                    className="absolute inset-0 rounded-full border-2 border-emerald-400"
-                    style={{ animation: 'qm-found-ring-expand 1s ease-out forwards 0.2s' }}
-                  ></div>
-
-                  <div
-                    className="relative w-full h-full rounded-full overflow-hidden border-3 border-emerald-400"
-                    style={{ animation: 'qm-avatar-lock 0.6s ease-out forwards' }}
-                  >
-                    {matchedOpponent?.avatar ? (
-                      <img
-                        src={matchedOpponent.avatar}
-                        alt="matched opponent"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-emerald-500/20 flex items-center justify-center">
-                        <span className="text-2xl font-black text-emerald-300">{(matchedOpponent?.username || 'O')[0].toUpperCase()}</span>
+                <div className="flex items-stretch relative" style={{ minHeight: '260px' }}>
+                  <div className="flex-1 flex flex-col items-center justify-center px-3 py-6 relative" style={{
+                    background: 'linear-gradient(160deg, rgba(59,130,246,0.08) 0%, rgba(59,130,246,0.02) 100%)',
+                  }}>
+                    <div className="relative mb-2">
+                      <div
+                        className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
+                        style={{
+                          border: '3px solid #3b82f6',
+                          background: '#0c1a35',
+                          boxShadow: '0 0 20px rgba(59,130,246,0.4)',
+                        }}
+                      >
+                        {userAvatar ? (
+                          <img src={userAvatar} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-2xl md:text-3xl font-black text-white/60">{userName[0]?.toUpperCase() || 'Y'}</span>
+                        )}
                       </div>
-                    )}
+                    </div>
+                    <p className="text-white text-xs md:text-sm font-bold truncate max-w-[100px] text-center">{userName}</p>
+                  </div>
+
+                  <div className="flex flex-col items-center justify-center w-[80px] md:w-[100px] flex-shrink-0 relative z-20">
+                    <div
+                      className="text-3xl md:text-4xl font-black italic text-transparent bg-clip-text"
+                      style={{
+                        backgroundImage: 'linear-gradient(180deg, #fef08a 0%, #facc15 50%, #eab308 100%)',
+                        WebkitBackgroundClip: 'text',
+                        textShadow: '0 0 20px rgba(250,204,21,0.4)',
+                      }}
+                    >
+                      VS
+                    </div>
+                  </div>
+
+                  <div className="flex-1 flex flex-col items-center justify-center px-3 py-6 relative" style={{
+                    background: 'linear-gradient(200deg, rgba(251,146,60,0.08) 0%, rgba(251,146,60,0.02) 100%)',
+                  }}>
+                    <div className="relative mb-2">
+                      <div
+                        className="absolute inset-0 rounded-full border-2 border-emerald-400"
+                        style={{ animation: 'qm-found-ring-expand 1.2s ease-out forwards', top: '-12px', left: '-12px', right: '-12px', bottom: '-12px' }}
+                      />
+                      <div
+                        className="absolute inset-0 rounded-full border-2 border-emerald-400"
+                        style={{ animation: 'qm-found-ring-expand 1.2s ease-out forwards 0.3s', top: '-12px', left: '-12px', right: '-12px', bottom: '-12px' }}
+                      />
+
+                      <div
+                        className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
+                        style={{
+                          border: '3px solid #10b981',
+                          background: '#0a1a0e',
+                          animation: 'qm-avatar-lock 0.6s ease-out forwards',
+                        }}
+                      >
+                        {matchedOpponent?.avatar ? (
+                          <img src={matchedOpponent.avatar} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-2xl md:text-3xl font-black text-emerald-300/70">
+                            {(matchedOpponent?.username || 'O')[0].toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-white text-xs md:text-sm font-bold truncate max-w-[100px] text-center">
+                      {matchedOpponent?.username || 'Opponent'}
+                    </p>
                   </div>
                 </div>
 
-                {matchedOpponent?.username && (
-                  <p className="text-white font-bold text-sm mb-1">{matchedOpponent.username}</p>
-                )}
+                <div className="px-5 pb-2">
+                  <div className="rounded-xl p-2.5 flex items-center justify-center gap-4" style={{ backgroundColor: '#0a0a0a', border: '1px solid #1a1a1a' }}>
+                    <div className="text-center">
+                      <span className="text-[9px] text-gray-600 block uppercase tracking-wider">Prize Pot</span>
+                      <span className="text-sm font-black text-emerald-400">${payout}</span>
+                    </div>
+                    <div className="w-px h-6 bg-gray-800" />
+                    <div className="text-center">
+                      <span className="text-[9px] text-gray-600 block uppercase tracking-wider">10% Fee</span>
+                      <span className="text-sm font-bold text-gray-500">${(potSize * 0.1).toFixed(0)}</span>
+                    </div>
+                  </div>
+                </div>
 
-                <h3
-                  className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-2"
-                  style={{ animation: 'qm-matched-slam 0.6s ease-out forwards 0.3s', opacity: 0, transform: 'scale(0.3)' }}
-                >
-                  MATCHED!
-                </h3>
-                <p className="text-emerald-300 text-sm font-medium">Battle starting now...</p>
+                <div className="text-center py-4 pb-6">
+                  <h3
+                    className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-2"
+                    style={{ animation: 'qm-matched-slam 0.6s ease-out forwards 0.2s', opacity: 0, transform: 'scale(0.3)' }}
+                  >
+                    MATCH FOUND
+                  </h3>
+                  <p className="text-gray-500 text-xs mb-1.5">Starting in</p>
+                  <div
+                    key={countdown}
+                    className="text-4xl md:text-5xl font-black text-white"
+                    style={{ animation: 'qm-countdown-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}
+                  >
+                    {countdown}
+                  </div>
+                </div>
               </div>
             </div>
           )}
