@@ -1,8 +1,8 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { matchups, matchupQueue, fakeOpponents, profiles, users } from '../../../shared/schema';
-import { eq, and } from 'drizzle-orm';
+import { matchups, matchupQueue, matchmakingQueue, fakeOpponents, profiles, users } from '../../../shared/schema';
+import { eq, and, desc } from 'drizzle-orm';
 
 const DURATION_CONFIGS = {
   '30_min': { minutes: 30, label: '30 Minutes' },
@@ -11,6 +11,12 @@ const DURATION_CONFIGS = {
   '1_day': { minutes: 1440, label: '1 Day' },
   '3_days': { minutes: 4320, label: '3 Days' },
   '1_week': { minutes: 10080, label: '1 Week' },
+};
+
+const GAME_MODES = {
+  rush: { durationMinutes: 180, durationType: 'rush', coins: 10000 },
+  original: { durationMinutes: 1440, durationType: 'original', coins: 10000 },
+  tournament: { durationMinutes: 4320, durationType: 'tournament', coins: 100000 },
 };
 
 const PLATFORM_FEE_PERCENT = 0.10;
@@ -29,10 +35,30 @@ export default async function handler(req, res) {
   const userId = session.user.id;
 
   try {
-    const [queueEntry] = await db
+    let queueEntry = null;
+    let queueSource = null;
+
+    const [mqEntry] = await db
       .select()
       .from(matchupQueue)
       .where(and(eq(matchupQueue.userId, userId), eq(matchupQueue.status, 'waiting')));
+
+    if (mqEntry) {
+      queueEntry = mqEntry;
+      queueSource = 'matchupQueue';
+    } else {
+      const [mmEntry] = await db
+        .select()
+        .from(matchmakingQueue)
+        .where(and(eq(matchmakingQueue.userId, userId), eq(matchmakingQueue.status, 'waiting')))
+        .orderBy(desc(matchmakingQueue.createdAt))
+        .limit(1);
+
+      if (mmEntry) {
+        queueEntry = mmEntry;
+        queueSource = 'matchmakingQueue';
+      }
+    }
 
     if (!queueEntry) {
       return res.status(404).json({ error: 'Not in queue' });
@@ -67,17 +93,32 @@ export default async function handler(req, res) {
     const randomRow = validFakeOpponents[Math.floor(Math.random() * validFakeOpponents.length)];
     const randomFake = randomRow.fo;
     const fakeProfileAvatar = randomRow.profile?.avatar || null;
-    const startingBalance = parseFloat(queueEntry.startingBalance) || 5000;
-    const potSize = startingBalance * 2;
+
+    let startingBalance, durationMinutes, durationType, challengeType;
+
+    if (queueSource === 'matchmakingQueue') {
+      const mode = GAME_MODES[queueEntry.gameMode] || GAME_MODES.original;
+      startingBalance = mode.coins;
+      durationMinutes = mode.durationMinutes;
+      durationType = mode.durationType || queueEntry.gameMode;
+      challengeType = 'random_battle';
+    } else {
+      startingBalance = parseFloat(queueEntry.startingBalance) || 5000;
+      const durationConfig = DURATION_CONFIGS[queueEntry.durationType] || DURATION_CONFIGS['1_day'];
+      durationMinutes = durationConfig.minutes;
+      durationType = queueEntry.durationType;
+      challengeType = queueEntry.challengeType;
+    }
+
+    const potSize = parseFloat(queueEntry.buyIn || startingBalance) * 2;
     const platformFee = potSize * PLATFORM_FEE_PERCENT;
     const winnerPayout = potSize - platformFee;
 
-    const durationConfig = DURATION_CONFIGS[queueEntry.durationType] || DURATION_CONFIGS['1_day'];
     const now = new Date();
-    const endsAt = new Date(now.getTime() + durationConfig.minutes * 60 * 1000);
+    const endsAt = new Date(now.getTime() + durationMinutes * 60 * 1000);
 
     const [newMatchup] = await db.insert(matchups).values({
-      challengeType: queueEntry.challengeType,
+      challengeType,
       startingBalance: startingBalance.toString(),
       potSize: potSize.toString(),
       platformFee: platformFee.toString(),
@@ -88,17 +129,24 @@ export default async function handler(req, res) {
       user2Balance: startingBalance.toString(),
       isFakeOpponent: true,
       fakeOpponentId: randomFake.id,
-      durationMinutes: durationConfig.minutes,
-      durationType: queueEntry.durationType,
+      durationMinutes,
+      durationType,
       startsAt: now,
       endsAt,
       status: 'active',
     }).returning();
 
-    await db
-      .update(matchupQueue)
-      .set({ status: 'matched', matchupId: newMatchup.id, matchedAt: now })
-      .where(eq(matchupQueue.id, queueEntry.id));
+    if (queueSource === 'matchupQueue') {
+      await db
+        .update(matchupQueue)
+        .set({ status: 'matched', matchupId: newMatchup.id, matchedAt: now })
+        .where(eq(matchupQueue.id, queueEntry.id));
+    } else {
+      await db
+        .update(matchmakingQueue)
+        .set({ status: 'matched', updatedAt: now })
+        .where(eq(matchmakingQueue.id, queueEntry.id));
+    }
 
     return res.status(200).json({
       status: 'matched',

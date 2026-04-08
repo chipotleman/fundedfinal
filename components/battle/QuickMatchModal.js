@@ -207,6 +207,11 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
   const handleMatchFound = (opponent, matchup) => {
     if (cancelledRef.current) return;
     cleanupAllTimers();
+    if (!matchup) {
+      setError('Matchmaking timed out. Please try again.');
+      setStep('config');
+      return;
+    }
     if (opponent) setMatchedOpponent(opponent);
     setStep('found');
     matchFoundTimeoutRef.current = setTimeout(() => {
@@ -262,13 +267,15 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
       if (cancelledRef.current) return;
       attempts++;
       try {
-        const res = await fetch('/api/matchups/queue');
+        const res = await fetch('/api/matchups/current');
         if (cancelledRef.current) return;
         if (!res.ok) return;
         const data = await res.json();
-        if (data.matchup && data.matchup.status === 'active') {
-          handleMatchFound(data.opponent, data.matchup);
-          return;
+        if (data.status === 'active' || data.status === 'matched') {
+          if (data.matchup) {
+            handleMatchFound(data.opponent, data.matchup);
+            return;
+          }
         }
       } catch {}
 
