@@ -122,6 +122,8 @@ export default function BattlePage() {
               setActiveMatchup(matchData.matchup);
               setMatchupData(matchData);
               setShowLobby(matchData.matchup);
+              refreshGlobalMatchup();
+              setTimeout(() => router.push('/?battleStarted=true'), 2500);
             }
           }
         }
@@ -169,8 +171,10 @@ export default function BattlePage() {
             if (data.matchup.status === 'active' || data.matchup.status === 'matched') {
               setActiveMatchup(data.matchup);
               setMatchupData(data);
+              setShowLobby(data.matchup);
               refreshGlobalMatchup();
               clearInterval(interval);
+              setTimeout(() => router.push('/?battleStarted=true'), 2500);
             }
           } else {
             setActiveMatchup(null);
@@ -774,7 +778,7 @@ export default function BattlePage() {
           setShowLobby(matchup);
           fetchData();
           refreshGlobalMatchup();
-          router.push('/?battleStarted=true');
+          setTimeout(() => router.push('/?battleStarted=true'), 2500);
         }}
       />
       <PlayFriendModal
@@ -791,7 +795,7 @@ export default function BattlePage() {
           setShowLobby(matchup);
           fetchData();
           refreshGlobalMatchup();
-          router.push('/?battleStarted=true');
+          setTimeout(() => router.push('/?battleStarted=true'), 2500);
         }}
       />
       <MatchHistoryModal
