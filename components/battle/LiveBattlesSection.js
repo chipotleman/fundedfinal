@@ -308,9 +308,19 @@ function BattleCard({ battle, compact, focused }) {
           </div>
         )}
         {picksLocked && (
-          <div className="mt-2 flex items-center gap-1.5 py-1.5 px-2 rounded-md" style={{ background: '#111', border: '1px solid #1a1a1a' }}>
-            <svg className="w-3 h-3 text-gray-600 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>
-            <span className="text-[9px] text-gray-500">Reveals when both lock in</span>
+          <div className="mt-2 rounded-md" style={{ background: '#111', border: '1px solid #1a1a1a' }}>
+            <div className="flex items-center gap-1.5 px-2 pt-1.5 pb-1">
+              <svg className="w-3 h-3 text-gray-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>
+              <span className="text-[9px] text-gray-500">Reveals when both lock in</span>
+            </div>
+            <div className="flex gap-1.5 px-2 pb-1.5">
+              <div className={`flex-1 flex items-center gap-1 py-1 px-1.5 rounded text-[9px] font-medium truncate ${onlyUser1 ? 'text-green-400' : 'text-gray-600'}`} style={{ background: onlyUser1 ? 'rgba(16,185,129,0.08)' : 'transparent' }}>
+                {onlyUser1 ? '✓' : '○'} {(user1.username || 'P1').slice(0, 8)}
+              </div>
+              <div className={`flex-1 flex items-center gap-1 py-1 px-1.5 rounded text-[9px] font-medium truncate ${onlyUser2 ? 'text-green-400' : 'text-gray-600'}`} style={{ background: onlyUser2 ? 'rgba(16,185,129,0.08)' : 'transparent' }}>
+                {onlyUser2 ? '✓' : '○'} {(user2.username || 'P2').slice(0, 8)}
+              </div>
+            </div>
           </div>
         )}
         <BattleChat battleId={battle.id} compact />
@@ -404,14 +414,34 @@ function BattleCard({ battle, compact, focused }) {
         )}
 
         {picksLocked && (
-          <div className="mb-2 flex items-center gap-2 py-2 px-3 rounded-lg" style={{ background: '#111', border: '1px solid #1a1a1a' }}>
-            <div className="flex items-center gap-1.5 flex-1">
-              <svg className="w-3.5 h-3.5 text-gray-500" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>
-              <span className="text-[10px] text-gray-500 font-medium">Picks hidden until both players lock in</span>
+          <div className="mb-2 rounded-lg" style={{ background: '#111', border: '1px solid #1a1a1a' }}>
+            <div className="flex items-center gap-2 px-3 py-2">
+              <svg className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>
+              <span className="text-[10px] text-gray-500 font-medium">Reveals when both players lock in</span>
             </div>
-            <span className="text-[9px] text-gray-600">
-              {onlyUser1 ? `${rawPicks.user1.length}P vs ?` : `? vs ${rawPicks.user2.length}P`}
-            </span>
+            <div className="flex gap-2 px-3 pb-2.5">
+              <div className="flex-1 flex items-center gap-1.5 py-1.5 px-2 rounded-md" style={{ background: onlyUser1 ? 'rgba(16,185,129,0.08)' : 'rgba(255,255,255,0.02)', border: onlyUser1 ? '1px solid rgba(16,185,129,0.2)' : '1px solid #1a1a1a' }}>
+                {onlyUser1 ? (
+                  <svg className="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                ) : (
+                  <div className="w-3 h-3 rounded-full border border-gray-600 flex-shrink-0 pick-pending-dot"></div>
+                )}
+                <span className={`text-[10px] font-medium truncate ${onlyUser1 ? 'text-green-400' : 'text-gray-600'}`}>
+                  {user1.username || 'Player 1'} {onlyUser1 ? 'locked' : 'pending'}
+                </span>
+              </div>
+              <span className="text-gray-600 text-[9px] self-center">vs</span>
+              <div className="flex-1 flex items-center gap-1.5 py-1.5 px-2 rounded-md" style={{ background: onlyUser2 ? 'rgba(16,185,129,0.08)' : 'rgba(255,255,255,0.02)', border: onlyUser2 ? '1px solid rgba(16,185,129,0.2)' : '1px solid #1a1a1a' }}>
+                {onlyUser2 ? (
+                  <svg className="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
+                ) : (
+                  <div className="w-3 h-3 rounded-full border border-gray-600 flex-shrink-0 pick-pending-dot"></div>
+                )}
+                <span className={`text-[10px] font-medium truncate ${onlyUser2 ? 'text-green-400' : 'text-gray-600'}`}>
+                  {user2.username || 'Player 2'} {onlyUser2 ? 'locked' : 'pending'}
+                </span>
+              </div>
+            </div>
           </div>
         )}
 
