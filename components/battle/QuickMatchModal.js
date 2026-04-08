@@ -316,6 +316,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
   const userName = userProfile?.username || session?.user?.name || 'You';
   const userAvatar = userProfile?.avatar || null;
   const selectedMode = GAME_MODE_OPTIONS.find(m => m.id === gameMode);
+  const matchedAvatar = matchedOpponent?.avatar || currentAvatar || null;
 
   return (
     <>
@@ -744,8 +745,8 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                           animation: 'qm-avatar-lock 0.6s ease-out forwards',
                         }}
                       >
-                        {matchedOpponent?.avatar ? (
-                          <img src={matchedOpponent.avatar} alt="" className="w-full h-full object-cover" />
+                        {matchedAvatar ? (
+                          <img src={matchedAvatar} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <span className="text-2xl md:text-3xl font-black text-emerald-300/70">
                             {(matchedOpponent?.username || 'O')[0].toUpperCase()}

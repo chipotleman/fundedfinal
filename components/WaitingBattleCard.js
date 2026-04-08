@@ -11,47 +11,47 @@ const MODE_THEMES = {
   rush: {
     label: 'RUSH',
     icon: '⚡',
-    cardBg: 'linear-gradient(135deg, #1a0800 0%, #2d1200 30%, #1a0a00 70%, #0d0500 100%)',
-    leftPanelBg: 'linear-gradient(160deg, rgba(251,146,60,0.12) 0%, rgba(251,146,60,0.04) 100%)',
-    rightPanelBg: 'linear-gradient(200deg, rgba(251,146,60,0.06) 0%, rgba(251,146,60,0.02) 100%)',
+    cardBg: 'linear-gradient(135deg, #1a0800 0%, #2d1200 25%, #1a0a00 50%, #0d0500 75%, #050200 100%)',
     borderColor: 'rgba(251,146,60,0.35)',
     accentColor: '#fb923c',
     accentRgb: '251,146,60',
     badgeBg: 'rgba(251,146,60,0.15)',
     avatarRing: '#fb923c',
     avatarGlow: '0 0 20px rgba(251,146,60,0.4)',
-    dotColor: 'bg-orange-400',
-    scanColor: 'rgba(251,146,60,0.3)',
+    glowColor: 'rgba(251,146,60,0.4)',
+    emberColors: ['#fdba74', '#fb923c', '#f97316'],
+    smokeOpacity: 0.35,
+    vsGradient: 'linear-gradient(180deg, #fef3c7 0%, #fb923c 50%, #ea580c 100%)',
   },
   original: {
     label: 'ORIGINAL',
     icon: '🏆',
-    cardBg: 'linear-gradient(135deg, #020a1a 0%, #0c1a35 30%, #081428 70%, #040c18 100%)',
-    leftPanelBg: 'linear-gradient(160deg, rgba(59,130,246,0.12) 0%, rgba(59,130,246,0.03) 100%)',
-    rightPanelBg: 'linear-gradient(200deg, rgba(59,130,246,0.06) 0%, rgba(59,130,246,0.02) 100%)',
+    cardBg: 'linear-gradient(135deg, #020a18 0%, #0a1628 25%, #122240 50%, #0d1a30 75%, #050d1a 100%)',
     borderColor: 'rgba(59,130,246,0.3)',
     accentColor: '#3b82f6',
     accentRgb: '59,130,246',
     badgeBg: 'rgba(59,130,246,0.15)',
     avatarRing: '#3b82f6',
     avatarGlow: '0 0 20px rgba(59,130,246,0.4)',
-    dotColor: 'bg-blue-400',
-    scanColor: 'rgba(59,130,246,0.3)',
+    glowColor: 'rgba(59,130,246,0.4)',
+    emberColors: ['#93c5fd', '#60a5fa', '#3b82f6'],
+    smokeOpacity: 0.35,
+    vsGradient: 'linear-gradient(180deg, #fef08a 0%, #facc15 50%, #eab308 100%)',
   },
   tournament: {
     label: 'TOURNAMENT',
     icon: '👑',
-    cardBg: 'linear-gradient(135deg, #050d08 0%, #0d2210 30%, #0a1a0e 70%, #040d06 100%)',
-    leftPanelBg: 'linear-gradient(160deg, rgba(16,185,129,0.12) 0%, rgba(16,185,129,0.03) 100%)',
-    rightPanelBg: 'linear-gradient(200deg, rgba(16,185,129,0.06) 0%, rgba(16,185,129,0.02) 100%)',
+    cardBg: 'linear-gradient(135deg, #050d08 0%, #0d2210 25%, #0a1a0e 50%, #040d06 75%, #020804 100%)',
     borderColor: 'rgba(16,185,129,0.3)',
     accentColor: '#10b981',
     accentRgb: '16,185,129',
     badgeBg: 'rgba(16,185,129,0.15)',
     avatarRing: '#10b981',
     avatarGlow: '0 0 20px rgba(16,185,129,0.4)',
-    dotColor: 'bg-emerald-400',
-    scanColor: 'rgba(16,185,129,0.3)',
+    glowColor: 'rgba(16,185,129,0.4)',
+    emberColors: ['#6ee7b7', '#34d399', '#10b981'],
+    smokeOpacity: 0.35,
+    vsGradient: 'linear-gradient(180deg, #fef08a 0%, #facc15 50%, #eab308 100%)',
   },
 };
 
@@ -114,17 +114,45 @@ export default function WaitingBattleCard({ matchup, queueEntry, myProfile, oppo
   return (
     <>
       <style>{`
-        @keyframes waiting-scan {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(200%); }
+        @keyframes wbc-ember-float {
+          0% { 
+            transform: translateY(0) translateX(0) scale(1); 
+            opacity: 0.9; 
+          }
+          100% { 
+            transform: translateY(-160px) translateX(10px) scale(0.3); 
+            opacity: 0; 
+          }
         }
-        @keyframes search-ring {
+        @keyframes wbc-smoke-rise {
+          0% { 
+            transform: translateY(0) translateX(0) scale(1) rotate(0deg); 
+            opacity: 0.35; 
+          }
+          50% {
+            transform: translateY(-60px) translateX(12px) scale(1.6) rotate(8deg);
+            opacity: 0.2;
+          }
+          100% { 
+            transform: translateY(-140px) translateX(-8px) scale(2.5) rotate(-5deg); 
+            opacity: 0; 
+          }
+        }
+        @keyframes wbc-vs-pulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.08); }
+        }
+        @keyframes wbc-glow {
+          0%, 100% { box-shadow: 0 0 15px ${theme.glowColor}; }
+          50% { box-shadow: 0 0 30px ${theme.glowColor}, 0 0 50px ${theme.glowColor}; }
+        }
+        @keyframes wbc-search-ring {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
         }
-        @keyframes search-pulse {
-          0%, 100% { opacity: 0.3; transform: scale(1); }
-          50% { opacity: 0.7; transform: scale(1.05); }
+        @keyframes wbc-pulse {
+          0%, 100% { opacity: 0.6; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.05); }
         }
       `}</style>
 
@@ -135,106 +163,159 @@ export default function WaitingBattleCard({ matchup, queueEntry, myProfile, oppo
           border: `2px solid ${theme.borderColor}`,
         }}
       >
-        <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ opacity: 0.1 }}>
-          <div className="absolute inset-0" style={{
-            background: `linear-gradient(90deg, transparent, ${theme.scanColor}, transparent)`,
-            animation: 'waiting-scan 2.5s ease-in-out infinite',
-          }} />
+        <div 
+          className="absolute inset-0 opacity-30 pointer-events-none"
+          style={{
+            background: `radial-gradient(ellipse at center bottom, ${theme.glowColor} 0%, transparent 60%)`,
+          }}
+        />
+
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+          {[...Array(10)].map((_, i) => (
+            <div
+              key={`smoke-${i}`}
+              className="absolute rounded-full"
+              style={{
+                width: `${20 + (i % 4) * 12}px`,
+                height: `${20 + (i % 4) * 12}px`,
+                left: `${5 + (i * 9.5)}%`,
+                bottom: `${5 + (i * 4) % 20}%`,
+                background: `radial-gradient(circle, rgba(100,100,100,${theme.smokeOpacity + 0.05}) 0%, rgba(70,70,70,${theme.smokeOpacity * 0.5}) 50%, transparent 70%)`,
+                filter: 'blur(6px)',
+                animation: `wbc-smoke-rise ${3.5 + (i % 3) * 0.8}s linear infinite`,
+                animationDelay: `${i * 0.3}s`,
+              }}
+            />
+          ))}
+          {[...Array(25)].map((_, i) => (
+            <div
+              key={`ember-${i}`}
+              className="absolute rounded-full"
+              style={{
+                width: `${2 + (i % 3) * 2}px`,
+                height: `${2 + (i % 3) * 2}px`,
+                left: `${2 + (i * 4)}%`,
+                bottom: `-5%`,
+                background: theme.emberColors[i % 3],
+                boxShadow: `0 0 ${6 + (i % 3) * 3}px ${theme.emberColors[i % 3]}`,
+                animation: `wbc-ember-float ${2.5 + (i % 5) * 0.4}s linear infinite`,
+                animationDelay: `${(i * 0.12)}s`,
+              }}
+            />
+          ))}
         </div>
 
-        <div className="relative z-10 h-full flex items-stretch">
-          <div className="flex-1 flex flex-col items-center justify-center px-2 md:px-4" style={{ background: theme.leftPanelBg }}>
-            <div className="relative mb-1">
-              <div
-                className="w-14 h-14 md:w-[72px] md:h-[72px] rounded-full flex items-center justify-center overflow-hidden relative z-10"
-                style={{
-                  border: `3px solid ${theme.avatarRing}`,
-                  boxShadow: theme.avatarGlow,
-                  background: '#111',
-                }}
-              >
-                {userAvatar ? (
-                  <img src={userAvatar} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-xl md:text-2xl font-black text-white/70">{userName?.[0]?.toUpperCase() || 'Y'}</span>
-                )}
-              </div>
-            </div>
-            <p className="text-white text-[11px] md:text-xs font-bold truncate max-w-[80px] md:max-w-[100px] text-center">{userName}</p>
-            <p className="text-[10px] text-gray-500">Ready</p>
-          </div>
-
-          <div className="flex flex-col items-center justify-center w-[100px] md:w-[140px] flex-shrink-0 relative z-20">
-            <div className="flex items-center gap-0.5 px-2 py-0.5 rounded-full mb-1" style={{ background: theme.badgeBg }}>
-              <span className="text-[8px] md:text-[9px]">{theme.icon}</span>
-              <span className="text-[7px] md:text-[8px] font-bold uppercase tracking-wider" style={{ color: theme.accentColor }}>{theme.label}</span>
-            </div>
-
-            <div className="text-xl md:text-2xl font-black italic text-white/30 mb-0.5">VS</div>
-
-            <div className="text-center">
-              <p className="text-[8px] text-gray-500 uppercase tracking-wider leading-none">Prize</p>
-              <p className="text-sm md:text-lg font-black leading-tight" style={{ color: theme.accentColor }}>
-                ${pot.toLocaleString()}
-              </p>
-            </div>
-
-            {privateCode && (
-              <div className="flex items-center gap-1 mt-1 bg-[#1a1a1a] border border-[#333] rounded px-1.5 py-0.5">
-                <span className="text-white font-mono font-bold text-[10px] tracking-wider">{privateCode}</span>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigator.clipboard.writeText(privateCode);
-                    const el = e.currentTarget;
-                    el.textContent = '✓';
-                    setTimeout(() => { el.textContent = '📋'; }, 1500);
+        <div className="relative z-10 h-full flex items-center px-3 md:px-6">
+          <div className="flex items-center justify-between w-full">
+            <div className="flex flex-col items-center flex-1">
+              <div className="flex flex-col items-center h-[90px] md:h-[110px]">
+                <div 
+                  className="w-12 h-12 md:w-16 md:h-16 rounded-full border-2 shadow-lg flex items-center justify-center overflow-hidden"
+                  style={{ 
+                    borderColor: theme.avatarRing,
+                    animation: 'wbc-glow 2s ease-in-out infinite',
+                    background: '#111',
                   }}
-                  className="text-[10px]"
-                >📋</button>
+                >
+                  {userAvatar ? (
+                    <img src={userAvatar} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-xl md:text-2xl font-black text-white/70">{userName?.[0]?.toUpperCase() || 'Y'}</span>
+                  )}
+                </div>
+                <span className="text-white text-[11px] md:text-xs font-bold mt-1 truncate max-w-[80px] md:max-w-[100px] text-center">{userName}</span>
+                <span className="text-[10px] mt-0.5" style={{ color: theme.accentColor }}>Ready</span>
               </div>
-            )}
-          </div>
+            </div>
 
-          <div className="flex-1 flex flex-col items-center justify-center px-2 md:px-4 relative" style={{ background: theme.rightPanelBg }}>
-            <div className="relative mb-1">
-              <div
-                className="w-14 h-14 md:w-[72px] md:h-[72px] rounded-full flex items-center justify-center overflow-hidden relative z-10"
-                style={{
-                  border: opponent ? `3px solid ${theme.avatarRing}` : '3px solid #333',
-                  background: opponent ? '#111' : '#0a0a0a',
-                  boxShadow: opponent ? theme.avatarGlow : 'none',
+            <div className="flex flex-col items-center justify-center flex-1">
+              <div className="flex items-center gap-0.5 px-2 py-0.5 rounded-full mb-1" style={{ background: theme.badgeBg }}>
+                <span className="text-[8px] md:text-[9px]">{theme.icon}</span>
+                <span className="text-[7px] md:text-[8px] font-bold uppercase tracking-wider" style={{ color: theme.accentColor }}>{theme.label}</span>
+              </div>
+
+              <div 
+                className="text-2xl md:text-4xl font-black text-transparent bg-clip-text"
+                style={{ 
+                  backgroundImage: theme.vsGradient,
+                  WebkitBackgroundClip: 'text',
+                  animation: 'wbc-vs-pulse 1.5s ease-in-out infinite',
                 }}
               >
+                VS
+              </div>
+
+              <div className="text-center mt-0.5">
+                <p className="text-[8px] text-gray-500 uppercase tracking-wider leading-none">Prize</p>
+                <p className="text-sm md:text-lg font-black leading-tight" style={{ color: theme.accentColor }}>
+                  ${pot.toLocaleString()}
+                </p>
+              </div>
+
+              {privateCode && (
+                <div className="flex items-center gap-1 mt-1 bg-[#1a1a1a] border border-[#333] rounded px-1.5 py-0.5">
+                  <span className="text-white font-mono font-bold text-[10px] tracking-wider">{privateCode}</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigator.clipboard.writeText(privateCode);
+                      const el = e.currentTarget;
+                      el.textContent = '✓';
+                      setTimeout(() => { el.textContent = '📋'; }, 1500);
+                    }}
+                    className="text-[10px]"
+                  >📋</button>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col items-center flex-1">
+              <div className="flex flex-col items-center h-[90px] md:h-[110px]">
+                <div className="relative">
+                  <div
+                    className="w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center overflow-hidden border-2 shadow-lg"
+                    style={{
+                      borderColor: opponent ? theme.avatarRing : '#333',
+                      background: opponent ? '#111' : '#0a0a0a',
+                      boxShadow: opponent ? theme.avatarGlow : 'none',
+                      animation: opponent ? 'wbc-glow 2s ease-in-out infinite' : 'wbc-pulse 2s ease-in-out infinite',
+                    }}
+                  >
+                    {opponent ? (
+                      opponent.avatar ? (
+                        <img src={opponent.avatar} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-xl md:text-2xl font-black text-white/70">{(opponent.username || 'O')[0].toUpperCase()}</span>
+                      )
+                    ) : (
+                      <>
+                        <div className="absolute inset-0 rounded-full" style={{
+                          background: `conic-gradient(${theme.accentColor}, transparent, ${theme.accentColor})`,
+                          animation: 'wbc-search-ring 2s linear infinite',
+                          opacity: 0.3,
+                        }} />
+                        <span className="text-xl md:text-2xl text-gray-600 relative z-10">?</span>
+                      </>
+                    )}
+                  </div>
+                </div>
                 {opponent ? (
-                  opponent.avatar ? (
-                    <img src={opponent.avatar} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-xl md:text-2xl font-black text-white/70">{(opponent.username || 'O')[0].toUpperCase()}</span>
-                  )
+                  <div className="flex flex-col items-center mt-1">
+                    <span className="text-white text-[11px] md:text-xs font-bold truncate max-w-[80px] md:max-w-[100px] text-center">{opponent.username || 'Opponent'}</span>
+                    <span className="text-[10px]" style={{ color: theme.accentColor }}>Joined</span>
+                  </div>
                 ) : (
-                  <>
-                    <div className="absolute inset-0 rounded-full" style={{
-                      background: `conic-gradient(${theme.accentColor}, transparent, ${theme.accentColor})`,
-                      animation: 'search-ring 2s linear infinite',
-                      opacity: 0.3,
-                    }} />
-                    <span className="text-xl md:text-2xl text-gray-600 relative z-10">?</span>
-                  </>
+                  <div className="flex flex-col items-center mt-0.5">
+                    <svg className="w-4 h-4 md:w-5 md:h-5 animate-bounce" viewBox="0 0 24 24" fill={theme.accentColor}>
+                      <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8-8-8z" transform="rotate(-90 12 12)"/>
+                    </svg>
+                    <span className="text-[10px] md:text-xs font-bold uppercase tracking-wide text-center leading-tight" style={{ color: theme.accentColor }}>
+                      Finding<br/>Opponent
+                    </span>
+                  </div>
                 )}
               </div>
             </div>
-            {opponent ? (
-              <>
-                <p className="text-white text-[11px] md:text-xs font-bold truncate max-w-[80px] md:max-w-[100px] text-center">{opponent.username || 'Opponent'}</p>
-                <p className="text-[10px]" style={{ color: theme.accentColor }}>Joined</p>
-              </>
-            ) : (
-              <div className="flex items-center gap-1">
-                <div className={`w-1 h-1 ${theme.dotColor} rounded-full animate-pulse`}></div>
-                <p className="text-gray-500 text-[10px] md:text-[11px]">Searching...</p>
-              </div>
-            )}
           </div>
         </div>
 
