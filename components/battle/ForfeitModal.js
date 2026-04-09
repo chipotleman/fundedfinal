@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
   const [isForfeiting, setIsForfeiting] = useState(false);
+  const { isDarkMode } = useTheme();
 
   if (!isOpen) return null;
 
@@ -53,39 +55,39 @@ export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
         <div
           className="forfeit-modal w-full max-w-sm rounded-2xl overflow-hidden"
           style={{
-            background: 'linear-gradient(180deg, #1c1917 0%, #0c0a09 100%)',
-            border: '1px solid rgba(239, 68, 68, 0.3)',
-            boxShadow: '0 0 60px rgba(239, 68, 68, 0.15), 0 25px 50px rgba(0,0,0,0.5)',
+            background: isDarkMode ? 'linear-gradient(180deg, #1c1917 0%, #0c0a09 100%)' : '#ffffff',
+            border: `1px solid ${isDarkMode ? 'rgba(239, 68, 68, 0.3)' : '#e5e7eb'}`,
+            boxShadow: isDarkMode ? '0 0 60px rgba(239, 68, 68, 0.15), 0 25px 50px rgba(0,0,0,0.5)' : '0 25px 50px rgba(0,0,0,0.15)',
           }}
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="relative px-6 pt-6 pb-4 text-center" style={{ borderBottom: '1px solid rgba(239, 68, 68, 0.15)' }}>
+          <div className="relative px-6 pt-6 pb-4 text-center" style={{ borderBottom: `1px solid ${isDarkMode ? 'rgba(239, 68, 68, 0.15)' : '#f3e8e8'}` }}>
             <div
               className="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center forfeit-icon"
               style={{ background: 'rgba(239, 68, 68, 0.15)', border: '2px solid rgba(239, 68, 68, 0.3)' }}
             >
               <span className="text-3xl">🏳️</span>
             </div>
-            <h2 className="text-2xl font-black text-red-400 mb-1">Surrender?</h2>
-            <p className="text-gray-500 text-sm">This action cannot be undone</p>
+            <h2 className="text-2xl font-black text-red-500 mb-1">Surrender?</h2>
+            <p className={`text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>This action cannot be undone</p>
           </div>
 
           <div className="px-6 py-4 space-y-2">
-            <div className="flex items-center gap-3 rounded-lg px-4 py-2.5" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
+            <div className="flex items-center gap-3 rounded-lg px-4 py-2.5" style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
               <span className="text-base">⚠️</span>
-              <p className="text-gray-400 text-sm">Your opponent will win</p>
+              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Your opponent will win</p>
             </div>
-            <div className="flex items-center gap-3 rounded-lg px-4 py-2.5" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
+            <div className="flex items-center gap-3 rounded-lg px-4 py-2.5" style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
               <span className="text-base">💸</span>
-              <p className="text-gray-400 text-sm">
+              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 You will lose your buy-in{buyIn > 0 ? ` ($${buyIn.toFixed(0)})` : ''}
               </p>
             </div>
             {potSize > 0 && (
-              <div className="flex items-center gap-3 rounded-lg px-4 py-2.5" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
+              <div className="flex items-center gap-3 rounded-lg px-4 py-2.5" style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
                 <span className="text-base">🏆</span>
-                <p className="text-gray-400 text-sm">
-                  Pot size: <span className="font-semibold text-white">${potSize.toFixed(0)}</span>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Pot size: <span className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${potSize.toFixed(0)}</span>
                 </p>
               </div>
             )}
@@ -109,7 +111,7 @@ export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
               className="w-full py-3 rounded-xl text-sm transition-all duration-200 disabled:opacity-50"
               style={{
                 background: 'transparent',
-                border: '1px solid #333',
+                border: `1px solid ${isDarkMode ? '#333' : '#e5e7eb'}`,
                 color: '#ef4444',
                 fontWeight: 500,
               }}

@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import TopNavbar from '../../components/TopNavbar';
 import { useBetSlip } from '../../contexts/BetSlipContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 export default function PublicProfile() {
   const [profile, setProfile] = useState(null);
@@ -25,6 +26,7 @@ export default function PublicProfile() {
   
   const { betSlip } = useBetSlip();
   const { data: session } = useSession();
+  const { isDarkMode } = useTheme();
   const router = useRouter();
   const { id } = router.query;
 
@@ -288,7 +290,7 @@ export default function PublicProfile() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: isDarkMode ? '#000' : '#f5f5f5' }}>
         <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
@@ -296,9 +298,9 @@ export default function PublicProfile() {
 
   if (!profile) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: isDarkMode ? '#000' : '#f5f5f5' }}>
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-4">Profile not found</h2>
+          <h2 className={`text-2xl font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Profile not found</h2>
           <Link href="/">
             <button className="bg-blue-600 text-white font-bold py-3 px-6 rounded-lg">
               Go to Dashboard
@@ -310,7 +312,7 @@ export default function PublicProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen" style={{ background: isDarkMode ? '#000' : '#f5f5f5' }}>
       <TopNavbar 
         user={session?.user}
         bankroll={0}
@@ -319,11 +321,11 @@ export default function PublicProfile() {
       />
       
       <div className="pt-16 pb-24 px-4 max-w-4xl mx-auto">
-        <div className="rounded-2xl overflow-hidden mb-6" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }}>
+        <div className="rounded-2xl overflow-hidden mb-6" style={{ backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08)' }}>
           <div className="p-6 sm:p-8">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-5">
               <div className="relative">
-                <div className="w-24 h-24 rounded-full flex items-center justify-center text-4xl overflow-hidden" style={{ backgroundColor: '#1a1a1a', border: '2px solid #333' }}>
+                <div className="w-24 h-24 rounded-full flex items-center justify-center text-4xl overflow-hidden" style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', border: `2px solid ${isDarkMode ? '#333' : '#d1d5db'}` }}>
                   {editing ? (
                     <label className="cursor-pointer w-full h-full flex items-center justify-center">
                       {formData.avatar ? (
@@ -341,7 +343,7 @@ export default function PublicProfile() {
                   ) : profile.avatar ? (
                     <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-white font-bold text-2xl">{profile.username?.[0]?.toUpperCase() || '?'}</span>
+                    <span className={`font-bold text-2xl ${isDarkMode ? 'text-white' : 'text-gray-600'}`}>{profile.username?.[0]?.toUpperCase() || '?'}</span>
                   )}
                 </div>
                 {winRate >= 60 && (
@@ -360,8 +362,8 @@ export default function PublicProfile() {
                         type="text"
                         value={formData.username}
                         onChange={handleUsernameChange}
-                        className="w-full rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        style={{ backgroundColor: '#111', border: '1px solid #1a1a1a', fontSize: '16px' }}
+                        className={`w-full rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+                        style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, fontSize: '16px' }}
                         maxLength={20}
                       />
                       {usernameStatus.checking && (
@@ -379,8 +381,8 @@ export default function PublicProfile() {
                       <textarea
                         value={formData.bio}
                         onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                        className="w-full rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        style={{ backgroundColor: '#111', border: '1px solid #1a1a1a', fontSize: '16px' }}
+                        className={`w-full rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
+                        style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, fontSize: '16px' }}
                         rows={3}
                         maxLength={200}
                         placeholder="Tell others about yourself..."
@@ -403,8 +405,8 @@ export default function PublicProfile() {
                             avatar: profile.avatar || '',
                           });
                         }}
-                        className="text-gray-400 font-semibold py-2 px-6 rounded-lg transition-all text-sm"
-                        style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}
+                        className={`font-semibold py-2 px-6 rounded-lg transition-all text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}
+                        style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}
                       >
                         Cancel
                       </button>
@@ -412,15 +414,15 @@ export default function PublicProfile() {
                   </div>
                 ) : (
                   <>
-                    <h1 className="text-2xl font-black text-white mb-1">
+                    <h1 className={`text-2xl font-black mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                       {profile.username || 'Anonymous'}
                     </h1>
                     <p className="text-gray-500 text-sm mb-3">{profile.bio || 'No bio yet'}</p>
                     {isOwnProfile && (
                       <button
                         onClick={() => setEditing(true)}
-                        className="text-gray-400 font-medium py-1.5 px-4 rounded-lg transition-all text-xs"
-                        style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}
+                        className={`font-medium py-1.5 px-4 rounded-lg transition-all text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}
+                        style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}
                       >
                         Edit Profile
                       </button>
@@ -500,27 +502,27 @@ export default function PublicProfile() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4" style={{ borderTop: '1px solid #1a1a1a' }}>
-            <div className="p-4 text-center" style={{ borderRight: '1px solid #1a1a1a' }}>
+          <div className="grid grid-cols-2 md:grid-cols-4" style={{ borderTop: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
+            <div className="p-4 text-center" style={{ borderRight: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
               <p className="text-gray-500 text-xs uppercase tracking-wider">Battles</p>
-              <p className="text-xl font-black text-white mt-1">{battleStats?.totalBattles || 0}</p>
+              <p className={`text-xl font-black mt-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{battleStats?.totalBattles || 0}</p>
             </div>
-            <div className="p-4 text-center" style={{ borderRight: '1px solid #1a1a1a' }}>
+            <div className="p-4 text-center" style={{ borderRight: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
               <p className="text-gray-500 text-xs uppercase tracking-wider">Win Rate</p>
-              <p className="text-xl font-black text-green-400 mt-1">{winRate}%</p>
+              <p className="text-xl font-black text-green-500 mt-1">{winRate}%</p>
             </div>
-            <div className="p-4 text-center" style={{ borderRight: '1px solid #1a1a1a' }}>
+            <div className="p-4 text-center" style={{ borderRight: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
               <p className="text-gray-500 text-xs uppercase tracking-wider">Wins</p>
-              <p className="text-xl font-black text-green-400 mt-1">{battleStats?.wins || 0}</p>
+              <p className="text-xl font-black text-green-500 mt-1">{battleStats?.wins || 0}</p>
             </div>
             <div className="p-4 text-center">
               <p className="text-gray-500 text-xs uppercase tracking-wider">Winnings</p>
-              <p className="text-xl font-black text-green-400 mt-1">{formatCurrency(battleStats?.totalWinnings)}</p>
+              <p className="text-xl font-black text-green-500 mt-1">{formatCurrency(battleStats?.totalWinnings)}</p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl p-5" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }}>
+        <div className="rounded-2xl p-5" style={{ backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08)' }}>
           <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Battle History</h2>
           
           {battleHistory.length > 0 ? (
@@ -529,22 +531,22 @@ export default function PublicProfile() {
                 <div 
                   key={battle.id} 
                   className="rounded-xl p-3.5"
-                  style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}
+                  style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full flex items-center justify-center overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center overflow-hidden" style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#e5e7eb' }}>
                         {battle.opponent?.avatar ? (
                           <img src={battle.opponent.avatar} alt="" className="w-full h-full rounded-full object-cover" />
                         ) : (
-                          <span className="text-white font-bold text-xs">{battle.opponent?.username?.[0]?.toUpperCase() || '?'}</span>
+                          <span className={`font-bold text-xs ${isDarkMode ? 'text-white' : 'text-gray-600'}`}>{battle.opponent?.username?.[0]?.toUpperCase() || '?'}</span>
                         )}
                       </div>
                       <div>
-                        <p className="text-white font-semibold text-sm">
+                        <p className={`font-semibold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                           vs {battle.opponent?.username || battle.opponent?.displayName || 'Unknown'}
                         </p>
-                        <p className="text-gray-600 text-xs">
+                        <p className="text-gray-500 text-xs">
                           {battle.challengeType?.toUpperCase()} {battle.durationType && `\u00B7 ${battle.durationType.replace('_', ' ')}`}
                         </p>
                       </div>
@@ -564,7 +566,7 @@ export default function PublicProfile() {
               ))}
             </div>
           ) : (
-            <p className="text-gray-600 text-center py-8 text-sm">No battle history yet</p>
+            <p className="text-gray-500 text-center py-8 text-sm">No battle history yet</p>
           )}
         </div>
       </div>
@@ -575,8 +577,8 @@ export default function PublicProfile() {
             className="absolute inset-0 bg-black/80 backdrop-blur-sm"
             onClick={() => setShowBattleInvite(false)}
           />
-          <div className="relative rounded-2xl p-5 max-w-md w-full" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }}>
-            <h3 className="text-lg font-bold text-white mb-4">
+          <div className="relative rounded-2xl p-5 max-w-md w-full" style={{ backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 25px 50px rgba(0,0,0,0.15)' }}>
+            <h3 className={`text-lg font-bold mb-4 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
               Challenge {profile?.username || 'User'}
             </h3>
             
@@ -591,9 +593,9 @@ export default function PublicProfile() {
                       className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
                         inviteBuyIn === amount 
                           ? 'bg-blue-600 text-white' 
-                          : 'text-gray-300'
+                          : isDarkMode ? 'text-gray-300' : 'text-gray-700'
                       }`}
-                      style={inviteBuyIn !== amount ? { backgroundColor: '#111', border: '1px solid #1a1a1a' } : {}}
+                      style={inviteBuyIn !== amount ? { backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` } : {}}
                     >
                       ${amount}
                     </button>
@@ -611,9 +613,9 @@ export default function PublicProfile() {
                       className={`py-2 px-3 rounded-lg text-sm font-semibold transition-all ${
                         inviteDuration === opt.value 
                           ? 'bg-blue-600 text-white' 
-                          : 'text-gray-300'
+                          : isDarkMode ? 'text-gray-300' : 'text-gray-700'
                       }`}
-                      style={inviteDuration !== opt.value ? { backgroundColor: '#111', border: '1px solid #1a1a1a' } : {}}
+                      style={inviteDuration !== opt.value ? { backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` } : {}}
                     >
                       {opt.label}
                     </button>
@@ -621,22 +623,22 @@ export default function PublicProfile() {
                 </div>
               </div>
               
-              <div className="rounded-lg p-3" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
+              <div className="rounded-lg p-3" style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
                 <div className="flex justify-between text-sm mb-1.5">
                   <span className="text-gray-500">Prize Pool</span>
-                  <span className="text-white font-bold">${inviteBuyIn * 2}</span>
+                  <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${inviteBuyIn * 2}</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Winner Takes (90%)</span>
-                  <span className="text-green-400 font-bold">${(inviteBuyIn * 2 * 0.9).toFixed(0)}</span>
+                  <span className="text-green-500 font-bold">${(inviteBuyIn * 2 * 0.9).toFixed(0)}</span>
                 </div>
               </div>
               
               <div className="flex gap-3 mt-4">
                 <button
                   onClick={() => setShowBattleInvite(false)}
-                  className="flex-1 py-2.5 text-gray-400 font-semibold rounded-lg transition-all text-sm"
-                  style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}
+                  className={`flex-1 py-2.5 font-semibold rounded-lg transition-all text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}
+                  style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}
                 >
                   Cancel
                 </button>
