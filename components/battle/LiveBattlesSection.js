@@ -514,6 +514,24 @@ function BattleCard({ battle, compact, focused }) {
         .pick-pending-dot {
           animation: pickPendingPulse 1.5s ease-in-out infinite;
         }
+        @keyframes battleCtaFloat {
+          0%, 100% { transform: translateY(0); opacity: 0.4; }
+          50% { transform: translateY(-6px); opacity: 0.8; }
+        }
+        .battle-cta-particle {
+          animation: battleCtaFloat 3s ease-in-out infinite;
+        }
+        @media (hover: hover) {
+          .battle-cta-card:hover {
+            border-color: rgba(59,130,246,0.45) !important;
+            box-shadow: 0 0 24px rgba(59,130,246,0.12), 0 4px 16px rgba(0,0,0,0.3);
+          }
+        }
+        @media (hover: none) {
+          .battle-cta-card:active {
+            transform: scale(0.98);
+          }
+        }
       `}</style>
     </div>
   );
@@ -593,19 +611,40 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
         </div>
         {sortedBattles.length === 0 ? (
           <div
-            className="rounded-xl p-4 cursor-pointer group transition-all duration-300"
+            className="battle-cta-card rounded-xl cursor-pointer group transition-all duration-300 overflow-hidden relative"
             onClick={() => router.push('/battle')}
-            style={{ backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08)' }}
+            style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0d1117 50%, #0a1628 100%)', border: '1px solid rgba(59,130,246,0.25)' }}
           >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20 flex-shrink-0 group-hover:bg-blue-500/20 transition-colors">
-                <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+              <div className="battle-cta-particle" style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(59,130,246,0.4)', position: 'absolute', top: '20%', left: '15%' }}></div>
+              <div className="battle-cta-particle" style={{ width: 2, height: 2, borderRadius: '50%', background: 'rgba(6,182,212,0.4)', position: 'absolute', top: '60%', left: '80%', animationDelay: '1s' }}></div>
+              <div className="battle-cta-particle" style={{ width: 2, height: 2, borderRadius: '50%', background: 'rgba(59,130,246,0.3)', position: 'absolute', top: '40%', left: '50%', animationDelay: '2s' }}></div>
+              <div className="battle-cta-particle" style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(16,185,129,0.3)', position: 'absolute', top: '75%', left: '30%', animationDelay: '0.5s' }}></div>
+            </div>
+
+            <div className="relative flex items-center justify-between px-4 py-4">
+              <div className="flex flex-col items-center gap-1.5">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.15), rgba(6,182,212,0.15))', border: '2px solid rgba(59,130,246,0.4)' }}>
+                  <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                </div>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">You</span>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium" style={{ color: isDarkMode ? '#fff' : '#111' }}>Start a 1v1 Battle</p>
-                <p className="text-gray-500 text-[11px]">Challenge an opponent</p>
+
+              <div className="flex flex-col items-center gap-1">
+                <span className="text-2xl font-black text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(135deg, #3b82f6, #06b6d4)' }}>VS</span>
+                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">1v1 Battle</span>
+                <div className="flex items-center gap-1 mt-1 group-hover:gap-2 transition-all">
+                  <span className="text-[11px] font-semibold text-blue-400">Tap to Start</span>
+                  <svg className="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                </div>
               </div>
-              <svg className="w-4 h-4 text-gray-500 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+
+              <div className="flex flex-col items-center gap-1.5">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(6,182,212,0.15))', border: '2px solid rgba(16,185,129,0.4)' }}>
+                  <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Opponent</span>
+              </div>
             </div>
           </div>
         ) : (
@@ -632,24 +671,45 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
 
       {sortedBattles.length === 0 ? (
         <div
-          className="rounded-xl p-6 text-center cursor-pointer group transition-all duration-300"
-          style={{ backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08)' }}
+          className="battle-cta-card rounded-xl cursor-pointer group transition-all duration-300 overflow-hidden relative"
+          style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0d1117 50%, #0a1628 100%)', border: '1px solid rgba(59,130,246,0.25)' }}
           onClick={() => {
             const startBtn = document.querySelector('.battle-start-btn');
             if (startBtn) startBtn.click();
           }}
         >
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-14 h-14 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20 group-hover:bg-blue-500/20 transition-colors">
-              <svg className="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="battle-cta-particle" style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(59,130,246,0.4)', position: 'absolute', top: '15%', left: '10%' }}></div>
+            <div className="battle-cta-particle" style={{ width: 2, height: 2, borderRadius: '50%', background: 'rgba(6,182,212,0.5)', position: 'absolute', top: '25%', left: '75%', animationDelay: '1.5s' }}></div>
+            <div className="battle-cta-particle" style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(59,130,246,0.3)', position: 'absolute', top: '70%', left: '85%', animationDelay: '0.8s' }}></div>
+            <div className="battle-cta-particle" style={{ width: 2, height: 2, borderRadius: '50%', background: 'rgba(16,185,129,0.4)', position: 'absolute', top: '80%', left: '20%', animationDelay: '2s' }}></div>
+            <div className="battle-cta-particle" style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(59,130,246,0.25)', position: 'absolute', top: '50%', left: '45%', animationDelay: '1s' }}></div>
+          </div>
+
+          <div className="relative flex items-center justify-between px-6 sm:px-10 py-6">
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.12), rgba(6,182,212,0.12))', border: '2.5px solid rgba(59,130,246,0.5)', boxShadow: '0 0 20px rgba(59,130,246,0.15)' }}>
+                <svg className="w-8 h-8 sm:w-10 sm:h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+              </div>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">You</span>
+              <span className="text-[10px] font-bold text-emerald-400 px-2.5 py-0.5 rounded-full" style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)' }}>FREE $10</span>
             </div>
-            <div>
-              <p className="font-semibold text-sm mb-0.5" style={{ color: isDarkMode ? '#fff' : '#111' }}>No live battles yet</p>
-              <p className="text-gray-500 text-xs">Tap to start one and be the first</p>
+
+            <div className="flex flex-col items-center gap-1.5">
+              <span className="text-4xl sm:text-5xl font-black text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(135deg, #3b82f6, #06b6d4)', filter: 'drop-shadow(0 0 12px rgba(59,130,246,0.3))' }}>VS</span>
+              <span className="text-[10px] sm:text-xs font-bold text-gray-500 uppercase tracking-[0.2em]">1v1 Battle</span>
+              <div className="flex items-center gap-1.5 mt-2 px-4 py-1.5 rounded-full group-hover:gap-2.5 transition-all" style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.15), rgba(6,182,212,0.15))', border: '1px solid rgba(59,130,246,0.3)' }}>
+                <span className="text-xs font-semibold text-blue-400">Tap to Start</span>
+                <svg className="w-3.5 h-3.5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5 text-blue-400 text-xs font-medium group-hover:gap-2.5 transition-all">
-              <span>Start a Battle</span>
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+
+            <div className="flex flex-col items-center gap-2">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.12), rgba(6,182,212,0.12))', border: '2.5px solid rgba(16,185,129,0.5)', boxShadow: '0 0 20px rgba(16,185,129,0.15)' }}>
+                <svg className="w-8 h-8 sm:w-10 sm:h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              </div>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Opponent</span>
+              <span className="text-[10px] text-gray-600 font-medium">Real Players</span>
             </div>
           </div>
         </div>
