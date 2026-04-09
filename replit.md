@@ -1,7 +1,7 @@
 # Piks - Sports Betting Battle Platform
 
 ### Overview
-Piks is a Next.js sports betting platform designed for competitive 1v1 betting battles. It enables users to compete against friends or random opponents in real-time betting matchups, with the winner taking 90% of the combined pot. Key features include Quick Match, Play a Friend, Private Match, battle history, and social functionalities. The platform also offers multi-player Pik Pools and an education marketplace. The business vision is to provide a high-end, engaging, and competitive sports betting experience.
+Piks is a Next.js sports betting platform designed for competitive 1v1 betting battles. It enables users to compete against friends or random opponents in real-time betting matchups, with the winner keeping the entire pot (Piks takes a 5% rake). Key features include Quick Match, Play a Friend, Private Match, battle history, and social functionalities. The platform also offers multi-player Pik Pools and an education marketplace. The business vision is to provide a high-end, engaging, and competitive sports betting experience.
 
 ### User Preferences
 - No purple gradients — purple signals "vibe coding". Use blue, emerald, cyan, and orange for premium look.

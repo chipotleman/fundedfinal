@@ -259,62 +259,22 @@ export default function BattlePage() {
 
       <div className="pt-14">
         <div className="max-w-5xl mx-auto px-4">
-
-          <div className="flex items-center justify-between py-2 sm:py-3">
-            <div className="flex items-center gap-3">
-              {!isGuest && profile && (
-                <>
-                  <div
-                    className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden cursor-pointer"
-                    style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#eef0f3', border: `1px solid ${isDarkMode ? '#333' : '#d1d5db'}` }}
-                    onClick={() => router.push(`/profile/${userId}`)}
-                  >
-                    {profile?.avatar ? (
-                      <img src={profile.avatar} className="w-full h-full object-cover" alt="" />
-                    ) : (
-                      <span className="text-sm font-bold" style={{ color: isDarkMode ? '#fff' : '#111' }}>{profile?.username?.[0]?.toUpperCase() || '?'}</span>
-                    )}
-                  </div>
-                  <div className="cursor-pointer" onClick={() => router.push(`/profile/${userId}`)}>
-                    <h1 className="text-base font-bold leading-tight" style={{ color: isDarkMode ? '#fff' : '#111' }}>{profile?.username || 'Player'}</h1>
-                    <div className="flex items-center gap-2 text-xs mt-0.5">
-                      <span className="text-green-400 font-semibold">{profile?.battleWins || 0}W</span>
-                      <span className="text-gray-600">-</span>
-                      <span className="text-red-400 font-semibold">{profile?.battleLosses || 0}L</span>
-                      {totalBattles > 0 && (
-                        <>
-                          <span className="text-gray-700">·</span>
-                          <span className="text-gray-400">{winRate}%</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </>
-              )}
-              {(isGuest || !profile) && (
-                <div>
-                  <h1 className="text-lg font-bold" style={{ color: isDarkMode ? '#fff' : '#111' }}>Battle Arena</h1>
-                  <p className="text-gray-500 text-xs mt-0.5">Head-to-head sports betting battles</p>
-                </div>
-              )}
+          {!isGuest && (
+            <div className="flex items-center justify-end py-2 sm:py-3">
+              <button
+                onClick={() => setShowSidebar(!showSidebar)}
+                className="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 transition-colors relative"
+                style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#eef0f3', border: `1px solid ${isDarkMode ? '#333' : '#e5e7eb'}` }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                {(invites.received?.length > 0) && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold flex items-center justify-center text-white">
+                    {invites.received.length}
+                  </span>
+                )}
+              </button>
             </div>
-            <div className="flex items-center gap-2">
-              {!isGuest && (
-                <button
-                  onClick={() => setShowSidebar(!showSidebar)}
-                  className="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 transition-colors relative"
-                  style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#eef0f3', border: `1px solid ${isDarkMode ? '#333' : '#d1d5db'}` }}
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                  {(invites.received?.length > 0) && (
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold flex items-center justify-center text-white">
-                      {invites.received.length}
-                    </span>
-                  )}
-                </button>
-              )}
-            </div>
-          </div>
+          )}
 
           {!isGuest && invites.received?.length > 0 && (
             <div className="mb-4 space-y-2">
@@ -557,10 +517,10 @@ export default function BattlePage() {
             const battleCTA = (
               <>
                 <div className="rounded-xl overflow-hidden mb-5" style={{ backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08)' }}>
-                  <div className="p-5 sm:p-6">
+                  <div className="p-5 sm:p-6 text-center">
                     <h2 className="text-xl sm:text-2xl font-bold mb-2" style={{ color: isDarkMode ? '#fff' : '#111' }}>1v1 Betting Battles</h2>
-                    <p className="text-sm mb-5" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>
-                      Go head-to-head against another player. Both start with the same bankroll, make your piks on live games, and the best record wins 90% of the pot.
+                    <p className="text-sm mb-5 max-w-md mx-auto" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>
+                      Go head-to-head against another player. Both start with the same bankroll, make your piks on live games, and the best record takes the pot.
                     </p>
 
                     <div className="grid grid-cols-3 gap-3 mb-5">
@@ -582,8 +542,8 @@ export default function BattlePage() {
                         <div className="w-9 h-9 rounded-full bg-orange-500/10 flex items-center justify-center mx-auto mb-2 border border-orange-500/20">
                           <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         </div>
-                        <p className="text-[11px] font-semibold" style={{ color: isDarkMode ? '#fff' : '#111' }}>Win 90%</p>
-                        <p className="text-[10px] mt-0.5" style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>Winner takes 90% of the combined pot</p>
+                        <p className="text-[11px] font-semibold" style={{ color: isDarkMode ? '#fff' : '#111' }}>Winner Takes Pot</p>
+                        <p className="text-[10px] mt-0.5" style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>Keep the entire pot, just a 5% rake</p>
                       </div>
                     </div>
 
@@ -663,7 +623,8 @@ export default function BattlePage() {
                         <p className="text-sm mb-3" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>Create an account to start battling</p>
                         <button
                           onClick={() => window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signup' } }))}
-                          className="bg-white text-black font-semibold py-2.5 px-8 rounded-lg transition-colors text-sm"
+                          className="font-semibold py-2.5 px-8 rounded-lg transition-colors text-sm"
+                          style={{ backgroundColor: isDarkMode ? '#fff' : '#111', color: isDarkMode ? '#000' : '#fff' }}
                         >
                           Sign Up Free
                         </button>
