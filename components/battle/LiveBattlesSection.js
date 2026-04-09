@@ -296,8 +296,8 @@ function BattleCard({ battle, compact, focused }) {
             <PlayerAvatar user={user2} isWinning={user2Winning} size={30} bgColor="#065f46" />
           </div>
         </div>
-        {picks && (
-          <div className="mt-2 flex gap-1">
+        {picks ? (
+          <div className="mt-2 flex gap-1" style={{ minHeight: '36px' }}>
             <div className="flex-1 min-w-0">
               {picks.user1.slice(0, 1).map((p, i) => <PickPill key={i} pick={p} compact />)}
             </div>
@@ -306,9 +306,8 @@ function BattleCard({ battle, compact, focused }) {
               {picks.user2.slice(0, 1).map((p, i) => <PickPill key={i} pick={p} compact />)}
             </div>
           </div>
-        )}
-        {picksLocked && (
-          <div className="mt-2 rounded-md" style={{ background: '#111', border: '1px solid #1a1a1a' }}>
+        ) : picksLocked ? (
+          <div className="mt-2 rounded-md" style={{ background: '#111', border: '1px solid #1a1a1a', minHeight: '36px' }}>
             <div className="flex items-center gap-1.5 px-2 pt-1.5 pb-1">
               <svg className="w-3 h-3 text-gray-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>
               <span className="text-[9px] text-gray-500">Reveals when both lock in</span>
@@ -321,6 +320,11 @@ function BattleCard({ battle, compact, focused }) {
                 {user2.username || 'Player 2'} {onlyUser2 ? '✓' : '○'}
               </div>
             </div>
+          </div>
+        ) : (
+          <div className="mt-2 flex items-center gap-1.5 px-2 py-2 rounded-md" style={{ background: '#111', border: '1px solid #1a1a1a', minHeight: '36px' }}>
+            <div className="w-1.5 h-1.5 rounded-full bg-yellow-500/50 pick-pending-dot"></div>
+            <span className="text-[9px] text-gray-500">Awaiting picks...</span>
           </div>
         )}
         <BattleChat battleId={battle.id} compact />
