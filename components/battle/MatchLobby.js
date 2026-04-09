@@ -1,6 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
+const MODE_THEMES = {
+  rush: { color: '#fb923c', rgb: '251,146,60', label: 'RUSH', icon: '⚡' },
+  original: { color: '#3b82f6', rgb: '59,130,246', label: 'ORIGINAL', icon: '🏆' },
+  tournament: { color: '#10b981', rgb: '16,185,129', label: 'TOURNAMENT', icon: '👑' },
+};
+
+function getGameMode(matchup) {
+  if (matchup?.durationType) return matchup.durationType;
+  const dm = matchup?.durationMinutes;
+  if (dm && dm <= 200) return 'rush';
+  if (dm && dm > 1500) return 'tournament';
+  return 'original';
+}
+
 export default function MatchLobby({ matchup, currentUser, onDismiss }) {
   const [countdown, setCountdown] = useState(5);
   const [showBattle, setShowBattle] = useState(false);
@@ -41,6 +55,9 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
   }, [countdown, router, onDismiss]);
 
   if (!matchup) return null;
+
+  const mode = getGameMode(matchup);
+  const theme = MODE_THEMES[mode] || MODE_THEMES.original;
 
   const isUser1 = matchup.user1Id === currentUser?.id;
   const buyIn = matchup.startingBalance || (isUser1 ? matchup.user1Balance : matchup.user2Balance);
@@ -95,8 +112,8 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
           100% { opacity: 1; transform: translateY(0); }
         }
         @keyframes ringPulse {
-          0%, 100% { box-shadow: 0 0 20px rgba(59,130,246,0.4); }
-          50% { box-shadow: 0 0 40px rgba(59,130,246,0.6), 0 0 60px rgba(59,130,246,0.2); }
+          0%, 100% { box-shadow: 0 0 20px rgba(${theme.rgb},0.4); }
+          50% { box-shadow: 0 0 40px rgba(${theme.rgb},0.6), 0 0 60px rgba(${theme.rgb},0.2); }
         }
         @keyframes bgPulse {
           0%, 100% { opacity: 0.4; }
@@ -131,11 +148,17 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
 
       <div className="fixed inset-0 bg-[#050a15] z-50 flex items-center justify-center p-4 overflow-hidden">
         <div className="absolute inset-0" style={{
-          background: 'radial-gradient(ellipse at 25% 50%, rgba(59,130,246,0.08) 0%, transparent 50%), radial-gradient(ellipse at 75% 50%, rgba(251,146,60,0.08) 0%, transparent 50%)',
+          background: `radial-gradient(ellipse at 25% 50%, rgba(${theme.rgb},0.08) 0%, transparent 50%), radial-gradient(ellipse at 75% 50%, rgba(251,146,60,0.08) 0%, transparent 50%)`,
           animation: 'bgPulse 3s ease-in-out infinite',
         }} />
 
         <div className="max-w-lg w-full text-center relative z-10">
+          <div className="lobby-label mb-1">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: `rgba(${theme.rgb},0.15)` }}>
+              <span className="text-xs">{theme.icon}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: theme.color }}>{theme.label}</span>
+            </div>
+          </div>
           <div className="lobby-label mb-1">
             <span className="text-xs font-bold uppercase tracking-[0.3em] text-gray-500">{matchTypeLabel}</span>
           </div>
@@ -148,8 +171,8 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
                 <div
                   className="w-28 h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center overflow-hidden relative"
                   style={{
-                    border: '4px solid #3b82f6',
-                    boxShadow: '0 0 30px rgba(59,130,246,0.4), inset 0 0 20px rgba(59,130,246,0.1)',
+                    border: `4px solid ${theme.color}`,
+                    boxShadow: `0 0 30px rgba(${theme.rgb},0.4), inset 0 0 20px rgba(${theme.rgb},0.1)`,
                     background: '#0c1a35',
                     animation: 'ringPulse 2s ease-in-out infinite',
                   }}
@@ -166,7 +189,7 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
 
             <div className="flex flex-col items-center relative z-10 -mx-4">
               {showBattle ? (
-                <div className="lobby-battle-text text-3xl md:text-4xl font-black text-emerald-400" style={{ textShadow: '0 0 30px rgba(16,185,129,0.5)' }}>
+                <div className="lobby-battle-text text-3xl md:text-4xl font-black" style={{ color: theme.color, textShadow: `0 0 30px rgba(${theme.rgb},0.5)` }}>
                   BATTLE!
                 </div>
               ) : (
@@ -202,7 +225,7 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
           <div className="lobby-prize">
             <div className="inline-flex flex-col items-center bg-[#0a0a0a]/80 border border-[#222] rounded-xl px-6 py-3 mb-6 backdrop-blur-sm">
               <span className="text-[10px] uppercase tracking-widest text-gray-500 mb-0.5">Prize Pot</span>
-              <span className="text-2xl md:text-3xl font-black text-emerald-400" style={{ textShadow: '0 0 15px rgba(16,185,129,0.4)' }}>
+              <span className="text-2xl md:text-3xl font-black" style={{ color: theme.color, textShadow: `0 0 15px rgba(${theme.rgb},0.4)` }}>
                 ${payout > 0 ? payout.toLocaleString() : parseFloat(potSize || 0).toLocaleString()}
               </span>
               <span className="text-[10px] text-gray-600 mt-0.5">🏆 Winner payout · 10% fee 🏆</span>
@@ -211,7 +234,7 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
 
           {!showBattle && (
             <div className="mb-4">
-              <div className="text-emerald-400 text-xs font-bold uppercase tracking-[0.25em] mb-2">Match Found</div>
+              <div className="text-xs font-bold uppercase tracking-[0.25em] mb-2" style={{ color: theme.color }}>Match Found</div>
               <div className="text-gray-500 text-xs mb-2">Starting in</div>
               <div key={countdown} className="lobby-countdown text-5xl md:text-6xl font-black text-white">
                 {countdown}

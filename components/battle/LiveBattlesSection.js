@@ -514,7 +514,7 @@ function BattleCard({ battle, compact, focused }) {
   );
 }
 
-export default function LiveBattlesSection({ compact = false, focusBattleId = null }) {
+export default function LiveBattlesSection({ compact = false, focusBattleId = null, currentUserId = null }) {
   const [battles, setBattles] = useState(() => getSimulatedBattles([]));
   const [avatars, setAvatars] = useState([]);
   const router = useRouter();
@@ -539,7 +539,11 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
       clearTimeout(timeout);
       if (res.ok) {
         const data = await res.json();
-        const liveBattles = (data.battles || []).filter(b => b.user2 && b.remainingMs > 0);
+        const liveBattles = (data.battles || []).filter(b => {
+          if (!b.user2 || b.remainingMs <= 0) return false;
+          if (currentUserId && (String(b.user1?.id) === String(currentUserId) || String(b.user2?.id) === String(currentUserId))) return false;
+          return true;
+        });
         const simulated = getSimulatedBattles(avatars);
         if (liveBattles.length >= 3) {
           setBattles(liveBattles);
@@ -555,7 +559,7 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
         console.error('Error fetching live battles:', err);
       }
     }
-  }, [avatars]);
+  }, [avatars, currentUserId]);
 
   useEffect(() => {
     fetchBattles();

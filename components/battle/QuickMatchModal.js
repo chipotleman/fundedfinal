@@ -405,10 +405,10 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                         onClick={() => setBuyIn(amount)}
                         className={`py-2.5 rounded-xl text-sm font-bold transition-all ${
                           buyIn === amount
-                            ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
+                            ? 'text-white shadow-lg shadow-blue-500/20'
                             : 'text-gray-300'
                         }`}
-                        style={buyIn !== amount ? { backgroundColor: '#111', border: '1px solid #1a1a1a' } : {}}
+                        style={buyIn === amount ? { backgroundColor: '#2563eb' } : { backgroundColor: '#111', border: '1px solid #1a1a1a' }}
                       >
                         ${amount}
                       </button>

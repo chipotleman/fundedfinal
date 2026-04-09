@@ -624,13 +624,13 @@ export default function Dashboard() {
                       <div className="flex items-center justify-between">
                         <div className="flex flex-col items-center flex-1">
                           <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{ backgroundColor: '#1a1a1a', border: '2px solid #3b82f6' }}>
-                            {user?.avatar ? (
-                              <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                            {(myProfile?.avatar || user?.avatar) ? (
+                              <img src={myProfile?.avatar || user?.avatar} alt="" className="w-full h-full object-cover" />
                             ) : (
-                              <span className="text-white font-bold text-lg">{(user?.username || user?.name || 'Y')[0]?.toUpperCase()}</span>
+                              <span className="text-white font-bold text-lg">{(myProfile?.username || user?.username || user?.name || '')[0]?.toUpperCase() || 'P'}</span>
                             )}
                           </div>
-                          <p className="text-white text-xs font-semibold truncate max-w-[90px]">{user?.username || user?.name || 'You'}</p>
+                          <p className="text-white text-xs font-semibold truncate max-w-[90px]">{myProfile?.username || user?.username || user?.name || ''}</p>
                         </div>
                         <div className="flex flex-col items-center px-3">
                           <span className="text-2xl font-black text-blue-400">VS</span>
@@ -844,7 +844,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <LiveBattlesSection compact />
+        <LiveBattlesSection compact currentUserId={user?.id} />
 
         <div className="mb-6">
           <div className="flex items-center justify-between px-1 mb-3">
