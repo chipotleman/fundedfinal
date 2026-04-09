@@ -12,6 +12,7 @@ import MatchResult from '../components/battle/MatchResult';
 import LiveBattlesSection from '../components/battle/LiveBattlesSection';
 import ForfeitModal from '../components/battle/ForfeitModal';
 import { useMatchup } from '../contexts/MatchupContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 export default function BattlePage() {
   const router = useRouter();
@@ -36,6 +37,7 @@ export default function BattlePage() {
   const [showForfeitModal, setShowForfeitModal] = useState(false);
   const [showBattleOptions, setShowBattleOptions] = useState(false);
 
+  const { isDarkMode } = useTheme();
   const isGuest = status !== 'authenticated';
   const userId = session?.user?.id;
 
@@ -252,7 +254,7 @@ export default function BattlePage() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen" style={{ backgroundColor: isDarkMode ? '#000000' : '#f5f5f5' }}>
       <TopNavbar />
 
       <div className="pt-14">
@@ -263,17 +265,18 @@ export default function BattlePage() {
               {!isGuest && profile && (
                 <>
                   <div
-                    className="w-10 h-10 rounded-full bg-[#1a1a1a] flex items-center justify-center overflow-hidden border border-[#333] cursor-pointer"
+                    className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden cursor-pointer"
+                    style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#eef0f3', border: `1px solid ${isDarkMode ? '#333' : '#d1d5db'}` }}
                     onClick={() => router.push(`/profile/${userId}`)}
                   >
                     {profile?.avatar ? (
                       <img src={profile.avatar} className="w-full h-full object-cover" alt="" />
                     ) : (
-                      <span className="text-sm font-bold text-white">{profile?.username?.[0]?.toUpperCase() || '?'}</span>
+                      <span className="text-sm font-bold" style={{ color: isDarkMode ? '#fff' : '#111' }}>{profile?.username?.[0]?.toUpperCase() || '?'}</span>
                     )}
                   </div>
                   <div className="cursor-pointer" onClick={() => router.push(`/profile/${userId}`)}>
-                    <h1 className="text-base font-bold text-white leading-tight">{profile?.username || 'Player'}</h1>
+                    <h1 className="text-base font-bold leading-tight" style={{ color: isDarkMode ? '#fff' : '#111' }}>{profile?.username || 'Player'}</h1>
                     <div className="flex items-center gap-2 text-xs mt-0.5">
                       <span className="text-green-400 font-semibold">{profile?.battleWins || 0}W</span>
                       <span className="text-gray-600">-</span>
@@ -290,7 +293,7 @@ export default function BattlePage() {
               )}
               {(isGuest || !profile) && (
                 <div>
-                  <h1 className="text-lg font-bold text-white">Battle Arena</h1>
+                  <h1 className="text-lg font-bold" style={{ color: isDarkMode ? '#fff' : '#111' }}>Battle Arena</h1>
                   <p className="text-gray-500 text-xs mt-0.5">Head-to-head sports betting battles</p>
                 </div>
               )}
@@ -299,7 +302,8 @@ export default function BattlePage() {
               {!isGuest && (
                 <button
                   onClick={() => setShowSidebar(!showSidebar)}
-                  className="lg:hidden w-9 h-9 bg-[#1a1a1a] rounded-lg flex items-center justify-center text-gray-400 transition-colors relative border border-[#333]"
+                  className="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 transition-colors relative"
+                  style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#eef0f3', border: `1px solid ${isDarkMode ? '#333' : '#d1d5db'}` }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                   {(invites.received?.length > 0) && (
@@ -326,11 +330,11 @@ export default function BattlePage() {
           )}
 
           {activeMatchup && activeMatchup.status === 'waiting' && (
-            <div className="mb-4 bg-[#0d0d0d] border border-orange-500/20 rounded-xl overflow-hidden">
-              <div className="flex items-center justify-between px-4 py-2.5 border-b border-[#1a1a1a]">
+            <div className="mb-4 rounded-xl overflow-hidden" style={{ backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? 'rgba(249,115,22,0.2)' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08)' }}>
+              <div className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
-                  <span className="text-white text-sm font-semibold">Waiting for Opponent</span>
+                  <span className="text-sm font-semibold" style={{ color: isDarkMode ? '#fff' : '#111' }}>Waiting for Opponent</span>
                 </div>
                 <span className="text-gray-500 text-xs font-medium">
                   {activeMatchup.matchType === 'private' ? 'Private' : activeMatchup.matchType === 'friend' ? 'Friend' : 'Quick'}
@@ -340,11 +344,11 @@ export default function BattlePage() {
                 <div className="flex gap-5 mb-3">
                   <div>
                     <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Buy-In</p>
-                    <p className="text-white font-semibold text-sm">${parseFloat(activeMatchup.startingBalance || 0).toFixed(0)}</p>
+                    <p className="font-semibold text-sm" style={{ color: isDarkMode ? '#fff' : '#111' }}>${parseFloat(activeMatchup.startingBalance || 0).toFixed(0)}</p>
                   </div>
                   <div>
                     <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Duration</p>
-                    <p className="text-white font-semibold text-sm">
+                    <p className="font-semibold text-sm" style={{ color: isDarkMode ? '#fff' : '#111' }}>
                       {activeMatchup.durationMinutes >= 1440
                         ? `${Math.floor(activeMatchup.durationMinutes / 1440)}d`
                         : activeMatchup.durationMinutes >= 60
@@ -354,13 +358,13 @@ export default function BattlePage() {
                   </div>
                   <div>
                     <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Pot</p>
-                    <p className="text-white font-semibold text-sm">${parseFloat(activeMatchup.potSize || activeMatchup.startingBalance * 2 || 0).toFixed(0)}</p>
+                    <p className="font-semibold text-sm" style={{ color: isDarkMode ? '#fff' : '#111' }}>${parseFloat(activeMatchup.potSize || activeMatchup.startingBalance * 2 || 0).toFixed(0)}</p>
                   </div>
                 </div>
                 {activeMatchup.privateCode && (
-                  <div className="bg-[#111] border border-[#222] rounded-lg p-3 mb-3">
+                  <div className="rounded-lg p-3 mb-3" style={{ backgroundColor: isDarkMode ? '#111' : '#eef0f3', border: `1px solid ${isDarkMode ? '#222' : '#d1d5db'}` }}>
                     <p className="text-gray-500 text-xs text-center mb-1.5">Share this code</p>
-                    <div className="text-xl font-mono font-bold text-white text-center tracking-[0.3em] mb-2">
+                    <div className="text-xl font-mono font-bold text-center tracking-[0.3em] mb-2" style={{ color: isDarkMode ? '#fff' : '#111' }}>
                       {activeMatchup.privateCode}
                     </div>
                     <button
@@ -370,7 +374,8 @@ export default function BattlePage() {
                         if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy Code'; }, 2000); }
                       }}
                       id="copy-code-btn"
-                      className="w-full bg-[#1a1a1a] text-white font-medium py-2 rounded-lg transition-colors text-sm border border-[#333]"
+                      className="w-full font-medium py-2 rounded-lg transition-colors text-sm"
+                      style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#fff', color: isDarkMode ? '#fff' : '#111', border: `1px solid ${isDarkMode ? '#333' : '#d1d5db'}` }}
                     >
                       Copy Code
                     </button>
@@ -570,9 +575,9 @@ export default function BattlePage() {
                       </div>
                     </button>
                   ) : (
-                    <div className="battle-options-panel rounded-xl border border-[#1a1a1a] bg-[#0d0d0d] overflow-hidden">
-                      <div className="flex items-center justify-between px-4 py-3 border-b border-[#1a1a1a]">
-                        <span className="text-white text-sm font-semibold">Choose Battle Mode</span>
+                    <div className="battle-options-panel rounded-xl overflow-hidden" style={{ backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08)' }}>
+                      <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
+                        <span className="text-sm font-semibold" style={{ color: isDarkMode ? '#fff' : '#111' }}>Choose Battle Mode</span>
                         <button
                           onClick={() => setShowBattleOptions(false)}
                           className="text-gray-500 transition-colors"
@@ -583,42 +588,45 @@ export default function BattlePage() {
                       <div className="p-3 grid grid-cols-3 gap-2 sm:gap-3">
                         <button
                           onClick={() => handleBattleOptionClick(setShowQuickMatch)}
-                          className="battle-mode-btn group flex flex-col items-center gap-2 sm:gap-3 py-4 sm:py-5 px-2 rounded-xl border border-[#1a1a1a] bg-[#111] transition-all duration-200"
+                          className="battle-mode-btn group flex flex-col items-center gap-2 sm:gap-3 py-4 sm:py-5 px-2 rounded-xl transition-all duration-200"
+                          style={{ backgroundColor: isDarkMode ? '#111' : '#f9fafb', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}
                           data-color="blue"
                         >
                           <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20 transition-colors">
                             <svg className="w-6 h-6 sm:w-7 sm:h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                           </div>
                           <div className="text-center">
-                            <p className="text-white font-semibold text-xs sm:text-sm leading-tight">Quick Match</p>
+                            <p className="font-semibold text-xs sm:text-sm leading-tight" style={{ color: isDarkMode ? '#fff' : '#111' }}>Quick Match</p>
                             <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5 leading-tight hidden sm:block">Random opponent</p>
                           </div>
                         </button>
 
                         <button
                           onClick={() => handleBattleOptionClick(setShowPlayFriend)}
-                          className="battle-mode-btn group flex flex-col items-center gap-2 sm:gap-3 py-4 sm:py-5 px-2 rounded-xl border border-[#1a1a1a] bg-[#111] transition-all duration-200"
+                          className="battle-mode-btn group flex flex-col items-center gap-2 sm:gap-3 py-4 sm:py-5 px-2 rounded-xl transition-all duration-200"
+                          style={{ backgroundColor: isDarkMode ? '#111' : '#f9fafb', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}
                           data-color="emerald"
                         >
                           <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 transition-colors">
                             <svg className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                           </div>
                           <div className="text-center">
-                            <p className="text-white font-semibold text-xs sm:text-sm leading-tight">Play a Friend</p>
+                            <p className="font-semibold text-xs sm:text-sm leading-tight" style={{ color: isDarkMode ? '#fff' : '#111' }}>Play a Friend</p>
                             <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5 leading-tight hidden sm:block">Challenge a friend</p>
                           </div>
                         </button>
 
                         <button
                           onClick={() => handleBattleOptionClick(setShowPrivateMatch)}
-                          className="battle-mode-btn group flex flex-col items-center gap-2 sm:gap-3 py-4 sm:py-5 px-2 rounded-xl border border-[#1a1a1a] bg-[#111] transition-all duration-200"
+                          className="battle-mode-btn group flex flex-col items-center gap-2 sm:gap-3 py-4 sm:py-5 px-2 rounded-xl transition-all duration-200"
+                          style={{ backgroundColor: isDarkMode ? '#111' : '#f9fafb', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}
                           data-color="orange"
                         >
                           <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-orange-500/10 flex items-center justify-center border border-orange-500/20 transition-colors">
                             <svg className="w-6 h-6 sm:w-7 sm:h-7 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
                           </div>
                           <div className="text-center">
-                            <p className="text-white font-semibold text-xs sm:text-sm leading-tight">Private Match</p>
+                            <p className="font-semibold text-xs sm:text-sm leading-tight" style={{ color: isDarkMode ? '#fff' : '#111' }}>Private Match</p>
                             <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5 leading-tight hidden sm:block">Join with code</p>
                           </div>
                         </button>
@@ -629,8 +637,8 @@ export default function BattlePage() {
               )}
 
               {isGuest && (
-                <div className="mb-5 bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-5 text-center">
-                  <h3 className="text-white font-semibold text-base mb-1.5">Ready to Battle?</h3>
+                <div className="mb-5 rounded-xl p-5 text-center" style={{ backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08)' }}>
+                  <h3 className="font-semibold text-base mb-1.5" style={{ color: isDarkMode ? '#fff' : '#111' }}>Ready to Battle?</h3>
                   <p className="text-gray-500 text-sm mb-4">Create an account to challenge opponents and win real prizes</p>
                   <button
                     onClick={() => window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signup' } }))}
@@ -646,17 +654,17 @@ export default function BattlePage() {
               {showSidebar && (
                 <div className="absolute inset-0 lg:hidden" onClick={() => setShowSidebar(false)}></div>
               )}
-              <div className={`${showSidebar ? 'absolute right-0 top-0 bottom-0 w-80 bg-[#0a0a0a] border-l border-[#1a1a1a] p-4 overflow-y-auto z-50' : ''} lg:static lg:p-0 space-y-5`}>
+              <div className={`${showSidebar ? `absolute right-0 top-0 bottom-0 w-80 p-4 overflow-y-auto z-50` : ''} lg:static lg:p-0 space-y-5`} style={showSidebar ? { backgroundColor: isDarkMode ? '#0a0a0a' : '#f5f5f5', borderLeft: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` } : undefined}>
                 {showSidebar && (
                   <div className="flex items-center justify-between mb-2 lg:hidden">
-                    <h3 className="text-white font-bold">Social</h3>
+                    <h3 className="font-bold" style={{ color: isDarkMode ? '#fff' : '#111' }}>Social</h3>
                     <button onClick={() => setShowSidebar(false)} className="text-gray-400">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                   </div>
                 )}
 
-                <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-4">
+                <div className="rounded-xl p-4" style={{ backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08)' }}>
                   <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Friends</h3>
                   {friends.length === 0 ? (
                     <div className="text-center py-4">
@@ -673,18 +681,20 @@ export default function BattlePage() {
                       {friends.map(friend => (
                         <div key={friend.id} className="flex items-center gap-2.5 px-2 py-2 rounded-lg group transition-colors">
                           <div
-                            className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer"
+                            className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer"
+                            style={{ backgroundColor: isDarkMode ? '#374151' : '#e5e7eb' }}
                             onClick={() => router.push(`/profile/${friend.id}`)}
                           >
                             {friend.avatar ? (
                               <img src={friend.avatar} className="w-full h-full object-cover" alt="" />
                             ) : (
-                              <span className="text-xs font-bold">{friend.username?.[0]?.toUpperCase()}</span>
+                              <span className="text-xs font-bold" style={{ color: isDarkMode ? '#fff' : '#111' }}>{friend.username?.[0]?.toUpperCase()}</span>
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
                             <div
-                              className="text-white text-sm font-medium truncate cursor-pointer"
+                              className="text-sm font-medium truncate cursor-pointer"
+                              style={{ color: isDarkMode ? '#fff' : '#111' }}
                               onClick={() => router.push(`/profile/${friend.id}`)}
                             >{friend.username}</div>
                             <div className="text-gray-500 text-[11px]">{friend.battleWins || 0}W-{friend.battleLosses || 0}L</div>
@@ -706,20 +716,20 @@ export default function BattlePage() {
                 </div>
 
                 {invites.sent?.length > 0 && (
-                  <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-4">
+                  <div className="rounded-xl p-4" style={{ backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08)' }}>
                     <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Sent Invites</h3>
                     <div className="space-y-2">
                       {invites.sent.map(invite => (
-                        <div key={invite.id} className="flex items-center justify-between bg-[#111] rounded-lg px-3 py-2">
+                        <div key={invite.id} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ backgroundColor: isDarkMode ? '#111' : '#f9fafb' }}>
                           <div className="flex items-center gap-2 min-w-0">
-                            <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                            <div className="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ backgroundColor: isDarkMode ? '#374151' : '#e5e7eb' }}>
                               {invite.receiver?.avatar ? (
                                 <img src={invite.receiver.avatar} className="w-full h-full object-cover" alt="" />
                               ) : (
                                 <span className="text-[10px]">{invite.receiver?.username?.[0]?.toUpperCase() || '?'}</span>
                               )}
                             </div>
-                            <span className="text-gray-300 text-xs truncate">{invite.receiver?.username || 'User'}</span>
+                            <span className="text-xs truncate" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>{invite.receiver?.username || 'User'}</span>
                           </div>
                           <button
                             onClick={() => handleCancelInvite(invite.id)}
@@ -734,20 +744,20 @@ export default function BattlePage() {
                 )}
 
                 {invites.recentlyClosed?.length > 0 && (
-                  <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-4">
+                  <div className="rounded-xl p-4" style={{ backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08)' }}>
                     <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">Invite Updates</h3>
                     <div className="space-y-2">
                       {invites.recentlyClosed.map(invite => (
-                        <div key={invite.id} className="flex items-center justify-between bg-[#111] rounded-lg px-3 py-2">
+                        <div key={invite.id} className="flex items-center justify-between rounded-lg px-3 py-2" style={{ backgroundColor: isDarkMode ? '#111' : '#f9fafb' }}>
                           <div className="flex items-center gap-2 min-w-0">
-                            <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                            <div className="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ backgroundColor: isDarkMode ? '#374151' : '#e5e7eb' }}>
                               {invite.receiver?.avatar ? (
                                 <img src={invite.receiver.avatar} className="w-full h-full object-cover" alt="" />
                               ) : (
                                 <span className="text-[10px]">{invite.receiver?.username?.[0]?.toUpperCase() || '?'}</span>
                               )}
                             </div>
-                            <span className="text-gray-300 text-xs truncate">{invite.receiver?.username || 'User'}</span>
+                            <span className="text-xs truncate" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>{invite.receiver?.username || 'User'}</span>
                           </div>
                           <span className={`text-[10px] font-medium flex-shrink-0 ${
                             invite.status === 'accepted' ? 'text-green-400' :

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import BattleChat from './BattleChat';
+import { useTheme } from '../../contexts/ThemeContext';
 
 function formatTimeRemaining(ms) {
   if (!ms || ms <= 0) return 'Ended';
@@ -519,6 +520,7 @@ function BattleCard({ battle, compact, focused }) {
 }
 
 export default function LiveBattlesSection({ compact = false, focusBattleId = null, currentUserId = null }) {
+  const { isDarkMode } = useTheme();
   const [battles, setBattles] = useState(() => getSimulatedBattles([]));
   const [avatars, setAvatars] = useState([]);
   const router = useRouter();
@@ -593,14 +595,14 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
           <div
             className="rounded-xl p-4 cursor-pointer group transition-all duration-300"
             onClick={() => router.push('/battle')}
-            style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }}
+            style={{ backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08)' }}
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20 flex-shrink-0 group-hover:bg-blue-500/20 transition-colors">
                 <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white text-sm font-medium">Start a 1v1 Battle</p>
+                <p className="text-sm font-medium" style={{ color: isDarkMode ? '#fff' : '#111' }}>Start a 1v1 Battle</p>
                 <p className="text-gray-500 text-[11px]">Challenge an opponent</p>
               </div>
               <svg className="w-4 h-4 text-gray-500 group-hover:text-blue-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
@@ -631,7 +633,7 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
       {sortedBattles.length === 0 ? (
         <div
           className="rounded-xl p-6 text-center cursor-pointer group transition-all duration-300"
-          style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }}
+          style={{ backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08)' }}
           onClick={() => {
             const startBtn = document.querySelector('.battle-start-btn');
             if (startBtn) startBtn.click();
@@ -642,7 +644,7 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
               <svg className="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
             </div>
             <div>
-              <p className="text-white font-semibold text-sm mb-0.5">No live battles yet</p>
+              <p className="font-semibold text-sm mb-0.5" style={{ color: isDarkMode ? '#fff' : '#111' }}>No live battles yet</p>
               <p className="text-gray-500 text-xs">Tap to start one and be the first</p>
             </div>
             <div className="flex items-center gap-1.5 text-blue-400 text-xs font-medium group-hover:gap-2.5 transition-all">
