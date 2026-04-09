@@ -35,10 +35,6 @@ export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
           60% { transform: translateX(-3px); }
           80% { transform: translateX(3px); }
         }
-        @keyframes forfeitPulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-          50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
-        }
         @keyframes forfeitSpin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
@@ -46,7 +42,6 @@ export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
         .forfeit-overlay { animation: forfeitOverlayIn 0.25s ease-out; }
         .forfeit-modal { animation: forfeitModalIn 0.3s ease-out; }
         .forfeit-icon { animation: forfeitShake 0.5s ease-in-out 0.3s; }
-        .forfeit-btn-pulse { animation: forfeitPulse 2s ease-in-out infinite; }
         .forfeit-spinner { animation: forfeitSpin 0.8s linear infinite; }
       `}</style>
 
@@ -75,22 +70,22 @@ export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
             <p className="text-gray-500 text-sm">This action cannot be undone</p>
           </div>
 
-          <div className="px-6 py-4 space-y-3">
-            <div className="flex items-center gap-3 bg-red-500/10 rounded-xl px-4 py-3 border border-red-500/20">
-              <span className="text-lg">⚠️</span>
-              <p className="text-red-300 text-sm font-medium">Your opponent will win</p>
+          <div className="px-6 py-4 space-y-2">
+            <div className="flex items-center gap-3 rounded-lg px-4 py-2.5" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
+              <span className="text-base">⚠️</span>
+              <p className="text-gray-400 text-sm">Your opponent will win</p>
             </div>
-            <div className="flex items-center gap-3 bg-red-500/10 rounded-xl px-4 py-3 border border-red-500/20">
-              <span className="text-lg">💸</span>
-              <p className="text-red-300 text-sm font-medium">
+            <div className="flex items-center gap-3 rounded-lg px-4 py-2.5" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
+              <span className="text-base">💸</span>
+              <p className="text-gray-400 text-sm">
                 You will lose your buy-in{buyIn > 0 ? ` ($${buyIn.toFixed(0)})` : ''}
               </p>
             </div>
             {potSize > 0 && (
-              <div className="flex items-center gap-3 rounded-xl px-4 py-3" style={{ backgroundColor: 'rgba(17,17,17,0.8)', border: '1px solid #1a1a1a' }}>
-                <span className="text-lg">🏆</span>
-                <p className="text-gray-300 text-sm">
-                  Pot size: <span className="font-bold text-white">${potSize.toFixed(0)}</span>
+              <div className="flex items-center gap-3 rounded-lg px-4 py-2.5" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
+                <span className="text-base">🏆</span>
+                <p className="text-gray-400 text-sm">
+                  Pot size: <span className="font-semibold text-white">${potSize.toFixed(0)}</span>
                 </p>
               </div>
             )}
@@ -111,11 +106,12 @@ export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
             <button
               onClick={handleConfirm}
               disabled={isForfeiting}
-              className="w-full py-3 rounded-xl font-bold text-sm transition-all duration-200 forfeit-btn-pulse disabled:opacity-50"
+              className="w-full py-3 rounded-xl text-sm transition-all duration-200 disabled:opacity-50"
               style={{
-                background: 'rgba(239, 68, 68, 0.15)',
-                border: '1px solid rgba(239, 68, 68, 0.4)',
-                color: '#f87171',
+                background: 'transparent',
+                border: '1px solid #333',
+                color: '#ef4444',
+                fontWeight: 500,
               }}
             >
               {isForfeiting ? (

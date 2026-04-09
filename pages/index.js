@@ -577,199 +577,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {showBattleWalkthrough && hasActiveMatchup && matchup && (
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{ backgroundColor: 'rgba(0,0,0,0.88)' }}>
-            <style>{`
-              @keyframes wtSlideUp {
-                from { opacity: 0; transform: translateY(30px) scale(0.95); }
-                to { opacity: 1; transform: translateY(0) scale(1); }
-              }
-              @keyframes wtPulse {
-                0%, 100% { box-shadow: 0 0 20px rgba(59,130,246,0.3); }
-                50% { box-shadow: 0 0 40px rgba(59,130,246,0.5); }
-              }
-              @keyframes wtFadeIn {
-                from { opacity: 0; transform: translateY(10px); }
-                to { opacity: 1; transform: translateY(0); }
-              }
-            `}</style>
-            <div 
-              className="w-[90%] max-w-[380px] rounded-2xl overflow-hidden"
-              style={{ 
-                background: 'linear-gradient(180deg, #0a1628 0%, #0d0d0d 100%)',
-                border: '2px solid rgba(59, 130, 246, 0.4)',
-                animation: 'wtSlideUp 0.4s ease-out, wtPulse 3s ease-in-out infinite',
-              }}
-            >
-              <div className="flex items-center justify-between px-5 pt-4 pb-2">
-                <div className="flex gap-1.5">
-                  {[0, 1, 2].map(i => (
-                    <div key={i} className="h-1 rounded-full transition-all duration-300" style={{ width: walkthroughStep === i ? '24px' : '8px', backgroundColor: walkthroughStep >= i ? '#3b82f6' : '#333' }}></div>
-                  ))}
-                </div>
-                <button onClick={() => { setShowBattleWalkthrough(false); setWalkthroughDismissed(true); setWalkthroughStep(0); }} className="text-gray-600 text-xs">Skip</button>
-              </div>
-
-              <div key={walkthroughStep} style={{ animation: 'wtFadeIn 0.3s ease-out' }}>
-                {walkthroughStep === 0 && (
-                  <>
-                    <div className="px-5 pt-2 pb-3 text-center">
-                      <div className="flex items-center justify-center gap-1.5 mb-3">
-                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                        <span className="text-green-400 text-xs font-bold uppercase tracking-wider">Battle Started</span>
-                      </div>
-                      <h2 className="text-white text-xl font-bold mb-1">You're Matched!</h2>
-                      <p className="text-gray-400 text-sm">You've been paired for a 1v1 battle.</p>
-                    </div>
-                    <div className="px-5 py-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex flex-col items-center flex-1">
-                          <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{ backgroundColor: '#1a1a1a', border: '2px solid #3b82f6' }}>
-                            {(myProfile?.avatar || user?.avatar) ? (
-                              <img src={myProfile?.avatar || user?.avatar} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="text-white font-bold text-lg">{(myProfile?.username || user?.username || user?.name || '')[0]?.toUpperCase() || 'P'}</span>
-                            )}
-                          </div>
-                          <p className="text-white text-xs font-semibold truncate max-w-[90px]">{myProfile?.username || user?.username || user?.name || ''}</p>
-                        </div>
-                        <div className="flex flex-col items-center px-3">
-                          <span className="text-2xl font-black text-blue-400">VS</span>
-                        </div>
-                        <div className="flex flex-col items-center flex-1">
-                          <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{ backgroundColor: '#1a1a1a', border: '2px solid #06b6d4' }}>
-                            {opponent?.avatar ? (
-                              <img src={opponent.avatar} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                              <span className="text-white font-bold text-lg">{(opponent?.username || 'O')[0]?.toUpperCase()}</span>
-                            )}
-                          </div>
-                          <p className="text-white text-xs font-semibold truncate max-w-[90px]">{opponent?.username || 'Opponent'}</p>
-                        </div>
-                      </div>
-                      <div className="mt-4 grid grid-cols-3 gap-3">
-                        <div className="bg-[#111] border border-[#222] rounded-lg p-2.5 text-center">
-                          <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Mode</p>
-                          <p className="text-white font-bold text-sm">{matchup.durationMinutes <= 200 ? 'RUSH' : matchup.durationMinutes <= 1500 ? 'ORIGINAL' : 'TOURNAMENT'}</p>
-                        </div>
-                        <div className="bg-[#111] border border-[#222] rounded-lg p-2.5 text-center">
-                          <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Pot</p>
-                          <p className="text-white font-bold text-sm">${parseFloat(matchup.potSize || matchup.startingBalance * 2 || 20000).toLocaleString()}</p>
-                        </div>
-                        <div className="bg-[#111] border border-[#222] rounded-lg p-2.5 text-center">
-                          <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Time</p>
-                          <p className="text-white font-bold text-sm">
-                            {timeRemaining ? (() => {
-                              const m = Math.floor(timeRemaining / 60000);
-                              const h = Math.floor(m / 60);
-                              const d = Math.floor(h / 24);
-                              if (d > 0) return `${d}d ${h % 24}h`;
-                              if (h > 0) return `${h}h ${m % 60}m`;
-                              return `${m}m`;
-                            })() : 'Starting'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {walkthroughStep === 1 && (
-                  <div className="px-5 py-4">
-                    <div className="text-center mb-4">
-                      <div className="w-12 h-12 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                        <span className="text-2xl">🎯</span>
-                      </div>
-                      <h2 className="text-white text-lg font-bold mb-1">How It Works</h2>
-                      <p className="text-gray-400 text-sm">Three simple steps to win</p>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-3 bg-[#111] border border-[#222] rounded-xl p-3">
-                        <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <span className="text-blue-400 text-xs font-bold">1</span>
-                        </div>
-                        <div>
-                          <p className="text-white text-sm font-semibold">Place Your Picks</p>
-                          <p className="text-gray-500 text-xs">Browse games below and add bets to your slip. Pick spreads, moneylines, or totals.</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3 bg-[#111] border border-[#222] rounded-xl p-3">
-                        <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <span className="text-emerald-400 text-xs font-bold">2</span>
-                        </div>
-                        <div>
-                          <p className="text-white text-sm font-semibold">Grow Your Balance</p>
-                          <p className="text-gray-500 text-xs">You both start with ${parseFloat(matchup.startingBalance || 10000).toLocaleString()}. Winning picks grow your bankroll.</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3 bg-[#111] border border-[#222] rounded-xl p-3">
-                        <div className="w-7 h-7 rounded-lg bg-orange-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                          <span className="text-orange-400 text-xs font-bold">3</span>
-                        </div>
-                        <div>
-                          <p className="text-white text-sm font-semibold">Highest Balance Wins</p>
-                          <p className="text-gray-500 text-xs">When time runs out, the player with the higher balance takes 90% of the pot.</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {walkthroughStep === 2 && (
-                  <div className="px-5 py-4">
-                    <div className="text-center mb-4">
-                      <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
-                        <span className="text-2xl">💡</span>
-                      </div>
-                      <h2 className="text-white text-lg font-bold mb-1">Tips to Win</h2>
-                      <p className="text-gray-400 text-sm">Quick strategy guide</p>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-3 bg-[#111] border border-[#222] rounded-xl p-3">
-                        <span className="text-lg mt-0.5">📊</span>
-                        <div>
-                          <p className="text-white text-sm font-semibold">Track the Banner</p>
-                          <p className="text-gray-500 text-xs">Your battle status bar at the top shows both balances and time left in real-time.</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3 bg-[#111] border border-[#222] rounded-xl p-3">
-                        <span className="text-lg mt-0.5">🔒</span>
-                        <div>
-                          <p className="text-white text-sm font-semibold">Hidden Bets</p>
-                          <p className="text-gray-500 text-xs">Your opponent can't see your picks until you've placed at least one bet — and vice versa.</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3 bg-[#111] border border-[#222] rounded-xl p-3">
-                        <span className="text-lg mt-0.5">⚡</span>
-                        <div>
-                          <p className="text-white text-sm font-semibold">Manage Risk</p>
-                          <p className="text-gray-500 text-xs">Don't go all-in early. Spread your bets across games to build a steady lead.</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="px-5 pb-5 pt-2">
-                <button
-                  onClick={() => {
-                    if (walkthroughStep < 2) {
-                      setWalkthroughStep(walkthroughStep + 1);
-                    } else {
-                      setShowBattleWalkthrough(false);
-                      setWalkthroughDismissed(true);
-                      setWalkthroughStep(0);
-                    }
-                  }}
-                  className="w-full bg-blue-600 text-white font-bold py-3 rounded-xl text-sm transition-all active:scale-[0.98]"
-                >
-                  {walkthroughStep === 0 ? 'How Does It Work?' : walkthroughStep === 1 ? 'Got It, Any Tips?' : 'Start Picking'}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
         <div 
           className="sticky z-40 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-2 mb-3"
           style={{ 
@@ -1201,6 +1008,201 @@ export default function Dashboard() {
         onClose={() => setShowBetSlip(false)}
         onBetPlaced={handleBetPlaced}
       />
+
+      {showBattleWalkthrough && hasActiveMatchup && matchup && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ backgroundColor: 'rgba(0,0,0,0.88)' }}>
+          <style>{`
+            @keyframes wtSlideUp {
+              from { opacity: 0; transform: translateY(30px) scale(0.95); }
+              to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            @keyframes wtPulse {
+              0%, 100% { box-shadow: 0 0 20px rgba(59,130,246,0.3); }
+              50% { box-shadow: 0 0 40px rgba(59,130,246,0.5); }
+            }
+            @keyframes wtFadeIn {
+              from { opacity: 0; transform: translateY(10px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+          `}</style>
+          <div 
+            className="w-full max-w-[380px] rounded-2xl overflow-hidden"
+            style={{ 
+              background: 'linear-gradient(180deg, #0a1628 0%, #0d0d0d 100%)',
+              border: '2px solid rgba(59, 130, 246, 0.4)',
+              animation: 'wtSlideUp 0.4s ease-out, wtPulse 3s ease-in-out infinite',
+            }}
+          >
+            <div className="flex items-center justify-between px-5 pt-4 pb-2">
+              <div className="flex gap-1.5">
+                {[0, 1, 2].map(i => (
+                  <div key={i} className="h-1 rounded-full transition-all duration-300" style={{ width: walkthroughStep === i ? '24px' : '8px', backgroundColor: walkthroughStep >= i ? '#3b82f6' : '#333' }}></div>
+                ))}
+              </div>
+              <button onClick={() => { setShowBattleWalkthrough(false); setWalkthroughDismissed(true); setWalkthroughStep(0); }} className="text-gray-600 text-xs">Skip</button>
+            </div>
+
+            <div key={walkthroughStep} style={{ animation: 'wtFadeIn 0.3s ease-out' }}>
+              {walkthroughStep === 0 && (
+                <>
+                  <div className="px-5 pt-2 pb-3 text-center">
+                    <div className="flex items-center justify-center gap-1.5 mb-3">
+                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                      <span className="text-green-400 text-xs font-bold uppercase tracking-wider">Battle Started</span>
+                    </div>
+                    <h2 className="text-white text-xl font-bold mb-1">You're Matched!</h2>
+                    <p className="text-gray-400 text-sm">You've been paired for a 1v1 battle.</p>
+                  </div>
+                  <div className="px-5 py-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col items-center flex-1">
+                        <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{ backgroundColor: '#1a1a1a', border: '2px solid #3b82f6' }}>
+                          {(myProfile?.avatar || user?.avatar) ? (
+                            <img src={myProfile?.avatar || user?.avatar} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-white font-bold text-lg">{(myProfile?.username || user?.username || user?.name || '')[0]?.toUpperCase() || 'P'}</span>
+                          )}
+                        </div>
+                        <p className="text-white text-xs font-semibold truncate max-w-[90px]">{myProfile?.username || user?.username || user?.name || ''}</p>
+                      </div>
+                      <div className="flex flex-col items-center px-3">
+                        <span className="text-2xl font-black text-blue-400">VS</span>
+                      </div>
+                      <div className="flex flex-col items-center flex-1">
+                        <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{ backgroundColor: '#1a1a1a', border: '2px solid #06b6d4' }}>
+                          {opponent?.avatar ? (
+                            <img src={opponent.avatar} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-white font-bold text-lg">{(opponent?.username || 'O')[0]?.toUpperCase()}</span>
+                          )}
+                        </div>
+                        <p className="text-white text-xs font-semibold truncate max-w-[90px]">{opponent?.username || 'Opponent'}</p>
+                      </div>
+                    </div>
+                    <div className="mt-4 grid grid-cols-3 gap-3">
+                      <div className="bg-[#111] border border-[#222] rounded-lg p-2.5 text-center">
+                        <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Mode</p>
+                        <p className="text-white font-bold text-sm">{matchup.durationMinutes <= 200 ? 'RUSH' : matchup.durationMinutes <= 1500 ? 'ORIGINAL' : 'TOURNAMENT'}</p>
+                      </div>
+                      <div className="bg-[#111] border border-[#222] rounded-lg p-2.5 text-center">
+                        <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Pot</p>
+                        <p className="text-white font-bold text-sm">${parseFloat(matchup.potSize || matchup.startingBalance * 2 || 20000).toLocaleString()}</p>
+                      </div>
+                      <div className="bg-[#111] border border-[#222] rounded-lg p-2.5 text-center">
+                        <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Time</p>
+                        <p className="text-white font-bold text-sm">
+                          {timeRemaining ? (() => {
+                            const m = Math.floor(timeRemaining / 60000);
+                            const h = Math.floor(m / 60);
+                            const d = Math.floor(h / 24);
+                            if (d > 0) return `${d}d ${h % 24}h`;
+                            if (h > 0) return `${h}h ${m % 60}m`;
+                            return `${m}m`;
+                          })() : 'Starting'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {walkthroughStep === 1 && (
+                <div className="px-5 py-4">
+                  <div className="text-center mb-4">
+                    <div className="w-12 h-12 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <span className="text-2xl">🎯</span>
+                    </div>
+                    <h2 className="text-white text-lg font-bold mb-1">How It Works</h2>
+                    <p className="text-gray-400 text-sm">Three simple steps to win</p>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3 bg-[#111] border border-[#222] rounded-xl p-3">
+                      <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-blue-400 text-xs font-bold">1</span>
+                      </div>
+                      <div>
+                        <p className="text-white text-sm font-semibold">Place Your Picks</p>
+                        <p className="text-gray-500 text-xs">Browse games below and add bets to your slip. Pick spreads, moneylines, or totals.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 bg-[#111] border border-[#222] rounded-xl p-3">
+                      <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-emerald-400 text-xs font-bold">2</span>
+                      </div>
+                      <div>
+                        <p className="text-white text-sm font-semibold">Grow Your Balance</p>
+                        <p className="text-gray-500 text-xs">You both start with ${parseFloat(matchup.startingBalance || 10000).toLocaleString()}. Winning picks grow your bankroll.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 bg-[#111] border border-[#222] rounded-xl p-3">
+                      <div className="w-7 h-7 rounded-lg bg-orange-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-orange-400 text-xs font-bold">3</span>
+                      </div>
+                      <div>
+                        <p className="text-white text-sm font-semibold">Highest Balance Wins</p>
+                        <p className="text-gray-500 text-xs">When time runs out, the player with the higher balance takes 90% of the pot.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {walkthroughStep === 2 && (
+                <div className="px-5 py-4">
+                  <div className="text-center mb-4">
+                    <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <span className="text-2xl">💡</span>
+                    </div>
+                    <h2 className="text-white text-lg font-bold mb-1">Tips to Win</h2>
+                    <p className="text-gray-400 text-sm">Quick strategy guide</p>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3 bg-[#111] border border-[#222] rounded-xl p-3">
+                      <span className="text-lg mt-0.5">📊</span>
+                      <div>
+                        <p className="text-white text-sm font-semibold">Track the Banner</p>
+                        <p className="text-gray-500 text-xs">Your battle status bar at the top shows both balances and time left in real-time.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 bg-[#111] border border-[#222] rounded-xl p-3">
+                      <span className="text-lg mt-0.5">🔒</span>
+                      <div>
+                        <p className="text-white text-sm font-semibold">Hidden Bets</p>
+                        <p className="text-gray-500 text-xs">Your opponent can't see your picks until you've placed at least one bet — and vice versa.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 bg-[#111] border border-[#222] rounded-xl p-3">
+                      <span className="text-lg mt-0.5">⚡</span>
+                      <div>
+                        <p className="text-white text-sm font-semibold">Manage Risk</p>
+                        <p className="text-gray-500 text-xs">Don't go all-in early. Spread your bets across games to build a steady lead.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="px-5 pb-5 pt-2">
+              <button
+                onClick={() => {
+                  if (walkthroughStep < 2) {
+                    setWalkthroughStep(walkthroughStep + 1);
+                  } else {
+                    setShowBattleWalkthrough(false);
+                    setWalkthroughDismissed(true);
+                    setWalkthroughStep(0);
+                  }
+                }}
+                className="w-full py-3 rounded-xl text-sm font-bold transition-all active:scale-[0.98]"
+                style={{ backgroundColor: '#2563eb', color: '#ffffff' }}
+              >
+                {walkthroughStep === 0 ? 'How Does It Work?' : walkthroughStep === 1 ? 'Got It, Any Tips?' : 'Start Picking'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style jsx>{`
         .scrollbar-hide {
