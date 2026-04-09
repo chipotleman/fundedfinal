@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const GAME_MODE_OPTIONS = [
   {
@@ -63,6 +64,7 @@ const TIPS = [
 ];
 
 export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound }) {
+  const { isDarkMode } = useTheme();
   const [step, setStep] = useState('config');
   const [buyIn, setBuyIn] = useState(10);
   const [gameMode, setGameMode] = useState('original');
@@ -302,6 +304,37 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
   const selectedMode = GAME_MODE_OPTIONS.find(m => m.id === gameMode);
   const matchedAvatar = matchedOpponent?.avatar || currentAvatar || null;
 
+  const th = {
+    overlay: isDarkMode ? 'bg-black/85' : 'bg-black/40',
+    cardBg: isDarkMode ? '#0d0d0d' : '#ffffff',
+    cardBorder: isDarkMode ? '#1a1a1a' : '#e5e7eb',
+    headerText: isDarkMode ? 'text-white' : 'text-gray-900',
+    subText: isDarkMode ? 'text-gray-400' : 'text-gray-500',
+    labelText: isDarkMode ? 'text-gray-400' : 'text-gray-500',
+    btnBg: isDarkMode ? '#111' : '#f3f4f6',
+    btnBorder: isDarkMode ? '#1a1a1a' : '#e5e7eb',
+    btnText: isDarkMode ? 'text-gray-300' : 'text-gray-700',
+    modeText: isDarkMode ? 'text-white' : 'text-gray-900',
+    modeDesc: isDarkMode ? 'text-gray-500' : 'text-gray-500',
+    modeBtnBg: isDarkMode ? '#111' : '#f9fafb',
+    infoBg: isDarkMode ? '#111' : '#f3f4f6',
+    infoBorder: isDarkMode ? '#1a1a1a' : '#e5e7eb',
+    infoLabel: isDarkMode ? 'text-gray-400' : 'text-gray-500',
+    infoValue: isDarkMode ? 'text-white' : 'text-gray-900',
+    searchBg: isDarkMode
+      ? 'linear-gradient(135deg, #020a18 0%, #0a1628 30%, #0d1a30 60%, #050d1a 100%)'
+      : 'linear-gradient(135deg, #f0f4ff 0%, #e8edf5 30%, #f5f7fa 60%, #eef2f7 100%)',
+    avatarBg1: isDarkMode ? '#0c1a35' : '#dbeafe',
+    avatarBg2: isDarkMode ? '#1a0a00' : '#fff7ed',
+    nameText: isDarkMode ? 'text-white' : 'text-gray-900',
+    foundBg: isDarkMode ? '#0d0d0d' : '#ffffff',
+    cancelBg: isDarkMode ? '#111' : '#f3f4f6',
+    cancelBorder: isDarkMode ? '#222' : '#d1d5db',
+    cancelText: isDarkMode ? 'text-gray-300' : 'text-gray-600',
+    closeBtn: isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-700',
+    fallbackText: isDarkMode ? 'text-white/60' : 'text-gray-400',
+  };
+
   return (
     <>
       <style>{`
@@ -379,25 +412,25 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
           100% { background-position: 100% 100%; }
         }
       `}</style>
-      <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => { if (step === 'found') return; if (step === 'searching') { cancelSearch(); } onClose(); }}>
-        <div className="rounded-2xl max-w-md w-full overflow-hidden" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }} onClick={e => e.stopPropagation()}>
+      <div className={`fixed inset-0 ${th.overlay} backdrop-blur-sm z-50 flex items-center justify-center p-4`} onClick={() => { if (step === 'found') return; if (step === 'searching') { cancelSearch(); } onClose(); }}>
+        <div className="rounded-2xl max-w-md w-full overflow-hidden" style={{ backgroundColor: th.cardBg, border: `1px solid ${th.cardBorder}`, boxShadow: isDarkMode ? 'none' : '0 25px 50px -12px rgba(0,0,0,0.15)' }} onClick={e => e.stopPropagation()}>
           {step === 'config' && (
             <>
-              <div className="p-5" style={{ borderBottom: '1px solid #1a1a1a' }}>
+              <div className="p-5" style={{ borderBottom: `1px solid ${th.cardBorder}` }}>
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-white">Quick Match</h2>
-                  <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+                  <h2 className={`text-lg font-bold ${th.headerText}`}>Quick Match</h2>
+                  <button onClick={onClose} className={`${th.closeBtn} transition-colors`}>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                   </button>
                 </div>
-                <p className="text-gray-400 text-sm mt-1">Find a random opponent instantly</p>
+                <p className={`${th.subText} text-sm mt-1`}>Find a random opponent instantly</p>
               </div>
 
               <div className="p-5 space-y-5">
                 {error && <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-400 text-sm">{error}</div>}
 
                 <div>
-                  <label className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 block">Buy-In</label>
+                  <label className={`text-xs font-medium ${th.labelText} uppercase tracking-wider mb-2 block`}>Buy-In</label>
                   <div className="grid grid-cols-5 gap-2">
                     {BUY_IN_OPTIONS.map(amount => (
                       <button
@@ -406,9 +439,9 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                         className={`py-2.5 rounded-xl text-sm font-bold transition-all ${
                           buyIn === amount
                             ? 'text-white shadow-lg shadow-blue-500/20'
-                            : 'text-gray-300'
+                            : th.btnText
                         }`}
-                        style={buyIn === amount ? { backgroundColor: '#2563eb' } : { backgroundColor: '#111', border: '1px solid #1a1a1a' }}
+                        style={buyIn === amount ? { backgroundColor: '#2563eb' } : { backgroundColor: th.btnBg, border: `1px solid ${th.btnBorder}` }}
                       >
                         ${amount}
                       </button>
@@ -417,7 +450,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                 </div>
 
                 <div>
-                  <label className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 block">Game Mode</label>
+                  <label className={`text-xs font-medium ${th.labelText} uppercase tracking-wider mb-2 block`}>Game Mode</label>
                   <div className="space-y-2">
                     {GAME_MODE_OPTIONS.map(mode => {
                       const selected = gameMode === mode.id;
@@ -427,20 +460,20 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                           onClick={() => setGameMode(mode.id)}
                           className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-left transition-all"
                           style={{
-                            backgroundColor: selected ? `${mode.color}15` : '#111',
-                            border: `1px solid ${selected ? `${mode.color}60` : 'transparent'}`,
+                            backgroundColor: selected ? `${mode.color}15` : th.modeBtnBg,
+                            border: `1px solid ${selected ? `${mode.color}60` : th.btnBorder}`,
                           }}
                         >
                           <span className="text-xl flex-shrink-0">{mode.icon}</span>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-sm text-white tracking-wide">{mode.label}</span>
+                              <span className={`font-bold text-sm ${th.modeText} tracking-wide`}>{mode.label}</span>
                               {mode.recommended && <span className="text-[9px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full font-semibold">POPULAR</span>}
                             </div>
-                            <p className="text-gray-500 text-[11px] mt-0.5">{mode.description}</p>
+                            <p className={`${th.modeDesc} text-[11px] mt-0.5`}>{mode.description}</p>
                           </div>
                           <div className="text-right flex-shrink-0">
-                            <div className="text-white font-bold text-xs">{mode.coins.toLocaleString()}</div>
+                            <div className={`${th.infoValue} font-bold text-xs`}>{mode.coins.toLocaleString()}</div>
                             <div className="text-gray-500 text-[10px]">coins</div>
                           </div>
                         </button>
@@ -449,13 +482,13 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                   </div>
                 </div>
 
-                <div className="rounded-xl p-3 flex items-center justify-between" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
+                <div className="rounded-xl p-3 flex items-center justify-between" style={{ backgroundColor: th.infoBg, border: `1px solid ${th.infoBorder}` }}>
                   <div>
-                    <div className="text-gray-400 text-xs">Prize Pool</div>
-                    <div className="text-white font-bold">${potSize}</div>
+                    <div className={`${th.infoLabel} text-xs`}>Prize Pool</div>
+                    <div className={`${th.infoValue} font-bold`}>${potSize}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-gray-400 text-xs">Winner Gets</div>
+                    <div className={`${th.infoLabel} text-xs`}>Winner Gets</div>
                     <div className="text-green-400 font-bold">${payout}</div>
                   </div>
                 </div>
@@ -472,7 +505,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
 
           {step === 'searching' && (
             <div className="relative overflow-hidden" style={{
-              background: 'linear-gradient(135deg, #020a18 0%, #0a1628 30%, #0d1a30 60%, #050d1a 100%)',
+              background: th.searchBg,
             }}>
               <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ opacity: 0.06 }}>
                 <div className="absolute inset-0" style={{
@@ -488,18 +521,18 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                       className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
                       style={{
                         border: '3px solid #3b82f6',
-                        background: '#0c1a35',
+                        background: th.avatarBg1,
                         animation: 'qm-user-glow 2s ease-in-out infinite',
                       }}
                     >
                       {userAvatar ? (
                         <img src={userAvatar} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-2xl md:text-3xl font-black text-white/60">{userName[0]?.toUpperCase() || 'Y'}</span>
+                        <span className={`text-2xl md:text-3xl font-black ${th.fallbackText}`}>{userName[0]?.toUpperCase() || 'Y'}</span>
                       )}
                     </div>
                   </div>
-                  <p className="text-white text-xs md:text-sm font-bold truncate max-w-[100px] text-center">{userName}</p>
+                  <p className={`${th.nameText} text-xs md:text-sm font-bold truncate max-w-[100px] text-center`}>{userName}</p>
                   <p className="text-blue-400 text-[10px] font-medium mt-0.5">Ready</p>
                 </div>
 
@@ -557,7 +590,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                         className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
                         style={{
                           border: '3px solid #fb923c',
-                          background: '#1a0a00',
+                          background: th.avatarBg2,
                           animation: 'qm-opp-glow 2s ease-in-out infinite',
                         }}
                       >
@@ -631,8 +664,8 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                 </div>
                 <button
                   onClick={cancelSearch}
-                  className="px-5 py-2 text-gray-300 rounded-xl transition-colors text-xs font-medium"
-                  style={{ backgroundColor: '#111', border: '1px solid #222' }}
+                  className={`px-5 py-2 ${th.cancelText} rounded-xl transition-colors text-xs font-medium`}
+                  style={{ backgroundColor: th.cancelBg, border: `1px solid ${th.cancelBorder}` }}
                 >
                   Cancel
                 </button>
@@ -642,7 +675,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
 
           {step === 'found' && (
             <div className="relative overflow-hidden" style={{
-              background: '#0d0d0d',
+              background: th.foundBg,
             }}>
               <div
                 className="absolute inset-0 pointer-events-none"
@@ -675,18 +708,18 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                         className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
                         style={{
                           border: '3px solid #3b82f6',
-                          background: '#111',
+                          background: th.avatarBg1,
                           boxShadow: '0 0 20px rgba(59,130,246,0.3)',
                         }}
                       >
                         {userAvatar ? (
                           <img src={userAvatar} alt="" className="w-full h-full object-cover" />
                         ) : (
-                          <span className="text-2xl md:text-3xl font-black text-white/60">{userName[0]?.toUpperCase() || 'Y'}</span>
+                          <span className={`text-2xl md:text-3xl font-black ${th.fallbackText}`}>{userName[0]?.toUpperCase() || 'Y'}</span>
                         )}
                       </div>
                     </div>
-                    <p className="text-white text-xs md:text-sm font-bold truncate max-w-[100px] text-center">{userName}</p>
+                    <p className={`${th.nameText} text-xs md:text-sm font-bold truncate max-w-[100px] text-center`}>{userName}</p>
                     <p className="text-[10px] text-blue-400/70 mt-0.5">YOU</p>
                   </div>
 
@@ -713,40 +746,40 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                         className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
                         style={{
                           border: '3px solid #ef4444',
-                          background: '#111',
+                          background: th.avatarBg2,
                           animation: 'qm-avatar-lock 0.6s ease-out forwards',
                         }}
                       >
                         {matchedAvatar ? (
                           <img src={matchedAvatar} alt="" className="w-full h-full object-cover" />
                         ) : (
-                          <span className="text-2xl md:text-3xl font-black text-white/60">
+                          <span className={`text-2xl md:text-3xl font-black ${th.fallbackText}`}>
                             {(matchedOpponent?.username || 'O')[0].toUpperCase()}
                           </span>
                         )}
                       </div>
                     </div>
-                    <p className="text-white text-xs md:text-sm font-bold truncate max-w-[100px] text-center">
+                    <p className={`${th.nameText} text-xs md:text-sm font-bold truncate max-w-[100px] text-center`}>
                       {matchedOpponent?.username || 'Opponent'}
                     </p>
                     <p className="text-[10px] text-red-400/60 mt-0.5">OPP</p>
                   </div>
                 </div>
 
-                <div className="mx-4 mb-4 rounded-xl p-3 flex items-center justify-between" style={{ background: '#111', border: '1px solid #1a1a1a' }}>
+                <div className="mx-4 mb-4 rounded-xl p-3 flex items-center justify-between" style={{ background: th.infoBg, border: `1px solid ${th.infoBorder}` }}>
                   <div>
-                    <div className="text-gray-500 text-[10px] uppercase tracking-wider">Mode</div>
-                    <div className="text-white font-bold text-sm flex items-center gap-1">
+                    <div className={`${th.infoLabel} text-[10px] uppercase tracking-wider`}>Mode</div>
+                    <div className={`${th.infoValue} font-bold text-sm flex items-center gap-1`}>
                       <span>{selectedMode?.icon}</span>
                       <span>{selectedMode?.label}</span>
                     </div>
                   </div>
                   <div className="text-center">
-                    <div className="text-gray-500 text-[10px] uppercase tracking-wider">Pot</div>
-                    <div className="text-white font-bold text-sm">${potSize}</div>
+                    <div className={`${th.infoLabel} text-[10px] uppercase tracking-wider`}>Pot</div>
+                    <div className={`${th.infoValue} font-bold text-sm`}>${potSize}</div>
                   </div>
                   <div className="text-right">
-                    <div className="text-gray-500 text-[10px] uppercase tracking-wider">Win</div>
+                    <div className={`${th.infoLabel} text-[10px] uppercase tracking-wider`}>Win</div>
                     <div className="text-emerald-400 font-bold text-sm">${payout}</div>
                   </div>
                 </div>

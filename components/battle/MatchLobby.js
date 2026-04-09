@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const MODE_THEMES = {
   rush: { color: '#fb923c', rgb: '251,146,60', label: 'RUSH', icon: '⚡' },
@@ -16,6 +17,7 @@ function getGameMode(matchup) {
 }
 
 export default function MatchLobby({ matchup, currentUser, onDismiss }) {
+  const { isDarkMode } = useTheme();
   const [countdown, setCountdown] = useState(5);
   const [showBattle, setShowBattle] = useState(false);
   const [entered, setEntered] = useState(false);
@@ -146,9 +148,11 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
         }
       `}</style>
 
-      <div className="fixed inset-0 bg-[#050a15] z-50 flex items-center justify-center p-4 overflow-hidden">
+      <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 overflow-hidden`} style={{ background: isDarkMode ? '#050a15' : '#f5f5f5' }}>
         <div className="absolute inset-0" style={{
-          background: `radial-gradient(ellipse at 25% 50%, rgba(${theme.rgb},0.08) 0%, transparent 50%), radial-gradient(ellipse at 75% 50%, rgba(251,146,60,0.08) 0%, transparent 50%)`,
+          background: isDarkMode
+            ? `radial-gradient(ellipse at 25% 50%, rgba(${theme.rgb},0.08) 0%, transparent 50%), radial-gradient(ellipse at 75% 50%, rgba(251,146,60,0.08) 0%, transparent 50%)`
+            : `radial-gradient(ellipse at 25% 50%, rgba(${theme.rgb},0.06) 0%, transparent 50%), radial-gradient(ellipse at 75% 50%, rgba(251,146,60,0.06) 0%, transparent 50%)`,
           animation: 'bgPulse 3s ease-in-out infinite',
         }} />
 
@@ -162,7 +166,7 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
           <div className="lobby-label mb-1">
             <span className="text-xs font-bold uppercase tracking-[0.3em] text-gray-500">{matchTypeLabel}</span>
           </div>
-          <div className="lobby-label text-2xl md:text-3xl font-black text-white mb-1">1v1 MATCH</div>
+          <div className={`lobby-label text-2xl md:text-3xl font-black mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>1v1 MATCH</div>
           <div className="lobby-label text-xs text-gray-500 mb-8">Get ready. The game is about to begin.</div>
 
           <div className="flex items-center justify-center gap-0 mb-8 relative" style={{ minHeight: '200px' }}>
@@ -173,18 +177,18 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
                   style={{
                     border: `4px solid ${theme.color}`,
                     boxShadow: `0 0 30px rgba(${theme.rgb},0.4), inset 0 0 20px rgba(${theme.rgb},0.1)`,
-                    background: '#0c1a35',
+                    background: isDarkMode ? '#0c1a35' : '#dbeafe',
                     animation: 'ringPulse 2s ease-in-out infinite',
                   }}
                 >
                   {player1.avatar ? (
                     <img src={player1.avatar} className="w-full h-full object-cover" alt="" />
                   ) : (
-                    <span className="text-4xl font-black text-white/60">{player1.username?.[0]?.toUpperCase() || 'P'}</span>
+                    <span className={`text-4xl font-black ${isDarkMode ? 'text-white/60' : 'text-gray-400'}`}>{player1.username?.[0]?.toUpperCase() || 'P'}</span>
                   )}
                 </div>
               </div>
-              <div className="text-white text-sm md:text-base font-bold">{player1.username || 'Player 1'}</div>
+              <div className={`text-sm md:text-base font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{player1.username || 'Player 1'}</div>
             </div>
 
             <div className="flex flex-col items-center relative z-10 -mx-4">
@@ -194,7 +198,7 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
                 </div>
               ) : (
                 <div className={`${entered ? 'lobby-vs' : 'opacity-0'}`}>
-                  <div className="text-5xl md:text-6xl font-black italic text-white" style={{ textShadow: '0 0 20px rgba(255,255,255,0.3)' }}>
+                  <div className={`text-5xl md:text-6xl font-black italic ${isDarkMode ? 'text-white' : 'text-gray-900'}`} style={{ textShadow: isDarkMode ? '0 0 20px rgba(255,255,255,0.3)' : '0 0 20px rgba(0,0,0,0.1)' }}>
                     VS
                   </div>
                 </div>
@@ -208,27 +212,27 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
                   style={{
                     border: '4px solid #fb923c',
                     boxShadow: '0 0 30px rgba(251,146,60,0.4), inset 0 0 20px rgba(251,146,60,0.1)',
-                    background: '#1a0a00',
+                    background: isDarkMode ? '#1a0a00' : '#fff7ed',
                   }}
                 >
                   {player2.avatar ? (
                     <img src={player2.avatar} className="w-full h-full object-cover" alt="" />
                   ) : (
-                    <span className="text-4xl font-black text-white/60">{player2.username?.[0]?.toUpperCase() || 'P'}</span>
+                    <span className={`text-4xl font-black ${isDarkMode ? 'text-white/60' : 'text-gray-400'}`}>{player2.username?.[0]?.toUpperCase() || 'P'}</span>
                   )}
                 </div>
               </div>
-              <div className="text-white text-sm md:text-base font-bold">{player2.username || 'Player 2'}</div>
+              <div className={`text-sm md:text-base font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{player2.username || 'Player 2'}</div>
             </div>
           </div>
 
           <div className="lobby-prize">
-            <div className="inline-flex flex-col items-center bg-[#0a0a0a]/80 border border-[#222] rounded-xl px-6 py-3 mb-6 backdrop-blur-sm">
+            <div className={`inline-flex flex-col items-center rounded-xl px-6 py-3 mb-6 backdrop-blur-sm`} style={{ background: isDarkMode ? 'rgba(10,10,10,0.8)' : 'rgba(255,255,255,0.9)', border: `1px solid ${isDarkMode ? '#222' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 4px 12px rgba(0,0,0,0.08)' }}>
               <span className="text-[10px] uppercase tracking-widest text-gray-500 mb-0.5">Prize Pot</span>
               <span className="text-2xl md:text-3xl font-black" style={{ color: theme.color, textShadow: `0 0 15px rgba(${theme.rgb},0.4)` }}>
                 ${payout > 0 ? payout.toLocaleString() : parseFloat(potSize || 0).toLocaleString()}
               </span>
-              <span className="text-[10px] text-gray-600 mt-0.5">🏆 Winner payout · 10% fee 🏆</span>
+              <span className="text-[10px] text-gray-500 mt-0.5">🏆 Winner payout · 10% fee 🏆</span>
             </div>
           </div>
 
@@ -236,7 +240,7 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
             <div className="mb-4">
               <div className="text-xs font-bold uppercase tracking-[0.25em] mb-2" style={{ color: theme.color }}>Match Found</div>
               <div className="text-gray-500 text-xs mb-2">Starting in</div>
-              <div key={countdown} className="lobby-countdown text-5xl md:text-6xl font-black text-white">
+              <div key={countdown} className={`lobby-countdown text-5xl md:text-6xl font-black ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                 {countdown}
               </div>
             </div>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTheme } from '../../contexts/ThemeContext';
 
 function useCountUp(target, duration = 1000, shouldStart = false) {
   const [value, setValue] = useState(0);
@@ -26,6 +27,7 @@ function useCountUp(target, duration = 1000, shouldStart = false) {
 }
 
 export default function MatchResult({ matchup, currentUserId, onRematch, onClose }) {
+  const { isDarkMode } = useTheme();
   const [showStats, setShowStats] = useState(false);
   const [showTitle, setShowTitle] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -184,7 +186,7 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
 
       {!isWinner && !isTie && <div className="mr-red-vignette" />}
 
-      <div className={`fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4 ${!isWinner && !isTie ? 'mr-shake' : ''}`}>
+      <div className={`fixed inset-0 backdrop-blur-md z-50 flex items-center justify-center p-4 ${!isWinner && !isTie ? 'mr-shake' : ''}`} style={{ background: isDarkMode ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,0.92)' }}>
         <div className="max-w-md w-full text-center">
 
           {showTitle && (
@@ -197,7 +199,7 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
                   <h2 className="text-4xl font-black text-cyan-400 mr-title-tie" style={{ animationDelay: '0.15s' }}>
                     DRAW!
                   </h2>
-                  <p className="text-gray-400 mt-2 text-sm">Evenly matched</p>
+                  <p className={`mt-2 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Evenly matched</p>
                 </>
               ) : isWinner ? (
                 <>
@@ -219,31 +221,31 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
                   <h2 className="text-4xl font-black text-red-500 mr-title-lose tracking-wider">
                     DEFEAT
                   </h2>
-                  <p className="text-gray-500 mt-2 text-sm">Better luck next time</p>
+                  <p className={`mt-2 text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Better luck next time</p>
                 </>
               )}
             </div>
           )}
 
           {showStats && (
-            <div className="mr-stats-card bg-[#0d0d0d] border border-[#1a1a1a] rounded-xl p-5 mb-6 space-y-4">
+            <div className="mr-stats-card rounded-xl p-5 mb-6 space-y-4" style={{ background: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 4px 12px rgba(0,0,0,0.08)' }}>
               <div className="flex justify-between items-center">
-                <span className="text-gray-400 text-sm">Starting Balance</span>
-                <span className="text-white font-medium">${animatedStarting.toFixed(2)}</span>
+                <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Starting Balance</span>
+                <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${animatedStarting.toFixed(2)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-gray-400 text-sm">Final Balance</span>
-                <span className="text-white font-bold">${animatedFinal.toFixed(2)}</span>
+                <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Final Balance</span>
+                <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${animatedFinal.toFixed(2)}</span>
               </div>
-              <div className="border-t border-[#1a1a1a] pt-3 flex justify-between items-center">
-                <span className="text-gray-400 text-sm">P&L</span>
+              <div className="pt-3 flex justify-between items-center" style={{ borderTop: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
+                <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>P&L</span>
                 <span className={`font-bold text-lg ${pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {pnl >= 0 ? '+' : '-'}${animatedPnl.toFixed(2)}
                 </span>
               </div>
               {isWinner && prizeWon > 0 && (
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-400 text-sm">Prize Won</span>
+                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Prize Won</span>
                   <span className="text-emerald-400 font-bold text-lg">${animatedPrize.toFixed(2)}</span>
                 </div>
               )}
@@ -254,21 +256,23 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
             <div className="flex gap-3 mr-stats-card" style={{ animationDelay: '0.15s' }}>
               <button
                 onClick={onRematch}
-                className="flex-1 bg-white text-black font-semibold py-3 rounded-lg hover:bg-gray-100 transition-colors"
+                className={`flex-1 font-semibold py-3 rounded-lg transition-colors ${isDarkMode ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'}`}
               >
                 Rematch
               </button>
               {isWinner ? (
                 <button
                   onClick={handleShare}
-                  className="flex-1 bg-[#1a1a1a] text-emerald-400 font-semibold py-3 rounded-lg hover:bg-[#222] transition-colors border border-[#333]"
+                  className="flex-1 text-emerald-400 font-semibold py-3 rounded-lg transition-colors"
+                  style={{ background: isDarkMode ? '#1a1a1a' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#333' : '#d1d5db'}` }}
                 >
                   {copied ? 'Copied!' : 'Share Win'}
                 </button>
               ) : (
                 <button
                   onClick={onClose}
-                  className="flex-1 bg-[#1a1a1a] text-gray-300 font-medium py-3 rounded-lg hover:bg-[#222] transition-colors border border-[#333]"
+                  className={`flex-1 font-medium py-3 rounded-lg transition-colors ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
+                  style={{ background: isDarkMode ? '#1a1a1a' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#333' : '#d1d5db'}` }}
                 >
                   Back to Battle
                 </button>
