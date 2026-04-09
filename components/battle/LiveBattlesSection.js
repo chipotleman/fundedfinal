@@ -322,7 +322,7 @@ function BattleCard({ battle, compact, focused }) {
             </div>
           </div>
         ) : (
-          <div className="mt-2 flex items-center gap-1.5 px-2 py-2 rounded-md" style={{ background: '#111', border: '1px solid #1a1a1a', minHeight: '64px' }}>
+          <div className="mt-2 flex items-center gap-1.5 px-2 py-2 rounded-md" style={{ background: '#111', border: '1px solid #1a1a1a', minHeight: '44px' }}>
             <div className="w-1.5 h-1.5 rounded-full bg-yellow-500/50 pick-pending-dot"></div>
             <span className="text-[9px] text-gray-500">Awaiting picks...</span>
           </div>
