@@ -547,7 +547,7 @@ export default function BattlePage() {
                       </div>
                     </div>
 
-                    {!activeMatchup && !showBattleOptions && (
+                    {!activeMatchup && (
                       <button
                         onClick={() => requireAuth(() => setShowBattleOptions(true))}
                         className="battle-start-btn w-full relative overflow-hidden rounded-xl py-4 sm:py-5 font-bold text-lg text-white border border-blue-500/30 transition-all duration-300"
@@ -559,63 +559,6 @@ export default function BattlePage() {
                           <span>Start a Battle</span>
                         </div>
                       </button>
-                    )}
-
-                    {!activeMatchup && showBattleOptions && (
-                      <div className="battle-options-panel">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="text-sm font-semibold" style={{ color: isDarkMode ? '#fff' : '#111' }}>Choose Battle Mode</span>
-                          <button onClick={() => setShowBattleOptions(false)} className="text-gray-500 transition-colors">
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                          </button>
-                        </div>
-                        <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                          <button
-                            onClick={() => handleBattleOptionClick(setShowQuickMatch)}
-                            className="battle-mode-btn group flex flex-col items-center gap-2 sm:gap-3 py-4 sm:py-5 px-2 rounded-xl transition-all duration-200"
-                            style={{ backgroundColor: isDarkMode ? '#111' : '#f9fafb', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}
-                            data-color="blue"
-                          >
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20 transition-colors">
-                              <svg className="w-6 h-6 sm:w-7 sm:h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                            </div>
-                            <div className="text-center">
-                              <p className="font-semibold text-xs sm:text-sm leading-tight" style={{ color: isDarkMode ? '#fff' : '#111' }}>Quick Match</p>
-                              <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5 leading-tight hidden sm:block">Random opponent</p>
-                            </div>
-                          </button>
-
-                          <button
-                            onClick={() => handleBattleOptionClick(setShowPlayFriend)}
-                            className="battle-mode-btn group flex flex-col items-center gap-2 sm:gap-3 py-4 sm:py-5 px-2 rounded-xl transition-all duration-200"
-                            style={{ backgroundColor: isDarkMode ? '#111' : '#f9fafb', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}
-                            data-color="emerald"
-                          >
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 transition-colors">
-                              <svg className="w-6 h-6 sm:w-7 sm:h-7 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                            </div>
-                            <div className="text-center">
-                              <p className="font-semibold text-xs sm:text-sm leading-tight" style={{ color: isDarkMode ? '#fff' : '#111' }}>Play a Friend</p>
-                              <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5 leading-tight hidden sm:block">Challenge a friend</p>
-                            </div>
-                          </button>
-
-                          <button
-                            onClick={() => handleBattleOptionClick(setShowPrivateMatch)}
-                            className="battle-mode-btn group flex flex-col items-center gap-2 sm:gap-3 py-4 sm:py-5 px-2 rounded-xl transition-all duration-200"
-                            style={{ backgroundColor: isDarkMode ? '#111' : '#f9fafb', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}
-                            data-color="orange"
-                          >
-                            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-orange-500/10 flex items-center justify-center border border-orange-500/20 transition-colors">
-                              <svg className="w-6 h-6 sm:w-7 sm:h-7 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
-                            </div>
-                            <div className="text-center">
-                              <p className="font-semibold text-xs sm:text-sm leading-tight" style={{ color: isDarkMode ? '#fff' : '#111' }}>Private Match</p>
-                              <p className="text-gray-500 text-[10px] sm:text-xs mt-0.5 leading-tight hidden sm:block">Join with code</p>
-                            </div>
-                          </button>
-                        </div>
-                      </div>
                     )}
 
                     {isGuest && (
@@ -859,6 +802,87 @@ export default function BattlePage() {
         </div>
       </div>
 
+      {showBattleOptions && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowBattleOptions(false)} onKeyDown={e => { if (e.key === 'Escape') setShowBattleOptions(false); }}>
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="battle-mode-title"
+            className="rounded-2xl max-w-sm w-full overflow-hidden bm-slide-in"
+            style={{ backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? '0 25px 50px rgba(0,0,0,0.5)' : '0 25px 50px rgba(0,0,0,0.15)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="p-5 pb-3" style={{ borderBottom: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 id="battle-mode-title" className="text-lg font-bold" style={{ color: isDarkMode ? '#fff' : '#111' }}>Choose Battle Mode</h2>
+                  <p className="text-xs mt-0.5" style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>How do you want to play?</p>
+                </div>
+                <button aria-label="Close" onClick={() => setShowBattleOptions(false)} className="w-8 h-8 rounded-full flex items-center justify-center transition-colors" style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6' }}>
+                  <svg className="w-4 h-4" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+            </div>
+            <div className="p-5 space-y-2.5">
+              <button
+                onClick={() => { setShowBattleOptions(false); setShowQuickMatch(true); }}
+                className="bm-option w-full flex items-center gap-4 p-4 rounded-xl transition-all"
+                style={{ backgroundColor: isDarkMode ? '#111' : '#f9fafb', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}
+              >
+                <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center border border-blue-500/20 flex-shrink-0">
+                  <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                </div>
+                <div className="text-left flex-1">
+                  <p className="font-semibold text-sm" style={{ color: isDarkMode ? '#fff' : '#111' }}>Quick Match</p>
+                  <p className="text-xs mt-0.5" style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>Get matched with a random opponent instantly</p>
+                </div>
+                <svg className="w-4 h-4 flex-shrink-0" style={{ color: isDarkMode ? '#4b5563' : '#d1d5db' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              </button>
+
+              <button
+                onClick={() => { setShowBattleOptions(false); setShowPlayFriend(true); }}
+                className="bm-option w-full flex items-center gap-4 p-4 rounded-xl transition-all"
+                style={{ backgroundColor: isDarkMode ? '#111' : '#f9fafb', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}
+              >
+                <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 flex-shrink-0">
+                  <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                </div>
+                <div className="text-left flex-1">
+                  <p className="font-semibold text-sm" style={{ color: isDarkMode ? '#fff' : '#111' }}>Play a Friend</p>
+                  <p className="text-xs mt-0.5" style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>Challenge someone from your friends list</p>
+                </div>
+                <svg className="w-4 h-4 flex-shrink-0" style={{ color: isDarkMode ? '#4b5563' : '#d1d5db' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              </button>
+
+              <button
+                onClick={() => { setShowBattleOptions(false); setShowPrivateMatch(true); }}
+                className="bm-option w-full flex items-center gap-4 p-4 rounded-xl transition-all"
+                style={{ backgroundColor: isDarkMode ? '#111' : '#f9fafb', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}
+              >
+                <div className="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center border border-orange-500/20 flex-shrink-0">
+                  <svg className="w-6 h-6 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
+                </div>
+                <div className="text-left flex-1">
+                  <p className="font-semibold text-sm" style={{ color: isDarkMode ? '#fff' : '#111' }}>Private Match</p>
+                  <p className="text-xs mt-0.5" style={{ color: isDarkMode ? '#6b7280' : '#9ca3af' }}>Create or join with a private code</p>
+                </div>
+                <svg className="w-4 h-4 flex-shrink-0" style={{ color: isDarkMode ? '#4b5563' : '#d1d5db' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              </button>
+            </div>
+          </div>
+          <style>{`
+            @keyframes bmSlideIn {
+              from { opacity: 0; transform: translateY(-12px) scale(0.97); }
+              to { opacity: 1; transform: translateY(0) scale(1); }
+            }
+            .bm-slide-in { animation: bmSlideIn 0.2s ease-out; }
+            @media (hover: hover) {
+              .bm-option:hover { transform: translateX(2px); }
+            }
+          `}</style>
+        </div>
+      )}
+
       <QuickMatchModal
         isOpen={showQuickMatch}
         onClose={() => setShowQuickMatch(false)}
@@ -938,33 +962,11 @@ export default function BattlePage() {
           .battle-start-btn:hover .battle-start-btn-hover-gradient {
             opacity: 1;
           }
-          .battle-mode-btn[data-color="blue"]:hover {
-            border-color: rgba(59, 130, 246, 0.3) !important;
-            background: rgba(59, 130, 246, 0.05) !important;
-          }
-          .battle-mode-btn[data-color="emerald"]:hover {
-            border-color: rgba(16, 185, 129, 0.3) !important;
-            background: rgba(16, 185, 129, 0.05) !important;
-          }
-          .battle-mode-btn[data-color="orange"]:hover {
-            border-color: rgba(249, 115, 22, 0.3) !important;
-            background: rgba(249, 115, 22, 0.05) !important;
-          }
         }
         .battle-start-btn-hover-gradient {
           transition: opacity 0.3s ease;
         }
-        .battle-options-panel {
-          animation: battleOptionsSlideIn 0.2s ease-out;
-        }
-        @keyframes battleOptionsSlideIn {
-          from { opacity: 0; transform: translateY(-8px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
         @media (hover: none) {
-          .battle-mode-btn:active {
-            transform: scale(0.97);
-          }
           .battle-start-btn:active {
             transform: scale(0.98);
           }
