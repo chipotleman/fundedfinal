@@ -544,7 +544,7 @@ export default function Dashboard() {
         <div className="mb-4">
           <div className="overflow-x-auto overflow-y-visible scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <div className="flex gap-3 py-1" style={{ minWidth: 'max-content' }}>
-              {hasActiveMatchup && matchup && !showBattleWalkthrough ? (
+              {hasActiveMatchup && matchup ? (
                 <ActiveBattleCard
                   matchup={matchup}
                   opponent={opponent || { username: 'Opponent', avatar: null }}
