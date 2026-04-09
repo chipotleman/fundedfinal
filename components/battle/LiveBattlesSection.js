@@ -89,9 +89,13 @@ function getSimulatedBattles(avatars) {
 }
 
 function PickPill({ pick, compact = false }) {
+  const { isDarkMode } = useTheme();
   const isWon = pick.status === 'won';
   const isLost = pick.status === 'lost';
   const isPending = pick.status === 'pending';
+
+  const neutralBorder = isDarkMode ? '#1a1a1a' : '#e5e7eb';
+  const neutralBg = isDarkMode ? '#111' : '#f9fafb';
 
   return (
     <div
@@ -103,8 +107,8 @@ function PickPill({ pick, compact = false }) {
         gap: compact ? '5px' : '8px',
         padding: compact ? '5px 7px' : '8px 10px',
         borderRadius: compact ? '6px' : '8px',
-        border: `1px solid ${isWon ? 'rgba(16, 185, 129, 0.3)' : isLost ? 'rgba(239, 68, 68, 0.3)' : '#1a1a1a'}`,
-        background: isWon ? 'rgba(16, 185, 129, 0.06)' : isLost ? 'rgba(239, 68, 68, 0.06)' : '#111',
+        border: `1px solid ${isWon ? 'rgba(16, 185, 129, 0.3)' : isLost ? 'rgba(239, 68, 68, 0.3)' : neutralBorder}`,
+        background: isWon ? 'rgba(16, 185, 129, 0.06)' : isLost ? 'rgba(239, 68, 68, 0.06)' : neutralBg,
       }}
     >
       <div
@@ -127,7 +131,7 @@ function PickPill({ pick, compact = false }) {
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: compact ? '4px' : '6px', marginBottom: compact ? '0px' : '2px' }}>
-          <span style={{ color: '#ffffff', fontSize: compact ? '10px' : '12px', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0 }}>{pick.team}</span>
+          <span style={{ color: isDarkMode ? '#ffffff' : '#111827', fontSize: compact ? '10px' : '12px', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0 }}>{pick.team}</span>
           <span
             style={{
               fontSize: compact ? '8px' : '9px',
@@ -161,6 +165,7 @@ function MomentumIcon() {
 }
 
 function PlayerAvatar({ user, isWinning, size = 44, bgColor = '#1e40af', onClick }) {
+  const { isDarkMode } = useTheme();
   const router = useRouter();
   const handleClick = (e) => {
     e.stopPropagation();
@@ -185,13 +190,13 @@ function PlayerAvatar({ user, isWinning, size = 44, bgColor = '#1e40af', onClick
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: bgColor,
-          border: isWinning ? '2px solid #10b981' : '2px solid #333',
+          border: isWinning ? '2px solid #10b981' : `2px solid ${isDarkMode ? '#333' : '#e5e7eb'}`,
         }}
       >
         {user.avatar ? (
           <img src={user.avatar} className="w-full h-full object-cover" alt="" style={{ borderRadius: '50%' }} />
         ) : (
-          <span className="text-white font-bold" style={{ fontSize: size * 0.35 }}>{user.username?.[0]?.toUpperCase() || '?'}</span>
+          <span className="font-bold" style={{ fontSize: size * 0.35, color: isDarkMode ? '#fff' : '#fff' }}>{user.username?.[0]?.toUpperCase() || '?'}</span>
         )}
       </div>
     </div>
@@ -220,6 +225,7 @@ function PnlBadge({ pnlPercent, size = 'normal' }) {
 }
 
 function BattleCard({ battle, compact, focused }) {
+  const { isDarkMode } = useTheme();
   const router = useRouter();
   const [timeLeft, setTimeLeft] = useState(battle.remainingMs || 0);
   const [expanded, setExpanded] = useState(false);
@@ -258,8 +264,9 @@ function BattleCard({ battle, compact, focused }) {
         className="flex-shrink-0 w-[360px] rounded-xl p-3 cursor-pointer flex flex-col"
         onClick={() => router.push(`/battle?battle=${battle.id}`)}
         style={{
-          backgroundColor: '#0d0d0d',
-          border: '1px solid #1a1a1a',
+          backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff',
+          border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`,
+          boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08)',
         }}
       >
         <div className="flex items-center justify-between mb-2">
@@ -276,7 +283,7 @@ function BattleCard({ battle, compact, focused }) {
           <div className="flex items-center gap-1.5">
             <PlayerAvatar user={user1} isWinning={user1Winning} size={30} bgColor="#1e40af" />
             <div className="min-w-0">
-              <p className="text-white text-[11px] font-medium truncate max-w-[120px] flex items-center gap-0.5">
+              <p className="text-[11px] font-medium truncate max-w-[120px] flex items-center gap-0.5" style={{ color: isDarkMode ? '#fff' : '#111' }}>
                 {user1.username || 'Player 1'}
                 {user1OnFire && <MomentumIcon />}
               </p>
@@ -288,7 +295,7 @@ function BattleCard({ battle, compact, focused }) {
           </div>
           <div className="flex items-center gap-1.5">
             <div className="min-w-0 text-right">
-              <p className="text-white text-[11px] font-medium truncate max-w-[120px] flex items-center justify-end gap-0.5">
+              <p className="text-[11px] font-medium truncate max-w-[120px] flex items-center justify-end gap-0.5" style={{ color: isDarkMode ? '#fff' : '#111' }}>
                 {user2OnFire && <MomentumIcon />}
                 {user2.username || 'Player 2'}
               </p>
@@ -308,7 +315,7 @@ function BattleCard({ battle, compact, focused }) {
             </div>
           </div>
         ) : picksLocked ? (
-          <div className="mt-2 rounded-md" style={{ background: '#111', border: '1px solid #1a1a1a', minHeight: '36px' }}>
+          <div className="mt-2 rounded-md" style={{ background: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, minHeight: '36px' }}>
             <div className="flex items-center gap-1.5 px-2 pt-1.5 pb-1">
               <svg className="w-3 h-3 text-gray-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>
               <span className="text-[9px] text-gray-500">Reveals when both lock in</span>
@@ -323,7 +330,7 @@ function BattleCard({ battle, compact, focused }) {
             </div>
           </div>
         ) : (
-          <div className="mt-2 flex items-center gap-1.5 px-2 py-2 rounded-md" style={{ background: '#111', border: '1px solid #1a1a1a', minHeight: '44px' }}>
+          <div className="mt-2 flex items-center gap-1.5 px-2 py-2 rounded-md" style={{ background: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, minHeight: '44px' }}>
             <div className="w-1.5 h-1.5 rounded-full bg-yellow-500/50 pick-pending-dot"></div>
             <span className="text-[9px] text-gray-500">Awaiting picks...</span>
           </div>
@@ -337,8 +344,9 @@ function BattleCard({ battle, compact, focused }) {
     <div
       className="rounded-xl overflow-hidden"
       style={{
-        backgroundColor: '#0d0d0d',
-        border: focused ? '1px solid rgba(6, 182, 212, 0.3)' : '1px solid #1a1a1a',
+        backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff',
+        border: focused ? '1px solid rgba(6, 182, 212, 0.3)' : `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`,
+        boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08)',
       }}
     >
       <div className="p-3.5" onClick={() => picks && setExpanded(!expanded)} style={{ cursor: picks ? 'pointer' : 'default' }}>
@@ -357,12 +365,12 @@ function BattleCard({ battle, compact, focused }) {
           <div className="flex items-center gap-2.5 flex-1 min-w-0">
             <PlayerAvatar user={user1} isWinning={user1Winning} size={40} bgColor="#1e40af" />
             <div className="min-w-0">
-              <p className="text-white text-sm font-medium truncate flex items-center gap-1">
+              <p className="text-sm font-medium truncate flex items-center gap-1" style={{ color: isDarkMode ? '#fff' : '#111' }}>
                 {user1.username || 'Player 1'}
                 {user1OnFire && <MomentumIcon />}
               </p>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-white text-sm font-bold tabular-nums">${(user1.balance || 0).toLocaleString()}</span>
+                <span className="text-sm font-bold tabular-nums" style={{ color: isDarkMode ? '#fff' : '#111' }}>${(user1.balance || 0).toLocaleString()}</span>
               </div>
               <div className="flex items-center gap-2 mt-0.5">
                 <PnlBadge pnlPercent={user1.pnlPercent} />
@@ -386,12 +394,12 @@ function BattleCard({ battle, compact, focused }) {
 
           <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
             <div className="min-w-0 text-right">
-              <p className="text-white text-sm font-medium truncate flex items-center justify-end gap-1">
+              <p className="text-sm font-medium truncate flex items-center justify-end gap-1" style={{ color: isDarkMode ? '#fff' : '#111' }}>
                 {user2OnFire && <MomentumIcon />}
                 {user2.username || 'Player 2'}
               </p>
               <div className="flex items-center gap-2 justify-end mt-0.5">
-                <span className="text-white text-sm font-bold tabular-nums">${(user2.balance || 0).toLocaleString()}</span>
+                <span className="text-sm font-bold tabular-nums" style={{ color: isDarkMode ? '#fff' : '#111' }}>${(user2.balance || 0).toLocaleString()}</span>
               </div>
               <div className="flex items-center gap-2 justify-end mt-0.5">
                 {picks ? (
@@ -409,7 +417,7 @@ function BattleCard({ battle, compact, focused }) {
         </div>
 
         {!picks && !picksLocked && (
-          <div className="mb-2 flex items-center gap-2 py-2 px-3 rounded-lg" style={{ background: '#111', border: '1px solid #1a1a1a' }}>
+          <div className="mb-2 flex items-center gap-2 py-2 px-3 rounded-lg" style={{ background: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
             <div className="flex items-center gap-1.5 flex-1">
               <div className="w-1.5 h-1.5 rounded-full bg-yellow-500/50 pick-pending-dot"></div>
               <span className="text-[10px] text-gray-500 font-medium">Awaiting picks from both players...</span>
@@ -419,13 +427,13 @@ function BattleCard({ battle, compact, focused }) {
         )}
 
         {picksLocked && (
-          <div className="mb-2 rounded-lg" style={{ background: '#111', border: '1px solid #1a1a1a' }}>
+          <div className="mb-2 rounded-lg" style={{ background: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
             <div className="flex items-center gap-2 px-3 py-2">
               <svg className="w-3.5 h-3.5 text-gray-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>
               <span className="text-[10px] text-gray-500 font-medium">Reveals when both players lock in</span>
             </div>
             <div className="flex gap-2 px-3 pb-2.5">
-              <div className="flex-1 flex items-center gap-1.5 py-1.5 px-2 rounded-md" style={{ background: onlyUser1 ? 'rgba(16,185,129,0.08)' : 'rgba(255,255,255,0.02)', border: onlyUser1 ? '1px solid rgba(16,185,129,0.2)' : '1px solid #1a1a1a' }}>
+              <div className="flex-1 flex items-center gap-1.5 py-1.5 px-2 rounded-md" style={{ background: onlyUser1 ? 'rgba(16,185,129,0.08)' : (isDarkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'), border: onlyUser1 ? '1px solid rgba(16,185,129,0.2)' : `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
                 {onlyUser1 ? (
                   <svg className="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
                 ) : (
@@ -436,7 +444,7 @@ function BattleCard({ battle, compact, focused }) {
                 </span>
               </div>
               <span className="text-gray-600 text-[9px] self-center">vs</span>
-              <div className="flex-1 flex items-center gap-1.5 py-1.5 px-2 rounded-md" style={{ background: onlyUser2 ? 'rgba(16,185,129,0.08)' : 'rgba(255,255,255,0.02)', border: onlyUser2 ? '1px solid rgba(16,185,129,0.2)' : '1px solid #1a1a1a' }}>
+              <div className="flex-1 flex items-center gap-1.5 py-1.5 px-2 rounded-md" style={{ background: onlyUser2 ? 'rgba(16,185,129,0.08)' : (isDarkMode ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'), border: onlyUser2 ? '1px solid rgba(16,185,129,0.2)' : `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
                 {onlyUser2 ? (
                   <svg className="w-3 h-3 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>
                 ) : (
@@ -450,7 +458,7 @@ function BattleCard({ battle, compact, focused }) {
           </div>
         )}
 
-        <div className="h-1 rounded-full overflow-hidden mb-2" style={{ background: '#1a1a1a' }}>
+        <div className="h-1 rounded-full overflow-hidden mb-2" style={{ background: isDarkMode ? '#1a1a1a' : '#e5e7eb' }}>
           <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${progress}%`, backgroundColor: '#3b82f6' }}></div>
         </div>
         <div className="flex items-center justify-between">
@@ -467,9 +475,9 @@ function BattleCard({ battle, compact, focused }) {
       {expanded && (
         <>
           {picks && (
-            <div style={{ borderTop: '1px solid #1a1a1a' }}>
+            <div style={{ borderTop: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
               <div className="grid grid-cols-2 relative">
-                <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: '1px', backgroundColor: '#1a1a1a' }}></div>
+                <div style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: '1px', backgroundColor: isDarkMode ? '#1a1a1a' : '#e5e7eb' }}></div>
 
                 <div className="p-3">
                   <div className="flex items-center gap-1.5 mb-2">

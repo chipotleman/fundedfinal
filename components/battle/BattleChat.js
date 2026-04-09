@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useTheme } from '../../contexts/ThemeContext';
 
 const CHATTER_FIRST = [
   'Sharp', 'Bet', 'Odds', 'Lock', 'Cash', 'Pick', 'Edge', 'Streak',
@@ -137,6 +138,7 @@ function generateMessagesForBattle(battleId, chatters) {
 }
 
 export default function BattleChat({ battleId, compact = false }) {
+  const { isDarkMode } = useTheme();
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const chatContainerRef = useRef(null);
@@ -209,7 +211,7 @@ export default function BattleChat({ battleId, compact = false }) {
   if (compact) {
     const lastMsg = messages.slice(-1)[0];
     return (
-      <div className="mt-1.5" style={{ borderTop: '1px solid #1a1a1a', paddingTop: '5px' }}>
+      <div className="mt-1.5" style={{ borderTop: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, paddingTop: '5px' }}>
         <style>{`
           @keyframes chatSlideIn {
             0% { opacity: 0; transform: translateX(-12px); }
@@ -233,8 +235,8 @@ export default function BattleChat({ battleId, compact = false }) {
   }
 
   return (
-    <div style={{ borderTop: '1px solid #1a1a1a', backgroundColor: 'rgba(0,0,0,0.4)' }} onClick={e => e.stopPropagation()}>
-      <div className="flex items-center justify-between px-2.5 py-1" style={{ borderBottom: '1px solid #141414' }}>
+    <div style={{ borderTop: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, backgroundColor: isDarkMode ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.03)' }} onClick={e => e.stopPropagation()}>
+      <div className="flex items-center justify-between px-2.5 py-1" style={{ borderBottom: `1px solid ${isDarkMode ? '#141414' : '#e5e7eb'}` }}>
         <div className="flex items-center gap-1">
           <span className="text-[9px]">💬</span>
           <span className="text-gray-500 text-[9px] font-semibold uppercase tracking-wider">Chat</span>
@@ -257,7 +259,7 @@ export default function BattleChat({ battleId, compact = false }) {
             style={{ fontSize: '10px', paddingTop: '1px', paddingBottom: '1px' }}
           >
             <span className={`font-bold ${m.color}`}>{m.user}</span>
-            <span className="text-gray-400 ml-1">{m.msg}</span>
+            <span className={`ml-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>{m.msg}</span>
           </div>
         ))}
       </div>
@@ -274,8 +276,8 @@ export default function BattleChat({ battleId, compact = false }) {
             onClick={e => e.stopPropagation()}
             onFocus={e => e.stopPropagation()}
             placeholder="Say something..."
-            className="flex-1 rounded-md text-white placeholder-gray-600 focus:outline-none"
-            style={{ backgroundColor: '#111', border: '1px solid #1a1a1a', padding: '4px 8px', fontSize: '10px' }}
+            className="flex-1 rounded-md placeholder-gray-600 focus:outline-none"
+            style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, padding: '4px 8px', fontSize: '10px', color: isDarkMode ? '#fff' : '#111' }}
             autoComplete="off"
           />
           <button
