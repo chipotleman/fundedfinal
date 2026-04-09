@@ -470,7 +470,7 @@ export default function BattlePage() {
                           <span className="text-white font-bold text-lg">{(myName || 'Y')[0]?.toUpperCase()}</span>
                         )}
                       </div>
-                      <p className="text-white font-semibold text-xs truncate max-w-[100px]">{myName}</p>
+                      <p className="text-white font-semibold text-xs truncate max-w-[100px] min-h-[16px]">{myName || '\u00A0'}</p>
                       <p className={`text-sm font-bold mt-0.5 ${myPnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                         ${myBal.toFixed(0)}
                       </p>
@@ -494,7 +494,7 @@ export default function BattlePage() {
                           <span className="text-white font-bold text-lg">{oppName[0]?.toUpperCase()}</span>
                         )}
                       </div>
-                      <p className="text-white font-semibold text-xs truncate max-w-[100px]">{oppName}</p>
+                      <p className="text-white font-semibold text-xs truncate max-w-[100px] min-h-[16px]">{oppName}</p>
                       <p className={`text-sm font-bold mt-0.5 ${oppPnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                         ${oppBal.toFixed(0)}
                       </p>

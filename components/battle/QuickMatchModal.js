@@ -642,26 +642,41 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
 
           {step === 'found' && (
             <div className="relative overflow-hidden" style={{
-              background: 'linear-gradient(135deg, #020a18 0%, #0a1628 30%, #0d1a30 60%, #050d1a 100%)',
+              background: '#0d0d0d',
             }}>
               <div
-                className="absolute inset-0"
+                className="absolute inset-0 pointer-events-none"
                 style={{ 
-                  background: 'radial-gradient(ellipse at center, rgba(16,185,129,0.12) 0%, transparent 70%)',
-                  animation: 'qm-green-flash 1s ease-out forwards',
+                  background: 'radial-gradient(ellipse at center bottom, rgba(16,185,129,0.08) 0%, transparent 60%)',
                 }}
               />
 
               <div className="relative z-10">
-                <div className="flex items-center justify-center gap-6 md:gap-10 pt-8 pb-4 px-4">
+                <div className="pt-5 pb-2 text-center">
+                  <h3
+                    className="text-lg md:text-xl font-black text-transparent bg-clip-text mb-1"
+                    style={{
+                      backgroundImage: 'linear-gradient(90deg, #10b981, #06b6d4)',
+                      WebkitBackgroundClip: 'text',
+                      animation: 'qm-matched-slam 0.6s ease-out forwards 0.2s',
+                      opacity: 0,
+                      transform: 'scale(0.3)',
+                    }}
+                  >
+                    MATCH FOUND
+                  </h3>
+                  <p className="text-gray-500 text-[11px]">Your opponent is ready</p>
+                </div>
+
+                <div className="flex items-center justify-center gap-4 md:gap-8 py-5 px-4">
                   <div className="flex flex-col items-center">
                     <div className="relative mb-2">
                       <div
                         className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
                         style={{
                           border: '3px solid #3b82f6',
-                          background: '#0c1a35',
-                          boxShadow: '0 0 20px rgba(59,130,246,0.4)',
+                          background: '#111',
+                          boxShadow: '0 0 20px rgba(59,130,246,0.3)',
                         }}
                       >
                         {userAvatar ? (
@@ -672,12 +687,12 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                       </div>
                     </div>
                     <p className="text-white text-xs md:text-sm font-bold truncate max-w-[100px] text-center">{userName}</p>
-                    <p className="text-[10px] text-blue-400">Ready</p>
+                    <p className="text-[10px] text-blue-400/70 mt-0.5">YOU</p>
                   </div>
 
                   <div className="flex flex-col items-center relative z-20">
                     <div
-                      className="text-3xl md:text-4xl font-black italic text-transparent bg-clip-text"
+                      className="text-2xl md:text-3xl font-black italic text-transparent bg-clip-text"
                       style={{
                         backgroundImage: 'linear-gradient(180deg, #fef08a 0%, #facc15 50%, #eab308 100%)',
                         WebkitBackgroundClip: 'text',
@@ -690,26 +705,22 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                   <div className="flex flex-col items-center">
                     <div className="relative mb-2">
                       <div
-                        className="absolute inset-0 rounded-full border-2 border-emerald-400"
-                        style={{ animation: 'qm-found-ring-expand 1.2s ease-out forwards', top: '-12px', left: '-12px', right: '-12px', bottom: '-12px' }}
-                      />
-                      <div
-                        className="absolute inset-0 rounded-full border-2 border-emerald-400"
-                        style={{ animation: 'qm-found-ring-expand 1.2s ease-out forwards 0.3s', top: '-12px', left: '-12px', right: '-12px', bottom: '-12px' }}
+                        className="absolute rounded-full border border-emerald-500/30"
+                        style={{ animation: 'qm-found-ring-expand 1.2s ease-out forwards', top: '-8px', left: '-8px', right: '-8px', bottom: '-8px' }}
                       />
 
                       <div
                         className="w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center overflow-hidden relative z-10"
                         style={{
-                          border: '3px solid #10b981',
-                          background: '#0a1a0e',
+                          border: '3px solid #ef4444',
+                          background: '#111',
                           animation: 'qm-avatar-lock 0.6s ease-out forwards',
                         }}
                       >
                         {matchedAvatar ? (
                           <img src={matchedAvatar} alt="" className="w-full h-full object-cover" />
                         ) : (
-                          <span className="text-2xl md:text-3xl font-black text-emerald-300/70">
+                          <span className="text-2xl md:text-3xl font-black text-white/60">
                             {(matchedOpponent?.username || 'O')[0].toUpperCase()}
                           </span>
                         )}
@@ -718,35 +729,38 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                     <p className="text-white text-xs md:text-sm font-bold truncate max-w-[100px] text-center">
                       {matchedOpponent?.username || 'Opponent'}
                     </p>
-                    <p className="text-[10px] text-emerald-400">Matched</p>
+                    <p className="text-[10px] text-red-400/60 mt-0.5">OPP</p>
                   </div>
                 </div>
 
-                <div className="text-center pb-2">
-                  <p className="text-[9px] text-gray-500 uppercase tracking-widest mb-1">Winner Takes</p>
-                  <p className="text-3xl md:text-4xl font-black text-emerald-400 leading-none" style={{
-                    textShadow: '0 0 25px rgba(16,185,129,0.5)',
-                  }}>
-                    ${payout}
-                  </p>
+                <div className="mx-4 mb-4 rounded-xl p-3 flex items-center justify-between" style={{ background: '#111', border: '1px solid #1a1a1a' }}>
+                  <div>
+                    <div className="text-gray-500 text-[10px] uppercase tracking-wider">Mode</div>
+                    <div className="text-white font-bold text-sm flex items-center gap-1">
+                      <span>{selectedMode?.icon}</span>
+                      <span>{selectedMode?.label}</span>
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-gray-500 text-[10px] uppercase tracking-wider">Pot</div>
+                    <div className="text-white font-bold text-sm">${potSize}</div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-gray-500 text-[10px] uppercase tracking-wider">Win</div>
+                    <div className="text-emerald-400 font-bold text-sm">${payout}</div>
+                  </div>
                 </div>
 
-                <div className="text-center py-4 pb-6">
-                  <h3
-                    className="text-xl md:text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 mb-4"
-                    style={{ animation: 'qm-matched-slam 0.6s ease-out forwards 0.2s', opacity: 0, transform: 'scale(0.3)' }}
-                  >
-                    MATCH FOUND
-                  </h3>
+                <div className="px-4 pb-5">
                   <button
                     onClick={handleContinue}
-                    className="px-8 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200 active:scale-95"
+                    className="w-full py-3.5 rounded-xl text-sm font-bold text-white transition-all duration-200 active:scale-[0.98]"
                     style={{
-                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                      boxShadow: '0 0 20px rgba(16,185,129,0.4)',
+                      backgroundColor: '#2563eb',
+                      boxShadow: '0 4px 20px rgba(37,99,235,0.3)',
                     }}
                   >
-                    Continue
+                    Continue to Battle
                   </button>
                 </div>
               </div>

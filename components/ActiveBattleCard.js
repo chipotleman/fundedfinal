@@ -230,7 +230,7 @@ export default function ActiveBattleCard({
                   <span className="text-xl md:text-2xl font-black text-white/70">{userName?.[0]?.toUpperCase() || 'Y'}</span>
                 )}
               </div>
-              <p className="text-white text-[11px] md:text-xs font-bold truncate max-w-[80px] md:max-w-[100px] text-center mt-1">{userName}</p>
+              <p className="text-white text-[11px] md:text-xs font-bold truncate max-w-[80px] md:max-w-[100px] text-center mt-1 min-h-[14px]">{userName || '\u00A0'}</p>
               <p className={`text-[10px] md:text-xs font-bold leading-tight ${isWinning ? 'text-green-400' : isLosing ? 'text-red-400' : 'text-yellow-400'}`}>
                 ${myBalanceNum.toLocaleString()}
               </p>

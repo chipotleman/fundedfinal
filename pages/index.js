@@ -37,6 +37,7 @@ export default function Dashboard() {
     if (router.query.battleStarted !== 'true') return;
     
     if (hasActiveMatchup) {
+      window.scrollTo({ top: 0, behavior: 'instant' });
       setShowBattleWalkthrough(true);
       router.replace('/', undefined, { shallow: true });
       if (battleStartedRetryRef.current) {
