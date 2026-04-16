@@ -1,8 +1,8 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { friendships, profiles } from '../../../shared/schema';
-import { eq, and, or } from 'drizzle-orm';
+import { friendships, profiles, users } from '../../../shared/schema';
+import { eq, and, or, inArray } from 'drizzle-orm';
 
 export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions);
@@ -29,24 +29,39 @@ export default async function handler(req, res) {
       }
 
       const senderIds = pendingRequests.map(r => r.userId);
-      const senderProfiles = await db
-        .select({
-          id: profiles.id,
-          username: profiles.username,
-          avatar: profiles.avatar,
-          battleWins: profiles.battleWins,
-          battleLosses: profiles.battleLosses,
-        })
-        .from(profiles)
-        .where(
-          or(...senderIds.map(id => eq(profiles.id, id)))
-        );
+      const [senderProfiles, senderUsers] = await Promise.all([
+        db
+          .select({
+            id: profiles.id,
+            username: profiles.username,
+            avatar: profiles.avatar,
+            battleWins: profiles.battleWins,
+            battleLosses: profiles.battleLosses,
+          })
+          .from(profiles)
+          .where(inArray(profiles.id, senderIds)),
+        db
+          .select({ id: users.id, email: users.email, image: users.image })
+          .from(users)
+          .where(inArray(users.id, senderIds)),
+      ]);
 
-      const requests = pendingRequests.map(req => ({
-        id: req.id,
-        sender: senderProfiles.find(p => p.id === req.userId),
-        createdAt: req.createdAt,
-      }));
+      const requests = pendingRequests.map(req => {
+        const profile = senderProfiles.find(p => p.id === req.userId);
+        const user = senderUsers.find(u => u.id === req.userId);
+        const emailHandle = user?.email ? user.email.split('@')[0] : null;
+        return {
+          id: req.id,
+          sender: {
+            id: req.userId,
+            username: profile?.username || emailHandle || 'Player',
+            avatar: profile?.avatar || user?.image || null,
+            battleWins: profile?.battleWins ?? 0,
+            battleLosses: profile?.battleLosses ?? 0,
+          },
+          createdAt: req.createdAt,
+        };
+      });
 
       return res.status(200).json({ requests });
     } catch (error) {
