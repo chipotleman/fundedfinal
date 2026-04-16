@@ -142,7 +142,16 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
       } else {
         await login(email.trim(), password, rememberMe);
         onClose();
-        router.push('/');
+        const ALLOWED_RESUME_ACTIONS = ['resumeBattleOptions'];
+        const pendingAction = typeof window !== 'undefined' ? window.__pendingAuthAction : null;
+        if (typeof window !== 'undefined') window.__pendingAuthAction = null;
+        if (pendingAction && ALLOWED_RESUME_ACTIONS.includes(pendingAction)) {
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent(pendingAction));
+          }, 150);
+        } else {
+          router.push('/');
+        }
       }
     } catch (error) {
       console.error('Auth error:', error);
@@ -203,7 +212,10 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
         style={{ WebkitTapHighlightColor: 'transparent', backgroundColor: isDarkMode ? '#000' : '#fff' }}
       >
         <button
-          onClick={onClose}
+          onClick={() => {
+            if (typeof window !== 'undefined') window.__pendingAuthAction = null;
+            onClose();
+          }}
           className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
           style={{ WebkitTapHighlightColor: 'transparent', backgroundColor: isDarkMode ? '#111' : '#f3f4f6' }}
         >

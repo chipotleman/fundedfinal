@@ -120,7 +120,16 @@ export default function OnboardingPopup({ isOpen, onClose }) {
       }
 
       onClose();
-      router.push('/');
+      const ALLOWED_RESUME_ACTIONS = ['resumeBattleOptions'];
+      const pendingAction = typeof window !== 'undefined' ? window.__pendingAuthAction : null;
+      if (typeof window !== 'undefined') window.__pendingAuthAction = null;
+      if (pendingAction && ALLOWED_RESUME_ACTIONS.includes(pendingAction)) {
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent(pendingAction));
+        }, 150);
+      } else {
+        router.push('/');
+      }
     } catch (err) {
       setError(err.message);
     } finally {

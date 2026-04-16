@@ -239,11 +239,20 @@ export default function BattlePage() {
 
   const requireAuth = (callback) => {
     if (isGuest) {
-      window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signin' } }));
+      if (typeof window !== 'undefined') {
+        window.__pendingAuthAction = 'resumeBattleOptions';
+      }
+      window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signin', pendingAction: 'resumeBattleOptions' } }));
       return;
     }
     callback();
   };
+
+  useEffect(() => {
+    const handleResume = () => setShowBattleOptions(true);
+    window.addEventListener('resumeBattleOptions', handleResume);
+    return () => window.removeEventListener('resumeBattleOptions', handleResume);
+  }, []);
 
   const totalBattles = (profile?.battleWins || 0) + (profile?.battleLosses || 0);
   const winRate = totalBattles > 0 ? Math.round(((profile?.battleWins || 0) / totalBattles) * 100) : 0;
