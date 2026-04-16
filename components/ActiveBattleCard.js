@@ -93,6 +93,15 @@ export default function ActiveBattleCard({
   const { data: session } = useSession();
   const { isDarkMode } = useTheme();
 
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (showModal) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = prev; };
+    }
+  }, [showModal]);
+
   const userAvatar = myProfile?.avatar || null;
   const userName = myProfile?.username || session?.user?.name || '';
 
@@ -305,7 +314,7 @@ export default function ActiveBattleCard({
 
         return (
           <div
-            className="fixed inset-0 z-50 overflow-y-auto"
+            className="fixed inset-0 z-[60] overflow-y-auto"
             onClick={() => setShowModal(false)}
           >
             <div className="fixed inset-0 bg-black/80 backdrop-blur-md" />

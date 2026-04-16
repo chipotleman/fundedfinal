@@ -1085,12 +1085,16 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
         <div 
           className="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-fade-in"
           style={{ backgroundColor: 'rgba(0,0,0,0.8)' }}
-          onClick={() => {
+          onClick={(e) => {
+            // Guard against ghost-click from the tap that placed the bet
+            const openedAt = e.currentTarget.dataset.openedAt;
+            if (openedAt && Date.now() - parseInt(openedAt) < 600) return;
             setShowReceipt(false);
             setCurrentReceipt(null);
             setShowPikPlacedBadge(false);
             onClose();
           }}
+          ref={(el) => { if (el && !el.dataset.openedAt) el.dataset.openedAt = String(Date.now()); }}
         >
           <div 
             className="relative w-full max-w-md"
