@@ -27,7 +27,6 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
   // Prefetch dashboard for instant navigation
   useEffect(() => {
     router.prefetch('/');
-    router.prefetch('/my-battle');
     router.prefetch('/leaderboard');
     router.prefetch('/social');
     router.prefetch('/battle');
@@ -501,11 +500,6 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                   <Link href="/battle" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                     Battle
                   </Link>
-                  {hasActiveChallenge && (
-                    <Link href="/my-battle" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
-                      My Battle
-                    </Link>
-                  )}
                   <Link href="/leaderboard" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
                     Leaderboard
                   </Link>

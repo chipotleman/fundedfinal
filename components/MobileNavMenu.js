@@ -214,15 +214,6 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
               >
                 Bet History
               </Link>
-              {hasActiveChallenge && (
-                <Link
-                  href="/my-battle"
-                  onClick={onClose}
-                  className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
-                >
-                  My Battle
-                </Link>
-              )}
               <Link
                 href="/leaderboard"
                 prefetch={true}
