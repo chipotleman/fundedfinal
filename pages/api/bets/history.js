@@ -1,6 +1,6 @@
 import { db } from '../../../lib/db';
-import { userBets, fakeOpponents, fakeOpponentBets } from '../../../shared/schema';
-import { eq, desc, or } from 'drizzle-orm';
+import { userBets, fakeOpponents, fakeOpponentBets, matchups, profiles, users } from '../../../shared/schema';
+import { eq, desc, or, inArray } from 'drizzle-orm';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
 
@@ -11,7 +11,7 @@ export default async function handler(req, res) {
 
   try {
     const session = await getServerSession(req, res, authOptions);
-    
+
     if (!session?.user?.id) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -28,16 +28,14 @@ export default async function handler(req, res) {
       ));
 
     let bets = [];
-    
+
     if (fakeOpponent) {
-      // For fake opponents, get bets from fakeOpponentBets table
       bets = await db
         .select()
         .from(fakeOpponentBets)
         .where(eq(fakeOpponentBets.fakeOpponentId, fakeOpponent.id))
         .orderBy(desc(fakeOpponentBets.placedAt));
     } else {
-      // For regular users, get bets from userBets table
       bets = await db
         .select()
         .from(userBets)
@@ -47,6 +45,7 @@ export default async function handler(req, res) {
 
     const formattedBets = bets.map(bet => ({
       id: bet.id,
+      matchupId: bet.matchupId || null,
       matchup: bet.matchupName,
       selection: bet.selection,
       betType: bet.marketType,
@@ -55,8 +54,8 @@ export default async function handler(req, res) {
       status: bet.status === 'pending' ? 'open' : bet.status,
       placedAt: bet.placedAt,
       settledAt: bet.settledAt,
-      profit: bet.status === 'won' 
-        ? (parseFloat(bet.potentialPayout) - parseFloat(bet.stake)) 
+      profit: bet.status === 'won'
+        ? (parseFloat(bet.potentialPayout) - parseFloat(bet.stake))
         : bet.status === 'cashed_out'
         ? parseFloat(bet.pnl) || (parseFloat(bet.stake) * -0.2)
         : bet.status === 'lost'
@@ -76,7 +75,97 @@ export default async function handler(req, res) {
       return new Date(b.placedAt) - new Date(a.placedAt);
     });
 
-    return res.status(200).json(formattedBets);
+    // Build battles map for any bets that have a matchupId
+    const matchupIds = [...new Set(formattedBets.map(b => b.matchupId).filter(Boolean))];
+    const battles = {};
+
+    if (matchupIds.length > 0) {
+      const matchupRows = await db
+        .select()
+        .from(matchups)
+        .where(inArray(matchups.id, matchupIds));
+
+      // Collect opponent IDs (real users + fake opponents)
+      const opponentUserIds = [];
+      const opponentFakeIds = [];
+      for (const m of matchupRows) {
+        const oppId = m.user1Id === userId ? m.user2Id : m.user1Id;
+        if (!oppId) continue;
+        if (m.isFakeOpponent && m.fakeOpponentId) {
+          opponentFakeIds.push(m.fakeOpponentId);
+        } else {
+          opponentUserIds.push(oppId);
+        }
+      }
+
+      const oppProfiles = opponentUserIds.length
+        ? await db.select().from(profiles).where(inArray(profiles.id, opponentUserIds))
+        : [];
+      const oppUsers = opponentUserIds.length
+        ? await db.select().from(users).where(inArray(users.id, opponentUserIds))
+        : [];
+      const fakeOpps = opponentFakeIds.length
+        ? await db.select().from(fakeOpponents).where(inArray(fakeOpponents.id, opponentFakeIds))
+        : [];
+
+      const profileMap = Object.fromEntries(oppProfiles.map(p => [p.id, p]));
+      const userMap = Object.fromEntries(oppUsers.map(u => [u.id, u]));
+      const fakeMap = Object.fromEntries(fakeOpps.map(f => [f.id, f]));
+
+      for (const m of matchupRows) {
+        const isUser1 = m.user1Id === userId;
+        const oppId = isUser1 ? m.user2Id : m.user1Id;
+        let opponent = { id: oppId, username: 'Opponent', avatar: null };
+
+        if (m.isFakeOpponent && m.fakeOpponentId && fakeMap[m.fakeOpponentId]) {
+          const f = fakeMap[m.fakeOpponentId];
+          opponent = {
+            id: f.id,
+            username: f.displayName || f.username || 'Opponent',
+            avatar: f.avatar || null,
+          };
+        } else if (oppId) {
+          const p = profileMap[oppId];
+          const u = userMap[oppId];
+          opponent = {
+            id: oppId,
+            username: p?.username || (u?.email ? u.email.split('@')[0] : 'Opponent'),
+            avatar: p?.avatar || u?.image || null,
+          };
+        }
+
+        const myBalance = parseFloat((isUser1 ? m.user1FinalBalance : m.user2FinalBalance) ?? (isUser1 ? m.user1Balance : m.user2Balance) ?? 0);
+        const oppBalance = parseFloat((isUser1 ? m.user2FinalBalance : m.user1FinalBalance) ?? (isUser1 ? m.user2Balance : m.user1Balance) ?? 0);
+
+        let outcome = 'active';
+        if (m.status === 'completed') {
+          if (m.winnerType === 'tie') outcome = 'tie';
+          else if (m.winnerId === userId) outcome = 'won';
+          else outcome = 'lost';
+        }
+
+        battles[m.id] = {
+          id: m.id,
+          opponent,
+          startingBalance: parseFloat(m.startingBalance ?? 0),
+          potSize: parseFloat(m.potSize ?? 0),
+          winnerPayout: parseFloat(m.winnerPayout ?? 0),
+          myBalance,
+          oppBalance,
+          durationMinutes: m.durationMinutes,
+          durationType: m.durationType,
+          status: m.status,
+          outcome,
+          startsAt: m.startsAt,
+          endsAt: m.endsAt,
+          createdAt: m.createdAt,
+          challengeType: m.challengeType,
+          isFakeOpponent: !!m.isFakeOpponent,
+        };
+      }
+    }
+
+    return res.status(200).json({ bets: formattedBets, battles });
   } catch (error) {
     console.error('Error fetching bet history:', error);
     return res.status(500).json({ error: 'Failed to fetch bet history' });

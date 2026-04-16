@@ -187,6 +187,7 @@ export default async function handler(req, res) {
       } else {
         const parlayBet = {
           userId,
+          ...(challengeType === '1v1' && activeChallenge ? { matchupId: activeChallenge.id } : {}),
           matchupName: `${bets.length}-Leg Parlay`,
           marketType: 'parlay',
           selection: bets.map(b => b.selection).join(', '),
@@ -247,6 +248,7 @@ export default async function handler(req, res) {
         } else {
           const newBet = {
             userId,
+            ...(challengeType === '1v1' && activeChallenge ? { matchupId: activeChallenge.id } : {}),
             matchupName: bet.matchup,
             marketType: bet.betType,
             selection: bet.selection,

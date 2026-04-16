@@ -124,6 +124,7 @@ export const messages = pgTable("messages", {
 export const userBets = pgTable("user_bets", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull(),
+  matchupId: varchar("matchup_id"),
   matchupName: varchar("matchup_name", { length: 255 }),
   marketType: varchar("market_type", { length: 100 }),
   selection: varchar("selection", { length: 255 }),

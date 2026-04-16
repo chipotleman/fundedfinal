@@ -3,6 +3,7 @@ import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import PiksBetCard from '../components/PiksBetCard';
 import ShareableBetSlip from '../components/ShareableBetSlip';
+import BattleHistoryGroup from '../components/BattleHistoryGroup';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -14,6 +15,8 @@ export default function BetHistory() {
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const { apiGames, inplayEvents } = useGames();
   const [allBets, setAllBets] = useState([]);
+  const [battlesMap, setBattlesMap] = useState({});
+  const [myProfile, setMyProfile] = useState(null);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const tabsRef = useRef(null);
   const [indicatorStyle, setIndicatorStyle] = useState({});
@@ -109,8 +112,15 @@ export default function BetHistory() {
           credentials: 'include'
         });
         if (response.ok) {
-          const bets = await response.json();
-          setAllBets(bets);
+          const data = await response.json();
+          // Backward compatible: handle both array and { bets, battles } shapes
+          if (Array.isArray(data)) {
+            setAllBets(data);
+            setBattlesMap({});
+          } else {
+            setAllBets(data.bets || []);
+            setBattlesMap(data.battles || {});
+          }
         } else if (response.status === 401) {
           console.error('Session expired or not authenticated');
         }
@@ -131,6 +141,7 @@ export default function BetHistory() {
           const response = await fetch(`/api/profiles/${user.id}`);
           if (response.ok) {
             const profile = await response.json();
+            setMyProfile(profile);
             if (profile?.bankroll) {
               setBankroll(profile.bankroll);
             }
@@ -393,24 +404,22 @@ export default function BetHistory() {
             </div>
           </div>
 
-          {/* Bets List */}
+          {/* Bets List - grouped by battle when applicable */}
           <div className="grid grid-cols-1 gap-4 max-w-2xl mx-auto">
-            {filteredBets.map(bet => {
-              // Normalize team names for matching
+            {(() => {
               const normalizeTeam = (name) => {
                 if (!name) return '';
                 return name.toLowerCase().replace(/[^a-z0-9]/g, '');
               };
-              
-              // Try multiple matching strategies for finding live game
+
               const findLiveGame = (gameId, matchup, awayTeam, homeTeam, awayTeamFull, homeTeamFull) => {
                 const fullMatchup = awayTeamFull && homeTeamFull ? `${awayTeamFull} @ ${homeTeamFull}` : null;
                 const abbrMatchup = awayTeam && homeTeam ? `${awayTeam} @ ${homeTeam}` : null;
-                const normalizedMatchup = matchup 
+                const normalizedMatchup = matchup
                   ? `${normalizeTeam(matchup.split(' @ ')[0])}@${normalizeTeam(matchup.split(' @ ')[1])}`
                   : null;
-                return liveGames[gameId] || 
-                  liveGames[matchup] || 
+                return liveGames[gameId] ||
+                  liveGames[matchup] ||
                   liveGames[matchup?.toLowerCase()] ||
                   (fullMatchup && liveGames[fullMatchup]) ||
                   (fullMatchup && liveGames[fullMatchup.toLowerCase()]) ||
@@ -419,48 +428,104 @@ export default function BetHistory() {
                   (normalizedMatchup && liveGames[normalizedMatchup]) ||
                   null;
               };
-              
-              const liveGame = findLiveGame(bet.gameId, bet.matchup, bet.awayTeam, bet.homeTeam, bet.awayTeamFull, bet.homeTeamFull);
-              
-              let enrichedLegs = bet.legs;
-              if (bet.legs && Array.isArray(bet.legs)) {
-                enrichedLegs = bet.legs.map(leg => {
-                  const legGame = findLiveGame(leg.gameId, leg.matchup, leg.awayTeam, leg.homeTeam, leg.awayTeamFull, leg.homeTeamFull);
-                  const legIsLive = !!(legGame && (legGame.isLive || legGame.status === 'IN_PROGRESS'));
-                  if (legGame) {
-                    return {
-                      ...leg,
-                      isLive: legIsLive,
-                      homeScore: legGame.scores?.home?.total ?? legGame.homeScore,
-                      awayScore: legGame.scores?.away?.total ?? legGame.awayScore,
-                      homeTeamFull: legGame.homeTeamFull || legGame.homeTeam,
-                      awayTeamFull: legGame.awayTeamFull || legGame.awayTeam,
-                      gameStart: legGame.startTime
-                    };
-                  }
-                  return { ...leg, isLive: false };
-                });
-              }
-              
-              const enrichedBet = {
-                ...bet,
-                legs: enrichedLegs,
-                isLive: liveGame?.isLive || liveGame?.status === 'IN_PROGRESS' || enrichedLegs?.some(leg => leg.isLive),
-                currentHomeScore: liveGame?.scores?.home?.total ?? liveGame?.homeScore,
-                currentAwayScore: liveGame?.scores?.away?.total ?? liveGame?.awayScore,
-                homeTeamFull: liveGame?.homeTeamFull || liveGame?.homeTeam,
-                awayTeamFull: liveGame?.awayTeamFull || liveGame?.awayTeam
+
+              const enrichBet = (bet) => {
+                const liveGame = findLiveGame(bet.gameId, bet.matchup, bet.awayTeam, bet.homeTeam, bet.awayTeamFull, bet.homeTeamFull);
+                let enrichedLegs = bet.legs;
+                if (bet.legs && Array.isArray(bet.legs)) {
+                  enrichedLegs = bet.legs.map(leg => {
+                    const legGame = findLiveGame(leg.gameId, leg.matchup, leg.awayTeam, leg.homeTeam, leg.awayTeamFull, leg.homeTeamFull);
+                    const legIsLive = !!(legGame && (legGame.isLive || legGame.status === 'IN_PROGRESS'));
+                    if (legGame) {
+                      return {
+                        ...leg,
+                        isLive: legIsLive,
+                        homeScore: legGame.scores?.home?.total ?? legGame.homeScore,
+                        awayScore: legGame.scores?.away?.total ?? legGame.awayScore,
+                        homeTeamFull: legGame.homeTeamFull || legGame.homeTeam,
+                        awayTeamFull: legGame.awayTeamFull || legGame.awayTeam,
+                        gameStart: legGame.startTime
+                      };
+                    }
+                    return { ...leg, isLive: false };
+                  });
+                }
+                return {
+                  ...bet,
+                  legs: enrichedLegs,
+                  isLive: liveGame?.isLive || liveGame?.status === 'IN_PROGRESS' || enrichedLegs?.some(leg => leg.isLive),
+                  currentHomeScore: liveGame?.scores?.home?.total ?? liveGame?.homeScore,
+                  currentAwayScore: liveGame?.scores?.away?.total ?? liveGame?.awayScore,
+                  homeTeamFull: liveGame?.homeTeamFull || liveGame?.homeTeam,
+                  awayTeamFull: liveGame?.awayTeamFull || liveGame?.awayTeam
+                };
               };
-              
-              return (
-                <PiksBetCard 
+
+              // Split bets into battle-attached and standalone
+              const battleBets = {};
+              const standaloneBets = [];
+              for (const bet of filteredBets) {
+                if (bet.matchupId && battlesMap[bet.matchupId]) {
+                  if (!battleBets[bet.matchupId]) battleBets[bet.matchupId] = [];
+                  battleBets[bet.matchupId].push(bet);
+                } else {
+                  standaloneBets.push(bet);
+                }
+              }
+
+              // Order battle groups by most recent bet placed
+              const battleEntries = Object.entries(battleBets).sort((a, b) => {
+                const aMax = Math.max(...a[1].map(x => new Date(x.placedAt || 0).getTime()));
+                const bMax = Math.max(...b[1].map(x => new Date(x.placedAt || 0).getTime()));
+                return bMax - aMax;
+              });
+
+              const groupNodes = battleEntries.map(([mid, bets]) => {
+                const battle = battlesMap[mid];
+                const isActive = battle.outcome === 'active';
+                return (
+                  <BattleHistoryGroup
+                    key={mid}
+                    battle={battle}
+                    myProfile={myProfile}
+                    betCount={bets.length}
+                    defaultExpanded={isActive}
+                  >
+                    {bets.map(bet => (
+                      <PiksBetCard
+                        key={bet.id}
+                        bet={enrichBet(bet)}
+                        onCashOut={cashOutBet}
+                        onShare={(b) => setShareModalBet(b)}
+                      />
+                    ))}
+                  </BattleHistoryGroup>
+                );
+              });
+
+              const standaloneNodes = standaloneBets.map(bet => (
+                <PiksBetCard
                   key={bet.id}
-                  bet={enrichedBet}
+                  bet={enrichBet(bet)}
                   onCashOut={cashOutBet}
-                  onShare={(bet) => setShareModalBet(bet)}
+                  onShare={(b) => setShareModalBet(b)}
                 />
+              ));
+
+              return (
+                <>
+                  {groupNodes}
+                  {standaloneNodes.length > 0 && groupNodes.length > 0 && (
+                    <div className="flex items-center gap-3 mt-2">
+                      <div className="flex-1 h-px bg-gray-700/50" />
+                      <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Other Piks</span>
+                      <div className="flex-1 h-px bg-gray-700/50" />
+                    </div>
+                  )}
+                  {standaloneNodes}
+                </>
               );
-            })}
+            })()}
 
             {filteredBets.length === 0 && (
               <div className="col-span-full">
