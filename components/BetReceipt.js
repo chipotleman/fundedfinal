@@ -14,7 +14,7 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
     setIsVisible(true);
     const timer = setTimeout(() => {
       handleClose();
-    }, 8000);
+    }, 20000);
 
     return () => clearTimeout(timer);
   }, [bet]);
