@@ -1,6 +1,6 @@
 import { db } from '../../../lib/db';
 import { userBets, fakeOpponents, fakeOpponentBets, matchups, profiles, users } from '../../../shared/schema';
-import { eq, desc, or, inArray } from 'drizzle-orm';
+import { eq, desc, or, inArray, and } from 'drizzle-orm';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
 
@@ -74,6 +74,29 @@ export default async function handler(req, res) {
       if (a.status !== 'open' && b.status === 'open') return 1;
       return new Date(b.placedAt) - new Date(a.placedAt);
     });
+
+    // Backfill matchupId for any bets without one by matching placedAt to a
+    // matchup's time window (the user participated in). Applies only to real
+    // user bets — fake-opponent bets already carry matchupId in their table.
+    if (!fakeOpponent) {
+      const userMatchups = await db
+        .select()
+        .from(matchups)
+        .where(or(eq(matchups.user1Id, userId), eq(matchups.user2Id, userId)));
+
+      for (const bet of formattedBets) {
+        if (bet.matchupId) continue;
+        if (!bet.placedAt) continue;
+        const placed = new Date(bet.placedAt).getTime();
+        const m = userMatchups.find(mm => {
+          const start = mm.startsAt ? new Date(mm.startsAt).getTime() : (mm.createdAt ? new Date(mm.createdAt).getTime() : null);
+          const end = mm.endsAt ? new Date(mm.endsAt).getTime() : (mm.status === 'completed' ? (mm.updatedAt ? new Date(mm.updatedAt).getTime() : null) : Date.now());
+          if (!start) return false;
+          return placed >= start && placed <= (end || Date.now());
+        });
+        if (m) bet.matchupId = m.id;
+      }
+    }
 
     // Build battles map for any bets that have a matchupId
     const matchupIds = [...new Set(formattedBets.map(b => b.matchupId).filter(Boolean))];
