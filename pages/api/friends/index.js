@@ -1,8 +1,8 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { friendships, profiles } from '../../../shared/schema';
-import { eq, or, and } from 'drizzle-orm';
+import { friendships, profiles, users } from '../../../shared/schema';
+import { eq, or, and, inArray } from 'drizzle-orm';
 
 export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions);
@@ -35,21 +35,39 @@ export default async function handler(req, res) {
         return res.status(200).json({ friends: [] });
       }
 
-      const friendProfiles = await db
-        .select({
-          id: profiles.id,
-          username: profiles.username,
-          avatar: profiles.avatar,
-          battleWins: profiles.battleWins,
-          battleLosses: profiles.battleLosses,
-          status: profiles.status,
-        })
-        .from(profiles)
-        .where(
-          or(...friendIds.map(id => eq(profiles.id, id)))
-        );
+      const [friendProfiles, friendUsers] = await Promise.all([
+        db
+          .select({
+            id: profiles.id,
+            username: profiles.username,
+            avatar: profiles.avatar,
+            battleWins: profiles.battleWins,
+            battleLosses: profiles.battleLosses,
+            status: profiles.status,
+          })
+          .from(profiles)
+          .where(inArray(profiles.id, friendIds)),
+        db
+          .select({ id: users.id, email: users.email, image: users.image })
+          .from(users)
+          .where(inArray(users.id, friendIds)),
+      ]);
 
-      return res.status(200).json({ friends: friendProfiles });
+      const friends = friendIds.map(fid => {
+        const profile = friendProfiles.find(p => p.id === fid);
+        const user = friendUsers.find(u => u.id === fid);
+        const emailHandle = user?.email ? user.email.split('@')[0] : null;
+        return {
+          id: fid,
+          username: profile?.username || emailHandle || 'Player',
+          avatar: profile?.avatar || user?.image || null,
+          battleWins: profile?.battleWins ?? 0,
+          battleLosses: profile?.battleLosses ?? 0,
+          status: profile?.status || 'inactive',
+        };
+      });
+
+      return res.status(200).json({ friends });
     } catch (error) {
       console.error('Error fetching friends:', error);
       return res.status(500).json({ error: 'Failed to fetch friends' });
