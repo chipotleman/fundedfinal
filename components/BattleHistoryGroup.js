@@ -59,8 +59,18 @@ function formatDate(date) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export default function BattleHistoryGroup({ battle, myProfile, betCount, children, defaultExpanded = false }) {
+export default function BattleHistoryGroup({
+  battle,
+  myProfile,
+  betCount,
+  opponentBetCount = 0,
+  myBetCards,
+  opponentBetCards,
+  children,
+  defaultExpanded = false,
+}) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const [activeTab, setActiveTab] = useState('mine'); // 'mine' | 'theirs'
   const { isDarkMode } = useTheme();
 
   const mode = getGameMode(battle);
@@ -208,8 +218,56 @@ export default function BattleHistoryGroup({ battle, myProfile, betCount, childr
       </div>
 
       {isExpanded && (
-        <div className="mt-3 grid grid-cols-1 gap-3 pl-2 md:pl-4 border-l-2" style={{ borderColor: theme.borderColor }}>
-          {children}
+        <div className="mt-3 pl-2 md:pl-4 border-l-2" style={{ borderColor: theme.borderColor }}>
+          {(myBetCards || opponentBetCards) ? (
+            <>
+              {/* Mine / Theirs toggle */}
+              <div
+                className="inline-flex rounded-full p-1 mb-3"
+                style={{
+                  background: isDarkMode ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)',
+                  border: `1px solid ${theme.borderColor}`,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setActiveTab('mine'); }}
+                  className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-colors"
+                  style={{
+                    background: activeTab === 'mine' ? theme.accentColor : 'transparent',
+                    color: activeTab === 'mine' ? '#fff' : (isDarkMode ? '#9ca3af' : '#6b7280'),
+                  }}
+                >
+                  Your Piks ({betCount})
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setActiveTab('theirs'); }}
+                  className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-colors"
+                  style={{
+                    background: activeTab === 'theirs' ? '#ef4444' : 'transparent',
+                    color: activeTab === 'theirs' ? '#fff' : (isDarkMode ? '#9ca3af' : '#6b7280'),
+                  }}
+                >
+                  {opponent.username}'s Piks ({opponentBetCount})
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3">
+                {activeTab === 'mine' ? (
+                  myBetCards && myBetCards.length > 0
+                    ? myBetCards
+                    : <p className="text-xs text-gray-500 py-4 text-center">No piks placed in this battle.</p>
+                ) : (
+                  opponentBetCards && opponentBetCards.length > 0
+                    ? opponentBetCards
+                    : <p className="text-xs text-gray-500 py-4 text-center">{opponent.username} hasn't placed any piks yet.</p>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="grid grid-cols-1 gap-3">{children}</div>
+          )}
         </div>
       )}
     </div>

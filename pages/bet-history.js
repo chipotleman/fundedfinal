@@ -158,24 +158,33 @@ export default function BetHistory() {
     return odds > 0 ? `+${odds}` : odds.toString();
   };
 
-  const filteredBets = allBets
-    .filter(bet => {
-      if (selectedFilter === 'all') return true;
-      if (selectedFilter === 'won') return bet.status === 'won';
-      if (selectedFilter === 'cashed_out') return bet.status === 'cashed_out';
-      return bet.status === selectedFilter;
-    })
-    .sort((a, b) => {
-      // For "All" filter, sort purely by placement date (chronological, newest first)
-      // For other filters, prioritize open bets then sort by date
-      if (selectedFilter !== 'all') {
-        if (a.status === 'open' && b.status !== 'open') return -1;
-        if (a.status !== 'open' && b.status === 'open') return 1;
-      }
-      const dateA = new Date(a.placedAt || a.createdAt || 0);
-      const dateB = new Date(b.placedAt || b.createdAt || 0);
-      return dateB - dateA;
-    });
+  // Per-bet status filter (used for standalone bets and "all" view)
+  const matchesBetStatus = (bet) => {
+    if (selectedFilter === 'all') return true;
+    if (selectedFilter === 'won') return bet.status === 'won';
+    if (selectedFilter === 'cashed_out') return bet.status === 'cashed_out';
+    return bet.status === selectedFilter;
+  };
+
+  // Battle group is filed by the BATTLE outcome (won/lost/active), not individual bet status
+  const battleMatchesFilter = (battle) => {
+    if (!battle) return false;
+    if (selectedFilter === 'all') return true;
+    if (selectedFilter === 'open') return battle.outcome === 'active';
+    if (selectedFilter === 'won') return battle.outcome === 'won';
+    if (selectedFilter === 'lost') return battle.outcome === 'lost';
+    return false; // cashed_out is per-bet only
+  };
+
+  const sortByDateDesc = (a, b) => {
+    if (selectedFilter !== 'all') {
+      if (a.status === 'open' && b.status !== 'open') return -1;
+      if (a.status !== 'open' && b.status === 'open') return 1;
+    }
+    const dateA = new Date(a.placedAt || a.createdAt || 0);
+    const dateB = new Date(b.placedAt || b.createdAt || 0);
+    return dateB - dateA;
+  };
 
   const totalProfit = allBets.reduce((sum, bet) => sum + bet.profit, 0);
 
@@ -461,37 +470,57 @@ export default function BetHistory() {
                 };
               };
 
-              // Split bets into battle-attached and standalone
-              const battleBets = {};
-              const standaloneBets = [];
-              for (const bet of filteredBets) {
+              // Group ALL user bets by matchupId (unfiltered, so a battle's whole
+              // story is shown when its battle-outcome tab is selected)
+              const allBattleBets = {};
+              const allStandalone = [];
+              for (const bet of allBets) {
                 if (bet.matchupId && battlesMap[bet.matchupId]) {
-                  if (!battleBets[bet.matchupId]) battleBets[bet.matchupId] = [];
-                  battleBets[bet.matchupId].push(bet);
+                  if (!allBattleBets[bet.matchupId]) allBattleBets[bet.matchupId] = [];
+                  allBattleBets[bet.matchupId].push(bet);
                 } else {
-                  standaloneBets.push(bet);
+                  allStandalone.push(bet);
                 }
               }
 
-              // Order battle groups by most recent bet placed
-              const battleEntries = Object.entries(battleBets).sort((a, b) => {
-                const aMax = Math.max(...a[1].map(x => new Date(x.placedAt || 0).getTime()));
-                const bMax = Math.max(...b[1].map(x => new Date(x.placedAt || 0).getTime()));
-                return bMax - aMax;
-              });
+              // Filter battle groups by battle outcome
+              const battleEntries = Object.entries(allBattleBets)
+                .filter(([mid]) => battleMatchesFilter(battlesMap[mid]))
+                .sort((a, b) => {
+                  const aMax = Math.max(...a[1].map(x => new Date(x.placedAt || 0).getTime()));
+                  const bMax = Math.max(...b[1].map(x => new Date(x.placedAt || 0).getTime()));
+                  return bMax - aMax;
+                });
+
+              // Filter standalone bets by per-bet status.
+              // For the cashed_out tab, also surface battle-attached cashed_out
+              // bets as ungrouped per-bet cards (since cashed_out is a per-bet
+              // concept, not a battle outcome).
+              let standalonePool = allStandalone;
+              if (selectedFilter === 'cashed_out') {
+                const battleCashedOut = Object.values(allBattleBets)
+                  .flat()
+                  .filter(b => b.status === 'cashed_out');
+                standalonePool = [...allStandalone, ...battleCashedOut];
+              }
+              const standaloneBets = standalonePool
+                .filter(matchesBetStatus)
+                .sort(sortByDateDesc);
 
               const groupNodes = battleEntries.map(([mid, bets]) => {
                 const battle = battlesMap[mid];
                 const isActive = battle.outcome === 'active';
+                const myBetsSorted = [...bets].sort(sortByDateDesc);
+                const oppBetsSorted = [...(battle.opponentBets || [])].sort(sortByDateDesc);
                 return (
                   <BattleHistoryGroup
                     key={mid}
                     battle={battle}
                     myProfile={myProfile}
                     betCount={bets.length}
+                    opponentBetCount={oppBetsSorted.length}
                     defaultExpanded={isActive}
-                  >
-                    {bets.map(bet => (
+                    myBetCards={myBetsSorted.map(bet => (
                       <PiksBetCard
                         key={bet.id}
                         bet={enrichBet(bet)}
@@ -499,7 +528,13 @@ export default function BetHistory() {
                         onShare={(b) => setShareModalBet(b)}
                       />
                     ))}
-                  </BattleHistoryGroup>
+                    opponentBetCards={oppBetsSorted.map(bet => (
+                      <PiksBetCard
+                        key={bet.id}
+                        bet={enrichBet(bet)}
+                      />
+                    ))}
+                  />
                 );
               });
 
@@ -512,6 +547,8 @@ export default function BetHistory() {
                 />
               ));
 
+              const totalDisplayed = groupNodes.length + standaloneNodes.length;
+
               return (
                 <>
                   {groupNodes}
@@ -523,25 +560,24 @@ export default function BetHistory() {
                     </div>
                   )}
                   {standaloneNodes}
+                  {totalDisplayed === 0 && (
+                    <div className="col-span-full">
+                      <div className="text-center py-24">
+                        <div className="bg-slate-900/50 backdrop-blur-xl rounded-3xl p-12 max-w-md mx-auto border border-slate-700/50">
+                          <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                          </div>
+                          <h3 className="text-2xl font-black text-white mb-4">No {selectedFilter} bets found</h3>
+                          <p className="text-gray-400 text-lg">Start placing bets to build your gallery!</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </>
               );
             })()}
-
-            {filteredBets.length === 0 && (
-              <div className="col-span-full">
-                <div className="text-center py-24">
-                  <div className="bg-slate-900/50 backdrop-blur-xl rounded-3xl p-12 max-w-md mx-auto border border-slate-700/50">
-                    <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                      </svg>
-                    </div>
-                    <h3 className="text-2xl font-black text-white mb-4">No {selectedFilter} bets found</h3>
-                    <p className="text-gray-400 text-lg">Start placing bets to build your gallery!</p>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>

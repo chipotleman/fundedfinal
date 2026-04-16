@@ -102,6 +102,32 @@ export default async function handler(req, res) {
     const matchupIds = [...new Set(formattedBets.map(b => b.matchupId).filter(Boolean))];
     const battles = {};
 
+    const formatRawBet = (bet) => ({
+      id: bet.id,
+      matchupId: bet.matchupId || null,
+      matchup: bet.matchupName,
+      selection: bet.selection,
+      betType: bet.marketType,
+      odds: parseInt(bet.odds) || 0,
+      stake: parseFloat(bet.stake) || 0,
+      status: bet.status === 'pending' ? 'open' : bet.status,
+      placedAt: bet.placedAt,
+      settledAt: bet.settledAt,
+      profit: bet.status === 'won'
+        ? (parseFloat(bet.potentialPayout) - parseFloat(bet.stake))
+        : bet.status === 'cashed_out'
+        ? parseFloat(bet.pnl) || (parseFloat(bet.stake) * -0.2)
+        : bet.status === 'lost'
+        ? -parseFloat(bet.stake)
+        : 0,
+      potentialPayout: parseFloat(bet.potentialPayout) || 0,
+      legs: bet.legs || null,
+      homeScore: bet.homeScore,
+      awayScore: bet.awayScore,
+      homeTeamFull: bet.homeTeamFull,
+      awayTeamFull: bet.awayTeamFull,
+    });
+
     if (matchupIds.length > 0) {
       const matchupRows = await db
         .select()
@@ -130,6 +156,39 @@ export default async function handler(req, res) {
       const fakeOpps = opponentFakeIds.length
         ? await db.select().from(fakeOpponents).where(inArray(fakeOpponents.id, opponentFakeIds))
         : [];
+
+      // Fetch opponent bets for each matchup so we can show what they piked
+      const opponentBetsByMatchup = {};
+      if (opponentUserIds.length) {
+        const oppBetRows = await db
+          .select()
+          .from(userBets)
+          .where(and(
+            inArray(userBets.userId, opponentUserIds),
+            inArray(userBets.matchupId, matchupIds)
+          ));
+        for (const b of oppBetRows) {
+          if (!opponentBetsByMatchup[b.matchupId]) opponentBetsByMatchup[b.matchupId] = [];
+          opponentBetsByMatchup[b.matchupId].push(formatRawBet(b));
+        }
+      }
+      if (opponentFakeIds.length) {
+        const fakeBetRows = await db
+          .select()
+          .from(fakeOpponentBets)
+          .where(and(
+            inArray(fakeOpponentBets.fakeOpponentId, opponentFakeIds),
+            inArray(fakeOpponentBets.matchupId, matchupIds)
+          ));
+        for (const b of fakeBetRows) {
+          if (!opponentBetsByMatchup[b.matchupId]) opponentBetsByMatchup[b.matchupId] = [];
+          opponentBetsByMatchup[b.matchupId].push(formatRawBet(b));
+        }
+      }
+      // Sort opponent bets newest-first
+      for (const mid of Object.keys(opponentBetsByMatchup)) {
+        opponentBetsByMatchup[mid].sort((a, b) => new Date(b.placedAt || 0) - new Date(a.placedAt || 0));
+      }
 
       const profileMap = Object.fromEntries(oppProfiles.map(p => [p.id, p]));
       const userMap = Object.fromEntries(oppUsers.map(u => [u.id, u]));
@@ -184,6 +243,7 @@ export default async function handler(req, res) {
           createdAt: m.createdAt,
           challengeType: m.challengeType,
           isFakeOpponent: !!m.isFakeOpponent,
+          opponentBets: opponentBetsByMatchup[m.id] || [],
         };
       }
     }
