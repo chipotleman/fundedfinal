@@ -5,6 +5,9 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
 const { publishMatchupPnlUpdate } = require('../../../lib/battle-events');
 
+export const CASHOUT_PAYOUT_RATIO = 0.8;
+export const CASHOUT_FEE_RATIO = 1 - CASHOUT_PAYOUT_RATIO;
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -49,7 +52,7 @@ export default async function handler(req, res) {
     }
 
     const stake = parseFloat(bet.stake) || 0;
-    const cashoutAmount = stake * 0.8;
+    const cashoutAmount = stake * CASHOUT_PAYOUT_RATIO;
     const pnl = cashoutAmount - stake;
 
     let liveMatchup = null;

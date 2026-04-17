@@ -2,6 +2,7 @@ import { db } from '../../../lib/db';
 import { matchups, fakeOpponents, profiles, userBets, fakeOpponentBets, userChallenges } from '../../../shared/schema';
 import { eq, and, or, lt, gte, lte } from 'drizzle-orm';
 import { publishBattleEvent } from '../../../lib/battle-events';
+import { CASHOUT_FEE_RATIO } from '../bets/cashout';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -43,8 +44,10 @@ export default async function handler(req, res) {
             user1FinalBalance += parseFloat(bet.pnl);
           } else if (bet.status === 'lost' && bet.stake) {
             user1FinalBalance -= parseFloat(bet.stake);
-          } else if (bet.status === 'cashed_out' && bet.pnl) {
-            user1FinalBalance += parseFloat(bet.pnl);
+          } else if (bet.status === 'cashed_out' && bet.stake) {
+            user1FinalBalance -= parseFloat(bet.stake) * CASHOUT_FEE_RATIO;
+          } else if (bet.status === 'push') {
+            // No-op: stake is fully refunded on a push.
           }
         }
 
@@ -76,8 +79,10 @@ export default async function handler(req, res) {
               user2FinalBalance += parseFloat(bet.pnl);
             } else if (bet.status === 'lost' && bet.stake) {
               user2FinalBalance -= parseFloat(bet.stake);
-            } else if (bet.status === 'cashed_out' && bet.pnl) {
-              user2FinalBalance += parseFloat(bet.pnl);
+            } else if (bet.status === 'cashed_out' && bet.stake) {
+              user2FinalBalance -= parseFloat(bet.stake) * CASHOUT_FEE_RATIO;
+            } else if (bet.status === 'push') {
+              // No-op: stake is fully refunded on a push.
             }
           }
         }
