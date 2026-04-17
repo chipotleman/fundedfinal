@@ -3,6 +3,7 @@ import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { matchups, profiles, userChallenges } from '../../../shared/schema';
 import { eq, and, or, inArray } from 'drizzle-orm';
+const { publishBattleEvent } = require('../../../lib/battle-events');
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -125,6 +126,20 @@ export default async function handler(req, res) {
         .update(userChallenges)
         .set({ currentBalance: '0' })
         .where(eq(userChallenges.id, forfeiterChallengeId));
+    }
+
+    try {
+      const recipients = [userId];
+      if (opponentId && !matchup.isFakeOpponent) recipients.push(opponentId);
+      publishBattleEvent(recipients, {
+        type: 'matchup:forfeit',
+        matchupId: matchup.id,
+        winnerId: opponentId,
+        loserId: userId,
+        winnerPayout,
+      });
+    } catch (e) {
+      console.error('[Forfeit] publish event error:', e);
     }
 
     return res.status(200).json({

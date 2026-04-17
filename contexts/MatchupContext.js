@@ -95,12 +95,59 @@ export function MatchupProvider({ children }) {
   useEffect(() => {
     if (status !== 'authenticated') return;
 
-    // Tight 1s poll while in an active battle so a forfeit propagates
-    // to the opponent within ~1 second. Slower otherwise.
-    const pollInterval = hasActiveMatchup ? 1000 : (isWaiting || isQueued) ? 10000 : 30000;
+    // Background safety-fallback poll. Real-time updates arrive via the
+    // SSE channel below; this only catches missed events (reconnects, etc).
+    const pollInterval = hasActiveMatchup ? 20000 : (isWaiting || isQueued) ? 10000 : 30000;
     const interval = setInterval(fetchCurrentMatchup, pollInterval);
     return () => clearInterval(interval);
   }, [status, fetchCurrentMatchup, hasActiveMatchup, isWaiting, isQueued]);
+
+  // Real-time push channel for battle events (forfeits, etc).
+  useEffect(() => {
+    if (status !== 'authenticated' || !session?.user?.id) return;
+    if (typeof window === 'undefined' || typeof EventSource === 'undefined') return;
+
+    let es = null;
+    let reconnectTimer = null;
+    let closed = false;
+
+    const connect = () => {
+      try {
+        es = new EventSource('/api/battles/stream');
+      } catch (_e) {
+        return;
+      }
+
+      es.onmessage = (msg) => {
+        try {
+          const data = JSON.parse(msg.data);
+          if (data?.type === 'matchup:forfeit') {
+            // Re-fetch immediately so the "Won by Forfeit" modal and
+            // updated balances surface within the SSE round-trip.
+            fetchCurrentMatchup();
+          }
+        } catch (_e) {}
+      };
+
+      es.onerror = () => {
+        if (closed) return;
+        try { es && es.close(); } catch (_e) {}
+        es = null;
+        // Reconnect with a small backoff.
+        reconnectTimer = setTimeout(() => {
+          if (!closed) connect();
+        }, 3000);
+      };
+    };
+
+    connect();
+
+    return () => {
+      closed = true;
+      if (reconnectTimer) clearTimeout(reconnectTimer);
+      try { es && es.close(); } catch (_e) {}
+    };
+  }, [status, session?.user?.id, fetchCurrentMatchup]);
 
   const acknowledgeForfeit = useCallback(() => {
     if (!forfeitNotice?.matchupId) {
