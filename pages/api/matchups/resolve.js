@@ -1,6 +1,7 @@
 import { db } from '../../../lib/db';
 import { matchups, fakeOpponents, profiles, userBets, fakeOpponentBets, userChallenges } from '../../../shared/schema';
 import { eq, and, or, lt, gte, lte } from 'drizzle-orm';
+import { publishBattleEvent } from '../../../lib/battle-events';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -168,6 +169,24 @@ export default async function handler(req, res) {
                 .where(eq(userChallenges.id, matchup.user2ChallengeId));
             }
           }
+        }
+
+        try {
+          const recipients = [matchup.user1Id];
+          if (matchup.user2Id && !matchup.isFakeOpponent) recipients.push(matchup.user2Id);
+          publishBattleEvent(recipients, {
+            type: 'matchup:completed',
+            matchupId: matchup.id,
+            winnerId,
+            winnerType,
+            user1FinalBalance,
+            user2FinalBalance,
+            totalPot,
+            platformFee,
+            winnerPayout: winnerType !== 'tie' ? winnerPayout : null,
+          });
+        } catch (e) {
+          console.error('[Resolve] publish event error:', e);
         }
 
         results.push({

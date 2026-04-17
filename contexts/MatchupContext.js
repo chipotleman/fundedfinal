@@ -129,6 +129,11 @@ export function MatchupProvider({ children }) {
             // Opponent placed a bet — refresh so their balance and
             // bet list update without waiting for the safety poll.
             fetchCurrentMatchup();
+          } else if (data?.type === 'matchup:completed') {
+            // Battle ended naturally at timer expiry — re-fetch so
+            // the result modal and final balances appear without
+            // waiting for the next safety poll.
+            fetchCurrentMatchup();
           }
         } catch (_e) {}
       };
