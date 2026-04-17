@@ -1,15 +1,43 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import CoinRain from './CoinRain';
 
 export default function WonByForfeitModal({ isOpen, onClose, opponent, payout }) {
   const [show, setShow] = useState(false);
+  const [celebrating, setCelebrating] = useState(false);
+  const celebrationTimerRef = useRef(null);
 
   useEffect(() => {
     if (isOpen) {
       setShow(true);
     } else {
       setShow(false);
+      setCelebrating(false);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (celebrationTimerRef.current) {
+        clearTimeout(celebrationTimerRef.current);
+        celebrationTimerRef.current = null;
+      }
+    };
+  }, []);
+
+  const handleClaim = () => {
+    if (celebrating) return;
+    setCelebrating(true);
+    if (celebrationTimerRef.current) clearTimeout(celebrationTimerRef.current);
+    celebrationTimerRef.current = setTimeout(() => {
+      celebrationTimerRef.current = null;
+      onClose && onClose();
+    }, 2400);
+  };
+
+  const handleBackdrop = () => {
+    if (celebrating) return;
+    onClose && onClose();
+  };
 
   if (!isOpen) return null;
 
@@ -27,7 +55,7 @@ export default function WonByForfeitModal({ isOpen, onClose, opponent, payout })
         opacity: show ? 1 : 0,
         transition: 'opacity 240ms ease',
       }}
-      onClick={onClose}
+      onClick={handleBackdrop}
     >
       <div
         onClick={(e) => e.stopPropagation()}
@@ -91,17 +119,23 @@ export default function WonByForfeitModal({ isOpen, onClose, opponent, payout })
           </div>
 
           <button
-            onClick={onClose}
+            onClick={handleClaim}
+            disabled={celebrating}
             className="w-full py-3 rounded-xl font-bold text-sm uppercase tracking-wider transition-transform active:scale-[0.98]"
             style={{
               background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
               color: '#fff',
               boxShadow: '0 8px 20px rgba(16,185,129,0.35)',
+              opacity: celebrating ? 0.85 : 1,
+              cursor: celebrating ? 'default' : 'pointer',
             }}
           >
-            Claim Win
+            {celebrating ? 'Claimed!' : 'Claim Win'}
           </button>
         </div>
+      </div>
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 110 }}>
+        <CoinRain trigger={celebrating} />
       </div>
     </div>
   );

@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function CoinRain({ trigger, onComplete }) {
   const [coins, setCoins] = useState([]);
   const [isActive, setIsActive] = useState(false);
+  const timeoutRef = useRef(null);
 
   useEffect(() => {
     if (trigger && !isActive) {
@@ -23,13 +24,24 @@ export default function CoinRain({ trigger, onComplete }) {
       
       setCoins(newCoins);
       
-      setTimeout(() => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      timeoutRef.current = setTimeout(() => {
+        timeoutRef.current = null;
         setIsActive(false);
         setCoins([]);
         if (onComplete) onComplete();
       }, 2500);
     }
   }, [trigger]);
+
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, []);
 
   if (!isActive || coins.length === 0) return null;
 

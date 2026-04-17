@@ -84,10 +84,10 @@ export function MatchupProvider({ children }) {
     const currentId = matchupData?.matchup?.id || null;
     const prevId = prevMatchupIdRef.current;
     if (prevId && !currentId) {
-      // Active matchup just went away — re-fetch shortly to pick up
-      // the forfeit-completion record.
-      const t = setTimeout(() => { fetchCurrentMatchup(); }, 400);
-      return () => clearTimeout(t);
+      // Active matchup just went away — re-fetch immediately to pick up
+      // the forfeit-completion record. (The SSE forfeit event already
+      // surfaces the modal directly; this reconciles balances/bets.)
+      fetchCurrentMatchup();
     }
     prevMatchupIdRef.current = currentId;
   }, [matchupData?.matchup?.id, fetchCurrentMatchup]);
@@ -122,8 +122,22 @@ export function MatchupProvider({ children }) {
         try {
           const data = JSON.parse(msg.data);
           if (data?.type === 'matchup:forfeit') {
-            // Re-fetch immediately so the "Won by Forfeit" modal and
-            // updated balances surface within the SSE round-trip.
+            // If this user is the winner, surface the "Won by Forfeit"
+            // modal immediately from the push payload — don't wait on
+            // the /api/matchups/current round-trip.
+            const myId = session?.user?.id;
+            if (myId && data.winnerId === myId && data.matchupId) {
+              const acks = readForfeitAcks();
+              if (!acks.has(data.matchupId)) {
+                setForfeitNotice({
+                  matchupId: data.matchupId,
+                  winnerPayout: Number(data.winnerPayout) || 0,
+                  opponent: data.loser || { username: 'Opponent', avatar: null },
+                  endedAt: new Date().toISOString(),
+                });
+              }
+            }
+            // Still re-fetch in the background so balances/bets reconcile.
             fetchCurrentMatchup();
           } else if (data?.type === 'matchup:bet') {
             // Opponent placed a bet — refresh so their balance and

@@ -47,33 +47,53 @@ export default async function handler(req, res) {
     const user1Final = isUser1 ? '0' : (parseFloat(matchup.user1Balance) || 0).toString();
     const user2Final = isUser1 ? (parseFloat(matchup.user2Balance) || 0).toString() : '0';
 
-    const updatedRows = await db
-      .update(matchups)
-      .set({
-        status: 'completed',
-        winnerId: opponentId,
-        winnerType: isUser1 ? 'user2' : 'user1',
-        user1FinalBalance: user1Final,
-        user2FinalBalance: user2Final,
-        winnerPayout: winnerPayout.toString(),
-        platformFee: platformFee.toString(),
-        endsAt: now,
-        updatedAt: now,
-      })
-      .where(and(
-        eq(matchups.id, matchup.id),
-        inArray(matchups.status, ['active', 'matched'])
-      ))
-      .returning({ id: matchups.id });
+    const [updatedRows, userProfileRows] = await Promise.all([
+      db
+        .update(matchups)
+        .set({
+          status: 'completed',
+          winnerId: opponentId,
+          winnerType: isUser1 ? 'user2' : 'user1',
+          user1FinalBalance: user1Final,
+          user2FinalBalance: user2Final,
+          winnerPayout: winnerPayout.toString(),
+          platformFee: platformFee.toString(),
+          endsAt: now,
+          updatedAt: now,
+        })
+        .where(and(
+          eq(matchups.id, matchup.id),
+          inArray(matchups.status, ['active', 'matched'])
+        ))
+        .returning({ id: matchups.id }),
+      db.select().from(profiles).where(eq(profiles.id, userId)),
+    ]);
 
     if (!updatedRows || updatedRows.length === 0) {
       return res.status(409).json({ error: 'Battle already completed or forfeited' });
     }
 
-    const [userProfile] = await db
-      .select()
-      .from(profiles)
-      .where(eq(profiles.id, userId));
+    const [userProfile] = userProfileRows;
+
+    // Publish forfeit SSE event ASAP (before secondary DB writes) so the
+    // opponent's "Won by Forfeit" modal surfaces with minimal latency.
+    try {
+      const recipients = [userId];
+      if (opponentId && !matchup.isFakeOpponent) recipients.push(opponentId);
+      publishBattleEvent(recipients, {
+        type: 'matchup:forfeit',
+        matchupId: matchup.id,
+        winnerId: opponentId,
+        loserId: userId,
+        winnerPayout,
+        loser: userProfile ? {
+          username: userProfile.username || 'Opponent',
+          avatar: userProfile.avatar || null,
+        } : null,
+      });
+    } catch (e) {
+      console.error('[Forfeit] publish event error:', e);
+    }
 
     if (userProfile) {
       await db
@@ -126,20 +146,6 @@ export default async function handler(req, res) {
         .update(userChallenges)
         .set({ currentBalance: '0' })
         .where(eq(userChallenges.id, forfeiterChallengeId));
-    }
-
-    try {
-      const recipients = [userId];
-      if (opponentId && !matchup.isFakeOpponent) recipients.push(opponentId);
-      publishBattleEvent(recipients, {
-        type: 'matchup:forfeit',
-        matchupId: matchup.id,
-        winnerId: opponentId,
-        loserId: userId,
-        winnerPayout,
-      });
-    } catch (e) {
-      console.error('[Forfeit] publish event error:', e);
     }
 
     return res.status(200).json({
