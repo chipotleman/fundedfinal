@@ -14,6 +14,7 @@ import ForfeitModal from '../components/battle/ForfeitModal';
 import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
 import { useMatchup } from '../contexts/MatchupContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useNotifications } from '../contexts/NotificationsContext';
 
 export default function BattlePage() {
   const router = useRouter();
@@ -40,8 +41,16 @@ export default function BattlePage() {
   const [showBattleOptions, setShowBattleOptions] = useState(false);
 
   const { isDarkMode } = useTheme();
+  const { setSuppress } = useNotifications();
   const isGuest = status !== 'authenticated';
   const userId = session?.user?.id;
+
+  // Suppress global invite toasts while the user is on the battle page —
+  // the page already renders InviteToast inline for received invites.
+  useEffect(() => {
+    setSuppress('battle_invites', true);
+    return () => setSuppress('battle_invites', false);
+  }, [setSuppress]);
 
   const fetchData = useCallback(async () => {
     if (!userId) {

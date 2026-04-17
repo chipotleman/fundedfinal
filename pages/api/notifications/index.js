@@ -1,8 +1,8 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { messages, friendships, battleInvites, profiles } from '../../../shared/schema';
-import { eq, and, sql, or } from 'drizzle-orm';
+import { messages, friendships, battleInvites, profiles, users } from '../../../shared/schema';
+import { eq, and, desc, lt, inArray } from 'drizzle-orm';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -17,30 +17,106 @@ export default async function handler(req, res) {
   const userId = session.user.id;
 
   try {
-    const [unreadMessagesResult, friendRequestsResult, battleInvitesResult] = await Promise.all([
-      db
-        .select({ count: sql`count(*)` })
-        .from(messages)
-        .where(and(eq(messages.receiverId, userId), eq(messages.read, false))),
-      db
-        .select({ count: sql`count(*)` })
-        .from(friendships)
-        .where(and(eq(friendships.friendId, userId), eq(friendships.status, 'pending'))),
-      db
-        .select({ count: sql`count(*)` })
-        .from(battleInvites)
-        .where(and(eq(battleInvites.receiverId, userId), eq(battleInvites.status, 'pending'))),
+    // Expire any stale battle invites so the receiver doesn't keep seeing them.
+    try {
+      await db
+        .update(battleInvites)
+        .set({ status: 'expired', respondedAt: new Date() })
+        .where(and(eq(battleInvites.status, 'pending'), lt(battleInvites.expiresAt, new Date())));
+    } catch (_e) {}
+
+    const [pendingInvites, pendingFriends, unreadMsgs] = await Promise.all([
+      db.select().from(battleInvites)
+        .where(and(eq(battleInvites.receiverId, userId), eq(battleInvites.status, 'pending')))
+        .orderBy(desc(battleInvites.createdAt))
+        .limit(20),
+      db.select().from(friendships)
+        .where(and(eq(friendships.friendId, userId), eq(friendships.status, 'pending')))
+        .orderBy(desc(friendships.createdAt))
+        .limit(20),
+      db.select().from(messages)
+        .where(and(eq(messages.receiverId, userId), eq(messages.read, false)))
+        .orderBy(desc(messages.createdAt))
+        .limit(50),
     ]);
 
-    const unreadMessages = parseInt(unreadMessagesResult[0]?.count || 0);
-    const pendingFriendRequests = parseInt(friendRequestsResult[0]?.count || 0);
-    const pendingBattleInvites = parseInt(battleInvitesResult[0]?.count || 0);
+    const senderIds = [...new Set([
+      ...pendingInvites.map(i => i.senderId),
+      ...pendingFriends.map(f => f.userId),
+      ...unreadMsgs.map(m => m.senderId),
+    ].filter(Boolean))];
+
+    const profMap = new Map();
+    const userMap = new Map();
+    if (senderIds.length > 0) {
+      const [p, u] = await Promise.all([
+        db.select({ id: profiles.id, username: profiles.username, avatar: profiles.avatar })
+          .from(profiles).where(inArray(profiles.id, senderIds)),
+        db.select({ id: users.id, email: users.email, image: users.image })
+          .from(users).where(inArray(users.id, senderIds)),
+      ]);
+      p.forEach(x => profMap.set(x.id, x));
+      u.forEach(x => userMap.set(x.id, x));
+    }
+
+    const buildSender = (id) => {
+      const p = profMap.get(id);
+      const u = userMap.get(id);
+      const handle = u?.email ? u.email.split('@')[0] : null;
+      return {
+        id,
+        username: p?.username || handle || 'Player',
+        avatar: p?.avatar || u?.image || null,
+      };
+    };
+
+    const battleInvitesOut = pendingInvites.map(i => ({
+      id: i.id,
+      buyIn: i.buyIn,
+      duration: i.duration,
+      gameMode: i.gameMode,
+      createdAt: i.createdAt,
+      sender: buildSender(i.senderId),
+    }));
+
+    const friendRequestsOut = pendingFriends.map(f => ({
+      id: f.id,
+      createdAt: f.createdAt,
+      sender: buildSender(f.userId),
+    }));
+
+    // Group unread messages by sender — keep only the most recent so the
+    // toast/badge represents distinct conversations rather than one per line.
+    const seenSenders = new Set();
+    const messagesOut = [];
+    for (const m of unreadMsgs) {
+      if (!m.senderId || seenSenders.has(m.senderId)) continue;
+      seenSenders.add(m.senderId);
+      messagesOut.push({
+        id: m.id,
+        preview: (m.content || '').slice(0, 80),
+        createdAt: m.createdAt,
+        sender: buildSender(m.senderId),
+      });
+    }
+
+    const counts = {
+      battleInvites: battleInvitesOut.length,
+      friendRequests: friendRequestsOut.length,
+      unreadMessages: messagesOut.length,
+      total: battleInvitesOut.length + friendRequestsOut.length + messagesOut.length,
+    };
 
     return res.status(200).json({
-      unreadMessages,
-      pendingFriendRequests,
-      pendingBattleInvites,
-      total: unreadMessages + pendingFriendRequests + pendingBattleInvites,
+      battleInvites: battleInvitesOut,
+      friendRequests: friendRequestsOut,
+      unreadMessages: messagesOut,
+      counts,
+      // Backwards-compat fields kept for any older callers.
+      pendingBattleInvites: counts.battleInvites,
+      pendingFriendRequests: counts.friendRequests,
+      unreadMessagesCount: unreadMsgs.length,
+      total: counts.total,
     });
   } catch (error) {
     console.error('Error fetching notifications:', error);

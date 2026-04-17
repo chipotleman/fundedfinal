@@ -3,6 +3,7 @@ import { authOptions } from '../../../../lib/auth';
 import { db } from '../../../../lib/db';
 import { battleInvites, matchups, profiles } from '../../../../shared/schema';
 import { eq, and } from 'drizzle-orm';
+const { publishBattleEvent } = require('../../../../lib/battle-events');
 
 export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions);
@@ -45,6 +46,7 @@ export default async function handler(req, res) {
           .update(battleInvites)
           .set({ status: 'cancelled', respondedAt: new Date() })
           .where(eq(battleInvites.id, id));
+        try { publishBattleEvent(battleInvite.receiverId, { type: 'notification:refresh' }); } catch (_e) {}
         return res.status(200).json({ message: 'Battle invite cancelled' });
       }
 
@@ -57,6 +59,9 @@ export default async function handler(req, res) {
           .update(battleInvites)
           .set({ status: 'declined', respondedAt: new Date() })
           .where(eq(battleInvites.id, id));
+        try {
+          publishBattleEvent([battleInvite.senderId, battleInvite.receiverId], { type: 'notification:refresh' });
+        } catch (_e) {}
         return res.status(200).json({ message: 'Battle invite declined' });
       }
 
@@ -145,6 +150,10 @@ export default async function handler(req, res) {
           db.select({ id: profiles.id, username: profiles.username, avatar: profiles.avatar })
             .from(profiles).where(eq(profiles.id, battleInvite.receiverId)).then(r => r[0]),
         ]);
+
+        try {
+          publishBattleEvent([battleInvite.senderId, battleInvite.receiverId], { type: 'notification:refresh' });
+        } catch (_e) {}
 
         return res.status(200).json({ 
           message: 'Battle started!',

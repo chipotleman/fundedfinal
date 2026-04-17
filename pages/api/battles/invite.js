@@ -3,6 +3,7 @@ import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { battleInvites, profiles, friendships } from '../../../shared/schema';
 import { eq, and, or, lt, gt, inArray } from 'drizzle-orm';
+const { publishBattleEvent } = require('../../../lib/battle-events');
 
 export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions);
@@ -179,6 +180,10 @@ export default async function handler(req, res) {
           expiresAt,
         })
         .returning();
+
+      try {
+        publishBattleEvent(receiverId, { type: 'notification:invite' });
+      } catch (_e) {}
 
       return res.status(201).json({ 
         message: 'Battle invite sent',

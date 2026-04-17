@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { signOut, useSession } from 'next-auth/react';
 import { useTheme } from '../contexts/ThemeContext';
+import { useNotifications } from '../contexts/NotificationsContext';
 
 export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurrentUser, isLoggedIn: propIsLoggedIn }) {
   const [touchStart, setTouchStart] = useState(null);
@@ -15,6 +16,8 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
   const router = useRouter();
   const { data: session, status } = useSession();
   const { isDarkMode, toggleTheme } = useTheme();
+  const { counts: notifCounts } = useNotifications();
+  const socialBadge = notifCounts?.total || 0;
   
   // Use session directly for login state - more reliable than prop
   const isLoggedIn = status === 'authenticated' && !!session?.user;
@@ -226,9 +229,14 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 href="/social"
                 prefetch={true}
                 onClick={onClose}
-                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
+                className="flex items-center justify-between text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
-                Social
+                <span>Social</span>
+                {socialBadge > 0 && (
+                  <span className="ml-2 min-w-[20px] h-[20px] px-1.5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center">
+                    {socialBadge > 9 ? '9+' : socialBadge}
+                  </span>
+                )}
               </Link>
 
               <div className="border-t border-[#1a1a1a] pt-4 mt-6">

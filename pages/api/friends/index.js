@@ -3,6 +3,7 @@ import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { friendships, profiles, users } from '../../../shared/schema';
 import { eq, or, and, inArray } from 'drizzle-orm';
+const { publishBattleEvent } = require('../../../lib/battle-events');
 
 export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions);
@@ -108,6 +109,9 @@ export default async function handler(req, res) {
               .update(friendships)
               .set({ status: 'accepted', updatedAt: new Date() })
               .where(eq(friendships.id, existing.id));
+            try {
+              publishBattleEvent([userId, existing.userId], { type: 'notification:refresh' });
+            } catch (_e) {}
             return res.status(200).json({ message: 'Friend request accepted', status: 'accepted' });
           }
           return res.status(400).json({ error: 'Friend request already pending' });
@@ -119,6 +123,10 @@ export default async function handler(req, res) {
         friendId,
         status: 'pending',
       });
+
+      try {
+        publishBattleEvent(friendId, { type: 'notification:friend_request' });
+      } catch (_e) {}
 
       return res.status(201).json({ message: 'Friend request sent', status: 'pending' });
     } catch (error) {

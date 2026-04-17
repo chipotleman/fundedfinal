@@ -6,6 +6,7 @@ import BalanceModal from './BalanceModal';
 import WithdrawModal from './WithdrawModal';
 import { useTheme } from '../contexts/ThemeContext';
 import { useMatchup } from '../contexts/MatchupContext';
+import { useNotifications } from '../contexts/NotificationsContext';
 
 export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -23,6 +24,8 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
   const { data: session, status } = useSession();
   const { isDarkMode, toggleTheme } = useTheme();
   const { hasActiveMatchup, myBalance: matchupBalance } = useMatchup();
+  const { counts: notifCounts } = useNotifications();
+  const notifTotal = notifCounts?.total || 0;
   
   // Prefetch dashboard for instant navigation
   useEffect(() => {
@@ -547,6 +550,33 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                     </div>
                   ) : null}
                 </div>
+              )}
+
+              {/* Notifications Bell - shows pending invites/requests/messages */}
+              {isLoggedIn && (
+                <button
+                  onClick={() => router.push('/social')}
+                  className="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-colors hover:bg-[#1a1a1a]"
+                  title={notifTotal > 0 ? `${notifTotal} new notification${notifTotal > 1 ? 's' : ''}` : 'Notifications'}
+                  aria-label="Notifications"
+                >
+                  <svg
+                    className="w-5 h-5 sm:w-6 sm:h-6"
+                    fill="none"
+                    stroke={isDarkMode ? '#e5e7eb' : '#374151'}
+                    strokeWidth={1.8}
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  {notifTotal > 0 && (
+                    <span
+                      className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
+                    >
+                      {notifTotal > 9 ? '9+' : notifTotal}
+                    </span>
+                  )}
+                </button>
               )}
 
               {/* Bet Slip Button - Only show when there are bets */}

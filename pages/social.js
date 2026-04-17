@@ -5,6 +5,7 @@ import Head from 'next/head';
 import TopNavbar from '../components/TopNavbar';
 import QuickMatchModal from '../components/battle/QuickMatchModal';
 import PlayFriendModal from '../components/battle/PlayFriendModal';
+import { useNotifications } from '../contexts/NotificationsContext';
 
 const SkeletonCard = () => (
   <div className="animate-pulse bg-[#111] rounded-xl p-4 border border-[#1a1a1a]">
@@ -701,6 +702,27 @@ export default function SocialPage() {
   const [playFriendInitial, setPlayFriendInitial] = useState(null);
 
   const [pendingInvites, setPendingInvites] = useState({ received: [], sent: [] });
+
+  const { setSuppress } = useNotifications();
+
+  // Suppress friend-request toasts while on the social page (which surfaces
+  // them inline) and battle-invite toasts (also visible from here).
+  useEffect(() => {
+    setSuppress('friend_requests', true);
+    setSuppress('battle_invites', true);
+    return () => {
+      setSuppress('friend_requests', false);
+      setSuppress('battle_invites', false);
+    };
+  }, [setSuppress]);
+
+  // Suppress message toasts for whichever conversation is currently open.
+  useEffect(() => {
+    if (!selectedChat?.id) return undefined;
+    const key = `message:${selectedChat.id}`;
+    setSuppress(key, true);
+    return () => setSuppress(key, false);
+  }, [selectedChat, setSuppress]);
 
   const friendIds = new Set(friends.map(f => f.id));
 

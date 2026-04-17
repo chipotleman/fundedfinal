@@ -3,6 +3,7 @@ import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { messages, profiles, friendships } from '../../../shared/schema';
 import { eq, or, and, desc } from 'drizzle-orm';
+const { publishBattleEvent } = require('../../../lib/battle-events');
 
 export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions);
@@ -49,12 +50,17 @@ export default async function handler(req, res) {
         .orderBy(messages.createdAt)
         .limit(100);
 
-      await db
+      const updated = await db
         .update(messages)
         .set({ read: true })
         .where(
           and(eq(messages.senderId, friendId), eq(messages.receiverId, userId), eq(messages.read, false))
-        );
+        )
+        .returning({ id: messages.id });
+
+      if (updated && updated.length > 0) {
+        try { publishBattleEvent(userId, { type: 'notification:refresh' }); } catch (_e) {}
+      }
 
       return res.status(200).json({ messages: conversationMessages });
     } catch (error) {
@@ -97,6 +103,10 @@ export default async function handler(req, res) {
           content: content.trim(),
         })
         .returning();
+
+      try {
+        publishBattleEvent(receiverId, { type: 'notification:message' });
+      } catch (_e) {}
 
       return res.status(201).json({ message: newMessage });
     } catch (error) {
