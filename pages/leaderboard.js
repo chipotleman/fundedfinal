@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
 import ProfileModal from '../components/ProfileModal';
+import TapSurface from '../components/TapSurface';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserProfiles } from '../contexts/UserProfilesContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -10,10 +11,12 @@ import BetSlip from '../components/BetSlip';
 const Leaderboard = () => {
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const { selectedProfile, showProfileModal, setShowProfileModal, openProfile } = useUserProfiles();
-  const { user, login, logout } = useAuth();
+  const { user } = useAuth();
   const [timeframe, setTimeframe] = useState('monthly');
   const [category, setCategory] = useState('all');
   const [bankroll, setBankroll] = useState(10000);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const carouselRef = useRef(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -35,36 +38,36 @@ const Leaderboard = () => {
   }, [user]);
 
   const allLeaderboardData = [
-    { rank: 1, username: "BetMaster2024", profit: 15420, roi: 154.2, wins: 89, totalBets: 127, tier: "Elite", badge: "🏆" },
-    { rank: 2, username: "SharpShooter", profit: 12890, roi: 128.9, wins: 76, totalBets: 115, tier: "Pro", badge: "🥈" },
-    { rank: 3, username: "SportsSage", profit: 11250, roi: 112.5, wins: 82, totalBets: 134, tier: "Elite", badge: "🥉" },
-    { rank: 4, username: "OddsWhisperer", profit: 9875, roi: 98.8, wins: 68, totalBets: 98, tier: "Pro", badge: "⭐" },
-    { rank: 5, username: "LineHunter", profit: 8640, roi: 86.4, wins: 71, totalBets: 109, tier: "Starter", badge: "⭐" },
-    { rank: 6, username: "ValueFinder", profit: 7920, roi: 79.2, wins: 63, totalBets: 94, tier: "Pro", badge: "⭐" },
-    { rank: 7, username: "BankrollBeast", profit: 7435, roi: 74.4, wins: 58, totalBets: 87, tier: "Starter", badge: "⭐" },
-    { rank: 8, username: "EdgeSeeker", profit: 6890, roi: 68.9, wins: 55, totalBets: 92, tier: "Pro", badge: "⭐" },
-    { rank: 9, username: "ProfitPro", profit: 6210, roi: 62.1, wins: 49, totalBets: 81, tier: "Starter", badge: "⭐" },
-    { rank: 10, username: "WinStreaker", profit: 5875, roi: 58.8, wins: 47, totalBets: 76, tier: "Starter", badge: "⭐" }
+    { rank: 1, username: "BetMaster2024", profit: 15420, roi: 154.2, wins: 89, totalBets: 127, tier: "Elite" },
+    { rank: 2, username: "SharpShooter", profit: 12890, roi: 128.9, wins: 76, totalBets: 115, tier: "Pro" },
+    { rank: 3, username: "SportsSage", profit: 11250, roi: 112.5, wins: 82, totalBets: 134, tier: "Elite" },
+    { rank: 4, username: "OddsWhisperer", profit: 9875, roi: 98.8, wins: 68, totalBets: 98, tier: "Pro" },
+    { rank: 5, username: "LineHunter", profit: 8640, roi: 86.4, wins: 71, totalBets: 109, tier: "Starter" },
+    { rank: 6, username: "ValueFinder", profit: 7920, roi: 79.2, wins: 63, totalBets: 94, tier: "Pro" },
+    { rank: 7, username: "BankrollBeast", profit: 7435, roi: 74.4, wins: 58, totalBets: 87, tier: "Starter" },
+    { rank: 8, username: "EdgeSeeker", profit: 6890, roi: 68.9, wins: 55, totalBets: 92, tier: "Pro" },
+    { rank: 9, username: "ProfitPro", profit: 6210, roi: 62.1, wins: 49, totalBets: 81, tier: "Starter" },
+    { rank: 10, username: "WinStreaker", profit: 5875, roi: 58.8, wins: 47, totalBets: 76, tier: "Starter" }
   ];
 
   const getFilteredData = () => {
     let filteredData = [...allLeaderboardData];
 
     if (category !== 'all') {
-      filteredData = filteredData.filter(user => user.tier.toLowerCase() === category);
+      filteredData = filteredData.filter(u => u.tier.toLowerCase() === category);
     }
 
     if (timeframe === 'weekly') {
-      filteredData = filteredData.map(user => ({
-        ...user,
-        profit: Math.floor(user.profit * 0.3),
-        roi: user.roi * 0.3
+      filteredData = filteredData.map(u => ({
+        ...u,
+        profit: Math.floor(u.profit * 0.3),
+        roi: u.roi * 0.3
       }));
     } else if (timeframe === 'monthly') {
-      filteredData = filteredData.map(user => ({
-        ...user,
-        profit: Math.floor(user.profit * 0.7),
-        roi: user.roi * 0.7
+      filteredData = filteredData.map(u => ({
+        ...u,
+        profit: Math.floor(u.profit * 0.7),
+        roi: u.roi * 0.7
       }));
     }
 
@@ -73,36 +76,163 @@ const Leaderboard = () => {
 
   const leaderboardData = getFilteredData();
 
-  const getTierColor = (tier) => {
-    switch(tier) {
-      case 'Elite': return 'text-yellow-400 bg-yellow-400/10 border-yellow-400/30';
-      case 'Pro': return 'text-blue-400 bg-blue-400/10 border-blue-400/30';
-      case 'Starter': return 'text-green-400 bg-green-400/10 border-green-400/30';
-      default: return 'text-gray-400 bg-gray-400/10 border-gray-400/30';
+  // Reset carousel position when filters change
+  useEffect(() => {
+    setActiveIndex(0);
+    if (carouselRef.current) {
+      carouselRef.current.scrollTo({ left: 0, behavior: 'auto' });
+    }
+  }, [timeframe, category]);
+
+  // Use actual child offsets so indicator math stays correct even if
+  // card width, gap, or padding change in the future.
+  const handleScroll = useCallback(() => {
+    const el = carouselRef.current;
+    if (!el || !el.children.length) return;
+    const center = el.scrollLeft + el.clientWidth / 2;
+    let nearestIdx = 0;
+    let nearestDist = Infinity;
+    for (let i = 0; i < el.children.length; i++) {
+      const child = el.children[i];
+      const childCenter = child.offsetLeft + child.offsetWidth / 2;
+      const dist = Math.abs(center - childCenter);
+      if (dist < nearestDist) {
+        nearestDist = dist;
+        nearestIdx = i;
+      }
+    }
+    if (nearestIdx !== activeIndex) {
+      setActiveIndex(nearestIdx);
+    }
+  }, [activeIndex]);
+
+  const scrollToCard = (idx) => {
+    const el = carouselRef.current;
+    if (!el) return;
+    const child = el.children[idx];
+    if (!child) return;
+    const target = child.offsetLeft - (el.clientWidth - child.offsetWidth) / 2;
+    el.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
+  };
+
+  const getTierStyles = (tier) => {
+    switch (tier) {
+      case 'Elite':
+        return {
+          chipBg: 'bg-yellow-400/10 border-yellow-400/30 text-yellow-300',
+          accent: 'from-yellow-500/20 via-yellow-500/5 to-transparent',
+          dot: 'bg-yellow-400'
+        };
+      case 'Pro':
+        return {
+          chipBg: 'bg-blue-400/10 border-blue-400/30 text-blue-300',
+          accent: 'from-blue-500/20 via-blue-500/5 to-transparent',
+          dot: 'bg-blue-400'
+        };
+      case 'Starter':
+        return {
+          chipBg: 'bg-green-400/10 border-green-400/30 text-green-300',
+          accent: 'from-green-500/20 via-green-500/5 to-transparent',
+          dot: 'bg-green-400'
+        };
+      default:
+        return {
+          chipBg: 'bg-gray-400/10 border-gray-400/30 text-gray-300',
+          accent: 'from-gray-500/20 via-gray-500/5 to-transparent',
+          dot: 'bg-gray-400'
+        };
     }
   };
 
-  const getRankIcon = (rank) => {
-    switch(rank) {
-      case 1: return "🏆";
-      case 2: return "🥈";
-      case 3: return "🥉";
-      default: return null;
-    }
+  const getRankBadge = (rank) => {
+    if (rank === 1) return { label: '1st', icon: '🏆', ring: 'ring-2 ring-yellow-400/60', glow: 'shadow-[0_0_30px_-8px_rgba(250,204,21,0.6)]' };
+    if (rank === 2) return { label: '2nd', icon: '🥈', ring: 'ring-1 ring-gray-300/40', glow: '' };
+    if (rank === 3) return { label: '3rd', icon: '🥉', ring: 'ring-1 ring-orange-400/40', glow: '' };
+    return { label: `#${rank}`, icon: null, ring: 'ring-1 ring-white/5', glow: '' };
   };
 
-  const getRankStyle = (rank) => {
-    switch(rank) {
-      case 1: return 'from-yellow-500/20 to-yellow-600/10 border-yellow-500/40';
-      case 2: return 'from-gray-400/20 to-gray-500/10 border-gray-400/40';
-      case 3: return 'from-orange-600/20 to-orange-700/10 border-orange-600/40';
-      default: return 'from-transparent to-transparent border-[#1a1a1a]';
-    }
+  const initials = (name) => name.slice(0, 2).toUpperCase();
+
+  const renderLeaderCard = (leader, opts = {}) => {
+    const { variant = 'carousel' } = opts;
+    const tier = getTierStyles(leader.tier);
+    const badge = getRankBadge(leader.rank);
+    const winRate = ((leader.wins / leader.totalBets) * 100).toFixed(0);
+
+    return (
+      <TapSurface
+        key={leader.rank}
+        onTap={() => openProfile(leader.username)}
+        activeColor="transparent"
+        inactiveColor="transparent"
+        activeTextColor="#ffffff"
+        inactiveTextColor="#ffffff"
+        className={`relative rounded-2xl overflow-hidden border border-white/10 backdrop-blur-xl ${badge.ring} ${badge.glow}`}
+        style={{
+          background: 'linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 50%, rgba(0,0,0,0.4) 100%)',
+          width: variant === 'carousel' ? '85vw' : '100%',
+          maxWidth: variant === 'carousel' ? '340px' : '100%',
+          flex: variant === 'carousel' ? '0 0 auto' : undefined,
+          scrollSnapAlign: variant === 'carousel' ? 'center' : undefined,
+        }}
+      >
+        {/* Tier accent gradient */}
+        <div className={`absolute inset-0 bg-gradient-to-br ${tier.accent} pointer-events-none`} />
+
+        <div className="relative p-5 flex flex-col h-full">
+          {/* Header row: rank + tier */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40 border border-white/10`}>
+                {badge.icon && <span className="text-base leading-none">{badge.icon}</span>}
+                <span className="text-xs font-bold text-white tracking-wide">{badge.label}</span>
+              </div>
+            </div>
+            <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider border ${tier.chipBg}`}>
+              {leader.tier}
+            </span>
+          </div>
+
+          {/* Avatar + name */}
+          <div className="flex items-center gap-3 mb-5">
+            <div className={`w-14 h-14 rounded-full flex items-center justify-center text-lg font-black text-white border border-white/10 ${badge.ring}`}
+                 style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' }}>
+              {initials(leader.username)}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-white font-bold text-base truncate">{leader.username}</div>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className={`w-1.5 h-1.5 rounded-full ${tier.dot}`} />
+                <span className="text-gray-400 text-xs">{leader.totalBets} bets</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Profit hero */}
+          <div className="mb-4 rounded-xl bg-black/30 border border-white/5 p-3 text-center">
+            <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Profit</div>
+            <div className="text-2xl font-black text-green-400">${leader.profit.toLocaleString()}</div>
+          </div>
+
+          {/* Stats row */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-lg bg-black/30 border border-white/5 p-2.5 text-center">
+              <div className="text-[10px] text-gray-400 uppercase tracking-wider">ROI</div>
+              <div className="text-base font-bold text-blue-400 mt-0.5">{leader.roi.toFixed(1)}%</div>
+            </div>
+            <div className="rounded-lg bg-black/30 border border-white/5 p-2.5 text-center">
+              <div className="text-[10px] text-gray-400 uppercase tracking-wider">Win Rate</div>
+              <div className="text-base font-bold text-white mt-0.5">{winRate}%</div>
+            </div>
+          </div>
+        </div>
+      </TapSurface>
+    );
   };
 
   return (
     <div className="min-h-screen bg-black">
-      <TopNavbar 
+      <TopNavbar
         bankroll={user ? bankroll : null}
         pnl={0}
         betSlipCount={betSlip.length}
@@ -110,194 +240,159 @@ const Leaderboard = () => {
       />
 
       <div className="pt-4 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Leaderboard</h1>
-          <p className="text-gray-400 text-sm sm:text-base">Top performers across all challenges</p>
+        {/* Header */}
+        <div className="mb-5">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Leaderboard</h1>
+          <p className="text-gray-400 text-sm">Top performers across all challenges</p>
         </div>
 
-        <div className="bg-[#111111] rounded-xl p-4 border border-[#1a1a1a] mb-6">
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-between">
-            <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
-              {['weekly', 'monthly', 'alltime'].map((tf) => (
-                <button
-                  key={tf}
-                  onClick={() => setTimeframe(tf)}
-                  className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
-                    timeframe === tf 
-                      ? 'bg-green-600 text-white' 
-                      : 'bg-[#1a1a1a] text-gray-400 border border-[#1a1a1a] hover:border-[#333]'
-                  }`}
+        {/* Filters - glassmorphism */}
+        <div
+          className="rounded-2xl p-3 sm:p-4 border border-white/10 backdrop-blur-xl mb-5"
+          style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)' }}
+        >
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-between">
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+              {[
+                { id: 'weekly', label: 'Weekly' },
+                { id: 'monthly', label: 'Monthly' },
+                { id: 'alltime', label: 'All Time' }
+              ].map((tf) => (
+                <TapSurface
+                  key={tf.id}
+                  onTap={() => setTimeframe(tf.id)}
+                  isActive={timeframe === tf.id}
+                  activeColor="#16a34a"
+                  inactiveColor="rgba(255,255,255,0.04)"
+                  activeTextColor="#ffffff"
+                  inactiveTextColor="#9ca3af"
+                  className="px-3.5 py-2 rounded-lg font-semibold text-xs whitespace-nowrap border border-white/5 flex items-center justify-center"
                 >
-                  {tf === 'weekly' ? 'Weekly' : tf === 'monthly' ? 'Monthly' : 'All Time'}
-                </button>
+                  {tf.label}
+                </TapSurface>
               ))}
             </div>
 
-            <div className="flex gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
-              {['all', 'elite', 'pro', 'starter'].map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setCategory(cat)}
-                  className={`px-4 py-2 rounded-lg font-medium text-sm whitespace-nowrap transition-all ${
-                    category === cat 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-[#1a1a1a] text-gray-400 border border-[#1a1a1a] hover:border-[#333]'
-                  }`}
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+              {[
+                { id: 'all', label: 'All' },
+                { id: 'elite', label: 'Elite' },
+                { id: 'pro', label: 'Pro' },
+                { id: 'starter', label: 'Starter' }
+              ].map((cat) => (
+                <TapSurface
+                  key={cat.id}
+                  onTap={() => setCategory(cat.id)}
+                  isActive={category === cat.id}
+                  activeColor="#2563eb"
+                  inactiveColor="rgba(255,255,255,0.04)"
+                  activeTextColor="#ffffff"
+                  inactiveTextColor="#9ca3af"
+                  className="px-3.5 py-2 rounded-lg font-semibold text-xs whitespace-nowrap border border-white/5 flex items-center justify-center"
                 >
-                  {cat === 'all' ? 'All Tiers' : cat.charAt(0).toUpperCase() + cat.slice(1)}
-                </button>
+                  {cat.label}
+                </TapSurface>
               ))}
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-          {leaderboardData.slice(0, 3).map((leader, index) => (
-            <div 
-              key={leader.rank} 
-              onClick={() => openProfile(leader.username)}
-              className={`relative bg-gradient-to-b ${getRankStyle(leader.rank)} bg-[#111111] rounded-xl p-6 border cursor-pointer hover:scale-[1.02] transition-transform duration-200 ${index === 0 ? 'sm:order-2 sm:scale-105' : index === 1 ? 'sm:order-1' : 'sm:order-3'}`}
-            >
-              <div className="text-center">
-                <div className="text-4xl sm:text-5xl mb-3">{getRankIcon(leader.rank)}</div>
-                <div className="text-lg sm:text-xl font-bold text-white mb-2">{leader.username}</div>
-                <div className={`inline-block px-3 py-1 rounded-full text-xs font-medium mb-4 border ${getTierColor(leader.tier)}`}>
-                  {leader.tier}
-                </div>
-                <div className="space-y-2">
-                  <div className="text-2xl sm:text-3xl font-black text-green-400">${leader.profit.toLocaleString()}</div>
-                  <div className="text-gray-500 text-xs uppercase">Profit</div>
-                  <div className="text-lg font-bold text-blue-400">{leader.roi.toFixed(1)}%</div>
-                  <div className="text-gray-500 text-xs uppercase">ROI</div>
-                  <div className="text-white font-medium">{((leader.wins/leader.totalBets) * 100).toFixed(0)}%</div>
-                  <div className="text-gray-500 text-xs uppercase">Win Rate</div>
-                </div>
+        {leaderboardData.length === 0 ? (
+          <div className="rounded-2xl border border-white/10 p-10 text-center text-gray-400">
+            No bettors match these filters yet.
+          </div>
+        ) : (
+          <>
+            {/* Mobile: Swipeable carousel */}
+            <div className="lg:hidden">
+              <div className="flex items-center justify-between mb-3 px-1">
+                <h2 className="text-sm font-semibold text-white uppercase tracking-wider">
+                  Swipe to browse
+                </h2>
+                <span className="text-xs text-gray-400">
+                  {activeIndex + 1} / {leaderboardData.length}
+                </span>
               </div>
+
+              <div
+                ref={carouselRef}
+                onScroll={handleScroll}
+                className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4"
+                style={{
+                  scrollSnapType: 'x mandatory',
+                  WebkitOverflowScrolling: 'touch',
+                  scrollPaddingLeft: '1rem',
+                  scrollPaddingRight: '1rem',
+                }}
+              >
+                {leaderboardData.map((leader) => renderLeaderCard(leader, { variant: 'carousel' }))}
+              </div>
+
+              {/* Dot indicators */}
+              <div className="flex items-center justify-center gap-1.5 mt-4">
+                {leaderboardData.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => scrollToCard(i)}
+                    aria-label={`Go to user ${i + 1}`}
+                    className={`transition-all duration-200 rounded-full ${
+                      i === activeIndex
+                        ? 'w-6 h-1.5 bg-white'
+                        : 'w-1.5 h-1.5 bg-white/30'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Desktop: Grid of same cards */}
+            <div className="hidden lg:block">
+              <h2 className="text-sm font-semibold text-white uppercase tracking-wider mb-3">
+                Rankings
+              </h2>
+              <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
+                {leaderboardData.map((leader) => (
+                  <div key={leader.rank}>
+                    {renderLeaderCard(leader, { variant: 'grid' })}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Community stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
+          {[
+            { value: '2,847', label: 'Active Bettors', color: 'text-green-400' },
+            { value: '$1.2M', label: 'Total Profits', color: 'text-green-400' },
+            { value: '68.4%', label: 'Avg Win Rate', color: 'text-blue-400' },
+            { value: '24/7', label: 'Live Updates', color: 'text-yellow-400' },
+          ].map((s, i) => (
+            <div
+              key={i}
+              className="rounded-2xl p-4 sm:p-5 border border-white/10 backdrop-blur-xl text-center"
+              style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)' }}
+            >
+              <div className={`text-xl sm:text-2xl font-black mb-1 ${s.color}`}>{s.value}</div>
+              <div className="text-gray-400 text-xs">{s.label}</div>
             </div>
           ))}
         </div>
 
-        <div className="bg-[#111111] rounded-xl border border-[#1a1a1a] overflow-hidden">
-          <div className="p-4 sm:p-6 border-b border-[#1a1a1a]">
-            <h2 className="text-lg sm:text-xl font-bold text-white">Full Rankings</h2>
-          </div>
-
-          <div className="hidden sm:block overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-[#0a0a0a]">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase">Rank</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase">Bettor</th>
-                  <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase">Tier</th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-400 uppercase">Profit</th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-400 uppercase">ROI</th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-400 uppercase">Win Rate</th>
-                  <th className="px-6 py-4 text-right text-xs font-medium text-gray-400 uppercase">Bets</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-800/50">
-                {leaderboardData.map((leader) => (
-                  <tr 
-                    key={leader.rank} 
-                    className="hover:bg-[#1a1a1a] transition-colors cursor-pointer"
-                    onClick={() => openProfile(leader.username)}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        {getRankIcon(leader.rank) && <span className="text-xl mr-2">{getRankIcon(leader.rank)}</span>}
-                        <span className="text-lg font-bold text-white">#{leader.rank}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-white font-medium hover:text-green-400 transition-colors">{leader.username}</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium border ${getTierColor(leader.tier)}`}>
-                        {leader.tier}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <span className="text-green-400 font-bold">${leader.profit.toLocaleString()}</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <span className="text-blue-400 font-medium">{leader.roi.toFixed(1)}%</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <span className="text-white">{((leader.wins/leader.totalBets) * 100).toFixed(0)}%</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <span className="text-gray-400">{leader.totalBets}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="sm:hidden divide-y divide-gray-800/50">
-            {leaderboardData.map((leader) => (
-              <div 
-                key={leader.rank}
-                onClick={() => openProfile(leader.username)}
-                className="p-4 hover:bg-[#1a1a1a] transition-colors cursor-pointer"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    {getRankIcon(leader.rank) && <span className="text-xl">{getRankIcon(leader.rank)}</span>}
-                    <span className="text-lg font-bold text-white">#{leader.rank}</span>
-                    <span className="text-white font-medium ml-2">{leader.username}</span>
-                  </div>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getTierColor(leader.tier)}`}>
-                    {leader.tier}
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <div className="text-green-400 font-bold">${leader.profit.toLocaleString()}</div>
-                    <div className="text-gray-500 text-xs">Profit</div>
-                  </div>
-                  <div>
-                    <div className="text-blue-400 font-medium">{leader.roi.toFixed(1)}%</div>
-                    <div className="text-gray-500 text-xs">ROI</div>
-                  </div>
-                  <div>
-                    <div className="text-white">{((leader.wins/leader.totalBets) * 100).toFixed(0)}%</div>
-                    <div className="text-gray-500 text-xs">Win Rate</div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
-          <div className="bg-[#111111] rounded-xl p-4 sm:p-6 border border-[#1a1a1a] text-center">
-            <div className="text-2xl sm:text-3xl font-black text-green-400 mb-1">2,847</div>
-            <div className="text-gray-400 text-xs sm:text-sm">Active Bettors</div>
-          </div>
-          <div className="bg-[#111111] rounded-xl p-4 sm:p-6 border border-[#1a1a1a] text-center">
-            <div className="text-2xl sm:text-3xl font-black text-green-400 mb-1">$1.2M</div>
-            <div className="text-gray-400 text-xs sm:text-sm">Total Profits</div>
-          </div>
-          <div className="bg-[#111111] rounded-xl p-4 sm:p-6 border border-[#1a1a1a] text-center">
-            <div className="text-2xl sm:text-3xl font-black text-blue-400 mb-1">68.4%</div>
-            <div className="text-gray-400 text-xs sm:text-sm">Avg Win Rate</div>
-          </div>
-          <div className="bg-[#111111] rounded-xl p-4 sm:p-6 border border-[#1a1a1a] text-center">
-            <div className="text-2xl sm:text-3xl font-black text-yellow-400 mb-1">24/7</div>
-            <div className="text-gray-400 text-xs sm:text-sm">Live Updates</div>
-          </div>
-        </div>
-
-        <div className="mt-8">
-          <div className="bg-[#111111] rounded-xl p-6 sm:p-8 border border-[#1a1a1a] text-center">
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-3">Ready to Climb the Rankings?</h2>
-            <p className="text-gray-400 mb-6 text-sm sm:text-base">Join the competition and prove you belong among the elite bettors.</p>
+        {/* CTA */}
+        <div className="mt-6">
+          <div
+            className="rounded-2xl p-6 sm:p-8 border border-white/10 backdrop-blur-xl text-center"
+            style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)' }}
+          >
+            <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Ready to Climb the Rankings?</h2>
+            <p className="text-gray-400 mb-5 text-sm">Join the competition and prove you belong among the elite bettors.</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href="/auth" className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition-all text-sm sm:text-base">
+              <Link href="/auth" className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition-all text-sm">
                 Start Your Journey
               </Link>
-              <Link href="/" className="bg-[#1a1a1a] hover:bg-[#222] text-white font-bold py-3 px-6 rounded-xl transition-all text-sm sm:text-base border border-[#1a1a1a]">
+              <Link href="/" className="bg-white/5 hover:bg-white/10 text-white font-bold py-3 px-6 rounded-xl transition-all text-sm border border-white/10">
                 View Dashboard
               </Link>
             </div>
@@ -314,7 +409,7 @@ const Leaderboard = () => {
       )}
 
       {showProfileModal && (
-        <ProfileModal 
+        <ProfileModal
           profile={selectedProfile}
           isOpen={showProfileModal}
           onClose={() => setShowProfileModal(false)}
@@ -332,6 +427,6 @@ const Leaderboard = () => {
       `}</style>
     </div>
   );
-}
+};
 
 export default Leaderboard;
