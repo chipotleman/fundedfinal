@@ -573,7 +573,6 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
         const data = await res.json();
         const liveBattles = (data.battles || []).filter(b => {
           if (!b.user2 || b.remainingMs <= 0) return false;
-          if (currentUserId && (String(b.user1?.id) === String(currentUserId) || String(b.user2?.id) === String(currentUserId))) return false;
           return true;
         });
         const simulated = getSimulatedBattles(avatars);
@@ -591,7 +590,7 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
         console.error('Error fetching live battles:', err);
       }
     }
-  }, [avatars, currentUserId]);
+  }, [avatars]);
 
   useEffect(() => {
     fetchBattles();

@@ -706,7 +706,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                               {/* Leg Info */}
                               <div className="flex-1 min-w-0">
                                 <div className="font-bold text-sm leading-tight" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.selection)}</div>
-                                <div className="text-xs uppercase mt-0.5" style={{ color: '#6b7280' }}>{bet.betType || 'Spread'}</div>
+                                <div className="text-xs uppercase mt-0.5 whitespace-nowrap" style={{ color: '#6b7280' }}>{bet.betType || 'Spread'}</div>
                                 {/* Live Badge + Matchup */}
                                 <div className="flex items-center gap-1.5 mt-1">
                                   {isLive && (
@@ -870,7 +870,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                               <div className="flex justify-between items-start mb-3">
                                 <div className="flex-1">
                                   <div className="font-bold text-lg leading-tight" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.selection)}</div>
-                                  <div className="text-gray-500 text-xs uppercase mt-0.5">{bet.betType}</div>
+                                  <div className="text-gray-500 text-xs uppercase mt-0.5 whitespace-nowrap">{bet.betType}</div>
                                 </div>
                                 <div className="flex items-center gap-1">
                                   {bet.oddsMoved === 'down' && <span className="text-red-500 text-sm">▼</span>}

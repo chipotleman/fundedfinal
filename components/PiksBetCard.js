@@ -486,7 +486,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                 </svg>
               )}
             </div>
-            <div className="text-xs uppercase tracking-wide" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>{bet.betType}</div>
+            <div className="text-xs uppercase tracking-wide whitespace-nowrap" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>{bet.betType}</div>
           </div>
           <div className="font-bold text-xl" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
             {formatOdds(bet.odds)}
@@ -526,7 +526,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
                       <div className="text-white font-bold text-base">{capitalizeLeagueId(leg.selection)}</div>
-                      <div className="text-gray-400 text-xs uppercase tracking-wide">
+                      <div className="text-gray-400 text-xs uppercase tracking-wide whitespace-nowrap">
                         {leg.betType || 'Moneyline'}
                       </div>
                     </div>
@@ -677,7 +677,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                               </span>
                             )}
                           </div>
-                          <div className="text-gray-400 text-xs uppercase tracking-wide">
+                          <div className="text-gray-400 text-xs uppercase tracking-wide whitespace-nowrap">
                             {leg.betType || 'Moneyline'}
                           </div>
                         </div>

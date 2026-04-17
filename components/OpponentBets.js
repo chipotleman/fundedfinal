@@ -84,12 +84,13 @@ export default function OpponentBets({
                   isDarkMode ? 'bg-[#111111] border border-gray-800/50' : 'bg-gray-100'
                 }`}
               >
-                <div className="flex-1">
-                  <p className={`font-medium text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                <div className="flex-1 min-w-0 pr-2">
+                  <p className={`font-medium text-sm truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     {bet.selection || bet.matchupName}
                   </p>
-                  <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {bet.matchupName} • {bet.marketType}
+                  <p className={`text-xs flex items-center gap-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <span className="truncate min-w-0">{bet.matchupName}</span>
+                    <span className="flex-shrink-0">• {bet.marketType}</span>
                   </p>
                 </div>
                 

@@ -224,7 +224,7 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                           <div className="flex justify-between items-start mb-1">
                             <div className="flex-1">
                               <div className="text-white font-bold text-xs">{leg.selection}</div>
-                              <div className="text-gray-400 text-[10px] uppercase">{leg.betType || 'Moneyline'}</div>
+                              <div className="text-gray-400 text-[10px] uppercase whitespace-nowrap">{leg.betType || 'Moneyline'}</div>
                             </div>
                             {leg.odds && (
                               <div className="font-bold text-sm text-blue-400">
@@ -271,7 +271,7 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                   <div className="flex justify-between items-start">
                     <div className="flex-1">
                       <div className="text-white font-bold text-sm">{bet.team || bet.selection}</div>
-                      <div className="text-gray-400 text-xs uppercase">{bet.betType}</div>
+                      <div className="text-gray-400 text-xs uppercase whitespace-nowrap">{bet.betType}</div>
                     </div>
                     <div className={`font-bold text-lg ${isOpen ? colors.text : 'text-white'}`}>
                       {formatOdds(bet.odds)}
