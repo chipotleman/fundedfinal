@@ -16,6 +16,12 @@ const capitalizeLeagueId = (text) => {
   return text.replace(/\(([wm])\)/gi, (match, letter) => `(${letter.toUpperCase()})`);
 };
 
+// Format a numeric dollar amount with thousands separators and two decimal places
+const formatMoney = (value) => {
+  const num = Number(value) || 0;
+  return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
 export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, onBetPlaced }) {
   const { data: session } = useSession();
   const isLoggedIn = !!session?.user;
@@ -918,7 +924,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                                   <div className="text-right min-w-[70px]">
                                     <div className="text-gray-500 text-[10px] uppercase tracking-wide">To Win</div>
                                     <div className="text-green-400 font-bold text-lg">
-                                      ${bet.stake ? (calculatePayout(bet.odds, bet.stake) - bet.stake).toFixed(2) : '0.00'}
+                                      ${bet.stake ? formatMoney(calculatePayout(bet.odds, bet.stake) - bet.stake) : '0.00'}
                                     </div>
                                   </div>
                                 </div>
@@ -967,7 +973,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                       <div className="text-right min-w-[100px]">
                         <div className="text-gray-500 text-[10px] uppercase">Parlay Win</div>
                         <div className="text-green-400 font-bold text-lg">
-                          ${parlayStake ? (totalPayout - parlayStake).toFixed(2) : '0.00'}
+                          ${parlayStake ? formatMoney(totalPayout - parlayStake) : '0.00'}
                         </div>
                       </div>
                     </div>
@@ -977,17 +983,17 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                 <div className="rounded-lg p-3 mb-4" style={{ backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.5)' : '#f3f4f6' }}>
                   <div className="flex justify-between text-sm mb-2">
                     <span style={{ color: isDarkMode ? '#9ca3af' : '#374151' }}>Total Pikked</span>
-                    <span className="font-bold" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>${totalStake.toFixed(2)}</span>
+                    <span className="font-bold" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>${formatMoney(totalStake)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span style={{ color: isDarkMode ? '#9ca3af' : '#374151' }}>Potential Payout</span>
-                    <span className="text-green-400 font-bold text-lg">${totalPayout.toFixed(2)}</span>
+                    <span className="text-green-400 font-bold text-lg">${formatMoney(totalPayout)}</span>
                   </div>
                 </div>
 
                 {isLoggedIn && totalStake > bankroll && (
                   <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 mb-3">
-                    <p className="text-red-400 text-sm">Insufficient balance: ${bankroll.toFixed(2)}</p>
+                    <p className="text-red-400 text-sm">Insufficient balance: ${formatMoney(bankroll)}</p>
                   </div>
                 )}
 
