@@ -1042,7 +1042,7 @@ export default function Dashboard() {
       />
 
       {showBattleWalkthrough && hasActiveMatchup && matchup && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ backgroundColor: isDarkMode ? 'rgba(0,0,0,0.88)' : 'rgba(0,0,0,0.4)' }}>
+        <div className="fixed inset-0 z-[9999] flex items-start justify-center p-4 pt-4 sm:pt-6 overflow-y-auto" style={{ backgroundColor: isDarkMode ? 'rgba(0,0,0,0.88)' : 'rgba(0,0,0,0.4)' }}>
           <style>{`
             @keyframes wtSlideUp {
               from { opacity: 0; transform: translateY(30px) scale(0.95); }
