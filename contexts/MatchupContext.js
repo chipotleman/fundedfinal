@@ -125,6 +125,10 @@ export function MatchupProvider({ children }) {
             // Re-fetch immediately so the "Won by Forfeit" modal and
             // updated balances surface within the SSE round-trip.
             fetchCurrentMatchup();
+          } else if (data?.type === 'matchup:bet') {
+            // Opponent placed a bet — refresh so their balance and
+            // bet list update without waiting for the safety poll.
+            fetchCurrentMatchup();
           }
         } catch (_e) {}
       };

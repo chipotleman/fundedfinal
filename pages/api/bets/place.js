@@ -3,6 +3,7 @@ import { userBets, profiles, fakeOpponents, fakeOpponentBets, matchups, poolPart
 import { eq, and, or, inArray } from 'drizzle-orm';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
+const { publishBattleEvent } = require('../../../lib/battle-events');
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -318,6 +319,36 @@ export default async function handler(req, res) {
         updatedAt: new Date()
       })
       .where(eq(profiles.id, userId));
+
+    try {
+      if (isFakeOpponent && activeMatchup) {
+        const realUserId = activeMatchup.user1Id;
+        if (realUserId) {
+          publishBattleEvent(realUserId, {
+            type: 'matchup:bet',
+            matchupId: activeMatchup.id,
+            actorId: userId,
+            betsPlaced: insertedBets.length,
+            totalStake,
+          });
+        }
+      } else if (challengeType === '1v1' && activeChallenge) {
+        const opponentId = activeChallenge.user1Id === userId
+          ? activeChallenge.user2Id
+          : activeChallenge.user1Id;
+        if (opponentId) {
+          publishBattleEvent(opponentId, {
+            type: 'matchup:bet',
+            matchupId: activeChallenge.id,
+            actorId: userId,
+            betsPlaced: insertedBets.length,
+            totalStake,
+          });
+        }
+      }
+    } catch (e) {
+      console.error('[Place Bet] Failed to publish matchup:bet event:', e);
+    }
 
     return res.status(200).json({ 
       success: true, 
