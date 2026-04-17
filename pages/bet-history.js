@@ -532,6 +532,9 @@ export default function BetHistory() {
                       <PiksBetCard
                         key={bet.id}
                         bet={enrichBet(bet)}
+                        isOpponent
+                        opponentName={battle.opponent?.username}
+                        opponentAvatar={battle.opponent?.avatar}
                       />
                     ))}
                   />

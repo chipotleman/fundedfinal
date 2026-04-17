@@ -6,7 +6,8 @@ import { BetSlipProvider } from '../contexts/BetSlipContext';
 import { UserProfilesProvider } from '../contexts/UserProfilesContext';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { GamesProvider } from '../contexts/GamesContext';
-import { MatchupProvider } from '../contexts/MatchupContext';
+import { MatchupProvider, useMatchup } from '../contexts/MatchupContext';
+import WonByForfeitModal from '../components/WonByForfeitModal';
 import ChallengePopup from '../components/ChallengePopup';
 import HowItWorksPopup from '../components/HowItWorksPopup';
 import DemoPopup from '../components/DemoPopup';
@@ -51,6 +52,18 @@ function AnalyticsTracker() {
   }, [trackEvent, router.pathname]);
 
   return null;
+}
+
+function ForfeitNoticeOverlay() {
+  const { forfeitNotice, acknowledgeForfeit } = useMatchup();
+  return (
+    <WonByForfeitModal
+      isOpen={!!forfeitNotice}
+      onClose={acknowledgeForfeit}
+      opponent={forfeitNotice?.opponent}
+      payout={forfeitNotice?.winnerPayout}
+    />
+  );
 }
 
 function AutoGrader() {
@@ -293,6 +306,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
             <UserProfilesProvider>
               <GamesProvider initialInplayEvents={pageProps.initialInplayEvents} initialApiGames={pageProps.initialApiGames}>
                 <MatchupProvider>
+                <ForfeitNoticeOverlay />
                 <AnalyticsTracker />
                 <AutoGrader />
                 {/* Solid Black Background */}

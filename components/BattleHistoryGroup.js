@@ -188,8 +188,16 @@ export default function BattleHistoryGroup({
                   ${(battle.winnerPayout || battle.potSize || 0).toLocaleString()}
                 </p>
               </div>
-              <div className="mt-1 text-[10px] text-gray-400">
-                {betCount} {betCount === 1 ? 'pik' : 'piks'}
+              <div className="mt-1 flex items-center gap-1.5 text-[10px] leading-none">
+                <span style={{ color: theme.accentColor }}>
+                  <span className="font-bold">You</span>
+                  <span className="text-white/80 ml-0.5">{betCount}</span>
+                </span>
+                <span className="text-gray-500">•</span>
+                <span className="text-red-300">
+                  <span className="font-bold">Opp</span>
+                  <span className="text-white/80 ml-0.5">{opponentBetCount}</span>
+                </span>
               </div>
             </div>
 

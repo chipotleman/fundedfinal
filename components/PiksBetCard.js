@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import TapSurface from './TapSurface';
 
-export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {} }) {
+export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, isOpponent = false, opponentName, opponentAvatar }) {
   const { isDarkMode } = useTheme();
   const [confirmingCashOut, setConfirmingCashOut] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -368,15 +368,23 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {} }
   );
 
   const getCardBorder = () => {
+    if (isOpponent) return '';
     if (isWon) return 'border-2 border-yellow-500/70';
     return '';
   };
 
   const getCardStyle = () => {
     const baseStyle = { backgroundColor: isDarkMode ? '#0a0a0a' : '#ffffff' };
-    const shadow = isDarkMode 
-      ? '0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3)' 
+    const shadow = isDarkMode
+      ? '0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3)'
       : '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)';
+    if (isOpponent) {
+      return {
+        ...baseStyle,
+        border: '2px solid rgba(239,68,68,0.55)',
+        boxShadow: '0 4px 18px rgba(239,68,68,0.18), 0 2px 4px rgba(0,0,0,0.3)',
+      };
+    }
     if (isWon) return { ...baseStyle, boxShadow: shadow };
     return {
       ...baseStyle,
@@ -387,6 +395,59 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {} }
 
   return (
     <div className={`relative rounded-2xl overflow-hidden mx-2 sm:mx-0 ${getCardBorder()}`} style={getCardStyle()}>
+      {isOpponent && (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 pointer-events-none flex items-center justify-center"
+          style={{ zIndex: 0 }}
+        >
+          {opponentAvatar ? (
+            <img
+              src={opponentAvatar}
+              alt=""
+              style={{
+                width: 240,
+                height: 240,
+                borderRadius: '9999px',
+                objectFit: 'cover',
+                opacity: 0.07,
+                filter: 'grayscale(40%)',
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: 240,
+                height: 240,
+                borderRadius: '9999px',
+                background: 'rgba(239,68,68,0.08)',
+              }}
+            />
+          )}
+        </div>
+      )}
+      {isOpponent && (
+        <div
+          className="absolute"
+          style={{ top: 8, right: 8, zIndex: 30 }}
+        >
+          <div
+            className="px-2 py-1 rounded-full uppercase"
+            style={{
+              background: 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)',
+              color: '#fff',
+              fontSize: 9,
+              fontWeight: 900,
+              letterSpacing: '0.12em',
+              boxShadow: '0 2px 10px rgba(239,68,68,0.45)',
+              border: '1px solid rgba(255,255,255,0.18)',
+            }}
+          >
+            {opponentName ? `${opponentName.length > 14 ? opponentName.slice(0, 12) + '…' : opponentName}'s Pik` : "Opponent's Pik"}
+          </div>
+        </div>
+      )}
+      <div className="relative" style={isOpponent ? { zIndex: 10 } : undefined}>
       <div className="px-4 pt-0 pb-0 bg-transparent">
         <div className="flex items-center justify-between -mt-2">
           <img src="/pikslogotransparent.png" alt="Piks" className="h-24 object-contain -ml-[24px]" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
@@ -769,6 +830,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {} }
             <span>Share Win</span>
           </button>
         )}
+      </div>
       </div>
     </div>
   );

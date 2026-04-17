@@ -151,9 +151,56 @@ export default async function handler(req, res) {
         }
       }
 
+      // Detect a recent forfeit win: within last 120s, a matchup completed
+      // where this user is the winner AND it ended noticeably before its
+      // scheduled end (forfeit signature).
+      let recentForfeit = null;
+      try {
+        const since = new Date(Date.now() - 120 * 1000);
+        const recent = await db
+          .select()
+          .from(matchups)
+          .where(and(
+            or(eq(matchups.user1Id, userId), eq(matchups.user2Id, userId)),
+            eq(matchups.status, 'completed'),
+            eq(matchups.winnerId, userId),
+            gte(matchups.updatedAt, since)
+          ))
+          .orderBy(desc(matchups.updatedAt))
+          .limit(1);
+
+        if (recent.length > 0) {
+          const r = recent[0];
+          const startMs = r.startsAt ? new Date(r.startsAt).getTime() : null;
+          const endMs = r.endsAt ? new Date(r.endsAt).getTime() : null;
+          const dur = (r.durationMinutes || 0) * 60 * 1000;
+          const earlyEnd = startMs && endMs && dur && (startMs + dur - endMs) > 60_000;
+          if (earlyEnd) {
+            const opponentId = r.user1Id === userId ? r.user2Id : r.user1Id;
+            let opp = { username: 'Opponent', avatar: null };
+            if (r.isFakeOpponent && r.fakeOpponentId) {
+              const [fake] = await db.select().from(fakeOpponents).where(eq(fakeOpponents.id, r.fakeOpponentId));
+              if (fake) opp = { username: fake.displayName, avatar: fake.avatar };
+            } else if (opponentId) {
+              const [oppProfile] = await db.select().from(profiles).where(eq(profiles.id, opponentId));
+              if (oppProfile) opp = { username: oppProfile.username || 'Opponent', avatar: oppProfile.avatar };
+            }
+            recentForfeit = {
+              matchupId: r.id,
+              winnerPayout: parseFloat(r.winnerPayout || 0),
+              opponent: opp,
+              endedAt: r.endsAt,
+            };
+          }
+        }
+      } catch (e) {
+        console.error('[Matchups Current] recent forfeit detection error:', e);
+      }
+
       return res.status(200).json({
         status: 'none',
         matchup: null,
+        recentForfeit,
       });
     }
 
