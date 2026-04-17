@@ -151,8 +151,8 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
       <div className={`fixed inset-0 z-50 flex items-start justify-center pt-10 px-4 pb-4 overflow-y-auto`} style={{ background: isDarkMode ? '#050a15' : '#f5f5f5' }}>
         <div className="absolute inset-0" style={{
           background: isDarkMode
-            ? `radial-gradient(ellipse at 25% 50%, rgba(${theme.rgb},0.08) 0%, transparent 50%), radial-gradient(ellipse at 75% 50%, rgba(251,146,60,0.08) 0%, transparent 50%)`
-            : `radial-gradient(ellipse at 25% 50%, rgba(${theme.rgb},0.06) 0%, transparent 50%), radial-gradient(ellipse at 75% 50%, rgba(251,146,60,0.06) 0%, transparent 50%)`,
+            ? `radial-gradient(ellipse at 25% 30%, rgba(${theme.rgb},0.08) 0%, transparent 50%), radial-gradient(ellipse at 75% 30%, rgba(251,146,60,0.08) 0%, transparent 50%)`
+            : `radial-gradient(ellipse at 25% 30%, rgba(${theme.rgb},0.06) 0%, transparent 50%), radial-gradient(ellipse at 75% 30%, rgba(251,146,60,0.06) 0%, transparent 50%)`,
           animation: 'bgPulse 3s ease-in-out infinite',
         }} />
 
