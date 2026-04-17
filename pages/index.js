@@ -8,6 +8,7 @@ import ActiveBattleCard from '../components/ActiveBattleCard';
 import WaitingBattleCard from '../components/WaitingBattleCard';
 import PoolContainer from '../components/PoolContainer';
 import FireBattleContainer from '../components/FireBattleContainer';
+import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
 import LiveBattlesSection from '../components/battle/LiveBattlesSection';
 import Footer from '../components/Footer';
 import { inferLeague } from '../lib/leagueInference';
@@ -30,6 +31,7 @@ export default function Dashboard() {
   const [showBattleWalkthrough, setShowBattleWalkthrough] = useState(false);
   const [walkthroughStep, setWalkthroughStep] = useState(0);
   const [walkthroughDismissed, setWalkthroughDismissed] = useState(false);
+  const [forfeitConfirmation, setForfeitConfirmation] = useState(null);
 
   const battleStartedRetryRef = useRef(null);
 
@@ -572,10 +574,18 @@ export default function Dashboard() {
                   myBetsCount={myBets?.length || 0}
                   myProfile={myProfile}
                   onForfeit={() => {
+                    const opponentSnapshot = opponent
+                      ? { username: opponent.username, avatar: opponent.avatar }
+                      : { username: 'Opponent', avatar: null };
                     fetch('/api/battles/forfeit', { method: 'POST' })
                       .then(r => r.json())
                       .then(data => {
                         if (data.success) {
+                          setForfeitConfirmation({
+                            opponent: opponentSnapshot,
+                            payout: data.matchup?.winnerPayout,
+                            totalPot: data.matchup?.totalPot,
+                          });
                           refreshMatchup();
                         }
                       })
@@ -1239,6 +1249,14 @@ export default function Dashboard() {
           }
         }
       `}</style>
+
+      <ForfeitConfirmedModal
+        isOpen={!!forfeitConfirmation}
+        onClose={() => setForfeitConfirmation(null)}
+        opponent={forfeitConfirmation?.opponent}
+        payout={forfeitConfirmation?.payout}
+        totalPot={forfeitConfirmation?.totalPot}
+      />
     </div>
   );
 }
