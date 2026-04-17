@@ -217,6 +217,8 @@ export function MatchupProvider({ children }) {
   const opponentLiveBalance = matchupData?.opponentLiveBalance;
   const myUnrealizedPnl = matchupData?.myUnrealizedPnl;
   const opponentUnrealizedPnl = matchupData?.opponentUnrealizedPnl;
+  const myPendingAtRiskCount = matchupData?.myPendingAtRiskCount || 0;
+  const opponentPendingAtRiskCount = matchupData?.opponentPendingAtRiskCount || 0;
   const myBets = matchupData?.myBets || [];
   const opponentBets = matchupData?.opponentBets || [];
   const canSeeOpponentBets = matchupData?.canSeeOpponentBets || false;
@@ -236,6 +238,8 @@ export function MatchupProvider({ children }) {
     opponentLiveBalance,
     myUnrealizedPnl,
     opponentUnrealizedPnl,
+    myPendingAtRiskCount,
+    opponentPendingAtRiskCount,
     myBets,
     opponentBets,
     canSeeOpponentBets,

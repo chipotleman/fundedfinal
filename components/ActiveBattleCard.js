@@ -86,6 +86,7 @@ export default function ActiveBattleCard({
   myUnrealizedPnl,
   opponentUnrealizedPnl,
   myBetsCount = 0,
+  myPendingAtRiskCount = 0,
   opponentBets = [],
   canSeeBets = false,
   onForfeit,
@@ -149,6 +150,12 @@ export default function ActiveBattleCard({
   const settledBets = opponentBets.filter(b => b.status !== 'pending');
   const minPicks = 4;
   const piksRemaining = Math.max(0, minPicks - myBetsCount);
+  const WARNING_WINDOW_MS = 30 * 60 * 1000;
+  const showUngradedWarning = myPendingAtRiskCount > 0
+    && timeRemaining != null
+    && timeRemaining > 0
+    && timeRemaining <= WARNING_WINDOW_MS;
+  const ungradedLabel = `${myPendingAtRiskCount} ${myPendingAtRiskCount === 1 ? 'pik' : 'piks'}`;
 
   return (
     <>
@@ -237,7 +244,23 @@ export default function ActiveBattleCard({
           ))}
         </div>
 
-        <div className="relative z-10 h-full flex items-center px-4 md:px-8">
+        {showUngradedWarning && (
+          <div
+            className="absolute top-0 left-0 right-0 z-20 px-2 py-1 flex items-center justify-center gap-1.5"
+            style={{
+              background: 'linear-gradient(90deg, rgba(202,138,4,0.95) 0%, rgba(234,179,8,0.95) 50%, rgba(202,138,4,0.95) 100%)',
+              borderBottom: '1px solid rgba(0,0,0,0.25)',
+            }}
+            title={`You have ${ungradedLabel} that may not grade before the timer ends — they'd be forfeited toward your battle score.`}
+          >
+            <span className="text-[11px] leading-none">⚠️</span>
+            <span className="text-[9px] md:text-[10px] font-bold uppercase tracking-wider text-black truncate">
+              {ungradedLabel} may not grade — forfeit risk
+            </span>
+          </div>
+        )}
+
+        <div className={`relative z-10 h-full flex items-center px-4 md:px-8 ${showUngradedWarning ? 'pt-3' : ''}`}>
           <div className="flex items-center w-full">
             <div className="flex flex-col items-center" style={{ width: '25%' }}>
               <div
@@ -480,6 +503,25 @@ export default function ActiveBattleCard({
                 </div>
 
                 <div className="px-4 pt-3 pb-4 space-y-3" style={{ background: isDarkMode ? '#0a0a0a' : '#ffffff' }}>
+                  {showUngradedWarning && (
+                    <div
+                      className="rounded-lg px-3 py-2 flex items-start gap-2"
+                      style={{
+                        background: isDarkMode ? 'rgba(202,138,4,0.15)' : 'rgba(254,243,199,0.9)',
+                        border: `1px solid ${isDarkMode ? 'rgba(234,179,8,0.45)' : 'rgba(202,138,4,0.4)'}`,
+                      }}
+                    >
+                      <span className="text-base leading-none mt-0.5">⚠️</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[11px] font-bold uppercase tracking-wide text-yellow-400 leading-tight">
+                          {ungradedLabel} may not grade in time
+                        </div>
+                        <div className={`text-[11px] mt-0.5 leading-snug ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                          The battle ends in {formatTimer(timeRemaining)}. Any pik whose game hasn’t finished by then is automatically forfeited toward your battle score.
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="rounded-xl p-3" style={{ background: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
                       <div className="flex items-center gap-1.5 mb-2.5">

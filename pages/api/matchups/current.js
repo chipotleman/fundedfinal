@@ -377,6 +377,8 @@ export default async function handler(req, res) {
     let opponentLiveBalance = opponentBalance;
     let myUnrealizedPnl = 0;
     let opponentUnrealizedPnl = 0;
+    let myPendingAtRiskCount = 0;
+    let opponentPendingAtRiskCount = 0;
     try {
       const snapshot = await computeMatchupSnapshot(matchup);
       const isU1Side = isFakeOpponentUser ? false : isUser1;
@@ -384,6 +386,8 @@ export default async function handler(req, res) {
       opponentLiveBalance = parseFloat((isU1Side ? snapshot.user2LiveBalance : snapshot.user1LiveBalance).toFixed(2));
       myUnrealizedPnl = parseFloat((isU1Side ? snapshot.user1UnrealizedPnl : snapshot.user2UnrealizedPnl).toFixed(2));
       opponentUnrealizedPnl = parseFloat((isU1Side ? snapshot.user2UnrealizedPnl : snapshot.user1UnrealizedPnl).toFixed(2));
+      myPendingAtRiskCount = isU1Side ? snapshot.user1PendingAtRiskCount : snapshot.user2PendingAtRiskCount;
+      opponentPendingAtRiskCount = isU1Side ? snapshot.user2PendingAtRiskCount : snapshot.user1PendingAtRiskCount;
     } catch (snapErr) {
       console.error('[Matchups Current] mark-to-market snapshot error:', snapErr?.message || snapErr);
     }
@@ -403,6 +407,8 @@ export default async function handler(req, res) {
       opponentLiveBalance,
       myUnrealizedPnl,
       opponentUnrealizedPnl,
+      myPendingAtRiskCount,
+      opponentPendingAtRiskCount,
       timeRemaining,
       endsAt: matchup.endsAt,
       startsAt: matchup.startsAt,
