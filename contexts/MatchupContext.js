@@ -134,6 +134,11 @@ export function MatchupProvider({ children }) {
             // the result modal and final balances appear without
             // waiting for the next safety poll.
             fetchCurrentMatchup();
+          } else if (data?.type === 'matchup:pnl') {
+            // Push-based live PnL: re-fetch so opponent balance,
+            // PnL, and bet statuses update without waiting for the
+            // 20s safety poll.
+            fetchCurrentMatchup();
           }
         } catch (_e) {}
       };

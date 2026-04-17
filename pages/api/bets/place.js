@@ -3,7 +3,7 @@ import { userBets, profiles, fakeOpponents, fakeOpponentBets, matchups, poolPart
 import { eq, and, or, inArray } from 'drizzle-orm';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
-const { publishBattleEvent } = require('../../../lib/battle-events');
+const { publishBattleEvent, publishMatchupPnlUpdate } = require('../../../lib/battle-events');
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -273,24 +273,32 @@ export default async function handler(req, res) {
     if (isFakeOpponent && activeMatchup) {
       const currentMatchupBalance = parseFloat(activeMatchup.user2Balance || activeMatchup.startingBalance || '0');
       const newMatchupBalance = currentMatchupBalance - totalStake;
-      await db
+      const [updatedMatchup] = await db
         .update(matchups)
         .set({ 
           user2Balance: newMatchupBalance.toFixed(2),
           updatedAt: new Date()
         })
-        .where(eq(matchups.id, activeMatchup.id));
+        .where(eq(matchups.id, activeMatchup.id))
+        .returning();
       console.log('[Place Bet] Updated matchup user2Balance:', newMatchupBalance.toFixed(2));
+      try {
+        publishMatchupPnlUpdate(updatedMatchup || activeMatchup, { reason: 'bet:placed', byUserId: userId });
+      } catch (e) { console.error('[Place Bet] publishMatchupPnlUpdate error:', e); }
     } else if (challengeType === '1v1' && activeChallenge) {
       const isUser1 = activeChallenge.user1Id === userId;
-      await db
+      const [updatedMatchup] = await db
         .update(matchups)
         .set({ 
           ...(isUser1 ? { user1Balance: newBankroll.toFixed(2) } : { user2Balance: newBankroll.toFixed(2) }),
           updatedAt: new Date()
         })
-        .where(eq(matchups.id, activeChallenge.id));
+        .where(eq(matchups.id, activeChallenge.id))
+        .returning();
       console.log('[Place Bet] Updated 1v1 balance for user:', newBankroll.toFixed(2));
+      try {
+        publishMatchupPnlUpdate(updatedMatchup || activeChallenge, { reason: 'bet:placed', byUserId: userId });
+      } catch (e) { console.error('[Place Bet] publishMatchupPnlUpdate error:', e); }
     } else if (challengeType === 'pool' && activeChallenge) {
       await db
         .update(poolParticipants)

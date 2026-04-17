@@ -1,6 +1,7 @@
 import { db } from '../../../lib/db';
-import { userBets, profiles, completedGames } from '../../../shared/schema';
-import { eq, or, gte } from 'drizzle-orm';
+import { userBets, profiles, completedGames, matchups } from '../../../shared/schema';
+import { eq, or, gte, inArray } from 'drizzle-orm';
+const { publishMatchupPnlUpdate } = require('../../../lib/battle-events');
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -233,6 +234,28 @@ export default async function handler(req, res) {
             .where(eq(profiles.id, update.userId));
         }
       }
+    }
+
+    try {
+      const matchupIds = Array.from(new Set(
+        betsToGrade
+          .filter(b => updates.find(u => u.betId === b.id))
+          .map(b => b.matchupId)
+          .filter(Boolean)
+      ));
+      if (matchupIds.length > 0) {
+        const liveMatchups = await db
+          .select()
+          .from(matchups)
+          .where(inArray(matchups.id, matchupIds));
+        for (const m of liveMatchups) {
+          if (m.status === 'active' || m.status === 'matched') {
+            publishMatchupPnlUpdate(m, { reason: 'bet:graded' });
+          }
+        }
+      }
+    } catch (pubErr) {
+      console.error('[GRADING] publishMatchupPnlUpdate error:', pubErr);
     }
 
     return res.status(200).json({
