@@ -26,7 +26,7 @@ export default function Dashboard() {
   const { isDarkMode } = useTheme();
   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
   const { apiGames: contextApiGames, inplayEvents: contextInplayEvents, loading: gamesLoading, error: gamesError, lastUpdated, isDemoMode } = useGames();
-  const { matchup, opponent, myProfile, myBalance: matchupBalance, opponentBalance, myBets, opponentBets, canSeeOpponentBets, hasActiveMatchup, isWaiting, isQueued, queueEntry, hasAnyMatchup, timeRemaining, refresh: refreshMatchup } = useMatchup();
+  const { matchup, opponent, myProfile, myBalance: matchupBalance, opponentBalance, myLiveBalance, opponentLiveBalance, myUnrealizedPnl, opponentUnrealizedPnl, myBets, opponentBets, canSeeOpponentBets, hasActiveMatchup, isWaiting, isQueued, queueEntry, hasAnyMatchup, timeRemaining, refresh: refreshMatchup } = useMatchup();
   const [selectedSport, setSelectedSport] = useState('Live');
   const [showBattleWalkthrough, setShowBattleWalkthrough] = useState(false);
   const [walkthroughStep, setWalkthroughStep] = useState(0);
@@ -569,6 +569,10 @@ export default function Dashboard() {
                   opponent={opponent || { username: 'Opponent', avatar: null }}
                   myBalance={matchupBalance}
                   opponentBalance={opponentBalance}
+                  myLiveBalance={myLiveBalance}
+                  opponentLiveBalance={opponentLiveBalance}
+                  myUnrealizedPnl={myUnrealizedPnl}
+                  opponentUnrealizedPnl={opponentUnrealizedPnl}
                   opponentBets={opponentBets}
                   canSeeBets={canSeeOpponentBets}
                   myBetsCount={myBets?.length || 0}

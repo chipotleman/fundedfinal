@@ -81,6 +81,10 @@ export default function ActiveBattleCard({
   opponent,
   myBalance,
   opponentBalance,
+  myLiveBalance,
+  opponentLiveBalance,
+  myUnrealizedPnl,
+  opponentUnrealizedPnl,
   myBetsCount = 0,
   opponentBets = [],
   canSeeBets = false,
@@ -123,13 +127,25 @@ export default function ActiveBattleCard({
 
   const myBalanceNum = parseFloat(myBalance ?? 0);
   const oppBalanceNum = parseFloat(opponentBalance ?? 0);
+  // Prefer the mark-to-market live balance (driven by current odds)
+  // for PnL display so the opponent's number ticks as odds move.
+  const myLiveNum = myLiveBalance != null && Number.isFinite(parseFloat(myLiveBalance))
+    ? parseFloat(myLiveBalance)
+    : myBalanceNum;
+  const oppLiveNum = opponentLiveBalance != null && Number.isFinite(parseFloat(opponentLiveBalance))
+    ? parseFloat(opponentLiveBalance)
+    : oppBalanceNum;
   const startingBalance = parseFloat(matchup.startingBalance ?? 0);
-  const isWinning = myBalanceNum > oppBalanceNum;
-  const isLosing = myBalanceNum < oppBalanceNum;
-  const isTied = myBalanceNum === oppBalanceNum;
+  const isWinning = myLiveNum > oppLiveNum;
+  const isLosing = myLiveNum < oppLiveNum;
+  const isTied = myLiveNum === oppLiveNum;
   const winnerPayout = parseFloat(matchup.winnerPayout ?? 0);
-  const myPnL = myBalanceNum - startingBalance;
-  const oppPnL = oppBalanceNum - startingBalance;
+  const myPnL = (myUnrealizedPnl != null && Number.isFinite(parseFloat(myUnrealizedPnl)))
+    ? parseFloat(myUnrealizedPnl)
+    : (myLiveNum - startingBalance);
+  const oppPnL = (opponentUnrealizedPnl != null && Number.isFinite(parseFloat(opponentUnrealizedPnl)))
+    ? parseFloat(opponentUnrealizedPnl)
+    : (oppLiveNum - startingBalance);
   const settledBets = opponentBets.filter(b => b.status !== 'pending');
   const minPicks = 4;
   const piksRemaining = Math.max(0, minPicks - myBetsCount);

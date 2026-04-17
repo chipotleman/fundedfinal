@@ -135,10 +135,45 @@ export function MatchupProvider({ children }) {
             // waiting for the next safety poll.
             fetchCurrentMatchup();
           } else if (data?.type === 'matchup:pnl') {
-            // Push-based live PnL: re-fetch so opponent balance,
-            // PnL, and bet statuses update without waiting for the
-            // 20s safety poll.
-            fetchCurrentMatchup();
+            // Push-based live PnL. If the payload carries
+            // mark-to-market live balances, merge them into local
+            // state directly so the opponent's PnL truly tracks odds
+            // movement without an API round-trip. For payloads that
+            // signal a state change (bet placed/graded), still
+            // re-fetch so bet lists/statuses come along too.
+            const reason = data.reason;
+            const hasLiveFields =
+              data.user1LiveBalance != null || data.user2LiveBalance != null;
+
+            if (reason === 'mark-to-market' && hasLiveFields) {
+              setMatchupData(prev => {
+                if (!prev || !prev.matchup || prev.matchup.id !== data.matchupId) {
+                  return prev;
+                }
+                const isU1Side = prev.isUser1 === true;
+                const myLive = parseFloat(
+                  isU1Side ? data.user1LiveBalance : data.user2LiveBalance
+                );
+                const oppLive = parseFloat(
+                  isU1Side ? data.user2LiveBalance : data.user1LiveBalance
+                );
+                const myUnreal = parseFloat(
+                  isU1Side ? data.user1UnrealizedPnl : data.user2UnrealizedPnl
+                );
+                const oppUnreal = parseFloat(
+                  isU1Side ? data.user2UnrealizedPnl : data.user1UnrealizedPnl
+                );
+                return {
+                  ...prev,
+                  myLiveBalance: Number.isFinite(myLive) ? myLive : prev.myLiveBalance,
+                  opponentLiveBalance: Number.isFinite(oppLive) ? oppLive : prev.opponentLiveBalance,
+                  myUnrealizedPnl: Number.isFinite(myUnreal) ? myUnreal : prev.myUnrealizedPnl,
+                  opponentUnrealizedPnl: Number.isFinite(oppUnreal) ? oppUnreal : prev.opponentUnrealizedPnl,
+                };
+              });
+            } else {
+              fetchCurrentMatchup();
+            }
           }
         } catch (_e) {}
       };
@@ -178,6 +213,10 @@ export function MatchupProvider({ children }) {
   const opponent = matchupData?.opponent;
   const myBalance = matchupData?.myBalance;
   const opponentBalance = matchupData?.opponentBalance;
+  const myLiveBalance = matchupData?.myLiveBalance;
+  const opponentLiveBalance = matchupData?.opponentLiveBalance;
+  const myUnrealizedPnl = matchupData?.myUnrealizedPnl;
+  const opponentUnrealizedPnl = matchupData?.opponentUnrealizedPnl;
   const myBets = matchupData?.myBets || [];
   const opponentBets = matchupData?.opponentBets || [];
   const canSeeOpponentBets = matchupData?.canSeeOpponentBets || false;
@@ -193,6 +232,10 @@ export function MatchupProvider({ children }) {
     myProfile,
     myBalance,
     opponentBalance,
+    myLiveBalance,
+    opponentLiveBalance,
+    myUnrealizedPnl,
+    opponentUnrealizedPnl,
     myBets,
     opponentBets,
     canSeeOpponentBets,

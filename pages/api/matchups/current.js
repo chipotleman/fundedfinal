@@ -3,6 +3,7 @@ import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { matchups, fakeOpponents, profiles, userBets, fakeOpponentBets, matchupQueue, matchmakingQueue } from '../../../shared/schema';
 import { eq, and, or, inArray, sql, gte, lte, desc } from 'drizzle-orm';
+const { computeMatchupSnapshot } = require('../../../lib/matchup-pnl-job');
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -372,6 +373,21 @@ export default async function handler(req, res) {
       ? Math.max(0, new Date(matchup.endsAt).getTime() - Date.now())
       : null;
 
+    let myLiveBalance = myBalance;
+    let opponentLiveBalance = opponentBalance;
+    let myUnrealizedPnl = 0;
+    let opponentUnrealizedPnl = 0;
+    try {
+      const snapshot = await computeMatchupSnapshot(matchup);
+      const isU1Side = isFakeOpponentUser ? false : isUser1;
+      myLiveBalance = parseFloat((isU1Side ? snapshot.user1LiveBalance : snapshot.user2LiveBalance).toFixed(2));
+      opponentLiveBalance = parseFloat((isU1Side ? snapshot.user2LiveBalance : snapshot.user1LiveBalance).toFixed(2));
+      myUnrealizedPnl = parseFloat((isU1Side ? snapshot.user1UnrealizedPnl : snapshot.user2UnrealizedPnl).toFixed(2));
+      opponentUnrealizedPnl = parseFloat((isU1Side ? snapshot.user2UnrealizedPnl : snapshot.user1UnrealizedPnl).toFixed(2));
+    } catch (snapErr) {
+      console.error('[Matchups Current] mark-to-market snapshot error:', snapErr?.message || snapErr);
+    }
+
     return res.status(200).json({
       status: matchup.status,
       matchup,
@@ -383,6 +399,10 @@ export default async function handler(req, res) {
       isUser1,
       myBalance,
       opponentBalance,
+      myLiveBalance,
+      opponentLiveBalance,
+      myUnrealizedPnl,
+      opponentUnrealizedPnl,
       timeRemaining,
       endsAt: matchup.endsAt,
       startsAt: matchup.startsAt,
