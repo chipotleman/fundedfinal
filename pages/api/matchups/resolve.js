@@ -20,6 +20,25 @@ export default async function handler(req, res) {
         lt(matchups.endsAt, now)
       ));
 
+    if (expiredMatchups.length > 0) {
+      try {
+        const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:5000';
+        const gradeResponse = await fetch(`${baseUrl}/api/bets/grade`, {
+          method: 'POST',
+        });
+        if (gradeResponse.ok) {
+          const gradeData = await gradeResponse.json().catch(() => ({}));
+          if (gradeData?.graded) {
+            console.log(`[Resolve] Pre-resolve grading pass settled ${gradeData.graded} bets`);
+          }
+        } else {
+          console.warn(`[Resolve] Pre-resolve grading pass returned ${gradeResponse.status}`);
+        }
+      } catch (gradeError) {
+        console.error('[Resolve] Pre-resolve grading pass failed:', gradeError);
+      }
+    }
+
     const results = [];
 
     for (const matchup of expiredMatchups) {
