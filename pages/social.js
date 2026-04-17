@@ -850,7 +850,7 @@ export default function SocialPage() {
   const handleAcceptRequest = async (requestId) => {
     try {
       const res = await fetch(`/api/friends/${requestId}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ action: 'accept' }),
@@ -867,10 +867,10 @@ export default function SocialPage() {
   const handleDeclineRequest = async (requestId) => {
     try {
       await fetch(`/api/friends/${requestId}`, {
-        method: 'PUT',
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ action: 'decline' }),
+        body: JSON.stringify({ action: 'reject' }),
       });
       fetchRequests();
     } catch (error) {
