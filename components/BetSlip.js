@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import ReactDOM from 'react-dom';
+import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -23,12 +24,22 @@ const formatMoney = (value) => {
 };
 
 export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, onBetPlaced }) {
+  const router = useRouter();
   const { data: session } = useSession();
   const isLoggedIn = !!session?.user;
   const { isDarkMode } = useTheme();
   const { betSlip: bets, removeBet, updateStake, clearBetSlip, setShowBetSlip } = useBetSlip();
   const { apiGames, inplayEvents } = useGames();
-  const { hasActiveMatchup, myBalance: matchupBalance, refresh: refreshMatchup } = useMatchup();
+  const {
+    hasActiveMatchup,
+    myBalance: matchupBalance,
+    myLiveBalance,
+    opponent: matchupOpponent,
+    opponentBalance,
+    opponentLiveBalance,
+    matchupData,
+    refresh: refreshMatchup,
+  } = useMatchup();
 
   const bankroll = hasActiveMatchup && matchupBalance != null ? matchupBalance : profileBankroll;
 
@@ -37,6 +48,112 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
       refreshMatchup();
     }
   }, [isOpen]);
+
+  // The "battle view" is wherever the user actively interacts with the
+  // matchup: the dashboard (where the live battle card and bet slip
+  // appear) and the /battle page itself. If the user navigates away
+  // from these, the head-to-head balance row should disappear too.
+  const isBattleView = (path) => path === '/' || path === '/battle' || path?.startsWith('/battle');
+
+  // Sticky head-to-head balances: keep the opponent balance row visible
+  // even after the battle settles, until the user closes the bet slip
+  // OR leaves the battle view.
+  // - While a 1v1 is active: live mark-to-market values track odds movement.
+  // - When the battle just completed (status transition or matchup
+  //   deactivates): freeze the last known balances as the final result.
+  // - If there is no head-to-head context AND we never captured a settled
+  //   snapshot, fall back to the single-balance UI immediately.
+  const [stickyMatchup, setStickyMatchup] = useState(null);
+  // Track the last live snapshot we saw while the matchup was active so
+  // that when it deactivates we can freeze it as the settled result even
+  // if the matchup record disappears from context entirely.
+  const lastActiveSnapshotRef = useRef(null);
+  const prevHadActiveMatchupRef = useRef(false);
+
+  // Clear sticky head-to-head state on any navigation away from the
+  // battle view. We listen for routeChangeStart so the bet slip header
+  // updates immediately when the user navigates.
+  useEffect(() => {
+    if (!router?.events) return;
+    const handler = (url) => {
+      const path = (url || '').split('?')[0];
+      if (!isBattleView(path)) {
+        setStickyMatchup(null);
+      }
+    };
+    router.events.on('routeChangeStart', handler);
+    return () => router.events.off('routeChangeStart', handler);
+  }, [router]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setStickyMatchup(null);
+      lastActiveSnapshotRef.current = null;
+      prevHadActiveMatchupRef.current = false;
+      return;
+    }
+    if (!isBattleView(router?.pathname)) {
+      setStickyMatchup(null);
+      lastActiveSnapshotRef.current = null;
+      prevHadActiveMatchupRef.current = false;
+      return;
+    }
+
+    // While the matchup is active, continuously stash the latest live
+    // snapshot so we can freeze it as the final settled view the moment
+    // the matchup deactivates — even if the matchup record disappears
+    // from context before a 'completed' status ever arrives.
+    if (hasActiveMatchup && matchupOpponent) {
+      const myShown = myLiveBalance != null ? myLiveBalance : matchupBalance;
+      const oppShown = opponentLiveBalance != null ? opponentLiveBalance : opponentBalance;
+      const snapshot = {
+        opponent: matchupOpponent,
+        myBalance: myShown,
+        opponentBalance: oppShown,
+      };
+      lastActiveSnapshotRef.current = snapshot;
+      prevHadActiveMatchupRef.current = true;
+      setStickyMatchup({ ...snapshot, settled: false });
+      return;
+    }
+
+    // Explicit completion signal: prefer the settled balances exposed
+    // in the matchup payload over the last live values when available.
+    if (matchupOpponent && matchupData?.status === 'completed') {
+      setStickyMatchup(prev => ({
+        opponent: matchupOpponent,
+        myBalance: matchupBalance != null ? matchupBalance : (prev?.myBalance ?? lastActiveSnapshotRef.current?.myBalance ?? null),
+        opponentBalance: opponentBalance != null ? opponentBalance : (prev?.opponentBalance ?? lastActiveSnapshotRef.current?.opponentBalance ?? null),
+        settled: true,
+      }));
+      prevHadActiveMatchupRef.current = false;
+      return;
+    }
+
+    // Matchup just deactivated (active -> none/completed) without an
+    // explicit completed payload reaching us. Freeze the last known
+    // active snapshot as the settled result so the dual-balance row
+    // stays visible until the user closes the slip or leaves the view.
+    if (prevHadActiveMatchupRef.current && lastActiveSnapshotRef.current) {
+      setStickyMatchup({ ...lastActiveSnapshotRef.current, settled: true });
+      prevHadActiveMatchupRef.current = false;
+      return;
+    }
+
+    // No head-to-head context and no settled snapshot to retain.
+    setStickyMatchup(prev => (prev?.settled ? prev : null));
+  }, [
+    isOpen,
+    hasActiveMatchup,
+    matchupOpponent?.id,
+    matchupOpponent?.username,
+    matchupBalance,
+    myLiveBalance,
+    opponentBalance,
+    opponentLiveBalance,
+    matchupData?.status,
+    router?.pathname,
+  ]);
 
   const [isPlacing, setIsPlacing] = useState(false);
   const [betType, setBetType] = useState('single');
@@ -530,10 +647,30 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
               <div className="flex items-center justify-between w-full min-h-[70px] relative">
                 {/* Logo placeholder - actual logo is in persistent layer above */}
                 <div className="absolute left-[-35px] top-1/2 -translate-y-1/2 w-[140px] h-[140px]"></div>
-                <div className="flex items-center gap-3 ml-auto mt-[2px]">
-                <div className="flex items-center gap-1.5 bg-green-500/20 border border-green-500/50 px-2.5 py-1 rounded-full">
-                  <span className="text-green-400 text-xs font-bold">${typeof bankroll === 'number' ? bankroll.toLocaleString() : parseFloat(bankroll || 0).toLocaleString()}</span>
-                </div>
+                <div className="flex items-center gap-2 ml-auto mt-[2px] flex-wrap justify-end">
+                {stickyMatchup ? (
+                  <>
+                    <div className="flex items-center gap-1.5 bg-green-500/20 border border-green-500/50 px-2 py-1 rounded-full" title="Your balance">
+                      <span className="text-green-400/80 text-[10px] font-bold uppercase tracking-wider">You</span>
+                      <span className="text-green-400 text-xs font-bold">
+                        ${parseFloat(stickyMatchup.myBalance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                    </div>
+                    <span className="text-gray-500 text-[10px] font-bold">VS</span>
+                    <div className="flex items-center gap-1.5 bg-orange-500/20 border border-orange-500/50 px-2 py-1 rounded-full" title={`${stickyMatchup.opponent?.username || 'Opponent'} balance`}>
+                      <span className="text-orange-400/80 text-[10px] font-bold uppercase tracking-wider truncate max-w-[80px]">
+                        {stickyMatchup.opponent?.username || stickyMatchup.opponent?.displayName || 'Opp'}
+                      </span>
+                      <span className="text-orange-400 text-xs font-bold">
+                        ${parseFloat(stickyMatchup.opponentBalance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-1.5 bg-green-500/20 border border-green-500/50 px-2.5 py-1 rounded-full">
+                    <span className="text-green-400 text-xs font-bold">${typeof bankroll === 'number' ? bankroll.toLocaleString() : parseFloat(bankroll || 0).toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-1.5 bg-blue-500/20 border border-blue-500/50 px-2.5 py-1 rounded-full">
                   <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
                   <span className="text-blue-400 text-xs font-bold">{bets.length} PIK{bets.length !== 1 ? 'S' : ''}</span>
