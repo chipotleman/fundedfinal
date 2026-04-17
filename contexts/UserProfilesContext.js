@@ -286,8 +286,13 @@ export const UserProfilesProvider = ({ children }) => {
     return userProfiles[username] || null;
   };
 
-  const openProfile = (username) => {
-    const profile = getUserProfile(username);
+  const openProfile = (usernameOrProfile) => {
+    if (usernameOrProfile && typeof usernameOrProfile === 'object') {
+      setSelectedProfile(usernameOrProfile);
+      setShowProfileModal(true);
+      return;
+    }
+    const profile = getUserProfile(usernameOrProfile);
     if (profile) {
       setSelectedProfile(profile);
       setShowProfileModal(true);

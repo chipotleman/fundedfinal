@@ -16,6 +16,9 @@ const Leaderboard = () => {
   const [category, setCategory] = useState('all');
   const [bankroll, setBankroll] = useState(10000);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const carouselRef = useRef(null);
 
   useEffect(() => {
@@ -37,44 +40,60 @@ const Leaderboard = () => {
     fetchUserProfile();
   }, [user]);
 
-  const allLeaderboardData = [
-    { rank: 1, username: "BetMaster2024", profit: 15420, roi: 154.2, wins: 89, totalBets: 127, tier: "Elite" },
-    { rank: 2, username: "SharpShooter", profit: 12890, roi: 128.9, wins: 76, totalBets: 115, tier: "Pro" },
-    { rank: 3, username: "SportsSage", profit: 11250, roi: 112.5, wins: 82, totalBets: 134, tier: "Elite" },
-    { rank: 4, username: "OddsWhisperer", profit: 9875, roi: 98.8, wins: 68, totalBets: 98, tier: "Pro" },
-    { rank: 5, username: "LineHunter", profit: 8640, roi: 86.4, wins: 71, totalBets: 109, tier: "Starter" },
-    { rank: 6, username: "ValueFinder", profit: 7920, roi: 79.2, wins: 63, totalBets: 94, tier: "Pro" },
-    { rank: 7, username: "BankrollBeast", profit: 7435, roi: 74.4, wins: 58, totalBets: 87, tier: "Starter" },
-    { rank: 8, username: "EdgeSeeker", profit: 6890, roi: 68.9, wins: 55, totalBets: 92, tier: "Pro" },
-    { rank: 9, username: "ProfitPro", profit: 6210, roi: 62.1, wins: 49, totalBets: 81, tier: "Starter" },
-    { rank: 10, username: "WinStreaker", profit: 5875, roi: 58.8, wins: 47, totalBets: 76, tier: "Starter" }
-  ];
+  useEffect(() => {
+    let cancelled = false;
+    const fetchLeaderboard = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const params = new URLSearchParams({ timeframe, category });
+        const response = await fetch(`/api/leaderboard?${params.toString()}`);
+        if (!response.ok) throw new Error('Failed to load leaderboard');
+        const data = await response.json();
+        if (!cancelled) {
+          setLeaderboardData(Array.isArray(data.leaders) ? data.leaders : []);
+        }
+      } catch (err) {
+        console.error('Error fetching leaderboard:', err);
+        if (!cancelled) {
+          setError('Could not load the leaderboard. Please try again.');
+          setLeaderboardData([]);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    fetchLeaderboard();
+    return () => {
+      cancelled = true;
+    };
+  }, [timeframe, category]);
 
-  const getFilteredData = () => {
-    let filteredData = [...allLeaderboardData];
-
-    if (category !== 'all') {
-      filteredData = filteredData.filter(u => u.tier.toLowerCase() === category);
-    }
-
-    if (timeframe === 'weekly') {
-      filteredData = filteredData.map(u => ({
-        ...u,
-        profit: Math.floor(u.profit * 0.3),
-        roi: u.roi * 0.3
-      }));
-    } else if (timeframe === 'monthly') {
-      filteredData = filteredData.map(u => ({
-        ...u,
-        profit: Math.floor(u.profit * 0.7),
-        roi: u.roi * 0.7
-      }));
-    }
-
-    return filteredData;
+  const handleOpenLeader = (leader) => {
+    const winRate = leader.totalBets > 0
+      ? Number(((leader.wins / leader.totalBets) * 100).toFixed(1))
+      : 0;
+    openProfile({
+      id: leader.id,
+      username: leader.username,
+      avatar: leader.avatar || null,
+      tier: leader.tier,
+      joinDate: leader.joinDate || new Date().toISOString(),
+      stats: {
+        totalBets: leader.totalBets,
+        winRate,
+        totalProfit: leader.profit,
+        currentStreak: 0,
+        longestStreak: 0,
+        avgOdds: 0,
+        challengesCompleted: 0,
+        currentChallenge: 0,
+        roi: leader.roi,
+      },
+      achievements: [],
+      recentBets: [],
+    });
   };
-
-  const leaderboardData = getFilteredData();
 
   // Reset carousel position when filters change
   useEffect(() => {
@@ -162,7 +181,7 @@ const Leaderboard = () => {
     return (
       <TapSurface
         key={leader.rank}
-        onTap={() => openProfile(leader.username)}
+        onTap={() => handleOpenLeader(leader)}
         activeColor="transparent"
         inactiveColor="transparent"
         activeTextColor="#ffffff"
@@ -297,7 +316,15 @@ const Leaderboard = () => {
           </div>
         </div>
 
-        {leaderboardData.length === 0 ? (
+        {loading ? (
+          <div className="rounded-2xl border border-white/10 p-10 text-center text-gray-400">
+            Loading leaderboard...
+          </div>
+        ) : error ? (
+          <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-10 text-center text-red-300">
+            {error}
+          </div>
+        ) : leaderboardData.length === 0 ? (
           <div className="rounded-2xl border border-white/10 p-10 text-center text-gray-400">
             No bettors match these filters yet.
           </div>
