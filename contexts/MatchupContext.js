@@ -95,9 +95,9 @@ export function MatchupProvider({ children }) {
   useEffect(() => {
     if (status !== 'authenticated') return;
 
-    // Tight 2s poll while in an active battle so a forfeit propagates
-    // to the opponent within ~1–2 seconds. Slower otherwise.
-    const pollInterval = hasActiveMatchup ? 2000 : (isWaiting || isQueued) ? 10000 : 30000;
+    // Tight 1s poll while in an active battle so a forfeit propagates
+    // to the opponent within ~1 second. Slower otherwise.
+    const pollInterval = hasActiveMatchup ? 1000 : (isWaiting || isQueued) ? 10000 : 30000;
     const interval = setInterval(fetchCurrentMatchup, pollInterval);
     return () => clearInterval(interval);
   }, [status, fetchCurrentMatchup, hasActiveMatchup, isWaiting, isQueued]);

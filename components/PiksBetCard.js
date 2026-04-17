@@ -443,7 +443,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
               border: '1px solid rgba(255,255,255,0.18)',
             }}
           >
-            {opponentName ? `${opponentName.length > 14 ? opponentName.slice(0, 12) + '…' : opponentName}'s Pik` : "Opponent's Pik"}
+            OPPONENT'S PIK
           </div>
         </div>
       )}
@@ -767,7 +767,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
           <div>PLACED: {formatPlacedDate()}</div>
         </div>
 
-        {isOpen && onCashOut && (() => {
+        {!isOpponent && isOpen && onCashOut && (() => {
           // Only allow cashout if NO game has started (not live, not completed)
           const now = new Date();
           let anyGameStarted = false;
@@ -814,7 +814,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
           );
         })()}
 
-        {isWon && onShare && (
+        {!isOpponent && isWon && onShare && (
           <button
             onClick={() => onShare(bet)}
             className="w-full mt-3 font-semibold py-2.5 px-4 rounded-xl text-sm transition-all flex items-center justify-center space-x-2"
