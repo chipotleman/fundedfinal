@@ -69,6 +69,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
   const isLost = bet.status === 'lost';
   const isCashedOut = bet.status === 'cashed_out';
   const isSettled = isWon || isLost || isCashedOut;
+  const didNotGradeInTime = bet.forfeitedAtBattleEnd === true && isOpen;
 
   const isOverUnder = bet.betType?.toLowerCase().includes('total') || 
                       bet.betType?.toLowerCase().includes('over') || 
@@ -491,6 +492,27 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
             {formatOdds(bet.odds)}
           </div>
         </div>
+
+        {didNotGradeInTime && (
+          <div
+            className="mb-3 px-3 py-2 rounded-lg flex items-start gap-2"
+            title="This pik never graded before the battle ended, so its stake was forfeited toward the battle's score."
+            style={{
+              background: isDarkMode ? 'rgba(234,179,8,0.10)' : 'rgba(234,179,8,0.15)',
+              border: '1px solid rgba(234,179,8,0.45)',
+            }}
+          >
+            <span className="text-base leading-none">⚠️</span>
+            <div className="flex-1">
+              <div className="text-yellow-400 text-xs font-bold uppercase tracking-wide">
+                Did not grade in time
+              </div>
+              <div className="text-[11px] mt-0.5" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+                Battle ended before this pik settled — stake was forfeited toward the battle's score.
+              </div>
+            </div>
+          </div>
+        )}
 
         {isParlay && isSettled && isExpanded && parlayLegs.legs.length > 0 && (
           <div className="mb-3 space-y-4 pt-3" style={{ borderTop: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #d1d5db' }}>

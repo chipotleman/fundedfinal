@@ -91,6 +91,11 @@ export default function BattleHistoryGroup({
   const userName = myProfile?.username || 'You';
   const opponent = battle.opponent || { username: 'Opponent', avatar: null };
 
+  const myPendingCount = Number(battle.myPendingCount) || 0;
+  const opponentPendingCount = Number(battle.opponentPendingCount) || 0;
+  const totalPendingCount = myPendingCount + opponentPendingCount;
+  const showPendingNote = !isActive && totalPendingCount > 0;
+
   const outcomeBadge = isWon
     ? { label: 'WON', bg: 'bg-green-500/20', text: 'text-green-400', border: 'rgba(34,197,94,0.6)' }
     : isLost
@@ -222,6 +227,32 @@ export default function BattleHistoryGroup({
               </p>
             </div>
           </div>
+
+          {showPendingNote && (
+            <div
+              className="mt-3 px-3 py-2 rounded-lg flex items-start gap-2"
+              style={{
+                background: 'rgba(234,179,8,0.10)',
+                border: '1px solid rgba(234,179,8,0.45)',
+              }}
+            >
+              <span className="text-sm leading-none mt-0.5">⚠️</span>
+              <div className="flex-1">
+                <div className="text-yellow-400 text-[11px] font-bold uppercase tracking-wide leading-tight">
+                  {totalPendingCount} {totalPendingCount === 1 ? 'pik' : 'piks'} did not grade in time
+                </div>
+                <div className="text-[10px] mt-0.5 text-gray-300 leading-snug">
+                  {(() => {
+                    const parts = [];
+                    if (myPendingCount > 0) parts.push(`${myPendingCount} of yours`);
+                    if (opponentPendingCount > 0) parts.push(`${opponentPendingCount} of ${opponent.username || 'opponent'}'s`);
+                    const who = parts.join(' and ');
+                    return `${who} ${totalPendingCount === 1 ? 'was' : 'were'} forfeited toward this battle's score.`;
+                  })()}
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

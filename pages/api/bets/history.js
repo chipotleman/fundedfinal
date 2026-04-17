@@ -226,6 +226,21 @@ export default async function handler(req, res) {
           else outcome = 'lost';
         }
 
+        const oppBets = opponentBetsByMatchup[m.id] || [];
+        let myPendingCount = 0;
+        let opponentPendingCount = 0;
+        if (m.status === 'completed') {
+          for (const ob of oppBets) {
+            if (ob.status === 'open') {
+              ob.forfeitedAtBattleEnd = true;
+              opponentPendingCount++;
+            }
+          }
+          for (const mb of formattedBets) {
+            if (mb.matchupId === m.id && mb.status === 'open') myPendingCount++;
+          }
+        }
+
         battles[m.id] = {
           id: m.id,
           opponent,
@@ -243,8 +258,22 @@ export default async function handler(req, res) {
           createdAt: m.createdAt,
           challengeType: m.challengeType,
           isFakeOpponent: !!m.isFakeOpponent,
-          opponentBets: opponentBetsByMatchup[m.id] || [],
+          opponentBets: oppBets,
+          myPendingCount,
+          opponentPendingCount,
         };
+      }
+    }
+
+    // Mark bets that were still pending when their battle ended as
+    // "did not grade in time (forfeited toward battle's score)" so the
+    // UI can show a badge and the user can reconcile their balance.
+    for (const bet of formattedBets) {
+      if (!bet.matchupId) continue;
+      const battle = battles[bet.matchupId];
+      if (!battle) continue;
+      if (battle.status === 'completed' && bet.status === 'open') {
+        bet.forfeitedAtBattleEnd = true;
       }
     }
 

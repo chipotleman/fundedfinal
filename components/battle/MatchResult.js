@@ -42,6 +42,13 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
   const isWinner = isCompleted && matchup?.winnerId === currentUserId;
   const isTie = matchup?.winnerType === 'tie';
   const prizeWon = isWinner && matchup?.winnerPayout ? parseFloat(matchup.winnerPayout) : 0;
+  const myPendingCount = Number(
+    isUser1 ? matchup?.pendingCountUser1 : matchup?.pendingCountUser2
+  ) || Number(matchup?.myPendingCount) || 0;
+  const opponentPendingCount = Number(
+    isUser1 ? matchup?.pendingCountUser2 : matchup?.pendingCountUser1
+  ) || Number(matchup?.opponentPendingCount) || 0;
+  const totalPendingCount = myPendingCount + opponentPendingCount;
 
   useEffect(() => {
     if (!isCompleted) return;
@@ -247,6 +254,31 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
                 <div className="flex justify-between items-center">
                   <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Prize Won</span>
                   <span className="text-emerald-400 font-bold text-lg">${animatedPrize.toFixed(2)}</span>
+                </div>
+              )}
+              {totalPendingCount > 0 && (
+                <div
+                  className="px-3 py-2 rounded-lg flex items-start gap-2"
+                  style={{
+                    background: 'rgba(234,179,8,0.10)',
+                    border: '1px solid rgba(234,179,8,0.45)',
+                  }}
+                >
+                  <span className="text-base leading-none mt-0.5">⚠️</span>
+                  <div className="flex-1 text-left">
+                    <div className="text-yellow-400 text-[11px] font-bold uppercase tracking-wide leading-tight">
+                      {totalPendingCount} {totalPendingCount === 1 ? 'pik' : 'piks'} did not grade in time
+                    </div>
+                    <div className={`text-[11px] mt-0.5 leading-snug ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      {(() => {
+                        const parts = [];
+                        if (myPendingCount > 0) parts.push(`${myPendingCount} of yours`);
+                        if (opponentPendingCount > 0) parts.push(`${opponentPendingCount} of opponent's`);
+                        const who = parts.join(' and ');
+                        return `${who} ${totalPendingCount === 1 ? 'was' : 'were'} forfeited toward this battle's score.`;
+                      })()}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

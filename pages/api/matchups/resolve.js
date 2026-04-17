@@ -29,7 +29,8 @@ export default async function handler(req, res) {
         
         let user1FinalBalance = parseFloat(matchup.startingBalance);
         let user2FinalBalance = parseFloat(matchup.startingBalance);
-        let user2PendingCount = 0;
+        let pendingCountUser1 = 0;
+        let pendingCountUser2 = 0;
 
         const user1Bets = await db
           .select()
@@ -40,7 +41,6 @@ export default async function handler(req, res) {
             lte(userBets.placedAt, matchupEndTime)
           ));
 
-        let user1PendingCount = 0;
         for (const bet of user1Bets) {
           if (bet.status === 'won' && bet.pnl) {
             user1FinalBalance += parseFloat(bet.pnl);
@@ -50,12 +50,11 @@ export default async function handler(req, res) {
             user1FinalBalance -= parseFloat(bet.stake) * CASHOUT_FEE_RATIO;
           } else if (bet.status === 'push') {
             // No-op: stake is fully refunded on a push.
-          } else if (bet.status === 'pending' && bet.stake) {
-            // Pending at battle end: stake was already deducted from the live
-            // matchup balance at placement time and is not refunded, so the
-            // resolved final balance matches the last live matchup:pnl value.
-            user1FinalBalance -= parseFloat(bet.stake);
-            user1PendingCount += 1;
+          } else if (bet.status === 'pending') {
+            // Pending at battle end: stake is forfeited toward the
+            // battle's score (deducted), matching the live PnL view.
+            if (bet.stake) user1FinalBalance -= parseFloat(bet.stake);
+            pendingCountUser1++;
           }
         }
 
@@ -74,11 +73,9 @@ export default async function handler(req, res) {
               user2FinalBalance -= parseFloat(bet.stake) * CASHOUT_FEE_RATIO;
             } else if (bet.status === 'push') {
               // No-op: stake is fully refunded on a push.
-            } else if (bet.status === 'pending' && bet.stake) {
-              // Pending at battle end: stake was already deducted from the
-              // live matchup balance at placement time and is not refunded.
-              user2FinalBalance -= parseFloat(bet.stake);
-              user2PendingCount += 1;
+            } else if (bet.status === 'pending') {
+              if (bet.stake) user2FinalBalance -= parseFloat(bet.stake);
+              pendingCountUser2++;
             }
           }
         } else {
@@ -100,11 +97,9 @@ export default async function handler(req, res) {
               user2FinalBalance -= parseFloat(bet.stake) * CASHOUT_FEE_RATIO;
             } else if (bet.status === 'push') {
               // No-op: stake is fully refunded on a push.
-            } else if (bet.status === 'pending' && bet.stake) {
-              // Pending at battle end: stake was already deducted from the
-              // live matchup balance at placement time and is not refunded.
-              user2FinalBalance -= parseFloat(bet.stake);
-              user2PendingCount += 1;
+            } else if (bet.status === 'pending') {
+              if (bet.stake) user2FinalBalance -= parseFloat(bet.stake);
+              pendingCountUser2++;
             }
           }
         }
@@ -215,6 +210,8 @@ export default async function handler(req, res) {
             totalPot,
             platformFee,
             winnerPayout: winnerType !== 'tie' ? winnerPayout : null,
+            pendingCountUser1,
+            pendingCountUser2,
           });
         } catch (e) {
           console.error('[Resolve] publish event error:', e);
@@ -230,8 +227,8 @@ export default async function handler(req, res) {
           platformFee,
           winnerPayout: winnerType !== 'tie' ? winnerPayout : null,
           betsCountUser1: user1Bets.length,
-          pendingCountUser1: user1PendingCount,
-          pendingCountUser2: user2PendingCount,
+          pendingCountUser1,
+          pendingCountUser2,
         });
 
       } catch (matchupError) {
