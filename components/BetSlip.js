@@ -242,10 +242,10 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
       // Save current scroll position
       savedScrollRef.current = window.scrollY || window.pageYOffset || 0;
     } else {
-      // Reset ALL modal-related state when bet slip closes to prevent stale overlays
-      // These overlays with high z-index can block the docking header
-      setShowReceipt(false);
-      setCurrentReceipt(null);
+      // Reset transient overlays when bet slip closes to prevent stale UI.
+      // IMPORTANT: do NOT reset showReceipt / currentReceipt here. The receipt
+      // must stay open until the user explicitly dismisses it (X / backdrop),
+      // even after clearBetSlip() flips isOpen to false post-placement.
       setShowPikPlacedBadge(false);
       setShowCoinRain(false);
       setShowShareModal(false);

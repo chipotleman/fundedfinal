@@ -12,11 +12,8 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
   useEffect(() => {
     if (!bet) return;
     setIsVisible(true);
-    const timer = setTimeout(() => {
-      handleClose();
-    }, 20000);
-
-    return () => clearTimeout(timer);
+    // Receipt stays open until the user explicitly dismisses it
+    // (X button or backdrop tap). No auto-close.
   }, [bet]);
 
   const handleClose = () => {
