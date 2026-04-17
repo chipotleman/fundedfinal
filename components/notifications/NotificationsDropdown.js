@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 import { useNotifications } from '../../contexts/NotificationsContext';
 
 function Avatar({ sender, size = 36 }) {
@@ -37,6 +38,8 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
   const ref = useRef(null);
   const [busyId, setBusyId] = useState(null);
   const markedRef = useRef(false);
+  const [expandedMessageIds, setExpandedMessageIds] = useState(() => new Set());
+  const messageCacheRef = useRef(new Map());
 
   const battleInvites = ctx.battleInvites || [];
   const friendRequests = ctx.friendRequests || [];
@@ -79,12 +82,66 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
     };
   }, [open, onClose, anchorRef]);
 
-  if (!open) return null;
+  // Reset per-open state when the dropdown closes.
+  useEffect(() => {
+    if (!open) {
+      setExpandedMessageIds(new Set());
+      messageCacheRef.current = new Map();
+    }
+  }, [open]);
+
+  // Cache message rows by sender id so the Messages section stays visible
+  // for the lifetime of this open — even after `markMessagesRead` clears
+  // them from `unreadMessages` — so the user can still expand and reply.
+  unreadMessages.forEach((m) => {
+    if (m?.sender?.id) messageCacheRef.current.set(m.sender.id, m);
+  });
+
+  const displayedMessages = (() => {
+    const rows = [];
+    const seen = new Set();
+    for (const m of unreadMessages) {
+      const sid = m?.sender?.id;
+      if (sid) seen.add(sid);
+      rows.push(m);
+    }
+    if (open) {
+      for (const [sid, m] of messageCacheRef.current.entries()) {
+        if (!seen.has(sid)) rows.push(m);
+      }
+    }
+    return rows;
+  })();
+
+  const visibleTotal =
+    battleInvites.length + friendRequests.length + displayedMessages.length;
+
+  const toggleExpanded = (sid) => {
+    if (!sid) return;
+    setExpandedMessageIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(sid)) next.delete(sid);
+      else next.add(sid);
+      return next;
+    });
+  };
+
+  const collapseExpanded = (sid) => {
+    if (!sid) return;
+    setExpandedMessageIds((prev) => {
+      if (!prev.has(sid)) return prev;
+      const next = new Set(prev);
+      next.delete(sid);
+      return next;
+    });
+  };
 
   const wrap = async (id, fn) => {
     setBusyId(id);
     try { await fn(); } finally { setBusyId(null); }
   };
+
+  if (!open) return null;
 
   return (
     <div
@@ -102,7 +159,7 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
       </div>
 
       <div className="overflow-y-auto" style={{ maxHeight: 'calc(70vh - 96px)' }}>
-        {total === 0 && (
+        {visibleTotal === 0 && (
           <div className="px-4 py-8 text-center text-gray-500 text-sm">
             You're all caught up.
           </div>
@@ -172,25 +229,19 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
           </Section>
         )}
 
-        {unreadMessages.length > 0 && (
+        {displayedMessages.length > 0 && (
           <Section title="Messages">
-            {unreadMessages.map(m => (
-              <button
-                key={m.id}
-                onClick={() => {
-                  onClose?.();
-                  const name = encodeURIComponent(m.sender?.username || 'User');
-                  router.push(`/social?chat=${m.sender?.id}&name=${name}`);
-                }}
-                className="w-full text-left"
-              >
-                <Row sender={m.sender} time={m.createdAt}>
-                  <div className="text-white text-sm font-semibold truncate">
-                    {m.sender?.username || 'Someone'}
-                  </div>
-                  <div className="text-gray-400 text-xs truncate">{m.preview}</div>
-                </Row>
-              </button>
+            {displayedMessages.map(m => (
+              <MessageItem
+                key={m.sender?.id || m.id}
+                item={m}
+                ctx={ctx}
+                router={router}
+                onClose={onClose}
+                expanded={expandedMessageIds.has(m.sender?.id)}
+                onToggle={() => toggleExpanded(m.sender?.id)}
+                onCollapse={() => collapseExpanded(m.sender?.id)}
+              />
             ))}
           </Section>
         )}
@@ -226,6 +277,193 @@ function Row({ sender, time, children }) {
       <div className="flex-1 min-w-0">{children}</div>
       {time && (
         <span className="text-[10px] text-gray-500 mt-1 flex-shrink-0">{timeAgo(time)}</span>
+      )}
+    </div>
+  );
+}
+
+function MessageItem({ item, ctx, router, onClose, expanded, onToggle, onCollapse }) {
+  const sender = item.sender || {};
+  const preview = item.preview || '';
+  const { data: session } = useSession();
+  const myId = session?.user?.id;
+
+  const [thread, setThread] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(null);
+  const [reply, setReply] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState(null);
+  const threadEndRef = useRef(null);
+  const inputRef = useRef(null);
+
+  // Suppress duplicate toast notifications for this conversation while open.
+  useEffect(() => {
+    if (!expanded || !sender.id) return undefined;
+    const key = `message:${sender.id}`;
+    ctx.setSuppress?.(key, true);
+    return () => ctx.setSuppress?.(key, false);
+  }, [expanded, sender.id, ctx]);
+
+  // Load the recent thread when the user expands the row.
+  useEffect(() => {
+    if (!expanded || !sender.id) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setLoadError(null);
+      try {
+        const res = await fetch(`/api/messages?friendId=${sender.id}`, { credentials: 'include' });
+        if (!res.ok) {
+          if (!cancelled) setLoadError(res.status === 403 ? 'You can only message friends.' : 'Could not load messages.');
+          return;
+        }
+        const data = await res.json();
+        if (!cancelled) setThread(data.messages || []);
+      } catch {
+        if (!cancelled) setLoadError('Could not load messages.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [expanded, sender.id]);
+
+  useEffect(() => {
+    if (expanded) {
+      threadEndRef.current?.scrollIntoView({ block: 'nearest' });
+      inputRef.current?.focus();
+    }
+  }, [expanded, thread.length]);
+
+  const handleSend = async (e) => {
+    e?.preventDefault?.();
+    const text = reply.trim();
+    if (!text || !sender.id || sending) return;
+    setSending(true);
+    setSendError(null);
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ receiverId: sender.id, content: text }),
+      });
+      if (!res.ok) {
+        setSendError('Could not send.');
+        return;
+      }
+      const data = await res.json();
+      if (data?.message) setThread((prev) => [...prev, data.message]);
+      setReply('');
+      // Collapse and refresh so this thread is cleared from the dropdown.
+      onCollapse?.();
+      ctx.refresh?.();
+    } catch {
+      setSendError('Could not send.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div>
+      <button
+        type="button"
+        onClick={onToggle}
+        className="w-full text-left"
+        aria-expanded={expanded}
+      >
+        <Row sender={sender} time={item.createdAt}>
+          <div className="flex items-start gap-2">
+            <div className="flex-1 min-w-0">
+              <div className="text-white text-sm font-semibold truncate">
+                {sender.username || 'Someone'}
+              </div>
+              <div className="text-gray-400 text-xs truncate">{preview}</div>
+            </div>
+            <svg
+              className={`w-4 h-4 text-gray-500 transition-transform flex-shrink-0 mt-0.5 ${expanded ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        </Row>
+      </button>
+
+      {expanded && (
+        <div className="px-4 pb-3">
+          <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg p-2 max-h-48 overflow-y-auto space-y-1.5">
+            {loading && (
+              <div className="text-gray-500 text-xs text-center py-3">Loading…</div>
+            )}
+            {!loading && loadError && (
+              <div className="text-red-400 text-xs text-center py-3">{loadError}</div>
+            )}
+            {!loading && !loadError && thread.length === 0 && (
+              <div className="text-gray-500 text-xs text-center py-3">No messages yet. Say hi!</div>
+            )}
+            {!loading && !loadError && thread.map((m) => (
+              <div
+                key={m.id}
+                className={`flex ${m.senderId === myId ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className={`max-w-[80%] px-2.5 py-1.5 rounded-2xl text-xs leading-snug break-words ${
+                    m.senderId === myId
+                      ? 'bg-emerald-600 text-white rounded-br-sm'
+                      : 'bg-gray-700 text-white rounded-bl-sm'
+                  }`}
+                >
+                  {m.content}
+                </div>
+              </div>
+            ))}
+            <div ref={threadEndRef} />
+          </div>
+
+          {!loadError && (
+            <form onSubmit={handleSend} className="mt-2">
+              <div className="flex gap-2">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={reply}
+                  onChange={(e) => setReply(e.target.value)}
+                  placeholder="Reply…"
+                  className="flex-1 min-w-0 px-3 py-1.5 bg-[#111] border border-[#1a1a1a] rounded-lg text-white text-xs focus:outline-none focus:border-emerald-500"
+                  maxLength={1000}
+                  disabled={sending}
+                />
+                <button
+                  type="submit"
+                  disabled={!reply.trim() || sending}
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold rounded-lg"
+                >
+                  {sending ? '…' : 'Send'}
+                </button>
+              </div>
+              {sendError && (
+                <div className="text-red-400 text-[11px] mt-1">{sendError}</div>
+              )}
+              <button
+                type="button"
+                onClick={() => {
+                  onClose?.();
+                  const name = encodeURIComponent(sender.username || 'User');
+                  router.push(`/social?chat=${sender.id}&name=${name}`);
+                }}
+                className="mt-1.5 text-[11px] text-blue-400 hover:text-blue-300"
+              >
+                Open full chat →
+              </button>
+            </form>
+          )}
+        </div>
       )}
     </div>
   );
