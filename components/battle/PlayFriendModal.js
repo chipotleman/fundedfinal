@@ -39,7 +39,7 @@ function UserAvatar({ user, size = 36, isDarkMode }) {
   );
 }
 
-export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onSwitchToPrivate }) {
+export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onSwitchToPrivate, initialFriend = null }) {
   const router = useRouter();
   const { isDarkMode } = useTheme();
   const [selectedFriend, setSelectedFriend] = useState(null);
@@ -79,8 +79,11 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
       setInviteCountdown(0);
       setActiveTab('friends');
       if (countdownRef.current) clearInterval(countdownRef.current);
+    } else if (initialFriend) {
+      setSelectedFriend(initialFriend);
+      setActiveTab('friends');
     }
-  }, [isOpen]);
+  }, [isOpen, initialFriend]);
 
   useEffect(() => {
     return () => {

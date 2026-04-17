@@ -3,6 +3,8 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import TopNavbar from '../components/TopNavbar';
+import QuickMatchModal from '../components/battle/QuickMatchModal';
+import PlayFriendModal from '../components/battle/PlayFriendModal';
 
 const SkeletonCard = () => (
   <div className="animate-pulse bg-[#111] rounded-xl p-4 border border-[#1a1a1a]">
@@ -694,16 +696,10 @@ export default function SocialPage() {
   
   const [activeTab, setActiveTab] = useState('friends');
   
-  const [showInviteModal, setShowInviteModal] = useState(null);
-  const [inviteBuyIn, setInviteBuyIn] = useState('100');
-  const [inviteDuration, setInviteDuration] = useState('24');
-  const [sendingInvite, setSendingInvite] = useState(false);
-  
-  const [showMatchmaking, setShowMatchmaking] = useState(false);
-  const [matchmakingBuyIn, setMatchmakingBuyIn] = useState('100');
-  const [matchmakingDuration, setMatchmakingDuration] = useState('24');
-  const [searchingMatch, setSearchingMatch] = useState(false);
-  
+  const [showQuickMatch, setShowQuickMatch] = useState(false);
+  const [showPlayFriend, setShowPlayFriend] = useState(false);
+  const [playFriendInitial, setPlayFriendInitial] = useState(null);
+
   const [pendingInvites, setPendingInvites] = useState({ received: [], sent: [] });
 
   const friendIds = new Set(friends.map(f => f.id));
@@ -907,7 +903,8 @@ export default function SocialPage() {
         setSelectedChat(user);
         break;
       case 'battle':
-        setShowInviteModal(user);
+        setPlayFriendInitial(user);
+        setShowPlayFriend(true);
         break;
       case 'add':
         handleAddFriend(user.id);
@@ -934,37 +931,6 @@ export default function SocialPage() {
       return () => clearInterval(interval);
     }
   }, [session]);
-
-  const handleSendInvite = async () => {
-    if (!showInviteModal) return;
-    setSendingInvite(true);
-    try {
-      const res = await fetch('/api/battles/invite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          receiverId: showInviteModal.id,
-          buyIn: parseFloat(inviteBuyIn) || 100,
-          duration: parseInt(inviteDuration) || 24,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setShowInviteModal(null);
-        setInviteBuyIn('100');
-        setInviteDuration('24');
-        fetchPendingInvites();
-      } else {
-        alert(data.error || 'Failed to send invite');
-      }
-    } catch (error) {
-      console.error('Error sending invite:', error);
-      alert('Failed to send invite');
-    } finally {
-      setSendingInvite(false);
-    }
-  };
 
   const handleAcceptInvite = async (inviteId) => {
     try {
@@ -1019,36 +985,6 @@ export default function SocialPage() {
     }
   };
 
-  const handleRandomMatchmaking = async () => {
-    setSearchingMatch(true);
-    try {
-      const res = await fetch('/api/battles/matchmaking', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          buyIn: parseFloat(matchmakingBuyIn) || 100,
-          duration: parseInt(matchmakingDuration) || 24,
-        }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        if (data.matched) {
-          setShowMatchmaking(false);
-          fetchLiveBattles();
-        } else {
-          alert('Searching for opponent... We\'ll notify you when matched!');
-        }
-      } else {
-        alert(data.error || 'Failed to start matchmaking');
-      }
-    } catch (error) {
-      console.error('Error with matchmaking:', error);
-      alert('Failed to start matchmaking');
-    } finally {
-      setSearchingMatch(false);
-    }
-  };
 
   if (status === 'loading') {
     return (
@@ -1090,7 +1026,7 @@ export default function SocialPage() {
                 )}
               </div>
               <button
-                onClick={() => setShowMatchmaking(true)}
+                onClick={() => setShowQuickMatch(true)}
                 className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg font-medium text-sm flex items-center gap-2 transition"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1348,162 +1284,25 @@ export default function SocialPage() {
           />
         )}
 
-        {showInviteModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowInviteModal(null)}>
-            <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold">Challenge to Battle</h2>
-                <button onClick={() => setShowInviteModal(null)} className="p-2 hover:bg-[#111] rounded-lg transition">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              
-              <div className="flex items-center gap-3 p-4 bg-[#111] rounded-xl mb-6">
-                <UserAvatar user={showInviteModal} />
-                <div>
-                  <p className="font-semibold">{showInviteModal.username}</p>
-                  <p className="text-xs text-gray-400">{showInviteModal.battleWins || 0}W - {showInviteModal.battleLosses || 0}L</p>
-                </div>
-              </div>
-              
-              <div className="space-y-4 mb-6">
-                <div>
-                  <label className="block text-sm text-gray-400 mb-2">Buy-In Amount ($)</label>
-                  <select 
-                    value={inviteBuyIn} 
-                    onChange={e => setInviteBuyIn(e.target.value)}
-                    className="w-full px-4 py-3 bg-[#111] border border-[#1a1a1a] rounded-xl focus:outline-none focus:border-purple-500"
-                  >
-                    <option value="50">$50</option>
-                    <option value="100">$100</option>
-                    <option value="250">$250</option>
-                    <option value="500">$500</option>
-                    <option value="1000">$1,000</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-2">Battle Duration</label>
-                  <select 
-                    value={inviteDuration} 
-                    onChange={e => setInviteDuration(e.target.value)}
-                    className="w-full px-4 py-3 bg-[#111] border border-[#1a1a1a] rounded-xl focus:outline-none focus:border-purple-500"
-                  >
-                    <option value="1">1 Hour</option>
-                    <option value="3">3 Hours</option>
-                    <option value="6">6 Hours</option>
-                    <option value="12">12 Hours</option>
-                    <option value="24">24 Hours</option>
-                    <option value="48">48 Hours</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="bg-purple-900/30 border border-purple-500/30 rounded-xl p-4 mb-6">
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-400">Total Pot</span>
-                  <span className="font-bold">${parseFloat(inviteBuyIn) * 2}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Winner Takes (90%)</span>
-                  <span className="font-bold text-green-400">${(parseFloat(inviteBuyIn) * 2 * 0.9).toFixed(2)}</span>
-                </div>
-              </div>
-              
-              <button
-                onClick={handleSendInvite}
-                disabled={sendingInvite}
-                className="w-full py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 rounded-xl font-bold transition"
-              >
-                {sendingInvite ? 'Sending...' : 'Send Challenge'}
-              </button>
-            </div>
-          </div>
-        )}
+        <QuickMatchModal
+          isOpen={showQuickMatch}
+          onClose={() => setShowQuickMatch(false)}
+          userId={session?.user?.id}
+          onMatchFound={() => {
+            setShowQuickMatch(false);
+            fetchLiveBattles();
+            router.push('/?battleStarted=true');
+          }}
+        />
 
-        {showMatchmaking && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowMatchmaking(false)}>
-            <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold">Find Random Opponent</h2>
-                <button onClick={() => setShowMatchmaking(false)} className="p-2 hover:bg-[#111] rounded-lg transition">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              
-              <div className="text-center mb-6">
-                <div className="w-20 h-20 mx-auto bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center mb-3">
-                  <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                  </svg>
-                </div>
-                <p className="text-gray-400 text-sm">Get matched with a random player at your skill level</p>
-              </div>
-              
-              <div className="space-y-4 mb-6">
-                <div>
-                  <label className="block text-sm text-gray-400 mb-2">Buy-In Amount ($)</label>
-                  <select 
-                    value={matchmakingBuyIn} 
-                    onChange={e => setMatchmakingBuyIn(e.target.value)}
-                    className="w-full px-4 py-3 bg-[#111] border border-[#1a1a1a] rounded-xl focus:outline-none focus:border-purple-500"
-                  >
-                    <option value="50">$50</option>
-                    <option value="100">$100</option>
-                    <option value="250">$250</option>
-                    <option value="500">$500</option>
-                    <option value="1000">$1,000</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-2">Battle Duration</label>
-                  <select 
-                    value={matchmakingDuration} 
-                    onChange={e => setMatchmakingDuration(e.target.value)}
-                    className="w-full px-4 py-3 bg-[#111] border border-[#1a1a1a] rounded-xl focus:outline-none focus:border-purple-500"
-                  >
-                    <option value="1">1 Hour</option>
-                    <option value="3">3 Hours</option>
-                    <option value="6">6 Hours</option>
-                    <option value="12">12 Hours</option>
-                    <option value="24">24 Hours</option>
-                    <option value="48">48 Hours</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="bg-purple-900/30 border border-purple-500/30 rounded-xl p-4 mb-6">
-                <div className="flex justify-between text-sm mb-2">
-                  <span className="text-gray-400">Total Pot</span>
-                  <span className="font-bold">${parseFloat(matchmakingBuyIn) * 2}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-400">Winner Takes (90%)</span>
-                  <span className="font-bold text-green-400">${(parseFloat(matchmakingBuyIn) * 2 * 0.9).toFixed(2)}</span>
-                </div>
-              </div>
-              
-              <button
-                onClick={handleRandomMatchmaking}
-                disabled={searchingMatch}
-                className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-700 disabled:to-gray-700 rounded-xl font-bold transition flex items-center justify-center gap-2"
-              >
-                {searchingMatch ? (
-                  <>
-                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Searching...
-                  </>
-                ) : 'Find Opponent'}
-              </button>
-            </div>
-          </div>
-        )}
+        <PlayFriendModal
+          isOpen={showPlayFriend}
+          onClose={() => { setShowPlayFriend(false); setPlayFriendInitial(null); }}
+          friends={friends}
+          initialFriend={playFriendInitial}
+          onInviteSent={() => { fetchPendingInvites(); fetchLiveBattles(); }}
+        />
+
       </div>
 
       <style jsx>{`
