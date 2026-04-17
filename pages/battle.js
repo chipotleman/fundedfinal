@@ -11,6 +11,7 @@ import MatchLobby from '../components/battle/MatchLobby';
 import MatchResult from '../components/battle/MatchResult';
 import LiveBattlesSection from '../components/battle/LiveBattlesSection';
 import ForfeitModal from '../components/battle/ForfeitModal';
+import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
 import { useMatchup } from '../contexts/MatchupContext';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -35,6 +36,7 @@ export default function BattlePage() {
   const [showLobby, setShowLobby] = useState(null);
   const [showResult, setShowResult] = useState(null);
   const [showForfeitModal, setShowForfeitModal] = useState(false);
+  const [forfeitConfirmation, setForfeitConfirmation] = useState(null);
   const [showBattleOptions, setShowBattleOptions] = useState(false);
 
   const { isDarkMode } = useTheme();
@@ -948,15 +950,30 @@ export default function BattlePage() {
         onCancel={() => setShowForfeitModal(false)}
         onConfirm={async () => {
           try {
+            const opponentSnapshot = matchupData?.opponent || null;
             const res = await fetch('/api/battles/forfeit', { method: 'POST' });
             const data = await res.json();
             if (data.success) {
+              setForfeitConfirmation({
+                opponent: opponentSnapshot,
+                payout: data?.matchup?.winnerPayout ?? null,
+                totalPot: data?.matchup?.totalPot ?? null,
+              });
               setActiveMatchup(null);
+              setMatchupData(null);
               fetchData();
             }
           } catch {}
           setShowForfeitModal(false);
         }}
+      />
+
+      <ForfeitConfirmedModal
+        isOpen={!!forfeitConfirmation}
+        onClose={() => setForfeitConfirmation(null)}
+        opponent={forfeitConfirmation?.opponent}
+        payout={forfeitConfirmation?.payout}
+        totalPot={forfeitConfirmation?.totalPot}
       />
 
       <style>{`
