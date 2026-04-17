@@ -3,6 +3,7 @@ import { matchups, fakeOpponents, profiles, userBets, fakeOpponentBets, userChal
 import { eq, and, or, lt, gte, lte } from 'drizzle-orm';
 import { publishBattleEvent } from '../../../lib/battle-events';
 import { CASHOUT_FEE_RATIO } from '../bets/cashout';
+import { evaluateAndAwardAchievements } from '../../../lib/achievements';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -181,6 +182,53 @@ export default async function handler(req, res) {
                 .where(eq(userChallenges.id, matchup.user2ChallengeId));
             }
           }
+          try {
+            if (winnerType === 'user1' && matchup.user1Id) {
+              const [winProfile] = await db.select().from(profiles).where(eq(profiles.id, matchup.user1Id));
+              if (winProfile) {
+                await db.update(profiles).set({
+                  battleWins: (winProfile.battleWins || 0) + 1,
+                  updatedAt: now,
+                }).where(eq(profiles.id, matchup.user1Id));
+              }
+              if (matchup.user2Id && !matchup.isFakeOpponent) {
+                const [loseProfile] = await db.select().from(profiles).where(eq(profiles.id, matchup.user2Id));
+                if (loseProfile) {
+                  await db.update(profiles).set({
+                    battleLosses: (loseProfile.battleLosses || 0) + 1,
+                    updatedAt: now,
+                  }).where(eq(profiles.id, matchup.user2Id));
+                }
+              }
+            } else if (winnerType === 'user2' && matchup.user2Id && !matchup.isFakeOpponent) {
+              const [winProfile] = await db.select().from(profiles).where(eq(profiles.id, matchup.user2Id));
+              if (winProfile) {
+                await db.update(profiles).set({
+                  battleWins: (winProfile.battleWins || 0) + 1,
+                  updatedAt: now,
+                }).where(eq(profiles.id, matchup.user2Id));
+              }
+              if (matchup.user1Id) {
+                const [loseProfile] = await db.select().from(profiles).where(eq(profiles.id, matchup.user1Id));
+                if (loseProfile) {
+                  await db.update(profiles).set({
+                    battleLosses: (loseProfile.battleLosses || 0) + 1,
+                    updatedAt: now,
+                  }).where(eq(profiles.id, matchup.user1Id));
+                }
+              }
+            } else if (winnerType === 'user2' && matchup.isFakeOpponent && matchup.user1Id) {
+              const [loseProfile] = await db.select().from(profiles).where(eq(profiles.id, matchup.user1Id));
+              if (loseProfile) {
+                await db.update(profiles).set({
+                  battleLosses: (loseProfile.battleLosses || 0) + 1,
+                  updatedAt: now,
+                }).where(eq(profiles.id, matchup.user1Id));
+              }
+            }
+          } catch (statsErr) {
+            console.error('[Resolve] battle stats update error:', statsErr);
+          }
         } else if (winnerType === 'tie') {
           const halfPot = totalPot / 2;
           const tieRefund = halfPot * 0.9;
@@ -214,6 +262,16 @@ export default async function handler(req, res) {
                 .where(eq(userChallenges.id, matchup.user2ChallengeId));
             }
           }
+        }
+
+        try {
+          const participants = [matchup.user1Id];
+          if (matchup.user2Id && !matchup.isFakeOpponent) participants.push(matchup.user2Id);
+          for (const uid of participants) {
+            if (uid) await evaluateAndAwardAchievements(uid);
+          }
+        } catch (achErr) {
+          console.error('[Resolve] achievement evaluation error:', achErr);
         }
 
         try {

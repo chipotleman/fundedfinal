@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { db } from "../../../lib/db";
 import { profiles, userBets, fakeOpponents } from "../../../shared/schema";
 import { desc, eq } from "drizzle-orm";
+import { evaluateAndAwardAchievements } from "../../../lib/achievements";
 
 function parseAmericanOdds(odds: unknown): number | null {
   if (odds === null || odds === undefined) return null;
@@ -34,10 +35,25 @@ export default async function handler(
 
   if (req.method === "GET") {
     try {
-      const [profile] = await db
+      let [profile] = await db
         .select()
         .from(profiles)
         .where(eq(profiles.id, id));
+
+      if (profile) {
+        try {
+          const newly = await evaluateAndAwardAchievements(id);
+          if (newly && newly.length > 0) {
+            const [refreshed] = await db
+              .select()
+              .from(profiles)
+              .where(eq(profiles.id, id));
+            if (refreshed) profile = refreshed;
+          }
+        } catch (achErr) {
+          console.error("[ACHIEVEMENTS] retroactive grant error:", achErr);
+        }
+      }
 
       if (!profile) {
         const [fakeOpp] = await db

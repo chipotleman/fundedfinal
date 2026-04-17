@@ -2,6 +2,7 @@ import { db } from '../../../lib/db';
 import { userBets, profiles, completedGames, matchups } from '../../../shared/schema';
 import { eq, or, gte, inArray } from 'drizzle-orm';
 const { publishMatchupPnlUpdate } = require('../../../lib/battle-events');
+import { evaluateAndAwardAchievements } from '../../../lib/achievements';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -295,6 +296,15 @@ export default async function handler(req, res) {
       }
     } catch (pubErr) {
       console.error('[GRADING] publishMatchupPnlUpdate error:', pubErr);
+    }
+
+    try {
+      const affectedUserIds = Array.from(new Set(updates.map(u => u.userId).filter(Boolean)));
+      for (const uid of affectedUserIds) {
+        await evaluateAndAwardAchievements(uid);
+      }
+    } catch (achErr) {
+      console.error('[GRADING] achievement evaluation error:', achErr);
     }
 
     return res.status(200).json({
