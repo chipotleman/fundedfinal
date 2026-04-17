@@ -216,6 +216,45 @@ export function NotificationsProvider({ children }) {
     refresh();
   }, [refresh]);
 
+  const markMessagesRead = useCallback(async (senderIds) => {
+    if (!isAuthed) return 0;
+    // Optimistically clear unread messages locally so the badge updates instantly.
+    setData(prev => {
+      const filterFn = Array.isArray(senderIds) && senderIds.length > 0
+        ? (m) => !senderIds.includes(m.sender?.id)
+        : () => false;
+      const remaining = prev.unreadMessages.filter(filterFn);
+      if (remaining.length === prev.unreadMessages.length) return prev;
+      return {
+        ...prev,
+        unreadMessages: remaining,
+        counts: {
+          ...prev.counts,
+          unreadMessages: remaining.length,
+          total: prev.counts.battleInvites + prev.counts.friendRequests + remaining.length,
+        },
+      };
+    });
+    try {
+      const res = await fetch('/api/messages/mark-read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          senderIds: Array.isArray(senderIds) ? senderIds : undefined,
+        }),
+      });
+      if (!res.ok) {
+        refresh();
+        return 0;
+      }
+      const json = await res.json();
+      return json?.marked || 0;
+    } catch {
+      refresh();
+      return 0;
+    }
+  }, [isAuthed, refresh]);
+
   const declineFriend = useCallback(async (id) => {
     try {
       await fetch(`/api/friends/${id}`, {
@@ -237,6 +276,7 @@ export function NotificationsProvider({ children }) {
     declineInvite,
     acceptFriend,
     declineFriend,
+    markMessagesRead,
   };
 
   return (
@@ -257,6 +297,7 @@ export function useNotifications() {
       declineInvite: async () => {},
       acceptFriend: async () => {},
       declineFriend: async () => {},
+      markMessagesRead: async () => 0,
     };
   }
   return ctx;
