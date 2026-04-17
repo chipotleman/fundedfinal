@@ -43,6 +43,8 @@ export default async function handler(req, res) {
             user1FinalBalance += parseFloat(bet.pnl);
           } else if (bet.status === 'lost' && bet.stake) {
             user1FinalBalance -= parseFloat(bet.stake);
+          } else if (bet.status === 'cashed_out' && bet.pnl) {
+            user1FinalBalance += parseFloat(bet.pnl);
           }
         }
 
@@ -74,6 +76,8 @@ export default async function handler(req, res) {
               user2FinalBalance += parseFloat(bet.pnl);
             } else if (bet.status === 'lost' && bet.stake) {
               user2FinalBalance -= parseFloat(bet.stake);
+            } else if (bet.status === 'cashed_out' && bet.pnl) {
+              user2FinalBalance += parseFloat(bet.pnl);
             }
           }
         }

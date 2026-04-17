@@ -1,8 +1,9 @@
 import { db } from '../../../lib/db';
-import { userBets, profiles } from '../../../shared/schema';
+import { userBets, profiles, matchups } from '../../../shared/schema';
 import { eq, and } from 'drizzle-orm';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
+const { publishMatchupPnlUpdate } = require('../../../lib/battle-events');
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -51,10 +52,17 @@ export default async function handler(req, res) {
     const cashoutAmount = stake * 0.8;
     const pnl = cashoutAmount - stake;
 
-    const currentBankroll = parseFloat(userProfile.bankroll) || 0;
-    const newBankroll = currentBankroll + cashoutAmount;
-    const currentPnl = parseFloat(userProfile.pnl) || 0;
-    const newPnl = currentPnl + pnl;
+    let liveMatchup = null;
+    if (bet.matchupId) {
+      const [m] = await db
+        .select()
+        .from(matchups)
+        .where(eq(matchups.id, bet.matchupId))
+        .limit(1);
+      if (m && (m.status === 'active' || m.status === 'matched')) {
+        liveMatchup = m;
+      }
+    }
 
     const [updatedBet] = await db
       .update(userBets)
@@ -66,14 +74,45 @@ export default async function handler(req, res) {
       .where(eq(userBets.id, betId))
       .returning();
 
-    await db
-      .update(profiles)
-      .set({
-        bankroll: newBankroll.toFixed(2),
-        pnl: newPnl.toFixed(2),
-        updatedAt: new Date()
-      })
-      .where(eq(profiles.id, userId));
+    let newBankroll = parseFloat(userProfile.bankroll) || 0;
+
+    if (liveMatchup) {
+      const isUser1 = liveMatchup.user1Id === userId;
+      const currentMatchupBalance = parseFloat(
+        (isUser1 ? liveMatchup.user1Balance : liveMatchup.user2Balance) ?? 0
+      );
+      const newMatchupBalance = currentMatchupBalance + cashoutAmount;
+      const [updatedMatchup] = await db
+        .update(matchups)
+        .set({
+          ...(isUser1
+            ? { user1Balance: newMatchupBalance.toFixed(2) }
+            : { user2Balance: newMatchupBalance.toFixed(2) }),
+          updatedAt: new Date(),
+        })
+        .where(eq(matchups.id, liveMatchup.id))
+        .returning();
+      try {
+        publishMatchupPnlUpdate(updatedMatchup || liveMatchup, {
+          reason: 'bet:cashed_out',
+          byUserId: userId,
+        });
+      } catch (e) {
+        console.error('[Cashout] publishMatchupPnlUpdate error:', e);
+      }
+    } else {
+      newBankroll = (parseFloat(userProfile.bankroll) || 0) + cashoutAmount;
+      const currentPnl = parseFloat(userProfile.pnl) || 0;
+      const newPnl = currentPnl + pnl;
+      await db
+        .update(profiles)
+        .set({
+          bankroll: newBankroll.toFixed(2),
+          pnl: newPnl.toFixed(2),
+          updatedAt: new Date()
+        })
+        .where(eq(profiles.id, userId));
+    }
 
     return res.status(200).json({
       success: true,

@@ -155,6 +155,7 @@ export default async function handler(req, res) {
           pnl,
           userId: bet.userId,
           stake: bet.stake,
+          matchupId: bet.matchupId || null,
           homeScore: null,
           awayScore: null
         });
@@ -192,12 +193,22 @@ export default async function handler(req, res) {
           pnl,
           userId: bet.userId,
           stake: bet.stake,
+          matchupId: bet.matchupId || null,
           homeScore: parseInt(game.homeScore) || 0,
           awayScore: parseInt(game.awayScore) || 0
         });
         gradedCount++;
       }
     }
+
+    const matchupIdsForUpdates = Array.from(new Set(
+      updates.map(u => u.matchupId).filter(Boolean)
+    ));
+    const matchupRowsArr = matchupIdsForUpdates.length > 0
+      ? await db.select().from(matchups).where(inArray(matchups.id, matchupIdsForUpdates))
+      : [];
+    const matchupById = new Map(matchupRowsArr.map(m => [m.id, m]));
+    const matchupRunningBalance = new Map();
 
     for (const update of updates) {
       const updateData = {
@@ -214,44 +225,72 @@ export default async function handler(req, res) {
         .where(eq(userBets.id, update.betId));
 
       if (update.status === 'won' || update.status === 'push') {
-        const [profile] = await db
-          .select()
-          .from(profiles)
-          .where(eq(profiles.id, update.userId))
-          .limit(1);
+        let bankrollChange;
+        if (update.status === 'won') {
+          bankrollChange = parseFloat(update.pnl) + parseFloat(update.stake);
+        } else {
+          bankrollChange = parseFloat(update.stake);
+        }
 
-        if (profile) {
-          let bankrollChange;
-          if (update.status === 'won') {
-            bankrollChange = parseFloat(update.pnl) + parseFloat(update.stake);
+        const matchup = update.matchupId ? matchupById.get(update.matchupId) : null;
+        const isLiveMatchup = matchup && (matchup.status === 'active' || matchup.status === 'matched');
+
+        if (isLiveMatchup) {
+          const isUser1 = matchup.user1Id === update.userId;
+          const running = matchupRunningBalance.get(matchup.id) || {
+            user1Balance: parseFloat(matchup.user1Balance ?? 0),
+            user2Balance: parseFloat(matchup.user2Balance ?? 0),
+          };
+          if (isUser1) {
+            running.user1Balance += bankrollChange;
           } else {
-            bankrollChange = parseFloat(update.stake);
+            running.user2Balance += bankrollChange;
           }
-          const newBankroll = parseFloat(profile.bankroll) + bankrollChange;
-          await db
-            .update(profiles)
-            .set({ bankroll: newBankroll })
-            .where(eq(profiles.id, update.userId));
+          matchupRunningBalance.set(matchup.id, running);
+        } else {
+          const [profile] = await db
+            .select()
+            .from(profiles)
+            .where(eq(profiles.id, update.userId))
+            .limit(1);
+
+          if (profile) {
+            const newBankroll = parseFloat(profile.bankroll) + bankrollChange;
+            await db
+              .update(profiles)
+              .set({ bankroll: newBankroll })
+              .where(eq(profiles.id, update.userId));
+          }
         }
       }
     }
 
+    for (const [matchupId, running] of matchupRunningBalance.entries()) {
+      try {
+        const setData = {
+          user1Balance: running.user1Balance.toFixed(2),
+          user2Balance: running.user2Balance.toFixed(2),
+          updatedAt: new Date(),
+        };
+        const [updatedMatchup] = await db
+          .update(matchups)
+          .set(setData)
+          .where(eq(matchups.id, matchupId))
+          .returning();
+        if (updatedMatchup) {
+          publishMatchupPnlUpdate(updatedMatchup, { reason: 'bet:graded' });
+        }
+      } catch (mErr) {
+        console.error('[GRADING] matchup balance update error:', mErr);
+      }
+    }
+
     try {
-      const matchupIds = Array.from(new Set(
-        betsToGrade
-          .filter(b => updates.find(u => u.betId === b.id))
-          .map(b => b.matchupId)
-          .filter(Boolean)
-      ));
-      if (matchupIds.length > 0) {
-        const liveMatchups = await db
-          .select()
-          .from(matchups)
-          .where(inArray(matchups.id, matchupIds));
-        for (const m of liveMatchups) {
-          if (m.status === 'active' || m.status === 'matched') {
-            publishMatchupPnlUpdate(m, { reason: 'bet:graded' });
-          }
+      const otherMatchupIds = matchupIdsForUpdates.filter(id => !matchupRunningBalance.has(id));
+      for (const id of otherMatchupIds) {
+        const m = matchupById.get(id);
+        if (m && (m.status === 'active' || m.status === 'matched')) {
+          publishMatchupPnlUpdate(m, { reason: 'bet:graded' });
         }
       }
     } catch (pubErr) {
