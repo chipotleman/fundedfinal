@@ -62,46 +62,76 @@ export default function ProfileModal({ profile, isOpen, onClose }) {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <div>
-              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Achievements</h3>
-              <div className="space-y-2">
-                {profile.achievements.map((achievement, index) => (
-                  <div key={index} className="flex items-center space-x-3 rounded-lg p-3" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
-                    <span className="text-2xl">{achievement.icon}</span>
-                    <div>
-                      <div className="text-white font-medium text-sm">{achievement.name}</div>
-                      <div className="text-gray-500 text-xs">{achievement.description}</div>
+          {(() => {
+            const achievements = Array.isArray(profile.achievements) ? profile.achievements : [];
+            const recentBets = Array.isArray(profile.recentBets) ? profile.recentBets : [];
+            const hasAchievements = achievements.length > 0;
+            const formatAmount = (n) => {
+              const num = Number(n);
+              if (!Number.isFinite(num)) return '0';
+              return Math.abs(num).toLocaleString(undefined, { maximumFractionDigits: 2 });
+            };
+            const gridCols = hasAchievements ? 'md:grid-cols-2' : 'md:grid-cols-1';
+            return (
+              <div className={`grid ${gridCols} gap-6`}>
+                {hasAchievements && (
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Achievements</h3>
+                    <div className="space-y-2">
+                      {achievements.map((achievement, index) => (
+                        <div key={index} className="flex items-center space-x-3 rounded-lg p-3" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
+                          <span className="text-2xl">{achievement.icon || '🏅'}</span>
+                          <div>
+                            <div className="text-white font-medium text-sm">{achievement.name || achievement.title}</div>
+                            {achievement.description && (
+                              <div className="text-gray-500 text-xs">{achievement.description}</div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
-            </div>
+                )}
 
-            <div>
-              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Recent Bets</h3>
-              <div className="space-y-2">
-                {profile.recentBets.map((bet, index) => (
-                  <div key={index} className="rounded-lg p-3" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <div className="text-white font-medium text-sm">{bet.game}</div>
-                        <div className="text-gray-500 text-sm">{bet.bet} ({bet.odds})</div>
-                      </div>
-                      <div className="text-right">
-                        <div className={`font-bold text-sm ${bet.result === 'won' ? 'text-green-400' : 'text-red-400'}`}>
-                          ${bet.amount}
-                        </div>
-                        <div className={`text-xs ${bet.result === 'won' ? 'text-green-400' : 'text-red-400'}`}>
-                          {bet.result.toUpperCase()}
-                        </div>
-                      </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Recent Bets</h3>
+                  {recentBets.length === 0 ? (
+                    <div className="rounded-lg p-4 text-center text-gray-500 text-sm" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
+                      No settled bets yet.
                     </div>
-                  </div>
-                ))}
+                  ) : (
+                    <div className="space-y-2">
+                      {recentBets.map((bet, index) => {
+                        const isWin = bet.result === 'won';
+                        const amountNum = Number(bet.amount);
+                        const sign = Number.isFinite(amountNum) && amountNum < 0 ? '-' : (isWin ? '+' : '');
+                        return (
+                          <div key={bet.id || index} className="rounded-lg p-3" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
+                            <div className="flex justify-between items-start">
+                              <div className="min-w-0 pr-3">
+                                <div className="text-white font-medium text-sm truncate">{bet.game}</div>
+                                <div className="text-gray-500 text-sm truncate">
+                                  {bet.bet}{bet.odds ? ` (${bet.odds})` : ''}
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className={`font-bold text-sm ${isWin ? 'text-green-400' : 'text-red-400'}`}>
+                                  {sign}${formatAmount(bet.amount)}
+                                </div>
+                                <div className={`text-xs ${isWin ? 'text-green-400' : 'text-red-400'}`}>
+                                  {String(bet.result || '').toUpperCase()}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
+            );
+          })()}
 
           <div className="mt-8 text-center">
             <div className="text-gray-600 text-sm">

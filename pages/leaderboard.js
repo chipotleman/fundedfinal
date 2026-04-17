@@ -21,6 +21,7 @@ const Leaderboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const carouselRef = useRef(null);
+  const profileRequestRef = useRef(0);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -71,11 +72,12 @@ const Leaderboard = () => {
     };
   }, [timeframe, category]);
 
-  const handleOpenLeader = (leader) => {
+  const handleOpenLeader = async (leader) => {
     const winRate = leader.totalBets > 0
       ? Number(((leader.wins / leader.totalBets) * 100).toFixed(1))
       : 0;
-    openProfile({
+
+    const baseProfile = {
       id: leader.id,
       username: leader.username,
       avatar: leader.avatar || null,
@@ -94,7 +96,34 @@ const Leaderboard = () => {
       },
       achievements: [],
       recentBets: [],
-    });
+    };
+
+    openProfile(baseProfile);
+
+    if (!leader.id) return;
+
+    const requestId = ++profileRequestRef.current;
+
+    try {
+      const response = await fetch(`/api/profiles/${leader.id}`);
+      if (!response.ok) return;
+      if (requestId !== profileRequestRef.current) return;
+      const data = await response.json();
+      if (requestId !== profileRequestRef.current) return;
+      openProfile({
+        ...baseProfile,
+        joinDate: data.createdAt || baseProfile.joinDate,
+        stats: {
+          ...baseProfile.stats,
+          currentStreak: data.currentStreak ?? 0,
+          avgOdds: data.avgOdds ?? 0,
+        },
+        achievements: Array.isArray(data.achievements) ? data.achievements : [],
+        recentBets: Array.isArray(data.recentBets) ? data.recentBets : [],
+      });
+    } catch (err) {
+      console.error('Error loading leader profile:', err);
+    }
   };
 
   // Reset carousel position when filters change

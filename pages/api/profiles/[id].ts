@@ -1,7 +1,26 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { db } from "../../../lib/db";
 import { profiles, userBets, fakeOpponents } from "../../../shared/schema";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
+
+function parseAmericanOdds(odds: unknown): number | null {
+  if (odds === null || odds === undefined) return null;
+  const str = String(odds).trim().replace(/^\+/, '');
+  const num = parseFloat(str);
+  return Number.isFinite(num) ? num : null;
+}
+
+function computeCurrentStreak(settledBets: Array<{ status: string | null }>): number {
+  if (!settledBets.length) return 0;
+  const first = settledBets[0].status;
+  if (first !== 'won' && first !== 'lost') return 0;
+  let streak = 0;
+  for (const bet of settledBets) {
+    if (bet.status === first) streak++;
+    else break;
+  }
+  return first === 'won' ? streak : -streak;
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -48,17 +67,60 @@ export default async function handler(
       const bets = await db
         .select()
         .from(userBets)
-        .where(eq(userBets.userId, id));
+        .where(eq(userBets.userId, id))
+        .orderBy(desc(userBets.placedAt));
 
       const totalBets = bets.length;
       const wins = bets.filter(b => b.status === 'won').length;
       const losses = bets.filter(b => b.status === 'lost').length;
 
+      const settledBets = bets.filter(b => b.status === 'won' || b.status === 'lost');
+
+      const oddsValues = settledBets
+        .map(b => parseAmericanOdds(b.odds))
+        .filter((n): n is number => n !== null);
+      const avgOdds = oddsValues.length
+        ? Math.round(oddsValues.reduce((a, c) => a + c, 0) / oddsValues.length)
+        : 0;
+
+      const currentStreak = computeCurrentStreak(settledBets);
+
+      const recentBets = settledBets.slice(0, 5).map(b => ({
+        id: b.id,
+        game: b.matchupName || 'Unknown matchup',
+        bet: b.selection || b.marketType || '—',
+        odds: b.odds || '',
+        result: b.status,
+        amount: Number(b.pnl ?? b.stake ?? 0),
+        stake: Number(b.stake ?? 0),
+        settledAt: b.settledAt,
+      }));
+
+      type Achievement = {
+        name?: string;
+        title?: string;
+        description?: string;
+        icon?: string;
+      };
+      const isAchievement = (value: unknown): value is Achievement => {
+        if (!value || typeof value !== 'object') return false;
+        const v = value as Record<string, unknown>;
+        return typeof v.name === 'string' || typeof v.title === 'string';
+      };
+      const rawAchievements: unknown[] = Array.isArray(profile.achievements)
+        ? profile.achievements
+        : [];
+      const achievements: Achievement[] = rawAchievements.filter(isAchievement);
+
       return res.status(200).json({
         ...profile,
         total_bets: totalBets,
         wins,
-        losses
+        losses,
+        recentBets,
+        achievements,
+        currentStreak,
+        avgOdds,
       });
     } catch (error) {
       console.error("Error fetching profile:", error);
