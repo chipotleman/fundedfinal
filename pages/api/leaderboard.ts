@@ -58,15 +58,10 @@ export default async function handler(
       .where(and(...conditions))
       .groupBy(userBets.userId);
 
-    if (stats.length === 0) {
-      return res.status(200).json({ leaders: [] });
-    }
-
     const userIds = stats.map((s) => s.userId);
-    const allProfiles = await db
-      .select()
-      .from(profiles)
-      .where(inArray(profiles.id, userIds));
+    const allProfiles = userIds.length
+      ? await db.select().from(profiles).where(inArray(profiles.id, userIds))
+      : [];
 
     const profileMap = new Map(allProfiles.map((p) => [p.id, p]));
 
@@ -105,7 +100,50 @@ export default async function handler(
       .slice(0, limit)
       .map((l, i) => ({ ...l, rank: i + 1 }));
 
-    return res.status(200).json({ leaders: ranked });
+    // Community-wide stats (across all non-fake bettors, all time, ignoring filters)
+    const communityStatsRows = await db
+      .select({
+        userId: userBets.userId,
+        totalBets: sql<number>`COUNT(*)::int`,
+        wins: sql<number>`COUNT(*) FILTER (WHERE ${userBets.status} = 'won')::int`,
+        profit: sql<number>`COALESCE(SUM(${userBets.pnl}), 0)::float`,
+      })
+      .from(userBets)
+      .where(sql`${userBets.status} IN ('won', 'lost')`)
+      .groupBy(userBets.userId);
+
+    let activeBettors = 0;
+    let totalProfits = 0;
+    let winRateSum = 0;
+    let winRateCount = 0;
+    if (communityStatsRows.length > 0) {
+      const allUserIds = communityStatsRows.map((r) => r.userId);
+      const communityProfiles = await db
+        .select({ id: profiles.id, isFakeAccount: profiles.isFakeAccount })
+        .from(profiles)
+        .where(inArray(profiles.id, allUserIds));
+      const realIds = new Set(
+        communityProfiles.filter((p) => !p.isFakeAccount).map((p) => p.id)
+      );
+      for (const r of communityStatsRows) {
+        if (!realIds.has(r.userId)) continue;
+        const tb = Number(r.totalBets) || 0;
+        if (tb === 0) continue;
+        activeBettors += 1;
+        totalProfits += Number(r.profit) || 0;
+        winRateSum += ((Number(r.wins) || 0) / tb) * 100;
+        winRateCount += 1;
+      }
+    }
+
+    const communityStats = {
+      activeBettors,
+      totalProfits: Math.round(totalProfits),
+      avgWinRate:
+        winRateCount > 0 ? Math.round((winRateSum / winRateCount) * 10) / 10 : 0,
+    };
+
+    return res.status(200).json({ leaders: ranked, communityStats });
   } catch (err) {
     console.error("Leaderboard error", err);
     return res.status(500).json({ message: "Failed to load leaderboard" });

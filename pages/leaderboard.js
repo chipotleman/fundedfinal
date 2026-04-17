@@ -17,6 +17,7 @@ const Leaderboard = () => {
   const [bankroll, setBankroll] = useState(10000);
   const [activeIndex, setActiveIndex] = useState(0);
   const [leaderboardData, setLeaderboardData] = useState([]);
+  const [communityStats, setCommunityStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const carouselRef = useRef(null);
@@ -52,6 +53,7 @@ const Leaderboard = () => {
         const data = await response.json();
         if (!cancelled) {
           setLeaderboardData(Array.isArray(data.leaders) ? data.leaders : []);
+          setCommunityStats(data.communityStats || null);
         }
       } catch (err) {
         console.error('Error fetching leaderboard:', err);
@@ -171,6 +173,14 @@ const Leaderboard = () => {
   };
 
   const initials = (name) => name.slice(0, 2).toUpperCase();
+
+  const formatProfit = (n) => {
+    const sign = n < 0 ? '-' : '';
+    const abs = Math.abs(n);
+    if (abs >= 1_000_000) return `${sign}$${(abs / 1_000_000).toFixed(1)}M`;
+    if (abs >= 1_000) return `${sign}$${(abs / 1_000).toFixed(1)}K`;
+    return `${sign}$${abs.toLocaleString()}`;
+  };
 
   const renderLeaderCard = (leader, opts = {}) => {
     const { variant = 'carousel' } = opts;
@@ -391,9 +401,27 @@ const Leaderboard = () => {
         {/* Community stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
           {[
-            { value: '2,847', label: 'Active Bettors', color: 'text-green-400' },
-            { value: '$1.2M', label: 'Total Profits', color: 'text-green-400' },
-            { value: '68.4%', label: 'Avg Win Rate', color: 'text-blue-400' },
+            {
+              value: communityStats
+                ? communityStats.activeBettors.toLocaleString()
+                : '—',
+              label: 'Active Bettors',
+              color: 'text-green-400',
+            },
+            {
+              value: communityStats
+                ? formatProfit(communityStats.totalProfits)
+                : '—',
+              label: 'Total Profits',
+              color: 'text-green-400',
+            },
+            {
+              value: communityStats
+                ? `${communityStats.avgWinRate.toFixed(1)}%`
+                : '—',
+              label: 'Avg Win Rate',
+              color: 'text-blue-400',
+            },
             { value: '24/7', label: 'Live Updates', color: 'text-yellow-400' },
           ].map((s, i) => (
             <div
