@@ -175,7 +175,12 @@ export default async function handler(req, res) {
           const endMs = r.endsAt ? new Date(r.endsAt).getTime() : null;
           const dur = (r.durationMinutes || 0) * 60 * 1000;
           const earlyEnd = startMs && endMs && dur && (startMs + dur - endMs) > 60_000;
-          if (earlyEnd) {
+          // Forfeit endpoint also sets the loser's final balance to exactly '0'.
+          // Use that as a deterministic secondary signal so a forfeit in the
+          // final minute (when earlyEnd would be false) is still detected.
+          const loserFinal = (r.user1Id === userId) ? r.user2FinalBalance : r.user1FinalBalance;
+          const loserBustedToZero = loserFinal != null && parseFloat(loserFinal) === 0;
+          if (earlyEnd || loserBustedToZero) {
             const opponentId = r.user1Id === userId ? r.user2Id : r.user1Id;
             let opp = { username: 'Opponent', avatar: null };
             if (r.isFakeOpponent && r.fakeOpponentId) {
