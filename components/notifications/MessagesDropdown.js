@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { useRouter } from 'next/router';
 import { useNotifications } from '../../contexts/NotificationsContext';
 import UserAvatar from '../UserAvatar';
@@ -38,13 +38,40 @@ function TypingDots() {
   );
 }
 
+function SkeletonRow() {
+  return (
+    <div
+      className="w-full flex items-center gap-3 px-3 py-2.5"
+      style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}
+    >
+      <div
+        className="rounded-full flex-shrink-0 animate-pulse"
+        style={{ width: 40, height: 40, backgroundColor: 'rgba(255,255,255,0.06)' }}
+      />
+      <div className="flex-1 min-w-0 space-y-2">
+        <div
+          className="h-3 rounded animate-pulse"
+          style={{ width: '40%', backgroundColor: 'rgba(255,255,255,0.08)' }}
+        />
+        <div
+          className="h-2.5 rounded animate-pulse"
+          style={{ width: '75%', backgroundColor: 'rgba(255,255,255,0.05)' }}
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function MessagesDropdown({ open, onClose, anchorRef }) {
   const router = useRouter();
   const ctx = useNotifications();
   const ref = useRef(null);
-  const [conversations, setConversations] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const {
+    conversations,
+    conversationsLoaded,
+    conversationsError,
+    refreshConversations,
+  } = ctx;
 
   const liveUnreadIds = useMemo(() => {
     const s = new Set();
@@ -54,38 +81,12 @@ export default function MessagesDropdown({ open, onClose, anchorRef }) {
     return s;
   }, [ctx.unreadMessages]);
 
-  const fetchConversations = useCallback(async () => {
-    try {
-      const res = await fetch('/api/messages/conversations', { credentials: 'include' });
-      if (!res.ok) {
-        setError('Could not load messages.');
-        return;
-      }
-      const data = await res.json();
-      setConversations(data.conversations || []);
-      setError(null);
-    } catch {
-      setError('Could not load messages.');
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
+  // Stale-while-revalidate: silently refresh in the background each open
+  // without flipping a loading flag, so cached rows stay on screen.
   useEffect(() => {
     if (!open) return;
-    setLoading(true);
-    fetchConversations();
-  }, [open, fetchConversations]);
-
-  // Refetch when unread set changes (new message arrives) so previews stay fresh.
-  const unreadKey = useMemo(
-    () => Array.from(liveUnreadIds).sort().join(','),
-    [liveUnreadIds]
-  );
-  useEffect(() => {
-    if (!open) return;
-    fetchConversations();
-  }, [unreadKey, open, fetchConversations]);
+    refreshConversations?.();
+  }, [open, refreshConversations]);
 
   // Close on outside click / Escape
   useEffect(() => {
@@ -120,6 +121,9 @@ export default function MessagesDropdown({ open, onClose, anchorRef }) {
   if (!open) return null;
 
   const total = liveUnreadIds.size;
+  const showSkeleton = !conversationsLoaded && sorted.length === 0 && !conversationsError;
+  const showError = conversationsLoaded && !!conversationsError && sorted.length === 0;
+  const showEmpty = conversationsLoaded && !conversationsError && sorted.length === 0;
 
   return (
     <div
@@ -158,18 +162,23 @@ export default function MessagesDropdown({ open, onClose, anchorRef }) {
       </div>
 
       <div className="overflow-y-auto" style={{ maxHeight: 'calc(70vh - 96px)' }}>
-        {loading && (
-          <div className="px-4 py-8 text-center text-gray-500 text-sm">Loading…</div>
+        {showSkeleton && (
+          <div aria-hidden="true">
+            <SkeletonRow />
+            <SkeletonRow />
+            <SkeletonRow />
+            <SkeletonRow />
+          </div>
         )}
-        {!loading && error && (
-          <div className="px-4 py-8 text-center text-red-400 text-sm">{error}</div>
+        {showError && (
+          <div className="px-4 py-8 text-center text-red-400 text-sm">{conversationsError}</div>
         )}
-        {!loading && !error && sorted.length === 0 && (
+        {showEmpty && (
           <div className="px-4 py-8 text-center text-gray-500 text-sm">
             No conversations yet.
           </div>
         )}
-        {!loading && !error && sorted.map((c) => {
+        {sorted.map((c) => {
           const f = c.friend;
           const last = c.lastMessage;
           const unread = last?.unread || liveUnreadIds.has(f.id);

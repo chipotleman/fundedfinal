@@ -35,6 +35,10 @@ export function NotificationsProvider({ children }) {
   const [data, setData] = useState(EMPTY);
   const [toasts, setToasts] = useState([]);
   const [typingSenderIds, setTypingSenderIds] = useState(() => new Set());
+  const [conversations, setConversations] = useState([]);
+  const [conversationsLoaded, setConversationsLoaded] = useState(false);
+  const [conversationsError, setConversationsError] = useState(null);
+  const conversationsInflightRef = useRef(null);
   const typingTimersRef = useRef(new Map());
   const seenRef = useRef(readSeen());
   const suppressRef = useRef(new Set());
@@ -118,6 +122,30 @@ export function NotificationsProvider({ children }) {
     });
   }, [isSuppressed]);
 
+  const refreshConversations = useCallback(async () => {
+    if (!isAuthed) return;
+    if (conversationsInflightRef.current) return conversationsInflightRef.current;
+    const promise = (async () => {
+      try {
+        const res = await fetch('/api/messages/conversations', { credentials: 'include' });
+        if (!res.ok) {
+          setConversationsError('Could not load messages.');
+          return;
+        }
+        const json = await res.json();
+        setConversations(json.conversations || []);
+        setConversationsError(null);
+      } catch {
+        setConversationsError('Could not load messages.');
+      } finally {
+        setConversationsLoaded(true);
+        conversationsInflightRef.current = null;
+      }
+    })();
+    conversationsInflightRef.current = promise;
+    return promise;
+  }, [isAuthed]);
+
   const refresh = useCallback(async () => {
     if (!isAuthed) return;
     try {
@@ -195,12 +223,29 @@ export function NotificationsProvider({ children }) {
       for (const t of typingTimersRef.current.values()) clearTimeout(t);
       typingTimersRef.current.clear();
       setTypingSenderIds(new Set());
+      setConversations([]);
+      setConversationsLoaded(false);
+      setConversationsError(null);
+      conversationsInflightRef.current = null;
       return;
     }
     refresh();
+    refreshConversations();
     const interval = setInterval(refresh, POLL_MS);
     return () => clearInterval(interval);
-  }, [isAuthed, refresh]);
+  }, [isAuthed, refresh, refreshConversations]);
+
+  // Refresh conversation cache whenever the unread-message set changes so the
+  // dropdown always has fresh previews ready before the user opens it.
+  const unreadMessageKey = data.unreadMessages
+    .map((m) => `${m.sender?.id || ''}:${m.id || ''}`)
+    .sort()
+    .join(',');
+  useEffect(() => {
+    if (!isAuthed) return;
+    if (!unreadMessageKey) return;
+    refreshConversations();
+  }, [isAuthed, unreadMessageKey, refreshConversations]);
 
   // SSE listener — uses the shared SSE singleton so only ONE EventSource
   // connection is open per tab (shared with MatchupContext).
@@ -245,6 +290,7 @@ export function NotificationsProvider({ children }) {
         // Still refresh so the unread badge / unread set stay accurate
         // (no-op for outgoing messages from the sender's own session).
         refresh();
+        refreshConversations();
       } else if (ev.type === 'notification:refresh' || ev.type.startsWith('notification:')) {
         refresh();
       } else if (ev.type === 'achievement:earned' && ev.achievement?.id) {
@@ -428,6 +474,10 @@ export function NotificationsProvider({ children }) {
     notifyTyping,
     notifyStoppedTyping,
     clearTyping,
+    conversations,
+    conversationsLoaded,
+    conversationsError,
+    refreshConversations,
   };
 
   return (
@@ -453,6 +503,10 @@ export function useNotifications() {
       notifyTyping: async () => {},
       notifyStoppedTyping: async () => {},
       clearTyping: () => {},
+      conversations: [],
+      conversationsLoaded: false,
+      conversationsError: null,
+      refreshConversations: async () => {},
     };
   }
   return ctx;
