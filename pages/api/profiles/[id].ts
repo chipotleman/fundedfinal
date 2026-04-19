@@ -3,6 +3,8 @@ import { db } from "../../../lib/db";
 import { profiles, userBets, fakeOpponents } from "../../../shared/schema";
 import { desc, eq } from "drizzle-orm";
 import { evaluateAndAwardAchievements, getAchievementsWithProgress } from "../../../lib/achievements";
+import { buildFrameCatalog, deriveUnlockedFrameIds } from "../../../lib/profileFrames";
+import { normalizeFavoriteTeams, findTeam, BANNER_LIBRARY } from "../../../lib/teamCatalog";
 
 function parseAmericanOdds(odds: unknown): number | null {
   if (odds === null || odds === undefined) return null;
@@ -135,6 +137,52 @@ export default async function handler(
         console.error("[ACHIEVEMENTS] progress lookup error:", progErr);
       }
 
+      const storedUnlocked = Array.isArray(profile.unlockedFrames)
+        ? profile.unlockedFrames.filter((f): f is string => typeof f === 'string')
+        : [];
+      const derivedUnlocked = deriveUnlockedFrameIds({
+        unlockedFrames: storedUnlocked,
+        achievements,
+      });
+
+      // Backfill: if we discovered frames the user has earned via achievements
+      // that aren't yet stored on the profile, persist them so equip
+      // validation doesn't reject legitimate frames.
+      if (derivedUnlocked.length > storedUnlocked.length) {
+        try {
+          await db
+            .update(profiles)
+            .set({ unlockedFrames: derivedUnlocked, updatedAt: new Date() })
+            .where(eq(profiles.id, id));
+        } catch (backfillErr) {
+          console.error('[FRAMES] backfill error:', backfillErr);
+        }
+      }
+
+      const unlockedFrames = derivedUnlocked;
+      const frames = buildFrameCatalog({
+        unlockedFrames,
+        achievements,
+      });
+      const equippedFrameId = profile.equippedFrame || null;
+      const equippedIsUnlocked = equippedFrameId
+        ? frames.some((f) => f.id === equippedFrameId && f.unlocked)
+        : false;
+
+      const rawFavorites = Array.isArray(profile.favoriteTeams)
+        ? profile.favoriteTeams
+        : [];
+      const favoriteTeams = normalizeFavoriteTeams(rawFavorites).map((t) => {
+        const meta = findTeam(t.league, t.teamId);
+        return {
+          league: t.league,
+          teamId: t.teamId,
+          name: meta?.name || t.teamId,
+          logo: meta?.logo || null,
+          sport: meta?.sport || null,
+        };
+      });
+
       return res.status(200).json({
         ...profile,
         total_bets: totalBets,
@@ -145,6 +193,11 @@ export default async function handler(
         allAchievements,
         currentStreak,
         avgOdds,
+        equippedFrame: equippedIsUnlocked ? equippedFrameId : null,
+        unlockedFrames,
+        favoriteTeams,
+        frames,
+        bannerLibrary: BANNER_LIBRARY,
       });
     } catch (error) {
       console.error("Error fetching profile:", error);

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
 import ProfileModal from '../components/ProfileModal';
+import UserAvatar from '../components/UserAvatar';
 import TapSurface from '../components/TapSurface';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserProfiles } from '../contexts/UserProfilesContext';
@@ -253,10 +254,14 @@ const Leaderboard = () => {
 
           {/* Avatar + name */}
           <div className="flex items-center gap-3 mb-5">
-            <div className={`w-14 h-14 rounded-full flex items-center justify-center text-lg font-black text-white border border-white/10 ${badge.ring}`}
-                 style={{ background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' }}>
-              {initials(leader.username)}
-            </div>
+            <UserAvatar
+              avatar={leader.avatar}
+              username={leader.username}
+              frameId={leader.equippedFrame}
+              size={56}
+              bgColor="#0f172a"
+              textColor="#ffffff"
+            />
             <div className="min-w-0 flex-1">
               <div className="text-white font-bold text-base truncate">{leader.username}</div>
               <div className="flex items-center gap-1.5 mt-0.5">

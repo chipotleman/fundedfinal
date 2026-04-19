@@ -4,6 +4,7 @@ import { useSession } from 'next-auth/react';
 import { useTheme } from '../contexts/ThemeContext';
 import ForfeitModal from './battle/ForfeitModal';
 import { formatMoney } from '../utils/formatMoney';
+import UserAvatar from './UserAvatar';
 
 function formatTimer(ms) {
   if (!ms || ms <= 0) return '00:00';
@@ -327,19 +328,14 @@ export default function ActiveBattleCard({
             </div>
 
             <div className="flex flex-col items-center" style={{ width: '25%' }}>
-              <div
-                className="w-14 h-14 md:w-[72px] md:h-[72px] rounded-full flex items-center justify-center overflow-hidden relative z-10"
-                style={{
-                  border: '3px solid #ef4444',
-                  boxShadow: '0 0 20px rgba(239,68,68,0.3)',
-                  background: '#111',
-                }}
-              >
-                {opponent.avatar ? (
-                  <img src={opponent.avatar} alt={opponent.username} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-xl md:text-2xl font-black text-white/70">{(opponent.username || 'O')[0].toUpperCase()}</span>
-                )}
+              <div className="relative z-10" style={{ filter: opponent.equippedFrame ? 'none' : 'drop-shadow(0 0 20px rgba(239,68,68,0.3))' }}>
+                <UserAvatar
+                  avatar={opponent.avatar}
+                  username={opponent.username}
+                  frameId={opponent.equippedFrame}
+                  size={72}
+                  bgColor="#111"
+                />
               </div>
               <p className="text-white text-[11px] md:text-xs font-bold truncate max-w-[80px] md:max-w-[100px] text-center mt-1">{opponent.username || 'Opponent'}</p>
               <p className="text-[10px] md:text-xs font-bold text-red-400 leading-tight">

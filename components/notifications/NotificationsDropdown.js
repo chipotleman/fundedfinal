@@ -3,20 +3,17 @@ import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { useNotifications } from '../../contexts/NotificationsContext';
 import { formatSeenAgo } from '../../utils/relativeTime';
+import UserAvatar from '../UserAvatar';
 
 function Avatar({ sender, size = 36 }) {
-  const initial = (sender?.username || '?')[0]?.toUpperCase();
   return (
-    <div
-      className="rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0"
-      style={{ width: size, height: size }}
-    >
-      {sender?.avatar ? (
-        <img src={sender.avatar} className="w-full h-full object-cover" alt="" />
-      ) : (
-        <span className="text-sm font-bold text-white">{initial}</span>
-      )}
-    </div>
+    <UserAvatar
+      avatar={sender?.avatar}
+      username={sender?.username}
+      frameId={sender?.equippedFrame}
+      size={size}
+      bgColor="#374151"
+    />
   );
 }
 

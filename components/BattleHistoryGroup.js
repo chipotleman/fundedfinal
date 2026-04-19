@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { formatMoney } from '../utils/formatMoney';
 import BattleOverviewPopup from './BattleOverviewPopup';
+import UserAvatar from './UserAvatar';
 
 const MODE_THEMES = {
   rush: {
@@ -218,19 +219,14 @@ export default function BattleHistoryGroup({
             </div>
 
             <div className="flex flex-col items-center" style={{ width: '32%' }}>
-              <div
-                className="w-12 h-12 md:w-14 md:h-14 rounded-full flex items-center justify-center overflow-hidden"
-                style={{
-                  border: '3px solid #ef4444',
-                  boxShadow: '0 0 20px rgba(239,68,68,0.3)',
-                  background: '#111',
-                }}
-              >
-                {opponent.avatar ? (
-                  <img src={opponent.avatar} alt={opponent.username} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-lg font-black text-white/70">{(opponent.username || 'O')[0].toUpperCase()}</span>
-                )}
+              <div style={{ filter: opponent.equippedFrame ? 'none' : 'drop-shadow(0 0 20px rgba(239,68,68,0.3))' }}>
+                <UserAvatar
+                  avatar={opponent.avatar}
+                  username={opponent.username}
+                  frameId={opponent.equippedFrame}
+                  size={56}
+                  bgColor="#111"
+                />
               </div>
               <p className="text-white text-[11px] font-bold truncate max-w-[90px] text-center mt-1">{opponent.username}</p>
               <p className="text-[10px] font-bold text-red-400 leading-tight">

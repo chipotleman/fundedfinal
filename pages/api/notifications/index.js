@@ -50,7 +50,7 @@ export default async function handler(req, res) {
     const userMap = new Map();
     if (senderIds.length > 0) {
       const [p, u] = await Promise.all([
-        db.select({ id: profiles.id, username: profiles.username, avatar: profiles.avatar })
+        db.select({ id: profiles.id, username: profiles.username, avatar: profiles.avatar, equippedFrame: profiles.equippedFrame })
           .from(profiles).where(inArray(profiles.id, senderIds)),
         db.select({ id: users.id, email: users.email, image: users.image })
           .from(users).where(inArray(users.id, senderIds)),
@@ -67,6 +67,7 @@ export default async function handler(req, res) {
         id,
         username: p?.username || handle || 'Player',
         avatar: p?.avatar || u?.image || null,
+        equippedFrame: p?.equippedFrame || null,
       };
     };
 

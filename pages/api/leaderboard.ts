@@ -80,6 +80,7 @@ export default async function handler(
           id: p.id,
           username: p.username || "Anonymous",
           avatar: p.avatar || null,
+          equippedFrame: p.equippedFrame || null,
           profit: Math.round(profit),
           roi: Math.round(roi * 10) / 10,
           wins,

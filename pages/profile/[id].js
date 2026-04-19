@@ -3,9 +3,12 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import TopNavbar from '../../components/TopNavbar';
+import UserAvatar from '../../components/UserAvatar';
+import ProfileEditPanel from '../../components/ProfileEditPanel';
 import { useBetSlip } from '../../contexts/BetSlipContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { formatMoney } from '../../utils/formatMoney';
+import { getFrameById } from '../../lib/profileFrames';
 
 export default function PublicProfile() {
   const [profile, setProfile] = useState(null);
@@ -14,7 +17,14 @@ export default function PublicProfile() {
   const [loading, setLoading] = useState(true);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [formData, setFormData] = useState({ username: '', bio: '', avatar: '' });
+  const [formData, setFormData] = useState({
+    username: '',
+    bio: '',
+    avatar: '',
+    bannerUrl: '',
+    favoriteTeams: [],
+    equippedFrame: null,
+  });
   const [usernameStatus, setUsernameStatus] = useState({ checking: false, available: null, error: null });
   const [saving, setSaving] = useState(false);
   const [friendStatus, setFriendStatus] = useState(null);
@@ -54,6 +64,11 @@ export default function PublicProfile() {
           username: profileData.username || '',
           bio: profileData.bio || '',
           avatar: profileData.avatar || '',
+          bannerUrl: profileData.bannerUrl || '',
+          favoriteTeams: Array.isArray(profileData.favoriteTeams)
+            ? profileData.favoriteTeams.map((t) => ({ league: t.league, teamId: t.teamId }))
+            : [],
+          equippedFrame: profileData.equippedFrame || null,
         });
         setIsOwnProfile(session?.user?.id === id);
       }
@@ -237,9 +252,8 @@ export default function PublicProfile() {
       });
 
       if (res.ok) {
-        const updated = await res.json();
-        setProfile(updated);
         setEditing(false);
+        await fetchProfile();
       } else {
         const error = await res.json();
         alert(error.error || 'Failed to update profile');
@@ -323,29 +337,57 @@ export default function PublicProfile() {
       
       <div className="pt-16 pb-24 px-4 max-w-4xl mx-auto">
         <div className="rounded-2xl overflow-hidden mb-6" style={{ backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08)' }}>
-          <div className="p-6 sm:p-8">
+          <div
+            className="relative w-full"
+            style={{
+              height: '160px',
+              background: profile.bannerUrl
+                ? `url(${profile.bannerUrl}) center/cover`
+                : 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+            }}
+          />
+          <div className="p-6 sm:p-8 -mt-12 relative">
+            {editing ? (
+              <ProfileEditPanel
+                profile={profile}
+                formData={formData}
+                setFormData={setFormData}
+                usernameStatus={usernameStatus}
+                onUsernameChange={handleUsernameChange}
+                onSave={handleSave}
+                onCancel={() => {
+                  setEditing(false);
+                  setFormData({
+                    username: profile.username || '',
+                    bio: profile.bio || '',
+                    avatar: profile.avatar || '',
+                    bannerUrl: profile.bannerUrl || '',
+                    favoriteTeams: Array.isArray(profile.favoriteTeams)
+                      ? profile.favoriteTeams.map((t) => ({ league: t.league, teamId: t.teamId }))
+                      : [],
+                    equippedFrame: profile.equippedFrame || null,
+                  });
+                }}
+                saving={saving}
+                isDarkMode={isDarkMode}
+              />
+            ) : (
             <div className="flex flex-col md:flex-row items-center md:items-start gap-5">
               <div className="relative">
-                <div className="w-24 h-24 rounded-full flex items-center justify-center text-4xl overflow-hidden" style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', border: `2px solid ${isDarkMode ? '#333' : '#d1d5db'}` }}>
-                  {editing ? (
-                    <label className="cursor-pointer w-full h-full flex items-center justify-center">
-                      {formData.avatar ? (
-                        <img src={formData.avatar} alt="Avatar" className="w-full h-full object-cover" />
-                      ) : (
-                        <span className="text-gray-500 text-xs">Upload</span>
-                      )}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleAvatarUpload}
-                        className="hidden"
-                      />
-                    </label>
-                  ) : profile.avatar ? (
-                    <img src={profile.avatar} alt="Avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className={`font-bold text-2xl ${isDarkMode ? 'text-white' : 'text-gray-600'}`}>{profile.username?.[0]?.toUpperCase() || '?'}</span>
-                  )}
+                <div
+                  className="rounded-full p-1"
+                  style={{
+                    backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff',
+                  }}
+                >
+                  <UserAvatar
+                    avatar={profile.avatar}
+                    username={profile.username}
+                    frameId={profile.equippedFrame}
+                    size={96}
+                    bgColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
+                    textColor={isDarkMode ? '#fff' : '#374151'}
+                  />
                 </div>
                 {winRate >= 60 && (
                   <div className="absolute -bottom-1 -right-1 bg-yellow-500 text-black text-[9px] font-bold px-1.5 py-0.5 rounded-full">
@@ -355,70 +397,49 @@ export default function PublicProfile() {
               </div>
 
               <div className="flex-1 text-center md:text-left">
-                {editing ? (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1 uppercase tracking-wider">Username</label>
-                      <input
-                        type="text"
-                        value={formData.username}
-                        onChange={handleUsernameChange}
-                        className={`w-full rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
-                        style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, fontSize: '16px' }}
-                        maxLength={20}
-                      />
-                      {usernameStatus.checking && (
-                        <p className="text-gray-400 text-xs mt-1">Checking...</p>
-                      )}
-                      {usernameStatus.available === true && formData.username !== profile.username && (
-                        <p className="text-green-400 text-xs mt-1">Available</p>
-                      )}
-                      {usernameStatus.error && (
-                        <p className="text-red-400 text-xs mt-1">{usernameStatus.error}</p>
-                      )}
+                <>
+                  <h1 className={`text-2xl font-black mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                    {profile.username || 'Anonymous'}
+                  </h1>
+                  <p className="text-gray-500 text-sm mb-3">{profile.bio || 'No bio yet'}</p>
+                  {(() => {
+                    const equipped = profile.equippedFrame ? getFrameById(profile.equippedFrame) : null;
+                    if (!equipped) return null;
+                    return (
+                      <p className="text-xs mb-3" style={{ color: '#9ca3af' }}>
+                        <span className="mr-1">{equipped.icon}</span>
+                        Wearing <span style={{ color: isDarkMode ? '#fff' : '#111' }}>{equipped.name}</span>
+                      </p>
+                    );
+                  })()}
+                  {Array.isArray(profile.favoriteTeams) && profile.favoriteTeams.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 justify-center md:justify-start mb-3">
+                      {profile.favoriteTeams.map((t) => (
+                        <span
+                          key={`${t.league}:${t.teamId}`}
+                          className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"
+                          style={{
+                            backgroundColor: isDarkMode ? '#111' : '#f3f4f6',
+                            border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`,
+                            color: isDarkMode ? '#e5e7eb' : '#374151',
+                          }}
+                        >
+                          {t.logo ? (
+                            <img src={t.logo} alt="" className="w-4 h-4 object-contain" />
+                          ) : (
+                            <span
+                              className="w-4 h-4 inline-flex items-center justify-center rounded-full text-[8px] font-bold"
+                              style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#e5e7eb' }}
+                            >
+                              {t.teamId?.slice(0, 3)}
+                            </span>
+                          )}
+                          <span>{t.name}</span>
+                          <span className="text-[10px] text-gray-500">{t.league}</span>
+                        </span>
+                      ))}
                     </div>
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1 uppercase tracking-wider">Bio</label>
-                      <textarea
-                        value={formData.bio}
-                        onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
-                        className={`w-full rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-blue-500 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}
-                        style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, fontSize: '16px' }}
-                        rows={3}
-                        maxLength={200}
-                        placeholder="Tell others about yourself..."
-                      />
-                    </div>
-                    <div className="flex gap-3">
-                      <button
-                        onClick={handleSave}
-                        disabled={saving || usernameStatus.available === false}
-                        className="bg-blue-600 disabled:opacity-40 text-white font-bold py-2 px-6 rounded-lg transition-all text-sm"
-                      >
-                        {saving ? 'Saving...' : 'Save'}
-                      </button>
-                      <button
-                        onClick={() => {
-                          setEditing(false);
-                          setFormData({
-                            username: profile.username || '',
-                            bio: profile.bio || '',
-                            avatar: profile.avatar || '',
-                          });
-                        }}
-                        className={`font-semibold py-2 px-6 rounded-lg transition-all text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}
-                        style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <>
-                    <h1 className={`text-2xl font-black mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                      {profile.username || 'Anonymous'}
-                    </h1>
-                    <p className="text-gray-500 text-sm mb-3">{profile.bio || 'No bio yet'}</p>
+                  )}
                     {isOwnProfile && (
                       <button
                         onClick={() => setEditing(true)}
@@ -497,10 +518,10 @@ export default function PublicProfile() {
                         )}
                       </div>
                     )}
-                  </>
-                )}
+                </>
               </div>
             </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4" style={{ borderTop: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
@@ -522,6 +543,63 @@ export default function PublicProfile() {
             </div>
           </div>
         </div>
+
+        {Array.isArray(profile.frames) && profile.frames.length > 0 && (
+          <div
+            className="rounded-2xl p-5 mb-6"
+            style={{
+              backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff',
+              border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`,
+              boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08)',
+            }}
+          >
+            <div className="flex items-baseline justify-between mb-4">
+              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
+                Achievements
+              </h2>
+              <span className="text-xs text-gray-500">
+                {profile.frames.filter((f) => f.unlocked).length} / {profile.frames.length}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+              {profile.frames.map((f) => {
+                const isEquipped = profile.equippedFrame === f.id;
+                return (
+                  <div
+                    key={f.id}
+                    className="rounded-xl p-3 flex items-center gap-3"
+                    style={{
+                      backgroundColor: isDarkMode ? '#111' : '#f9fafb',
+                      border: `1px solid ${isEquipped ? '#3b82f6' : isDarkMode ? '#1a1a1a' : '#e5e7eb'}`,
+                      opacity: f.unlocked ? 1 : 0.55,
+                    }}
+                  >
+                    <UserAvatar
+                      avatar={profile.avatar}
+                      username={profile.username}
+                      frame={f.unlocked ? f : null}
+                      size={40}
+                      bgColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
+                      textColor={isDarkMode ? '#fff' : '#374151'}
+                    />
+                    <div className="min-w-0">
+                      <div className={`text-xs font-bold truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        <span className="mr-1">{f.icon}</span>
+                        {f.name}
+                      </div>
+                      <div className="text-[10px] text-gray-500 leading-snug">
+                        {f.unlocked ? f.description : `Locked · ${f.description}`}
+                      </div>
+                      {isEquipped && (
+                        <div className="text-[10px] text-blue-400 font-semibold mt-0.5">Equipped</div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="rounded-2xl p-5" style={{ backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08)' }}>
           <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Battle History</h2>

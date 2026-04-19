@@ -40,6 +40,7 @@ export default async function handler(req, res) {
           id: profiles.id,
           username: profiles.username,
           avatar: profiles.avatar,
+          equippedFrame: profiles.equippedFrame,
           battleWins: profiles.battleWins,
           battleLosses: profiles.battleLosses,
         })
