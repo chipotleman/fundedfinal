@@ -35,18 +35,38 @@ function Avatar({ user, size = 40 }) {
   );
 }
 
-function NotificationsFeed({ ctx, router, isDarkMode }) {
+function NotificationsFeed({ ctx, router, isDarkMode, onOpenChat }) {
   const battleInvites = ctx.battleInvites || [];
   const friendRequests = ctx.friendRequests || [];
+  const unreadMessages = ctx.unreadMessages || [];
   const [busyId, setBusyId] = useState(null);
+
+  // Group unread messages by sender so each conversation is one feed item.
+  const messageGroups = useMemo(() => {
+    const map = new Map();
+    for (const m of unreadMessages) {
+      const sid = m.sender?.id;
+      if (!sid) continue;
+      const existing = map.get(sid);
+      if (!existing || new Date(m.createdAt) > new Date(existing.createdAt)) {
+        map.set(sid, { ...m, count: (existing?.count || 0) + 1 });
+      } else {
+        existing.count = (existing.count || 0) + 1;
+      }
+    }
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+  }, [unreadMessages]);
 
   const wrap = async (id, fn) => {
     setBusyId(id);
     try { await fn(); } finally { setBusyId(null); }
   };
 
-  const empty =
-    battleInvites.length === 0 && friendRequests.length === 0;
+  const totalNew =
+    battleInvites.length + friendRequests.length + messageGroups.length;
+  const empty = totalNew === 0;
 
   const cardBg = isDarkMode ? '#0a0a0a' : '#ffffff';
   const cardBorder = isDarkMode ? '#1a1a1a' : '#e5e7eb';
@@ -66,7 +86,7 @@ function NotificationsFeed({ ctx, router, isDarkMode }) {
           Notifications
         </span>
         <span className="text-xs" style={{ color: textSecondary }}>
-          {battleInvites.length + friendRequests.length} new
+          {totalNew} new
         </span>
       </div>
 
@@ -122,6 +142,43 @@ function NotificationsFeed({ ctx, router, isDarkMode }) {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {messageGroups.length > 0 && (
+        <div>
+          <div
+            className="px-4 pt-3 pb-1 text-[11px] uppercase tracking-wider font-semibold"
+            style={{ color: textSecondary }}
+          >
+            Messages
+          </div>
+          {messageGroups.map(m => (
+            <button
+              key={`msg-${m.sender.id}`}
+              onClick={() => onOpenChat?.(m.sender.id)}
+              className="w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-white/5 transition-colors"
+              style={{ borderTop: `1px solid ${cardBorder}` }}
+            >
+              <Avatar user={m.sender} />
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
+                  {m.sender?.username || 'Someone'}
+                  {m.count > 1 && (
+                    <span
+                      className="ml-2 inline-flex items-center justify-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500 text-white"
+                    >{m.count}</span>
+                  )}
+                </div>
+                <div className="text-xs truncate" style={{ color: textSecondary }}>
+                  {m.content || 'New message'}
+                </div>
+              </div>
+              <span className="text-[10px] flex-shrink-0 mt-1" style={{ color: textSecondary }}>
+                {timeAgo(m.createdAt)}
+              </span>
+            </button>
+          ))}
         </div>
       )}
 
@@ -669,7 +726,7 @@ export default function NotificationsPage() {
         {/* Desktop two-column / mobile tabbed */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div className={`md:col-span-2 ${mobileTab === 'notifications' ? 'block' : 'hidden'} md:block`}>
-            <NotificationsFeed ctx={ctx} router={router} isDarkMode={isDarkMode} />
+            <NotificationsFeed ctx={ctx} router={router} isDarkMode={isDarkMode} onOpenChat={handleSelect} />
           </div>
           <div className={`md:col-span-3 ${mobileTab === 'messages' ? 'block' : 'hidden'} md:block`}>
             <MessagesPanel

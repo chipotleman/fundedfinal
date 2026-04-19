@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useRouter } from 'next/router';
 import { useNotifications } from '../../contexts/NotificationsContext';
@@ -201,32 +201,141 @@ function Toast({ toast, ctx, router }) {
   }
 
   if (toast.type === 'message') {
-    const preview = toast.payload?.preview || '';
     return (
-      <div
-        className="bg-gradient-to-r from-emerald-900/95 to-emerald-800/95 border border-emerald-500/50 rounded-xl p-3"
-        style={baseStyle}
-      >
-        <div className="flex items-center gap-3">
-          <Avatar sender={sender} />
-          <div className="flex-1 min-w-0">
-            <div className="text-white text-sm font-bold truncate">{sender.username || 'Someone'}</div>
-            <div className="text-gray-300 text-xs truncate">{preview}</div>
-          </div>
-          <CloseBtn onClick={() => ctx.dismissToast(toast.id)} />
+      <MessageToast toast={toast} ctx={ctx} router={router} baseStyle={baseStyle} />
+    );
+  }
+
+  return null;
+}
+
+function MessageToast({ toast, ctx, router, baseStyle }) {
+  const sender = toast.sender || {};
+  const preview = toast.payload?.preview || '';
+  const [expanded, setExpanded] = useState(false);
+  const [reply, setReply] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState(null);
+  const [sent, setSent] = useState(false);
+  const inputElRef = useRef(null);
+  const lastTypingSentRef = useRef(0);
+
+  useEffect(() => {
+    if (expanded) inputElRef.current?.focus();
+  }, [expanded]);
+
+  // Suppress further toasts for this conversation while expanded so a fast
+  // back-and-forth doesn't stack new toasts on top of the open reply.
+  useEffect(() => {
+    if (!expanded || !sender.id) return undefined;
+    const key = `message:${sender.id}`;
+    ctx.setSuppress?.(key, true);
+    return () => ctx.setSuppress?.(key, false);
+  }, [expanded, sender.id, ctx]);
+
+  const handleChange = (e) => {
+    const v = e.target.value;
+    setReply(v);
+    if (!sender.id || !v.trim()) return;
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < 2500) return;
+    lastTypingSentRef.current = now;
+    ctx.notifyTyping?.(sender.id);
+  };
+
+  const handleSend = async (e) => {
+    e?.preventDefault?.();
+    const text = reply.trim();
+    if (!text || !sender.id || sending) return;
+    setSending(true);
+    setSendError(null);
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ receiverId: sender.id, content: text }),
+      });
+      if (!res.ok) {
+        setSendError(res.status === 403 ? 'You can only message friends.' : 'Could not send.');
+        return;
+      }
+      // Mark this conversation read so the bell badge clears.
+      ctx.markMessagesRead?.([sender.id]);
+      setReply('');
+      setSent(true);
+      setTimeout(() => ctx.dismissToast(toast.id), 1200);
+    } catch {
+      setSendError('Could not send.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div
+      className="bg-gradient-to-r from-emerald-900/95 to-emerald-800/95 border border-emerald-500/50 rounded-xl p-3"
+      style={baseStyle}
+    >
+      <div className="flex items-center gap-3">
+        <Avatar sender={sender} />
+        <div className="flex-1 min-w-0">
+          <div className="text-white text-sm font-bold truncate">{sender.username || 'Someone'}</div>
+          <div className="text-gray-300 text-xs truncate">{preview}</div>
         </div>
+        <CloseBtn onClick={() => ctx.dismissToast(toast.id)} />
+      </div>
+
+      {!expanded && !sent && (
         <div className="flex gap-2 mt-2">
+          <button
+            onClick={() => {
+              setExpanded(true);
+              if (sender.id) ctx.markMessagesRead?.([sender.id]);
+            }}
+            className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1.5 rounded-lg"
+          >Reply</button>
           <button
             onClick={() => {
               ctx.dismissToast(toast.id);
               router.push(`/notifications?chat=${sender.id}`);
             }}
-            className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1.5 rounded-lg"
-          >Reply</button>
+            className="px-3 bg-emerald-900/60 hover:bg-emerald-900/80 text-emerald-100 text-xs font-medium py-1.5 rounded-lg"
+            title="Open full chat"
+          >Open</button>
         </div>
-      </div>
-    );
-  }
+      )}
 
-  return null;
+      {expanded && !sent && (
+        <form onSubmit={handleSend} className="mt-2">
+          <div className="flex gap-2">
+            <input
+              ref={inputElRef}
+              type="text"
+              value={reply}
+              onChange={handleChange}
+              placeholder="Reply…"
+              className="flex-1 min-w-0 px-3 py-1.5 bg-emerald-950/60 border border-emerald-500/40 rounded-lg text-white text-xs focus:outline-none focus:border-emerald-300 placeholder-emerald-200/60"
+              maxLength={1000}
+              disabled={sending}
+            />
+            <button
+              type="submit"
+              disabled={!reply.trim() || sending}
+              className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white text-xs font-bold rounded-lg"
+            >{sending ? '…' : 'Send'}</button>
+          </div>
+          {sendError && (
+            <div className="text-red-300 text-[11px] mt-1">{sendError}</div>
+          )}
+        </form>
+      )}
+
+      {sent && (
+        <div className="mt-2 text-emerald-200 text-xs font-semibold">
+          Reply sent ✓
+        </div>
+      )}
+    </div>
+  );
 }
