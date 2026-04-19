@@ -61,6 +61,7 @@ export default function BattlePage() {
   const [showForfeitModal, setShowForfeitModal] = useState(false);
   const [forfeitConfirmation, setForfeitConfirmation] = useState(null);
   const [showBattleOptions, setShowBattleOptions] = useState(false);
+  const [focusLiveBattleId, setFocusLiveBattleId] = useState(null);
 
   const [socialTab, setSocialTab] = useState('friends');
   const [searchQuery, setSearchQuery] = useState('');
@@ -244,6 +245,79 @@ export default function BattlePage() {
       : `/notifications?chat=${chatId}`;
     router.replace(target);
   }, [router.isReady, router.query.chat, router.query.name]);
+
+  // Push notification deep links: /battle?invite=<id>, ?forfeit=<matchupId>,
+  // ?result=<matchupId>, ?live=<matchupId>. Open the relevant view, then strip
+  // the query param so a refresh doesn't re-trigger it.
+  const consumedDeepLinkRef = useRef(null);
+  useEffect(() => {
+    if (!router.isReady) return;
+    if (isGuest) return;
+    const { invite, forfeit, result, live } = router.query;
+    const inviteId = Array.isArray(invite) ? invite[0] : invite;
+    const forfeitId = Array.isArray(forfeit) ? forfeit[0] : forfeit;
+    const resultId = Array.isArray(result) ? result[0] : result;
+    const liveId = Array.isArray(live) ? live[0] : live;
+    const key = inviteId
+      ? `invite:${inviteId}`
+      : forfeitId
+      ? `forfeit:${forfeitId}`
+      : resultId
+      ? `result:${resultId}`
+      : liveId
+      ? `live:${liveId}`
+      : null;
+    if (!key) return;
+    if (consumedDeepLinkRef.current === key) return;
+    consumedDeepLinkRef.current = key;
+
+    (async () => {
+      if (inviteId) {
+        // Surface the Invites tab so the user can act on the challenge.
+        setSocialTab('invites');
+        if (typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches) {
+          setSocialSheetOpen(true);
+        }
+        // Refresh invites so the deep-linked one is present even if it
+        // arrived after the initial fetch.
+        fetchData();
+      } else if (forfeitId) {
+        // The ForfeitConfirmedModal is rendered globally from MatchupContext
+        // based on `recentForfeit` returned by /api/matchups/current. Just
+        // make sure that data is fresh.
+        refreshGlobalMatchup();
+      } else if (resultId) {
+        try {
+          const res = await fetch('/api/battles/history?limit=20');
+          if (res.ok) {
+            const data = await res.json();
+            const match = (data.matches || []).find(m => String(m.id) === String(resultId));
+            if (match) {
+              setShowResult({
+                ...match,
+                status: 'completed',
+                winnerId: match.winnerId || match.winner_id,
+                user1FinalBalance: match.user1FinalBalance || match.user1_final_balance,
+                user2FinalBalance: match.user2FinalBalance || match.user2_final_balance,
+              });
+            }
+          }
+        } catch {}
+      }
+      if (liveId) {
+        // LiveBattlesSection focuses the matching battle via focusBattleId.
+        setFocusLiveBattleId(liveId);
+      }
+
+      // Clear the consumed query param so a refresh doesn't re-trigger.
+      const cleaned = { ...router.query };
+      delete cleaned.invite;
+      delete cleaned.forfeit;
+      delete cleaned.result;
+      delete cleaned.live;
+      router.replace({ pathname: router.pathname, query: cleaned }, undefined, { shallow: true });
+    })();
+  }, [router.isReady, router.query.invite, router.query.forfeit, router.query.result, router.query.live, isGuest, fetchData, refreshGlobalMatchup]);
 
   const handleSearch = useCallback((query) => {
     setSearchQuery(query);
@@ -993,7 +1067,7 @@ export default function BattlePage() {
 
                 <div className="flex-1 min-w-0 order-2 lg:order-1">
                   <div className="mb-5">
-                    <LiveBattlesSection focusBattleId={router.query.battle} currentUserId={userId} />
+                    <LiveBattlesSection focusBattleId={focusLiveBattleId || router.query.battle} currentUserId={userId} />
                   </div>
 
                 </div>

@@ -314,7 +314,7 @@ export default async function handler(req, res) {
               category: 'result',
               title,
               body,
-              url: `/battles?result=${matchup.id}`,
+              url: `/battle?result=${matchup.id}`,
               tag: `result:${matchup.id}`,
               data: { matchupId: matchup.id, type: 'result' },
             }).catch(err => console.error('[result push]', err.message));

@@ -171,7 +171,7 @@ export default async function handler(req, res) {
               category: 'friend_live',
               title: `${senderName} just started a battle`,
               body: 'Tap to spectate or jump into your own.',
-              url: `/battles?live=${newMatchup.id}`,
+              url: `/battle?live=${newMatchup.id}`,
               tag: `friend_live:${battleInvite.senderId}:${newMatchup.id}`,
               data: { matchupId: newMatchup.id, type: 'friend_live', friendId: battleInvite.senderId },
             }).catch(() => {});
@@ -181,7 +181,7 @@ export default async function handler(req, res) {
               category: 'friend_live',
               title: `${receiverName} just started a battle`,
               body: 'Tap to spectate or jump into your own.',
-              url: `/battles?live=${newMatchup.id}`,
+              url: `/battle?live=${newMatchup.id}`,
               tag: `friend_live:${battleInvite.receiverId}:${newMatchup.id}`,
               data: { matchupId: newMatchup.id, type: 'friend_live', friendId: battleInvite.receiverId },
             }).catch(() => {});

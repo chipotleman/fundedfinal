@@ -198,7 +198,7 @@ export default async function handler(req, res) {
           category: 'invite',
           title: 'New battle invite',
           body: `${senderName} challenged you to a $${parsedBuyIn} battle`,
-          url: '/battles?invite=' + newInvite.id,
+          url: '/battle?invite=' + newInvite.id,
           tag: `invite:${newInvite.id}`,
           data: { inviteId: newInvite.id, type: 'invite' },
         }).catch(e => console.error('[invite push]', e.message));

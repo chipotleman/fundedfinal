@@ -124,7 +124,7 @@ export default async function handler(req, res) {
           category: 'forfeit',
           title: 'You won by forfeit!',
           body: `${loserName} forfeited. You collected $${winnerPayout.toFixed(2)}.`,
-          url: `/battles?forfeit=${matchup.id}`,
+          url: `/battle?forfeit=${matchup.id}`,
           tag: `forfeit:${matchup.id}`,
           data: { matchupId: matchup.id, type: 'forfeit', winnerPayout },
         }).catch(err => console.error('[forfeit push]', err.message));
