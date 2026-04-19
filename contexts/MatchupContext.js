@@ -93,15 +93,34 @@ export function MatchupProvider({ children }) {
     prevMatchupIdRef.current = currentId;
   }, [matchupData?.matchup?.id, fetchCurrentMatchup]);
 
+  // Fallback poll while SSE is unhealthy. We do NOT poll on a fixed clock
+  // when the stream is connected — the SSE channel below pushes every state
+  // change and re-fetches on reconnect. This effect is triggered by the SSE
+  // client emitting `piks:disconnected` (see handler below) which sets
+  // `sseHealthy` to false. Once SSE comes back, we clear the interval.
+  const [sseHealthy, setSseHealthy] = useState(true);
   useEffect(() => {
     if (status !== 'authenticated') return;
+    if (sseHealthy) return;
 
-    // Background safety-fallback poll. Real-time updates arrive via the
-    // SSE channel below; this only catches missed events (reconnects, etc).
-    const pollInterval = hasActiveMatchup ? 20000 : (isWaiting || isQueued) ? 10000 : 30000;
-    const interval = setInterval(fetchCurrentMatchup, pollInterval);
-    return () => clearInterval(interval);
-  }, [status, fetchCurrentMatchup, hasActiveMatchup, isWaiting, isQueued]);
+    // SSE has been broken — start a fallback poll after a short grace period
+    // (so quick blips don't cause an immediate fetch on top of the normal
+    // reconnect re-fetch), then keep polling at a steady cadence until the
+    // stream recovers.
+    const FALLBACK_GRACE_MS = 15000;
+    const FALLBACK_INTERVAL_MS = hasActiveMatchup ? 20000 : (isWaiting || isQueued) ? 10000 : 30000;
+
+    let interval = null;
+    const grace = setTimeout(() => {
+      fetchCurrentMatchup();
+      interval = setInterval(fetchCurrentMatchup, FALLBACK_INTERVAL_MS);
+    }, FALLBACK_GRACE_MS);
+
+    return () => {
+      clearTimeout(grace);
+      if (interval) clearInterval(interval);
+    };
+  }, [status, sseHealthy, fetchCurrentMatchup, hasActiveMatchup, isWaiting, isQueued]);
 
   // Real-time push channel for battle events (forfeits, etc).
   // Uses the shared SSE singleton so only ONE EventSource connection is opened
@@ -120,7 +139,22 @@ export function MatchupProvider({ children }) {
       // that arrived during the reconnect window is caught without waiting for
       // the safety poll.
       if (data?.type === 'piks:reconnected') {
+        setSseHealthy(true);
         fetchCurrentMatchup();
+        return;
+      }
+      if (data?.type === 'piks:disconnected') {
+        setSseHealthy(false);
+        return;
+      }
+      if (data?.type === 'connected') {
+        // If we were previously unhealthy (e.g. initial connect failed and
+        // fallback polling has been running), fetch immediately on recovery
+        // so the user sees fresh state without waiting for the next poll.
+        setSseHealthy(prev => {
+          if (prev === false) fetchCurrentMatchup();
+          return true;
+        });
         return;
       }
       if (data?.type === 'matchup:forfeit') {
@@ -197,7 +231,32 @@ export function MatchupProvider({ children }) {
       }
     };
 
+    // Initialize health from the shared client's current state, so a late-
+    // mounting subscriber (the SSE singleton may already be connected by
+    // the time this provider mounts) doesn't incorrectly start in an
+    // unhealthy state and trigger fallback polling.
+    if (typeof client.getState === 'function') {
+      const initialState = client.getState();
+      if (initialState === 'connected') {
+        setSseHealthy(true);
+      } else if (initialState === 'disconnected') {
+        setSseHealthy(false);
+      }
+    }
+
     const unsubscribe = client.subscribe(handleEvent);
+
+    // Connect watchdog: if after this window the client still hasn't
+    // reached a 'connected' state, mark the stream unhealthy so the
+    // fallback poll engages. Polling the explicit getState() avoids the
+    // late-subscriber pitfall of relying on replayed lifecycle events.
+    const CONNECT_WATCHDOG_MS = 10000;
+    const connectWatchdog = setTimeout(() => {
+      const s = typeof client.getState === 'function' ? client.getState() : null;
+      if (s !== 'connected') {
+        setSseHealthy(false);
+      }
+    }, CONNECT_WATCHDOG_MS);
 
     // Second push path: NotificationsContext dispatches this when it receives
     // a notification:forfeit event, giving two independent delivery channels.
@@ -229,6 +288,7 @@ export function MatchupProvider({ children }) {
     document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
+      clearTimeout(connectWatchdog);
       unsubscribe();
       window.removeEventListener('piks:forfeit:win', handleForfeitWin);
       document.removeEventListener('visibilitychange', handleVisibility);
