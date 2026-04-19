@@ -16,7 +16,6 @@ import { useMatchup } from '../contexts/MatchupContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNotifications } from '../contexts/NotificationsContext';
 import { formatMoney } from '../utils/formatMoney';
-import { formatSeenAgo } from '../utils/relativeTime';
 
 function UserAvatar({ user, size = 'md' }) {
   const sizeMap = { sm: 'w-8 h-8 text-xs', md: 'w-10 h-10 text-sm', lg: 'w-12 h-12 text-base' };
@@ -31,114 +30,7 @@ function UserAvatar({ user, size = 'md' }) {
   );
 }
 
-function ChatModal({ friend, messages, onClose, onSend, messageInput, setMessageInput, sending, session, messageError, friendIsTyping, onTypingChange }) {
-  const messagesEndRef = useRef(null);
-  const [, setNowTick] = useState(0);
-  const lastTypingSentRef = useRef(0);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  useEffect(() => {
-    const id = setInterval(() => setNowTick(n => n + 1), 30000);
-    return () => clearInterval(id);
-  }, []);
-
-  const handleInputChange = (e) => {
-    const v = e.target.value;
-    setMessageInput(v);
-    if (onTypingChange && v.trim()) {
-      const now = Date.now();
-      if (now - lastTypingSentRef.current > 2500) {
-        lastTypingSentRef.current = now;
-        onTypingChange(v);
-      }
-    }
-  };
-
-  const myId = session?.user?.id;
-  let lastOutgoingIdx = -1;
-  for (let i = messages.length - 1; i >= 0; i--) {
-    if (messages[i].senderId === myId) { lastOutgoingIdx = i; break; }
-  }
-  const showSeen = lastOutgoingIdx >= 0 && messages[lastOutgoingIdx]?.read;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col">
-        <div className="flex items-center gap-3 p-4 border-b border-[#1a1a1a] flex-shrink-0">
-          <UserAvatar user={friend} />
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-white truncate">{friend.username}</p>
-            <p className="text-xs text-gray-400">{friend.battleWins || 0}W - {friend.battleLosses || 0}L</p>
-          </div>
-          <button onClick={onClose} className="p-2 hover:bg-[#111] rounded-lg transition text-gray-400 hover:text-white flex-shrink-0">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px]">
-          {messageError ? (
-            <div className="text-center py-8">
-              <p className="text-gray-400 mb-1">You can only message friends</p>
-              <p className="text-sm text-gray-500">Add {friend.username} as a friend first!</p>
-            </div>
-          ) : messages.length === 0 ? (
-            <p className="text-gray-400 text-center py-8 text-sm">No messages yet. Say hi!</p>
-          ) : (
-            messages.map((msg, idx) => (
-              <div key={msg.id} className={`flex flex-col ${msg.senderId === myId ? 'items-end' : 'items-start'}`}>
-                <div className={`max-w-[80%] px-4 py-2 rounded-2xl ${msg.senderId === myId ? 'bg-purple-600 rounded-br-md' : 'bg-gray-700 rounded-bl-md'}`}>
-                  <p className="text-sm text-white">{msg.content}</p>
-                  <p className="text-[10px] opacity-50 mt-1">{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                </div>
-                {showSeen && idx === lastOutgoingIdx && (
-                  <p className="text-[10px] text-gray-500 mt-0.5 mr-1">
-                    {messages[lastOutgoingIdx].readAt ? `Seen ${formatSeenAgo(messages[lastOutgoingIdx].readAt)}` : 'Seen'}
-                  </p>
-                )}
-              </div>
-            ))
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-
-        <div className="h-5 px-4 flex-shrink-0" aria-live="polite">
-          {friendIsTyping && (
-            <div className="flex items-center gap-1.5 text-xs text-gray-500 italic">
-              <span className="flex gap-0.5">
-                {[0, 120, 240].map(d => <span key={d} className="w-1 h-1 rounded-full bg-gray-500 animate-bounce" style={{ animationDelay: `${d}ms` }} />)}
-              </span>
-              <span>{friend.username} is typing…</span>
-            </div>
-          )}
-        </div>
-
-        {!messageError && (
-          <form onSubmit={onSend} className="p-4 border-t border-[#1a1a1a] flex-shrink-0">
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={messageInput}
-                onChange={handleInputChange}
-                placeholder="Type a message..."
-                className="flex-1 px-4 py-2 bg-[#111] border border-[#1a1a1a] rounded-xl focus:outline-none focus:border-purple-500 text-sm text-white placeholder-gray-500"
-              />
-              <button
-                type="submit"
-                disabled={!messageInput.trim() || sending}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-xl font-medium transition text-sm text-white"
-              >
-                Send
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
-    </div>
-  );
-}
+// In-page ChatModal removed — messaging now lives on /notifications.
 
 export default function BattlePage() {
   const router = useRouter();
@@ -169,18 +61,12 @@ export default function BattlePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
-  const [selectedChat, setSelectedChat] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [messageInput, setMessageInput] = useState('');
-  const [sendingMessage, setSendingMessage] = useState(false);
-  const [messageError, setMessageError] = useState(false);
 
   const { isDarkMode } = useTheme();
-  const { setSuppress, typingSenderIds, notifyTyping, clearTyping } = useNotifications();
+  const { setSuppress } = useNotifications();
   const isGuest = status !== 'authenticated';
   const userId = session?.user?.id;
   const debounceRef = useRef(null);
-  const friendIsTyping = !!selectedChat?.id && typingSenderIds?.has?.(selectedChat.id);
 
   useEffect(() => {
     setSuppress('battle_invites', true);
@@ -190,13 +76,6 @@ export default function BattlePage() {
       setSuppress('friend_requests', false);
     };
   }, [setSuppress]);
-
-  useEffect(() => {
-    if (!selectedChat?.id) return;
-    const key = `message:${selectedChat.id}`;
-    setSuppress(key, true);
-    return () => setSuppress(key, false);
-  }, [selectedChat, setSuppress]);
 
   const fetchData = useCallback(async () => {
     if (!userId) {
@@ -348,74 +227,12 @@ export default function BattlePage() {
     return () => clearInterval(interval);
   }, [userId, activeMatchup?.status]);
 
+  // ?chat=<id> on /battle is a legacy entry point — forward it to /notifications.
   useEffect(() => {
     const chatId = router.query.chat;
-    const chatName = router.query.name;
-    if (!chatId || !userId) return;
-    const friend = friends.find(f => f.id === chatId) ||
-      (chatName ? { id: chatId, username: decodeURIComponent(chatName) } : null);
-    if (friend) {
-      setSelectedChat(friend);
-      router.replace('/battle', undefined, { shallow: true });
-    } else {
-      fetch(`/api/profiles/${chatId}`)
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-          const profile = data?.profile || data;
-          if (profile?.id) {
-            setSelectedChat(profile);
-            router.replace('/battle', undefined, { shallow: true });
-          }
-        })
-        .catch(() => {});
-    }
-  }, [router.query.chat, userId, friends.length]);
-
-  useEffect(() => {
-    if (!selectedChat) return;
-    fetchMessages(selectedChat.id);
-    const interval = setInterval(() => fetchMessages(selectedChat.id), 5000);
-    return () => clearInterval(interval);
-  }, [selectedChat]);
-
-  const fetchMessages = async (friendId) => {
-    try {
-      const res = await fetch(`/api/messages?friendId=${friendId}`, { credentials: 'include' });
-      if (res.ok) {
-        const data = await res.json();
-        const next = data.messages || [];
-        setMessages(prev => {
-          const prevIds = new Set(prev.map(m => m.id));
-          const incomingFromFriend = next.some(m => !prevIds.has(m.id) && m.senderId === friendId);
-          if (incomingFromFriend) clearTyping?.(friendId);
-          return next;
-        });
-        setMessageError(false);
-      } else if (res.status === 403) {
-        setMessages([]);
-        setMessageError(true);
-      }
-    } catch {}
-  };
-
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!messageInput.trim() || !selectedChat) return;
-    setSendingMessage(true);
-    try {
-      const res = await fetch('/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ receiverId: selectedChat.id, content: messageInput.trim() }),
-      });
-      if (res.ok) {
-        setMessageInput('');
-        fetchMessages(selectedChat.id);
-      }
-    } catch {}
-    finally { setSendingMessage(false); }
-  };
+    if (!chatId) return;
+    router.replace(`/notifications?chat=${chatId}`);
+  }, [router.query.chat]);
 
   const handleSearch = useCallback((query) => {
     setSearchQuery(query);
@@ -619,7 +436,7 @@ export default function BattlePage() {
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <button
-                      onClick={() => { setSelectedChat(friend); if (inDrawer) setShowSidebar(false); }}
+                      onClick={() => { router.push(`/notifications?chat=${friend.id}`); if (inDrawer) setShowSidebar(false); }}
                       className="p-1.5 rounded-lg transition-colors hover:bg-blue-500/20 active:bg-blue-500/20 text-blue-400"
                       title="Message"
                     >
@@ -758,7 +575,7 @@ export default function BattlePage() {
                   </div>
                   {userId !== user.id && (
                     friendIds.has(user.id) ? (
-                      <button onClick={() => setSelectedChat(user)} className="px-2 py-1 bg-blue-500/20 text-blue-400 text-[10px] font-semibold rounded-md">Message</button>
+                      <button onClick={() => router.push(`/notifications?chat=${user.id}`)} className="px-2 py-1 bg-blue-500/20 text-blue-400 text-[10px] font-semibold rounded-md">Message</button>
                     ) : (
                       <button onClick={() => handleAddFriend(user.id)} className="px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-semibold rounded-md transition">Add</button>
                     )
@@ -1232,22 +1049,6 @@ export default function BattlePage() {
           fetchData();
         }}
       />
-
-      {selectedChat && (
-        <ChatModal
-          friend={selectedChat}
-          messages={messages}
-          onClose={() => { setSelectedChat(null); setMessageError(false); setMessages([]); }}
-          onSend={handleSendMessage}
-          messageInput={messageInput}
-          setMessageInput={setMessageInput}
-          sending={sendingMessage}
-          session={session}
-          messageError={messageError}
-          friendIsTyping={friendIsTyping}
-          onTypingChange={(v) => notifyTyping?.(selectedChat.id)}
-        />
-      )}
 
     </div>
   );

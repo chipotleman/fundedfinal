@@ -5,12 +5,12 @@ export default function SocialRedirect() {
   const router = useRouter();
   useEffect(() => {
     if (!router.isReady) return;
-    const { chat, name } = router.query;
+    const { chat } = router.query;
     if (chat) {
-      router.replace(`/battle?chat=${chat}${name ? `&name=${encodeURIComponent(name)}` : ''}`);
+      router.replace(`/notifications?chat=${chat}`);
     } else {
-      router.replace('/battle');
+      router.replace('/notifications');
     }
-  }, [router.isReady, router.query.chat, router.query.name]);
+  }, [router.isReady, router.query.chat]);
   return null;
 }
