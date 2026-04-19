@@ -1485,6 +1485,7 @@ export default function BattlePage() {
         onInviteSent={() => fetchData()}
         onInviteCancelled={() => fetchData()}
         onSwitchToPrivate={() => { setShowPlayFriend(false); setPlayFriendInitial(null); setShowPrivateMatch(true); }}
+        onOpenMessage={(friend) => { setShowPlayFriend(false); setPlayFriendInitial(null); openMessagePopup(friend); }}
       />
 
       <MessagePopup

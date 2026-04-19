@@ -23,7 +23,7 @@ function UserAvatar({ user, size = 36 }) {
   return <SharedUserAvatar user={user} size={size} />;
 }
 
-export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onInviteCancelled, onSwitchToPrivate, initialFriend = null, lockedFriend = null, currentUser = null }) {
+export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onInviteCancelled, onSwitchToPrivate, initialFriend = null, lockedFriend = null, currentUser = null, onOpenMessage = null }) {
   const router = useRouter();
   const profileCache = useProfileCacheOptional();
   useModalScrollLock(isOpen);
@@ -516,7 +516,15 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                     {filteredFriends.map((friend, i) => {
                       const isSelected = selectedFriend?.id === friend.id;
                       const togglePlay = () => setSelectedFriend(isSelected ? null : friend);
-                      const openMessage = () => { onClose && onClose(); router.push(`/notifications?chat=${friend.id}`); };
+                      const openMessage = () => {
+                        if (onOpenMessage) {
+                          onClose && onClose();
+                          onOpenMessage(friend);
+                        } else {
+                          onClose && onClose();
+                          router.push(`/notifications?chat=${friend.id}`);
+                        }
+                      };
                       return (
                         <div
                           key={friend.id}

@@ -4,12 +4,16 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import TopNavbar from '../components/TopNavbar';
 import UserAvatar from '../components/UserAvatar';
+import MessagePopup from '../components/messages/MessagePopup';
 import { useProfileCache } from '../contexts/ProfileCacheContext';
+import { useNotifications } from '../contexts/NotificationsContext';
 
 export default function FriendsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const profileCache = useProfileCache();
+  const notificationsCtx = useNotifications();
+  const [messageFriend, setMessageFriend] = useState(null);
 
   const goToProfile = (user) => {
     if (!user?.id) return;
@@ -296,7 +300,7 @@ export default function FriendsPage() {
                             <div className="flex items-center gap-1.5 flex-shrink-0">
                               {/* Mobile: icon-only message */}
                               <button
-                                onClick={(e) => { e.stopPropagation(); setSelectedChat(friend); }}
+                                onClick={(e) => { e.stopPropagation(); setMessageFriend(friend); }}
                                 className="sm:hidden p-2 rounded-lg text-blue-400 hover:bg-blue-500/15"
                                 title="Message"
                                 aria-label="Message"
@@ -305,7 +309,7 @@ export default function FriendsPage() {
                               </button>
                               {/* Desktop: text message button */}
                               <button
-                                onClick={(e) => { e.stopPropagation(); setSelectedChat(friend); }}
+                                onClick={(e) => { e.stopPropagation(); setMessageFriend(friend); }}
                                 className="hidden sm:inline-flex px-2.5 py-1 text-xs font-semibold rounded-lg text-blue-400 hover:bg-blue-500/15"
                               >
                                 Message
@@ -474,6 +478,13 @@ export default function FriendsPage() {
           </div>
         </div>
       </div>
+      <MessagePopup
+        isOpen={!!messageFriend}
+        friend={messageFriend}
+        ctx={notificationsCtx}
+        myId={session?.user?.id}
+        onClose={() => setMessageFriend(null)}
+      />
     </>
   );
 }

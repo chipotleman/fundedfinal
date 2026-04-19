@@ -7,8 +7,10 @@ import BetSlip from '../../components/BetSlip';
 import UserAvatar from '../../components/UserAvatar';
 import ActiveStatus from '../../components/ActiveStatus';
 import ProfileEditPanel from '../../components/ProfileEditPanel';
+import MessagePopup from '../../components/messages/MessagePopup';
 import { useBetSlip } from '../../contexts/BetSlipContext';
 import { useProfileCache } from '../../contexts/ProfileCacheContext';
+import { useNotifications } from '../../contexts/NotificationsContext';
 import { formatMoney } from '../../utils/formatMoney';
 import { getFrameById } from '../../lib/profileFrames';
 
@@ -28,6 +30,8 @@ export default function PublicProfile() {
   const cache = useProfileCache();
   const router = useRouter();
   const { id } = router.query;
+  const notificationsCtx = useNotifications();
+  const [messageOpen, setMessageOpen] = useState(false);
 
   const cachedProfileEntry = id ? cache.getProfile(id) : null;
   const cachedHistoryEntry = id ? cache.getHistory(id) : null;
@@ -831,7 +835,7 @@ export default function PublicProfile() {
                       <div className="flex flex-wrap gap-2 mt-3">
                         <button
                           type="button"
-                          onClick={() => router.push(`/messenger?chat=${id}`)}
+                          onClick={() => setMessageOpen(true)}
                           aria-label="Message"
                           title="Message"
                           className="bg-[#1a1a1a] hover:bg-[#222] focus:bg-[#222] text-blue-400 hover:text-blue-300 font-semibold p-2 rounded-lg transition-all text-sm flex items-center justify-center border border-[#2a2a2a] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
@@ -1142,6 +1146,13 @@ export default function PublicProfile() {
           </div>
         </div>
       )}
+      <MessagePopup
+        isOpen={messageOpen}
+        friend={messageOpen ? { id, username: profile?.username, avatar: profile?.avatar, frameId: profile?.equippedFrame } : null}
+        ctx={notificationsCtx}
+        myId={session?.user?.id}
+        onClose={() => setMessageOpen(false)}
+      />
     </div>
   );
 }
