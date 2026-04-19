@@ -23,7 +23,7 @@ function UserAvatar({ user, size = 36 }) {
   return <SharedUserAvatar user={user} size={size} />;
 }
 
-export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onSwitchToPrivate, initialFriend = null, lockedFriend = null, currentUser = null }) {
+export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onInviteCancelled, onSwitchToPrivate, initialFriend = null, lockedFriend = null, currentUser = null }) {
   const router = useRouter();
   const profileCache = useProfileCacheOptional();
   useModalScrollLock(isOpen);
@@ -35,6 +35,8 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
   const [searching, setSearching] = useState(false);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [sentInviteId, setSentInviteId] = useState(null);
+  const [cancelling, setCancelling] = useState(false);
   const [error, setError] = useState('');
   const [inviteCountdown, setInviteCountdown] = useState(0);
   const [activeTab, setActiveTab] = useState('friends');
@@ -60,6 +62,8 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
       setSearchQuery('');
       setSearchResults([]);
       setSent(false);
+      setSentInviteId(null);
+      setCancelling(false);
       setError('');
       setInviteCountdown(0);
       setActiveTab('friends');
@@ -145,6 +149,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
         return;
       }
       setSent(true);
+      setSentInviteId(data?.invite?.id || null);
       const expirySeconds = INVITE_EXPIRY_HOURS * 3600;
       setInviteCountdown(expirySeconds);
       countdownRef.current = setInterval(() => {
@@ -158,6 +163,39 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
       setError('Network error. Please try again.');
     } finally {
       setSending(false);
+    }
+  };
+
+  const cancelInvite = async () => {
+    if (!sentInviteId || cancelling) return;
+    setCancelling(true);
+    setError('');
+    try {
+      const res = await fetch(`/api/battles/invite/${sentInviteId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'cancel' }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || 'Failed to cancel invite');
+        return;
+      }
+      if (countdownRef.current) clearInterval(countdownRef.current);
+      setSent(false);
+      setSentInviteId(null);
+      setInviteCountdown(0);
+      if (lockedFriend) {
+        onClose();
+      } else {
+        setSelectedFriend(null);
+        setActiveTab('friends');
+      }
+      if (onInviteCancelled) onInviteCancelled();
+    } catch {
+      setError('Network error. Please try again.');
+    } finally {
+      setCancelling(false);
     }
   };
 
@@ -405,6 +443,10 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
               </div>
             )}
 
+            {error && (
+              <div className="mt-3 bg-red-500/10 border border-red-500/20 rounded-lg p-2.5 text-red-400 text-xs pfm-fade-in">{error}</div>
+            )}
+
             <button
               onClick={onClose}
               className="mt-4 w-full font-semibold text-sm py-3 rounded-xl transition-colors"
@@ -412,6 +454,17 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
             >
               I'll wait in the background
             </button>
+
+            {sentInviteId && inviteCountdown > 0 && (
+              <button
+                onClick={cancelInvite}
+                disabled={cancelling}
+                className="mt-2 w-full font-medium text-xs py-2.5 rounded-xl transition-colors disabled:opacity-60"
+                style={{ backgroundColor: 'transparent', color: '#f87171', border: `1px solid rgba(248,113,113,0.3)` }}
+              >
+                {cancelling ? 'Cancelling…' : 'Cancel invite'}
+              </button>
+            )}
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto px-5 pb-5">
