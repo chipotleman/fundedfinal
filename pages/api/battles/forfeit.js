@@ -75,22 +75,36 @@ export default async function handler(req, res) {
 
     const [userProfile] = userProfileRows;
 
-    // Publish forfeit SSE event ASAP (before secondary DB writes) so the
+    // Publish forfeit SSE events ASAP (before secondary DB writes) so the
     // opponent's "Won by Forfeit" modal surfaces with minimal latency.
+    // Two independent event types are published:
+    //   matchup:forfeit     — consumed by MatchupContext (primary path)
+    //   notification:forfeit — consumed by NotificationsContext (backup path)
+    // Both carry the full payload so the modal can render without a DB round-trip.
     try {
-      const recipients = [userId];
-      if (opponentId && !matchup.isFakeOpponent) recipients.push(opponentId);
-      publishBattleEvent(recipients, {
-        type: 'matchup:forfeit',
+      const loserProfile = userProfile ? {
+        username: userProfile.username || 'Opponent',
+        avatar: userProfile.avatar || null,
+      } : null;
+
+      const forfeitPayload = {
         matchupId: matchup.id,
         winnerId: opponentId,
         loserId: userId,
         winnerPayout,
-        loser: userProfile ? {
-          username: userProfile.username || 'Opponent',
-          avatar: userProfile.avatar || null,
-        } : null,
-      });
+        loser: loserProfile,
+      };
+
+      const recipients = [userId];
+      if (opponentId && !matchup.isFakeOpponent) recipients.push(opponentId);
+
+      publishBattleEvent(recipients, { type: 'matchup:forfeit', ...forfeitPayload });
+
+      // Also push a notification:forfeit directly to the winner so the global
+      // notifications listener has a second independent delivery channel.
+      if (opponentId && !matchup.isFakeOpponent) {
+        publishBattleEvent([opponentId], { type: 'notification:forfeit', ...forfeitPayload });
+      }
     } catch (e) {
       console.error('[Forfeit] publish event error:', e);
     }

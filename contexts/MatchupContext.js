@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
+import { getBattleStreamClient } from '../lib/battleStreamClient';
 
 const MatchupContext = createContext(null);
 
@@ -103,112 +104,129 @@ export function MatchupProvider({ children }) {
   }, [status, fetchCurrentMatchup, hasActiveMatchup, isWaiting, isQueued]);
 
   // Real-time push channel for battle events (forfeits, etc).
+  // Uses the shared SSE singleton so only ONE EventSource connection is opened
+  // per browser tab regardless of how many contexts subscribe.
   useEffect(() => {
     if (status !== 'authenticated' || !session?.user?.id) return;
-    if (typeof window === 'undefined' || typeof EventSource === 'undefined') return;
+    if (typeof window === 'undefined') return;
 
-    let es = null;
-    let reconnectTimer = null;
-    let closed = false;
+    const client = getBattleStreamClient();
+    if (!client) return;
 
-    const connect = () => {
-      try {
-        es = new EventSource('/api/battles/stream');
-      } catch (_e) {
+    const myId = session.user.id;
+
+    const handleEvent = (data) => {
+      // SSE re-established after a drop — immediately re-fetch so any event
+      // that arrived during the reconnect window is caught without waiting for
+      // the safety poll.
+      if (data?.type === 'piks:reconnected') {
+        fetchCurrentMatchup();
         return;
       }
-
-      es.onmessage = (msg) => {
-        try {
-          const data = JSON.parse(msg.data);
-          if (data?.type === 'matchup:forfeit') {
-            // If this user is the winner, surface the "Won by Forfeit"
-            // modal immediately from the push payload — don't wait on
-            // the /api/matchups/current round-trip.
-            const myId = session?.user?.id;
-            if (myId && data.winnerId === myId && data.matchupId) {
-              const acks = readForfeitAcks();
-              if (!acks.has(data.matchupId)) {
-                setForfeitNotice({
-                  matchupId: data.matchupId,
-                  winnerPayout: Number(data.winnerPayout) || 0,
-                  opponent: data.loser || { username: 'Opponent', avatar: null },
-                  endedAt: new Date().toISOString(),
-                });
-              }
-            }
-            // Still re-fetch in the background so balances/bets reconcile.
-            fetchCurrentMatchup();
-          } else if (data?.type === 'matchup:bet') {
-            // Opponent placed a bet — refresh so their balance and
-            // bet list update without waiting for the safety poll.
-            fetchCurrentMatchup();
-          } else if (data?.type === 'matchup:completed') {
-            // Battle ended naturally at timer expiry — re-fetch so
-            // the result modal and final balances appear without
-            // waiting for the next safety poll.
-            fetchCurrentMatchup();
-          } else if (data?.type === 'matchup:pnl') {
-            // Push-based live PnL. If the payload carries
-            // mark-to-market live balances, merge them into local
-            // state directly so the opponent's PnL truly tracks odds
-            // movement without an API round-trip. For payloads that
-            // signal a state change (bet placed/graded), still
-            // re-fetch so bet lists/statuses come along too.
-            const reason = data.reason;
-            const hasLiveFields =
-              data.user1LiveBalance != null || data.user2LiveBalance != null;
-
-            if (reason === 'mark-to-market' && hasLiveFields) {
-              setMatchupData(prev => {
-                if (!prev || !prev.matchup || prev.matchup.id !== data.matchupId) {
-                  return prev;
-                }
-                const isU1Side = prev.isUser1 === true;
-                const myLive = parseFloat(
-                  isU1Side ? data.user1LiveBalance : data.user2LiveBalance
-                );
-                const oppLive = parseFloat(
-                  isU1Side ? data.user2LiveBalance : data.user1LiveBalance
-                );
-                const myUnreal = parseFloat(
-                  isU1Side ? data.user1UnrealizedPnl : data.user2UnrealizedPnl
-                );
-                const oppUnreal = parseFloat(
-                  isU1Side ? data.user2UnrealizedPnl : data.user1UnrealizedPnl
-                );
-                return {
-                  ...prev,
-                  myLiveBalance: Number.isFinite(myLive) ? myLive : prev.myLiveBalance,
-                  opponentLiveBalance: Number.isFinite(oppLive) ? oppLive : prev.opponentLiveBalance,
-                  myUnrealizedPnl: Number.isFinite(myUnreal) ? myUnreal : prev.myUnrealizedPnl,
-                  opponentUnrealizedPnl: Number.isFinite(oppUnreal) ? oppUnreal : prev.opponentUnrealizedPnl,
-                };
-              });
-            } else {
-              fetchCurrentMatchup();
-            }
+      if (data?.type === 'matchup:forfeit') {
+        // If this user is the winner, surface the "Won by Forfeit"
+        // modal immediately from the push payload — don't wait on
+        // the /api/matchups/current round-trip.
+        if (data.winnerId === myId && data.matchupId) {
+          const acks = readForfeitAcks();
+          if (!acks.has(data.matchupId)) {
+            setForfeitNotice({
+              matchupId: data.matchupId,
+              winnerPayout: Number(data.winnerPayout) || 0,
+              opponent: data.loser || { username: 'Opponent', avatar: null },
+              endedAt: new Date().toISOString(),
+            });
           }
-        } catch (_e) {}
-      };
+        }
+        // Still re-fetch in the background so balances/bets reconcile.
+        fetchCurrentMatchup();
+      } else if (data?.type === 'matchup:bet') {
+        // Opponent placed a bet — refresh so their balance and
+        // bet list update without waiting for the safety poll.
+        fetchCurrentMatchup();
+      } else if (data?.type === 'matchup:completed') {
+        // Battle ended naturally at timer expiry — re-fetch so
+        // the result modal and final balances appear without
+        // waiting for the next safety poll.
+        fetchCurrentMatchup();
+      } else if (data?.type === 'matchup:pnl') {
+        // Push-based live PnL. If the payload carries
+        // mark-to-market live balances, merge them into local
+        // state directly so the opponent's PnL truly tracks odds
+        // movement without an API round-trip. For payloads that
+        // signal a state change (bet placed/graded), still
+        // re-fetch so bet lists/statuses come along too.
+        const reason = data.reason;
+        const hasLiveFields =
+          data.user1LiveBalance != null || data.user2LiveBalance != null;
 
-      es.onerror = () => {
-        if (closed) return;
-        try { es && es.close(); } catch (_e) {}
-        es = null;
-        // Reconnect with a small backoff.
-        reconnectTimer = setTimeout(() => {
-          if (!closed) connect();
-        }, 3000);
-      };
+        if (reason === 'mark-to-market' && hasLiveFields) {
+          setMatchupData(prev => {
+            if (!prev || !prev.matchup || prev.matchup.id !== data.matchupId) {
+              return prev;
+            }
+            const isU1Side = prev.isUser1 === true;
+            const myLive = parseFloat(
+              isU1Side ? data.user1LiveBalance : data.user2LiveBalance
+            );
+            const oppLive = parseFloat(
+              isU1Side ? data.user2LiveBalance : data.user1LiveBalance
+            );
+            const myUnreal = parseFloat(
+              isU1Side ? data.user1UnrealizedPnl : data.user2UnrealizedPnl
+            );
+            const oppUnreal = parseFloat(
+              isU1Side ? data.user2UnrealizedPnl : data.user1UnrealizedPnl
+            );
+            return {
+              ...prev,
+              myLiveBalance: Number.isFinite(myLive) ? myLive : prev.myLiveBalance,
+              opponentLiveBalance: Number.isFinite(oppLive) ? oppLive : prev.opponentLiveBalance,
+              myUnrealizedPnl: Number.isFinite(myUnreal) ? myUnreal : prev.myUnrealizedPnl,
+              opponentUnrealizedPnl: Number.isFinite(oppUnreal) ? oppUnreal : prev.opponentUnrealizedPnl,
+            };
+          });
+        } else {
+          fetchCurrentMatchup();
+        }
+      }
     };
 
-    connect();
+    const unsubscribe = client.subscribe(handleEvent);
+
+    // Second push path: NotificationsContext dispatches this when it receives
+    // a notification:forfeit event, giving two independent delivery channels.
+    const handleForfeitWin = (e) => {
+      const data = e.detail;
+      if (!data?.matchupId || !data?.winnerId || data.winnerId !== myId) return;
+      const acks = readForfeitAcks();
+      if (!acks.has(data.matchupId)) {
+        setForfeitNotice({
+          matchupId: data.matchupId,
+          winnerPayout: Number(data.winnerPayout) || 0,
+          opponent: data.loser || { username: 'Opponent', avatar: null },
+          endedAt: new Date().toISOString(),
+        });
+      }
+      // Background reconcile.
+      fetchCurrentMatchup();
+    };
+    window.addEventListener('piks:forfeit:win', handleForfeitWin);
+
+    // Catch-up: when the tab becomes active after being backgrounded, immediately
+    // reconnect the SSE and re-fetch matchup state — no more 20-second wait.
+    const handleVisibility = () => {
+      if (!document.hidden) {
+        client.reconnectNow();
+        fetchCurrentMatchup();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
 
     return () => {
-      closed = true;
-      if (reconnectTimer) clearTimeout(reconnectTimer);
-      try { es && es.close(); } catch (_e) {}
+      unsubscribe();
+      window.removeEventListener('piks:forfeit:win', handleForfeitWin);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, [status, session?.user?.id, fetchCurrentMatchup]);
 

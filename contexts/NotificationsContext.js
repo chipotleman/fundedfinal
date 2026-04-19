@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
+import { getBattleStreamClient } from '../lib/battleStreamClient';
 
 const NotificationsContext = createContext(null);
 const SEEN_KEY = 'piks_notif_seen_v1';
@@ -121,6 +122,15 @@ export function NotificationsProvider({ children }) {
       };
       setData({ battleInvites, friendRequests, unreadMessages, counts });
 
+      // Catch-up path: if the API found a recent forfeit win that the SSE push
+      // may have missed, dispatch it so MatchupContext can surface the modal.
+      // The client-side ack (sessionStorage) prevents duplicate shows.
+      if (json.recentForfeitWin?.matchupId && typeof window !== 'undefined') {
+        window.dispatchEvent(
+          new CustomEvent('piks:forfeit:win', { detail: json.recentForfeitWin })
+        );
+      }
+
       const isInitial = initialLoadRef.current;
       initialLoadRef.current = false;
 
@@ -176,45 +186,63 @@ export function NotificationsProvider({ children }) {
     return () => clearInterval(interval);
   }, [isAuthed, refresh]);
 
-  // SSE listener — extends the existing battle stream with notification events.
+  // SSE listener — uses the shared SSE singleton so only ONE EventSource
+  // connection is open per tab (shared with MatchupContext).
   useEffect(() => {
-    if (!isAuthed || typeof window === 'undefined' || typeof EventSource === 'undefined') return;
-    let es = null;
-    let timer = null;
-    let closed = false;
-    const connect = () => {
-      try { es = new EventSource('/api/battles/stream'); } catch { return; }
-      es.onmessage = (msg) => {
-        try {
-          const ev = JSON.parse(msg.data);
-          if (!ev?.type) return;
-          if (ev.type === 'notification:typing') {
-            if (ev.senderId) markTyping(ev.senderId);
-          } else if (ev.type === 'notification:refresh' || ev.type.startsWith('notification:')) {
-            refresh();
-          } else if (ev.type === 'achievement:earned' && ev.achievement?.id) {
-            enqueueToast({
-              id: `achievement:${ev.achievement.id}`,
-              type: 'achievement',
-              payload: ev.achievement,
-            });
-          }
-        } catch {}
-      };
-      es.onerror = () => {
-        if (closed) return;
-        try { es && es.close(); } catch {}
-        es = null;
-        timer = setTimeout(() => { if (!closed) connect(); }, 4000);
-      };
+    if (!isAuthed || typeof window === 'undefined') return;
+
+    const client = getBattleStreamClient();
+    if (!client) return;
+
+    const userId = session?.user?.id;
+
+    const handleEvent = (ev) => {
+      if (!ev?.type) return;
+      // SSE re-established after a drop — immediately refresh so any missed
+      // notification (including a forfeit win) is caught without waiting for
+      // the 25-second poll interval.
+      if (ev.type === 'piks:reconnected') {
+        refresh();
+        return;
+      }
+      if (ev.type === 'notification:typing') {
+        if (ev.senderId) markTyping(ev.senderId);
+      } else if (ev.type === 'notification:forfeit') {
+        // Second independent push path for forfeit wins.  Dispatch a window
+        // event so MatchupContext can surface the modal without a round-trip,
+        // even if its own SSE handler was briefly in a reconnect window.
+        if (userId && ev.winnerId === userId && ev.matchupId) {
+          window.dispatchEvent(new CustomEvent('piks:forfeit:win', { detail: ev }));
+        }
+        refresh();
+      } else if (ev.type === 'notification:refresh' || ev.type.startsWith('notification:')) {
+        refresh();
+      } else if (ev.type === 'achievement:earned' && ev.achievement?.id) {
+        enqueueToast({
+          id: `achievement:${ev.achievement.id}`,
+          type: 'achievement',
+          payload: ev.achievement,
+        });
+      }
     };
-    connect();
+
+    const unsubscribe = client.subscribe(handleEvent);
+
+    // Catch-up: immediately reconnect and refresh notifications when the tab
+    // becomes active so a missed push resolves in ~1 s, not after the 25 s poll.
+    const handleVisibility = () => {
+      if (!document.hidden) {
+        client.reconnectNow();
+        refresh();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
     return () => {
-      closed = true;
-      if (timer) clearTimeout(timer);
-      try { es && es.close(); } catch {}
+      unsubscribe();
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [isAuthed, refresh]);
+  }, [isAuthed, refresh, markTyping, enqueueToast, session?.user?.id]);
 
   // Auto-dismiss toasts after their duration
   useEffect(() => {
