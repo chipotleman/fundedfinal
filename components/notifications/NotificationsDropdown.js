@@ -77,17 +77,17 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
       ref={ref}
       role="dialog"
       aria-label="Notifications"
-      className="fixed left-1/2 -translate-x-1/2 top-[var(--top-nav-height,70px)] sm:absolute sm:left-auto sm:right-0 sm:translate-x-0 sm:top-full mt-2 w-[calc(100vw-16px)] max-w-sm sm:w-96 sm:max-w-[calc(100vw-24px)] bg-[#0a0a0a] border border-[#10b981]/30 rounded-xl shadow-2xl z-[70] overflow-hidden"
+      className="fixed left-1/2 -translate-x-1/2 top-[var(--top-nav-height,70px)] sm:absolute sm:left-auto sm:right-0 sm:translate-x-0 sm:top-full mt-2 w-[calc(100vw-16px)] max-w-sm sm:w-96 sm:max-w-[calc(100vw-24px)] bg-[#0a0a0a] border border-[#3b82f6]/30 rounded-xl shadow-2xl z-[70] overflow-hidden"
       style={{
         maxHeight: '70vh',
-        boxShadow: '0 0 0 1px rgba(16,185,129,0.10), 0 18px 48px -12px rgba(16,185,129,0.35)',
+        boxShadow: '0 0 0 1px rgba(59,130,246,0.10), 0 18px 48px -12px rgba(59,130,246,0.35)',
       }}
     >
       <div className="px-4 py-3 border-b border-[#1a1a1a] flex items-center justify-between gap-2">
         <span
           className="font-bold text-sm tracking-wide"
           style={{
-            background: 'linear-gradient(90deg, #34d399 0%, #22d3ee 100%)',
+            background: 'linear-gradient(90deg, #60a5fa 0%, #22d3ee 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -97,10 +97,10 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
         </span>
         {total > 0 && (
           <span
-            className="text-[10px] font-semibold px-2 py-0.5 rounded-full text-emerald-300"
+            className="text-[10px] font-semibold px-2 py-0.5 rounded-full text-blue-300"
             style={{
-              backgroundColor: 'rgba(16,185,129,0.12)',
-              border: '1px solid rgba(16,185,129,0.3)',
+              backgroundColor: 'rgba(59,130,246,0.12)',
+              border: '1px solid rgba(59,130,246,0.3)',
             }}
           >
             {total} new
@@ -135,8 +135,8 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                         onClose?.();
                         if (data) router.push('/?battleStarted=true');
                       })}
-                      className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
-                      style={{ boxShadow: '0 0 12px rgba(16,185,129,0.45)' }}
+                      className="flex-1 bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
+                      style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}
                     >Accept</button>
                     <button
                       disabled={busyId === inv.id}
@@ -167,8 +167,8 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                       onClose?.();
                       router.push(`/battle?result=${encodeURIComponent(rm.matchupId)}&rematch=1`);
                     })}
-                    className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
-                    style={{ boxShadow: '0 0 12px rgba(16,185,129,0.45)' }}
+                    className="flex-1 bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
+                    style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}
                   >View</button>
                   <button
                     disabled={busyId === rm.id}
@@ -213,8 +213,8 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                         // Ack after navigation so the popup is rendered first.
                         ctx.ackGameResult(r.matchupId);
                       })}
-                      className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
-                      style={{ boxShadow: '0 0 12px rgba(16,185,129,0.45)' }}
+                      className="flex-1 bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
+                      style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}
                     >View</button>
                     <button
                       disabled={busyId === r.id}
@@ -239,8 +239,8 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                   <button
                     disabled={busyId === fr.id}
                     onClick={() => wrap(fr.id, async () => { await ctx.acceptFriend(fr.id); })}
-                    className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
-                    style={{ boxShadow: '0 0 12px rgba(16,185,129,0.45)' }}
+                    className="flex-1 bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
+                    style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}
                   >Accept</button>
                   <button
                     disabled={busyId === fr.id}
@@ -257,7 +257,7 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
       <div className="border-t border-[#1a1a1a]">
         <button
           onClick={() => { onClose?.(); router.push('/notifications'); }}
-          className="w-full text-center text-xs font-bold py-3 text-emerald-300 hover:text-emerald-200 hover:bg-emerald-400/5 transition-colors"
+          className="w-full text-center text-xs font-bold py-3 text-blue-300 hover:text-blue-200 hover:bg-blue-400/5 transition-colors"
         >
           View all
         </button>

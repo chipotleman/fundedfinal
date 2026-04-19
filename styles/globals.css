@@ -37,7 +37,7 @@ button:focus-within,
 
 :root {
   --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
-  --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  --success-gradient: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
   --danger-gradient: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
   --card-gradient: linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
   --glass-bg: rgba(255, 255, 255, 0.08);
@@ -171,12 +171,12 @@ body {
   font-weight: 600;
   color: white;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(17, 153, 142, 0.3);
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
 }
 
 .btn-success:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(17, 153, 142, 0.5);
+  box-shadow: 0 8px 30px rgba(59, 130, 246, 0.5);
 }
 
 .btn-danger {
@@ -298,8 +298,8 @@ body {
 }
 
 .status-green {
-  background: #10b981;
-  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+  background: #3b82f6;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
@@ -338,8 +338,8 @@ body {
 }
 
 .auth-input:focus {
-  border-color: var(--focus-color, #22c55e) !important;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-color, #22c55e) 20%, transparent);
+  border-color: var(--focus-color, #3b82f6) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus-color, #3b82f6) 20%, transparent);
 }
 
 .modern-input::placeholder {

@@ -4,7 +4,7 @@ import useModalScrollLock from '../hooks/useModalScrollLock';
 import UserAvatar from './UserAvatar';
 
 // Override the ORIGINAL theme inside this popup so it leans gold/neutral
-// instead of bright blue. RUSH (orange) and TOURNAMENT (green) pass through.
+// instead of bright blue. RUSH (orange) and TOURNAMENT (blue) pass through.
 function getPopupTheme(theme) {
   if (theme?.label !== 'ORIGINAL') return theme;
   return {

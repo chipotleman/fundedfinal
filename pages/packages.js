@@ -185,7 +185,7 @@ export default function Packages() {
         <div className="text-center">
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white mb-3">
             PICK YOUR{" "}
-            <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
               CHALLENGE
             </span>
           </h1>
@@ -202,7 +202,7 @@ export default function Packages() {
                   onClick={() => setBillingType("monthly")}
                   className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
                     billingType === "monthly"
-                      ? "bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-lg"
+                      ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg"
                       : "text-gray-300 hover:text-white"
                   }`}
                 >
@@ -212,7 +212,7 @@ export default function Packages() {
                   onClick={() => setBillingType("annual")}
                   className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 ${
                     billingType === "annual"
-                      ? "bg-gradient-to-r from-green-500 to-blue-500 text-white shadow-lg"
+                      ? "bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg"
                       : "text-gray-300 hover:text-white"
                   }`}
                 >
@@ -233,13 +233,13 @@ export default function Packages() {
               key={pkg.id}
               className={`relative bg-slate-900 rounded-2xl border-2 p-6 transition-all duration-300 hover:transform hover:-translate-y-2 hover:shadow-2xl ${
                 pkg.popular
-                  ? "border-green-400 shadow-lg shadow-green-400/20"
+                  ? "border-blue-400 shadow-lg shadow-blue-400/20"
                   : "border-slate-700 hover:border-blue-400"
               }`}
             >
               {pkg.popular && (
                 <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-gradient-to-r from-green-400 to-blue-500 text-white px-4 py-1 rounded-full text-sm font-bold">
+                  <span className="bg-gradient-to-r from-blue-400 to-cyan-400 text-white px-4 py-1 rounded-full text-sm font-bold">
                     MOST POPULAR
                   </span>
                 </div>
@@ -300,7 +300,7 @@ export default function Packages() {
                 onClick={() => handlePurchase(pkg)}
                 className={`w-full py-3 px-4 rounded-xl font-bold transition-all duration-300 ${
                   pkg.popular
-                    ? "bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white"
+                    ? "bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
                     : "bg-slate-800 hover:bg-slate-700 text-white border border-slate-600"
                 }`}
               >
@@ -324,13 +324,13 @@ export default function Packages() {
                   key={pkg.id}
                   className={`flex-shrink-0 w-80 relative bg-slate-900 rounded-2xl border-2 p-6 transition-all duration-300 hover:transform hover:-translate-y-2 hover:shadow-2xl ${
                     pkg.popular
-                      ? "border-green-400 shadow-lg shadow-green-400/20"
+                      ? "border-blue-400 shadow-lg shadow-blue-400/20"
                       : "border-slate-700 hover:border-blue-400"
                   }`}
                 >
                   {pkg.popular && (
                     <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-gradient-to-r from-green-400 to-blue-500 text-white px-4 py-1 rounded-full text-sm font-bold">
+                      <span className="bg-gradient-to-r from-blue-400 to-cyan-400 text-white px-4 py-1 rounded-full text-sm font-bold">
                         MOST POPULAR
                       </span>
                     </div>
@@ -397,7 +397,7 @@ export default function Packages() {
                     onClick={() => handlePurchase(pkg)}
                     className={`w-full py-3 px-4 rounded-xl font-bold transition-all duration-300 ${
                       pkg.popular
-                        ? "bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white"
+                        ? "bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white"
                         : "bg-slate-800 hover:bg-slate-700 text-white border border-slate-600"
                     }`}
                   >
@@ -435,7 +435,7 @@ export default function Packages() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div>
-              <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-blue-500 rounded-lg flex items-center justify-center mb-2 mx-auto">
+              <div className="w-10 h-10 bg-gradient-to-r from-blue-400 to-cyan-400 rounded-lg flex items-center justify-center mb-2 mx-auto">
                 <span className="text-white font-bold text-sm">1</span>
               </div>
               <h3 className="text-base font-bold text-white mb-1">

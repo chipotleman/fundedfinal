@@ -15,7 +15,7 @@ function Toggle({ value, onChange, disabled }) {
       onClick={() => !disabled && onChange(!value)}
       disabled={disabled}
       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 ${
-        value ? 'bg-green-500' : 'bg-[#222]'
+        value ? 'bg-blue-500' : 'bg-[#222]'
       }`}
     >
       <span
@@ -61,7 +61,7 @@ export default function PushSettingsSection() {
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-xl font-bold text-white">Push Notifications</h2>
         {push.subscribed ? (
-          <span className="text-green-400 text-xs font-semibold uppercase tracking-wide">On</span>
+          <span className="text-blue-400 text-xs font-semibold uppercase tracking-wide">On</span>
         ) : (
           <span className="text-gray-500 text-xs font-semibold uppercase tracking-wide">Off</span>
         )}
@@ -90,7 +90,7 @@ export default function PushSettingsSection() {
         <button
           onClick={handleEnable}
           disabled={push.busy || isIOSWithoutPwa || blocked}
-          className="px-4 py-2 text-sm font-semibold rounded-lg bg-green-500 hover:bg-green-400 text-black disabled:opacity-50"
+          className="px-4 py-2 text-sm font-semibold rounded-lg bg-blue-500 hover:bg-blue-400 text-white disabled:opacity-50"
         >
           {push.busy ? 'Enabling…' : 'Enable on this device'}
         </button>
@@ -148,7 +148,7 @@ export default function PushSettingsSection() {
                   <div className="text-white text-sm font-medium truncate">
                     {d.deviceLabel || 'Browser'}
                     {d.endpoint === push.endpoint && (
-                      <span className="ml-2 text-xs text-green-400">This device</span>
+                      <span className="ml-2 text-xs text-blue-400">This device</span>
                     )}
                   </div>
                   <div className="text-gray-500 text-xs">

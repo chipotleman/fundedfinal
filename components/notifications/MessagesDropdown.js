@@ -31,9 +31,9 @@ function Avatar({ user, size = 36 }) {
 function TypingDots() {
   return (
     <span className="inline-flex items-center gap-0.5 ml-1">
-      <span className="w-1 h-1 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-      <span className="w-1 h-1 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '120ms' }} />
-      <span className="w-1 h-1 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '240ms' }} />
+      <span className="w-1 h-1 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+      <span className="w-1 h-1 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '120ms' }} />
+      <span className="w-1 h-1 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '240ms' }} />
     </span>
   );
 }
@@ -135,17 +135,17 @@ export default function MessagesDropdown({ open, onClose, anchorRef }) {
       ref={ref}
       role="dialog"
       aria-label="Messages"
-      className="fixed left-1/2 -translate-x-1/2 top-[var(--top-nav-height,70px)] sm:absolute sm:left-auto sm:right-0 sm:translate-x-0 sm:top-full mt-2 w-[calc(100vw-16px)] max-w-sm sm:w-96 sm:max-w-[calc(100vw-24px)] bg-[#0a0a0a] border border-[#10b981]/30 rounded-xl shadow-2xl z-[70] overflow-hidden"
+      className="fixed left-1/2 -translate-x-1/2 top-[var(--top-nav-height,70px)] sm:absolute sm:left-auto sm:right-0 sm:translate-x-0 sm:top-full mt-2 w-[calc(100vw-16px)] max-w-sm sm:w-96 sm:max-w-[calc(100vw-24px)] bg-[#0a0a0a] border border-[#3b82f6]/30 rounded-xl shadow-2xl z-[70] overflow-hidden"
       style={{
         maxHeight: '70vh',
-        boxShadow: '0 0 0 1px rgba(16,185,129,0.10), 0 18px 48px -12px rgba(16,185,129,0.35)',
+        boxShadow: '0 0 0 1px rgba(59,130,246,0.10), 0 18px 48px -12px rgba(59,130,246,0.35)',
       }}
     >
       <div className="px-4 py-3 border-b border-[#1a1a1a] flex items-center justify-between gap-2">
         <span
           className="font-bold text-sm tracking-wide"
           style={{
-            background: 'linear-gradient(90deg, #34d399 0%, #22d3ee 100%)',
+            background: 'linear-gradient(90deg, #3b82f6 0%, #06b6d4 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -155,10 +155,10 @@ export default function MessagesDropdown({ open, onClose, anchorRef }) {
         </span>
         {total > 0 && (
           <span
-            className="text-[10px] font-semibold px-2 py-0.5 rounded-full text-emerald-300"
+            className="text-[10px] font-semibold px-2 py-0.5 rounded-full text-blue-300"
             style={{
-              backgroundColor: 'rgba(16,185,129,0.12)',
-              border: '1px solid rgba(16,185,129,0.3)',
+              backgroundColor: 'rgba(59,130,246,0.12)',
+              border: '1px solid rgba(59,130,246,0.3)',
             }}
           >
             {total} unread
@@ -196,10 +196,10 @@ export default function MessagesDropdown({ open, onClose, anchorRef }) {
                 onClose?.();
                 router.push(`/messenger?chat=${f.id}`);
               }}
-              className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-emerald-400/5 relative"
+              className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:bg-blue-400/5 relative"
               style={{
                 borderBottom: '1px solid rgba(255,255,255,0.04)',
-                backgroundColor: unread ? 'rgba(16,185,129,0.06)' : 'transparent',
+                backgroundColor: unread ? 'rgba(59,130,246,0.06)' : 'transparent',
               }}
             >
               <Avatar user={f} size={40} />
@@ -217,15 +217,15 @@ export default function MessagesDropdown({ open, onClose, anchorRef }) {
                   )}
                   {unread && (c.unreadCount > 0 ? (
                     <span
-                      className="min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full bg-emerald-500 text-white flex-shrink-0 flex items-center justify-center"
-                      style={{ boxShadow: '0 0 8px rgba(52,211,153,0.65)' }}
+                      className="min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full bg-blue-500 text-white flex-shrink-0 flex items-center justify-center"
+                      style={{ boxShadow: '0 0 8px rgba(59,130,246,0.65)' }}
                     >
                       {c.unreadCount > 9 ? '9+' : c.unreadCount}
                     </span>
                   ) : (
                     <span
-                      className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"
-                      style={{ boxShadow: '0 0 8px rgba(52,211,153,0.85)' }}
+                      className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0"
+                      style={{ boxShadow: '0 0 8px rgba(59,130,246,0.85)' }}
                     />
                   ))}
                 </div>
@@ -233,7 +233,7 @@ export default function MessagesDropdown({ open, onClose, anchorRef }) {
                   className={`text-[11px] truncate ${unread ? 'font-semibold text-white' : 'text-gray-400'}`}
                 >
                   {isTyping ? (
-                    <span className="text-emerald-300 italic inline-flex items-center">
+                    <span className="text-blue-300 italic inline-flex items-center">
                       typing<TypingDots />
                     </span>
                   ) : last ? (
@@ -251,7 +251,7 @@ export default function MessagesDropdown({ open, onClose, anchorRef }) {
       <div className="border-t border-[#1a1a1a]">
         <button
           onClick={() => { onClose?.(); router.push('/messenger'); }}
-          className="w-full text-center text-xs font-bold py-3 text-emerald-300 hover:text-emerald-200 hover:bg-emerald-400/5 transition-colors"
+          className="w-full text-center text-xs font-bold py-3 text-blue-300 hover:text-blue-200 hover:bg-blue-400/5 transition-colors"
         >
           View all
         </button>

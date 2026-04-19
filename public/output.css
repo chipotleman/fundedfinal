@@ -766,7 +766,7 @@ video {
 
 .bg-neon-green {
   --tw-bg-opacity: 1;
-  background-color: rgb(57 255 20 / var(--tw-bg-opacity, 1));
+  background-color: rgb(59 130 246 / var(--tw-bg-opacity, 1));
 }
 
 .bg-white {
@@ -897,7 +897,7 @@ video {
 
 .text-neon-green {
   --tw-text-opacity: 1;
-  color: rgb(57 255 20 / var(--tw-text-opacity, 1));
+  color: rgb(59 130 246 / var(--tw-text-opacity, 1));
 }
 
 .text-white {
@@ -945,11 +945,11 @@ html, body {
 }
 
 .text-neon-green {
-  color: #39FF14;
+  color: #3b82f6;
 }
 
 .bg-neon-green {
-  background-color: #39FF14;
+  background-color: #3b82f6;
 }
 
 .text-neon-blue {
@@ -976,15 +976,15 @@ html, body {
 
 .btn-green {
   --tw-bg-opacity: 1;
-  background-color: rgb(57 255 20 / var(--tw-bg-opacity, 1));
+  background-color: rgb(59 130 246 / var(--tw-bg-opacity, 1));
   --tw-text-opacity: 1;
-  color: rgb(0 0 0 / var(--tw-text-opacity, 1));
-  background-color: #39FF14;
+  color: rgb(255 255 255 / var(--tw-text-opacity, 1));
+  background-color: #3b82f6;
 }
 
 .btn-green:hover {
   --tw-bg-opacity: 1;
-  background-color: rgb(134 239 172 / var(--tw-bg-opacity, 1));
+  background-color: rgb(96 165 250 / var(--tw-bg-opacity, 1));
 }
 
 .btn-blue {

@@ -361,7 +361,7 @@ export default function AuthPage() {
           <div className="max-w-7xl w-full">
             <div className="text-center mb-12">
               <h1 className="text-4xl sm:text-5xl font-black text-white mb-4 tracking-tight">
-                Choose Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">Challenge</span>
+                Choose Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Challenge</span>
               </h1>
               <p className="text-lg sm:text-xl text-gray-300 font-medium">Select the tier that matches your skill level and start earning</p>
             </div>
@@ -377,7 +377,7 @@ export default function AuthPage() {
                 >
                   <div className={`relative bg-[#111] backdrop-blur-lg rounded-2xl sm:rounded-3xl p-6 sm:p-8 border-2 transition-all duration-300 ${
                     challenge.popular
-                      ? 'border-green-400 shadow-2xl shadow-green-400/20'
+                      ? 'border-blue-400 shadow-2xl shadow-blue-400/20'
                       : selectedChallenge?.id === challenge.id
                       ? 'border-blue-400 shadow-2xl shadow-blue-400/20'
                       : 'border-[#1a1a1a] hover:border-[#1a1a1a] group-hover:shadow-xl'
@@ -385,7 +385,7 @@ export default function AuthPage() {
 
                     {challenge.popular && (
                       <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                        <span className="bg-gradient-to-r from-green-400 to-green-500 text-black px-6 py-2 rounded-full text-sm font-bold uppercase tracking-wide shadow-lg">
+                        <span className="bg-gradient-to-r from-blue-400 to-cyan-400 text-white px-6 py-2 rounded-full text-sm font-bold uppercase tracking-wide shadow-lg">
                           Most Popular
                         </span>
                       </div>
@@ -394,7 +394,7 @@ export default function AuthPage() {
                     <div className="absolute top-6 right-6">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
                         challenge.badge === 'BEGINNER' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
-                        challenge.badge === 'POPULAR' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
+                        challenge.badge === 'POPULAR' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
                         'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                       }`}>
                         {challenge.badge}
@@ -420,8 +420,8 @@ export default function AuthPage() {
                         </div>
                       </div>
 
-                      <div className="text-center p-4 sm:p-6 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-2xl border border-green-500/20">
-                        <div className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-400">
+                      <div className="text-center p-4 sm:p-6 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-2xl border border-blue-500/20">
+                        <div className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
                           ${challenge.payout.toLocaleString()}
                         </div>
                         <div className="text-gray-300 text-sm font-medium mt-1">Payout on Success</div>
@@ -436,7 +436,7 @@ export default function AuthPage() {
               <button
                 onClick={handleChallengeStart}
                 disabled={loading || !selectedChallenge}
-                className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-4 px-8 sm:px-12 rounded-xl sm:rounded-2xl transition-all duration-300 text-lg sm:text-xl shadow-2xl transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed"
+                className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-4 px-8 sm:px-12 rounded-xl sm:rounded-2xl transition-all duration-300 text-lg sm:text-xl shadow-2xl transform hover:scale-105 disabled:scale-100 disabled:cursor-not-allowed"
               >
                 {loading ? (
                   <div className="flex items-center space-x-2">
@@ -472,7 +472,7 @@ export default function AuthPage() {
       {/* Main Auth Form */}
       <div className="flex-1 flex items-center justify-center p-4 pt-8">
         <div className="relative max-w-md w-full">
-          <div className="bg-black rounded-3xl p-6 sm:p-8 border-2 border-green-500">
+          <div className="bg-black rounded-3xl p-6 sm:p-8 border-2 border-blue-500">
             {/* Logo */}
             <div className="text-center mb-6">
               <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-28 mx-auto mb-4" />
@@ -489,7 +489,7 @@ export default function AuthPage() {
                   setConfirmPassword('');
                 }}
                 className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all duration-200 ${
-                  !isSignUp ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-gray-300'
+                  !isSignUp ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-300'
                 }`}
               >
                 Sign In
@@ -503,7 +503,7 @@ export default function AuthPage() {
                   setConfirmPassword('');
                 }}
                 className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all duration-200 ${
-                  isSignUp ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-gray-300'
+                  isSignUp ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-gray-300'
                 }`}
               >
                 Sign Up
@@ -513,7 +513,7 @@ export default function AuthPage() {
             {error && (
               <div className={`mb-6 p-4 rounded-xl border ${
                 error.includes('✅') || error.includes('successfully') || error.includes('created')
-                  ? 'bg-green-500/10 border-green-500/20 text-green-400'
+                  ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
                   : 'bg-red-500/10 border-red-500/20 text-red-400'
               }`}>
                 <p className="text-sm font-medium">{error}</p>
@@ -603,7 +603,7 @@ export default function AuthPage() {
                     id="rememberMe"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 bg-[#1a1a1a] border border-[#1a1a1a] rounded focus:ring-2 focus:ring-blue-500 text-green-500"
+                    className="w-4 h-4 bg-[#1a1a1a] border border-[#1a1a1a] rounded focus:ring-2 focus:ring-blue-500 text-blue-500"
                   />
                   <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-400 cursor-pointer">
                     Remember my email
@@ -613,7 +613,7 @@ export default function AuthPage() {
                   <button
                     type="button"
                     onClick={openForgotPassword}
-                    className="text-sm font-medium text-green-400 hover:text-green-300 transition-colors"
+                    className="text-sm font-medium text-blue-400 hover:text-blue-300 transition-colors"
                   >
                     Forgot password?
                   </button>
@@ -623,7 +623,7 @@ export default function AuthPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3.5 rounded-xl transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 shadow-lg"
+                className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3.5 rounded-xl transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 shadow-lg"
               >
                 {loading ? (
                   <div className="flex items-center justify-center space-x-2">
@@ -655,7 +655,7 @@ export default function AuthPage() {
           onClick={closeForgotPassword}
         >
           <div
-            className="relative w-full max-w-md bg-black border-2 border-green-500 rounded-3xl p-6 sm:p-8"
+            className="relative w-full max-w-md bg-black border-2 border-blue-500 rounded-3xl p-6 sm:p-8"
             onClick={(e) => e.stopPropagation()}
           >
             <button
@@ -675,7 +675,7 @@ export default function AuthPage() {
             </p>
 
             {forgotMessage && (
-              <div className="mb-4 p-4 rounded-xl border bg-green-500/10 border-green-500/20 text-green-400">
+              <div className="mb-4 p-4 rounded-xl border bg-blue-500/10 border-blue-500/20 text-blue-400">
                 <p className="text-sm font-medium">{forgotMessage}</p>
               </div>
             )}
@@ -704,7 +704,7 @@ export default function AuthPage() {
               <button
                 type="submit"
                 disabled={forgotLoading || !!forgotMessage}
-                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3.5 rounded-xl transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 shadow-lg"
+                className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3.5 rounded-xl transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 shadow-lg"
               >
                 {forgotLoading ? (
                   <div className="flex items-center justify-center space-x-2">

@@ -92,18 +92,18 @@ export default function DemoPage() {
       };
     } else if (currentChallenge.badge === 'POPULAR') {
       return {
-        primary: 'green',
-        border: 'border-green-500',
-        borderColor: '#22c55e',
-        borderLight: 'border-green-400/50',
-        shadow: 'shadow-green-400/20',
-        bg: 'bg-green-500/20',
-        text: 'text-green-400',
-        gradient: 'from-green-500 to-blue-500',
-        gradientHover: 'hover:from-green-600 hover:to-blue-600',
-        splitGradient: 'from-green-500/10 to-blue-500/10',
-        splitBorder: 'border-green-500/30',
-        splitBar: 'from-green-400 to-green-500'
+        primary: 'blue',
+        border: 'border-blue-500',
+        borderColor: '#3b82f6',
+        borderLight: 'border-blue-400/50',
+        shadow: 'shadow-blue-400/20',
+        bg: 'bg-blue-500/20',
+        text: 'text-blue-400',
+        gradient: 'from-blue-500 to-cyan-500',
+        gradientHover: 'hover:from-blue-600 hover:to-cyan-600',
+        splitGradient: 'from-blue-500/10 to-cyan-500/10',
+        splitBorder: 'border-blue-500/30',
+        splitBar: 'from-blue-400 to-blue-500'
       };
     } else {
       return {

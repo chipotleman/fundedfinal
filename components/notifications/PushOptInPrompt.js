@@ -60,7 +60,7 @@ export default function PushOptInPrompt() {
               <button
                 onClick={handleEnable}
                 disabled={push.busy || isIOSWithoutPwa}
-                className="px-4 py-2 text-sm font-semibold rounded-lg bg-green-500 hover:bg-green-400 text-black disabled:opacity-50"
+                className="px-4 py-2 text-sm font-semibold rounded-lg bg-blue-500 hover:bg-blue-400 text-white disabled:opacity-50"
               >
                 {isIOSWithoutPwa ? 'Add to Home Screen first' : push.busy ? 'Enabling…' : 'Enable notifications'}
               </button>

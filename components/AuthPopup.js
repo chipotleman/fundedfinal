@@ -178,7 +178,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
   } : {};
 
   const CheckIcon = ({ met }) => (
-    <svg className={`w-3.5 h-3.5 flex-shrink-0 ${met ? 'text-green-400' : 'text-gray-600'}`} fill="currentColor" viewBox="0 0 20 20">
+    <svg className={`w-3.5 h-3.5 flex-shrink-0 ${met ? 'text-blue-400' : 'text-gray-600'}`} fill="currentColor" viewBox="0 0 20 20">
       {met
         ? <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
         : <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5" fill="none" />
@@ -192,7 +192,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
     if (emailChecking) return 'border-blue-500/50';
     if (emailStatus === 'invalid') return 'border-red-500/50';
     if (emailStatus === 'taken') return 'border-red-500/50';
-    if (emailStatus === 'available' || emailStatus === 'valid_format') return 'border-green-500/50';
+    if (emailStatus === 'available' || emailStatus === 'valid_format') return 'border-blue-500/50';
     return defaultBorder;
   };
 
@@ -234,7 +234,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
           {error && (
             <div className={`mb-4 p-3 rounded-xl border text-sm ${
               error.includes('successfully') || error.includes('created')
-                ? 'bg-green-500/10 border-green-500/20 text-green-400'
+                ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
                 : error.includes('soon')
                 ? 'bg-blue-500/10 border-blue-500/20 text-blue-400'
                 : 'bg-red-500/10 border-red-500/20 text-red-400'
@@ -284,7 +284,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                     <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
                   )}
                   {!emailChecking && emailTouched && email && emailStatus === 'available' && (
-                    <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                    <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   )}
@@ -299,7 +299,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                 <p className={`text-xs mt-1.5 ${
                   emailStatus === 'taken' ? 'text-red-400' :
                   emailStatus === 'invalid' ? 'text-red-400' :
-                  emailStatus === 'available' ? 'text-green-400' : 'text-gray-500'
+                  emailStatus === 'available' ? 'text-blue-400' : 'text-gray-500'
                 }`}>
                   {emailStatus === 'taken' && 'Email already registered — sign in instead'}
                   {emailStatus === 'invalid' && 'Please enter a valid email address'}
@@ -340,15 +340,15 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
               <div className="space-y-1.5 px-1">
                 <div className="flex items-center gap-2">
                   <CheckIcon met={hasMinLength} />
-                  <span className={`text-xs ${hasMinLength ? 'text-green-400' : 'text-gray-500'}`}>At least 8 characters</span>
+                  <span className={`text-xs ${hasMinLength ? 'text-blue-400' : 'text-gray-500'}`}>At least 8 characters</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckIcon met={hasNumber} />
-                  <span className={`text-xs ${hasNumber ? 'text-green-400' : 'text-gray-500'}`}>Contains a number</span>
+                  <span className={`text-xs ${hasNumber ? 'text-blue-400' : 'text-gray-500'}`}>Contains a number</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckIcon met={hasUppercase} />
-                  <span className={`text-xs ${hasUppercase ? 'text-green-400' : 'text-gray-500'}`}>Contains an uppercase letter</span>
+                  <span className={`text-xs ${hasUppercase ? 'text-blue-400' : 'text-gray-500'}`}>Contains an uppercase letter</span>
                 </div>
               </div>
             )}
@@ -361,7 +361,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                   onChange={(e) => { setConfirmPassword(e.target.value); setConfirmTouched(true); }}
                   className={`w-full border rounded-xl px-4 py-3 placeholder-gray-500 focus:outline-none transition-all duration-200 ${
                     confirmTouched && confirmPassword
-                      ? passwordsMatch ? 'border-green-500/50' : 'border-red-500/40'
+                      ? passwordsMatch ? 'border-blue-500/50' : 'border-red-500/40'
                       : 'focus:border-blue-500'
                   }`}
                   style={{ backgroundColor: '#111', color: '#fff', borderColor: confirmTouched && confirmPassword ? undefined : ('#1a1a1a') }}
@@ -371,7 +371,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                 {confirmTouched && confirmPassword.length > 0 && (
                   <div className="flex items-center gap-2 mt-1.5 px-1">
                     <CheckIcon met={passwordsMatch} />
-                    <span className={`text-xs ${passwordsMatch ? 'text-green-400' : 'text-gray-500'}`}>
+                    <span className={`text-xs ${passwordsMatch ? 'text-blue-400' : 'text-gray-500'}`}>
                       {passwordsMatch ? 'Passwords match' : 'Passwords must match'}
                     </span>
                   </div>

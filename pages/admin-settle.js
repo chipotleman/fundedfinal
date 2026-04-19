@@ -84,7 +84,7 @@ export default function AdminSettle() {
 
       <button
         onClick={handleSettle}
-        className="w-full bg-neon-green text-black px-4 py-2 rounded hover:bg-green-400 mb-4"
+        className="w-full bg-neon-green text-white px-4 py-2 rounded hover:bg-blue-400 mb-4"
       >
         Settle Bets
       </button>

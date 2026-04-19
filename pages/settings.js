@@ -49,7 +49,7 @@ function Toggle({ value, onChange }) {
       type="button"
       onClick={() => onChange(!value)}
       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-        value ? 'bg-green-500' : 'bg-[#222]'
+        value ? 'bg-blue-500' : 'bg-[#222]'
       }`}
       aria-pressed={value}
     >
@@ -75,7 +75,7 @@ function Toast({ toast, onClose }) {
       className={`fixed top-20 right-4 z-50 px-4 py-3 rounded-lg shadow-lg text-sm font-medium border ${
         isError
           ? 'bg-red-500/15 border-red-500/40 text-red-300'
-          : 'bg-green-500/15 border-green-500/40 text-green-300'
+          : 'bg-blue-500/15 border-blue-500/40 text-blue-300'
       }`}
       role="status"
     >
@@ -245,13 +245,13 @@ export default function Settings() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0d0d0d] flex items-center justify-center">
-        <div className="w-10 h-10 border-4 border-green-400 border-t-transparent rounded-full animate-spin" />
+        <div className="w-10 h-10 border-4 border-blue-400 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   const sectionClass = 'bg-[#111] backdrop-blur-lg rounded-2xl border border-[#1a1a1a] p-6 sm:p-8 mb-8';
-  const inputClass = 'w-full bg-[#1a1a1a] text-white px-3 py-2 rounded-lg border border-[#222] focus:border-green-400 focus:outline-none';
+  const inputClass = 'w-full bg-[#1a1a1a] text-white px-3 py-2 rounded-lg border border-[#222] focus:border-blue-400 focus:outline-none';
 
   return (
     <div className="min-h-screen bg-[#0d0d0d]">
@@ -275,7 +275,7 @@ export default function Settings() {
             <div className="space-y-5">
               <div className="text-xs text-gray-500">
                 Want to change your banner or avatar with the full editor? Visit{' '}
-                <a href={`/profile/${session?.user?.id || ''}`} className="text-green-400 hover:text-green-300 underline">My Profile</a>.
+                <a href={`/profile/${session?.user?.id || ''}`} className="text-blue-400 hover:text-blue-300 underline">My Profile</a>.
               </div>
 
               <div>
@@ -351,7 +351,7 @@ export default function Settings() {
                     })
                   }
                   disabled={savingSection === 'profile'}
-                  className="bg-green-500 hover:bg-green-400 disabled:opacity-60 text-black font-semibold px-5 py-2 rounded-lg"
+                  className="bg-blue-500 hover:bg-blue-400 disabled:opacity-60 text-white font-semibold px-5 py-2 rounded-lg"
                 >
                   {savingSection === 'profile' ? 'Saving…' : 'Save profile'}
                 </button>
@@ -415,7 +415,7 @@ export default function Settings() {
                       type="button"
                       onClick={() => update('oddsFormat', opt.id)}
                       className={`px-4 py-2 text-sm font-medium ${
-                        active ? 'bg-green-500 text-black' : 'bg-[#1a1a1a] text-gray-300 hover:bg-[#222]'
+                        active ? 'bg-blue-500 text-white' : 'bg-[#1a1a1a] text-gray-300 hover:bg-[#222]'
                       }`}
                     >
                       {opt.label}
@@ -432,7 +432,7 @@ export default function Settings() {
                   type="button"
                   onClick={() => saveSection('preferences', { oddsFormat: form.oddsFormat })}
                   disabled={savingSection === 'preferences'}
-                  className="bg-green-500 hover:bg-green-400 disabled:opacity-60 text-black font-semibold px-5 py-2 rounded-lg"
+                  className="bg-blue-500 hover:bg-blue-400 disabled:opacity-60 text-white font-semibold px-5 py-2 rounded-lg"
                 >
                   {savingSection === 'preferences' ? 'Saving…' : 'Save preferences'}
                 </button>
@@ -479,7 +479,7 @@ export default function Settings() {
                     })
                   }
                   disabled={savingSection === 'social'}
-                  className="bg-green-500 hover:bg-green-400 disabled:opacity-60 text-black font-semibold px-5 py-2 rounded-lg"
+                  className="bg-blue-500 hover:bg-blue-400 disabled:opacity-60 text-white font-semibold px-5 py-2 rounded-lg"
                 >
                   {savingSection === 'social' ? 'Saving…' : 'Save socials'}
                 </button>
@@ -514,7 +514,7 @@ export default function Settings() {
                   type="button"
                   onClick={() => saveSection('notifications', { notifications: form.notifications })}
                   disabled={savingSection === 'notifications'}
-                  className="bg-green-500 hover:bg-green-400 disabled:opacity-60 text-black font-semibold px-5 py-2 rounded-lg"
+                  className="bg-blue-500 hover:bg-blue-400 disabled:opacity-60 text-white font-semibold px-5 py-2 rounded-lg"
                 >
                   {savingSection === 'notifications' ? 'Saving…' : 'Save notifications'}
                 </button>
@@ -543,7 +543,7 @@ export default function Settings() {
                   type="button"
                   onClick={() => saveSection('privacy', { privacy: form.privacy })}
                   disabled={savingSection === 'privacy'}
-                  className="bg-green-500 hover:bg-green-400 disabled:opacity-60 text-black font-semibold px-5 py-2 rounded-lg"
+                  className="bg-blue-500 hover:bg-blue-400 disabled:opacity-60 text-white font-semibold px-5 py-2 rounded-lg"
                 >
                   {savingSection === 'privacy' ? 'Saving…' : 'Save privacy'}
                 </button>
