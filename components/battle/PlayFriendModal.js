@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
 import SharedUserAvatar from '../UserAvatar';
+import { useProfileCacheOptional } from '../../contexts/ProfileCacheContext';
 
 const BUY_IN_OPTIONS = [5, 10, 25, 50, 100];
 const GAME_MODE_OPTIONS = [
@@ -24,6 +25,7 @@ function UserAvatar({ user, size = 36 }) {
 
 export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onSwitchToPrivate, initialFriend = null }) {
   const router = useRouter();
+  const profileCache = useProfileCacheOptional();
   useModalScrollLock(isOpen);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [buyIn, setBuyIn] = useState(10);
@@ -203,9 +205,19 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
     }
   };
 
-  const navigateToProfile = (userId) => {
+  const navigateToProfile = (userOrId) => {
+    const user = userOrId && typeof userOrId === 'object' ? userOrId : null;
+    const id = user ? user.id : userOrId;
+    if (!id) return;
+    if (profileCache) {
+      profileCache.prefetchProfile(id, user ? {
+        id,
+        username: user.username || user.name,
+        avatar: user.avatar ?? null,
+      } : null);
+    }
     onClose();
-    router.push(`/profile/${userId}`);
+    router.push(`/profile/${id}`);
   };
 
   const handleSwitchToPrivate = () => {
@@ -362,7 +374,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                             animationDelay: `${i * 40}ms`,
                           }}
                         >
-                          <button type="button" className="cursor-pointer flex-shrink-0" onClick={(e) => { e.stopPropagation(); navigateToProfile(friend.id); }} aria-label={`View ${friend.username}'s profile`}>
+                          <button type="button" className="cursor-pointer flex-shrink-0" onClick={(e) => { e.stopPropagation(); navigateToProfile(friend); }} aria-label={`View ${friend.username}'s profile`}>
                             <UserAvatar user={friend} size={38} />
                           </button>
                           <button type="button" onClick={togglePlay} className="text-left flex-1 min-w-0 cursor-pointer">
@@ -460,12 +472,12 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                           style={{ backgroundColor: elevatedBg, border: `1px solid ${cardBorder}`, animationDelay: `${i * 50}ms` }}
                         >
                           <div className="flex items-center gap-3">
-                            <button type="button" className="cursor-pointer flex-shrink-0" onClick={() => navigateToProfile(user.id)} aria-label={`View ${user.username}'s profile`}>
+                            <button type="button" className="cursor-pointer flex-shrink-0" onClick={() => navigateToProfile(user)} aria-label={`View ${user.username}'s profile`}>
                               <UserAvatar user={user} size={40} />
                             </button>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1.5">
-                                <button type="button" className="text-sm font-semibold truncate cursor-pointer bg-transparent border-none p-0" style={{ color: textPrimary }} onClick={() => navigateToProfile(user.id)}>
+                                <button type="button" className="text-sm font-semibold truncate cursor-pointer bg-transparent border-none p-0" style={{ color: textPrimary }} onClick={() => navigateToProfile(user)}>
                                   {user.username}
                                 </button>
                                 {isAlreadyFriend && (
@@ -561,11 +573,11 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                         style={{ backgroundColor: elevatedBg, border: `1px solid ${cardBorder}`, animationDelay: `${i * 50}ms` }}
                       >
                         <div className="flex items-center gap-3">
-                          <button type="button" className="cursor-pointer flex-shrink-0" onClick={() => navigateToProfile(sender.id)} aria-label={`View ${sender.username || 'user'}'s profile`}>
+                          <button type="button" className="cursor-pointer flex-shrink-0" onClick={() => navigateToProfile(sender)} aria-label={`View ${sender.username || 'user'}'s profile`}>
                             <UserAvatar user={sender} size={42} />
                           </button>
                           <div className="flex-1 min-w-0">
-                            <button type="button" className="text-sm font-semibold truncate cursor-pointer bg-transparent border-none p-0 text-left" style={{ color: textPrimary }} onClick={() => navigateToProfile(sender.id)}>
+                            <button type="button" className="text-sm font-semibold truncate cursor-pointer bg-transparent border-none p-0 text-left" style={{ color: textPrimary }} onClick={() => navigateToProfile(sender)}>
                               {sender.username || 'Unknown'}
                             </button>
                             <div className="text-xs mt-0.5" style={{ color: textMuted }}>

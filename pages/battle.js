@@ -18,6 +18,7 @@ import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
 import ConnectionBadge from '../components/battle/ConnectionBadge';
 import { useMatchup } from '../contexts/MatchupContext';
 import { useNotifications } from '../contexts/NotificationsContext';
+import { useProfileCache } from '../contexts/ProfileCacheContext';
 import { formatMoney } from '../utils/formatMoney';
 import { formatLastSeen } from '../utils/relativeTime';
 import { readBattleResult, clearBattleResult } from '../utils/battleResultCache';
@@ -42,6 +43,19 @@ export default function BattlePage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { matchup: globalMatchup, matchupData: globalMatchupData, hasActiveMatchup: globalHasActive, isWaiting: globalIsWaiting, hasAnyMatchup: globalHasAny, refresh: refreshGlobalMatchup } = useMatchup();
+  const profileCache = useProfileCache();
+
+  const goToProfile = useCallback((user) => {
+    const id = user?.id || user;
+    if (!id) return;
+    const seed = (user && typeof user === 'object') ? {
+      id,
+      username: user.username || user.name,
+      avatar: user.avatar ?? null,
+    } : null;
+    profileCache.prefetchProfile(id, seed);
+    router.push(`/profile/${id}`);
+  }, [profileCache, router]);
 
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -678,7 +692,7 @@ export default function BattlePage() {
                 const lastSeenLabel = !friend.isOnline && friend.lastSeenAt != null ? formatLastSeen(friend.lastSeenAt) : '';
                 return (
                 <div key={friend.id} className="flex items-center gap-2.5 px-3 py-2.5 group">
-                  <div className="flex-shrink-0 cursor-pointer" onClick={() => router.push(`/profile/${friend.id}`)}>
+                  <div className="flex-shrink-0 cursor-pointer" onClick={() => goToProfile(friend)}>
                     <FramedAvatar
                       user={friend}
                       size={32}
@@ -687,7 +701,7 @@ export default function BattlePage() {
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate cursor-pointer flex items-center gap-1.5" style={{ color: textPrimary }} onClick={() => router.push(`/profile/${friend.id}`)}>
+                    <div className="text-sm font-medium truncate cursor-pointer flex items-center gap-1.5" style={{ color: textPrimary }} onClick={() => goToProfile(friend)}>
                       <span className="truncate">{friend.username}</span>
                       {friend.isOnline && (
                         <span className="text-[9px] font-semibold uppercase tracking-wide text-green-500 flex-shrink-0">Active now</span>
@@ -742,7 +756,7 @@ export default function BattlePage() {
                   <div
                     className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer"
                     style={{ backgroundColor: '#374151' }}
-                    onClick={() => router.push(`/profile/${req.sender?.id}`)}
+                    onClick={() => goToProfile(req.sender)}
                   >
                     {req.sender?.avatar ? (
                       <img src={req.sender.avatar} className="w-full h-full object-cover" alt="" />
@@ -848,11 +862,11 @@ export default function BattlePage() {
             <div className="divide-y" style={{ borderColor: cardBorder }}>
               {searchResults.map(user => (
                 <div key={user.id} className="flex items-center gap-2.5 px-3 py-2.5">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer" style={{ backgroundColor: '#374151' }} onClick={() => router.push(`/profile/${user.id}`)}>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer" style={{ backgroundColor: '#374151' }} onClick={() => goToProfile(user)}>
                     {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-xs font-bold" style={{ color: textPrimary }}>{user.username?.[0]?.toUpperCase()}</span>}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate cursor-pointer" style={{ color: textPrimary }} onClick={() => router.push(`/profile/${user.id}`)}>{user.username}</div>
+                    <div className="text-sm font-medium truncate cursor-pointer" style={{ color: textPrimary }} onClick={() => goToProfile(user)}>{user.username}</div>
                     <div className="text-[10px]" style={{ color: textSecondary }}>{user.battleWins || 0}W-{user.battleLosses || 0}L</div>
                   </div>
                   {userId !== user.id && (

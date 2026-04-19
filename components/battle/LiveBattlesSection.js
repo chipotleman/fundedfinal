@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import BattleChat from './BattleChat';
 import { formatMoney } from '../../utils/formatMoney';
 import UserAvatar from '../UserAvatar';
+import { useProfileCacheOptional } from '../../contexts/ProfileCacheContext';
 
 function formatTimeRemaining(ms) {
   if (!ms || ms <= 0) return 'Ended';
@@ -166,11 +167,19 @@ function MomentumIcon() {
 
 function PlayerAvatar({ user, isWinning, size = 44, bgColor = '#1e40af', onClick }) {
   const router = useRouter();
+  const profileCache = useProfileCacheOptional();
   const handleClick = (e) => {
     e.stopPropagation();
     if (onClick) {
       onClick(e);
     } else if (user.id) {
+      if (profileCache) {
+        profileCache.prefetchProfile(user.id, {
+          id: user.id,
+          username: user.username || user.name,
+          avatar: user.avatar ?? null,
+        });
+      }
       router.push(`/profile/${user.id}`);
     }
   };
