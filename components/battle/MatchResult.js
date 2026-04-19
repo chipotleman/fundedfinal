@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
+import CoinRain from '../CoinRain';
 
 function useCountUp(target, duration = 1000, shouldStart = false) {
   const [value, setValue] = useState(0);
@@ -190,6 +191,12 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
           }}
         />
       ))}
+
+      {isWinner && (
+        <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 110 }}>
+          <CoinRain trigger={showConfetti} />
+        </div>
+      )}
 
       {!isWinner && !isTie && <div className="mr-red-vignette" />}
 
