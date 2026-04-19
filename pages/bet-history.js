@@ -539,6 +539,7 @@ export default function BetHistory() {
                   <BattleHistoryGroup
                     key={mid}
                     battle={battle}
+                    matchupId={mid}
                     myProfile={myProfile}
                     betCount={bets.length}
                     opponentBetCount={oppBetsSorted.length}

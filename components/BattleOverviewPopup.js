@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { formatMoney } from '../utils/formatMoney';
 import useModalScrollLock from '../hooks/useModalScrollLock';
@@ -129,6 +129,7 @@ function TicketCarousel({ cards, theme, emptyMessage }) {
 
 export default function BattleOverviewPopup({
   battle,
+  matchupId,
   theme,
   myProfile,
   betCount,
@@ -140,8 +141,78 @@ export default function BattleOverviewPopup({
 }) {
   const { isDarkMode } = useTheme();
   const [activeTab, setActiveTab] = useState('mine');
+  const [shareToast, setShareToast] = useState(null);
+  const toastTimerRef = useRef(null);
 
   useModalScrollLock(true, { restoreScroll: true });
+
+  useEffect(() => () => {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+  }, []);
+
+  const showShareToast = (message) => {
+    setShareToast(message);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = setTimeout(() => setShareToast(null), 2200);
+  };
+
+  const buildShareUrl = () => {
+    const id = matchupId || battle?.matchupId || battle?.id;
+    if (!id) return null;
+    if (typeof window === 'undefined') return `/bet-history?battle=${id}`;
+    const url = new URL('/bet-history', window.location.origin);
+    url.searchParams.set('battle', id);
+    return url.toString();
+  };
+
+  const copyToClipboard = async (text) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (_) {}
+    }
+    if (typeof document !== 'undefined') {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        const ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        return ok;
+      } catch (_) {}
+    }
+    return false;
+  };
+
+  const handleShare = async (e) => {
+    e.stopPropagation();
+    const shareUrl = buildShareUrl();
+    if (!shareUrl) {
+      showShareToast("Couldn't build link");
+      return;
+    }
+    const opp = battle?.opponent?.username || 'opponent';
+    const shareData = {
+      title: 'Battle on Piks',
+      text: `Check out my battle vs ${opp}`,
+      url: shareUrl,
+    };
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+      }
+    }
+    const ok = await copyToClipboard(shareUrl);
+    showShareToast(ok ? 'Link copied!' : "Couldn't copy link");
+  };
 
   const formatDate = (date) => {
     if (!date) return '';
@@ -205,6 +276,18 @@ export default function BattleOverviewPopup({
                     {outcomeBadge.label}
                   </span>
                 </div>
+                <button
+                  onClick={handleShare}
+                  className="w-7 h-7 rounded-full flex items-center justify-center transition-colors"
+                  style={{ background: 'rgba(255,255,255,0.08)' }}
+                  aria-label="Share battle link"
+                  title="Share battle link"
+                  type="button"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke={theme.accentColor} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                  </svg>
+                </button>
                 <button
                   onClick={onClose}
                   className="w-7 h-7 rounded-full flex items-center justify-center transition-colors"
@@ -384,6 +467,17 @@ export default function BattleOverviewPopup({
             )}
           </div>
         </div>
+
+        {shareToast && (
+          <div
+            className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-4 px-3 py-1.5 rounded-full text-[11px] font-bold text-white shadow-lg"
+            style={{ background: 'rgba(17,24,39,0.95)', border: `1px solid ${theme.borderColor}` }}
+            role="status"
+            aria-live="polite"
+          >
+            {shareToast}
+          </div>
+        )}
       </div>
     </div>
   );

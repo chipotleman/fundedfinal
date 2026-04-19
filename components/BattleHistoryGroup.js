@@ -63,6 +63,7 @@ function formatDate(date) {
 
 export default function BattleHistoryGroup({
   battle,
+  matchupId,
   myProfile,
   betCount,
   opponentBetCount = 0,
@@ -269,6 +270,7 @@ export default function BattleHistoryGroup({
       {isPopupOpen && (
         <BattleOverviewPopup
           battle={battle}
+          matchupId={matchupId}
           theme={theme}
           myProfile={myProfile}
           betCount={betCount}
