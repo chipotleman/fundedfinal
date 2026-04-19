@@ -1072,7 +1072,14 @@ export default function Dashboard() {
                       </div>
                       <div className="rounded-lg p-2.5 text-center" style={{ background: '#111', border: `1px solid ${'#222'}` }}>
                         <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Pot</p>
-                        <p className={`font-bold text-sm ${'text-white'}`}>${parseFloat(matchup.potSize || matchup.startingBalance * 2 || 20000).toLocaleString()}</p>
+                        <p className={`font-bold text-sm ${'text-white'}`}>${(() => {
+                          const payout = parseFloat(matchup.winnerPayout);
+                          if (payout > 0) return payout.toLocaleString();
+                          const gross = parseFloat(matchup.potSize || matchup.startingBalance * 2 || 20000);
+                          const fee = parseFloat(matchup.platformFee);
+                          const net = fee > 0 ? gross - fee : gross - gross * 0.10;
+                          return net.toLocaleString();
+                        })()}</p>
                       </div>
                       <div className="rounded-lg p-2.5 text-center" style={{ background: '#111', border: `1px solid ${'#222'}` }}>
                         <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Time</p>
@@ -1169,7 +1176,16 @@ export default function Dashboard() {
               )}
             </div>
 
-            <div className="px-5 pb-5 pt-2 flex-shrink-0">
+            <div className="px-5 pb-5 pt-2 flex-shrink-0 flex gap-2">
+              {walkthroughStep > 0 && (
+                <button
+                  onClick={() => setWalkthroughStep(walkthroughStep - 1)}
+                  className="py-3 px-5 rounded-xl text-sm font-bold transition-all active:scale-[0.98]"
+                  style={{ backgroundColor: '#1a1a1a', color: '#e5e7eb', border: '1px solid #333' }}
+                >
+                  Back
+                </button>
+              )}
               <button
                 onClick={() => {
                   if (walkthroughStep < 2) {
@@ -1180,7 +1196,7 @@ export default function Dashboard() {
                     setWalkthroughStep(0);
                   }
                 }}
-                className="w-full py-3 rounded-xl text-sm font-bold transition-all active:scale-[0.98]"
+                className="flex-1 py-3 rounded-xl text-sm font-bold transition-all active:scale-[0.98]"
                 style={{ backgroundColor: '#2563eb', color: '#ffffff' }}
               >
                 {walkthroughStep === 0 ? 'How Does It Work?' : walkthroughStep === 1 ? 'Got It, Any Tips?' : 'Start Picking'}
