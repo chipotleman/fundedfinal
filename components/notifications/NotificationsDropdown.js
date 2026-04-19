@@ -185,21 +185,22 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
           <Section title="Results">
             {gameResults.map((r) => {
               const accent = r.outcome === 'won' ? '#3b82f6' : r.outcome === 'lost' ? '#f87171' : '#facc15';
-              const label = r.outcome === 'won' ? 'Won' : r.outcome === 'lost' ? 'Lost' : 'Graded';
               const pnl = Number.isFinite(r.pnl) ? r.pnl : 0;
-              const pnlText = `${pnl >= 0 ? '+' : '−'}$${formatMoney(Math.abs(pnl))}`;
+              const amount = Math.abs(pnl);
+              let label;
+              if (r.outcome === 'won') {
+                label = amount > 0 ? `Won $${formatMoney(amount)}` : 'Won';
+              } else if (r.outcome === 'lost') {
+                label = amount > 0 ? `Lost $${formatMoney(amount)}` : 'Lost';
+              } else {
+                label = 'Push';
+              }
               return (
                 <Row key={`result:${r.id}`} sender={r.opponent} time={r.endedAt}>
                   <div className="text-white text-sm font-semibold truncate">
                     <span style={{ color: accent }}>{label}</span>
                     {' vs '}
                     {r.opponent?.username || 'Opponent'}
-                  </div>
-                  <div className="text-gray-400 text-xs">
-                    {r.outcome === 'won' && r.winnerPayout > 0
-                      ? `Payout $${formatMoney(r.winnerPayout)}`
-                      : `P/L ${pnlText}`}
-                    {r.buyIn > 0 ? ` · $${formatMoney(r.buyIn)} buy-in` : ''}
                   </div>
                   <div className="flex gap-2 mt-2">
                     <button

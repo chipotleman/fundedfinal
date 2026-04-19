@@ -5,6 +5,7 @@ import TopNavbar from '../components/TopNavbar';
 import { useNotifications } from '../contexts/NotificationsContext';
 import { isUserOnline } from '../components/ActiveStatus';
 import UserAvatar, { UserNameLink } from '../components/UserAvatar';
+import { formatMoney } from '../utils/formatMoney';
 
 function timeAgo(iso) {
   if (!iso) return '';
@@ -134,9 +135,16 @@ function NotificationsFeed({ ctx, router }) {
           </div>
           {gameResults.map((r) => {
             const accent = r.outcome === 'won' ? '#3b82f6' : r.outcome === 'lost' ? '#f87171' : '#facc15';
-            const label = r.outcome === 'won' ? 'Won' : r.outcome === 'lost' ? 'Lost' : 'Graded';
             const pnl = Number.isFinite(r.pnl) ? r.pnl : 0;
-            const pnlText = `${pnl >= 0 ? '+' : '−'}$${Math.abs(pnl).toFixed(2)}`;
+            const amount = Math.abs(pnl);
+            let label;
+            if (r.outcome === 'won') {
+              label = amount > 0 ? `Won $${formatMoney(amount)}` : 'Won';
+            } else if (r.outcome === 'lost') {
+              label = amount > 0 ? `Lost $${formatMoney(amount)}` : 'Lost';
+            } else {
+              label = 'Push';
+            }
             return (
               <div
                 key={`result:${r.id}`}
@@ -149,12 +157,6 @@ function NotificationsFeed({ ctx, router }) {
                     <span style={{ color: accent }}>{label}</span>
                     {' vs '}
                     <UserNameLink user={r.opponent} fallback="Opponent" />
-                  </div>
-                  <div className="text-xs" style={{ color: textSecondary }}>
-                    {r.outcome === 'won' && r.winnerPayout > 0
-                      ? `Payout $${r.winnerPayout.toFixed(2)}`
-                      : `P/L ${pnlText}`}
-                    {r.buyIn > 0 ? ` · $${r.buyIn} buy-in` : ''}
                   </div>
                   <div className="flex gap-2 mt-2">
                     <button
