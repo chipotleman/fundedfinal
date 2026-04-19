@@ -205,6 +205,7 @@ export default async function handler(req, res) {
             id: f.id,
             username: f.displayName || f.username || 'Opponent',
             avatar: f.avatar || null,
+            equippedFrame: null,
           };
         } else if (oppId) {
           const p = profileMap[oppId];
@@ -213,6 +214,7 @@ export default async function handler(req, res) {
             id: oppId,
             username: p?.username || (u?.email ? u.email.split('@')[0] : 'Opponent'),
             avatar: p?.avatar || u?.image || null,
+            equippedFrame: p?.equippedFrame || null,
           };
         }
 

@@ -56,6 +56,7 @@ export default async function handler(req, res) {
           id: f.id,
           username: f.displayName || f.username || 'Opponent',
           avatar: f.avatar || null,
+          equippedFrame: null,
         };
       }
     } else if (m.user2Id) {
@@ -65,6 +66,7 @@ export default async function handler(req, res) {
         id: m.user2Id,
         username: p?.username || (u?.email ? u.email.split('@')[0] : 'Player 2'),
         avatar: p?.avatar || u?.image || null,
+        equippedFrame: p?.equippedFrame || null,
       };
     }
 
@@ -76,6 +78,7 @@ export default async function handler(req, res) {
         id: m.user1Id,
         username: p?.username || (u?.email ? u.email.split('@')[0] : 'Player 1'),
         avatar: p?.avatar || u?.image || null,
+        equippedFrame: p?.equippedFrame || null,
       };
     }
 

@@ -1,6 +1,24 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { formatMoney } from '../utils/formatMoney';
 import useModalScrollLock from '../hooks/useModalScrollLock';
+import UserAvatar from './UserAvatar';
+
+// Override the ORIGINAL theme inside this popup so it leans gold/neutral
+// instead of bright blue. RUSH (orange) and TOURNAMENT (green) pass through.
+function getPopupTheme(theme) {
+  if (theme?.label !== 'ORIGINAL') return theme;
+  return {
+    ...theme,
+    cardBg: 'linear-gradient(135deg, #0a0a0c 0%, #14151a 25%, #1d1f26 50%, #14151a 75%, #08080a 100%)',
+    borderColor: 'rgba(234,179,8,0.30)',
+    accentColor: '#eab308',
+    accentRgb: '234,179,8',
+    badgeBg: 'rgba(234,179,8,0.15)',
+    avatarRing: '#eab308',
+    avatarGlow: '0 0 20px rgba(234,179,8,0.40)',
+    glowColor: 'rgba(234,179,8,0.35)',
+  };
+}
 
 function TicketCarousel({ cards, theme, emptyMessage }) {
   const [index, setIndex] = useState(0);
@@ -129,15 +147,26 @@ function TicketCarousel({ cards, theme, emptyMessage }) {
 export default function BattleOverviewPopup({
   battle,
   matchupId,
-  theme,
+  theme: rawTheme,
   myProfile,
   betCount,
   opponentBetCount,
   myBetCards,
   opponentBetCards,
-  outcomeBadge,
+  outcomeBadge: rawOutcomeBadge,
   onClose,
 }) {
+  const theme = getPopupTheme(rawTheme);
+  // The active outcome badge inherits from theme.borderColor in the parent;
+  // re-derive it here so the ORIGINAL override flows through.
+  const outcomeBadge = rawOutcomeBadge?.label === 'ACTIVE' && rawTheme?.label === 'ORIGINAL'
+    ? {
+        ...rawOutcomeBadge,
+        bg: 'bg-yellow-500/15',
+        text: 'text-yellow-300',
+        border: theme.borderColor,
+      }
+    : rawOutcomeBadge;
   const [activeTab, setActiveTab] = useState('mine');
   const [shareToast, setShareToast] = useState(null);
   const toastTimerRef = useRef(null);
@@ -318,14 +347,21 @@ export default function BattleOverviewPopup({
             <div className="flex items-center w-full px-3 pb-2">
               <div className="flex flex-col items-center" style={{ width: '32%' }}>
                 <div
-                  className="w-11 h-11 rounded-full flex items-center justify-center overflow-hidden"
-                  style={{ border: `2px solid ${theme.avatarRing}`, boxShadow: theme.avatarGlow, background: '#111' }}
+                  className="rounded-full"
+                  style={{
+                    padding: 2,
+                    background: theme.avatarRing,
+                    boxShadow: theme.avatarGlow,
+                  }}
                 >
-                  {userAvatar ? (
-                    <img src={userAvatar} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-base font-black text-white/70">{userName?.[0]?.toUpperCase() || 'Y'}</span>
-                  )}
+                  <UserAvatar
+                    user={{ id: myProfile?.id, username: userName }}
+                    avatar={userAvatar}
+                    username={userName}
+                    frameId={myProfile?.equippedFrame || null}
+                    size={40}
+                    bgColor="#111"
+                  />
                 </div>
                 <p className="text-white text-[11px] font-bold truncate max-w-[90px] text-center mt-0.5 leading-tight">{userName}</p>
                 <p className={`text-[10px] font-bold leading-tight ${myPnL > 0 ? 'text-green-400' : myPnL < 0 ? 'text-red-400' : 'text-yellow-400'}`}>
@@ -366,14 +402,21 @@ export default function BattleOverviewPopup({
 
               <div className="flex flex-col items-center" style={{ width: '32%' }}>
                 <div
-                  className="w-11 h-11 rounded-full flex items-center justify-center overflow-hidden"
-                  style={{ border: '2px solid #ef4444', boxShadow: '0 0 20px rgba(239,68,68,0.3)', background: '#111' }}
+                  className="rounded-full"
+                  style={{
+                    padding: 2,
+                    background: '#ef4444',
+                    boxShadow: '0 0 20px rgba(239,68,68,0.3)',
+                  }}
                 >
-                  {opponent.avatar ? (
-                    <img src={opponent.avatar} alt={opponent.username} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-base font-black text-white/70">{(opponent.username || 'O')[0].toUpperCase()}</span>
-                  )}
+                  <UserAvatar
+                    user={{ id: opponent.id, username: opponent.username }}
+                    avatar={opponent.avatar}
+                    username={opponent.username}
+                    frameId={opponent.equippedFrame || null}
+                    size={40}
+                    bgColor="#111"
+                  />
                 </div>
                 <p className="text-white text-[11px] font-bold truncate max-w-[90px] text-center mt-0.5 leading-tight">{opponent.username}</p>
                 <p className="text-[10px] font-bold text-red-400 leading-tight">
