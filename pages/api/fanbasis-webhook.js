@@ -1,8 +1,10 @@
 import { buffer } from 'micro';
 import crypto from 'crypto';
-import { eq } from 'drizzle-orm';
+import { eq, and, sql, isNull } from 'drizzle-orm';
 import { db } from '../../lib/db';
-import { userChallenges } from '../../shared/schema';
+import { userChallenges, profiles } from '../../shared/schema';
+
+const FIRST_DEPOSIT_MATCH_CAP = 100;
 
 export const config = {
   api: {
@@ -127,7 +129,14 @@ async function handlePaymentCompleted(payload) {
     const profitTarget = startingBalance * 0.2;
     const maxDailyLoss = startingBalance * 0.1;
 
-    const result = await db.insert(userChallenges).values({
+    const priorChallenges = await db
+      .select({ id: userChallenges.id })
+      .from(userChallenges)
+      .where(eq(userChallenges.userId, userId))
+      .limit(1);
+    const isFirstDeposit = priorChallenges.length === 0;
+
+    const inserted = await db.insert(userChallenges).values({
       userId: userId,
       challengeType: challengeType || 'UNKNOWN',
       challengeName: challengeName || 'Challenge',
@@ -145,11 +154,61 @@ async function handlePaymentCompleted(payload) {
       profitTarget: profitTarget.toString(),
       transactionId: transactionIdValue,
       activatedAt: new Date(),
-    }).onConflictDoNothing({ target: userChallenges.transactionId });
+    }).onConflictDoNothing({ target: userChallenges.transactionId }).returning({ id: userChallenges.id });
 
     console.log('Challenge activated successfully for user:', userId);
+
+    if (isFirstDeposit && inserted.length > 0) {
+      await grantFirstDepositMatch({
+        userId,
+        challengeId: inserted[0].id,
+        depositAmount: adjustedPrice,
+      });
+    }
   } catch (error) {
     console.error('Failed to activate challenge:', error);
     throw error;
   }
+}
+
+async function grantFirstDepositMatch({ userId, challengeId, depositAmount }) {
+  const matchAmount = Math.min(Math.max(depositAmount || 0, 0), FIRST_DEPOSIT_MATCH_CAP);
+  if (matchAmount <= 0) {
+    console.log('First deposit match skipped (non-positive deposit) for user:', userId);
+    return;
+  }
+
+  await db.transaction(async (tx) => {
+    const claim = await tx
+      .update(profiles)
+      .set({
+        firstDepositMatchGrantedAt: new Date(),
+        firstDepositMatchAmount: matchAmount.toString(),
+        updatedAt: new Date(),
+      })
+      .where(and(eq(profiles.id, userId), isNull(profiles.firstDepositMatchGrantedAt)))
+      .returning({ id: profiles.id });
+
+    if (claim.length === 0) {
+      console.log('First deposit match already granted for user:', userId);
+      return;
+    }
+
+    const credited = await tx
+      .update(userChallenges)
+      .set({
+        currentBalance: sql`${userChallenges.currentBalance} + ${matchAmount}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(userChallenges.id, challengeId))
+      .returning({ id: userChallenges.id });
+
+    if (credited.length === 0) {
+      throw new Error(
+        `First deposit match: challenge ${challengeId} not found while crediting user ${userId} — aborting transaction so the bonus flag is rolled back`
+      );
+    }
+
+    console.log(`First deposit match of $${matchAmount.toFixed(2)} credited to user ${userId} (challenge ${challengeId})`);
+  });
 }

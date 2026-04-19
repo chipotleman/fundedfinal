@@ -61,6 +61,8 @@ export const profiles = pgTable("profiles", {
   bettingStyle: varchar("betting_style", { length: 50 }),
   experienceLevel: varchar("experience_level", { length: 50 }),
   onboardingCompleted: boolean("onboarding_completed").default(false),
+  firstDepositMatchGrantedAt: timestamp("first_deposit_match_granted_at"),
+  firstDepositMatchAmount: decimal("first_deposit_match_amount", { precision: 10, scale: 2 }),
   lastSeenAt: timestamp("last_seen_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

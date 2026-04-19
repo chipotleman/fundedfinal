@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { userChallenges } from '../../../shared/schema';
+import { userChallenges, profiles } from '../../../shared/schema';
 import { eq, asc } from 'drizzle-orm';
 
 export default async function handler(req, res) {
@@ -15,31 +15,53 @@ export default async function handler(req, res) {
       return res.status(200).json({ hasDeposited: false, signedIn: false });
     }
 
-    const rows = await db
-      .select({
-        id: userChallenges.id,
-        startingBalance: userChallenges.startingBalance,
-        pricePaid: userChallenges.pricePaid,
-        activatedAt: userChallenges.activatedAt,
-        createdAt: userChallenges.createdAt,
-      })
-      .from(userChallenges)
-      .where(eq(userChallenges.userId, session.user.id))
-      .orderBy(asc(userChallenges.createdAt))
-      .limit(1);
+    const [rows, profileRows] = await Promise.all([
+      db
+        .select({
+          id: userChallenges.id,
+          startingBalance: userChallenges.startingBalance,
+          pricePaid: userChallenges.pricePaid,
+          activatedAt: userChallenges.activatedAt,
+          createdAt: userChallenges.createdAt,
+        })
+        .from(userChallenges)
+        .where(eq(userChallenges.userId, session.user.id))
+        .orderBy(asc(userChallenges.createdAt))
+        .limit(1),
+      db
+        .select({
+          grantedAt: profiles.firstDepositMatchGrantedAt,
+          grantedAmount: profiles.firstDepositMatchAmount,
+        })
+        .from(profiles)
+        .where(eq(profiles.id, session.user.id))
+        .limit(1),
+    ]);
+
+    const matchGranted = !!profileRows[0]?.grantedAt;
 
     if (rows.length === 0) {
-      return res.status(200).json({ hasDeposited: false, signedIn: true });
+      return res.status(200).json({
+        hasDeposited: matchGranted,
+        matchGranted,
+        signedIn: true,
+      });
     }
 
     const first = rows[0];
     const startingBalance = parseFloat(first.startingBalance) || 0;
     const pricePaid = parseFloat(first.pricePaid) || 0;
-    const matchAmount = Math.max(0, startingBalance - pricePaid);
-    const grantedAt = first.activatedAt || first.createdAt;
+    const grantedAmount = profileRows[0]?.grantedAmount != null
+      ? parseFloat(profileRows[0].grantedAmount)
+      : null;
+    const matchAmount = grantedAmount != null && !Number.isNaN(grantedAmount)
+      ? grantedAmount
+      : Math.max(0, startingBalance - pricePaid);
+    const grantedAt = profileRows[0]?.grantedAt || first.activatedAt || first.createdAt;
 
     return res.status(200).json({
       hasDeposited: true,
+      matchGranted,
       signedIn: true,
       firstChallengeId: first.id,
       startingBalance,
