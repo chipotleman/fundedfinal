@@ -4,26 +4,6 @@ import { getBattleStreamClient } from '../lib/battleStreamClient';
 
 const MatchupContext = createContext(null);
 
-const FORFEIT_ACK_KEY = 'piks_forfeit_acks_v1';
-
-function readForfeitAcks() {
-  if (typeof window === 'undefined') return new Set();
-  try {
-    const raw = sessionStorage.getItem(FORFEIT_ACK_KEY);
-    if (!raw) return new Set();
-    return new Set(JSON.parse(raw));
-  } catch (_e) {
-    return new Set();
-  }
-}
-
-function writeForfeitAcks(set) {
-  if (typeof window === 'undefined') return;
-  try {
-    sessionStorage.setItem(FORFEIT_ACK_KEY, JSON.stringify([...set]));
-  } catch (_e) {}
-}
-
 export function MatchupProvider({ children }) {
   const { data: session, status } = useSession();
   const [matchupData, setMatchupData] = useState(null);
@@ -31,6 +11,16 @@ export function MatchupProvider({ children }) {
   const [error, setError] = useState(null);
   const [forfeitNotice, setForfeitNotice] = useState(null);
   const prevMatchupIdRef = useRef(null);
+  // Per-tab in-memory guard: tracks matchupIds the user has just dismissed
+  // so a duplicate forfeit event arriving from another channel before the
+  // server ack POST is processed doesn't reopen the modal. Cleared on reload.
+  const dismissedForfeitIdsRef = useRef(new Set());
+
+  const surfaceForfeitNotice = useCallback((notice) => {
+    if (!notice?.matchupId) return;
+    if (dismissedForfeitIdsRef.current.has(notice.matchupId)) return;
+    setForfeitNotice(notice);
+  }, []);
 
   const fetchCurrentMatchup = useCallback(async () => {
     if (status !== 'authenticated' || !session?.user?.id) {
@@ -46,13 +36,11 @@ export function MatchupProvider({ children }) {
         setMatchupData(data);
         setError(null);
 
-        // Forfeit-win detection: surface a one-time notice for any
-        // recentForfeit we haven't ack'd yet in this session.
+        // Forfeit-win detection: the server only returns recentForfeit
+        // when the persistent flag is set and not yet acknowledged, so
+        // surface it directly. Dismissal is persisted via /api/battles/forfeit-ack.
         if (data?.recentForfeit?.matchupId) {
-          const acks = readForfeitAcks();
-          if (!acks.has(data.recentForfeit.matchupId)) {
-            setForfeitNotice(data.recentForfeit);
-          }
+          surfaceForfeitNotice(data.recentForfeit);
         }
       } else {
         setError(data.error);
@@ -63,7 +51,7 @@ export function MatchupProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  }, [session?.user?.id, status]);
+  }, [session?.user?.id, status, surfaceForfeitNotice]);
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -162,15 +150,12 @@ export function MatchupProvider({ children }) {
         // modal immediately from the push payload — don't wait on
         // the /api/matchups/current round-trip.
         if (data.winnerId === myId && data.matchupId) {
-          const acks = readForfeitAcks();
-          if (!acks.has(data.matchupId)) {
-            setForfeitNotice({
-              matchupId: data.matchupId,
-              winnerPayout: Number(data.winnerPayout) || 0,
-              opponent: data.loser || { username: 'Opponent', avatar: null },
-              endedAt: new Date().toISOString(),
-            });
-          }
+          surfaceForfeitNotice({
+            matchupId: data.matchupId,
+            winnerPayout: Number(data.winnerPayout) || 0,
+            opponent: data.loser || { username: 'Opponent', avatar: null },
+            endedAt: new Date().toISOString(),
+          });
         }
         // Still re-fetch in the background so balances/bets reconcile.
         fetchCurrentMatchup();
@@ -263,15 +248,12 @@ export function MatchupProvider({ children }) {
     const handleForfeitWin = (e) => {
       const data = e.detail;
       if (!data?.matchupId || !data?.winnerId || data.winnerId !== myId) return;
-      const acks = readForfeitAcks();
-      if (!acks.has(data.matchupId)) {
-        setForfeitNotice({
-          matchupId: data.matchupId,
-          winnerPayout: Number(data.winnerPayout) || 0,
-          opponent: data.loser || { username: 'Opponent', avatar: null },
-          endedAt: new Date().toISOString(),
-        });
-      }
+      surfaceForfeitNotice({
+        matchupId: data.matchupId,
+        winnerPayout: Number(data.winnerPayout) || 0,
+        opponent: data.loser || { username: 'Opponent', avatar: null },
+        endedAt: new Date().toISOString(),
+      });
       // Background reconcile.
       fetchCurrentMatchup();
     };
@@ -293,7 +275,7 @@ export function MatchupProvider({ children }) {
       window.removeEventListener('piks:forfeit:win', handleForfeitWin);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [status, session?.user?.id, fetchCurrentMatchup]);
+  }, [status, session?.user?.id, fetchCurrentMatchup, surfaceForfeitNotice]);
 
   const acknowledgeForfeit = useCallback(() => {
     const matchupId = forfeitNotice?.matchupId;
@@ -301,14 +283,12 @@ export function MatchupProvider({ children }) {
       setForfeitNotice(null);
       return;
     }
-    const acks = readForfeitAcks();
-    acks.add(matchupId);
-    writeForfeitAcks(acks);
+    dismissedForfeitIdsRef.current.add(matchupId);
     setForfeitNotice(null);
     // Persist the acknowledgement server-side so the modal doesn't
     // resurface on the next /api/matchups/current or /api/notifications
-    // poll (especially after a server restart that wipes sessionStorage's
-    // counterpart in-memory event bus).
+    // poll. The persistent matchups.forfeitAcknowledgedAt flag is the
+    // single source of truth.
     fetch('/api/battles/forfeit-ack', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

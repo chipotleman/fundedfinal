@@ -124,7 +124,8 @@ export function NotificationsProvider({ children }) {
 
       // Catch-up path: if the API found a recent forfeit win that the SSE push
       // may have missed, dispatch it so MatchupContext can surface the modal.
-      // The client-side ack (sessionStorage) prevents duplicate shows.
+      // The persistent matchups.forfeitAcknowledgedAt flag prevents duplicates —
+      // the API only returns recentForfeitWin while the flag is unset.
       if (json.recentForfeitWin?.matchupId && typeof window !== 'undefined') {
         window.dispatchEvent(
           new CustomEvent('piks:forfeit:win', { detail: json.recentForfeitWin })
