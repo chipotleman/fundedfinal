@@ -6,6 +6,7 @@ import PiksBetCard from '../components/PiksBetCard';
 import ShareableBetSlip from '../components/ShareableBetSlip';
 import BattleHistoryGroup from '../components/BattleHistoryGroup';
 import { useBetSlip } from '../contexts/BetSlipContext';
+import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useGames } from '../contexts/GamesContext';
@@ -209,9 +210,7 @@ export default function BetHistory() {
     fetchUserProfile();
   }, [user]);
 
-  const formatOdds = (odds) => {
-    return odds > 0 ? `+${odds}` : odds.toString();
-  };
+  const { formatOdds } = useUserPreferences();
 
   // Per-bet status filter (used for standalone bets and "all" view)
   const matchesBetStatus = (bet) => {

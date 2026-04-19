@@ -5,6 +5,7 @@ import { SessionProvider } from 'next-auth/react';
 import { AuthProvider } from '../contexts/AuthContext';
 import { BetSlipProvider } from '../contexts/BetSlipContext';
 import { UserProfilesProvider } from '../contexts/UserProfilesContext';
+import { UserPreferencesProvider } from '../contexts/UserPreferencesContext';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { GamesProvider } from '../contexts/GamesContext';
 import { MatchupProvider, useMatchup } from '../contexts/MatchupContext';
@@ -416,6 +417,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
       {battlePreviewHead}
       <ThemeProvider>
         <AuthProvider>
+          <UserPreferencesProvider>
           <BetSlipProvider>
             <UserProfilesProvider>
               <GamesProvider initialInplayEvents={pageProps.initialInplayEvents} initialApiGames={pageProps.initialApiGames}>
@@ -533,6 +535,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
               </GamesProvider>
             </UserProfilesProvider>
           </BetSlipProvider>
+          </UserPreferencesProvider>
         </AuthProvider>
       </ThemeProvider>
     </SessionProvider>

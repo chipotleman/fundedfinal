@@ -13,6 +13,7 @@ import LiveBattlesSection from '../components/battle/LiveBattlesSection';
 import Footer from '../components/Footer';
 import { inferLeague } from '../lib/leagueInference';
 import { useBetSlip } from '../contexts/BetSlipContext';
+import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useGames } from '../contexts/GamesContext';
@@ -476,12 +477,7 @@ export default function Dashboard() {
   }, [allGames, games]);
 
 
-  const formatOdds = (odds) => {
-    if (odds === null || odds === undefined || odds === 0) return '-';
-    const num = typeof odds === 'string' ? parseFloat(odds) : odds;
-    if (isNaN(num)) return '-';
-    return num > 0 ? `+${num}` : num.toString();
-  };
+  const { formatOdds } = useUserPreferences();
 
   const formatSpread = (point) => {
     if (point === null || point === undefined) return '-';

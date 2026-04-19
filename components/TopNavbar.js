@@ -714,7 +714,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                             <button
                               onClick={() => {
                                 setShowUserMenu(false);
-                                alert('Settings modal coming soon!');
+                                router.push('/settings');
                               }}
                               className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-[#1a1a1a] text-gray-300 hover:text-green-400 transition-colors"
                             >

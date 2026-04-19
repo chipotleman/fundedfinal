@@ -205,6 +205,30 @@ export default function Profile() {
                   <h2 className="text-3xl font-bold text-white">{profile?.username || 'User'}</h2>
                   <p className="text-purple-100">{user.email}</p>
                   <p className="text-purple-200 mt-2">{profile?.bio || 'No bio added yet'}</p>
+                  {(profile?.instagramHandle || profile?.facebookUrl) && (
+                    <div className="mt-3 flex flex-wrap items-center gap-2 justify-center sm:justify-start">
+                      {profile?.instagramHandle && (
+                        <a
+                          href={`https://instagram.com/${String(profile.instagramHandle).replace(/^@+/, '')}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white/10 hover:bg-white/20 text-white"
+                        >
+                          <span>📷</span>@{String(profile.instagramHandle).replace(/^@+/, '')}
+                        </a>
+                      )}
+                      {profile?.facebookUrl && (
+                        <a
+                          href={profile.facebookUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-white/10 hover:bg-white/20 text-white"
+                        >
+                          <span>👍</span>Facebook
+                        </a>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
