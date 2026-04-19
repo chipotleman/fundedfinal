@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useSession, signIn } from 'next-auth/react';
 import { useTheme } from '../contexts/ThemeContext';
 import useModalScrollLock from '../hooks/useModalScrollLock';
+import { formatMoney } from '../utils/formatMoney';
 
 const challenges = [
   {
@@ -625,7 +626,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                       <div className={`text-xs ${theme.text} font-medium`}>Click to change</div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className={`${theme.text} font-bold`}>${currentChallenge.startingBalance.toLocaleString()}</span>
+                      <span className={`${theme.text} font-bold`}>${formatMoney(currentChallenge.startingBalance, 0)}</span>
                       <svg className={`w-4 h-4 ${theme.text} transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                       </svg>
@@ -651,7 +652,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                             <span className="text-white font-medium text-sm">{challenge.name}</span>
                             <div className="text-xs text-gray-400">{challenge.badge} • ${challenge.price}</div>
                           </div>
-                          <span className={`${theme.text} font-bold`}>${challenge.startingBalance.toLocaleString()}</span>
+                          <span className={`${theme.text} font-bold`}>${formatMoney(challenge.startingBalance, 0)}</span>
                         </div>
                       ))}
                     </div>
@@ -968,28 +969,28 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-300 text-sm">Starting Balance</span>
-                    <span className={`${theme.text} font-bold`}>${currentChallenge.startingBalance.toLocaleString()}</span>
+                    <span className={`${theme.text} font-bold`}>${formatMoney(currentChallenge.startingBalance, 0)}</span>
                   </div>
                   
                   <div className="flex justify-between items-center">
                     <span className="text-gray-300 text-sm">Target Balance (Phase 1)</span>
-                    <span className={`${theme.text} font-bold`}>${(currentChallenge.startingBalance + currentChallenge.target).toLocaleString()}</span>
+                    <span className={`${theme.text} font-bold`}>${formatMoney(currentChallenge.startingBalance + currentChallenge.target, 0)}</span>
                   </div>
                   
                   <div className="flex justify-between items-center">
                     <span className="text-gray-300 text-sm">Target Balance (Phase 2)</span>
-                    <span className={`${theme.text} font-bold`}>${(currentChallenge.startingBalance + currentChallenge.target * 2).toLocaleString()}</span>
+                    <span className={`${theme.text} font-bold`}>${formatMoney(currentChallenge.startingBalance + currentChallenge.target * 2, 0)}</span>
                   </div>
 
                   <div className="border-t border-[#1a1a1a] pt-2 mt-3">
                     <div className="flex justify-between items-center">
                       <span className="text-gray-300 text-sm">Minimum Balance (Phase 1)</span>
-                      <span className="text-red-400 font-bold">${(currentChallenge.startingBalance * 0.85).toLocaleString()}</span>
+                      <span className="text-red-400 font-bold">${formatMoney(currentChallenge.startingBalance * 0.85, 0)}</span>
                     </div>
                     
                     <div className="flex justify-between items-center">
                       <span className="text-gray-300 text-sm">Minimum Balance (Phase 2)</span>
-                      <span className="text-red-400 font-bold">${(currentChallenge.startingBalance + currentChallenge.target * 0.85).toLocaleString()}</span>
+                      <span className="text-red-400 font-bold">${formatMoney(currentChallenge.startingBalance + currentChallenge.target * 0.85, 0)}</span>
                     </div>
                   </div>
 
@@ -1327,8 +1328,8 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
               {/* Phase 1 Progress Bar */}
               <div className="mb-3">
                 <div className="flex justify-between text-xs text-gray-400 mb-1">
-                  <span>Minimum: ${(currentChallenge.startingBalance * 0.85).toLocaleString()}</span>
-                  <span>Target: ${(currentChallenge.startingBalance + currentChallenge.target).toLocaleString()}</span>
+                  <span>Minimum: ${formatMoney(currentChallenge.startingBalance * 0.85, 0)}</span>
+                  <span>Target: ${formatMoney(currentChallenge.startingBalance + currentChallenge.target, 0)}</span>
                 </div>
                 <div className="w-full bg-[#1a1a1a] rounded-full h-4 relative overflow-hidden">
                   {/* Danger Zone (Red) */}
@@ -1342,7 +1343,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 </div>
                 <div className="flex justify-between text-xs mt-1">
                   <span className="text-red-400">Fail Zone</span>
-                  <span className="text-gray-400">Starting: ${currentChallenge.startingBalance.toLocaleString()}</span>
+                  <span className="text-gray-400">Starting: ${formatMoney(currentChallenge.startingBalance, 0)}</span>
                   <span className={theme.text}>Pass Zone</span>
                 </div>
               </div>
@@ -1350,11 +1351,11 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
               <div className="text-sm text-gray-300 space-y-1">
                 <div className="flex items-center space-x-2">
                   <div className={`w-2 h-2 ${theme.text.replace('text-', 'bg-')} rounded-full`}></div>
-                  <span>Reach ${(currentChallenge.startingBalance + currentChallenge.target).toLocaleString()} to advance</span>
+                  <span>Reach ${formatMoney(currentChallenge.startingBalance + currentChallenge.target, 0)} to advance</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                  <span>Don't fall below ${(currentChallenge.startingBalance * 0.85).toLocaleString()}</span>
+                  <span>Don't fall below ${formatMoney(currentChallenge.startingBalance * 0.85, 0)}</span>
                 </div>
               </div>
             </div>
@@ -1369,8 +1370,8 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
               {/* Phase 2 Progress Bar */}
               <div className="mb-3 opacity-50">
                 <div className="flex justify-between text-xs text-gray-400 mb-1">
-                  <span>Minimum: ${(currentChallenge.startingBalance + currentChallenge.target * 0.85).toLocaleString()}</span>
-                  <span>Target: ${(currentChallenge.startingBalance + currentChallenge.target * 2).toLocaleString()}</span>
+                  <span>Minimum: ${formatMoney(currentChallenge.startingBalance + currentChallenge.target * 0.85, 0)}</span>
+                  <span>Target: ${formatMoney(currentChallenge.startingBalance + currentChallenge.target * 2, 0)}</span>
                 </div>
                 <div className="w-full bg-[#1a1a1a] rounded-full h-4 relative overflow-hidden">
                   {/* Danger Zone (Red) */}
@@ -1382,7 +1383,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 </div>
                 <div className="flex justify-between text-xs mt-1">
                   <span className="text-red-400">Fail Zone</span>
-                  <span className="text-gray-400">Starting: ${(currentChallenge.startingBalance + currentChallenge.target).toLocaleString()}</span>
+                  <span className="text-gray-400">Starting: ${formatMoney(currentChallenge.startingBalance + currentChallenge.target, 0)}</span>
                   <span className={theme.text}>Pass Zone</span>
                 </div>
               </div>
@@ -1390,11 +1391,11 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
               <div className="text-sm text-gray-300 space-y-1 opacity-50">
                 <div className="flex items-center space-x-2">
                   <div className={`w-2 h-2 ${theme.text.replace('text-', 'bg-')} rounded-full`}></div>
-                  <span>Reach ${(currentChallenge.startingBalance + currentChallenge.target * 2).toLocaleString()} to get funded</span>
+                  <span>Reach ${formatMoney(currentChallenge.startingBalance + currentChallenge.target * 2, 0)} to get funded</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                  <span>Don't fall below ${(currentChallenge.startingBalance + currentChallenge.target * 0.85).toLocaleString()}</span>
+                  <span>Don't fall below ${formatMoney(currentChallenge.startingBalance + currentChallenge.target * 0.85, 0)}</span>
                 </div>
               </div>
             </div>

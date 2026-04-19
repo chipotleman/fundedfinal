@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import useModalScrollLock from '../hooks/useModalScrollLock';
+import { formatMoney } from '../utils/formatMoney';
 
 export default function BalanceModal({ 
   isOpen, 
@@ -133,11 +134,11 @@ export default function BalanceModal({
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="bg-[#0a0a0a] rounded-lg p-3 border border-gray-800/50">
                 <div className="text-gray-500 text-xs mb-1">Current Balance</div>
-                <div className="text-white font-bold text-xl">${currentBalance.toLocaleString()}</div>
+                <div className="text-white font-bold text-xl">${formatMoney(currentBalance, 0)}</div>
               </div>
               <div className="bg-[#0a0a0a] rounded-lg p-3 border border-gray-800/50">
                 <div className="text-gray-500 text-xs mb-1">Profit Target</div>
-                <div className="text-green-400 font-bold text-xl">${profitTarget.toLocaleString()}</div>
+                <div className="text-green-400 font-bold text-xl">${formatMoney(profitTarget, 0)}</div>
               </div>
             </div>
 
@@ -153,7 +154,7 @@ export default function BalanceModal({
                 ></div>
               </div>
               <div className="text-gray-500 text-xs mt-1">
-                {isFunded ? 'Target achieved! You are funded.' : `$${profitNeeded.toLocaleString()} more profit needed`}
+                {isFunded ? 'Target achieved! You are funded.' : `$${formatMoney(profitNeeded, 0)} more profit needed`}
               </div>
             </div>
           </div>
@@ -162,7 +163,7 @@ export default function BalanceModal({
             <div className="bg-[#111111] rounded-lg p-3 border border-gray-800/50 text-center">
               <div className="text-gray-500 text-xs mb-1">Total P&L</div>
               <div className={`font-bold text-lg ${pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {pnl >= 0 ? '+' : ''}${(pnl || 0).toLocaleString()}
+                {pnl >= 0 ? '+' : ''}${formatMoney(pnl || 0, 0)}
               </div>
             </div>
             <div className="bg-[#111111] rounded-lg p-3 border border-gray-800/50 text-center">
@@ -185,7 +186,7 @@ export default function BalanceModal({
                 <div>
                   <div className="text-white font-bold mb-1">Ready to Level Up?</div>
                   <div className="text-gray-400 text-sm">
-                    Upgrade to <span className="text-purple-400 font-medium">{nextChallenge?.name}</span> with ${nextChallenge?.balance.toLocaleString()} bankroll
+                    Upgrade to <span className="text-purple-400 font-medium">{nextChallenge?.name}</span> with ${formatMoney(nextChallenge?.balance, 0)} bankroll
                   </div>
                 </div>
                 <button

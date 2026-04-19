@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { formatMoney } from '../utils/formatMoney';
 
 export default function ForfeitConfirmedModal({ isOpen, onClose, opponent, payout, totalPot }) {
   const [show, setShow] = useState(false);
@@ -24,10 +25,10 @@ export default function ForfeitConfirmedModal({ isOpen, onClose, opponent, payou
   const opponentName = opponent?.username || 'Your opponent';
   const opponentAvatar = opponent?.avatar;
   const payoutDisplay = payout != null
-    ? Number(payout).toLocaleString('en-US', { maximumFractionDigits: 2 })
+    ? formatMoney(payout, Number.isInteger(Number(payout)) ? 0 : 2)
     : '0';
   const potDisplay = totalPot != null
-    ? Number(totalPot).toLocaleString('en-US', { maximumFractionDigits: 2 })
+    ? formatMoney(totalPot, Number.isInteger(Number(totalPot)) ? 0 : 2)
     : null;
 
   const handleStartNew = (e) => {

@@ -371,7 +371,7 @@ function BattleCard({ battle, compact, focused }) {
                 {user1OnFire && <MomentumIcon />}
               </p>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="text-sm font-bold tabular-nums" style={{ color: isDarkMode ? '#fff' : '#111' }}>${(user1.balance || 0).toLocaleString()}</span>
+                <span className="text-sm font-bold tabular-nums" style={{ color: isDarkMode ? '#fff' : '#111' }}>${formatMoney(user1.balance || 0, 0)}</span>
               </div>
               <div className="flex items-center gap-2 mt-0.5">
                 <PnlBadge pnlPercent={user1.pnlPercent} />
@@ -400,7 +400,7 @@ function BattleCard({ battle, compact, focused }) {
                 {user2.username || 'Player 2'}
               </p>
               <div className="flex items-center gap-2 justify-end mt-0.5">
-                <span className="text-sm font-bold tabular-nums" style={{ color: isDarkMode ? '#fff' : '#111' }}>${(user2.balance || 0).toLocaleString()}</span>
+                <span className="text-sm font-bold tabular-nums" style={{ color: isDarkMode ? '#fff' : '#111' }}>${formatMoney(user2.balance || 0, 0)}</span>
               </div>
               <div className="flex items-center gap-2 justify-end mt-0.5">
                 {picks ? (

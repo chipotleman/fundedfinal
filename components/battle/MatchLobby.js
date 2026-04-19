@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useTheme } from '../../contexts/ThemeContext';
+import { formatMoney } from '../../utils/formatMoney';
 
 const MODE_THEMES = {
   rush: { color: '#fb923c', rgb: '251,146,60', label: 'RUSH', icon: '⚡' },
@@ -230,7 +231,7 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
             <div className={`inline-flex flex-col items-center rounded-xl px-6 py-3 mb-6 backdrop-blur-sm`} style={{ background: isDarkMode ? 'rgba(10,10,10,0.8)' : 'rgba(255,255,255,0.9)', border: `1px solid ${isDarkMode ? '#222' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 4px 12px rgba(0,0,0,0.08)' }}>
               <span className="text-[10px] uppercase tracking-widest text-gray-500 mb-0.5">Prize Pot</span>
               <span className="text-2xl md:text-3xl font-black" style={{ color: theme.color, textShadow: `0 0 15px rgba(${theme.rgb},0.4)` }}>
-                ${payout > 0 ? payout.toLocaleString() : parseFloat(potSize || 0).toLocaleString()}
+                ${payout > 0 ? formatMoney(payout, 0) : formatMoney(parseFloat(potSize || 0), 0)}
               </span>
               <span className="text-[10px] text-gray-500 mt-0.5">🏆 Winner payout · 10% fee 🏆</span>
             </div>

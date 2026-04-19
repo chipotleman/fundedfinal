@@ -8,6 +8,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useMatchup } from '../contexts/MatchupContext';
 import { useNotifications } from '../contexts/NotificationsContext';
 import NotificationsDropdown from './notifications/NotificationsDropdown';
+import { formatMoney } from '../utils/formatMoney';
 
 export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -545,8 +546,8 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                         </svg>
                         <span className="font-bold text-sm" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
                           {hasActiveMatchup && matchupBalance != null
-                            ? <><span className="text-orange-400">⚔</span> ${parseFloat(matchupBalance).toLocaleString()}</>
-                            : `$${parseFloat(userProfile.bankroll).toLocaleString()}`
+                            ? <><span className="text-orange-400">⚔</span> ${formatMoney(parseFloat(matchupBalance), 0)}</>
+                            : `$${formatMoney(parseFloat(userProfile.bankroll), 0)}`
                           }
                         </span>
                       </button>
@@ -620,7 +621,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                       </svg>
                     )}
                     <span className="font-bold text-xs whitespace-nowrap" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
-                      ${displayValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                      ${formatMoney(displayValue, 0)}
                     </span>
                   </button>
                 );

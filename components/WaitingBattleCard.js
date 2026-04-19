@@ -1,5 +1,6 @@
 import { useSession } from 'next-auth/react';
 import { useMatchup } from '../contexts/MatchupContext';
+import { formatMoney } from '../utils/formatMoney';
 
 const GAME_MODES = {
   rush: { durationMinutes: 180, label: 'RUSH' },
@@ -249,7 +250,7 @@ export default function WaitingBattleCard({ matchup, queueEntry, myProfile, oppo
                   color: theme.accentColor,
                   textShadow: `0 0 20px rgba(${theme.accentRgb},0.5)`,
                 }}>
-                  ${pot.toLocaleString()}
+                  ${formatMoney(pot, 0)}
                 </p>
               </div>
 

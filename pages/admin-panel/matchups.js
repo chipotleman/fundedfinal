@@ -445,7 +445,7 @@ export default function AdminMatchups() {
                       </td>
                       <td className="p-3">${formatMoney(matchup.user1Balance || 0, 0)}</td>
                       <td className="p-3">${formatMoney(matchup.user2Balance || 0, 0)}</td>
-                      <td className="p-3 text-green-400">${parseFloat(matchup.winnerPayout || 0).toLocaleString()}</td>
+                      <td className="p-3 text-green-400">${formatMoney(parseFloat(matchup.winnerPayout || 0), 0)}</td>
                       <td className="p-3">{formatDate(matchup.endsAt)}</td>
                       <td className="p-3 space-x-2">
                         {matchup.isFakeOpponent && matchup.status === 'active' && (
@@ -831,7 +831,7 @@ export default function AdminMatchups() {
                 Manage Bets for {selectedMatchup.user2Info?.username || 'Opponent'}
               </h2>
               <p className="text-gray-400 text-sm mb-4">
-                vs {selectedMatchup.user1Info?.username} | Prize Pool: ${parseFloat(selectedMatchup.winnerPayout || 0).toLocaleString()}
+                vs {selectedMatchup.user1Info?.username} | Prize Pool: ${formatMoney(parseFloat(selectedMatchup.winnerPayout || 0), 0)}
               </p>
 
               <div className="bg-gray-700 rounded-lg p-4 mb-4">
@@ -909,7 +909,7 @@ export default function AdminMatchups() {
                       <p className="text-sm text-gray-400">{bet.matchupName} | {bet.marketType}</p>
                     </div>
                     <div className="text-right">
-                      <p>${parseFloat(bet.stake).toLocaleString()} @ {bet.odds}</p>
+                      <p>${formatMoney(parseFloat(bet.stake || 0), 0)} @ {bet.odds}</p>
                       <div className="flex gap-2 mt-1">
                         <button
                           onClick={() => updateBetStatus(bet.id, 'won')}

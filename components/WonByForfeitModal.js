@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import CoinRain from './CoinRain';
 import useModalScrollLock from '../hooks/useModalScrollLock';
+import { formatMoney } from '../utils/formatMoney';
 
 export default function WonByForfeitModal({ isOpen, onClose, opponent, payout }) {
   const [show, setShow] = useState(false);
@@ -46,7 +47,7 @@ export default function WonByForfeitModal({ isOpen, onClose, opponent, payout })
 
   const opponentName = opponent?.username || 'Your opponent';
   const opponentAvatar = opponent?.avatar;
-  const payoutDisplay = payout != null ? Number(payout).toLocaleString('en-US', { maximumFractionDigits: 2 }) : '0';
+  const payoutDisplay = payout != null ? formatMoney(payout, Number.isInteger(Number(payout)) ? 0 : 2) : '0';
 
   return (
     <div

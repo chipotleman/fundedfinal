@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import useModalScrollLock from '../hooks/useModalScrollLock';
 import { useRouter } from 'next/router';
 import { useTheme } from '../contexts/ThemeContext';
+import { formatMoney } from '../utils/formatMoney';
 
 export default function SessionSummaryPopup({ isOpen, onClose, sessionData }) {
   const router = useRouter();
@@ -100,11 +101,11 @@ export default function SessionSummaryPopup({ isOpen, onClose, sessionData }) {
               <div className="pt-3 mt-3 space-y-2" style={{ borderTop: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
                 <div className="flex items-center justify-between">
                   <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Starting Balance</span>
-                  <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${startingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${formatMoney(startingBalance, 2)}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Ending Balance</span>
-                  <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${endingBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${formatMoney(endingBalance, 2)}</span>
                 </div>
               </div>
             )}
@@ -171,7 +172,7 @@ export default function SessionSummaryPopup({ isOpen, onClose, sessionData }) {
                   <span className={`font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Session P/L</span>
                 </div>
                 <span className={`font-bold text-lg ${isProfitable ? 'text-green-400' : 'text-red-400'}`}>
-                  {isProfitable ? '+' : ''}{sessionPnL.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+                  {isProfitable ? '+' : ''}{sessionPnL < 0 ? '-' : ''}${formatMoney(Math.abs(sessionPnL), 2)}
                 </span>
               </div>
             )}

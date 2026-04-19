@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
+import { formatMoney } from '../utils/formatMoney';
 
 export default function OpponentBets({ 
   matchupId, 
@@ -50,7 +51,7 @@ export default function OpponentBets({
           <div>
             <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponentName}'s Bets</h3>
             <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              {opponentBets.length} pick{opponentBets.length !== 1 ? 's' : ''} • ${totalStaked.toLocaleString()} staked
+              {opponentBets.length} pick{opponentBets.length !== 1 ? 's' : ''} • ${formatMoney(totalStaked, 0)} staked
             </p>
           </div>
         </div>
@@ -96,7 +97,7 @@ export default function OpponentBets({
                 
                 <div className="text-right">
                   <p className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
-                    ${parseFloat(bet.stake || 0).toLocaleString()}
+                    ${formatMoney(parseFloat(bet.stake || 0), 0)}
                   </p>
                   <div className="flex items-center gap-2">
                     <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>@ {bet.odds}</span>
@@ -107,8 +108,8 @@ export default function OpponentBets({
                       'bg-yellow-500/20 text-yellow-500'
                     }`}>
                       {bet.status === 'pending' ? 'Pending' :
-                       bet.status === 'won' ? `+$${parseFloat(bet.pnl || 0).toLocaleString()}` :
-                       bet.status === 'lost' ? `-$${parseFloat(bet.stake || 0).toLocaleString()}` :
+                       bet.status === 'won' ? `+$${formatMoney(parseFloat(bet.pnl || 0), 0)}` :
+                       bet.status === 'lost' ? `-$${formatMoney(parseFloat(bet.stake || 0), 0)}` :
                        'Push'}
                     </span>
                   </div>

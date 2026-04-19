@@ -281,7 +281,7 @@ export default function ActiveBattleCard({
               </div>
               <p className="text-white text-[11px] md:text-xs font-bold truncate max-w-[80px] md:max-w-[100px] text-center mt-1 min-h-[14px]">{userName || '\u00A0'}</p>
               <p className={`text-[10px] md:text-xs font-bold leading-tight ${isWinning ? 'text-green-400' : isLosing ? 'text-red-400' : 'text-yellow-400'}`}>
-                ${myBalanceNum.toLocaleString()}
+                ${formatMoney(myBalanceNum, 0)}
               </p>
             </div>
 
@@ -308,7 +308,7 @@ export default function ActiveBattleCard({
                   color: theme.prizeColor,
                   textShadow: `0 0 10px rgba(${theme.accentRgb},0.4)`,
                 }}>
-                  ${winnerPayout.toLocaleString()}
+                  ${formatMoney(winnerPayout, 0)}
                 </p>
               </div>
 
@@ -339,7 +339,7 @@ export default function ActiveBattleCard({
               </div>
               <p className="text-white text-[11px] md:text-xs font-bold truncate max-w-[80px] md:max-w-[100px] text-center mt-1">{opponent.username || 'Opponent'}</p>
               <p className="text-[10px] md:text-xs font-bold text-red-400 leading-tight">
-                ${oppBalanceNum.toLocaleString()}
+                ${formatMoney(oppBalanceNum, 0)}
               </p>
             </div>
           </div>
@@ -442,7 +442,7 @@ export default function ActiveBattleCard({
                             color: theme.prizeColor,
                             textShadow: `0 0 15px rgba(${theme.accentRgb},0.5)`,
                           }}>
-                            ${winnerPayout.toLocaleString()}
+                            ${formatMoney(winnerPayout, 0)}
                           </p>
                         </div>
                       </div>
@@ -532,12 +532,12 @@ export default function ActiveBattleCard({
                       <div className="space-y-2">
                         <div className="flex justify-between items-baseline">
                           <span className="text-[10px] text-gray-500">Balance</span>
-                          <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${myBalanceNum.toLocaleString()}</span>
+                          <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${formatMoney(myBalanceNum, 0)}</span>
                         </div>
                         <div className="flex justify-between items-baseline">
                           <span className="text-[10px] text-gray-500">P&L</span>
                           <span className={`text-sm font-bold ${myPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {myPnL >= 0 ? '+' : ''}${myPnL.toLocaleString()}
+                            {myPnL >= 0 ? '+' : ''}${formatMoney(myPnL, 0)}
                           </span>
                         </div>
                         <div className="flex justify-between items-baseline">
@@ -561,12 +561,12 @@ export default function ActiveBattleCard({
                       <div className="space-y-2">
                         <div className="flex justify-between items-baseline">
                           <span className="text-[10px] text-gray-500">Balance</span>
-                          <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${oppBalanceNum.toLocaleString()}</span>
+                          <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${formatMoney(oppBalanceNum, 0)}</span>
                         </div>
                         <div className="flex justify-between items-baseline">
                           <span className="text-[10px] text-gray-500">P&L</span>
                           <span className={`text-sm font-bold ${oppPnL >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            {oppPnL >= 0 ? '+' : ''}${oppPnL.toLocaleString()}
+                            {oppPnL >= 0 ? '+' : ''}${formatMoney(oppPnL, 0)}
                           </span>
                         </div>
                         <div className="flex justify-between items-baseline">
@@ -575,7 +575,7 @@ export default function ActiveBattleCard({
                         </div>
                         <div className="flex justify-between items-baseline">
                           <span className="text-[10px] text-gray-500">Staked</span>
-                          <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${oppStaked.toLocaleString()}</span>
+                          <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${formatMoney(oppStaked, 0)}</span>
                         </div>
                       </div>
                     </div>

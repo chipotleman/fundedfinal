@@ -1,6 +1,7 @@
 
 import { Fragment, useEffect } from 'react';
 import useModalScrollLock from '../hooks/useModalScrollLock';
+import { formatMoney } from '../utils/formatMoney';
 
 export default function ProfileModal({ profile, isOpen, onClose }) {
   useModalScrollLock(isOpen);
@@ -35,7 +36,7 @@ export default function ProfileModal({ profile, isOpen, onClose }) {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
             <div className="rounded-xl p-4 text-center" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
-              <div className="text-2xl font-bold text-green-400">${profile.stats.totalProfit.toLocaleString()}</div>
+              <div className="text-2xl font-bold text-green-400">${formatMoney(profile.stats.totalProfit, 0)}</div>
               <div className="text-gray-500 text-sm">Total Profit</div>
             </div>
             <div className="rounded-xl p-4 text-center" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
@@ -88,7 +89,8 @@ export default function ProfileModal({ profile, isOpen, onClose }) {
             const formatAmount = (n) => {
               const num = Number(n);
               if (!Number.isFinite(num)) return '0';
-              return Math.abs(num).toLocaleString(undefined, { maximumFractionDigits: 2 });
+              const abs = Math.abs(num);
+              return formatMoney(abs, Number.isInteger(abs) ? 0 : 2);
             };
             const formatEarnedAt = (iso) => {
               if (!iso) return '';

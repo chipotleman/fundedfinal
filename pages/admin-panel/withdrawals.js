@@ -119,7 +119,7 @@ export default function AdminWithdrawals() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             </div>
             <p className="text-gray-400 text-xs uppercase tracking-wider mb-1">Total Pending</p>
-            <p className="text-2xl font-bold text-white">${totalPending.toLocaleString()}</p>
+            <p className="text-2xl font-bold text-white">${formatMoney(totalPending, 0)}</p>
           </div>
         </div>
       </div>
@@ -165,7 +165,7 @@ export default function AdminWithdrawals() {
                         </div>
                       </td>
                       <td className="py-4 px-4">
-                        <p className="text-white font-bold">${parseFloat(withdrawal.amount).toLocaleString()}</p>
+                        <p className="text-white font-bold">${formatMoney(parseFloat(withdrawal.amount), 0)}</p>
                         {parseFloat(withdrawal.fee) > 0 && <p className="text-gray-500 text-xs">Fee: ${formatMoney(withdrawal.fee)}</p>}
                       </td>
                       <td className="py-4 px-4 text-gray-300">{methodLabels[withdrawal.methodType] || withdrawal.methodType}</td>
@@ -196,7 +196,7 @@ export default function AdminWithdrawals() {
             </h2>
             <div className="mb-4 p-4 rounded-xl bg-white/5 border border-white/10">
               <p className="text-gray-400 text-sm">Amount</p>
-              <p className="text-2xl font-bold text-white">${parseFloat(selectedWithdrawal.amount).toLocaleString()}</p>
+              <p className="text-2xl font-bold text-white">${formatMoney(parseFloat(selectedWithdrawal.amount), 0)}</p>
               <p className="text-gray-400 text-sm mt-2">User: {selectedWithdrawal.userEmail}</p>
             </div>
             {actionType === 'deny' && (
@@ -229,8 +229,8 @@ export default function AdminWithdrawals() {
             </div>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white/5 rounded-xl p-4 border border-white/5"><p className="text-gray-500 text-xs uppercase">Amount</p><p className="text-xl font-bold text-white">${parseFloat(selectedWithdrawal.amount).toLocaleString()}</p></div>
-                <div className="bg-white/5 rounded-xl p-4 border border-white/5"><p className="text-gray-500 text-xs uppercase">Net Amount</p><p className="text-xl font-bold text-white">${parseFloat(selectedWithdrawal.netAmount || selectedWithdrawal.amount).toLocaleString()}</p></div>
+                <div className="bg-white/5 rounded-xl p-4 border border-white/5"><p className="text-gray-500 text-xs uppercase">Amount</p><p className="text-xl font-bold text-white">${formatMoney(parseFloat(selectedWithdrawal.amount), 0)}</p></div>
+                <div className="bg-white/5 rounded-xl p-4 border border-white/5"><p className="text-gray-500 text-xs uppercase">Net Amount</p><p className="text-xl font-bold text-white">${formatMoney(parseFloat(selectedWithdrawal.netAmount || selectedWithdrawal.amount), 0)}</p></div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white/5 rounded-xl p-4 border border-white/5"><p className="text-gray-500 text-xs uppercase">Fee</p><p className="text-white">${formatMoney(selectedWithdrawal.fee || 0)}</p></div>
