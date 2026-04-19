@@ -628,31 +628,26 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
 
                 <div>
                   <label className="text-[11px] font-semibold uppercase tracking-wider mb-2 block" style={{ color: textMuted }}>Game Mode</label>
-                  <div className="space-y-1.5">
+                  <div className="grid grid-cols-3 gap-1.5">
                     {GAME_MODE_OPTIONS.map(mode => {
                       const selected = gameMode === mode.id;
                       return (
                         <button
                           key={mode.id}
                           onClick={() => setGameMode(mode.id)}
-                          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-left transition-all"
+                          className="flex flex-col items-center text-center px-1.5 py-2 rounded-xl transition-all relative"
                           style={{
                             backgroundColor: selected ? `${mode.color}12` : elevatedBg,
                             border: `1px solid ${selected ? `${mode.color}40` : cardBorder}`,
                           }}
                         >
-                          <span className="text-base">{mode.icon}</span>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-bold text-xs" style={{ color: textPrimary }}>{mode.label}</span>
-                              {mode.recommended && <span className="text-[8px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full font-semibold">POPULAR</span>}
-                            </div>
-                            <p className="text-[10px]" style={{ color: textMuted }}>{mode.description}</p>
-                          </div>
-                          <div className="text-right flex-shrink-0">
-                            <div className="font-bold text-[11px]" style={{ color: textPrimary }}>{mode.coins.toLocaleString()}</div>
-                            <div className="text-[9px]" style={{ color: textMuted }}>coins</div>
-                          </div>
+                          {mode.recommended && (
+                            <span className="absolute -top-1.5 left-1/2 -translate-x-1/2 text-[8px] bg-blue-500 text-white px-1.5 py-0.5 rounded-full font-semibold leading-none">POPULAR</span>
+                          )}
+                          <span className="text-base leading-none mb-1">{mode.icon}</span>
+                          <span className="font-bold text-[11px] leading-tight" style={{ color: textPrimary }}>{mode.label}</span>
+                          <span className="font-bold text-[10px] mt-0.5" style={{ color: textPrimary }}>{mode.coins.toLocaleString()}</span>
+                          <span className="text-[9px]" style={{ color: textMuted }}>coins</span>
                         </button>
                       );
                     })}
