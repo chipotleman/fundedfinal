@@ -124,7 +124,7 @@ export default function AdminGames() {
           <button onClick={downloadPull} disabled={!selectedPullId || downloading} className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 disabled:opacity-50 text-white rounded-xl transition-all flex items-center gap-2 font-medium">
             {downloading ? <><span className="animate-spin">⏳</span> Downloading...</> : <>📥 Download Excel</>}
           </button>
-          <button onClick={saveCurrentPull} disabled={games.length === 0 || savingPull} className="px-4 py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 disabled:opacity-50 text-white rounded-xl transition-all flex items-center gap-2 font-medium">
+          <button onClick={saveCurrentPull} disabled={games.length === 0 || savingPull} className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 disabled:opacity-50 text-white rounded-xl transition-all flex items-center gap-2 font-medium">
             {savingPull ? <><span className="animate-spin">⏳</span> Saving...</> : <>💾 Save Current Pull</>}
           </button>
         </div>

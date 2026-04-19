@@ -199,7 +199,7 @@ export default function AdminPanel() {
               padding: '10px 20px',
               borderRadius: '8px',
               border: 'none',
-              background: activeTab === 'mockUsers' ? 'linear-gradient(135deg, #22c55e, #16a34a)' : '#222',
+              background: activeTab === 'mockUsers' ? 'linear-gradient(135deg, #3b82f6, #06b6d4)' : '#222',
               color: '#fff',
               fontWeight: '600',
               cursor: 'pointer'
@@ -351,7 +351,7 @@ export default function AdminPanel() {
           marginBottom: '30px',
           border: '1px solid #333'
         }}>
-          <h2 style={{ color: '#22c55e', marginBottom: '15px', fontSize: '1.3rem' }}>Mock User Generator</h2>
+          <h2 style={{ color: '#3b82f6', marginBottom: '15px', fontSize: '1.3rem' }}>Mock User Generator</h2>
           <p style={{ color: '#888', marginBottom: '15px', fontSize: '0.9rem' }}>
             Paste profile picture URLs (one per line) to create mock users. Each URL creates one fake account with a random username and stats.
           </p>
@@ -379,7 +379,7 @@ export default function AdminPanel() {
               onClick={handleCreateMockUsers}
               disabled={creatingMockUsers || !mockUserUrls.trim()}
               style={{
-                background: 'linear-gradient(135deg, #22c55e, #16a34a)',
+                background: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
                 color: '#fff',
                 padding: '10px 20px',
                 border: 'none',
@@ -424,7 +424,7 @@ export default function AdminPanel() {
                       borderRadius: '50%',
                       overflow: 'hidden',
                       margin: '0 auto 8px',
-                      border: '2px solid #22c55e'
+                      border: '2px solid #3b82f6'
                     }}>
                       <img
                         src={user.avatar}

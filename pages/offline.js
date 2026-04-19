@@ -9,7 +9,7 @@ export default function Offline() {
         </p>
         <button
           onClick={() => window.location.reload()}
-          className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
         >
           Try Again
         </button>

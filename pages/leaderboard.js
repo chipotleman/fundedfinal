@@ -285,7 +285,7 @@ const Leaderboard = () => {
         key={leader.id || leader.rank}
         ref={(el) => { if (leader.id) userRowRefs.current[leader.id] = el; }}
         className={`group flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3 sm:py-4 transition-colors ${
-          isMe ? 'bg-emerald-500/5' : ''
+          isMe ? 'bg-blue-500/5' : ''
         } lb-row`}
       >
         <div className="w-8 sm:w-10 text-center text-sm sm:text-base font-bold text-gray-400 tabular-nums">
@@ -313,7 +313,7 @@ const Leaderboard = () => {
               className="text-white font-semibold text-sm sm:text-base truncate"
             />
             {isMe && (
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-500/15 text-blue-300 border border-blue-500/30">
                 You
               </span>
             )}
@@ -373,9 +373,9 @@ const Leaderboard = () => {
           <div className="sticky top-2 z-30 mb-4 flex justify-end pointer-events-none">
             <button
               onClick={scrollToMyRank}
-              className="pointer-events-auto inline-flex items-center gap-2 px-3 py-2 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs font-semibold backdrop-blur-md shadow-lg shadow-emerald-500/10 transition-colors active:bg-emerald-500/25"
+              className="pointer-events-auto inline-flex items-center gap-2 px-3 py-2 rounded-full bg-blue-500/15 border border-blue-500/40 text-blue-300 text-xs font-semibold backdrop-blur-md shadow-lg shadow-blue-500/10 transition-colors active:bg-blue-500/25"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
               You're #{userRank.rank}
             </button>
           </div>
@@ -397,7 +397,7 @@ const Leaderboard = () => {
                   key={tf.id}
                   onTap={() => setTimeframe(tf.id)}
                   isActive={timeframe === tf.id}
-                  activeColor="#10b981"
+                  activeColor="#3b82f6"
                   inactiveColor="rgba(255,255,255,0.04)"
                   activeTextColor="#ffffff"
                   inactiveTextColor="#9ca3af"
@@ -452,11 +452,11 @@ const Leaderboard = () => {
                 className="rounded-3xl border border-white/10 backdrop-blur-xl mb-6 overflow-hidden"
                 style={{
                   background:
-                    'radial-gradient(120% 80% at 50% 0%, rgba(16,185,129,0.10) 0%, rgba(8,145,178,0.06) 35%, rgba(0,0,0,0) 70%), linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
+                    'radial-gradient(120% 80% at 50% 0%, rgba(59,130,246,0.10) 0%, rgba(6,182,212,0.06) 35%, rgba(0,0,0,0) 70%), linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
                 }}
               >
                 <div className="px-4 sm:px-6 pt-6 pb-8">
-                  <div className="text-[11px] text-emerald-300/80 font-semibold uppercase tracking-[0.18em] text-center mb-6">
+                  <div className="text-[11px] text-blue-300/80 font-semibold uppercase tracking-[0.18em] text-center mb-6">
                     Top Performers
                   </div>
                   <div className="flex items-end justify-center gap-3 sm:gap-8">
@@ -497,7 +497,7 @@ const Leaderboard = () => {
                 ? communityStats.activeBettors.toLocaleString()
                 : '—',
               label: 'Active Bettors',
-              color: 'text-emerald-400',
+              color: 'text-blue-400',
             },
             {
               value: communityStats
@@ -531,12 +531,12 @@ const Leaderboard = () => {
           <div className="mt-6">
             <div
               className="rounded-2xl p-6 sm:p-8 border border-white/10 text-center"
-              style={{ background: 'linear-gradient(160deg, rgba(16,185,129,0.08) 0%, rgba(8,145,178,0.04) 100%)' }}
+              style={{ background: 'linear-gradient(160deg, rgba(59,130,246,0.08) 0%, rgba(6,182,212,0.04) 100%)' }}
             >
               <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Ready to Climb the Rankings?</h2>
               <p className="text-gray-400 mb-5 text-sm">Join the competition and prove you belong among the elite bettors.</p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Link href="/auth" className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-xl transition-all text-sm">
+                <Link href="/auth" className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold py-3 px-6 rounded-xl transition-all text-sm">
                   Start Your Journey
                 </Link>
                 <Link href="/" className="bg-white/5 hover:bg-white/10 text-white font-bold py-3 px-6 rounded-xl transition-all text-sm border border-white/10">
@@ -581,8 +581,8 @@ const Leaderboard = () => {
           animation: lbFlash 1.6s ease-out;
         }
         @keyframes lbFlash {
-          0% { background-color: rgba(16, 185, 129, 0.25); }
-          100% { background-color: rgba(16, 185, 129, 0); }
+          0% { background-color: rgba(59, 130, 246, 0.25); }
+          100% { background-color: rgba(59, 130, 246, 0); }
         }
       `}</style>
     </div>

@@ -79,8 +79,8 @@ export default function FakeLogin() {
           </>
         ) : (
           <>
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-500/20 flex items-center justify-center animate-pulse">
-              <svg className="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-500/20 flex items-center justify-center animate-pulse">
+              <svg className="w-8 h-8 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
@@ -88,7 +88,7 @@ export default function FakeLogin() {
             <p className="text-zinc-400">{status}</p>
             <div className="mt-6">
               <div className="w-48 h-1 mx-auto bg-zinc-800 rounded-full overflow-hidden">
-                <div className="h-full bg-green-500 animate-pulse" style={{ width: '60%' }}></div>
+                <div className="h-full bg-blue-500 animate-pulse" style={{ width: '60%' }}></div>
               </div>
             </div>
           </>

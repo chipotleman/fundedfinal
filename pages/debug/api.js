@@ -179,7 +179,7 @@ export default function APIDebug() {
             <button
               onClick={() => fetchData(true)}
               disabled={loading}
-              className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 px-4 py-2 rounded-lg text-sm font-medium"
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 px-4 py-2 rounded-lg text-sm font-medium"
             >
               Force Refresh (uses credits)
             </button>
@@ -256,7 +256,7 @@ export default function APIDebug() {
                 <div 
                   key={sport.key} 
                   className={`rounded-lg p-3 cursor-pointer transition-all ${
-                    selectedSport === sport.key ? 'bg-green-600' : 'bg-gray-700 hover:bg-gray-600'
+                    selectedSport === sport.key ? 'bg-blue-600' : 'bg-gray-700 hover:bg-gray-600'
                   }`}
                   onClick={() => setSelectedSport(selectedSport === sport.key ? 'all' : sport.key)}
                 >

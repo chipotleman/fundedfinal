@@ -76,8 +76,8 @@ export default function AdminDashboard() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
       ),
-      gradient: 'from-green-500 to-emerald-500',
-      bgGlow: 'bg-green-500/20',
+      gradient: 'from-blue-500 to-cyan-500',
+      bgGlow: 'bg-blue-500/20',
     },
   ];
 

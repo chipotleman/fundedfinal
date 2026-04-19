@@ -31,7 +31,7 @@ export default function InstagramStrategy() {
             <img src="/fundmybet-logo.png" alt="Funder Logo" className="h-24 mx-auto mb-6" />
           </div>
           <h1 className="text-6xl font-black text-white mb-6">
-            Instagram Growth <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Strategy</span>
+            Instagram Growth <span className="bg-gradient-to-r from-blue-400 to-cyan-500 bg-clip-text text-transparent">Strategy</span>
           </h1>
           <p className="text-xl text-gray-400">Confidential Investor Presentation</p>
           <div className="mt-12 text-sm text-gray-500">
@@ -51,7 +51,7 @@ export default function InstagramStrategy() {
             <h2 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-8">Phase 1: Foundation & Teasing</h2>
             <div className="space-y-4 md:space-y-6">
               <div className="bg-slate-800 p-4 md:p-6 rounded-xl border border-gray-700">
-                <h3 className="text-green-400 font-bold text-base md:text-lg mb-2">🎯 Goal</h3>
+                <h3 className="text-blue-400 font-bold text-base md:text-lg mb-2">🎯 Goal</h3>
                 <p className="text-gray-300 text-sm md:text-base">Build anticipation and establish credibility before launch</p>
               </div>
               <div className="bg-slate-800 p-4 md:p-6 rounded-xl border border-gray-700">
@@ -77,7 +77,7 @@ export default function InstagramStrategy() {
                 <div className="space-y-3 text-left">
                   <div className="flex justify-between text-sm md:text-base">
                     <span className="text-gray-400">Teaser Posts</span>
-                    <span className="text-green-400">Daily</span>
+                    <span className="text-blue-400">Daily</span>
                   </div>
                   <div className="flex justify-between text-sm md:text-base">
                     <span className="text-gray-400">Educational</span>
@@ -105,7 +105,7 @@ export default function InstagramStrategy() {
             <h2 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-8">Phase 2: Awareness Building</h2>
             <div className="space-y-4 md:space-y-6">
               <div className="bg-slate-800 p-4 md:p-6 rounded-xl border border-gray-700">
-                <h3 className="text-green-400 font-bold text-base md:text-lg mb-2">🎯 Goal</h3>
+                <h3 className="text-blue-400 font-bold text-base md:text-lg mb-2">🎯 Goal</h3>
                 <p className="text-gray-300 text-sm md:text-base">Identify pain points and position our solution</p>
               </div>
               <div className="bg-slate-800 p-4 md:p-6 rounded-xl border border-gray-700">
@@ -133,8 +133,8 @@ export default function InstagramStrategy() {
                     <span className="text-red-400 font-semibold text-sm md:text-base">Problem:</span>
                     <p className="text-gray-300 text-xs md:text-sm mt-1">"Lost your bankroll again?"</p>
                   </div>
-                  <div className="bg-green-900/20 p-3 rounded-lg border border-green-500/30">
-                    <span className="text-green-400 font-semibold text-sm md:text-base">Solution:</span>
+                  <div className="bg-blue-900/20 p-3 rounded-lg border border-blue-500/30">
+                    <span className="text-blue-400 font-semibold text-sm md:text-base">Solution:</span>
                     <p className="text-gray-300 text-xs md:text-sm mt-1">"What if there was a better way?"</p>
                   </div>
                 </div>
@@ -155,7 +155,7 @@ export default function InstagramStrategy() {
             <h2 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-8">Phase 3: Product Reveal</h2>
             <div className="space-y-6">
               <div className="bg-slate-800 p-6 rounded-xl border border-gray-700">
-                <h3 className="text-green-400 font-bold text-lg mb-2">🎯 Goal</h3>
+                <h3 className="text-blue-400 font-bold text-lg mb-2">🎯 Goal</h3>
                 <p className="text-gray-300">Launch product with maximum impact and conversions</p>
               </div>
               <div className="bg-slate-800 p-6 rounded-xl border border-gray-700">
@@ -179,16 +179,16 @@ export default function InstagramStrategy() {
                 <div className="text-6xl mb-4">🚀</div>
                 <h4 className="text-white font-bold mb-4">Launch Strategy</h4>
                 <div className="space-y-3">
-                  <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 p-3 rounded-lg border border-green-500/30">
+                  <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 p-3 rounded-lg border border-blue-500/30">
                     <p className="text-white font-semibold">🚨 GAME CHANGER ALERT 🚨</p>
                     <p className="text-gray-300 text-sm mt-1">Get funded up to $25,000</p>
                   </div>
                   <div className="text-left space-y-2">
-                    <div className="flex items-center text-green-400">
+                    <div className="flex items-center text-blue-400">
                       <span className="mr-2">✅</span>
                       <span className="text-sm">Keep 80% of profits</span>
                     </div>
-                    <div className="flex items-center text-green-400">
+                    <div className="flex items-center text-blue-400">
                       <span className="mr-2">✅</span>
                       <span className="text-sm">Zero personal risk</span>
                     </div>
@@ -211,7 +211,7 @@ export default function InstagramStrategy() {
             <h2 className="text-4xl font-bold text-white mb-8">Phase 4: Social Proof & FOMO</h2>
             <div className="space-y-6">
               <div className="bg-slate-800 p-6 rounded-xl border border-gray-700">
-                <h3 className="text-green-400 font-bold text-lg mb-2">🎯 Goal</h3>
+                <h3 className="text-blue-400 font-bold text-lg mb-2">🎯 Goal</h3>
                 <p className="text-gray-300">Build trust through user success stories and create urgency</p>
               </div>
               <div className="bg-slate-800 p-6 rounded-xl border border-gray-700">
@@ -235,8 +235,8 @@ export default function InstagramStrategy() {
                 <div className="text-6xl mb-4">🏆</div>
                 <h4 className="text-white font-bold mb-4">Social Proof Strategy</h4>
                 <div className="space-y-4">
-                  <div className="bg-green-900/20 p-3 rounded-lg border border-green-500/30">
-                    <p className="text-green-400 font-semibold">Success Story</p>
+                  <div className="bg-blue-900/20 p-3 rounded-lg border border-blue-500/30">
+                    <p className="text-blue-400 font-semibold">Success Story</p>
                     <p className="text-gray-300 text-sm mt-1">"Made $2,400 in my first week"</p>
                   </div>
                   <div className="bg-orange-900/20 p-3 rounded-lg border border-orange-500/30">
@@ -261,7 +261,7 @@ export default function InstagramStrategy() {
             <h2 className="text-4xl font-bold text-white mb-8">Phase 5: Scale & Optimize</h2>
             <div className="space-y-6">
               <div className="bg-slate-800 p-6 rounded-xl border border-gray-700">
-                <h3 className="text-green-400 font-bold text-lg mb-2">🎯 Goal</h3>
+                <h3 className="text-blue-400 font-bold text-lg mb-2">🎯 Goal</h3>
                 <p className="text-gray-300">Systematize content and scale through partnerships</p>
               </div>
               <div className="bg-slate-800 p-6 rounded-xl border border-gray-700">
@@ -287,7 +287,7 @@ export default function InstagramStrategy() {
                 <div className="space-y-2 text-left text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-400">Monday</span>
-                    <span className="text-green-400">Success Stories</span>
+                    <span className="text-blue-400">Success Stories</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Tuesday</span>
@@ -319,11 +319,11 @@ export default function InstagramStrategy() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 h-auto md:h-4/5 overflow-y-auto">
             <div className="space-y-6">
               <div className="bg-slate-800 p-6 rounded-xl border border-gray-700">
-                <h3 className="text-green-400 font-bold text-lg mb-4">📈 Growth Metrics</h3>
+                <h3 className="text-blue-400 font-bold text-lg mb-4">📈 Growth Metrics</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-300">Follower Growth</span>
-                    <span className="text-green-400 font-bold">+15% weekly</span>
+                    <span className="text-blue-400 font-bold">+15% weekly</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-300">Reach Increase</span>
@@ -340,7 +340,7 @@ export default function InstagramStrategy() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-300">CAC (Cost per Follower)</span>
-                    <span className="text-green-400 font-bold">$0.45</span>
+                    <span className="text-blue-400 font-bold">$0.45</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-300">CPM (Cost per 1k)</span>
@@ -355,7 +355,7 @@ export default function InstagramStrategy() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-300">Avg Engagement Rate</span>
-                    <span className="text-green-400 font-bold">8.5%</span>
+                    <span className="text-blue-400 font-bold">8.5%</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-300">Reels Watch Rate</span>
@@ -372,7 +372,7 @@ export default function InstagramStrategy() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-300">LTV (User Value)</span>
-                    <span className="text-green-400 font-bold">$247</span>
+                    <span className="text-blue-400 font-bold">$247</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-300">App Conversion</span>
@@ -395,9 +395,9 @@ export default function InstagramStrategy() {
           <h2 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-8 text-center">Current Traction</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 h-auto md:h-4/5 overflow-y-auto">
             <div className="space-y-8">
-              <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 p-8 rounded-xl border border-green-500/30">
+              <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 p-8 rounded-xl border border-blue-500/30">
                 <div className="text-center">
-                  <div className="text-4xl font-black text-green-400 mb-2">2,847</div>
+                  <div className="text-4xl font-black text-blue-400 mb-2">2,847</div>
                   <h3 className="text-white font-bold">👥 Waitlist Signups</h3>
                   <p className="text-gray-400 text-sm">Pre-launch interest</p>
                 </div>
@@ -440,7 +440,7 @@ export default function InstagramStrategy() {
           <h2 className="text-2xl md:text-4xl font-bold text-white mb-4 md:mb-8 text-center">Go-To-Market Strategy</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 h-auto md:h-4/5 overflow-y-auto">
             <div className="space-y-6">
-              <h3 className="text-2xl font-bold text-green-400 mb-4">🎯 Scaling Channels</h3>
+              <h3 className="text-2xl font-bold text-blue-400 mb-4">🎯 Scaling Channels</h3>
               <div className="space-y-4">
                 <div className="bg-slate-800 p-4 rounded-xl border border-gray-700">
                   <h4 className="text-blue-400 font-bold mb-2">🎯 Influencer Deals</h4>
@@ -451,7 +451,7 @@ export default function InstagramStrategy() {
                   <p className="text-gray-300 text-sm">Short-form viral content to drive organic reach</p>
                 </div>
                 <div className="bg-slate-800 p-4 rounded-xl border border-gray-700">
-                  <h4 className="text-green-400 font-bold mb-2">🔁 Paid Amplification</h4>
+                  <h4 className="text-blue-400 font-bold mb-2">🔁 Paid Amplification</h4>
                   <p className="text-gray-300 text-sm">Boost high-performing organic content</p>
                 </div>
               </div>
@@ -494,11 +494,11 @@ export default function InstagramStrategy() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-12 h-auto md:h-4/5 overflow-y-auto">
             <div className="space-y-6">
               <div className="bg-slate-800 p-6 rounded-xl border border-gray-700">
-                <h3 className="text-green-400 font-bold text-lg mb-4">🧩 Revenue Streams</h3>
+                <h3 className="text-blue-400 font-bold text-lg mb-4">🧩 Revenue Streams</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-300">Challenge Fees</span>
-                    <span className="text-green-400 font-bold">65%</span>
+                    <span className="text-blue-400 font-bold">65%</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-300">Profit Share (20%)</span>
@@ -515,7 +515,7 @@ export default function InstagramStrategy() {
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-300">Gross Margin</span>
-                    <span className="text-green-400 font-bold">78%</span>
+                    <span className="text-blue-400 font-bold">78%</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-300">Recurring Revenue</span>
@@ -546,10 +546,10 @@ export default function InstagramStrategy() {
                   </div>
                 </div>
               </div>
-              <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 p-6 rounded-xl border border-green-500/30">
+              <div className="bg-gradient-to-r from-blue-500/10 to-cyan-500/10 p-6 rounded-xl border border-blue-500/30">
                 <h3 className="text-white font-bold text-lg mb-2">💰 Revenue Projection</h3>
                 <div className="text-center">
-                  <div className="text-3xl font-black text-green-400">$2.4M</div>
+                  <div className="text-3xl font-black text-blue-400">$2.4M</div>
                   <p className="text-gray-400">Year 1 Target</p>
                 </div>
               </div>
@@ -627,7 +627,7 @@ export default function InstagramStrategy() {
                 onClick={() => goToSlide(index)}
                 className={`w-3 h-3 rounded-full transition-all duration-300 ${
                   index === currentSlide 
-                    ? 'bg-gradient-to-r from-green-400 to-blue-500' 
+                    ? 'bg-gradient-to-r from-blue-400 to-cyan-500' 
                     : 'bg-gray-600 hover:bg-gray-500'
                 }`}
               />
@@ -642,7 +642,7 @@ export default function InstagramStrategy() {
                 onClick={() => goToSlide(index)}
                 className={`p-4 rounded-xl border text-left transition-all duration-300 ${
                   index === currentSlide
-                    ? 'border-green-500 bg-green-500/10 text-green-400'
+                    ? 'border-blue-500 bg-blue-500/10 text-blue-400'
                     : 'border-gray-700 bg-slate-800 text-gray-400 hover:border-gray-600 hover:text-white'
                 }`}
               >

@@ -146,7 +146,7 @@ export default function Promos() {
         {/* Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-2 pb-4 sm:pb-8 text-center">
           <h1 className="text-4xl md:text-6xl font-black text-white mb-4">
-            <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Promotions</span>
+            <span className="bg-gradient-to-r from-blue-400 to-cyan-500 bg-clip-text text-transparent">Promotions</span>
           </h1>
           <p className="text-lg text-gray-300 max-w-2xl mx-auto">
             Earn more through referrals, challenges, and exclusive VIP rewards. Turn your network into profits.
@@ -178,7 +178,7 @@ export default function Promos() {
               onClick={() => setActiveTab('referrals')}
               className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all ${
                 activeTab === 'referrals' 
-                  ? 'bg-green-500 text-white' 
+                  ? 'bg-blue-500 text-white' 
                   : 'text-gray-300 hover:text-white'
               }`}
             >
@@ -188,7 +188,7 @@ export default function Promos() {
               onClick={() => setActiveTab('challenges')}
               className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all ${
                 activeTab === 'challenges' 
-                  ? 'bg-green-500 text-white' 
+                  ? 'bg-blue-500 text-white' 
                   : 'text-gray-300 hover:text-white'
               }`}
             >
@@ -198,7 +198,7 @@ export default function Promos() {
               onClick={() => setActiveTab('vip')}
               className={`flex-1 py-3 px-6 rounded-lg font-medium transition-all ${
                 activeTab === 'vip' 
-                  ? 'bg-green-500 text-white' 
+                  ? 'bg-blue-500 text-white' 
                   : 'text-gray-300 hover:text-white'
               }`}
             >
@@ -211,11 +211,11 @@ export default function Promos() {
         {activeTab === 'referrals' && (
           <div className="max-w-7xl mx-auto px-6">
             {/* Referral Code */}
-            <div className="bg-gradient-to-r from-green-500/20 to-blue-500/20 backdrop-blur-lg rounded-2xl p-8 border border-green-500/30 mb-8">
+            <div className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 backdrop-blur-lg rounded-2xl p-8 border border-blue-500/30 mb-8">
               <div className="text-center">
                 <h2 className="text-3xl font-bold text-white mb-4">Your Referral Code</h2>
                 <div className="bg-[#0d0d0d] rounded-xl p-6 mb-6">
-                  <div className="text-2xl font-mono text-green-400 mb-4">{userReferralCode}</div>
+                  <div className="text-2xl font-mono text-blue-400 mb-4">{userReferralCode}</div>
                   <div className="text-gray-300 mb-4">Share this link with friends:</div>
                   <div className="bg-[#1a1a1a] rounded-lg p-3 text-gray-300 text-sm break-all mb-4">
                     https://fundmybet.com/ref/{userReferralCode}
@@ -224,7 +224,7 @@ export default function Promos() {
                     onClick={copyReferralCode}
                     className={`px-6 py-3 rounded-xl font-bold transition-all ${
                       copiedCode 
-                        ? 'bg-green-500 text-white' 
+                        ? 'bg-cyan-500 text-white' 
                         : 'bg-blue-500 hover:bg-blue-600 text-white'
                     }`}
                   >
@@ -261,7 +261,7 @@ export default function Promos() {
 
                   <div className="w-full bg-[#1a1a1a] rounded-full h-2 mb-4">
                     <div 
-                      className="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full transition-all"
+                      className="bg-gradient-to-r from-blue-400 to-cyan-500 h-2 rounded-full transition-all"
                       style={{ width: `${(promo.progress.current / promo.progress.max) * 100}%` }}
                     ></div>
                   </div>
@@ -269,7 +269,7 @@ export default function Promos() {
                   <button 
                     className={`w-full py-3 rounded-xl font-bold transition-all ${
                       promo.status === 'available' 
-                        ? 'bg-green-500 hover:bg-green-600 text-white' 
+                        ? 'bg-blue-500 hover:bg-blue-600 text-white' 
                         : 'bg-[#1a1a1a] text-gray-400 cursor-not-allowed'
                     }`}
                     disabled={promo.status !== 'available'}
@@ -313,7 +313,7 @@ export default function Promos() {
                       </div>
                     </div>
 
-                    <button className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300">
+                    <button className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300">
                       Start Challenge
                     </button>
                   </div>

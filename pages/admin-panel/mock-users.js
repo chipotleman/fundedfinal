@@ -266,7 +266,7 @@ export default function MockUsersPage() {
                 key={user.id}
                 className="relative bg-white/5 border border-white/10 rounded-xl p-4 text-center group hover:border-purple-500/50 transition-colors"
               >
-                <div className="w-16 h-16 rounded-full overflow-hidden mx-auto mb-3 border-2 border-green-500">
+                <div className="w-16 h-16 rounded-full overflow-hidden mx-auto mb-3 border-2 border-blue-500">
                   <img
                     src={user.avatar}
                     alt={user.username}

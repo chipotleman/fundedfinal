@@ -316,7 +316,7 @@ export default function AdminMatchups() {
 
   const getMatchTypeColor = (type) => {
     switch (type) {
-      case 'friend': return 'bg-emerald-600';
+      case 'friend': return 'bg-cyan-600';
       case 'private': return 'bg-orange-600';
       case 'random': return 'bg-blue-600';
       default: return 'bg-gray-600';
@@ -388,7 +388,7 @@ export default function AdminMatchups() {
           </button>
           <button
             onClick={() => setActiveTab('invites')}
-            className={`px-4 py-2 rounded ${activeTab === 'invites' ? 'bg-emerald-600' : 'bg-gray-700'}`}
+            className={`px-4 py-2 rounded ${activeTab === 'invites' ? 'bg-blue-600' : 'bg-gray-700'}`}
           >
             Battle Invites
             {battleInvites.filter(i => i.status === 'pending').length > 0 && (
@@ -460,7 +460,7 @@ export default function AdminMatchups() {
                             <button
                               onClick={() => handlePlayAs(matchup)}
                               disabled={impersonating === matchup.id}
-                              className="px-3 py-1 bg-green-600 rounded text-sm hover:bg-green-500 disabled:opacity-50"
+                              className="px-3 py-1 bg-blue-600 rounded text-sm hover:bg-blue-500 disabled:opacity-50"
                             >
                               {impersonating === matchup.id ? 'Opening...' : 'Play As'}
                             </button>
@@ -486,7 +486,7 @@ export default function AdminMatchups() {
           <div>
             <button
               onClick={() => setShowOpponentModal(true)}
-              className="mb-4 px-4 py-2 bg-green-600 rounded hover:bg-green-500"
+              className="mb-4 px-4 py-2 bg-blue-600 rounded hover:bg-blue-500"
             >
               + Add Fake Opponent
             </button>
@@ -523,7 +523,7 @@ export default function AdminMatchups() {
                     {!opponent.hasCredentials && (
                       <button
                         onClick={() => setupCredentials(opponent)}
-                        className="px-3 py-1 bg-green-600 rounded text-sm hover:bg-green-500"
+                        className="px-3 py-1 bg-blue-600 rounded text-sm hover:bg-blue-500"
                       >
                         Setup Credentials
                       </button>
@@ -813,7 +813,7 @@ export default function AdminMatchups() {
                 </button>
                 <button
                   onClick={createFakeOpponent}
-                  className="flex-1 px-4 py-2 bg-green-600 rounded hover:bg-green-500"
+                  className="flex-1 px-4 py-2 bg-blue-600 rounded hover:bg-blue-500"
                 >
                   Create
                 </button>

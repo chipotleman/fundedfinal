@@ -47,7 +47,7 @@ export default function AdminSettle() {
 
   return (
     <div className="max-w-md mx-auto p-6 bg-black text-white min-h-screen">
-      <h1 className="text-2xl font-bold mb-4 text-neon-green">🛠️ Admin Settlement Panel</h1>
+      <h1 className="text-2xl font-bold mb-4 text-blue-400">🛠️ Admin Settlement Panel</h1>
 
       {/* MATCHUP SELECT */}
       <label className="block mb-2">Select Matchup:</label>
@@ -84,7 +84,7 @@ export default function AdminSettle() {
 
       <button
         onClick={handleSettle}
-        className="w-full bg-neon-green text-white px-4 py-2 rounded hover:bg-blue-400 mb-4"
+        className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-400 mb-4"
       >
         Settle Bets
       </button>
