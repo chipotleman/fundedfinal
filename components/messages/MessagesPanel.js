@@ -63,7 +63,7 @@ function VoiceBubble({ url, durationMs, mine }) {
   );
 }
 
-export function ConversationThread({ friend, ctx, myId, onStartBattle, inviteConfirmation }) {
+export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   const { hasActiveMatchup } = useMatchup();
   const [thread, setThread] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -495,6 +495,9 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, inviteCon
         </div>
         {onStartBattle && (
           <>
+            {/* Mobile: square icon-only button. Same blue gradient + glow as
+                the standard "Start a Battle" CTA on the Battle page so the
+                visual language is identical no matter where the flow starts. */}
             <button
               type="button"
               onClick={() => {
@@ -505,15 +508,17 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, inviteCon
                 onStartBattle(friend);
               }}
               disabled={hasActiveMatchup}
+              className="sm:hidden relative inline-flex items-center justify-center w-9 h-9 rounded-lg text-white border border-blue-500/40 overflow-hidden flex-shrink-0 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}
               title={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : 'Start Battle'}
-              className="sm:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg text-purple-300 transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ backgroundColor: 'rgba(147,51,234,0.12)', border: '1px solid rgba(147,51,234,0.3)' }}
               aria-label={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : `Start battle with ${friend?.username || 'friend'}`}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500" />
+              <svg className="w-4 h-4 relative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </button>
+            {/* Desktop: compact icon + label pill, same blue treatment. */}
             <button
               type="button"
               onClick={() => {
@@ -524,15 +529,16 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, inviteCon
                 onStartBattle(friend);
               }}
               disabled={hasActiveMatchup}
+              className="hidden sm:inline-flex relative items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white border border-blue-500/40 overflow-hidden flex-shrink-0 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}
               title={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : undefined}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-purple-200 transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ backgroundColor: 'rgba(147,51,234,0.15)', border: '1px solid rgba(147,51,234,0.35)' }}
               aria-label={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : `Start battle with ${friend?.username || 'friend'}`}
             >
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500" />
+              <svg className="w-3.5 h-3.5 relative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              {hasActiveMatchup ? 'In a battle' : 'Start Battle'}
+              <span className="relative">{hasActiveMatchup ? 'In a battle' : 'Start Battle'}</span>
             </button>
           </>
         )}
@@ -540,18 +546,6 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, inviteCon
           <span className="sr-only">{ACTIVE_BATTLE_BLOCK_MESSAGE}</span>
         )}
       </div>
-      {inviteConfirmation && inviteConfirmation.friendId === friend?.id && (
-        <div
-          className="mx-4 mt-3 px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-2 flex-shrink-0"
-          style={{ backgroundColor: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.3)', color: '#3b82f6' }}
-          role="status"
-        >
-          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-          <span>Battle invite sent to {friend?.username || 'your friend'}.</span>
-        </div>
-      )}
 
       <div
         ref={scrollRef}
@@ -892,7 +886,6 @@ export default function MessagesPanel({
   variant = 'card', // 'card' | 'fullpage'
   minHeight = 520,
   onStartBattle,
-  inviteConfirmation,
 }) {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1136,7 +1129,6 @@ export default function MessagesPanel({
             ctx={ctx}
             myId={myId}
             onStartBattle={onStartBattle}
-            inviteConfirmation={inviteConfirmation}
           />
         ) : selectedId && !loading && !friendsError ? (
           <NotFriendsCard

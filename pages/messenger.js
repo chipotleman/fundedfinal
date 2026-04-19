@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import TopNavbar from '../components/TopNavbar';
@@ -16,8 +16,6 @@ export default function MessengerPage() {
 
   const [selectedId, setSelectedId] = useState(null);
   const [battleFriend, setBattleFriend] = useState(null);
-  const [inviteConfirmation, setInviteConfirmation] = useState(null);
-  const confirmTimerRef = useRef(null);
 
   const myId = session?.user?.id;
   const isAuthed = status === 'authenticated';
@@ -31,19 +29,26 @@ export default function MessengerPage() {
     setBattleFriend(null);
   }, []);
 
-  const handleInviteSent = useCallback((sentFriend) => {
-    const friend = sentFriend || battleFriend;
-    setBattleFriend(null);
-    if (!friend?.id) return;
-    setInviteConfirmation({ friendId: friend.id, username: friend.username, at: Date.now() });
-    if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
-    confirmTimerRef.current = setTimeout(() => setInviteConfirmation(null), 4000);
-  }, [battleFriend]);
-
+  // Defensive: messenger and notifications have historically suffered an iOS
+  // Safari "click trap" where leftover body locks, pointer captures, or the
+  // sticky TopNavbar's --top-nav-height being momentarily 0 cause subsequent
+  // top-nav taps to no-op until refresh. On every mount of this page we
+  // proactively release any body / html scroll locks left behind by a modal
+  // that did not fully tear down before navigation, and re-publish the
+  // navbar height in case TopNavbar's resize observer hadn't fired yet.
   useEffect(() => {
-    return () => {
-      if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
-    };
+    if (typeof document === 'undefined') return;
+    const b = document.body.style;
+    b.overflow = '';
+    b.position = '';
+    b.top = '';
+    b.left = '';
+    b.right = '';
+    b.width = '';
+    b.height = '';
+    b.overscrollBehavior = '';
+    document.documentElement.style.overflow = '';
+    document.documentElement.style.overscrollBehavior = '';
   }, []);
 
   // Pre-select a conversation from ?chat=<id>.
@@ -157,7 +162,6 @@ export default function MessengerPage() {
             myId={myId}
             variant="fullpage"
             onStartBattle={handleStartBattle}
-            inviteConfirmation={inviteConfirmation}
           />
         </div>
       </div>
@@ -166,7 +170,9 @@ export default function MessengerPage() {
         onClose={handleCloseBattle}
         friends={battleFriend ? [battleFriend] : []}
         lockedFriend={battleFriend}
-        onInviteSent={handleInviteSent}
+        currentUser={session?.user ? { id: session.user.id, username: session.user.name, avatar: session.user.image } : null}
+        onInviteSent={() => { ctx.refresh?.(); }}
+        onInviteCancelled={() => { ctx.refresh?.(); }}
       />
     </div>
   );

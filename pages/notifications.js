@@ -235,6 +235,26 @@ export default function NotificationsPage() {
 
   const isAuthed = status === 'authenticated';
 
+  // Defensive: mirror the messenger page — proactively release any leftover
+  // body / html scroll-lock styles a previous modal may have left behind.
+  // Without this, navigating to /notifications while a modal was tearing
+  // down can leave `body { overflow: hidden }` in place, which on iOS Safari
+  // manifests as top-nav taps no longer navigating until a hard refresh.
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const b = document.body.style;
+    b.overflow = '';
+    b.position = '';
+    b.top = '';
+    b.left = '';
+    b.right = '';
+    b.width = '';
+    b.height = '';
+    b.overscrollBehavior = '';
+    document.documentElement.style.overflow = '';
+    document.documentElement.style.overscrollBehavior = '';
+  }, []);
+
   // ?chat=<id> deep link → forward to /messenger.
   useEffect(() => {
     if (!router.isReady) return;
