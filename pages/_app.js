@@ -13,6 +13,7 @@ import { VoiceChatProvider } from '../contexts/VoiceChatContext';
 import { NotificationsProvider } from '../contexts/NotificationsContext';
 import { PushNotificationsProvider } from '../contexts/PushNotificationsContext';
 import GlobalToastContainer from '../components/notifications/GlobalToastContainer';
+import BonusClaimedCelebration from '../components/BonusClaimedCelebration';
 import PushOptInPrompt from '../components/notifications/PushOptInPrompt';
 import WonByForfeitModal from '../components/WonByForfeitModal';
 import ChallengePopup from '../components/ChallengePopup';
@@ -470,6 +471,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
                 <AutoGrader />
                 <GlobalToastContainer />
                 <PushOptInPrompt />
+                <BonusClaimedCelebration />
                 {/* Solid Black Background */}
                 <div
                   style={{
