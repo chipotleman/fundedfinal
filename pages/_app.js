@@ -370,6 +370,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
             onJoinClick={() => {
               if (typeof window !== 'undefined') {
                 localStorage.setItem('beta_access', 'true');
+                window.__pendingBattleOpen = battlePreview.matchupId;
               }
               setBetaAuthenticated(true);
               setJustAuthenticated(true);
@@ -379,6 +380,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
             onLoginClick={() => {
               if (typeof window !== 'undefined') {
                 localStorage.setItem('beta_access', 'true');
+                window.__pendingBattleOpen = battlePreview.matchupId;
               }
               setBetaAuthenticated(true);
               setJustAuthenticated(true);

@@ -115,25 +115,36 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
       if (isSignUp) {
         await signUpUser(email.trim(), password);
         setError('');
-        
+
         if (rememberMe) {
           localStorage.setItem('remembered_email', email.trim());
         }
-        
+
+        const pendingBattleOpen = typeof window !== 'undefined' ? window.__pendingBattleOpen : null;
+        if (typeof window !== 'undefined') window.__pendingBattleOpen = null;
+
         onClose();
-        setTimeout(() => {
-          window.dispatchEvent(new CustomEvent('openOnboardingPopup'));
-        }, 500);
+        if (pendingBattleOpen) {
+          router.push(`/bet-history?battle=${encodeURIComponent(pendingBattleOpen)}`);
+        } else {
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('openOnboardingPopup'));
+          }, 500);
+        }
       } else {
         await login(email.trim(), password, rememberMe);
         onClose();
         const ALLOWED_RESUME_ACTIONS = ['resumeBattleOptions'];
         const pendingAction = typeof window !== 'undefined' ? window.__pendingAuthAction : null;
         if (typeof window !== 'undefined') window.__pendingAuthAction = null;
+        const pendingBattleOpen = typeof window !== 'undefined' ? window.__pendingBattleOpen : null;
+        if (typeof window !== 'undefined') window.__pendingBattleOpen = null;
         if (pendingAction && ALLOWED_RESUME_ACTIONS.includes(pendingAction)) {
           setTimeout(() => {
             window.dispatchEvent(new CustomEvent(pendingAction));
           }, 150);
+        } else if (pendingBattleOpen) {
+          router.push(`/bet-history?battle=${encodeURIComponent(pendingBattleOpen)}`);
         } else {
           router.push('/');
         }
@@ -198,7 +209,10 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
       >
         <button
           onClick={() => {
-            if (typeof window !== 'undefined') window.__pendingAuthAction = null;
+            if (typeof window !== 'undefined') {
+              window.__pendingAuthAction = null;
+              window.__pendingBattleOpen = null;
+            }
             onClose();
           }}
           className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-colors"

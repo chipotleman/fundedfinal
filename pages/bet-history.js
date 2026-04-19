@@ -38,6 +38,26 @@ export default function BetHistory() {
     setOpenBattleId(prev => (prev === next ? prev : next));
   }, [router.isReady, router.query.battle]);
 
+  // If a deep-linked battle isn't in our battles map (e.g. brand-new signup
+  // arriving from a shared public battle preview), fetch its public view so
+  // the popup can still render with the matchup context.
+  useEffect(() => {
+    if (!openBattleId) return;
+    if (battlesMap[openBattleId]) return;
+    if (loading) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/battles/public/${encodeURIComponent(openBattleId)}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled || !data?.battle) return;
+        setBattlesMap(prev => (prev[openBattleId] ? prev : { ...prev, [openBattleId]: data.battle }));
+      } catch (_) {}
+    })();
+    return () => { cancelled = true; };
+  }, [openBattleId, battlesMap, loading]);
+
   const handleBattleOpenChange = (matchupId, open) => {
     if (open) {
       setOpenBattleId(matchupId);
@@ -515,6 +535,13 @@ export default function BetHistory() {
                 } else {
                   allStandalone.push(bet);
                 }
+              }
+
+              // Ensure a deep-linked battle (e.g. opened from a shared public
+              // preview) is always present so the popup can render even when
+              // the viewer has no bets in it.
+              if (openBattleId && battlesMap[openBattleId] && !allBattleBets[openBattleId]) {
+                allBattleBets[openBattleId] = [];
               }
 
               // Filter battle groups by battle outcome
