@@ -135,6 +135,32 @@ function AutoGrader() {
 }
 
 function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
+  // Defensive global cleanup: on every route change, clear any body/html
+  // styles that modals (BetSlip, ActiveBattleCard, OnboardingPopup,
+  // ChallengePopup, AuthPopup, BalanceModal, ShareableBetSlip, etc.) may
+  // have set via useModalScrollLock or direct mutations. If a modal is
+  // still open when a programmatic redirect, deep link, or service-worker
+  // navigation fires, its cleanup may not run before the next page mounts,
+  // leaving the body locked and swallowing taps. Mirrors task #158's
+  // per-component fix for the mobile nav menu.
+  useEffect(() => {
+    if (!router?.events) return undefined;
+    const release = () => {
+      if (typeof document === 'undefined') return;
+      const b = document.body.style;
+      b.overflow = '';
+      b.position = '';
+      b.top = '';
+      b.left = '';
+      b.right = '';
+      b.width = '';
+      b.height = '';
+      document.documentElement.style.overflow = '';
+    };
+    router.events.on('routeChangeStart', release);
+    return () => router.events.off('routeChangeStart', release);
+  }, [router]);
+
   const [showChallengePopup, setShowChallengePopup] = useState(false);
   const [selectedChallengeIndex, setSelectedChallengeIndex] = useState(1);
   const [showHowItWorksPopup, setShowHowItWorksPopup] = useState(false);
