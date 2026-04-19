@@ -30,7 +30,7 @@ export default async function handler(req, res) {
 
     const updated = await db
       .update(messages)
-      .set({ read: true })
+      .set({ read: true, readAt: new Date() })
       .where(and(...conditions))
       .returning({ id: messages.id });
 

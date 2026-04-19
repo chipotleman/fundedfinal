@@ -50,13 +50,24 @@ export default async function handler(req, res) {
         .orderBy(messages.createdAt)
         .limit(100);
 
+      const readAt = new Date();
       const updated = await db
         .update(messages)
-        .set({ read: true })
+        .set({ read: true, readAt })
         .where(
           and(eq(messages.senderId, friendId), eq(messages.receiverId, userId), eq(messages.read, false))
         )
         .returning({ id: messages.id });
+
+      if (updated && updated.length > 0) {
+        const updatedIds = new Set(updated.map((u) => u.id));
+        for (const m of conversationMessages) {
+          if (updatedIds.has(m.id)) {
+            m.read = true;
+            m.readAt = readAt;
+          }
+        }
+      }
 
       if (updated && updated.length > 0) {
         try { publishBattleEvent(userId, { type: 'notification:refresh' }); } catch (_e) {}

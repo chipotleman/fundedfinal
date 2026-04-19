@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { useNotifications } from '../../contexts/NotificationsContext';
+import { formatSeenAgo } from '../../utils/relativeTime';
 
 function Avatar({ sender, size = 36 }) {
   const initial = (sender?.username || '?')[0]?.toUpperCase();
@@ -665,6 +666,13 @@ function MessageItem({ item, ctx, router, onClose, expanded, onToggle, onCollaps
   const lastMessageIdRef = useRef(null);
   const lastTypingSentRef = useRef(0);
   const isTyping = !!sender.id && ctx.typingSenderIds?.has?.(sender.id);
+  const [, setNowTick] = useState(0);
+
+  useEffect(() => {
+    if (!expanded) return undefined;
+    const id = setInterval(() => setNowTick((n) => n + 1), 30000);
+    return () => clearInterval(id);
+  }, [expanded]);
 
   // Suppress duplicate toast notifications for this conversation while open.
   useEffect(() => {
@@ -699,7 +707,23 @@ function MessageItem({ item, ctx, router, onClose, expanded, onToggle, onCollaps
         setThread((prev) => {
           const prevLast = prev[prev.length - 1]?.id;
           const nextLast = next[next.length - 1]?.id;
-          if (prev.length === next.length && prevLast === nextLast) return prev;
+          let lastOutgoingChanged = false;
+          if (prev.length === next.length && prevLast === nextLast) {
+            for (let i = next.length - 1; i >= 0; i--) {
+              if (next[i].senderId !== sender.id) {
+                const p = prev[i];
+                if (
+                  !p ||
+                  p.read !== next[i].read ||
+                  String(p.readAt || '') !== String(next[i].readAt || '')
+                ) {
+                  lastOutgoingChanged = true;
+                }
+                break;
+              }
+            }
+            if (!lastOutgoingChanged) return prev;
+          }
           const prevIds = new Set(prev.map((m) => m.id));
           const incomingFromFriend = next.some(
             (m) => !prevIds.has(m.id) && m.senderId === sender.id
@@ -890,7 +914,11 @@ function MessageItem({ item, ctx, router, onClose, expanded, onToggle, onCollaps
                     {m.content}
                   </div>
                   {showSeen && idx === lastOutgoingIdx && (
-                    <p className="text-[10px] text-gray-500 mt-0.5 mr-0.5">Seen</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5 mr-0.5">
+                      {thread[lastOutgoingIdx].readAt
+                        ? `Seen ${formatSeenAgo(thread[lastOutgoingIdx].readAt)}`
+                        : 'Seen'}
+                    </p>
                   )}
                 </div>
               ));

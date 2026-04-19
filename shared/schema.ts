@@ -113,6 +113,7 @@ export const messages = pgTable("messages", {
   receiverId: varchar("receiver_id").notNull(),
   content: text("content").notNull(),
   read: boolean("read").default(false).notNull(),
+  readAt: timestamp("read_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   senderIdIdx: index("messages_sender_id_idx").on(table.senderId),

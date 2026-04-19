@@ -7,6 +7,7 @@ import QuickMatchModal from '../components/battle/QuickMatchModal';
 import PlayFriendModal from '../components/battle/PlayFriendModal';
 import { useNotifications } from '../contexts/NotificationsContext';
 import { formatMoney } from '../utils/formatMoney';
+import { formatSeenAgo } from '../utils/relativeTime';
 
 const SkeletonCard = () => (
   <div className="animate-pulse bg-[#111] rounded-xl p-4 border border-[#1a1a1a]">
@@ -192,10 +193,16 @@ const UserCard = ({ user, isFriend, session, onAction, compact = false }) => {
 
 const ChatModal = ({ friend, messages, onClose, onSend, messageInput, setMessageInput, sending, session, isFriend, messageError, friendIsTyping, onTypingChange }) => {
   const messagesEndRef = useRef(null);
+  const [, setNowTick] = useState(0);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    const id = setInterval(() => setNowTick((n) => n + 1), 30000);
+    return () => clearInterval(id);
+  }, []);
 
   const handleInputChange = (e) => {
     const v = e.target.value;
@@ -245,7 +252,11 @@ const ChatModal = ({ friend, messages, onClose, onSend, messageInput, setMessage
                     <p className="text-[10px] opacity-50 mt-1">{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                   </div>
                   {showSeen && idx === lastOutgoingIdx && (
-                    <p className="text-[10px] text-gray-500 mt-0.5 mr-1">Seen</p>
+                    <p className="text-[10px] text-gray-500 mt-0.5 mr-1">
+                      {messages[lastOutgoingIdx].readAt
+                        ? `Seen ${formatSeenAgo(messages[lastOutgoingIdx].readAt)}`
+                        : 'Seen'}
+                    </p>
                   )}
                 </div>
               ));
