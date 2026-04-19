@@ -1,0 +1,134 @@
+13:46:43.493 Running build in Washington, D.C., USA (East) – iad1 (Static IPs)
+13:46:43.494 Build machine configuration: 4 cores, 8 GB
+13:46:43.604 Cloning github.com/chipotleman/fundedfinal (Branch: main, Commit: 385165c)
+13:46:53.305 Cloning completed: 9.701s
+13:46:53.405 Restored build cache from previous deployment (4RtJpYm9GYwDCwUdzbF6s8gjLcgF)
+13:46:53.579 Running "vercel build"
+13:46:54.168 Vercel CLI 51.6.1
+13:46:54.441 Installing dependencies...
+13:46:56.743 
+13:46:56.743 added 36 packages in 2s
+13:46:56.743 
+13:46:56.743 166 packages are looking for funding
+13:46:56.743   run `npm fund` for details
+13:46:56.770 Detected Next.js version: 14.2.35
+13:46:56.775 Running "npm run build"
+13:46:56.876 
+13:46:56.876 > fundedfinal@1.0.0 build
+13:46:56.876 > next build
+13:46:56.876 
+13:46:57.967   ▲ Next.js 14.2.35
+13:46:57.967   - Environments: .env.local
+13:46:57.968   - Experiments (use with caution):
+13:46:57.968     · instrumentationHook
+13:46:57.968 
+13:46:58.022    Creating an optimized production build ...
+13:46:58.558 > [PWA] Compile server
+13:46:58.559 > [PWA] Compile server
+13:46:58.560 > [PWA] Compile client (static)
+13:46:58.560 > [PWA] Custom worker found: /vercel/path0/worker/index.js
+13:46:58.560 > [PWA] Build custom worker: /vercel/path0/public/worker-gqvocuhISg6vOzzSL2de-.js
+13:46:58.793 > [PWA] Auto register service worker with: /vercel/path0/node_modules/next-pwa/register.js
+13:46:58.793 > [PWA] Service worker: /vercel/path0/public/sw.js
+13:46:58.793 > [PWA]   url: /sw.js
+13:46:58.793 > [PWA]   scope: /
+13:46:58.832 > [PWA] Fallback to precache routes when fetch failed from cache or network:
+13:46:58.832 > [PWA]   document (page): /offline
+13:47:13.237 <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (695kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+13:47:22.604  ⚠ Compiled with warnings
+13:47:22.604 
+13:47:22.604 ./components/LiveGameTracker.js
+13:47:22.604 Attempted import error: 'useLiveGame' is not exported from '../hooks/useGoalserveLive' (imported as 'useLiveGame').
+13:47:22.604 
+13:47:22.604 Import trace for requested module:
+13:47:22.604 ./components/LiveGameTracker.js
+13:47:22.604 
+13:47:22.604 ./components/LiveGameTracker.js
+13:47:22.605 Attempted import error: 'useLiveGame' is not exported from '../hooks/useGoalserveLive' (imported as 'useLiveGame').
+13:47:22.605 
+13:47:22.605 Import trace for requested module:
+13:47:22.605 ./components/LiveGameTracker.js
+13:47:22.605 ./pages/game/[id].js
+13:47:22.605 
+13:47:22.605 ./pages/api/challenges/[id].js
+13:47:22.605 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+13:47:22.605 
+13:47:22.605 Import trace for requested module:
+13:47:22.605 ./pages/api/challenges/[id].js
+13:47:22.605 
+13:47:22.605 ./pages/api/challenges/active.js
+13:47:22.605 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+13:47:22.605 
+13:47:22.605 Import trace for requested module:
+13:47:22.605 ./pages/api/challenges/active.js
+13:47:22.605 
+13:47:22.605 ./pages/api/marketplace/become-capper.js
+13:47:22.605 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+13:47:22.605 
+13:47:22.605 Import trace for requested module:
+13:47:22.606 ./pages/api/marketplace/become-capper.js
+13:47:22.606 
+13:47:22.606 ./pages/api/marketplace/dashboard.js
+13:47:22.606 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+13:47:22.606 
+13:47:22.606 Import trace for requested module:
+13:47:22.606 ./pages/api/marketplace/dashboard.js
+13:47:22.606 
+13:47:22.606 ./pages/api/marketplace/my-subscriptions.js
+13:47:22.606 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+13:47:22.606 
+13:47:22.606 Import trace for requested module:
+13:47:22.606 ./pages/api/marketplace/my-subscriptions.js
+13:47:22.606 
+13:47:22.606 ./pages/api/marketplace/products.js
+13:47:22.606 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+13:47:22.606 
+13:47:22.606 Import trace for requested module:
+13:47:22.606 ./pages/api/marketplace/products.js
+13:47:22.607 
+13:47:22.607 ./pages/api/marketplace/reviews.js
+13:47:22.607 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+13:47:22.607 
+13:47:22.607 Import trace for requested module:
+13:47:22.607 ./pages/api/marketplace/reviews.js
+13:47:22.607 
+13:47:22.607 ./pages/api/marketplace/subscribe.js
+13:47:22.607 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+13:47:22.607 
+13:47:22.607 Import trace for requested module:
+13:47:22.607 ./pages/api/marketplace/subscribe.js
+13:47:22.607 
+13:47:22.607 ./pages/api/pools/current.js
+13:47:22.607 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+13:47:22.607 
+13:47:22.607 Import trace for requested module:
+13:47:22.607 ./pages/api/pools/current.js
+13:47:22.607 
+13:47:22.607 ./pages/api/profile/avatar.js
+13:47:22.607 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+13:47:22.607 
+13:47:22.607 Import trace for requested module:
+13:47:22.607 ./pages/api/profile/avatar.js
+13:47:22.607 
+13:47:22.607 ./pages/api/user/profile.js
+13:47:22.612 Attempted import error: 'authOptions' is not exported from '../auth/[...nextauth]' (imported as 'authOptions').
+13:47:22.612 
+13:47:22.612 Import trace for requested module:
+13:47:22.612 ./pages/api/user/profile.js
+13:47:22.612 
+13:47:22.613    Linting and checking validity of types ...
+13:47:26.657 Failed to compile.
+13:47:26.658 
+13:47:26.658 ./pages/api/profiles/[id].ts:144:9
+13:47:26.658 Type error: Type 'string[]' is not assignable to type 'never[]'.
+13:47:26.658   Type 'string' is not assignable to type 'never'.
+13:47:26.658 
+13:47:26.658 [0m [90m 142 |[39m         [33m:[39m [][33m;[39m[0m
+13:47:26.658 [0m [90m 143 |[39m       [36mconst[39m derivedUnlocked [33m=[39m deriveUnlockedFrameIds({[0m
+13:47:26.658 [0m[31m[1m>[22m[39m[90m 144 |[39m         unlockedFrames[33m:[39m storedUnlocked[33m,[39m[0m
+13:47:26.659 [0m [90m     |[39m         [31m[1m^[22m[39m[0m
+13:47:26.659 [0m [90m 145 |[39m         achievements[33m,[39m[0m
+13:47:26.659 [0m [90m 146 |[39m       })[33m;[39m[0m
+13:47:26.659 [0m [90m 147 |[39m[0m
+13:47:26.680 Next.js build worker exited with code: 1 and signal: null
+13:47:26.739 Error: Command "npm run build" exited with 1
