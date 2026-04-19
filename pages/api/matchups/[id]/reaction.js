@@ -6,12 +6,44 @@ import { eq } from 'drizzle-orm';
 import { publishBattleEvent } from '../../../../lib/battle-events';
 
 // Keep this list in lockstep with REACTION_EMOJIS / REACTION_TEXTS in
-// components/battle/MatchResult.js — only what the UI exposes is accepted.
+// components/battle/MatchResult.js — only what the UI exposes is accepted
+// for the canned strip. Free-text messages take a separate `customText`
+// path with sanitisation, length and rate limits.
 const ALLOWED_EMOJIS = new Set(['👍', '🔥', '😂', '🎯', '👏']);
 const ALLOWED_TEXTS = new Set(['GG', 'Nice!', 'Close one', 'WP']);
 
+const CUSTOM_TEXT_MAX = 60;
+// Light, broad-strokes blocklist. Substring match on the normalized message
+// (lower-cased, alphanumerics only) so common leetspeak/spacing tricks are
+// still caught. Intentionally short — the goal is to filter the obvious
+// stuff, not to be a comprehensive moderation system.
+const PROFANITY_LIST = [
+  'fuck', 'fck', 'shit', 'sht', 'bitch', 'btch', 'cunt', 'asshole',
+  'dick', 'pussy', 'cock', 'faggot', 'fag', 'nigger', 'nigga',
+  'retard', 'slut', 'whore', 'rape', 'kys', 'kkk',
+];
+
+function sanitizeCustomText(raw) {
+  if (typeof raw !== 'string') return null;
+  // Strip control chars (including newlines/tabs) and zero-width chars.
+  let s = raw.replace(/[\u0000-\u001F\u007F\u200B-\u200D\uFEFF]/g, ' ');
+  // Collapse runs of whitespace.
+  s = s.replace(/\s+/g, ' ').trim();
+  if (!s) return null;
+  if (s.length > CUSTOM_TEXT_MAX) s = s.slice(0, CUSTOM_TEXT_MAX);
+  return s;
+}
+
+function containsProfanity(s) {
+  const norm = s.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (!norm) return false;
+  return PROFANITY_LIST.some((w) => norm.includes(w));
+}
+
 const recentByUser = global.__piks_reaction_rl__ || (global.__piks_reaction_rl__ = new Map());
+const recentCustomByUser = global.__piks_reaction_custom_rl__ || (global.__piks_reaction_custom_rl__ = new Map());
 const COOLDOWN_MS = 400;
+const CUSTOM_COOLDOWN_MS = 2500;
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -26,8 +58,13 @@ export default async function handler(req, res) {
 
   const emoji = typeof req.body?.emoji === 'string' ? req.body.emoji : null;
   const text = typeof req.body?.text === 'string' ? req.body.text : null;
-  if (!emoji && !text) {
-    return res.status(400).json({ error: 'emoji or text required' });
+  const customTextRaw = typeof req.body?.customText === 'string' ? req.body.customText : null;
+
+  if (!emoji && !text && !customTextRaw) {
+    return res.status(400).json({ error: 'emoji, text or customText required' });
+  }
+  if (customTextRaw && (emoji || text)) {
+    return res.status(400).json({ error: 'Send customText on its own' });
   }
   if (emoji && !ALLOWED_EMOJIS.has(emoji)) {
     return res.status(400).json({ error: 'Invalid emoji' });
@@ -36,11 +73,34 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid text' });
   }
 
+  let customText = null;
+  if (customTextRaw) {
+    customText = sanitizeCustomText(customTextRaw);
+    if (!customText) {
+      return res.status(400).json({ error: 'Empty message' });
+    }
+    if (containsProfanity(customText)) {
+      return res.status(400).json({ error: 'Message blocked' });
+    }
+  }
+
+  const now = Date.now();
   const rlKey = `${userId}:${id}`;
   const last = recentByUser.get(rlKey) || 0;
-  const now = Date.now();
   if (now - last < COOLDOWN_MS) {
     return res.status(429).json({ error: 'Too fast' });
+  }
+  if (customText) {
+    const lastCustom = recentCustomByUser.get(rlKey) || 0;
+    if (now - lastCustom < CUSTOM_COOLDOWN_MS) {
+      return res.status(429).json({ error: 'Slow down' });
+    }
+    recentCustomByUser.set(rlKey, now);
+    if (recentCustomByUser.size > 5000) {
+      for (const [k, t] of recentCustomByUser) {
+        if (now - t > 60000) recentCustomByUser.delete(k);
+      }
+    }
   }
   recentByUser.set(rlKey, now);
   if (recentByUser.size > 5000) {
@@ -64,13 +124,17 @@ export default async function handler(req, res) {
 
     const fromSide = m.user1Id === userId ? 'user1' : 'user2';
     const recipients = [m.user1Id, m.user2Id].filter(Boolean);
+    // Custom messages render through the same `text` bubble as canned ones,
+    // but we tag them so clients can style or audit if desired.
+    const outText = customText || text || null;
     const payload = {
       type: 'matchup:reaction',
       matchupId: m.id,
       fromUserId: userId,
       fromSide,
       emoji: emoji || null,
-      text: text || null,
+      text: outText,
+      custom: !!customText,
       id: `${now}-${Math.random().toString(36).slice(2, 8)}`,
     };
     publishBattleEvent(recipients, payload);

@@ -398,15 +398,20 @@ export default function BattlePage() {
   const [incomingReaction, setIncomingReaction] = useState(null);
 
   const handleSendReaction = useCallback(async (payload) => {
-    if (!showResult?.id) return;
-    if (showResult?.isFakeOpponent || resultData?.isFakeOpponent) return;
+    if (!showResult?.id) return null;
+    if (showResult?.isFakeOpponent || resultData?.isFakeOpponent) return null;
     try {
-      await fetch(`/api/matchups/${showResult.id}/reaction`, {
+      const res = await fetch(`/api/matchups/${showResult.id}/reaction`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-    } catch {}
+      const data = await res.json().catch(() => null);
+      if (!res.ok) return { error: data?.error || 'Failed' };
+      return data;
+    } catch {
+      return { error: 'Network error' };
+    }
   }, [showResult, resultData]);
 
   // SSE listener for two-sided rematch handshake updates.

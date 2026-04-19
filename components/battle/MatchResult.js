@@ -55,15 +55,22 @@ function PlayerBlock({
         {reactions.map((r) => (
           <div
             key={r.id}
-            className="mr-reaction-float pointer-events-none absolute left-1/2 -translate-x-1/2 -top-2 z-10 whitespace-nowrap"
+            className="mr-reaction-float pointer-events-none absolute left-1/2 -translate-x-1/2 -top-2 z-10 flex items-center justify-center"
+            style={{ maxWidth: 220 }}
           >
             {r.emoji && (
               <span className="text-3xl" style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.6))' }}>{r.emoji}</span>
             )}
             {r.text && (
               <span
-                className="ml-1 inline-block text-xs font-black px-2 py-1 rounded-full text-white align-middle"
-                style={{ background: 'rgba(15,23,42,0.85)', border: '1px solid rgba(255,255,255,0.15)' }}
+                className="ml-1 inline-block text-xs font-black px-2 py-1 rounded-2xl text-white align-middle break-words"
+                style={{
+                  background: 'rgba(15,23,42,0.85)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  maxWidth: 200,
+                  whiteSpace: 'normal',
+                  wordBreak: 'break-word',
+                }}
               >{r.text}</span>
             )}
           </div>
@@ -152,7 +159,11 @@ export default function MatchResult({
   const [copied, setCopied] = useState(false);
   const [myReactions, setMyReactions] = useState([]);
   const [oppReactions, setOppReactions] = useState([]);
+  const [customText, setCustomText] = useState('');
+  const [customSending, setCustomSending] = useState(false);
+  const [customError, setCustomError] = useState('');
   const lastSendRef = useRef(0);
+  const lastCustomSendRef = useRef(0);
   const declineFiredRef = useRef(false);
 
   const isCompleted = matchup && matchup.status === 'completed';
@@ -268,6 +279,32 @@ export default function MatchResult({
     lastSendRef.current = now;
     try { onSendReaction?.(payload); } catch {}
   }, [onSendReaction]);
+
+  const sendCustomMessage = useCallback(async () => {
+    const trimmed = customText.replace(/\s+/g, ' ').trim();
+    if (!trimmed) return;
+    const now = Date.now();
+    if (now - lastCustomSendRef.current < 2500) {
+      setCustomError('Slow down a moment.');
+      return;
+    }
+    lastCustomSendRef.current = now;
+    setCustomSending(true);
+    setCustomError('');
+    try {
+      const r = await onSendReaction?.({ customText: trimmed });
+      if (r && r.error) {
+        // Preserve the draft so the user can edit/retry.
+        setCustomError(typeof r.error === 'string' ? r.error : 'Could not send');
+      } else {
+        setCustomText('');
+      }
+    } catch {
+      setCustomError('Could not send');
+    } finally {
+      setCustomSending(false);
+    }
+  }, [customText, onSendReaction]);
 
   const handleClose = useCallback(() => {
     // Treat closing without accepting as an implicit decline so the
@@ -589,6 +626,38 @@ export default function MatchResult({
                   </button>
                 ))}
               </div>
+              <form
+                className="mt-2 flex items-center gap-2"
+                onSubmit={(e) => { e.preventDefault(); sendCustomMessage(); }}
+              >
+                <input
+                  type="text"
+                  value={customText}
+                  onChange={(e) => { setCustomText(e.target.value); if (customError) setCustomError(''); }}
+                  maxLength={60}
+                  placeholder="Say something…"
+                  aria-label="Send a custom message"
+                  className="flex-1 min-w-0 text-sm text-white placeholder-gray-500 bg-black/40 rounded-full px-3 py-1.5 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                  style={{ border: '1px solid #2a2a2a' }}
+                />
+                <span className="text-[10px] tabular-nums text-gray-500 select-none w-8 text-right">
+                  {Math.max(0, 60 - customText.length)}
+                </span>
+                <button
+                  type="submit"
+                  disabled={customSending || !customText.trim()}
+                  className={`text-xs font-bold px-3 py-1.5 rounded-full transition-colors ${
+                    customSending || !customText.trim()
+                      ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                      : 'bg-cyan-500 text-black hover:bg-cyan-400'
+                  }`}
+                >
+                  Send
+                </button>
+              </form>
+              {customError && (
+                <div className="mt-1 text-[11px] text-red-400 text-left px-1">{customError}</div>
+              )}
             </div>
           )}
 
