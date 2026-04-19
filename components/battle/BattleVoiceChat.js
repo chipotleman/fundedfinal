@@ -471,6 +471,21 @@ export default function BattleVoiceChat() {
   // Tear down on unmount
   useEffect(() => () => teardown(null), [teardown]);
 
+  const [showProbeHelp, setShowProbeHelp] = useState(false);
+
+  // Auto-dismiss the help popover when a re-test succeeds, or when the
+  // pill is no longer in a failed state (e.g. user navigated away).
+  useEffect(() => {
+    if (!showProbeHelp) return;
+    if (probeStatus === VOICE_PROBE_STATUS.SUCCESS) setShowProbeHelp(false);
+    else if (probeStatus === VOICE_PROBE_STATUS.IDLE) setShowProbeHelp(false);
+  }, [probeStatus, showProbeHelp]);
+
+  // Close help if the user enters a call so it doesn't sit on top of the call UI.
+  useEffect(() => {
+    if (state !== 'idle' && showProbeHelp) setShowProbeHelp(false);
+  }, [state, showProbeHelp]);
+
   if (!eligible && state === 'idle' && !statusMessage) return null;
 
   const oppName = incomingSender?.username || opponent?.username || 'Opponent';
@@ -489,6 +504,47 @@ export default function BattleVoiceChat() {
   const probeIsRunning = probeStatus === VOICE_PROBE_STATUS.RUNNING;
   const probeFailed = probeStatus === VOICE_PROBE_STATUS.WARNING || probeStatus === VOICE_PROBE_STATUS.ERROR;
 
+  const probeHelpTips = (() => {
+    const msg = (probeMessage || '').toLowerCase();
+    if (probeStatus === VOICE_PROBE_STATUS.ERROR && msg.includes('not supported')) {
+      return [
+        'Try a recent version of Chrome, Safari, Edge, or Firefox.',
+        'Update your browser if it is more than a year out of date.',
+        "If you're inside another app's browser (like Instagram or TikTok), open this page in your real browser.",
+      ];
+    }
+    if (probeStatus === VOICE_PROBE_STATUS.ERROR && msg.includes("couldn't reach")) {
+      return [
+        'Check that you have an internet connection.',
+        'Turn off any VPN or ad blocker that might be blocking our servers.',
+        'If you are on a work or school network, it may be blocking voice traffic — try mobile data.',
+        'Contact support if the issue keeps happening.',
+      ];
+    }
+    if (probeStatus === VOICE_PROBE_STATUS.ERROR && (msg.includes('initialized') || msg.includes('test connection'))) {
+      return [
+        'Make sure your browser is allowed to use the microphone for this site.',
+        'Close other apps or tabs that may be using your microphone.',
+        'Try refreshing the page, or use a different browser.',
+      ];
+    }
+    if (probeStatus === VOICE_PROBE_STATUS.ERROR) {
+      return [
+        'Switch to a different network — try mobile data instead of Wi-Fi (or vice versa).',
+        'Turn off any VPN, proxy, or firewall that may be blocking calls.',
+        'Restart your router or move closer to it if your signal is weak.',
+        'Contact support if none of these help.',
+      ];
+    }
+    // WARNING — relay was not found, so a strict network is the most likely cause.
+    return [
+      'Switch to mobile data instead of Wi-Fi (or vice versa).',
+      'Turn off your VPN if you have one running.',
+      'Work, school, and hotel networks often block voice calls — try a different network.',
+      'Contact support if it still does not work.',
+    ];
+  })();
+
   return (
     <>
       <audio ref={remoteAudioRef} autoPlay playsInline />
@@ -505,7 +561,11 @@ export default function BattleVoiceChat() {
       {eligible && state === 'idle' && (
         <button
           type="button"
-          onClick={() => runProbe({ force: true })}
+          onClick={() => {
+            if (probeIsRunning) return;
+            if (probeFailed) setShowProbeHelp(v => !v);
+            else runProbe({ force: true });
+          }}
           disabled={probeIsRunning}
           className="fixed z-[55] flex items-center gap-1.5 rounded-full px-2.5 py-1 shadow-md transition-colors"
           style={{
@@ -517,8 +577,9 @@ export default function BattleVoiceChat() {
             cursor: probeIsRunning ? 'default' : 'pointer',
             maxWidth: 'min(80vw, 280px)',
           }}
-          title={probeFailed ? `${probeMessage} Tap to re-test.` : `${probeLabel}. Tap to re-test.`}
-          aria-label={probeFailed ? `${probeLabel}. Tap to re-test voice chat.` : `${probeLabel}. Tap to re-test.`}
+          title={probeFailed ? `${probeMessage} Tap for help.` : `${probeLabel}. Tap to re-test.`}
+          aria-label={probeFailed ? `${probeLabel}. Tap for troubleshooting help.` : `${probeLabel}. Tap to re-test.`}
+          aria-expanded={probeFailed ? showProbeHelp : undefined}
         >
           <span
             className={`w-1.5 h-1.5 rounded-full flex-shrink-0${probeIsRunning ? ' voice-probe-pulse' : ''}`}
@@ -528,6 +589,76 @@ export default function BattleVoiceChat() {
             {probeLabel}
           </span>
         </button>
+      )}
+
+      {/* Help popover — concrete next steps for fixing voice chat issues */}
+      {eligible && state === 'idle' && probeFailed && showProbeHelp && (
+        <>
+          <div
+            className="fixed inset-0 z-[64]"
+            onClick={() => setShowProbeHelp(false)}
+            aria-hidden="true"
+          />
+          <div
+            role="dialog"
+            aria-label="Voice chat troubleshooting"
+            className="fixed z-[65] rounded-xl p-3 shadow-xl"
+            style={{
+              right: '16px',
+              bottom: 'calc(150px + env(safe-area-inset-bottom, 0px))',
+              background: 'rgba(10,10,10,0.97)',
+              border: `1px solid ${probeDot}`,
+              color: '#fff',
+              width: 'min(86vw, 300px)',
+              backdropFilter: 'blur(8px)',
+            }}
+          >
+            <div className="flex items-start gap-2 mb-2">
+              <span
+                className="w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5"
+                style={{ background: probeDot }}
+              />
+              <p className="text-[11px] font-bold uppercase tracking-wider flex-1">
+                {probeLabel}
+              </p>
+              <button
+                type="button"
+                onClick={() => setShowProbeHelp(false)}
+                className="text-gray-400 hover:text-white -mt-1 -mr-1 p-1"
+                aria-label="Close help"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
+                </svg>
+              </button>
+            </div>
+            {probeMessage && (
+              <p className="text-[11px] text-gray-300 mb-2 leading-snug">{probeMessage}</p>
+            )}
+            <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-1">Try this:</p>
+            <ul className="space-y-1.5 mb-3">
+              {probeHelpTips.map((tip, i) => (
+                <li key={i} className="flex gap-2 text-[12px] leading-snug text-gray-100">
+                  <span className="text-gray-500 flex-shrink-0">{i + 1}.</span>
+                  <span>{tip}</span>
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              onClick={() => runProbe({ force: true })}
+              disabled={probeIsRunning}
+              className="w-full py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-colors"
+              style={{
+                background: probeIsRunning ? '#1f2937' : '#2563eb',
+                color: '#fff',
+                cursor: probeIsRunning ? 'default' : 'pointer',
+              }}
+            >
+              {probeIsRunning ? 'Testing…' : 'Re-test voice chat'}
+            </button>
+          </div>
+        </>
       )}
 
       {/* Floating Voice button — shown when eligible and idle */}
