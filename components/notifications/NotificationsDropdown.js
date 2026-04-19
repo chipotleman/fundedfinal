@@ -38,7 +38,8 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
 
   const battleInvites = ctx.battleInvites || [];
   const friendRequests = ctx.friendRequests || [];
-  const total = battleInvites.length + friendRequests.length;
+  const gameResults = ctx.gameResults || [];
+  const total = battleInvites.length + friendRequests.length + gameResults.length;
 
   useEffect(() => {
     if (!open) return;
@@ -134,6 +135,49 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                       onClick={() => wrap(inv.id, async () => { await ctx.declineInvite(inv.id); })}
                       className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-medium py-1.5 rounded-lg disabled:opacity-50"
                     >Decline</button>
+                  </div>
+                </Row>
+              );
+            })}
+          </Section>
+        )}
+
+        {gameResults.length > 0 && (
+          <Section title="Results">
+            {gameResults.map((r) => {
+              const accent = r.outcome === 'won' ? '#34d399' : r.outcome === 'lost' ? '#f87171' : '#facc15';
+              const label = r.outcome === 'won' ? 'Won' : r.outcome === 'lost' ? 'Lost' : 'Graded';
+              const pnl = Number.isFinite(r.pnl) ? r.pnl : 0;
+              const pnlText = `${pnl >= 0 ? '+' : '−'}$${Math.abs(pnl).toFixed(2)}`;
+              return (
+                <Row key={`result:${r.id}`} sender={r.opponent} time={r.endedAt}>
+                  <div className="text-white text-sm font-semibold truncate">
+                    <span style={{ color: accent }}>{label}</span>
+                    {' vs '}
+                    {r.opponent?.username || 'Opponent'}
+                  </div>
+                  <div className="text-gray-400 text-xs">
+                    {r.outcome === 'won' && r.winnerPayout > 0
+                      ? `Payout $${r.winnerPayout.toFixed(2)}`
+                      : `P/L ${pnlText}`}
+                    {r.buyIn > 0 ? ` · $${r.buyIn} buy-in` : ''}
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      disabled={busyId === r.id}
+                      onClick={() => wrap(r.id, async () => {
+                        await ctx.ackGameResult(r.matchupId);
+                        onClose?.();
+                        router.push(`/battle?result=${encodeURIComponent(r.matchupId)}`);
+                      })}
+                      className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
+                      style={{ boxShadow: '0 0 12px rgba(16,185,129,0.45)' }}
+                    >View</button>
+                    <button
+                      disabled={busyId === r.id}
+                      onClick={() => wrap(r.id, async () => { await ctx.ackGameResult(r.matchupId); })}
+                      className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-medium py-1.5 rounded-lg disabled:opacity-50"
+                    >Dismiss</button>
                   </div>
                 </Row>
               );

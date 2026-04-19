@@ -632,6 +632,12 @@ export const matchups = pgTable("matchups", {
   forfeitedById: varchar("forfeited_by_id"),
   forfeitAcknowledgedAt: timestamp("forfeit_acknowledged_at"),
 
+  // Per-user acknowledgment of the game-result alert (won/lost/graded) shown
+  // in the bell dropdown. Cleared (null) until the user dismisses the alert
+  // via /api/notifications/result-ack.
+  user1ResultAckAt: timestamp("user1_result_ack_at"),
+  user2ResultAckAt: timestamp("user2_result_ack_at"),
+
   // Private match code
   privateCode: varchar("private_code", { length: 10 }),
   matchType: varchar("match_type", { length: 20 }).default('random'), // random, friend, private

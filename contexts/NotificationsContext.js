@@ -24,7 +24,8 @@ const EMPTY = {
   battleInvites: [],
   friendRequests: [],
   unreadMessages: [],
-  counts: { battleInvites: 0, friendRequests: 0, unreadMessages: 0, total: 0 },
+  gameResults: [],
+  counts: { battleInvites: 0, friendRequests: 0, unreadMessages: 0, gameResults: 0, total: 0 },
 };
 
 const TYPING_TTL_MS = 4000;
@@ -114,13 +115,15 @@ export function NotificationsProvider({ children }) {
       const battleInvites = json.battleInvites || [];
       const friendRequests = json.friendRequests || [];
       const unreadMessages = json.unreadMessages || [];
+      const gameResults = json.gameResults || [];
       const counts = {
         battleInvites: battleInvites.length,
         friendRequests: friendRequests.length,
         unreadMessages: unreadMessages.length,
-        total: battleInvites.length + friendRequests.length + unreadMessages.length,
+        gameResults: gameResults.length,
+        total: battleInvites.length + friendRequests.length + unreadMessages.length + gameResults.length,
       };
-      setData({ battleInvites, friendRequests, unreadMessages, counts });
+      setData({ battleInvites, friendRequests, unreadMessages, gameResults, counts });
 
       // Catch-up path: if the API found a recent forfeit win that the SSE push
       // may have missed, dispatch it so MatchupContext can surface the modal.
@@ -351,6 +354,38 @@ export function NotificationsProvider({ children }) {
     }
   }, [isAuthed, refresh]);
 
+  const ackGameResult = useCallback(async (matchupId) => {
+    if (!matchupId) return;
+    // Optimistically remove the result from local state.
+    setData(prev => {
+      const remaining = (prev.gameResults || []).filter(r => r.matchupId !== matchupId);
+      if (remaining.length === (prev.gameResults || []).length) return prev;
+      return {
+        ...prev,
+        gameResults: remaining,
+        counts: {
+          ...prev.counts,
+          gameResults: remaining.length,
+          total: prev.counts.battleInvites + prev.counts.friendRequests + prev.counts.unreadMessages + remaining.length,
+        },
+      };
+    });
+    try {
+      const res = await fetch('/api/notifications/result-ack', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ matchupId }),
+      });
+      if (!res.ok) {
+        // Server rejected the ack — re-sync so the list reflects the truth.
+        refresh();
+      }
+    } catch {
+      refresh();
+    }
+  }, [refresh]);
+
   const declineFriend = useCallback(async (id) => {
     try {
       await fetch(`/api/friends/${id}`, {
@@ -372,6 +407,7 @@ export function NotificationsProvider({ children }) {
     declineInvite,
     acceptFriend,
     declineFriend,
+    ackGameResult,
     markMessagesRead,
     typingSenderIds,
     notifyTyping,

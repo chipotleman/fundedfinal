@@ -57,6 +57,7 @@ function Avatar({ user, size = 40, isOnline = false, onlineDotBorderColor = '#0a
 function NotificationsFeed({ ctx, router }) {
   const battleInvites = ctx.battleInvites || [];
   const friendRequests = ctx.friendRequests || [];
+  const gameResults = ctx.gameResults || [];
   const [busyId, setBusyId] = useState(null);
 
   const wrap = async (id, fn) => {
@@ -64,7 +65,7 @@ function NotificationsFeed({ ctx, router }) {
     try { await fn(); } finally { setBusyId(null); }
   };
 
-  const totalNew = battleInvites.length + friendRequests.length;
+  const totalNew = battleInvites.length + friendRequests.length + gameResults.length;
   const empty = totalNew === 0;
 
   const cardBg = '#0a0a0a';
@@ -155,6 +156,64 @@ function NotificationsFeed({ ctx, router }) {
                 </div>
                 <span className="text-[10px] flex-shrink-0 mt-1" style={{ color: textSecondary }}>
                   {timeAgo(inv.createdAt)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {gameResults.length > 0 && (
+        <div>
+          <div
+            className="px-4 pt-3 pb-1 text-[11px] uppercase tracking-wider font-semibold"
+            style={{ color: textSecondary }}
+          >
+            Results
+          </div>
+          {gameResults.map((r) => {
+            const accent = r.outcome === 'won' ? '#34d399' : r.outcome === 'lost' ? '#f87171' : '#facc15';
+            const label = r.outcome === 'won' ? 'Won' : r.outcome === 'lost' ? 'Lost' : 'Graded';
+            const pnl = Number.isFinite(r.pnl) ? r.pnl : 0;
+            const pnlText = `${pnl >= 0 ? '+' : '−'}$${Math.abs(pnl).toFixed(2)}`;
+            return (
+              <div
+                key={`result:${r.id}`}
+                className="px-4 py-3 flex items-start gap-3"
+                style={{ borderTop: `1px solid ${cardBorder}` }}
+              >
+                <Avatar user={r.opponent} onlineDotBorderColor={cardBg} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
+                    <span style={{ color: accent }}>{label}</span>
+                    {' vs '}
+                    {r.opponent?.username || 'Opponent'}
+                  </div>
+                  <div className="text-xs" style={{ color: textSecondary }}>
+                    {r.outcome === 'won' && r.winnerPayout > 0
+                      ? `Payout $${r.winnerPayout.toFixed(2)}`
+                      : `P/L ${pnlText}`}
+                    {r.buyIn > 0 ? ` · $${r.buyIn} buy-in` : ''}
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      disabled={busyId === r.id}
+                      onClick={() => wrap(r.id, async () => {
+                        await ctx.ackGameResult(r.matchupId);
+                        router.push(`/battle?result=${encodeURIComponent(r.matchupId)}`);
+                      })}
+                      className="bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-50"
+                      style={{ boxShadow: '0 0 12px rgba(16,185,129,0.45)' }}
+                    >View</button>
+                    <button
+                      disabled={busyId === r.id}
+                      onClick={() => wrap(r.id, () => ctx.ackGameResult(r.matchupId))}
+                      className="text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50 bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10"
+                    >Dismiss</button>
+                  </div>
+                </div>
+                <span className="text-[10px] flex-shrink-0 mt-1" style={{ color: textSecondary }}>
+                  {timeAgo(r.endedAt)}
                 </span>
               </div>
             );

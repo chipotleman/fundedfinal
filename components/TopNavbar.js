@@ -28,7 +28,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
   const { data: session, status } = useSession();
   const { hasActiveMatchup, myBalance: matchupBalance, matchup: activeMatchup, opponent: activeOpponent } = useMatchup();
   const { counts: notifCounts } = useNotifications();
-  const notifAlerts = (notifCounts?.battleInvites || 0) + (notifCounts?.friendRequests || 0);
+  const notifAlerts = (notifCounts?.battleInvites || 0) + (notifCounts?.friendRequests || 0) + (notifCounts?.gameResults || 0);
   const notifMessages = notifCounts?.unreadMessages || 0;
   const notifTotal = notifAlerts;
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
