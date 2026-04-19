@@ -26,7 +26,7 @@ export default function MessagePopup({ isOpen, friend, ctx, myId, onClose }) {
   if (!isOpen || !friend) return null;
 
   const cardBg = '#0a0a0a';
-  const cardBorder = 'rgba(16,185,129,0.22)';
+  const cardBorder = 'rgba(59,130,246,0.22)';
 
   return (
     <div
@@ -44,7 +44,7 @@ export default function MessagePopup({ isOpen, friend, ctx, myId, onClose }) {
         style={{
           backgroundColor: cardBg,
           border: `1px solid ${cardBorder}`,
-          boxShadow: '0 0 0 1px rgba(16,185,129,0.08), 0 25px 50px rgba(0,0,0,0.5)',
+          boxShadow: '0 0 0 1px rgba(59,130,246,0.08), 0 25px 50px rgba(0,0,0,0.5)',
           height: 'min(80vh, 640px)',
           maxHeight: '92dvh',
           overflow: 'hidden',
@@ -73,7 +73,7 @@ export default function MessagePopup({ isOpen, friend, ctx, myId, onClose }) {
           <button
             type="button"
             onClick={() => { onClose?.(); router.push(`/messenger?chat=${friend.id}`); }}
-            className="text-[11px] font-semibold text-emerald-300 hover:text-emerald-200 transition-colors"
+            className="text-[11px] font-semibold text-blue-400 hover:text-blue-300 transition-colors"
           >
             Open full conversation →
           </button>
