@@ -597,7 +597,14 @@ export const matchups = pgTable("matchups", {
   status: varchar("status", { length: 50 }).default('waiting').notNull(), // waiting, matched, active, completed, cancelled
   winnerId: varchar("winner_id"),
   winnerType: varchar("winner_type", { length: 20 }), // user1, user2, tie
-  
+
+  // Forfeit notification persistence — survives server restarts so the
+  // winner still sees the WonByForfeitModal on first load after a deploy.
+  // forfeitedById is set to the loser's user id when the forfeit endpoint
+  // runs; forfeitAcknowledgedAt is set when the winner dismisses the modal.
+  forfeitedById: varchar("forfeited_by_id"),
+  forfeitAcknowledgedAt: timestamp("forfeit_acknowledged_at"),
+
   // Private match code
   privateCode: varchar("private_code", { length: 10 }),
   matchType: varchar("match_type", { length: 20 }).default('random'), // random, friend, private

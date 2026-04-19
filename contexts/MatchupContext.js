@@ -236,14 +236,24 @@ export function MatchupProvider({ children }) {
   }, [status, session?.user?.id, fetchCurrentMatchup]);
 
   const acknowledgeForfeit = useCallback(() => {
-    if (!forfeitNotice?.matchupId) {
+    const matchupId = forfeitNotice?.matchupId;
+    if (!matchupId) {
       setForfeitNotice(null);
       return;
     }
     const acks = readForfeitAcks();
-    acks.add(forfeitNotice.matchupId);
+    acks.add(matchupId);
     writeForfeitAcks(acks);
     setForfeitNotice(null);
+    // Persist the acknowledgement server-side so the modal doesn't
+    // resurface on the next /api/matchups/current or /api/notifications
+    // poll (especially after a server restart that wipes sessionStorage's
+    // counterpart in-memory event bus).
+    fetch('/api/battles/forfeit-ack', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ matchupId }),
+    }).catch(() => {});
   }, [forfeitNotice?.matchupId]);
 
   const matchup = matchupData?.matchup;

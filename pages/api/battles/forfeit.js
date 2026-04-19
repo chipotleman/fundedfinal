@@ -61,6 +61,12 @@ export default async function handler(req, res) {
           platformFee: platformFee.toString(),
           endsAt: now,
           updatedAt: now,
+          // Persist a "pending forfeit win" flag so the winner still sees
+          // the WonByForfeitModal even if the SSE server restarts before
+          // they next load the app. Cleared via /api/battles/forfeit-ack
+          // when the winner dismisses the modal.
+          forfeitedById: userId,
+          forfeitAcknowledgedAt: null,
         })
         .where(and(
           eq(matchups.id, matchup.id),

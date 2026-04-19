@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { messages, friendships, battleInvites, profiles, users, matchups, fakeOpponents } from '../../../shared/schema';
-import { eq, and, desc, lt, inArray, gte } from 'drizzle-orm';
+import { eq, and, desc, lt, inArray, gte, isNotNull, isNull } from 'drizzle-orm';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -108,20 +108,20 @@ export default async function handler(req, res) {
       total: battleInvitesOut.length + friendRequestsOut.length + messagesOut.length,
     };
 
-    // Catch-up: look for a recent forfeit win that the client's SSE may have
-    // missed (e.g. during a reconnect window or while the tab was backgrounded).
-    // A 5-minute window balances coverage against unnecessary DB work.
-    // Detection mirrors /api/matchups/current: early-end OR loser busted to zero.
+    // Catch-up: surface any pending forfeit win for this user. Backed by
+    // the persistent matchups.forfeitedById / forfeitAcknowledgedAt columns
+    // so the modal still appears after a server restart or any gap — no
+    // time window required. Cleared via /api/battles/forfeit-ack on dismiss.
     let recentForfeitWin = null;
     try {
-      const since = new Date(Date.now() - 5 * 60 * 1000);
       const recentWon = await db
         .select()
         .from(matchups)
         .where(and(
           eq(matchups.winnerId, userId),
           eq(matchups.status, 'completed'),
-          gte(matchups.endsAt, since),
+          isNotNull(matchups.forfeitedById),
+          isNull(matchups.forfeitAcknowledgedAt),
         ))
         .orderBy(desc(matchups.endsAt))
         .limit(1);
@@ -129,32 +129,23 @@ export default async function handler(req, res) {
       if (recentWon.length > 0) {
         const r = recentWon[0];
         const loserId = r.user1Id === userId ? r.user2Id : r.user1Id;
-        const loserFinalBalance = r.user1Id === userId ? r.user2FinalBalance : r.user1FinalBalance;
-        const startMs = r.startsAt ? new Date(r.startsAt).getTime() : null;
-        const endMs = r.endsAt ? new Date(r.endsAt).getTime() : null;
-        const dur = (r.durationMinutes || 0) * 60 * 1000;
-        const earlyEnd = startMs && endMs && dur && (startMs + dur - endMs) > 60_000;
-        const loserBustedToZero = loserFinalBalance != null && parseFloat(loserFinalBalance) === 0;
-
-        if (earlyEnd || loserBustedToZero) {
-          let loserProfile = { username: 'Opponent', avatar: null };
-          if (r.isFakeOpponent && r.fakeOpponentId) {
-            const [fake] = await db.select().from(fakeOpponents).where(eq(fakeOpponents.id, r.fakeOpponentId));
-            if (fake) loserProfile = { username: fake.displayName, avatar: fake.avatar };
-          } else if (loserId) {
-            const [lp] = await db
-              .select({ username: profiles.username, avatar: profiles.avatar })
-              .from(profiles)
-              .where(eq(profiles.id, loserId));
-            if (lp) loserProfile = { username: lp.username || 'Opponent', avatar: lp.avatar };
-          }
-          recentForfeitWin = {
-            matchupId: r.id,
-            winnerId: userId,
-            winnerPayout: parseFloat(r.winnerPayout || 0),
-            loser: loserProfile,
-          };
+        let loserProfile = { username: 'Opponent', avatar: null };
+        if (r.isFakeOpponent && r.fakeOpponentId) {
+          const [fake] = await db.select().from(fakeOpponents).where(eq(fakeOpponents.id, r.fakeOpponentId));
+          if (fake) loserProfile = { username: fake.displayName, avatar: fake.avatar };
+        } else if (loserId) {
+          const [lp] = await db
+            .select({ username: profiles.username, avatar: profiles.avatar })
+            .from(profiles)
+            .where(eq(profiles.id, loserId));
+          if (lp) loserProfile = { username: lp.username || 'Opponent', avatar: lp.avatar };
         }
+        recentForfeitWin = {
+          matchupId: r.id,
+          winnerId: userId,
+          winnerPayout: parseFloat(r.winnerPayout || 0),
+          loser: loserProfile,
+        };
       }
     } catch (_e) {}
 
