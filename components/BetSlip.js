@@ -69,6 +69,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
   // if the matchup record disappears from context entirely.
   const lastActiveSnapshotRef = useRef(null);
   const prevHadActiveMatchupRef = useRef(false);
+  const receiptTimerRef = useRef(null);
 
   // Clear sticky head-to-head state on any navigation away from the
   // battle view. We listen for routeChangeStart so the bet slip header
@@ -84,6 +85,12 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
     router.events.on('routeChangeStart', handler);
     return () => router.events.off('routeChangeStart', handler);
   }, [router]);
+
+  useEffect(() => {
+    return () => {
+      if (receiptTimerRef.current) clearTimeout(receiptTimerRef.current);
+    };
+  }, []);
 
   useEffect(() => {
     if (!isOpen) {
@@ -551,6 +558,15 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
         setTimeout(() => {
           setShowPikPlacedBadge(false);
         }, 3000);
+
+        // Auto-dismiss receipt after 10 seconds
+        if (receiptTimerRef.current) clearTimeout(receiptTimerRef.current);
+        receiptTimerRef.current = setTimeout(() => {
+          setShowReceipt(false);
+          setCurrentReceipt(null);
+          setShowPikPlacedBadge(false);
+          receiptTimerRef.current = null;
+        }, 10000);
       }
 
       setShowCoinRain(true);
@@ -1231,11 +1247,11 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
           onClick={(e) => {
             // Guard against ghost-click from the tap that placed the bet
             const openedAt = e.currentTarget.dataset.openedAt;
-            if (openedAt && Date.now() - parseInt(openedAt) < 600) return;
+            if (openedAt && Date.now() - parseInt(openedAt) < 1000) return;
+            if (receiptTimerRef.current) { clearTimeout(receiptTimerRef.current); receiptTimerRef.current = null; }
             setShowReceipt(false);
             setCurrentReceipt(null);
             setShowPikPlacedBadge(false);
-            onClose();
           }}
           ref={(el) => { if (el && !el.dataset.openedAt) el.dataset.openedAt = String(Date.now()); }}
         >
@@ -1245,10 +1261,10 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
           >
             <button
               onClick={() => {
+                if (receiptTimerRef.current) { clearTimeout(receiptTimerRef.current); receiptTimerRef.current = null; }
                 setShowReceipt(false);
                 setCurrentReceipt(null);
                 setShowPikPlacedBadge(false);
-                onClose();
               }}
               className="absolute -top-1 -right-1 z-10 w-5 h-5 flex items-center justify-center rounded-full text-gray-400 hover:text-white transition-colors" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}
             >
