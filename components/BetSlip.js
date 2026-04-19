@@ -747,8 +747,15 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                 <div className="absolute left-[-35px] top-1/2 -translate-y-1/2 w-[140px] h-[140px]"></div>
                 <div className="flex items-center gap-2 ml-auto mt-[2px] flex-wrap justify-end">
                 {isLoggedIn && hasActiveMatchup && (
-                  <div className="flex items-center gap-1.5 bg-green-500/20 border border-green-500/50 px-2.5 py-1 rounded-full">
-                    <span className="text-green-400 text-xs font-bold">${formatMoney(bankroll, 0)}</span>
+                  <div
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
+                    style={{
+                      background: 'linear-gradient(180deg, rgba(251,146,60,0.15) 0%, rgba(194,65,12,0.08) 100%)',
+                      border: '1px solid rgba(251,146,60,0.45)',
+                    }}
+                  >
+                    <span className="text-xs leading-none" style={{ color: '#fb923c' }}>⚔</span>
+                    <span className="text-xs font-bold" style={{ color: '#fed7aa' }}>{formatMoney(bankroll, 0)}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-1.5 bg-blue-500/20 border border-blue-500/50 px-2.5 py-1 rounded-full">
@@ -1176,8 +1183,9 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                                   </div>
                                   <div className="text-right min-w-[70px]">
                                     <div className="text-gray-500 text-[10px] uppercase tracking-wide">To Win</div>
-                                    <div className="text-green-400 font-bold text-lg">
-                                      ${bet.stake ? formatMoney(calculatePayout(bet.odds, bet.stake) - bet.stake) : '0.00'}
+                                    <div className="font-bold text-lg flex items-center justify-end gap-1">
+                                      <span className="leading-none" style={{ color: '#fb923c' }}>⚔</span>
+                                      <span style={{ color: '#fed7aa' }}>{bet.stake ? formatMoney(calculatePayout(bet.odds, bet.stake) - bet.stake, 0) : '0'}</span>
                                     </div>
                                   </div>
                                 </div>
@@ -1281,11 +1289,17 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                 <div className="rounded-lg p-3 mb-4" style={{ backgroundColor: 'rgba(15, 23, 42, 0.5)' }}>
                   <div className="flex justify-between text-sm mb-2">
                     <span style={{ color: '#9ca3af' }}>Total Pikked</span>
-                    <span className="font-bold" style={{ color: '#ffffff' }}>${formatMoney(totalStake)}</span>
+                    <span className="font-bold inline-flex items-center gap-1">
+                      <span className="leading-none" style={{ color: '#fb923c' }}>⚔</span>
+                      <span style={{ color: '#fed7aa' }}>{formatMoney(totalStake, 0)}</span>
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span style={{ color: '#9ca3af' }}>Potential Payout</span>
-                    <span className="text-green-400 font-bold text-lg">${formatMoney(totalPayout)}</span>
+                    <span className="font-bold text-lg inline-flex items-center gap-1">
+                      <span className="leading-none" style={{ color: '#fb923c' }}>⚔</span>
+                      <span className="text-green-400">{formatMoney(totalPayout, 0)}</span>
+                    </span>
                   </div>
                 </div>
 
