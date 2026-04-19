@@ -46,8 +46,8 @@ export default function ForfeitConfirmedModal({ isOpen, onClose, opponent, payou
       className="fixed z-[100] pointer-events-none"
       style={{
         left: '50%',
-        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
-        transform: `translate(-50%, ${show ? '0' : '20px'})`,
+        top: 'calc(var(--top-nav-height, 70px) + 12px)',
+        transform: `translate(-50%, ${show ? '0' : '-20px'})`,
         opacity: show ? 1 : 0,
         transition: 'transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 220ms ease',
         width: 'min(420px, calc(100vw - 24px))',
