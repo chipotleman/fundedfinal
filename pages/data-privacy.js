@@ -1,10 +1,8 @@
 import { useState } from 'react';
-import { useTheme } from '../contexts/ThemeContext';
 import TopNavbar from '../components/TopNavbar';
 import Footer from '../components/Footer';
 
 export default function DataPrivacyRequest() {
-  const { isDarkMode } = useTheme();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -23,15 +21,15 @@ export default function DataPrivacyRequest() {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: isDarkMode ? '#000000' : '#f5f5f5' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#000000' }}>
       <TopNavbar />
       <div className="px-4 sm:px-6 lg:px-8 py-8 pt-24">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+          <h1 className="text-3xl font-bold mb-8" style={{ color: '#ffffff' }}>
             Data Privacy Request
           </h1>
           
-          <div className="space-y-6" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+          <div className="space-y-6" style={{ color: '#d1d5db' }}>
             <p>
               You have the right to request access to, correction of, or deletion of your personal data. Use the form below to submit your request.
             </p>
@@ -39,9 +37,9 @@ export default function DataPrivacyRequest() {
             {submitted ? (
               <div 
                 className="p-6 rounded-lg text-center"
-                style={{ backgroundColor: isDarkMode ? '#1f2937' : '#e5e7eb' }}
+                style={{ backgroundColor: '#1f2937' }}
               >
-                <h2 className="text-xl font-semibold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                <h2 className="text-xl font-semibold mb-2" style={{ color: '#ffffff' }}>
                   Request Submitted
                 </h2>
                 <p>
@@ -51,7 +49,7 @@ export default function DataPrivacyRequest() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#ffffff' }}>
                     Full Name
                   </label>
                   <input
@@ -62,15 +60,15 @@ export default function DataPrivacyRequest() {
                     required
                     className="w-full px-4 py-2 rounded-lg border"
                     style={{
-                      backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
-                      borderColor: isDarkMode ? '#374151' : '#d1d5db',
-                      color: isDarkMode ? '#ffffff' : '#000000'
+                      backgroundColor: '#1f2937',
+                      borderColor: '#374151',
+                      color: '#ffffff'
                     }}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#ffffff' }}>
                     Email Address
                   </label>
                   <input
@@ -81,15 +79,15 @@ export default function DataPrivacyRequest() {
                     required
                     className="w-full px-4 py-2 rounded-lg border"
                     style={{
-                      backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
-                      borderColor: isDarkMode ? '#374151' : '#d1d5db',
-                      color: isDarkMode ? '#ffffff' : '#000000'
+                      backgroundColor: '#1f2937',
+                      borderColor: '#374151',
+                      color: '#ffffff'
                     }}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#ffffff' }}>
                     Request Type
                   </label>
                   <select
@@ -99,9 +97,9 @@ export default function DataPrivacyRequest() {
                     required
                     className="w-full px-4 py-2 rounded-lg border"
                     style={{
-                      backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
-                      borderColor: isDarkMode ? '#374151' : '#d1d5db',
-                      color: isDarkMode ? '#ffffff' : '#000000'
+                      backgroundColor: '#1f2937',
+                      borderColor: '#374151',
+                      color: '#ffffff'
                     }}
                   >
                     <option value="">Select a request type</option>
@@ -114,7 +112,7 @@ export default function DataPrivacyRequest() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#ffffff' }}>
                     Additional Details
                   </label>
                   <textarea
@@ -124,9 +122,9 @@ export default function DataPrivacyRequest() {
                     rows={4}
                     className="w-full px-4 py-2 rounded-lg border"
                     style={{
-                      backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
-                      borderColor: isDarkMode ? '#374151' : '#d1d5db',
-                      color: isDarkMode ? '#ffffff' : '#000000'
+                      backgroundColor: '#1f2937',
+                      borderColor: '#374151',
+                      color: '#ffffff'
                     }}
                     placeholder="Please provide any additional information about your request..."
                   />
@@ -145,9 +143,9 @@ export default function DataPrivacyRequest() {
               </form>
             )}
 
-            <p className="text-sm" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>
+            <p className="text-sm" style={{ color: '#9ca3af' }}>
               You can also submit requests by emailing{' '}
-              <a href="mailto:help@thepiks.com" className="underline" style={{ color: isDarkMode ? '#60a5fa' : '#2563eb' }}>
+              <a href="mailto:help@thepiks.com" className="underline" style={{ color: '#60a5fa' }}>
                 help@thepiks.com
               </a>
             </p>

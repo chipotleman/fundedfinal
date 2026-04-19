@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-import { useTheme } from '../../contexts/ThemeContext';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
 
 const GAME_MODE_OPTIONS = [
@@ -65,7 +64,6 @@ const TIPS = [
 ];
 
 export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound }) {
-  const { isDarkMode } = useTheme();
   useModalScrollLock(isOpen);
   const [step, setStep] = useState('config');
   const [buyIn, setBuyIn] = useState(10);
@@ -307,34 +305,32 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
   const matchedAvatar = matchedOpponent?.avatar || currentAvatar || null;
 
   const th = {
-    overlay: isDarkMode ? 'bg-black/85' : 'bg-black/40',
-    cardBg: isDarkMode ? '#0d0d0d' : '#ffffff',
-    cardBorder: isDarkMode ? '#1a1a1a' : '#e5e7eb',
-    headerText: isDarkMode ? 'text-white' : 'text-gray-900',
-    subText: isDarkMode ? 'text-gray-400' : 'text-gray-500',
-    labelText: isDarkMode ? 'text-gray-400' : 'text-gray-500',
-    btnBg: isDarkMode ? '#111' : '#f3f4f6',
-    btnBorder: isDarkMode ? '#1a1a1a' : '#e5e7eb',
-    btnText: isDarkMode ? 'text-gray-300' : 'text-gray-700',
-    modeText: isDarkMode ? 'text-white' : 'text-gray-900',
-    modeDesc: isDarkMode ? 'text-gray-500' : 'text-gray-500',
-    modeBtnBg: isDarkMode ? '#111' : '#f9fafb',
-    infoBg: isDarkMode ? '#111' : '#f3f4f6',
-    infoBorder: isDarkMode ? '#1a1a1a' : '#e5e7eb',
-    infoLabel: isDarkMode ? 'text-gray-400' : 'text-gray-500',
-    infoValue: isDarkMode ? 'text-white' : 'text-gray-900',
-    searchBg: isDarkMode
-      ? 'linear-gradient(135deg, #020a18 0%, #0a1628 30%, #0d1a30 60%, #050d1a 100%)'
-      : 'linear-gradient(135deg, #f0f4ff 0%, #e8edf5 30%, #f5f7fa 60%, #eef2f7 100%)',
-    avatarBg1: isDarkMode ? '#0c1a35' : '#dbeafe',
-    avatarBg2: isDarkMode ? '#1a0a00' : '#fff7ed',
-    nameText: isDarkMode ? 'text-white' : 'text-gray-900',
-    foundBg: isDarkMode ? '#0d0d0d' : '#ffffff',
-    cancelBg: isDarkMode ? '#111' : '#f3f4f6',
-    cancelBorder: isDarkMode ? '#222' : '#d1d5db',
-    cancelText: isDarkMode ? 'text-gray-300' : 'text-gray-600',
-    closeBtn: isDarkMode ? 'text-gray-400 hover:text-white' : 'text-gray-400 hover:text-gray-700',
-    fallbackText: isDarkMode ? 'text-white/60' : 'text-gray-400',
+    overlay: 'bg-black/85',
+    cardBg: '#0d0d0d',
+    cardBorder: '#1a1a1a',
+    headerText: 'text-white',
+    subText: 'text-gray-400',
+    labelText: 'text-gray-400',
+    btnBg: '#111',
+    btnBorder: '#1a1a1a',
+    btnText: 'text-gray-300',
+    modeText: 'text-white',
+    modeDesc: 'text-gray-500',
+    modeBtnBg: '#111',
+    infoBg: '#111',
+    infoBorder: '#1a1a1a',
+    infoLabel: 'text-gray-400',
+    infoValue: 'text-white',
+    searchBg: 'linear-gradient(135deg, #020a18 0%, #0a1628 30%, #0d1a30 60%, #050d1a 100%)',
+    avatarBg1: '#0c1a35',
+    avatarBg2: '#1a0a00',
+    nameText: 'text-white',
+    foundBg: '#0d0d0d',
+    cancelBg: '#111',
+    cancelBorder: '#222',
+    cancelText: 'text-gray-300',
+    closeBtn: 'text-gray-400 hover:text-white',
+    fallbackText: 'text-white/60',
   };
 
   return (
@@ -415,7 +411,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
         }
       `}</style>
       <div className={`fixed inset-0 ${th.overlay} backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto`} onClick={() => { if (step === 'found') return; if (step === 'searching') { cancelSearch(); } onClose(); }}>
-        <div className="rounded-2xl max-w-md w-full overflow-hidden my-auto" style={{ backgroundColor: th.cardBg, border: `1px solid ${th.cardBorder}`, boxShadow: isDarkMode ? 'none' : '0 25px 50px -12px rgba(0,0,0,0.15)' }} onClick={e => e.stopPropagation()}>
+        <div className="rounded-2xl max-w-md w-full overflow-hidden my-auto" style={{ backgroundColor: th.cardBg, border: `1px solid ${th.cardBorder}`, boxShadow: 'none' }} onClick={e => e.stopPropagation()}>
           {step === 'config' && (
             <>
               <div className="p-5" style={{ borderBottom: `1px solid ${th.cardBorder}` }}>

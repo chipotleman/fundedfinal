@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useSession } from 'next-auth/react';
-import { useTheme } from '../contexts/ThemeContext';
 import ForfeitModal from './battle/ForfeitModal';
 import ConnectionBadge from './battle/ConnectionBadge';
 import { formatMoney } from '../utils/formatMoney';
@@ -133,7 +132,6 @@ export default function ActiveBattleCard({
   const [showForfeitModal, setShowForfeitModal] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { data: session } = useSession();
-  const { isDarkMode } = useTheme();
   const { oppSpeaking } = useVoiceChat();
 
   useEffect(() => { setMounted(true); }, []);
@@ -414,7 +412,7 @@ export default function ActiveBattleCard({
             <div className="flex min-h-full items-start justify-center p-4 pt-4 md:pt-8">
               <div
                 className="relative w-full max-w-lg rounded-2xl overflow-hidden"
-                style={{ background: isDarkMode ? '#0a0a0a' : '#ffffff', border: `1px solid ${isDarkMode ? `rgba(${theme.accentRgb},0.2)` : '#e5e7eb'}` }}
+                style={{ background: '#0a0a0a', border: `1px solid ${`rgba(${theme.accentRgb},0.2)`}` }}
                 onClick={e => e.stopPropagation()}
               >
                 <div className="relative overflow-hidden" style={{ background: theme.cardBg }}>
@@ -449,7 +447,7 @@ export default function ActiveBattleCard({
                       </div>
                       <button
                         onClick={() => setShowModal(false)}
-                        className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${isDarkMode ? 'bg-white/5 hover:bg-white/10' : 'bg-white/20 hover:bg-white/30'}`}
+                        className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${'bg-white/5 hover:bg-white/10'}`}
                       >
                         <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -560,13 +558,13 @@ export default function ActiveBattleCard({
                   </div>
                 </div>
 
-                <div className="px-4 pt-3 pb-4 space-y-3" style={{ background: isDarkMode ? '#0a0a0a' : '#ffffff' }}>
+                <div className="px-4 pt-3 pb-4 space-y-3" style={{ background: '#0a0a0a' }}>
                   {showUngradedWarning && (
                     <div
                       className="rounded-lg px-3 py-2 flex items-start gap-2"
                       style={{
-                        background: isDarkMode ? 'rgba(202,138,4,0.15)' : 'rgba(254,243,199,0.9)',
-                        border: `1px solid ${isDarkMode ? 'rgba(234,179,8,0.45)' : 'rgba(202,138,4,0.4)'}`,
+                        background: 'rgba(202,138,4,0.15)',
+                        border: `1px solid ${'rgba(234,179,8,0.45)'}`,
                       }}
                     >
                       <span className="text-base leading-none mt-0.5">⚠️</span>
@@ -574,14 +572,14 @@ export default function ActiveBattleCard({
                         <div className="text-[11px] font-bold uppercase tracking-wide text-yellow-400 leading-tight">
                           {ungradedLabel} may not grade in time
                         </div>
-                        <div className={`text-[11px] mt-0.5 leading-snug ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        <div className={`text-[11px] mt-0.5 leading-snug ${'text-gray-300'}`}>
                           The battle ends in {formatTimer(timeRemaining)}. Any pik whose game hasn’t finished by then is automatically forfeited toward your battle score.
                         </div>
                       </div>
                     </div>
                   )}
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="rounded-xl p-3" style={{ background: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
+                    <div className="rounded-xl p-3" style={{ background: '#111', border: `1px solid ${'#1a1a1a'}` }}>
                       <div className="flex items-center gap-1.5 mb-2.5">
                         <div className="w-1.5 h-1.5 rounded-full" style={{ background: theme.accentColor }} />
                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{userName}</span>
@@ -589,7 +587,7 @@ export default function ActiveBattleCard({
                       <div className="space-y-2">
                         <div className="flex justify-between items-baseline">
                           <span className="text-[10px] text-gray-500">Balance</span>
-                          <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${formatMoney(myBalanceNum, 0)}</span>
+                          <span className={`text-sm font-bold ${'text-white'}`}>${formatMoney(myBalanceNum, 0)}</span>
                         </div>
                         <div className="flex justify-between items-baseline">
                           <span className="text-[10px] text-gray-500">P&L</span>
@@ -599,7 +597,7 @@ export default function ActiveBattleCard({
                         </div>
                         <div className="flex justify-between items-baseline">
                           <span className="text-[10px] text-gray-500">Piks</span>
-                          <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{myBetsCount}</span>
+                          <span className={`text-sm font-bold ${'text-white'}`}>{myBetsCount}</span>
                         </div>
                         <div className="flex justify-between items-baseline">
                           <span className="text-[10px] text-gray-500">Min Piks Left</span>
@@ -610,7 +608,7 @@ export default function ActiveBattleCard({
                       </div>
                     </div>
 
-                    <div className="rounded-xl p-3" style={{ background: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
+                    <div className="rounded-xl p-3" style={{ background: '#111', border: `1px solid ${'#1a1a1a'}` }}>
                       <div className="flex items-center gap-1.5 mb-2.5">
                         <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
                         <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider truncate">{opponent.username || 'Opponent'}</span>
@@ -618,7 +616,7 @@ export default function ActiveBattleCard({
                       <div className="space-y-2">
                         <div className="flex justify-between items-baseline">
                           <span className="text-[10px] text-gray-500">Balance</span>
-                          <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${formatMoney(oppBalanceNum, 0)}</span>
+                          <span className={`text-sm font-bold ${'text-white'}`}>${formatMoney(oppBalanceNum, 0)}</span>
                         </div>
                         <div className="flex justify-between items-baseline">
                           <span className="text-[10px] text-gray-500">P&L</span>
@@ -628,11 +626,11 @@ export default function ActiveBattleCard({
                         </div>
                         <div className="flex justify-between items-baseline">
                           <span className="text-[10px] text-gray-500">Piks</span>
-                          <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponentBets.length}</span>
+                          <span className={`text-sm font-bold ${'text-white'}`}>{opponentBets.length}</span>
                         </div>
                         <div className="flex justify-between items-baseline">
                           <span className="text-[10px] text-gray-500">Staked</span>
-                          <span className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${formatMoney(oppStaked, 0)}</span>
+                          <span className={`text-sm font-bold ${'text-white'}`}>${formatMoney(oppStaked, 0)}</span>
                         </div>
                       </div>
                     </div>
@@ -642,15 +640,15 @@ export default function ActiveBattleCard({
                     <svg className="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span className={`text-xs font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatTimer(timeRemaining)}</span>
+                    <span className={`text-xs font-bold ${'text-white'}`}>{formatTimer(timeRemaining)}</span>
                     <span className="text-[10px] text-gray-500">remaining</span>
                   </div>
 
-                  <div className="rounded-xl overflow-hidden" style={{ background: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
-                    <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
+                  <div className="rounded-xl overflow-hidden" style={{ background: '#111', border: `1px solid ${'#1a1a1a'}` }}>
+                    <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: `1px solid ${'#1a1a1a'}` }}>
                       <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Opponent's Piks</span>
                       {!canSeeBets && (
-                        <span className={`text-[9px] flex items-center gap-1 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`}>
+                        <span className={`text-[9px] flex items-center gap-1 ${'text-gray-600'}`}>
                           <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>
                           Locked
                         </span>
@@ -660,14 +658,14 @@ export default function ActiveBattleCard({
                       <div className="max-h-[180px] overflow-y-auto">
                         {opponentBets.length === 0 ? (
                           <div className="py-6 text-center">
-                            <p className={`text-xs ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`}>No piks placed yet</p>
+                            <p className={`text-xs ${'text-gray-600'}`}>No piks placed yet</p>
                           </div>
                         ) : (
-                          <div className={`divide-y ${isDarkMode ? 'divide-[#1a1a1a]' : 'divide-gray-200'}`}>
+                          <div className={`divide-y ${'divide-[#1a1a1a]'}`}>
                             {opponentBets.map((bet, i) => (
                               <div key={i} className="flex justify-between items-center px-3 py-2.5">
                                 <div className="flex-1 truncate mr-2">
-                                  <span className={`text-xs ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{bet.selection}</span>
+                                  <span className={`text-xs ${'text-white'}`}>{bet.selection}</span>
                                   <span className="text-[10px] text-gray-500 ml-1.5">({bet.odds})</span>
                                 </div>
                                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -687,8 +685,8 @@ export default function ActiveBattleCard({
                       </div>
                     ) : (
                       <div className="py-8 flex flex-col items-center justify-center">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2" style={{ background: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.03)', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
-                          <svg className={`w-5 h-5 ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`} fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2" style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${'#1a1a1a'}` }}>
+                          <svg className={`w-5 h-5 ${'text-gray-600'}`} fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>
                         </div>
                         <p className="text-[11px] text-gray-500 text-center">Place a pik to reveal opponent's piks</p>
                       </div>

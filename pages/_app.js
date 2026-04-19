@@ -6,7 +6,6 @@ import { AuthProvider } from '../contexts/AuthContext';
 import { BetSlipProvider } from '../contexts/BetSlipContext';
 import { UserProfilesProvider } from '../contexts/UserProfilesContext';
 import { UserPreferencesProvider } from '../contexts/UserPreferencesContext';
-import { ThemeProvider } from '../contexts/ThemeContext';
 import { GamesProvider } from '../contexts/GamesContext';
 import { MatchupProvider, useMatchup } from '../contexts/MatchupContext';
 import { VoiceChatProvider } from '../contexts/VoiceChatContext';
@@ -151,6 +150,19 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [betaAuthenticated, setBetaAuthenticated] = useState(false);
   const [justAuthenticated, setJustAuthenticated] = useState(false);
+
+  // Force dark theme on root element and clear any legacy theme preference.
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.classList.add('dark');
+      document.documentElement.classList.remove('light');
+    }
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.removeItem('piks-theme');
+      } catch (_e) {}
+    }
+  }, []);
 
   // Preload logo image on app mount
   useEffect(() => {
@@ -415,8 +427,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
   return (
     <SessionProvider session={session}>
       {battlePreviewHead}
-      <ThemeProvider>
-        <AuthProvider>
+      <AuthProvider>
           <UserPreferencesProvider>
           <BetSlipProvider>
             <UserProfilesProvider>
@@ -537,7 +548,6 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
           </BetSlipProvider>
           </UserPreferencesProvider>
         </AuthProvider>
-      </ThemeProvider>
     </SessionProvider>
   );
 }

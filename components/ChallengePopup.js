@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useSession, signIn } from 'next-auth/react';
-import { useTheme } from '../contexts/ThemeContext';
 import useModalScrollLock from '../hooks/useModalScrollLock';
 import { formatMoney } from '../utils/formatMoney';
 
@@ -68,7 +67,6 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const { data: session, status, update: updateSession } = useSession();
-  const { isDarkMode } = useTheme();
 
   useModalScrollLock(isOpen);
 
@@ -375,10 +373,10 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
           className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full flex items-center justify-center"
           style={{ 
             WebkitTapHighlightColor: 'transparent',
-            backgroundColor: isDarkMode ? 'rgba(51, 65, 85, 0.7)' : 'rgba(226, 232, 240, 0.9)'
+            backgroundColor: 'rgba(51, 65, 85, 0.7)'
           }}
         >
-          <svg className="w-5 h-5" style={{ color: isDarkMode ? '#ffffff' : '#1f2937' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" style={{ color: '#ffffff' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -394,10 +392,10 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
             className="absolute top-4 left-4 z-20 w-8 h-8 rounded-full flex items-center justify-center"
             style={{ 
               WebkitTapHighlightColor: 'transparent',
-              backgroundColor: isDarkMode ? 'rgba(51, 65, 85, 0.7)' : 'rgba(226, 232, 240, 0.9)'
+              backgroundColor: 'rgba(51, 65, 85, 0.7)'
             }}
           >
-            <svg className="w-5 h-5" style={{ color: isDarkMode ? '#ffffff' : '#1f2937' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5" style={{ color: '#ffffff' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
@@ -410,7 +408,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
             alt="Piks Logo" 
             className="h-36 mx-auto" 
             style={{ 
-              filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)',
+              filter: 'none',
               opacity: 1,
               animation: 'none',
               transition: 'none'
@@ -557,7 +555,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                   setConfirmPassword('');
                 }}
                 className="text-sm transition-colors hover:opacity-70"
-                style={{ color: isDarkMode ? '#9ca3af' : '#374151' }}
+                style={{ color: '#9ca3af' }}
               >
                 {isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
               </button>
@@ -571,16 +569,16 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
               }}
             >
               <div className="flex items-center justify-between text-sm">
-                <span style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>Selected:</span>
-                <span className="font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{currentChallenge.name}</span>
+                <span style={{ color: '#9ca3af' }}>Selected:</span>
+                <span className="font-medium" style={{ color: '#ffffff' }}>{currentChallenge.name}</span>
               </div>
               <div className="flex items-center justify-between text-sm mt-1">
-                <span style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>Your Split:</span>
-                <span className="font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{userSplit}%</span>
+                <span style={{ color: '#9ca3af' }}>Your Split:</span>
+                <span className="font-medium" style={{ color: '#ffffff' }}>{userSplit}%</span>
               </div>
               <div className="flex items-center justify-between text-sm mt-1">
-                <span style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>Price:</span>
-                <span className="font-bold" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>${adjustedPrice}</span>
+                <span style={{ color: '#9ca3af' }}>Price:</span>
+                <span className="font-bold" style={{ color: '#ffffff' }}>${adjustedPrice}</span>
               </div>
             </div>
           </div>
@@ -891,11 +889,11 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
           /* Fanbasis Checkout - Redirect to New Tab */
           <div className="p-6 pt-0 flex flex-col items-center" style={{ WebkitTapHighlightColor: 'transparent' }}>
             <div className="text-center mb-6">
-              <h2 className="text-xl font-bold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>Complete Your Purchase</h2>
-              <p className="text-sm font-medium mb-1" style={{ color: isDarkMode ? '#60a5fa' : '#1e40af' }}>
+              <h2 className="text-xl font-bold mb-2" style={{ color: '#ffffff' }}>Complete Your Purchase</h2>
+              <p className="text-sm font-medium mb-1" style={{ color: '#60a5fa' }}>
                 {currentChallenge.name} • ${adjustedPrice}
               </p>
-              <p className="text-xs font-medium" style={{ color: isDarkMode ? '#60a5fa' : '#1e40af' }}>
+              <p className="text-xs font-medium" style={{ color: '#60a5fa' }}>
                 {userSplit}% profit split
               </p>
             </div>
@@ -911,7 +909,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
                 >
                   <span style={{ color: '#ffffff' }}>Continue to Checkout →</span>
                 </a>
-                <p className="text-xs text-center" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>
+                <p className="text-xs text-center" style={{ color: '#9ca3af' }}>
                   Opens secure payment page in a new tab
                 </p>
               </div>
@@ -928,8 +926,8 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
               }}
               className="w-full mt-6 py-3 px-6 font-medium rounded-xl border border-blue-600/30"
               style={{ 
-                backgroundColor: isDarkMode ? 'rgba(30, 58, 138, 0.3)' : 'rgba(219, 234, 254, 0.8)',
-                color: isDarkMode ? '#d1d5db' : '#1e40af'
+                backgroundColor: 'rgba(30, 58, 138, 0.3)',
+                color: '#d1d5db'
               }}
             >
               Back
@@ -941,7 +939,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
             {/* Header */}
             <div className="text-center mb-6">
               <div className="mb-4">
-                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-16 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
+                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-16 mx-auto" style={{ filter: 'none' }} />
               </div>
               <div className={`w-16 h-16 bg-gradient-to-r ${theme.gradient} rounded-full flex items-center justify-center mb-4 mx-auto`}>
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1095,7 +1093,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
             {/* Header */}
             <div className="text-center mb-6">
               <div className="mb-4">
-                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-40 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
+                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-40 mx-auto" style={{ filter: 'none' }} />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">How Do I Get My Account?</h3>
             </div>
@@ -1312,7 +1310,7 @@ export default function ChallengePopup({ isOpen, onClose, initialIndex = 1 }) {
             {/* Header */}
             <div className="text-center mb-6">
               <div className="mb-4">
-                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
+                <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" style={{ filter: 'none' }} />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Challenge Phases</h3>
               <p className="text-gray-400 text-sm">You must complete 2 phases to get funded</p>

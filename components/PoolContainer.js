@@ -27,7 +27,7 @@ function formatTimeRemaining(ms) {
   return `${seconds}s`;
 }
 
-export default function PoolContainer({ isDarkMode }) {
+export default function PoolContainer() {
   const getInitialPoolState = () => {
     if (typeof window === 'undefined') return null;
     try {

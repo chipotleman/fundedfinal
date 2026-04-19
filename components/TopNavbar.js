@@ -4,7 +4,6 @@ import { useRouter } from 'next/router';
 import { useSession, signOut } from 'next-auth/react';
 import BalanceModal from './BalanceModal';
 import WithdrawModal from './WithdrawModal';
-import { useTheme } from '../contexts/ThemeContext';
 import { useMatchup } from '../contexts/MatchupContext';
 import { useNotifications } from '../contexts/NotificationsContext';
 import NotificationsDropdown from './notifications/NotificationsDropdown';
@@ -24,7 +23,6 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
   const navRef = useRef(null);
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { isDarkMode, toggleTheme } = useTheme();
   const { hasActiveMatchup, myBalance: matchupBalance } = useMatchup();
   const { counts: notifCounts } = useNotifications();
   const notifTotal = notifCounts?.total || 0;
@@ -453,7 +451,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
 
   return (
     <>
-      <nav ref={navRef} className="sticky top-0 left-0 right-0 z-50" style={{ backgroundColor: isDarkMode ? '#000000' : '#ffffff' }}>
+      <nav ref={navRef} className="sticky top-0 left-0 right-0 z-50" style={{ backgroundColor: '#000000' }}>
         <div className="px-3 sm:px-6 h-[70px] sm:h-auto sm:py-1 sm:-mb-6 flex items-center">
           <div className="flex items-center justify-between w-full sm:justify-between min-h-[70px] sm:min-h-[48px] relative">
             {/* Logo - absolutely positioned on mobile to not affect bar height */}
@@ -473,8 +471,8 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                   alt="Piks"
                   className="h-[140px] sm:h-[230px] w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
                   style={{
-                    filter: isDarkMode ? 'hue-rotate(0deg) saturate(1.2) brightness(1.1)' : 'invert(1) hue-rotate(0deg) saturate(1.2) brightness(0.1)',
-                    animation: isDarkMode ? 'logoRedYellowGlow 4s infinite ease-in-out' : 'none'
+                    filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
+                    animation: 'logoRedYellowGlow 4s infinite ease-in-out'
                   }}
                   onLoad={(e) => {
                     console.log('Logo loaded successfully');
@@ -500,25 +498,25 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
             <div className="hidden lg:flex items-center space-x-8">
               {isLoggedIn ? (
                 <>
-                  <Link href="/dashboard" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+                  <Link href="/dashboard" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: '#d1d5db' }}>
                     The Lab
                   </Link>
-                  <Link href="/battle" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+                  <Link href="/battle" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]" style={{ color: '#d1d5db' }}>
                     Battle
                   </Link>
-                  <Link href="/leaderboard" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+                  <Link href="/leaderboard" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: '#d1d5db' }}>
                     Leaderboard
                   </Link>
                 </>
               ) : (
                 <>
-                  <Link href="/how-it-works" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+                  <Link href="/how-it-works" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: '#d1d5db' }}>
                     How It Works
                   </Link>
-                  <Link href="/battle" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+                  <Link href="/battle" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]" style={{ color: '#d1d5db' }}>
                     Battle
                   </Link>
-                  <Link href="/leaderboard" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+                  <Link href="/leaderboard" className="font-light text-sm uppercase tracking-wider transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]" style={{ color: '#d1d5db' }}>
                     Leaderboard
                   </Link>
                 </>
@@ -531,16 +529,16 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
               {isLoggedIn && (
                 <div className="hidden sm:flex items-center space-x-4">
                   {hasActiveChallenge && userProfile ? (
-                    <div className="rounded-lg px-3 py-2 transition-colors" style={{ backgroundColor: isDarkMode ? '#111111' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#d1d5db' }}>
+                    <div className="rounded-lg px-3 py-2 transition-colors" style={{ backgroundColor: '#111111', borderWidth: 1, borderColor: 'rgba(55, 65, 81, 0.5)' }}>
                       <button
                         onClick={() => router.push('/bet-history')}
                         className="flex items-center space-x-2"
                       >
-                        <svg className="w-4 h-4" style={{ color: isDarkMode ? '#ffffff' : '#111827' }} fill="currentColor" viewBox="0 0 20 20">
+                        <svg className="w-4 h-4" style={{ color: '#ffffff' }} fill="currentColor" viewBox="0 0 20 20">
                           <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
                           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
                         </svg>
-                        <span className="font-bold text-sm" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+                        <span className="font-bold text-sm" style={{ color: '#ffffff' }}>
                           {hasActiveMatchup && matchupBalance != null
                             ? <><span className="text-orange-400">⚔</span> ${formatMoney(parseFloat(matchupBalance), 0)}</>
                             : `$${formatMoney(parseFloat(userProfile.bankroll), 0)}`
@@ -567,7 +565,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                     <svg
                       className="w-5 h-5 sm:w-6 sm:h-6"
                       fill="none"
-                      stroke={isDarkMode ? '#e5e7eb' : '#374151'}
+                      stroke={'#e5e7eb'}
                       strokeWidth={1.8}
                       viewBox="0 0 24 24"
                     >
@@ -602,21 +600,21 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                     onClick={() => router.push('/bet-history')}
                     className="sm:hidden flex items-center gap-1 rounded-md px-2 py-1.5 transition-colors"
                     style={{
-                      backgroundColor: isDarkMode ? '#111111' : '#f3f4f6',
+                      backgroundColor: '#111111',
                       borderWidth: 1,
-                      borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#d1d5db',
+                      borderColor: 'rgba(55, 65, 81, 0.5)',
                       marginRight: betSlipCount > 0 ? 0 : 60,
                     }}
                   >
                     {showMatchup ? (
                       <span className="text-orange-400 text-xs leading-none">⚔</span>
                     ) : (
-                      <svg className="w-3.5 h-3.5" style={{ color: isDarkMode ? '#ffffff' : '#111827' }} fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="w-3.5 h-3.5" style={{ color: '#ffffff' }} fill="currentColor" viewBox="0 0 20 20">
                         <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
                       </svg>
                     )}
-                    <span className="font-bold text-xs whitespace-nowrap" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+                    <span className="font-bold text-xs whitespace-nowrap" style={{ color: '#ffffff' }}>
                       ${formatMoney(displayValue, 0)}
                     </span>
                   </button>
@@ -639,23 +637,6 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                   </span>
                 </button>
               )}
-
-              {/* Theme Toggle Button - Hidden on mobile, shown in menu drawer instead */}
-              <button
-                onClick={toggleTheme}
-                className="hidden lg:flex w-9 h-9 sm:w-10 sm:h-10 items-center justify-center rounded-full hover:bg-[#1a1a1a] transition-all duration-300"
-                title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-              >
-                {isDarkMode ? (
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
-                  </svg>
-                ) : (
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M11 3a1 1 0 10-2 0v1a1 1 0 102 0V3zM15.657 5.757a1 1 0 00-1.414-1.414l-.707.707a1 1 0 001.414 1.414l.707-.707zM18 10a1 1 0 01-1 1h-1a1 1 0 110-2h1a1 1 0 011 1zM5.05 6.464A1 1 0 106.464 5.05l-.707-.707a1 1 0 00-1.414 1.414l.707.707zM5 10a1 1 0 01-1 1H3a1 1 0 110-2h1a1 1 0 011 1zM8 16v-1h4v1a2 2 0 11-4 0zM12 14c.015-.34.208-.646.477-.859a4 4 0 10-4.954 0c.27.213.462.519.476.859h4.002z" />
-                  </svg>
-                )}
-              </button>
 
               {/* Desktop Authentication Buttons - All the way on the right */}
               <div className="hidden lg:flex items-center space-x-3 ml-4">
@@ -817,7 +798,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
           position: relative;
           border-radius: 8px;
           padding: 2px;
-          background: ${isDarkMode ? '#111111' : '#e5e7eb'};
+          background: ${'#111111'};
           overflow: hidden;
         }
         
@@ -844,7 +825,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
           content: '';
           position: absolute;
           inset: 2px;
-          background: ${isDarkMode ? '#000000' : '#ffffff'};
+          background: ${'#000000'};
           border-radius: 6px;
         }
         

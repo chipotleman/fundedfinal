@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import useModalScrollLock from '../hooks/useModalScrollLock';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
-import { useTheme } from '../contexts/ThemeContext';
 
 const SPORTS = [
   { id: 'nba', name: 'NBA', icon: '🏀' },
@@ -37,7 +36,6 @@ export default function OnboardingPopup({ isOpen, onClose }) {
   const [error, setError] = useState('');
   const router = useRouter();
   const { data: session } = useSession();
-  const { isDarkMode } = useTheme();
 
   const totalSteps = 4;
 
@@ -126,7 +124,7 @@ export default function OnboardingPopup({ isOpen, onClose }) {
           <div className="space-y-6">
             <div className="text-center">
               <div className="text-4xl mb-4">👋</div>
-              <h2 className="text-2xl font-bold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+              <h2 className="text-2xl font-bold mb-2" style={{ color: '#ffffff' }}>
                 Welcome to Piks!
               </h2>
               <p className="text-gray-400 text-sm">
@@ -135,7 +133,7 @@ export default function OnboardingPopup({ isOpen, onClose }) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+              <label className="block text-sm font-medium mb-2" style={{ color: '#d1d5db' }}>
                 Choose your username
               </label>
               <input
@@ -146,9 +144,9 @@ export default function OnboardingPopup({ isOpen, onClose }) {
                 maxLength={20}
                 className="w-full px-4 py-3 rounded-xl border transition-all focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 style={{
-                  backgroundColor: isDarkMode ? '#1a1a1a' : '#f9fafb',
-                  borderColor: isDarkMode ? '#374151' : '#d1d5db',
-                  color: isDarkMode ? '#ffffff' : '#111827',
+                  backgroundColor: '#1a1a1a',
+                  borderColor: '#374151',
+                  color: '#ffffff',
                 }}
               />
               <p className="text-xs text-gray-500 mt-1">This is how other players will see you</p>
@@ -161,7 +159,7 @@ export default function OnboardingPopup({ isOpen, onClose }) {
           <div className="space-y-6">
             <div className="text-center">
               <div className="text-4xl mb-4">🏆</div>
-              <h2 className="text-2xl font-bold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+              <h2 className="text-2xl font-bold mb-2" style={{ color: '#ffffff' }}>
                 Favorite Sports
               </h2>
               <p className="text-gray-400 text-sm">
@@ -182,11 +180,11 @@ export default function OnboardingPopup({ isOpen, onClose }) {
                   style={{
                     backgroundColor: selectedSports.includes(sport.id) 
                       ? 'rgba(59, 130, 246, 0.1)' 
-                      : isDarkMode ? '#1a1a1a' : '#f9fafb',
+                      : '#1a1a1a',
                   }}
                 >
                   <div className="text-2xl mb-1">{sport.icon}</div>
-                  <div className="text-sm font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+                  <div className="text-sm font-medium" style={{ color: '#ffffff' }}>
                     {sport.name}
                   </div>
                 </button>
@@ -200,7 +198,7 @@ export default function OnboardingPopup({ isOpen, onClose }) {
           <div className="space-y-6">
             <div className="text-center">
               <div className="text-4xl mb-4">🎯</div>
-              <h2 className="text-2xl font-bold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+              <h2 className="text-2xl font-bold mb-2" style={{ color: '#ffffff' }}>
                 Betting Style
               </h2>
               <p className="text-gray-400 text-sm">
@@ -221,10 +219,10 @@ export default function OnboardingPopup({ isOpen, onClose }) {
                   style={{
                     backgroundColor: bettingStyle === style.id 
                       ? 'rgba(59, 130, 246, 0.1)' 
-                      : isDarkMode ? '#1a1a1a' : '#f9fafb',
+                      : '#1a1a1a',
                   }}
                 >
-                  <div className="font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+                  <div className="font-medium" style={{ color: '#ffffff' }}>
                     {style.name}
                   </div>
                   <div className="text-sm text-gray-400">{style.description}</div>
@@ -239,7 +237,7 @@ export default function OnboardingPopup({ isOpen, onClose }) {
           <div className="space-y-6">
             <div className="text-center">
               <div className="text-4xl mb-4">📊</div>
-              <h2 className="text-2xl font-bold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+              <h2 className="text-2xl font-bold mb-2" style={{ color: '#ffffff' }}>
                 Experience Level
               </h2>
               <p className="text-gray-400 text-sm">
@@ -260,10 +258,10 @@ export default function OnboardingPopup({ isOpen, onClose }) {
                   style={{
                     backgroundColor: experienceLevel === level.id 
                       ? 'rgba(59, 130, 246, 0.1)' 
-                      : isDarkMode ? '#1a1a1a' : '#f9fafb',
+                      : '#1a1a1a',
                   }}
                 >
-                  <div className="font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+                  <div className="font-medium" style={{ color: '#ffffff' }}>
                     {level.name}
                   </div>
                   <div className="text-sm text-gray-400">{level.description}</div>
@@ -288,9 +286,9 @@ export default function OnboardingPopup({ isOpen, onClose }) {
       <div 
         className="relative w-full max-w-md rounded-2xl overflow-hidden"
         style={{
-          backgroundColor: isDarkMode ? '#0a0a0a' : '#ffffff',
+          backgroundColor: '#0a0a0a',
           border: '1px solid',
-          borderColor: isDarkMode ? '#1f2937' : '#e5e7eb',
+          borderColor: '#1f2937',
         }}
       >
         <div className="p-6">
@@ -324,9 +322,9 @@ export default function OnboardingPopup({ isOpen, onClose }) {
                 onClick={handleBack}
                 className="flex-1 py-3 px-4 rounded-xl font-medium transition-all border"
                 style={{
-                  backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6',
-                  borderColor: isDarkMode ? '#374151' : '#d1d5db',
-                  color: isDarkMode ? '#d1d5db' : '#374151',
+                  backgroundColor: '#1a1a1a',
+                  borderColor: '#374151',
+                  color: '#d1d5db',
                 }}
               >
                 Back

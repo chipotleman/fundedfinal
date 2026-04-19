@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import useModalScrollLock from '../hooks/useModalScrollLock';
 import { useRouter } from 'next/router';
-import { useTheme } from '../contexts/ThemeContext';
 import { formatMoney } from '../utils/formatMoney';
 
 export default function SessionSummaryPopup({ isOpen, onClose, sessionData }) {
   const router = useRouter();
-  const { isDarkMode } = useTheme();
   
   useModalScrollLock(isOpen);
 
@@ -49,18 +47,18 @@ export default function SessionSummaryPopup({ isOpen, onClose, sessionData }) {
   return (
     <div 
       className={`fixed inset-0 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto`}
-      style={{ background: isDarkMode ? 'rgba(0,0,0,0.9)' : 'rgba(0,0,0,0.4)' }}
+      style={{ background: 'rgba(0,0,0,0.9)' }}
     >
       <div 
         className="relative rounded-3xl max-w-md w-full my-auto"
-        style={{ backgroundColor: isDarkMode ? '#000' : '#ffffff', border: `1px solid ${isDarkMode ? 'rgba(26,26,26,0.5)' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 25px 50px -12px rgba(0,0,0,0.15)', WebkitTapHighlightColor: 'transparent' }}
+        style={{ backgroundColor: '#000', border: `1px solid ${'rgba(26,26,26,0.5)'}`, boxShadow: 'none', WebkitTapHighlightColor: 'transparent' }}
       >
         <button
           onClick={handleClose}
           className={`absolute top-4 right-4 z-20 w-8 h-8 rounded-full flex items-center justify-center`}
-          style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', WebkitTapHighlightColor: 'transparent' }}
+          style={{ backgroundColor: '#111', WebkitTapHighlightColor: 'transparent' }}
         >
-          <svg className={`w-5 h-5 ${isDarkMode ? 'text-white' : 'text-gray-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className={`w-5 h-5 ${'text-white'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -68,51 +66,51 @@ export default function SessionSummaryPopup({ isOpen, onClose, sessionData }) {
         <div className="p-6 pt-8">
           <div className="text-center mb-6">
             <div className="mb-4">
-              <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
+              <img src="/pikslogotransparent.png" alt="Piks Logo" className="h-32 mx-auto" style={{ filter: 'none' }} />
             </div>
             {isDemo && (
               <span className="inline-block px-3 py-1 mb-2 rounded-full text-xs font-bold uppercase tracking-wide bg-orange-500/20 text-orange-400 border border-orange-500/30">
                 Demo Session
               </span>
             )}
-            <h3 className={`text-xl font-bold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Session Summary</h3>
-            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Here's what you accomplished</p>
+            <h3 className={`text-xl font-bold mb-2 ${'text-white'}`}>Session Summary</h3>
+            <p className={`text-sm ${'text-gray-400'}`}>Here's what you accomplished</p>
           </div>
 
-          <div className="rounded-2xl p-4 mb-4" style={{ background: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
+          <div className="rounded-2xl p-4 mb-4" style={{ background: '#111', border: `1px solid ${'#1a1a1a'}` }}>
             <div className="flex items-center justify-between mb-3">
-              <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Session Duration</span>
-              <span className={`font-bold text-lg ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{formatDuration(duration)}</span>
+              <span className={`text-sm ${'text-gray-400'}`}>Session Duration</span>
+              <span className={`font-bold text-lg ${'text-white'}`}>{formatDuration(duration)}</span>
             </div>
             
             {challengeName && (
               <div className="flex items-center justify-between mb-3">
-                <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Challenge</span>
+                <span className={`text-sm ${'text-gray-400'}`}>Challenge</span>
                 <div className="flex items-center space-x-2">
-                  <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{challengeName}</span>
+                  <span className={`font-medium ${'text-white'}`}>{challengeName}</span>
                   {challengePhase && (
-                    <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Phase {challengePhase}</span>
+                    <span className={`text-xs ${'text-gray-400'}`}>Phase {challengePhase}</span>
                   )}
                 </div>
               </div>
             )}
 
             {startingBalance !== null && endingBalance !== null && (
-              <div className="pt-3 mt-3 space-y-2" style={{ borderTop: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
+              <div className="pt-3 mt-3 space-y-2" style={{ borderTop: `1px solid ${'#1a1a1a'}` }}>
                 <div className="flex items-center justify-between">
-                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Starting Balance</span>
-                  <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${formatMoney(startingBalance, 2)}</span>
+                  <span className={`text-sm ${'text-gray-400'}`}>Starting Balance</span>
+                  <span className={`font-medium ${'text-white'}`}>${formatMoney(startingBalance, 2)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Ending Balance</span>
-                  <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${formatMoney(endingBalance, 2)}</span>
+                  <span className={`text-sm ${'text-gray-400'}`}>Ending Balance</span>
+                  <span className={`font-medium ${'text-white'}`}>${formatMoney(endingBalance, 2)}</span>
                 </div>
               </div>
             )}
           </div>
 
           <div className="space-y-3 mb-6">
-            <div className="flex justify-between items-center py-3 px-4 rounded-xl" style={{ background: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
+            <div className="flex justify-between items-center py-3 px-4 rounded-xl" style={{ background: '#111', border: `1px solid ${'#1a1a1a'}` }}>
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
                   <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
@@ -120,35 +118,35 @@ export default function SessionSummaryPopup({ isOpen, onClose, sessionData }) {
                     <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
                   </svg>
                 </div>
-                <span className={`font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Bets Placed</span>
+                <span className={`font-medium ${'text-gray-300'}`}>Bets Placed</span>
               </div>
-              <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{betsPlaced}</span>
+              <span className={`font-bold ${'text-white'}`}>{betsPlaced}</span>
             </div>
 
             <div className="grid grid-cols-3 gap-2">
               <div className="py-3 px-3 bg-green-500/10 rounded-xl border border-green-500/20 text-center">
                 <div className="text-green-400 font-bold text-lg">{wins}</div>
-                <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Wins</div>
+                <div className={`text-xs ${'text-gray-400'}`}>Wins</div>
               </div>
               <div className="py-3 px-3 bg-red-500/10 rounded-xl border border-red-500/20 text-center">
                 <div className="text-red-400 font-bold text-lg">{losses}</div>
-                <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Losses</div>
+                <div className={`text-xs ${'text-gray-400'}`}>Losses</div>
               </div>
               <div className="py-3 px-3 bg-blue-500/10 rounded-xl border border-blue-500/20 text-center">
                 <div className="text-blue-400 font-bold text-lg">{pending}</div>
-                <div className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Pending</div>
+                <div className={`text-xs ${'text-gray-400'}`}>Pending</div>
               </div>
             </div>
 
             {betsPlaced > 0 && (
-              <div className="flex justify-between items-center py-3 px-4 rounded-xl" style={{ background: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
+              <div className="flex justify-between items-center py-3 px-4 rounded-xl" style={{ background: '#111', border: `1px solid ${'#1a1a1a'}` }}>
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
                     <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <span className={`font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Win Rate</span>
+                  <span className={`font-medium ${'text-gray-300'}`}>Win Rate</span>
                 </div>
                 <span className={`font-bold ${winRate >= 50 ? 'text-green-400' : 'text-red-400'}`}>{winRate}%</span>
               </div>
@@ -169,7 +167,7 @@ export default function SessionSummaryPopup({ isOpen, onClose, sessionData }) {
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <span className={`font-medium ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Session P/L</span>
+                  <span className={`font-medium ${'text-gray-300'}`}>Session P/L</span>
                 </div>
                 <span className={`font-bold text-lg ${isProfitable ? 'text-green-400' : 'text-red-400'}`}>
                   {isProfitable ? '+' : ''}{sessionPnL < 0 ? '-' : ''}${formatMoney(Math.abs(sessionPnL), 2)}

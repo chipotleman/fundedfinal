@@ -12,7 +12,6 @@ const BIO_MAX = 200;
  *  - formData / setFormData: form state
  *  - usernameStatus, onUsernameChange: username availability
  *  - onSave, onCancel, saving
- *  - isDarkMode
  */
 export default function ProfileEditPanel({
   profile,
@@ -23,16 +22,16 @@ export default function ProfileEditPanel({
   onSave,
   onCancel,
   saving,
-  isDarkMode,
+  true,
 }) {
   const avatarInputRef = useRef(null);
   const bannerInputRef = useRef(null);
   const [bannerUploading, setBannerUploading] = useState(false);
   const [activeLeague, setActiveLeague] = useState(TEAM_CATALOG[0].league);
 
-  const inputBg = isDarkMode ? '#111' : '#f3f4f6';
-  const inputBorder = isDarkMode ? '#1a1a1a' : '#e5e7eb';
-  const inputText = isDarkMode ? 'text-white' : 'text-gray-900';
+  const inputBg = '#111';
+  const inputBorder = '#1a1a1a';
+  const inputText = 'text-white';
   const labelClass = 'block text-xs text-gray-500 mb-1 uppercase tracking-wider';
 
   const frames = Array.isArray(profile?.frames) ? profile.frames : [];
@@ -181,7 +180,7 @@ export default function ProfileEditPanel({
           onClick={() => bannerInputRef.current?.click()}
           disabled={bannerUploading}
           className="text-xs font-medium px-3 py-1.5 rounded-md"
-          style={{ backgroundColor: inputBg, border: `1px solid ${inputBorder}`, color: isDarkMode ? '#d1d5db' : '#374151' }}
+          style={{ backgroundColor: inputBg, border: `1px solid ${inputBorder}`, color: '#d1d5db' }}
         >
           {bannerUploading ? 'Uploading…' : 'Upload custom banner'}
         </button>
@@ -198,7 +197,7 @@ export default function ProfileEditPanel({
               frameId={formData.equippedFrame}
               size={72}
               bgColor={inputBg}
-              textColor={isDarkMode ? '#fff' : '#374151'}
+              textColor={'#fff'}
             />
             <input
               type="file"
@@ -266,7 +265,7 @@ export default function ProfileEditPanel({
               className="text-xs font-semibold px-2.5 py-1 rounded-full"
               style={{
                 backgroundColor: activeLeague === g.league ? '#3b82f6' : inputBg,
-                color: activeLeague === g.league ? '#fff' : isDarkMode ? '#d1d5db' : '#374151',
+                color: activeLeague === g.league ? '#fff' : '#d1d5db',
                 border: `1px solid ${activeLeague === g.league ? '#3b82f6' : inputBorder}`,
               }}
             >
@@ -290,7 +289,7 @@ export default function ProfileEditPanel({
                 className="flex items-center gap-2 text-left px-2 py-1.5 rounded-md text-xs"
                 style={{
                   backgroundColor: selected ? '#3b82f6' : 'transparent',
-                  color: selected ? '#fff' : isDarkMode ? '#e5e7eb' : '#374151',
+                  color: selected ? '#fff' : '#e5e7eb',
                 }}
               >
                 {t.logo ? (
@@ -300,7 +299,7 @@ export default function ProfileEditPanel({
                     className="w-5 h-5 inline-flex items-center justify-center rounded-full text-[10px] font-bold"
                     style={{
                       backgroundColor: selected ? 'rgba(255,255,255,0.2)' : inputBorder,
-                      color: selected ? '#fff' : isDarkMode ? '#fff' : '#374151',
+                      color: selected ? '#fff' : '#fff',
                     }}
                   >
                     {t.id}
@@ -323,7 +322,7 @@ export default function ProfileEditPanel({
             className="rounded-lg p-2 text-xs flex items-center gap-2"
             style={{
               backgroundColor: !formData.equippedFrame ? '#3b82f6' : inputBg,
-              color: !formData.equippedFrame ? '#fff' : isDarkMode ? '#d1d5db' : '#374151',
+              color: !formData.equippedFrame ? '#fff' : '#d1d5db',
               border: `1px solid ${!formData.equippedFrame ? '#3b82f6' : inputBorder}`,
             }}
           >
@@ -332,7 +331,7 @@ export default function ProfileEditPanel({
               username={formData.username || profile?.username}
               size={32}
               bgColor={inputBg}
-              textColor={isDarkMode ? '#fff' : '#374151'}
+              textColor={'#fff'}
             />
             <span>No frame</span>
           </button>
@@ -347,7 +346,7 @@ export default function ProfileEditPanel({
                 className="rounded-lg p-2 text-xs flex items-center gap-2"
                 style={{
                   backgroundColor: isEquipped ? '#3b82f6' : inputBg,
-                  color: isEquipped ? '#fff' : isDarkMode ? '#d1d5db' : '#374151',
+                  color: isEquipped ? '#fff' : '#d1d5db',
                   border: `1px solid ${isEquipped ? '#3b82f6' : inputBorder}`,
                   opacity: f.unlocked ? 1 : 0.55,
                   cursor: f.unlocked ? 'pointer' : 'not-allowed',
@@ -360,7 +359,7 @@ export default function ProfileEditPanel({
                   frame={f}
                   size={32}
                   bgColor={inputBg}
-                  textColor={isDarkMode ? '#fff' : '#374151'}
+                  textColor={'#fff'}
                 />
                 <span className="flex-1 min-w-0 truncate">
                   <span className="block truncate font-semibold">{f.name}</span>
@@ -384,7 +383,7 @@ export default function ProfileEditPanel({
         </button>
         <button
           onClick={onCancel}
-          className={`font-semibold py-2 px-6 rounded-lg text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}
+          className={`font-semibold py-2 px-6 rounded-lg text-sm ${'text-gray-400'}`}
           style={{ backgroundColor: inputBg, border: `1px solid ${inputBorder}` }}
         >
           Cancel

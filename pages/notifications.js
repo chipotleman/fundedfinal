@@ -3,7 +3,6 @@ import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import TopNavbar from '../components/TopNavbar';
 import { useNotifications } from '../contexts/NotificationsContext';
-import { useTheme } from '../contexts/ThemeContext';
 import { formatSeenAgo } from '../utils/relativeTime';
 import ActiveStatus, { isUserOnline } from '../components/ActiveStatus';
 
@@ -60,7 +59,7 @@ function Avatar({ user, size = 40, isOnline = false, onlineDotBorderColor = '#0a
   );
 }
 
-function NotificationsFeed({ ctx, router, isDarkMode, onOpenChat }) {
+function NotificationsFeed({ ctx, router, onOpenChat }) {
   const battleInvites = ctx.battleInvites || [];
   const friendRequests = ctx.friendRequests || [];
   const unreadMessages = ctx.unreadMessages || [];
@@ -93,16 +92,12 @@ function NotificationsFeed({ ctx, router, isDarkMode, onOpenChat }) {
     battleInvites.length + friendRequests.length + messageGroups.length;
   const empty = totalNew === 0;
 
-  const cardBg = isDarkMode ? '#0a0a0a' : '#ffffff';
-  const cardBorder = isDarkMode
-    ? 'rgba(16,185,129,0.22)'
-    : 'rgba(16,185,129,0.35)';
-  const textPrimary = isDarkMode ? '#ffffff' : '#111111';
-  const textSecondary = isDarkMode ? '#9ca3af' : '#6b7280';
-  const accent = isDarkMode ? '#34d399' : '#059669';
-  const cardShadow = isDarkMode
-    ? '0 0 0 1px rgba(16,185,129,0.08), 0 8px 32px -8px rgba(16,185,129,0.18)'
-    : '0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(16,185,129,0.12)';
+  const cardBg = '#0a0a0a';
+  const cardBorder = 'rgba(16,185,129,0.22)';
+  const textPrimary = '#ffffff';
+  const textSecondary = '#9ca3af';
+  const accent = '#34d399';
+  const cardShadow = '0 0 0 1px rgba(16,185,129,0.08), 0 8px 32px -8px rgba(16,185,129,0.18)';
 
   return (
     <div
@@ -132,8 +127,8 @@ function NotificationsFeed({ ctx, router, isDarkMode, onOpenChat }) {
           className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
           style={{
             color: accent,
-            backgroundColor: isDarkMode ? 'rgba(16,185,129,0.10)' : 'rgba(16,185,129,0.12)',
-            border: `1px solid ${isDarkMode ? 'rgba(16,185,129,0.25)' : 'rgba(16,185,129,0.30)'}`,
+            backgroundColor: 'rgba(16,185,129,0.10)',
+            border: `1px solid rgba(16,185,129,0.25)`,
           }}
         >
           {totalNew} new
@@ -183,7 +178,7 @@ function NotificationsFeed({ ctx, router, isDarkMode, onOpenChat }) {
                     <button
                       disabled={busyId === inv.id}
                       onClick={() => wrap(inv.id, () => ctx.declineInvite(inv.id))}
-                      className={`text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50 ${isDarkMode ? 'bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10' : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200'}`}
+                      className={`text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50 bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10`}
                     >Decline</button>
                   </div>
                 </div>
@@ -208,7 +203,7 @@ function NotificationsFeed({ ctx, router, isDarkMode, onOpenChat }) {
             <button
               key={`msg-${m.sender.id}`}
               onClick={() => onOpenChat?.(m.sender.id)}
-              className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors ${isDarkMode ? 'hover:bg-emerald-400/5' : 'hover:bg-emerald-50'}`}
+              className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors hover:bg-emerald-400/5`}
               style={{ borderTop: `1px solid ${cardBorder}` }}
             >
               <Avatar user={m.sender} isOnline={m.sender?.isOnline ?? isUserOnline(m.sender?.lastSeenAt)} onlineDotBorderColor={cardBg} />
@@ -263,7 +258,7 @@ function NotificationsFeed({ ctx, router, isDarkMode, onOpenChat }) {
                   <button
                     disabled={busyId === fr.id}
                     onClick={() => wrap(fr.id, () => ctx.declineFriend(fr.id))}
-                    className={`text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50 ${isDarkMode ? 'bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10' : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200'}`}
+                    className={`text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50 bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10`}
                   >Decline</button>
                 </div>
               </div>
@@ -278,7 +273,7 @@ function NotificationsFeed({ ctx, router, isDarkMode, onOpenChat }) {
   );
 }
 
-function ConversationThread({ friend, ctx, myId, isDarkMode }) {
+function ConversationThread({ friend, ctx, myId }) {
   const [thread, setThread] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -435,12 +430,10 @@ function ConversationThread({ friend, ctx, myId, isDarkMode }) {
     }
   };
 
-  const cardBorder = isDarkMode
-    ? 'rgba(16,185,129,0.18)'
-    : 'rgba(16,185,129,0.30)';
-  const textPrimary = isDarkMode ? '#ffffff' : '#111111';
-  const textSecondary = isDarkMode ? '#9ca3af' : '#6b7280';
-  const inputBg = isDarkMode ? '#0d1310' : '#f3f4f6';
+  const cardBorder = 'rgba(16,185,129,0.18)';
+  const textPrimary = '#ffffff';
+  const textSecondary = '#9ca3af';
+  const inputBg = '#0d1310';
 
   let lastOutgoingIdx = -1;
   for (let i = thread.length - 1; i >= 0; i--) {
@@ -457,7 +450,7 @@ function ConversationThread({ friend, ctx, myId, isDarkMode }) {
         <Avatar
           user={friend}
           isOnline={friend?.isOnline ?? isUserOnline(friend?.lastSeenAt)}
-          onlineDotBorderColor={isDarkMode ? '#0a0a0a' : '#ffffff'}
+          onlineDotBorderColor={'#0a0a0a'}
         />
         <div className="flex-1 min-w-0">
           <div className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
@@ -499,19 +492,15 @@ function ConversationThread({ friend, ctx, myId, isDarkMode }) {
               className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm leading-snug break-words ${
                 m.senderId === myId
                   ? 'bg-emerald-500 text-white rounded-br-sm'
-                  : isDarkMode
-                    ? 'text-white rounded-bl-sm'
-                    : 'bg-gray-200 text-gray-900 rounded-bl-sm'
+                  : 'text-white rounded-bl-sm'
               }`}
               style={
                 m.senderId === myId
                   ? { boxShadow: '0 0 14px rgba(16,185,129,0.35)' }
-                  : isDarkMode
-                    ? {
-                        backgroundColor: '#161b18',
-                        border: '1px solid rgba(16,185,129,0.18)',
-                      }
-                    : undefined
+                  : {
+                      backgroundColor: '#161b18',
+                      border: '1px solid rgba(16,185,129,0.18)',
+                    }
               }
             >
               {m.content}
@@ -555,7 +544,7 @@ function ConversationThread({ friend, ctx, myId, isDarkMode }) {
                 backgroundColor: inputBg,
                 border: `1px solid ${cardBorder}`,
                 color: textPrimary,
-                boxShadow: isDarkMode ? 'inset 0 0 0 1px rgba(16,185,129,0.05)' : 'none',
+                boxShadow: 'inset 0 0 0 1px rgba(16,185,129,0.05)',
               }}
               maxLength={1000}
               disabled={sending}
@@ -582,7 +571,7 @@ function ConversationThread({ friend, ctx, myId, isDarkMode }) {
   );
 }
 
-function NotFriendsCard({ userId, isDarkMode, onFriendAdded }) {
+function NotFriendsCard({ userId, onFriendAdded }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -645,13 +634,11 @@ function NotFriendsCard({ userId, isDarkMode, onFriendAdded }) {
     }
   };
 
-  const cardBorder = isDarkMode
-    ? 'rgba(16,185,129,0.18)'
-    : 'rgba(16,185,129,0.30)';
-  const textPrimary = isDarkMode ? '#ffffff' : '#111111';
-  const textSecondary = isDarkMode ? '#9ca3af' : '#6b7280';
-  const cardBg = isDarkMode ? '#0a0a0a' : '#ffffff';
-  const innerBg = isDarkMode ? '#0d1310' : '#f0fdf4';
+  const cardBorder = 'rgba(16,185,129,0.18)';
+  const textPrimary = '#ffffff';
+  const textSecondary = '#9ca3af';
+  const cardBg = '#0a0a0a';
+  const innerBg = '#0d1310';
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -758,7 +745,7 @@ function applyIncomingMessage(prev, msg, myId, selectedId) {
   return next;
 }
 
-function MessagesPanel({ selectedId, onSelect, ctx, myId, isDarkMode }) {
+function MessagesPanel({ selectedId, onSelect, ctx, myId }) {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
@@ -895,18 +882,14 @@ function MessagesPanel({ selectedId, onSelect, ctx, myId, isDarkMode }) {
     [conversations, selectedId]
   );
 
-  const cardBg = isDarkMode ? '#0a0a0a' : '#ffffff';
-  const cardBorder = isDarkMode
-    ? 'rgba(16,185,129,0.22)'
-    : 'rgba(16,185,129,0.35)';
-  const textPrimary = isDarkMode ? '#ffffff' : '#111111';
-  const textSecondary = isDarkMode ? '#9ca3af' : '#6b7280';
-  const inputBg = isDarkMode ? '#0d1310' : '#f3f4f6';
-  const rowHover = isDarkMode ? 'rgba(16,185,129,0.06)' : '#ecfdf5';
-  const rowSelected = isDarkMode ? 'rgba(16,185,129,0.12)' : '#d1fae5';
-  const cardShadow = isDarkMode
-    ? '0 0 0 1px rgba(16,185,129,0.08), 0 8px 32px -8px rgba(16,185,129,0.18)'
-    : '0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(16,185,129,0.12)';
+  const cardBg = '#0a0a0a';
+  const cardBorder = 'rgba(16,185,129,0.22)';
+  const textPrimary = '#ffffff';
+  const textSecondary = '#9ca3af';
+  const inputBg = '#0d1310';
+  const rowHover = 'rgba(16,185,129,0.06)';
+  const rowSelected = 'rgba(16,185,129,0.12)';
+  const cardShadow = '0 0 0 1px rgba(16,185,129,0.08), 0 8px 32px -8px rgba(16,185,129,0.18)';
 
   return (
     <div
@@ -1027,13 +1010,11 @@ function MessagesPanel({ selectedId, onSelect, ctx, myId, isDarkMode }) {
             friend={selectedFriend}
             ctx={ctx}
             myId={myId}
-            isDarkMode={isDarkMode}
           />
         ) : selectedId && !loading && !friendsError ? (
           <NotFriendsCard
             key={selectedId}
             userId={selectedId}
-            isDarkMode={isDarkMode}
             onFriendAdded={loadFriends}
           />
         ) : selectedId && friendsError ? (
@@ -1067,7 +1048,6 @@ export default function NotificationsPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const ctx = useNotifications();
-  const { isDarkMode } = useTheme();
 
   const [mobileTab, setMobileTab] = useState('notifications');
   const [selectedId, setSelectedId] = useState(null);
@@ -1105,12 +1085,10 @@ export default function NotificationsPage() {
     if (id) setMobileTab('messages');
   }, []);
 
-  const bg = isDarkMode ? '#000000' : '#f3f4f6';
-  const pageBg = isDarkMode
-    ? 'radial-gradient(ellipse 70% 40% at 50% 0%, rgba(16,185,129,0.10), transparent 70%), radial-gradient(ellipse 60% 35% at 100% 100%, rgba(34,211,238,0.06), transparent 70%), #000000'
-    : 'radial-gradient(ellipse 70% 40% at 50% 0%, rgba(16,185,129,0.08), transparent 70%), #f3f4f6';
-  const textPrimary = isDarkMode ? '#ffffff' : '#111111';
-  const textSecondary = isDarkMode ? '#9ca3af' : '#6b7280';
+  const bg = '#000000';
+  const pageBg = 'radial-gradient(ellipse 70% 40% at 50% 0%, rgba(16,185,129,0.10), transparent 70%), radial-gradient(ellipse 60% 35% at 100% 100%, rgba(34,211,238,0.06), transparent 70%), #000000';
+  const textPrimary = '#ffffff';
+  const textSecondary = '#9ca3af';
 
   if (status === 'loading') {
     return (
@@ -1143,9 +1121,7 @@ export default function NotificationsPage() {
         <h1
           className="text-xl sm:text-2xl font-bold mb-4 tracking-tight"
           style={{
-            background: isDarkMode
-              ? 'linear-gradient(90deg, #34d399 0%, #22d3ee 100%)'
-              : 'linear-gradient(90deg, #059669 0%, #0891b2 100%)',
+            background: 'linear-gradient(90deg, #34d399 0%, #22d3ee 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -1168,20 +1144,10 @@ export default function NotificationsPage() {
                 onClick={() => setMobileTab(tab.key)}
                 className="flex-1 py-2 rounded-lg text-sm font-semibold relative transition-shadow"
                 style={{
-                  backgroundColor: active
-                    ? '#10b981'
-                    : (isDarkMode ? '#0a0a0a' : '#ffffff'),
+                  backgroundColor: active ? '#10b981' : '#0a0a0a',
                   color: active ? '#ffffff' : textPrimary,
-                  border: `1px solid ${
-                    active
-                      ? '#10b981'
-                      : (isDarkMode
-                          ? 'rgba(16,185,129,0.22)'
-                          : 'rgba(16,185,129,0.30)')
-                  }`,
-                  boxShadow: active
-                    ? '0 0 16px rgba(16,185,129,0.45)'
-                    : 'none',
+                  border: `1px solid ${active ? '#10b981' : 'rgba(16,185,129,0.22)'}`,
+                  boxShadow: active ? '0 0 16px rgba(16,185,129,0.45)' : 'none',
                 }}
               >
                 {tab.label}
@@ -1201,7 +1167,7 @@ export default function NotificationsPage() {
         {/* Desktop two-column / mobile tabbed */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div className={`md:col-span-2 ${mobileTab === 'notifications' ? 'block' : 'hidden'} md:block`}>
-            <NotificationsFeed ctx={ctx} router={router} isDarkMode={isDarkMode} onOpenChat={handleSelect} />
+            <NotificationsFeed ctx={ctx} router={router} onOpenChat={handleSelect} />
           </div>
           <div className={`md:col-span-3 ${mobileTab === 'messages' ? 'block' : 'hidden'} md:block`}>
             <MessagesPanel
@@ -1209,7 +1175,6 @@ export default function NotificationsPage() {
               onSelect={handleSelect}
               ctx={ctx}
               myId={myId}
-              isDarkMode={isDarkMode}
             />
           </div>
         </div>

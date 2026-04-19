@@ -8,14 +8,12 @@ import BattleHistoryGroup from '../components/BattleHistoryGroup';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
 import { useGames } from '../contexts/GamesContext';
 import { formatMoney } from '../utils/formatMoney';
 
 export default function BetHistory() {
   const router = useRouter();
   const { user } = useAuth();
-  const { isDarkMode } = useTheme();
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const { apiGames, inplayEvents } = useGames();
   const [allBets, setAllBets] = useState([]);
@@ -391,7 +389,7 @@ export default function BetHistory() {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: isDarkMode ? '#000000' : '#f9fafb' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#000000' }}>
       <TopNavbar 
         bankroll={user ? bankroll : null}
         pnl={totalProfit}
@@ -409,8 +407,8 @@ export default function BetHistory() {
               ref={tabsRef}
               className="relative rounded-full p-1 flex"
               style={{
-                backgroundColor: isDarkMode ? '#111111' : '#f3f4f6',
-                border: isDarkMode ? '1px solid rgba(55,65,81,0.5)' : '1px solid #d1d5db'
+                backgroundColor: '#111111',
+                border: '1px solid rgba(55,65,81,0.5)'
               }}
             >
               <div 
@@ -442,7 +440,7 @@ export default function BetHistory() {
                   style={{
                     color: selectedFilter === filter 
                       ? '#ffffff' 
-                      : (isDarkMode ? '#9ca3af' : '#6b7280')
+                      : ('#9ca3af')
                   }}
                   ref={(el) => {
                     if (el && selectedFilter === filter && !indicatorStyle.width) {

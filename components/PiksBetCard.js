@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
-import { useTheme } from '../contexts/ThemeContext';
 import TapSurface from './TapSurface';
 import { formatMoney } from '../utils/formatMoney';
 
 export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, isOpponent = false, opponentName, opponentAvatar, compactHeader = false }) {
-  const { isDarkMode } = useTheme();
   const [confirmingCashOut, setConfirmingCashOut] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const buttonRef = useRef(null);
@@ -341,7 +339,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
   const ScoreSection = ({ homeTeam, awayTeam, homeScore, awayScore, homeQuarters, awayQuarters }) => (
     <div className="space-y-1">
       <div className="flex justify-between items-center text-sm">
-        <span style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{homeTeam}</span>
+        <span style={{ color: 'rgba(255,255,255,0.9)' }}>{homeTeam}</span>
         <div className="flex items-center space-x-2">
           {homeQuarters && homeQuarters.length > 0 && (
             <div className="flex space-x-1.5 text-gray-400 text-xs">
@@ -352,7 +350,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
         </div>
       </div>
       <div className="flex justify-between items-center text-sm">
-        <span style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{awayTeam}</span>
+        <span style={{ color: 'rgba(255,255,255,0.9)' }}>{awayTeam}</span>
         <div className="flex items-center space-x-2">
           {awayQuarters && awayQuarters.length > 0 && (
             <div className="flex space-x-1.5 text-gray-400 text-xs">
@@ -372,10 +370,8 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
   };
 
   const getCardStyle = () => {
-    const baseStyle = { backgroundColor: isDarkMode ? '#0a0a0a' : '#ffffff' };
-    const shadow = isDarkMode
-      ? '0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3)'
-      : '0 4px 12px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06)';
+    const baseStyle = { backgroundColor: '#0a0a0a' };
+    const shadow = '0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3)';
     if (isOpponent) {
       return {
         ...baseStyle,
@@ -386,7 +382,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
     if (isWon) return { ...baseStyle, boxShadow: shadow };
     return {
       ...baseStyle,
-      border: isDarkMode ? '1px solid #4b5563' : '1px solid #9ca3af',
+      border: '1px solid #4b5563',
       boxShadow: shadow
     };
   };
@@ -421,8 +417,9 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
             src="/pikslogotransparent.png"
             alt="Piks"
             className={`object-contain ${compactHeader ? 'h-12 -ml-[12px]' : 'h-24 -ml-[24px]'}`}
-            style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }}
+            style={{ filter: 'none' }}
           />
+
 
           {isWon && (
             <div
@@ -451,7 +448,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
         >
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <div className="font-bold text-base" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{isParlay ? formatParlayTitle : getFullSelectionName()}</div>
+              <div className="font-bold text-base" style={{ color: '#ffffff' }}>{isParlay ? formatParlayTitle : getFullSelectionName()}</div>
               {isParlay && isSettled && (
                 <svg 
                   className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} 
@@ -463,9 +460,9 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                 </svg>
               )}
             </div>
-            <div className="text-xs uppercase tracking-wide whitespace-nowrap" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>{bet.betType}</div>
+            <div className="text-xs uppercase tracking-wide whitespace-nowrap" style={{ color: '#9ca3af' }}>{bet.betType}</div>
           </div>
-          <div className="font-bold text-xl" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+          <div className="font-bold text-xl" style={{ color: '#ffffff' }}>
             {formatOdds(bet.odds)}
           </div>
         </div>
@@ -475,7 +472,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
             className="mb-3 px-3 py-2 rounded-lg flex items-start gap-2"
             title="This pik never graded before the battle ended, so its stake was forfeited toward the battle's score."
             style={{
-              background: isDarkMode ? 'rgba(234,179,8,0.10)' : 'rgba(234,179,8,0.15)',
+              background: 'rgba(234,179,8,0.10)',
               border: '1px solid rgba(234,179,8,0.45)',
             }}
           >
@@ -484,7 +481,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
               <div className="text-yellow-400 text-xs font-bold uppercase tracking-wide">
                 Did not grade in time
               </div>
-              <div className="text-[11px] mt-0.5" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+              <div className="text-[11px] mt-0.5" style={{ color: '#d1d5db' }}>
                 Battle ended before this pik settled — stake was forfeited toward the battle's score.
               </div>
             </div>
@@ -492,7 +489,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
         )}
 
         {isParlay && isSettled && isExpanded && parlayLegs.legs.length > 0 && (
-          <div className="mb-3 space-y-4 pt-3" style={{ borderTop: isDarkMode ? '1px solid rgba(255,255,255,0.1)' : '1px solid #d1d5db' }}>
+          <div className="mb-3 space-y-4 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
             {parlayLegs.legs.map((leg, index) => {
               const legScores = generateScoresForLeg(leg, index);
               const legTeams = getTeamNamesForLeg(leg, index);
@@ -515,7 +512,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{capitalizeLeagueId(legTeams.homeTeam)}</span>
+                      <span className="text-sm" style={{ color: 'rgba(255,255,255,0.9)' }}>{capitalizeLeagueId(legTeams.homeTeam)}</span>
                       <div className="flex items-center gap-3">
                         <div className="flex gap-2 text-gray-400 text-sm">
                           {legScores.homeQuarters.map((q, i) => <span key={i}>{q}</span>)}
@@ -524,7 +521,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                       </div>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{capitalizeLeagueId(legTeams.awayTeam)}</span>
+                      <span className="text-sm" style={{ color: 'rgba(255,255,255,0.9)' }}>{capitalizeLeagueId(legTeams.awayTeam)}</span>
                       <div className="flex items-center gap-3">
                         <div className="flex gap-2 text-gray-400 text-sm">
                           {legScores.awayQuarters.map((q, i) => <span key={i}>{q}</span>)}
@@ -563,23 +560,23 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                 )}
               </div>
             ) : (
-              <div className="text-xs uppercase mb-1" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>Game</div>
+              <div className="text-xs uppercase mb-1" style={{ color: '#9ca3af' }}>Game</div>
             )}
             {isLiveGame && typeof currentHomeScore === 'number' ? (
               <div className="space-y-1">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.awayTeamFull || bet.matchup?.split(' @ ')[0])}</span>
+                  <span className="text-sm font-medium" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.awayTeamFull || bet.matchup?.split(' @ ')[0])}</span>
                   <span className="text-white font-bold">{currentAwayScore}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.homeTeamFull || bet.matchup?.split(' @ ')[1])}</span>
+                  <span className="text-sm font-medium" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.homeTeamFull || bet.matchup?.split(' @ ')[1])}</span>
                   <span className="text-white font-bold">{currentHomeScore}</span>
                 </div>
               </div>
             ) : (
               <>
-                <div className="text-sm font-medium" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.matchup)}</div>
-                <div className="text-xs mt-0.5" style={{ color: isDarkMode ? '#93c5fd' : '#111827' }}>
+                <div className="text-sm font-medium" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.matchup)}</div>
+                <div className="text-xs mt-0.5" style={{ color: '#93c5fd' }}>
                   {bet.gameStart ? new Date(bet.gameStart).toLocaleString('en-US', {
                     month: 'short',
                     day: 'numeric',
@@ -659,14 +656,14 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                           </div>
                         </div>
                         {parlayLegs.hasRealData && leg.odds && (
-                          <div className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+                          <div className="font-bold text-lg" style={{ color: '#ffffff' }}>
                             {leg.odds > 0 ? `+${leg.odds}` : leg.odds}
                           </div>
                         )}
                       </div>
                       <div className="space-y-1">
                         <div className="flex justify-between items-center">
-                          <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{capitalizeLeagueId(leg.homeTeamFull || legTeams.homeTeam)}</span>
+                          <span className="text-sm" style={{ color: 'rgba(255,255,255,0.9)' }}>{capitalizeLeagueId(leg.homeTeamFull || legTeams.homeTeam)}</span>
                           {(isLegLive || hasScores) ? (
                             <span className="text-white font-bold">{leg.homeScore}</span>
                           ) : (
@@ -674,7 +671,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                           )}
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-sm" style={{ color: isDarkMode ? 'rgba(255,255,255,0.9)' : '#111827' }}>{capitalizeLeagueId(leg.awayTeamFull || legTeams.awayTeam)}</span>
+                          <span className="text-sm" style={{ color: 'rgba(255,255,255,0.9)' }}>{capitalizeLeagueId(leg.awayTeamFull || legTeams.awayTeam)}</span>
                           {(isLegLive || hasScores) ? (
                             <span className="text-white font-bold">{leg.awayScore}</span>
                           ) : (
@@ -729,11 +726,11 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
           </div>
         )}
 
-        <div className="pt-3 mt-2" style={{ borderTop: isDarkMode ? '1px solid rgba(255,255,255,0.2)' : '1px solid #9ca3af' }}>
+        <div className="pt-3 mt-2" style={{ borderTop: '1px solid rgba(255,255,255,0.2)' }}>
           <div className="flex justify-between items-end">
             <div>
-              <div className="font-bold text-xl" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>${formatMoney(bet.stake || 0)}</div>
-              <div className="text-xs uppercase" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>Total Pikked</div>
+              <div className="font-bold text-xl" style={{ color: '#ffffff' }}>${formatMoney(bet.stake || 0)}</div>
+              <div className="text-xs uppercase" style={{ color: '#9ca3af' }}>Total Pikked</div>
             </div>
             {isWon && (
               <div className="text-right">
@@ -743,7 +740,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
             )}
             {isOpen && (
               <div className="text-right">
-                <div className="font-bold text-xl" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>${formatMoney(payout)}</div>
+                <div className="font-bold text-xl" style={{ color: '#ffffff' }}>${formatMoney(payout)}</div>
                 <div className="text-gray-400 text-xs uppercase">Potential Payout</div>
               </div>
             )}
@@ -819,8 +816,8 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
             onClick={() => onShare(bet)}
             className="w-full mt-3 font-semibold py-2.5 px-4 rounded-xl text-sm transition-all flex items-center justify-center space-x-2"
             style={{
-              backgroundColor: isDarkMode ? 'rgba(255,255,255,0.1)' : '#2563eb',
-              border: isDarkMode ? '1px solid rgba(255,255,255,0.3)' : 'none',
+              backgroundColor: 'rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.3)',
               color: '#ffffff'
             }}
           >

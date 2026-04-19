@@ -17,7 +17,6 @@ import ForfeitModal from '../components/battle/ForfeitModal';
 import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
 import ConnectionBadge from '../components/battle/ConnectionBadge';
 import { useMatchup } from '../contexts/MatchupContext';
-import { useTheme } from '../contexts/ThemeContext';
 import { useNotifications } from '../contexts/NotificationsContext';
 import { formatMoney } from '../utils/formatMoney';
 import { formatLastSeen } from '../utils/relativeTime';
@@ -71,7 +70,6 @@ export default function BattlePage() {
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
 
-  const { isDarkMode } = useTheme();
   const { setSuppress } = useNotifications();
   const { oppSpeaking } = useVoiceChat();
   const isGuest = status !== 'authenticated';
@@ -467,12 +465,12 @@ export default function BattlePage() {
   const inviteCount = invites.received?.length || 0;
   const onlineFriendCount = friends.filter(f => f.isOnline).length;
 
-  const cardBg = isDarkMode ? '#0d0d0d' : '#ffffff';
-  const cardBorder = isDarkMode ? '#1a1a1a' : '#e5e7eb';
-  const cardShadow = isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08)';
-  const textPrimary = isDarkMode ? '#ffffff' : '#111111';
-  const textSecondary = isDarkMode ? '#9ca3af' : '#6b7280';
-  const inputBg = isDarkMode ? '#111' : '#f3f4f6';
+  const cardBg = '#0d0d0d';
+  const cardBorder = '#1a1a1a';
+  const cardShadow = 'none';
+  const textPrimary = '#ffffff';
+  const textSecondary = '#9ca3af';
+  const inputBg = '#111';
 
   const SocialSection = () => (
     <div className="rounded-xl overflow-hidden" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, boxShadow: cardShadow }}>
@@ -531,7 +529,7 @@ export default function BattlePage() {
                   <div className="relative flex-shrink-0">
                     <div
                       className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden cursor-pointer"
-                      style={{ backgroundColor: isDarkMode ? '#374151' : '#e5e7eb' }}
+                      style={{ backgroundColor: '#374151' }}
                       onClick={() => router.push(`/profile/${friend.id}`)}
                     >
                       {friend.avatar ? (
@@ -595,7 +593,7 @@ export default function BattlePage() {
                 <div key={req.id} className="flex items-center gap-2.5 px-3 py-2.5">
                   <div
                     className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer"
-                    style={{ backgroundColor: isDarkMode ? '#374151' : '#e5e7eb' }}
+                    style={{ backgroundColor: '#374151' }}
                     onClick={() => router.push(`/profile/${req.sender?.id}`)}
                   >
                     {req.sender?.avatar ? (
@@ -638,7 +636,7 @@ export default function BattlePage() {
                   className={`px-3 py-2.5 bg-gradient-to-r from-blue-900/20 to-transparent transition-all duration-500 ${invite.id === highlightInviteId ? 'invite-row-highlight' : ''}`}
                 >
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ backgroundColor: isDarkMode ? '#374151' : '#e5e7eb' }}>
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ backgroundColor: '#374151' }}>
                       {invite.sender?.avatar ? <img src={invite.sender.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-[10px] font-bold text-white">{invite.sender?.username?.[0]?.toUpperCase() || '?'}</span>}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -658,7 +656,7 @@ export default function BattlePage() {
                   ref={invite.id === highlightInviteId ? inviteRowRef : null}
                   className={`flex items-center gap-2.5 px-3 py-2.5 transition-all duration-500 ${invite.id === highlightInviteId ? 'invite-row-highlight' : ''}`}
                 >
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ backgroundColor: isDarkMode ? '#374151' : '#e5e7eb' }}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ backgroundColor: '#374151' }}>
                     {invite.receiver?.avatar ? <img src={invite.receiver.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-[10px] font-bold text-white">{invite.receiver?.username?.[0]?.toUpperCase() || '?'}</span>}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -670,7 +668,7 @@ export default function BattlePage() {
               ))}
               {(invites.recentlyClosed || []).map(invite => (
                 <div key={invite.id} className="flex items-center gap-2.5 px-3 py-2.5">
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ backgroundColor: isDarkMode ? '#374151' : '#e5e7eb' }}>
+                  <div className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ backgroundColor: '#374151' }}>
                     {invite.receiver?.avatar ? <img src={invite.receiver.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-[10px] font-bold text-white">{invite.receiver?.username?.[0]?.toUpperCase() || '?'}</span>}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -702,7 +700,7 @@ export default function BattlePage() {
             <div className="divide-y" style={{ borderColor: cardBorder }}>
               {searchResults.map(user => (
                 <div key={user.id} className="flex items-center gap-2.5 px-3 py-2.5">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer" style={{ backgroundColor: isDarkMode ? '#374151' : '#e5e7eb' }} onClick={() => router.push(`/profile/${user.id}`)}>
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer" style={{ backgroundColor: '#374151' }} onClick={() => router.push(`/profile/${user.id}`)}>
                     {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-xs font-bold" style={{ color: textPrimary }}>{user.username?.[0]?.toUpperCase()}</span>}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -726,7 +724,7 @@ export default function BattlePage() {
   );
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: isDarkMode ? '#000000' : '#f5f5f5' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#000000' }}>
       <style jsx global>{`
         @keyframes inviteRowHighlightAnim {
           0%, 100% { background-color: rgba(59, 130, 246, 0); box-shadow: inset 0 0 0 0 rgba(59, 130, 246, 0); }
@@ -821,7 +819,7 @@ export default function BattlePage() {
           )}
 
           {activeMatchup && activeMatchup.status === 'waiting' && (
-            <div className="mb-4 rounded-xl overflow-hidden" style={{ backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? 'rgba(249,115,22,0.2)' : '#e5e7eb'}`, boxShadow: cardShadow }}>
+            <div className="mb-4 rounded-xl overflow-hidden" style={{ backgroundColor: '#0d0d0d', border: `1px solid ${'rgba(249,115,22,0.2)'}`, boxShadow: cardShadow }}>
               <div className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: `1px solid ${cardBorder}` }}>
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
@@ -853,7 +851,7 @@ export default function BattlePage() {
                   </div>
                 </div>
                 {activeMatchup.privateCode && (
-                  <div className="rounded-lg p-3 mb-3" style={{ backgroundColor: isDarkMode ? '#111' : '#eef0f3', border: `1px solid ${cardBorder}` }}>
+                  <div className="rounded-lg p-3 mb-3" style={{ backgroundColor: '#111', border: `1px solid ${cardBorder}` }}>
                     <p className="text-gray-500 text-xs text-center mb-1.5">Share this code</p>
                     <div className="text-xl font-mono font-bold text-center tracking-[0.3em] mb-2" style={{ color: textPrimary }}>
                       {activeMatchup.privateCode}
@@ -866,7 +864,7 @@ export default function BattlePage() {
                       }}
                       id="copy-code-btn"
                       className="w-full font-medium py-2 rounded-lg transition-colors text-sm"
-                      style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#fff', color: textPrimary, border: `1px solid ${cardBorder}` }}
+                      style={{ backgroundColor: '#1a1a1a', color: textPrimary, border: `1px solid ${cardBorder}` }}
                     >
                       Copy Code
                     </button>
@@ -1071,21 +1069,21 @@ export default function BattlePage() {
                   </p>
 
                   <div className="grid grid-cols-3 gap-3 mb-5">
-                    <div className="rounded-lg p-3 text-center" style={{ backgroundColor: isDarkMode ? '#111' : '#f9fafb', border: `1px solid ${cardBorder}` }}>
+                    <div className="rounded-lg p-3 text-center" style={{ backgroundColor: '#111', border: `1px solid ${cardBorder}` }}>
                       <div className="w-9 h-9 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-2 border border-blue-500/20">
                         <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                       </div>
                       <p className="text-[11px] font-semibold" style={{ color: textPrimary }}>Pick Games</p>
                       <p className="text-[10px] mt-0.5" style={{ color: textSecondary }}>Both players make piks on live games</p>
                     </div>
-                    <div className="rounded-lg p-3 text-center" style={{ backgroundColor: isDarkMode ? '#111' : '#f9fafb', border: `1px solid ${cardBorder}` }}>
+                    <div className="rounded-lg p-3 text-center" style={{ backgroundColor: '#111', border: `1px solid ${cardBorder}` }}>
                       <div className="w-9 h-9 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-2 border border-emerald-500/20">
                         <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
                       </div>
                       <p className="text-[11px] font-semibold" style={{ color: textPrimary }}>Track Live</p>
                       <p className="text-[10px] mt-0.5" style={{ color: textSecondary }}>Watch your balance move in real time</p>
                     </div>
-                    <div className="rounded-lg p-3 text-center" style={{ backgroundColor: isDarkMode ? '#111' : '#f9fafb', border: `1px solid ${cardBorder}` }}>
+                    <div className="rounded-lg p-3 text-center" style={{ backgroundColor: '#111', border: `1px solid ${cardBorder}` }}>
                       <div className="w-9 h-9 rounded-full bg-orange-500/10 flex items-center justify-center mx-auto mb-2 border border-orange-500/20">
                         <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                       </div>
@@ -1113,7 +1111,7 @@ export default function BattlePage() {
                       <button
                         onClick={() => window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signup' } }))}
                         className="font-semibold py-2.5 px-8 rounded-lg transition-colors text-sm"
-                        style={{ backgroundColor: isDarkMode ? '#fff' : '#111', color: isDarkMode ? '#000' : '#fff' }}
+                        style={{ backgroundColor: '#fff', color: '#000' }}
                       >
                         Sign Up Free
                       </button>
@@ -1136,7 +1134,7 @@ export default function BattlePage() {
                   className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left"
                 >
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${cardBorder}` }}>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#111', border: `1px solid ${cardBorder}` }}>
                       <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                     </div>
                     <div className="min-w-0 flex-1">
@@ -1211,19 +1209,104 @@ export default function BattlePage() {
         </div>
       </div>
 
+      {!isGuest && (
+        <>
+          <button
+            onClick={() => setSocialSheetOpen(true)}
+            onTouchStart={(e) => { sheetDragStartRef.current = e.touches[0].clientY; }}
+            onTouchMove={(e) => {
+              if (sheetDragStartRef.current == null) return;
+              const dy = sheetDragStartRef.current - e.touches[0].clientY;
+              if (dy > 30) {
+                sheetDragStartRef.current = null;
+                setSocialSheetOpen(true);
+              }
+            }}
+            onTouchEnd={() => { sheetDragStartRef.current = null; }}
+            aria-label="Open Friends & Invites"
+            className={`lg:hidden fixed left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1 px-5 py-2 rounded-t-2xl shadow-lg active:scale-95 transition-all ${socialSheetOpen ? 'translate-y-full opacity-0 pointer-events-none' : ''}`}
+            style={{
+              bottom: 'env(safe-area-inset-bottom, 0px)',
+              backgroundColor: '#1a1a1a',
+              border: `1px solid ${cardBorder}`,
+              borderBottom: 'none',
+            }}
+          >
+            <div className="w-10 h-1 rounded-full" style={{ backgroundColor: '#3a3a3a' }} />
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4" style={{ color: textSecondary }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+              <span className="text-xs font-semibold" style={{ color: textPrimary }}>Friends & Invites</span>
+              {(inviteCount + requestCount) > 0 && (
+                <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full">{inviteCount + requestCount}</span>
+              )}
+            </div>
+          </button>
+
+          <div
+            className={`lg:hidden fixed inset-0 z-40 transition-opacity duration-300 ${socialSheetOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+            style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+            onClick={() => { setSocialSheetOpen(false); setSheetDragY(0); }}
+          />
+
+          <div
+            className={`lg:hidden fixed left-0 right-0 bottom-0 z-50 rounded-t-2xl flex flex-col`}
+            style={{
+              backgroundColor: '#0a0a0a',
+              borderTop: `1px solid ${cardBorder}`,
+              maxHeight: '85vh',
+              height: '85vh',
+              transform: socialSheetOpen
+                ? `translateY(${sheetDragY}px)`
+                : 'translateY(100%)',
+              transition: sheetDragStartRef.current ? 'none' : 'transform 300ms cubic-bezier(0.32, 0.72, 0, 1)',
+              boxShadow: '0 -8px 24px rgba(0,0,0,0.3)',
+            }}
+          >
+            <div
+              className="flex flex-col items-center pt-2 pb-2 cursor-grab active:cursor-grabbing select-none flex-shrink-0"
+              onTouchStart={(e) => { sheetDragStartRef.current = e.touches[0].clientY; }}
+              onTouchMove={(e) => {
+                if (sheetDragStartRef.current == null) return;
+                const dy = e.touches[0].clientY - sheetDragStartRef.current;
+                if (dy > 0) setSheetDragY(dy);
+              }}
+              onTouchEnd={() => {
+                const dy = sheetDragY;
+                sheetDragStartRef.current = null;
+                if (dy > 100) {
+                  setSocialSheetOpen(false);
+                }
+                setSheetDragY(0);
+              }}
+            >
+              <div className="w-10 h-1 rounded-full" style={{ backgroundColor: '#3a3a3a' }} />
+              <div className="flex items-center justify-between w-full px-4 mt-2">
+                <h3 className="font-bold" style={{ color: textPrimary }}>Friends & Invites</h3>
+                <button onClick={() => { setSocialSheetOpen(false); setSheetDragY(0); }} className="text-gray-400 hover:text-white" aria-label="Close">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto px-4 pb-6 overscroll-contain">
+              <SocialSection inDrawer={true} />
+            </div>
+          </div>
+        </>
+      )}
+
       {showBattleOptions && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowBattleOptions(false)}>
           <div className="rounded-2xl p-6 w-full max-w-sm space-y-3" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }} onClick={e => e.stopPropagation()}>
             <h3 className="text-lg font-bold text-center mb-4" style={{ color: textPrimary }}>Choose Battle Mode</h3>
-            <button onClick={() => handleBattleOptionClick(setShowQuickMatch)} className="w-full flex items-center gap-4 p-4 rounded-xl text-left transition-all hover:scale-[1.01]" style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${cardBorder}` }}>
+            <button onClick={() => handleBattleOptionClick(setShowQuickMatch)} className="w-full flex items-center gap-4 p-4 rounded-xl text-left transition-all hover:scale-[1.01]" style={{ backgroundColor: '#111', border: `1px solid ${cardBorder}` }}>
               <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0"><svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg></div>
               <div><p className="font-semibold text-sm" style={{ color: textPrimary }}>Quick Match</p><p className="text-xs" style={{ color: textSecondary }}>Find a random opponent</p></div>
             </button>
-            <button onClick={() => handleBattleOptionClick(setShowPlayFriend)} className="w-full flex items-center gap-4 p-4 rounded-xl text-left transition-all hover:scale-[1.01]" style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${cardBorder}` }}>
+            <button onClick={() => handleBattleOptionClick(setShowPlayFriend)} className="w-full flex items-center gap-4 p-4 rounded-xl text-left transition-all hover:scale-[1.01]" style={{ backgroundColor: '#111', border: `1px solid ${cardBorder}` }}>
               <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0"><svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg></div>
               <div><p className="font-semibold text-sm" style={{ color: textPrimary }}>Challenge Friend</p><p className="text-xs" style={{ color: textSecondary }}>Invite a friend to battle</p></div>
             </button>
-            <button onClick={() => handleBattleOptionClick(setShowPrivateMatch)} className="w-full flex items-center gap-4 p-4 rounded-xl text-left transition-all hover:scale-[1.01]" style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${cardBorder}` }}>
+            <button onClick={() => handleBattleOptionClick(setShowPrivateMatch)} className="w-full flex items-center gap-4 p-4 rounded-xl text-left transition-all hover:scale-[1.01]" style={{ backgroundColor: '#111', border: `1px solid ${cardBorder}` }}>
               <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0"><svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg></div>
               <div><p className="font-semibold text-sm" style={{ color: textPrimary }}>Private Match</p><p className="text-xs" style={{ color: textSecondary }}>Create a room with a code</p></div>
             </button>

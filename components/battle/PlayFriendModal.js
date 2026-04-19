@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
-import { useTheme } from '../../contexts/ThemeContext';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
 
 const BUY_IN_OPTIONS = [5, 10, 25, 50, 100];
@@ -18,21 +17,21 @@ const TABS = [
   { id: 'requests', label: 'Requests' },
 ];
 
-function UserAvatar({ user, size = 36, isDarkMode }) {
+function UserAvatar({ user, size = 36 }) {
   return (
     <div
       className="rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
       style={{
         width: size,
         height: size,
-        backgroundColor: isDarkMode ? '#374151' : '#e5e7eb',
-        border: `2px solid ${isDarkMode ? '#4b5563' : '#d1d5db'}`,
+        backgroundColor: '#374151',
+        border: `2px solid ${'#4b5563'}`,
       }}
     >
       {user?.avatar ? (
         <img src={user.avatar} className="w-full h-full object-cover" alt="" />
       ) : (
-        <span className="font-bold" style={{ fontSize: size * 0.35, color: isDarkMode ? '#fff' : '#374151' }}>
+        <span className="font-bold" style={{ fontSize: size * 0.35, color: '#fff' }}>
           {user?.username?.[0]?.toUpperCase() || '?'}
         </span>
       )}
@@ -42,7 +41,6 @@ function UserAvatar({ user, size = 36, isDarkMode }) {
 
 export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onSwitchToPrivate, initialFriend = null }) {
   const router = useRouter();
-  const { isDarkMode } = useTheme();
   useModalScrollLock(isOpen);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [buyIn, setBuyIn] = useState(10);
@@ -62,14 +60,14 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
   const countdownRef = useRef(null);
   const searchTimeoutRef = useRef(null);
 
-  const cardBg = isDarkMode ? '#0d0d0d' : '#ffffff';
-  const cardBorder = isDarkMode ? '#1a1a1a' : '#e5e7eb';
-  const inputBg = isDarkMode ? '#111' : '#f3f4f6';
-  const inputBorder = isDarkMode ? '#1a1a1a' : '#e5e7eb';
-  const textPrimary = isDarkMode ? '#fff' : '#111';
-  const textSecondary = isDarkMode ? '#9ca3af' : '#6b7280';
-  const textMuted = isDarkMode ? '#6b7280' : '#9ca3af';
-  const elevatedBg = isDarkMode ? '#111' : '#f9fafb';
+  const cardBg = '#0d0d0d';
+  const cardBorder = '#1a1a1a';
+  const inputBg = '#111';
+  const inputBorder = '#1a1a1a';
+  const textPrimary = '#fff';
+  const textSecondary = '#9ca3af';
+  const textMuted = '#6b7280';
+  const elevatedBg = '#111';
 
   useEffect(() => {
     if (!isOpen) {
@@ -257,7 +255,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
         aria-modal="true"
         aria-labelledby="pfm-title"
         className="rounded-2xl max-w-md w-full max-h-[88vh] overflow-hidden flex flex-col pfm-slide-in my-auto"
-        style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, boxShadow: isDarkMode ? '0 25px 50px rgba(0,0,0,0.5)' : '0 25px 50px rgba(0,0,0,0.15)' }}
+        style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, boxShadow: '0 25px 50px rgba(0,0,0,0.5)' }}
         onClick={e => e.stopPropagation()}
       >
         <div className="px-5 pt-5 pb-0 flex-shrink-0">
@@ -279,9 +277,9 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                   onClick={() => setActiveTab(tab.id)}
                   className="flex-1 py-2 rounded-lg text-xs font-semibold transition-all relative"
                   style={{
-                    backgroundColor: activeTab === tab.id ? (isDarkMode ? '#1a1a1a' : '#fff') : 'transparent',
+                    backgroundColor: activeTab === tab.id ? ('#1a1a1a') : 'transparent',
                     color: activeTab === tab.id ? textPrimary : textMuted,
-                    boxShadow: activeTab === tab.id ? (isDarkMode ? '0 1px 3px rgba(0,0,0,0.3)' : '0 1px 3px rgba(0,0,0,0.1)') : 'none',
+                    boxShadow: activeTab === tab.id ? ('0 1px 3px rgba(0,0,0,0.3)') : 'none',
                   }}
                 >
                   {tab.label}
@@ -373,13 +371,13 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                         onClick={() => setSelectedFriend(selectedFriend?.id === friend.id ? null : friend)}
                         className="pfm-list-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all"
                         style={{
-                          backgroundColor: selectedFriend?.id === friend.id ? (isDarkMode ? 'rgba(59,130,246,0.12)' : 'rgba(59,130,246,0.08)') : elevatedBg,
+                          backgroundColor: selectedFriend?.id === friend.id ? ('rgba(59,130,246,0.12)') : elevatedBg,
                           border: `1px solid ${selectedFriend?.id === friend.id ? 'rgba(59,130,246,0.3)' : 'transparent'}`,
                           animationDelay: `${i * 40}ms`,
                         }}
                       >
                         <button type="button" className="cursor-pointer flex-shrink-0" onClick={(e) => { e.stopPropagation(); navigateToProfile(friend.id); }} aria-label={`View ${friend.username}'s profile`}>
-                          <UserAvatar user={friend} size={38} isDarkMode={isDarkMode} />
+                          <UserAvatar user={friend} size={38} />
                         </button>
                         <div className="text-left flex-1 min-w-0">
                           <div className="text-sm font-medium truncate" style={{ color: textPrimary }}>{friend.username}</div>
@@ -453,7 +451,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                         >
                           <div className="flex items-center gap-3">
                             <button type="button" className="cursor-pointer flex-shrink-0" onClick={() => navigateToProfile(user.id)} aria-label={`View ${user.username}'s profile`}>
-                              <UserAvatar user={user} size={40} isDarkMode={isDarkMode} />
+                              <UserAvatar user={user} size={40} />
                             </button>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-1.5">
@@ -554,7 +552,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                       >
                         <div className="flex items-center gap-3">
                           <button type="button" className="cursor-pointer flex-shrink-0" onClick={() => navigateToProfile(sender.id)} aria-label={`View ${sender.username || 'user'}'s profile`}>
-                            <UserAvatar user={sender} size={42} isDarkMode={isDarkMode} />
+                            <UserAvatar user={sender} size={42} />
                           </button>
                           <div className="flex-1 min-w-0">
                             <button type="button" className="text-sm font-semibold truncate cursor-pointer bg-transparent border-none p-0 text-left" style={{ color: textPrimary }} onClick={() => navigateToProfile(sender.id)}>
@@ -601,7 +599,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
             {selectedFriend && activeTab === 'friends' && (
               <div className="mt-4 pt-4 space-y-4 pfm-fade-in" style={{ borderTop: `1px solid ${cardBorder}` }}>
                 <div className="flex items-center gap-3 p-3 rounded-xl" style={{ backgroundColor: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)' }}>
-                  <UserAvatar user={selectedFriend} size={32} isDarkMode={isDarkMode} />
+                  <UserAvatar user={selectedFriend} size={32} />
                   <div className="flex-1 min-w-0">
                     <span className="text-sm font-semibold" style={{ color: textPrimary }}>Challenging {selectedFriend.username}</span>
                   </div>

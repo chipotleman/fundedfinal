@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import useModalScrollLock from '../hooks/useModalScrollLock';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
 
 export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
   const [isSignUp, setIsSignUp] = useState(initialMode === 'signup');
@@ -23,7 +22,6 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
   const emailDebounceRef = useRef(null);
   const router = useRouter();
   const { login, signUp: signUpUser } = useAuth();
-  const { isDarkMode } = useTheme();
 
   const hasMinLength = password.length >= 8;
   const hasNumber = /\d/.test(password);
@@ -189,7 +187,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
   );
 
   const emailBorderColor = () => {
-    const defaultBorder = isDarkMode ? 'border-[#1a1a1a]' : 'border-[#e5e7eb]';
+    const defaultBorder = 'border-[#1a1a1a]';
     if (!emailTouched || !email) return defaultBorder;
     if (emailChecking) return 'border-blue-500/50';
     if (emailStatus === 'invalid') return 'border-red-500/50';
@@ -205,7 +203,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
     >
       <div 
         className="popup-content relative rounded-3xl max-w-md w-full my-auto border-2 border-blue-500/50"
-        style={{ WebkitTapHighlightColor: 'transparent', backgroundColor: isDarkMode ? '#000' : '#fff' }}
+        style={{ WebkitTapHighlightColor: 'transparent', backgroundColor: '#000' }}
       >
         <button
           onClick={() => {
@@ -216,9 +214,9 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
             onClose();
           }}
           className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full flex items-center justify-center transition-colors"
-          style={{ WebkitTapHighlightColor: 'transparent', backgroundColor: isDarkMode ? '#111' : '#f3f4f6' }}
+          style={{ WebkitTapHighlightColor: 'transparent', backgroundColor: '#111' }}
         >
-          <svg className="w-5 h-5" style={{ color: isDarkMode ? '#fff' : '#374151' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5" style={{ color: '#fff' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -229,7 +227,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
               src="/pikslogotransparent.png" 
               alt="Piks Logo" 
               className="h-56 mx-auto" 
-              style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)', marginBottom: '-3.5rem' }} 
+              style={{ filter: 'none', marginBottom: '-3.5rem' }} 
             />
           </div>
 
@@ -250,7 +248,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
               type="button"
               onClick={() => handleOAuthClick('Apple')}
               className="w-full flex items-center justify-center space-x-3 font-medium py-3 px-4 rounded-xl transition-all duration-200"
-              style={{ WebkitTapHighlightColor: 'transparent', backgroundColor: '#000000', color: '#ffffff', border: `1px solid ${isDarkMode ? '#333333' : '#000000'}` }}
+              style={{ WebkitTapHighlightColor: 'transparent', backgroundColor: '#000000', color: '#ffffff', border: `1px solid ${'#333333'}` }}
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
@@ -261,10 +259,10 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t" style={{ borderColor: isDarkMode ? '#1a1a1a' : '#e5e7eb' }}></div>
+              <div className="w-full border-t" style={{ borderColor: '#1a1a1a' }}></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 text-gray-500" style={{ backgroundColor: isDarkMode ? '#000' : '#fff' }}>or continue with email</span>
+              <span className="px-4 text-gray-500" style={{ backgroundColor: '#000' }}>or continue with email</span>
             </div>
           </div>
 
@@ -277,7 +275,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                   onChange={handleEmailChange}
                   onBlur={() => { setEmailTouched(true); checkEmail(email); }}
                   className={`w-full border rounded-xl px-4 py-3 pr-10 placeholder-gray-500 focus:outline-none transition-all duration-200 ${emailBorderColor()}`}
-                  style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', color: isDarkMode ? '#fff' : '#111' }}
+                  style={{ backgroundColor: '#111', color: '#fff' }}
                   placeholder="Email address"
                   required
                 />
@@ -316,7 +314,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); setPasswordTouched(true); }}
                 className="w-full border rounded-xl px-4 py-3 pr-12 placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all duration-200"
-                style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', color: isDarkMode ? '#fff' : '#111', borderColor: isDarkMode ? '#1a1a1a' : '#e5e7eb' }}
+                style={{ backgroundColor: '#111', color: '#fff', borderColor: '#1a1a1a' }}
                 placeholder="Password"
                 required
               />
@@ -366,7 +364,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                       ? passwordsMatch ? 'border-green-500/50' : 'border-red-500/40'
                       : 'focus:border-blue-500'
                   }`}
-                  style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', color: isDarkMode ? '#fff' : '#111', borderColor: confirmTouched && confirmPassword ? undefined : (isDarkMode ? '#1a1a1a' : '#e5e7eb') }}
+                  style={{ backgroundColor: '#111', color: '#fff', borderColor: confirmTouched && confirmPassword ? undefined : ('#1a1a1a') }}
                   placeholder="Confirm password"
                   required
                 />
@@ -388,9 +386,9 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
                 className="w-4 h-4 rounded focus:ring-2 focus:ring-blue-500 text-blue-500"
-                style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#e5e7eb', borderColor: isDarkMode ? '#1a1a1a' : '#d1d5db' }}
+                style={{ backgroundColor: '#1a1a1a', borderColor: '#1a1a1a' }}
               />
-              <label htmlFor="rememberMePopup" className="ml-2 text-sm cursor-pointer" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>
+              <label htmlFor="rememberMePopup" className="ml-2 text-sm cursor-pointer" style={{ color: '#9ca3af' }}>
                 Remember my email
               </label>
             </div>

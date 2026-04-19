@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import PiksBetCard from './PiksBetCard';
-import { useTheme } from '../contexts/ThemeContext';
 import { formatMoney } from '../utils/formatMoney';
 
 export default function ShareableBetSlip({ bet, isVisible, onClose }) {
@@ -9,7 +8,6 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
   const [message, setMessage] = useState('');
   const cardContainerRef = useRef(null);
   const scrollPositionRef = useRef(0);
-  const { isDarkMode } = useTheme();
 
   useEffect(() => {
     if (!isVisible) return;
@@ -68,7 +66,7 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
     setIsGenerating(true);
     try {
       const canvas = await html2canvas(cardContainerRef.current, {
-        backgroundColor: isDarkMode ? '#000000' : '#f3f4f6',
+        backgroundColor: '#000000',
         scale: 3,
         useCORS: true,
         logging: false
@@ -146,7 +144,7 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
         left: 0,
         width: '100vw',
         height: '100vh',
-        backgroundColor: isDarkMode ? 'rgba(0,0,0,0.97)' : 'rgba(0,0,0,0.92)',
+        backgroundColor: 'rgba(0,0,0,0.97)',
         zIndex: 99999,
         display: 'flex',
         flexDirection: 'column',
@@ -203,7 +201,7 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
           width: '92vw',
           maxWidth: 400,
           padding: 12,
-          backgroundColor: isDarkMode ? '#000' : '#f3f4f6',
+          backgroundColor: '#000',
           borderRadius: 12,
           transform: 'scale(0.75)',
           transformOrigin: 'center center'

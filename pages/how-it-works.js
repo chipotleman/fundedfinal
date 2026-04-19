@@ -5,11 +5,9 @@ import ChallengeOverview from '../components/ChallengeOverview';
 import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
 
 // Piks Card Module Component
 function ThunderCardModule() {
-  const { isDarkMode } = useTheme();
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [savedEmail, setSavedEmail] = useState('');
@@ -42,7 +40,7 @@ function ThunderCardModule() {
   return (
     <div className="text-center px-4 mb-8">
       <div className="max-w-3xl mx-auto">
-        <div className="rounded-2xl overflow-hidden p-4 sm:p-6" style={{ background: isDarkMode ? 'linear-gradient(to bottom right, #0f172a, #581c87, #1e3a8a)' : 'linear-gradient(to bottom right, #f8fafc, #e0e7ff, #dbeafe)', borderWidth: 1, borderColor: isDarkMode ? 'rgba(168, 85, 247, 0.3)' : '#c7d2fe', boxShadow: isDarkMode ? 'none' : '0 4px 20px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.06)' }}>
+        <div className="rounded-2xl overflow-hidden p-4 sm:p-6" style={{ background: 'linear-gradient(to bottom right, #0f172a, #581c87, #1e3a8a)', borderWidth: 1, borderColor: 'rgba(168, 85, 247, 0.3)', boxShadow: 'none' }}>
           {/* Card Image - Main Focus */}
           <div className="flex justify-center mb-1">
             <div className="relative transform hover:scale-105 transition-all duration-300">
@@ -55,22 +53,22 @@ function ThunderCardModule() {
           </div>
 
           {/* Title */}
-          <h2 className="text-3xl sm:text-4xl font-black mb-3" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+          <h2 className="text-3xl sm:text-4xl font-black mb-3" style={{ color: '#ffffff' }}>
             Introducing the <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Piks Card</span>
           </h2>
-          <p className="text-base mb-4 max-w-lg mx-auto" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+          <p className="text-base mb-4 max-w-lg mx-auto" style={{ color: '#d1d5db' }}>
             The first prepaid bank card that gets funded directly from your betting profits. Use it anywhere.
           </p>
 
           {/* Sign Up Section */}
-          <div className="backdrop-blur-lg rounded-xl p-5 max-w-md mx-auto" style={{ backgroundColor: isDarkMode ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.8)', borderWidth: 1, borderColor: isDarkMode ? 'rgba(51, 65, 85, 0.5)' : '#d1d5db' }}>
+          <div className="backdrop-blur-lg rounded-xl p-5 max-w-md mx-auto" style={{ backgroundColor: 'rgba(0,0,0,0.3)', borderWidth: 1, borderColor: 'rgba(51, 65, 85, 0.5)' }}>
             {!isSubmitted ? (
               <>
-                <div className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium mb-3" style={{ backgroundColor: isDarkMode ? 'rgba(147, 51, 234, 0.2)' : 'rgba(34, 197, 94, 0.2)', color: isDarkMode ? '#c4b5fd' : '#15803d' }}>
+                <div className="inline-flex items-center px-4 py-1.5 rounded-full text-sm font-medium mb-3" style={{ backgroundColor: 'rgba(147, 51, 234, 0.2)', color: '#c4b5fd' }}>
                   🚀 Coming Soon
                 </div>
-                <h3 className="text-lg font-bold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>Get Early Access</h3>
-                <p className="text-sm mb-4" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>
+                <h3 className="text-lg font-bold mb-2" style={{ color: '#ffffff' }}>Get Early Access</h3>
+                <p className="text-sm mb-4" style={{ color: '#9ca3af' }}>
                   Join our waitlist for early access and special perks.
                 </p>
                 <form onSubmit={handleSubmit} className="space-y-3">
@@ -80,7 +78,7 @@ function ThunderCardModule() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
                     className="w-full px-4 py-3 rounded-lg focus:outline-none focus:ring-2"
-                    style={{ backgroundColor: isDarkMode ? '#1e293b' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? '#475569' : '#d1d5db', color: isDarkMode ? '#ffffff' : '#111827' }}
+                    style={{ backgroundColor: '#1e293b', borderWidth: 1, borderColor: '#475569', color: '#ffffff' }}
                     required
                   />
                   <button
@@ -186,7 +184,6 @@ function CustomVideoPlayer() {
 
 export default function Home() {
   const { user } = useAuth();
-  const { isDarkMode } = useTheme();
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const [bankroll, setBankroll] = useState(10000);
 
@@ -217,7 +214,7 @@ export default function Home() {
   }, [user]);
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden" style={{scrollBehavior: 'smooth', backgroundColor: isDarkMode ? '#000000' : '#f9fafb'}}>
+    <div className="min-h-screen w-full overflow-x-hidden" style={{scrollBehavior: 'smooth', backgroundColor: '#000000'}}>
       <TopNavbar 
         bankroll={user ? bankroll : null}
         pnl={user ? 0 : null}
@@ -229,7 +226,7 @@ export default function Home() {
         {/* Main Video Section - No scrolling needed */}
         <div className="relative flex items-center justify-center pt-2 pb-8 sm:min-h-screen">
           {/* Background Pattern */}
-          <div className="absolute inset-0" style={{ backgroundColor: isDarkMode ? '#000000' : '#f9fafb' }}></div>
+          <div className="absolute inset-0" style={{ backgroundColor: '#000000' }}></div>
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg%20width%3D%2260%22%20height%3D%2260%22%20viewBox%3D%220%200%2060%2060%22%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%3E%3Cg%20fill%3D%22none%22%20fill-rule%3D%22evenodd%22%3E%3Cg%20fill%3D%22%23ffffff%22%20fill-opacity%3D%220.05%22%3E%3Cpath%20d%3D%22m36%2034v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6%2034v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6%204V0H4v4H0v2h4v4h2V6h4V4H6z%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
 
           <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
@@ -237,10 +234,10 @@ export default function Home() {
             <div className="text-center mb-6 sm:mb-16 pt-2 sm:pt-0">
 
 
-              <h1 className="text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 leading-tight px-2" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+              <h1 className="text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 leading-tight px-2" style={{ color: '#ffffff' }}>
                 Get <span style={{ color: '#2563eb' }} className="font-bold inline-block">Funded</span> to Bet
               </h1>
-              <p className="text-base sm:text-lg md:text-xl max-w-3xl mx-auto leading-relaxed mb-4 sm:mb-6 px-4" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+              <p className="text-base sm:text-lg md:text-xl max-w-3xl mx-auto leading-relaxed mb-4 sm:mb-6 px-4" style={{ color: '#d1d5db' }}>
                 Watch how you can get funded up to <button onClick={() => window.dispatchEvent(new CustomEvent('openChallengePopup'))} className="font-bold transition-colors cursor-pointer" style={{ color: '#2563eb', textDecoration: 'none' }}>$100,000</button> to bet with and keep 90% of your profits
               </p>
             </div>
@@ -253,7 +250,7 @@ export default function Home() {
                 <div className="absolute -inset-1 rounded-2xl p-[2px] animate-pulse" style={{ backgroundColor: '#2563eb' }}></div>
 
                 {/* Video container - more rectangular */}
-                <div className="relative bg-[#0d0d0d] rounded-2xl overflow-hidden" style={{ boxShadow: isDarkMode ? 'none' : '0 4px 20px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.06)' }}>
+                <div className="relative bg-[#0d0d0d] rounded-2xl overflow-hidden" style={{ boxShadow: 'none' }}>
                   <CustomVideoPlayer />
                 </div>
               </div>
@@ -290,9 +287,9 @@ export default function Home() {
                   onClick={() => window.dispatchEvent(new CustomEvent('openHowItWorks'))}
                   className="w-full sm:w-auto font-bold py-3 sm:py-4 px-6 sm:px-8 rounded-xl text-base sm:text-lg text-center"
                   style={{
-                    backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
-                    color: isDarkMode ? '#ffffff' : '#111827',
-                    border: isDarkMode ? '1px solid #334155' : '1px solid #d1d5db',
+                    backgroundColor: '#1e293b',
+                    color: '#ffffff',
+                    border: '1px solid #334155',
                     cursor: 'pointer',
                     userSelect: 'none',
                     WebkitUserSelect: 'none',
@@ -314,15 +311,15 @@ export default function Home() {
               <div 
                 className="max-w-4xl mx-auto rounded-2xl p-6"
                 style={{
-                  backgroundColor: isDarkMode ? 'transparent' : '#ffffff',
-                  boxShadow: isDarkMode ? 'none' : '0 4px 20px rgba(0, 0, 0, 0.08), 0 8px 32px rgba(0, 0, 0, 0.06)'
+                  backgroundColor: 'transparent',
+                  boxShadow: 'none'
                 }}
               >
                 <div className="text-center mb-6">
-                  <h2 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
-                    Compare <span style={{ color: isDarkMode ? undefined : '#111827' }} className={isDarkMode ? "bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent" : ""}>{isDarkMode ? 'Challenges' : <span style={{ color: '#111827' }}>Challenges</span>}</span>
+                  <h2 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: '#ffffff' }}>
+                    Compare <span style={{ color: undefined }} className={"bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent"}>{'Challenges'}</span>
                   </h2>
-                  <p className="text-sm" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>
+                  <p className="text-sm" style={{ color: '#9ca3af' }}>
                     See what's included at each level
                   </p>
                 </div>

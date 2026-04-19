@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 
-export default function FireBattleContainer({ isDarkMode }) {
+export default function FireBattleContainer() {
   const [currentAvatarIndex, setCurrentAvatarIndex] = useState(0);
   const [uploadedAvatars, setUploadedAvatars] = useState([]);
   const [userAvatar, setUserAvatar] = useState(null);

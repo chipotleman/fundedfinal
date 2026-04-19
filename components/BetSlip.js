@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { useBetSlip } from '../contexts/BetSlipContext';
-import { useTheme } from '../contexts/ThemeContext';
 import { useGames } from '../contexts/GamesContext';
 import { useMatchup } from '../contexts/MatchupContext';
 import ShareableBetSlip from './ShareableBetSlip';
@@ -22,7 +21,6 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
   const router = useRouter();
   const { data: session } = useSession();
   const isLoggedIn = !!session?.user;
-  const { isDarkMode } = useTheme();
   const { betSlip: bets, removeBet, updateStake, clearBetSlip, setShowBetSlip } = useBetSlip();
   const { apiGames, inplayEvents } = useGames();
   const {
@@ -706,8 +704,8 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                   alt="Piks" 
                   className="h-[140px] w-auto brightness-100"
                   style={{
-                    filter: isDarkMode ? 'hue-rotate(0deg) saturate(1.2) brightness(1.1)' : 'invert(1) hue-rotate(0deg) saturate(1.2) brightness(0.1)',
-                    animation: isDarkMode ? 'logoRedYellowGlow 4s infinite ease-in-out' : 'none',
+                    filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
+                    animation: 'logoRedYellowGlow 4s infinite ease-in-out',
                     pointerEvents: 'none'
                   }}
                 />
@@ -722,7 +720,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
           {/* Backdrop - blocks clicks but NOT body scroll (preserves sticky positioning) */}
           <div 
             className="fixed inset-0 z-[98] hidden md:block"
-            style={{ backgroundColor: isDarkMode ? '#000000' : 'rgba(0,0,0,0.5)' }}
+            style={{ backgroundColor: '#000000' }}
             onClick={onClose}
           />
           
@@ -730,13 +728,13 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
           <div 
             className="fixed inset-0 md:inset-auto md:top-0 md:right-0 md:bottom-0 md:w-[420px] z-[99] flex flex-col" 
             style={{ 
-              backgroundColor: isDarkMode ? '#000000' : '#ffffff',
+              backgroundColor: '#000000',
               overscrollBehavior: 'contain'
             }}
             onTouchStart={() => {}}
           >
             {/* Header with Piks branding - matches TopNavbar structure */}
-            <div className="px-3 h-[70px] flex items-center" style={{ borderBottomWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#e5e7eb' }}>
+            <div className="px-3 h-[70px] flex items-center" style={{ borderBottomWidth: 1, borderColor: 'rgba(55, 65, 81, 0.5)' }}>
               <div className="flex items-center justify-between w-full min-h-[70px] relative">
                 {/* Logo placeholder - actual logo is in persistent layer above */}
                 <div className="absolute left-[-35px] top-1/2 -translate-y-1/2 w-[140px] h-[140px]"></div>
@@ -759,8 +757,8 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
 
             {/* Mode Toggle */}
             {bets.length >= 2 && (
-              <div className="px-4 py-3" style={{ borderBottomWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#000000' }}>
-                <div className="flex rounded-lg p-1 relative" style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6' }}>
+              <div className="px-4 py-3" style={{ borderBottomWidth: 1, borderColor: 'rgba(55, 65, 81, 0.5)' }}>
+                <div className="flex rounded-lg p-1 relative" style={{ backgroundColor: '#1a1a1a' }}>
                   <div 
                     className="absolute top-1 bottom-1 rounded-md transition-all duration-200 pointer-events-none"
                     style={{
@@ -855,7 +853,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                             className="flex relative"
                             style={{ 
                               transform: `translateX(-${swipeOffset}px)`, 
-                              backgroundColor: isDarkMode ? '#000000' : '#ffffff',
+                              backgroundColor: '#000000',
                               transition: swipeRefs.current[bet.id] ? 'none' : 'transform 0.2s ease-out'
                             }}
                             onTouchStart={(e) => handleTouchStart(bet.id, e)}
@@ -873,7 +871,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                                   <div style={{ 
                                     width: '2px', 
                                     height: '100%',
-                                    backgroundColor: isDarkMode ? 'rgba(107, 114, 128, 0.6)' : 'rgba(156, 163, 175, 0.7)'
+                                    backgroundColor: 'rgba(107, 114, 128, 0.6)'
                                   }} />
                                 )}
                               </div>
@@ -887,7 +885,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                                   height: '16px', 
                                   minWidth: '16px', 
                                   minHeight: '16px',
-                                  backgroundColor: isDarkMode ? '#000000' : '#ffffff'
+                                  backgroundColor: '#000000'
                                 }}
                                 aria-label={`Remove ${bet.selection}`}
                               >
@@ -905,7 +903,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                                   <div style={{ 
                                     width: '2px', 
                                     height: '100%',
-                                    backgroundColor: isDarkMode ? 'rgba(107, 114, 128, 0.6)' : 'rgba(156, 163, 175, 0.7)'
+                                    backgroundColor: 'rgba(107, 114, 128, 0.6)'
                                   }} />
                                 )}
                               </div>
@@ -915,7 +913,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                             <div className="flex-1 flex items-center gap-3 py-3 pl-3 pr-4 min-w-0">
                               {/* Leg Info */}
                               <div className="flex-1 min-w-0">
-                                <div className="font-bold text-sm leading-tight" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.selection)}</div>
+                                <div className="font-bold text-sm leading-tight" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.selection)}</div>
                                 <div className="text-xs uppercase mt-0.5 whitespace-nowrap" style={{ color: '#6b7280' }}>{bet.betType || 'Spread'}</div>
                                 {/* Live Badge + Matchup */}
                                 <div className="flex items-center gap-1.5 mt-1">
@@ -935,7 +933,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                                 <span className={`font-bold text-sm ${
                                   bet.oddsMoved === 'up' ? 'text-green-400' : 
                                   bet.oddsMoved === 'down' ? 'text-red-400' : ''
-                                }`} style={{ color: bet.oddsMoved === 'up' ? undefined : bet.oddsMoved === 'down' ? undefined : (isDarkMode ? '#ffffff' : '#111827') }}>
+                                }`} style={{ color: bet.oddsMoved === 'up' ? undefined : bet.oddsMoved === 'down' ? undefined : ('#ffffff') }}>
                                   {formatOdds(bet.odds)}
                                 </span>
                               </div>
@@ -1012,9 +1010,9 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                           className="rounded-xl relative"
                           style={{ 
                             transform: `translateX(-${swipeOffset}px)`,
-                            backgroundColor: isDarkMode ? '#000000' : '#ffffff',
+                            backgroundColor: '#000000',
                             borderWidth: 1,
-                            borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : '#e2e8f0',
+                            borderColor: 'rgba(55, 65, 81, 0.3)',
                             transition: swipeRefs.current[bet.id] ? 'none' : 'transform 0.2s ease-out'
                           }}
                           onTouchStart={(e) => handleTouchStart(bet.id, e)}
@@ -1040,7 +1038,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                               </button>
                               
                               {isCollapsible && (
-                                <svg className="w-4 h-4 transition-transform flex-shrink-0" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280', transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 transition-transform flex-shrink-0" style={{ color: '#9ca3af', transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                 </svg>
                               )}
@@ -1055,7 +1053,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                               )}
                               {/* Show team when collapsed */}
                               {!isExpanded && (
-                                <span className="text-xs truncate ml-1" style={{ color: isDarkMode ? '#9ca3af' : '#4b5563' }}>
+                                <span className="text-xs truncate ml-1" style={{ color: '#9ca3af' }}>
                                   {capitalizeLeagueId(bet.selection)}
                                 </span>
                               )}
@@ -1079,7 +1077,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                               {/* Selection & Odds Row */}
                               <div className="flex justify-between items-start mb-3">
                                 <div className="flex-1">
-                                  <div className="font-bold text-lg leading-tight" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.selection)}</div>
+                                  <div className="font-bold text-lg leading-tight" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.selection)}</div>
                                   <div className="text-gray-500 text-xs uppercase mt-0.5 whitespace-nowrap">{bet.betType}</div>
                                 </div>
                                 <div className="flex items-center gap-1">
@@ -1095,19 +1093,19 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                               </div>
                               
                               {/* Game Info Box - compact, LIVE is on header row */}
-                              <div className="rounded-lg px-3 py-2" style={{ backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.4)' : '#f1f5f9', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.3)' : '#e2e8f0' }}>
+                              <div className="rounded-lg px-3 py-2" style={{ backgroundColor: 'rgba(30, 41, 59, 0.4)', borderWidth: 1, borderColor: 'rgba(55, 65, 81, 0.3)' }}>
                                 <div className="space-y-0.5">
                                   <div className="flex justify-between items-center">
-                                    <span className="text-sm" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0] || 'Away')}</span>
+                                    <span className="text-sm" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0] || 'Away')}</span>
                                     <div className="flex items-center gap-2">
-                                      {awayScore !== null && <span className="font-bold text-sm" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{awayScore}</span>}
+                                      {awayScore !== null && <span className="font-bold text-sm" style={{ color: '#ffffff' }}>{awayScore}</span>}
                                       {/* Game time only - LIVE is on header */}
                                       {!isLive && <span className="text-gray-500 text-[10px]">{gameTime}</span>}
                                     </div>
                                   </div>
                                   <div className="flex justify-between items-center">
-                                    <span className="text-sm" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{capitalizeLeagueId(bet.homeTeamFull || bet.homeTeam || bet.matchup?.split(' @ ')[1] || 'Home')}</span>
-                                    {homeScore !== null && <span className="font-bold text-sm" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{homeScore}</span>}
+                                    <span className="text-sm" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.homeTeamFull || bet.homeTeam || bet.matchup?.split(' @ ')[1] || 'Home')}</span>
+                                    {homeScore !== null && <span className="font-bold text-sm" style={{ color: '#ffffff' }}>{homeScore}</span>}
                                   </div>
                                 </div>
                               </div>
@@ -1116,7 +1114,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                               {betType === 'single' && (
                                 <div className="flex items-center gap-3 mt-4">
                                   <div className="relative flex-1">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: isDarkMode ? '#6b7280' : '#6b7280' }}>$</span>
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#6b7280' }}>$</span>
                                     <input
                                       type="text"
                                       inputMode="decimal"
@@ -1124,10 +1122,10 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                                       onChange={(e) => handleStakeInputChange(bet.id, e)}
                                       className="w-full pl-8 pr-3 py-3 rounded-lg text-base focus:outline-none focus:ring-1 focus:ring-blue-500"
                                       style={{ 
-                                        backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : '#f1f5f9',
+                                        backgroundColor: 'rgba(30, 41, 59, 0.8)',
                                         borderWidth: 1,
-                                        borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#e2e8f0',
-                                        color: isDarkMode ? '#ffffff' : '#111827'
+                                        borderColor: 'rgba(55, 65, 81, 0.5)',
+                                        color: '#ffffff'
                                       }}
                                       placeholder={`Min $${minBetAmount}`}
                                     />
@@ -1152,7 +1150,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                     <button 
                       onClick={() => clearBetSlip()}
                       className="w-full mt-3 py-2.5 flex items-center justify-center gap-2 text-red-500 hover:text-red-400 transition-colors border-t"
-                      style={{ borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#e2e8f0' }}
+                      style={{ borderColor: 'rgba(55, 65, 81, 0.5)' }}
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -1165,20 +1163,20 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
             </div>
 
             {bets.length > 0 && (
-              <div className="flex-shrink-0 p-4" style={{ borderTopWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#000000', backgroundColor: isDarkMode ? '#000000' : '#ffffff' }}>
+              <div className="flex-shrink-0 p-4" style={{ borderTopWidth: 1, borderColor: 'rgba(55, 65, 81, 0.5)', backgroundColor: '#000000' }}>
                 {/* Parlay Stake Input */}
                 {betType === 'parlay' && bets.length >= 2 && (
                   <div className="mb-4">
                     <div className="flex items-center gap-3">
                       <div className="relative flex-1">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: isDarkMode ? '#6b7280' : '#111827' }}>$</span>
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#6b7280' }}>$</span>
                         <input
                           type="text"
                           inputMode="decimal"
                           value={getParlayStakeDisplayValue()}
                           onChange={handleParlayStakeInputChange}
                           className="w-full pl-8 pr-3 py-3 rounded-lg text-base focus:outline-none focus:border-blue-500"
-                          style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? '#374151' : '#000000', color: isDarkMode ? '#ffffff' : '#111827' }}
+                          style={{ backgroundColor: '#1a1a1a', borderWidth: 1, borderColor: '#374151', color: '#ffffff' }}
                           placeholder={`Min $${minBetAmount}`}
                         />
                       </div>
@@ -1192,13 +1190,13 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                   </div>
                 )}
                 
-                <div className="rounded-lg p-3 mb-4" style={{ backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.5)' : '#f3f4f6' }}>
+                <div className="rounded-lg p-3 mb-4" style={{ backgroundColor: 'rgba(15, 23, 42, 0.5)' }}>
                   <div className="flex justify-between text-sm mb-2">
-                    <span style={{ color: isDarkMode ? '#9ca3af' : '#374151' }}>Total Pikked</span>
-                    <span className="font-bold" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>${formatMoney(totalStake)}</span>
+                    <span style={{ color: '#9ca3af' }}>Total Pikked</span>
+                    <span className="font-bold" style={{ color: '#ffffff' }}>${formatMoney(totalStake)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span style={{ color: isDarkMode ? '#9ca3af' : '#374151' }}>Potential Payout</span>
+                    <span style={{ color: '#9ca3af' }}>Potential Payout</span>
                     <span className="text-green-400 font-bold text-lg">${formatMoney(totalPayout)}</span>
                   </div>
                 </div>

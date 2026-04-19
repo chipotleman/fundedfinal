@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useTheme } from '../contexts/ThemeContext';
 import { formatMoney } from '../utils/formatMoney';
 import BattleOverviewPopup from './BattleOverviewPopup';
 import UserAvatar from './UserAvatar';
@@ -82,7 +81,6 @@ export default function BattleHistoryGroup({
     if (!isControlled) setInternalOpen(value);
     if (onOpenChange) onOpenChange(value);
   };
-  const { isDarkMode } = useTheme();
 
   const mode = getGameMode(battle);
   const theme = MODE_THEMES[mode];

@@ -1,26 +1,24 @@
-import { useTheme } from '../contexts/ThemeContext';
 import TopNavbar from '../components/TopNavbar';
 import Footer from '../components/Footer';
 
 export default function PrivacyPolicy() {
-  const { isDarkMode } = useTheme();
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: isDarkMode ? '#000000' : '#f5f5f5' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#000000' }}>
       <TopNavbar />
       <div className="px-4 sm:px-6 lg:px-8 py-8 pt-24">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+          <h1 className="text-3xl font-bold mb-8" style={{ color: '#ffffff' }}>
             Privacy Policy
           </h1>
           
-          <div className="space-y-6" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+          <div className="space-y-6" style={{ color: '#d1d5db' }}>
             <p>
               <strong>Last Updated:</strong> January 2026
             </p>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              <h2 className="text-xl font-semibold mb-3" style={{ color: '#ffffff' }}>
                 Information We Collect
               </h2>
               <p className="mb-3">We collect information you provide directly to us, including:</p>
@@ -33,7 +31,7 @@ export default function PrivacyPolicy() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              <h2 className="text-xl font-semibold mb-3" style={{ color: '#ffffff' }}>
                 How We Use Your Information
               </h2>
               <ul className="list-disc pl-6 space-y-2">
@@ -46,7 +44,7 @@ export default function PrivacyPolicy() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              <h2 className="text-xl font-semibold mb-3" style={{ color: '#ffffff' }}>
                 Information Sharing
               </h2>
               <p>
@@ -61,7 +59,7 @@ export default function PrivacyPolicy() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              <h2 className="text-xl font-semibold mb-3" style={{ color: '#ffffff' }}>
                 Data Security
               </h2>
               <p>
@@ -70,7 +68,7 @@ export default function PrivacyPolicy() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              <h2 className="text-xl font-semibold mb-3" style={{ color: '#ffffff' }}>
                 Your Rights
               </h2>
               <p>You have the right to:</p>
@@ -83,12 +81,12 @@ export default function PrivacyPolicy() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              <h2 className="text-xl font-semibold mb-3" style={{ color: '#ffffff' }}>
                 Contact Us
               </h2>
               <p>
                 If you have questions about this Privacy Policy, please contact us at{' '}
-                <a href="mailto:help@thepiks.com" className="underline" style={{ color: isDarkMode ? '#60a5fa' : '#2563eb' }}>
+                <a href="mailto:help@thepiks.com" className="underline" style={{ color: '#60a5fa' }}>
                   help@thepiks.com
                 </a>
               </p>

@@ -1,22 +1,20 @@
-import { useTheme } from '../contexts/ThemeContext';
 import TopNavbar from '../components/TopNavbar';
 import Footer from '../components/Footer';
 
 export default function HouseRules() {
-  const { isDarkMode } = useTheme();
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: isDarkMode ? '#000000' : '#f5f5f5' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#000000' }}>
       <TopNavbar />
       <div className="px-4 sm:px-6 lg:px-8 py-8 pt-24">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+          <h1 className="text-3xl font-bold mb-8" style={{ color: '#ffffff' }}>
             House Rules
           </h1>
           
-          <div className="space-y-6" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+          <div className="space-y-6" style={{ color: '#d1d5db' }}>
             <section>
-              <h2 className="text-xl font-semibold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              <h2 className="text-xl font-semibold mb-3" style={{ color: '#ffffff' }}>
                 1. Challenge Requirements
               </h2>
               <ul className="list-disc pl-6 space-y-2">
@@ -29,7 +27,7 @@ export default function HouseRules() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              <h2 className="text-xl font-semibold mb-3" style={{ color: '#ffffff' }}>
                 2. Betting Rules
               </h2>
               <ul className="list-disc pl-6 space-y-2">
@@ -41,7 +39,7 @@ export default function HouseRules() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              <h2 className="text-xl font-semibold mb-3" style={{ color: '#ffffff' }}>
                 3. Account Rules
               </h2>
               <ul className="list-disc pl-6 space-y-2">
@@ -53,7 +51,7 @@ export default function HouseRules() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              <h2 className="text-xl font-semibold mb-3" style={{ color: '#ffffff' }}>
                 4. Payouts
               </h2>
               <ul className="list-disc pl-6 space-y-2">
@@ -64,7 +62,7 @@ export default function HouseRules() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              <h2 className="text-xl font-semibold mb-3" style={{ color: '#ffffff' }}>
                 5. 1v1 Battles & Pik Pools
               </h2>
               <ul className="list-disc pl-6 space-y-2">

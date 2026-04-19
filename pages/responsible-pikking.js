@@ -1,26 +1,24 @@
-import { useTheme } from '../contexts/ThemeContext';
 import TopNavbar from '../components/TopNavbar';
 import Footer from '../components/Footer';
 
 export default function ResponsiblePikking() {
-  const { isDarkMode } = useTheme();
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: isDarkMode ? '#000000' : '#f5f5f5' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#000000' }}>
       <TopNavbar />
       <div className="px-4 sm:px-6 lg:px-8 py-8 pt-24">
         <div className="max-w-3xl mx-auto">
-          <h1 className="text-3xl font-bold mb-8" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+          <h1 className="text-3xl font-bold mb-8" style={{ color: '#ffffff' }}>
             Responsible Pikking
           </h1>
           
-          <div className="space-y-6" style={{ color: isDarkMode ? '#d1d5db' : '#374151' }}>
+          <div className="space-y-6" style={{ color: '#d1d5db' }}>
             <p>
               At Piks, we are committed to promoting responsible gaming practices. We want all of our users to enjoy our platform safely and responsibly.
             </p>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              <h2 className="text-xl font-semibold mb-3" style={{ color: '#ffffff' }}>
                 Know Your Limits
               </h2>
               <ul className="list-disc pl-6 space-y-2">
@@ -32,7 +30,7 @@ export default function ResponsiblePikking() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              <h2 className="text-xl font-semibold mb-3" style={{ color: '#ffffff' }}>
                 Warning Signs
               </h2>
               <p className="mb-3">If you experience any of the following, it may be time to seek help:</p>
@@ -46,12 +44,12 @@ export default function ResponsiblePikking() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              <h2 className="text-xl font-semibold mb-3" style={{ color: '#ffffff' }}>
                 Self-Exclusion
               </h2>
               <p>
                 If you feel you need to take a break, contact our support team at{' '}
-                <a href="mailto:help@thepiks.com" className="underline" style={{ color: isDarkMode ? '#60a5fa' : '#2563eb' }}>
+                <a href="mailto:help@thepiks.com" className="underline" style={{ color: '#60a5fa' }}>
                   help@thepiks.com
                 </a>{' '}
                 to request a temporary or permanent self-exclusion from the platform.
@@ -59,20 +57,20 @@ export default function ResponsiblePikking() {
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-3" style={{ color: isDarkMode ? '#ffffff' : '#000000' }}>
+              <h2 className="text-xl font-semibold mb-3" style={{ color: '#ffffff' }}>
                 Get Help
               </h2>
               <p className="mb-3">If you or someone you know has a gambling problem, help is available:</p>
               <ul className="list-disc pl-6 space-y-2">
                 <li>
                   <strong>National Council on Problem Gambling:</strong>{' '}
-                  <a href="tel:1-800-522-4700" className="underline" style={{ color: isDarkMode ? '#60a5fa' : '#2563eb' }}>
+                  <a href="tel:1-800-522-4700" className="underline" style={{ color: '#60a5fa' }}>
                     1-800-522-4700
                   </a>
                 </li>
                 <li>
                   <strong>Gamblers Anonymous:</strong>{' '}
-                  <a href="https://www.gamblersanonymous.org" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: isDarkMode ? '#60a5fa' : '#2563eb' }}>
+                  <a href="https://www.gamblersanonymous.org" target="_blank" rel="noopener noreferrer" className="underline" style={{ color: '#60a5fa' }}>
                     www.gamblersanonymous.org
                   </a>
                 </li>

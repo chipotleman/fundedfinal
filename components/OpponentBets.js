@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useTheme } from '../contexts/ThemeContext';
 import { formatMoney } from '../utils/formatMoney';
 
 export default function OpponentBets({ 
@@ -10,21 +9,18 @@ export default function OpponentBets({
   onRefresh 
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const { isDarkMode } = useTheme();
 
   if (!canSeeBets) {
     return (
       <div className={`${
-        isDarkMode 
-          ? 'bg-[#0a0a0a] border-gray-800/50' 
-          : 'bg-white border-gray-300 shadow-lg'
+        'bg-[#0a0a0a] border-gray-800/50'
       } border rounded-xl p-4 mb-4`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <span className="text-2xl">🔒</span>
             <div>
-              <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponentName}'s Bets</h3>
-              <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>Place a bet to see your opponent's picks</p>
+              <h3 className={`font-semibold ${'text-white'}`}>{opponentName}'s Bets</h3>
+              <p className={`text-sm ${'text-gray-400'}`}>Place a bet to see your opponent's picks</p>
             </div>
           </div>
         </div>
@@ -38,9 +34,7 @@ export default function OpponentBets({
 
   return (
     <div className={`${
-      isDarkMode 
-        ? 'bg-[#0a0a0a] border-gray-800/50' 
-        : 'bg-white border-gray-300 shadow-lg'
+      'bg-[#0a0a0a] border-gray-800/50'
     } border rounded-xl p-4 mb-4`}>
       <div 
         className="flex items-center justify-between cursor-pointer"
@@ -49,8 +43,8 @@ export default function OpponentBets({
         <div className="flex items-center gap-3">
           <span className="text-2xl">👀</span>
           <div>
-            <h3 className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponentName}'s Bets</h3>
-            <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+            <h3 className={`font-semibold ${'text-white'}`}>{opponentName}'s Bets</h3>
+            <p className={`text-sm ${'text-gray-400'}`}>
               {opponentBets.length} pick{opponentBets.length !== 1 ? 's' : ''} • ${formatMoney(totalStaked, 0)} staked
             </p>
           </div>
@@ -62,45 +56,45 @@ export default function OpponentBets({
               {pendingBets.length} pending
             </span>
             <span className={`px-2 py-1 rounded text-xs ${
-              isDarkMode ? 'bg-[#1a1a1a] text-gray-300' : 'bg-gray-200 text-gray-700'
+              'bg-[#1a1a1a] text-gray-300'
             }`}>
               {settledBets.length} settled
             </span>
           </div>
-          <span className={`transition-transform ${isExpanded ? 'rotate-180' : ''} ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          <span className={`transition-transform ${isExpanded ? 'rotate-180' : ''} ${'text-gray-400'}`}>
             ▼
           </span>
         </div>
       </div>
 
       {isExpanded && (
-        <div className={`mt-4 pt-4 border-t space-y-3 ${isDarkMode ? 'border-gray-800/50' : 'border-gray-200'}`}>
+        <div className={`mt-4 pt-4 border-t space-y-3 ${'border-gray-800/50'}`}>
           {opponentBets.length === 0 ? (
-            <p className={`text-center py-4 ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>No bets placed yet</p>
+            <p className={`text-center py-4 ${'text-gray-500'}`}>No bets placed yet</p>
           ) : (
             opponentBets.map((bet, index) => (
               <div 
                 key={bet.id || index}
                 className={`flex items-center justify-between p-3 rounded-lg ${
-                  isDarkMode ? 'bg-[#111111] border border-gray-800/50' : 'bg-gray-100'
+                  'bg-[#111111] border border-gray-800/50'
                 }`}
               >
                 <div className="flex-1 min-w-0 pr-2">
-                  <p className={`font-medium text-sm truncate ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  <p className={`font-medium text-sm truncate ${'text-white'}`}>
                     {bet.selection || bet.matchupName}
                   </p>
-                  <p className={`text-xs flex items-center gap-1 ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  <p className={`text-xs flex items-center gap-1 ${'text-gray-400'}`}>
                     <span className="truncate min-w-0">{bet.matchupName}</span>
                     <span className="flex-shrink-0">• {bet.marketType}</span>
                   </p>
                 </div>
                 
                 <div className="text-right">
-                  <p className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                  <p className={`font-semibold ${'text-white'}`}>
                     ${formatMoney(parseFloat(bet.stake || 0), 0)}
                   </p>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>@ {bet.odds}</span>
+                    <span className={`text-xs ${'text-gray-400'}`}>@ {bet.odds}</span>
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                       bet.status === 'won' ? 'bg-green-500/20 text-green-500' :
                       bet.status === 'lost' ? 'bg-red-500/20 text-red-500' :

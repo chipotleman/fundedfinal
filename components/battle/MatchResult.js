@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useTheme } from '../../contexts/ThemeContext';
 import CoinRain from '../CoinRain';
 import { formatMoney } from '../../utils/formatMoney';
 
@@ -29,7 +28,6 @@ function useCountUp(target, duration = 1000, shouldStart = false) {
 }
 
 export default function MatchResult({ matchup, currentUserId, onRematch, onClose, highlight = false }) {
-  const { isDarkMode } = useTheme();
   const [showStats, setShowStats] = useState(false);
   const [showTitle, setShowTitle] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
@@ -210,7 +208,7 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
 
       {!isWinner && !isTie && <div className="mr-red-vignette" />}
 
-      <div className={`fixed inset-0 backdrop-blur-md z-50 flex items-center justify-center p-4 ${!isWinner && !isTie ? 'mr-shake' : ''}`} style={{ background: isDarkMode ? 'rgba(0,0,0,0.9)' : 'rgba(255,255,255,0.92)' }}>
+      <div className={`fixed inset-0 backdrop-blur-md z-50 flex items-center justify-center p-4 ${!isWinner && !isTie ? 'mr-shake' : ''}`} style={{ background: 'rgba(0,0,0,0.9)' }}>
         <div className="max-w-md w-full text-center">
 
           {showTitle && (
@@ -223,7 +221,7 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
                   <h2 className="text-4xl font-black text-cyan-400 mr-title-tie" style={{ animationDelay: '0.15s' }}>
                     DRAW!
                   </h2>
-                  <p className={`mt-2 text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Evenly matched</p>
+                  <p className={`mt-2 text-sm ${'text-gray-400'}`}>Evenly matched</p>
                 </>
               ) : isWinner ? (
                 <>
@@ -245,7 +243,7 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
                   <h2 className="text-4xl font-black text-red-500 mr-title-lose tracking-wider">
                     DEFEAT
                   </h2>
-                  <p className={`mt-2 text-sm ${isDarkMode ? 'text-gray-500' : 'text-gray-500'}`}>Better luck next time</p>
+                  <p className={`mt-2 text-sm ${'text-gray-500'}`}>Better luck next time</p>
                 </>
               )}
             </div>
@@ -255,28 +253,28 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
             <div
               className={`mr-stats-card rounded-xl p-5 mb-6 space-y-4 ${highlight ? 'mr-result-highlight' : ''}`}
               style={{
-                background: isDarkMode ? '#0d0d0d' : '#ffffff',
-                border: `1px solid ${highlight ? 'rgba(6, 182, 212, 0.55)' : (isDarkMode ? '#1a1a1a' : '#e5e7eb')}`,
-                boxShadow: isDarkMode ? 'none' : '0 4px 12px rgba(0,0,0,0.08)',
+                background: '#0d0d0d',
+                border: `1px solid ${highlight ? 'rgba(6, 182, 212, 0.55)' : ('#1a1a1a')}`,
+                boxShadow: 'none',
               }}
             >
               <div className="flex justify-between items-center">
-                <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Starting Balance</span>
-                <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${formatMoney(animatedStarting)}</span>
+                <span className={`text-sm ${'text-gray-400'}`}>Starting Balance</span>
+                <span className={`font-medium ${'text-white'}`}>${formatMoney(animatedStarting)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Final Balance</span>
-                <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${formatMoney(animatedFinal)}</span>
+                <span className={`text-sm ${'text-gray-400'}`}>Final Balance</span>
+                <span className={`font-bold ${'text-white'}`}>${formatMoney(animatedFinal)}</span>
               </div>
-              <div className="pt-3 flex justify-between items-center" style={{ borderTop: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
-                <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>P&L</span>
+              <div className="pt-3 flex justify-between items-center" style={{ borderTop: `1px solid ${'#1a1a1a'}` }}>
+                <span className={`text-sm ${'text-gray-400'}`}>P&L</span>
                 <span className={`font-bold text-lg ${pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
                   {pnl >= 0 ? '+' : '-'}${formatMoney(animatedPnl)}
                 </span>
               </div>
               {isWinner && prizeWon > 0 && (
                 <div className="flex justify-between items-center">
-                  <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Prize Won</span>
+                  <span className={`text-sm ${'text-gray-400'}`}>Prize Won</span>
                   <span className="text-emerald-400 font-bold text-lg">${formatMoney(animatedPrize)}</span>
                 </div>
               )}
@@ -293,7 +291,7 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
                     <div className="text-yellow-400 text-[11px] font-bold uppercase tracking-wide leading-tight">
                       {totalPendingCount} {totalPendingCount === 1 ? 'pik' : 'piks'} did not grade in time
                     </div>
-                    <div className={`text-[11px] mt-0.5 leading-snug ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    <div className={`text-[11px] mt-0.5 leading-snug ${'text-gray-300'}`}>
                       {(() => {
                         const parts = [];
                         if (myPendingCount > 0) parts.push(`${myPendingCount} of yours`);
@@ -312,7 +310,7 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
             <div className="flex gap-3 mr-stats-card" style={{ animationDelay: '0.15s' }}>
               <button
                 onClick={onRematch}
-                className={`flex-1 font-semibold py-3 rounded-lg transition-colors ${isDarkMode ? 'bg-white text-black hover:bg-gray-100' : 'bg-gray-900 text-white hover:bg-gray-800'}`}
+                className={`flex-1 font-semibold py-3 rounded-lg transition-colors ${'bg-white text-black hover:bg-gray-100'}`}
               >
                 Rematch
               </button>
@@ -320,15 +318,15 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
                 <button
                   onClick={handleShare}
                   className="flex-1 text-emerald-400 font-semibold py-3 rounded-lg transition-colors"
-                  style={{ background: isDarkMode ? '#1a1a1a' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#333' : '#d1d5db'}` }}
+                  style={{ background: '#1a1a1a', border: `1px solid ${'#333'}` }}
                 >
                   {copied ? 'Copied!' : 'Share Win'}
                 </button>
               ) : (
                 <button
                   onClick={onClose}
-                  className={`flex-1 font-medium py-3 rounded-lg transition-colors ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}
-                  style={{ background: isDarkMode ? '#1a1a1a' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#333' : '#d1d5db'}` }}
+                  className={`flex-1 font-medium py-3 rounded-lg transition-colors ${'text-gray-300'}`}
+                  style={{ background: '#1a1a1a', border: `1px solid ${'#333'}` }}
                 >
                   Back to Battle
                 </button>

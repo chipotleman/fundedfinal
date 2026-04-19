@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
-import { useTheme } from '../contexts/ThemeContext';
 import { formatMoney } from '../utils/formatMoney';
 import useModalScrollLock from '../hooks/useModalScrollLock';
 
@@ -139,7 +138,6 @@ export default function BattleOverviewPopup({
   outcomeBadge,
   onClose,
 }) {
-  const { isDarkMode } = useTheme();
   const [activeTab, setActiveTab] = useState('mine');
   const [shareToast, setShareToast] = useState(null);
   const toastTimerRef = useRef(null);
@@ -408,7 +406,7 @@ export default function BattleOverviewPopup({
                 <div
                   className="inline-flex rounded-full p-1 mb-2"
                   style={{
-                    background: isDarkMode ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)',
+                    background: 'rgba(255,255,255,0.04)',
                     border: `1px solid ${theme.borderColor}`,
                   }}
                 >
@@ -418,7 +416,7 @@ export default function BattleOverviewPopup({
                     className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-colors"
                     style={{
                       background: activeTab === 'mine' ? theme.accentColor : 'transparent',
-                      color: activeTab === 'mine' ? '#fff' : (isDarkMode ? '#9ca3af' : '#6b7280'),
+                      color: activeTab === 'mine' ? '#fff' : ('#9ca3af'),
                     }}
                   >
                     Your Piks ({betCount})
@@ -429,7 +427,7 @@ export default function BattleOverviewPopup({
                     className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-colors"
                     style={{
                       background: activeTab === 'theirs' ? '#ef4444' : 'transparent',
-                      color: activeTab === 'theirs' ? '#fff' : (isDarkMode ? '#9ca3af' : '#6b7280'),
+                      color: activeTab === 'theirs' ? '#fff' : ('#9ca3af'),
                     }}
                   >
                     {opponent.username}'s Piks ({opponentBetCount})

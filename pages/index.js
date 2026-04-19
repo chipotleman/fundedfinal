@@ -15,7 +15,6 @@ import { inferLeague } from '../lib/leagueInference';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import { useAuth } from '../contexts/AuthContext';
-import { useTheme } from '../contexts/ThemeContext';
 import { useGames } from '../contexts/GamesContext';
 import { useMatchup } from '../contexts/MatchupContext';
 import { categorizeGames, filterGamesBySport } from '../lib/gamesUtils';
@@ -25,7 +24,6 @@ import useModalScrollLock from '../hooks/useModalScrollLock';
 export default function Dashboard() {
   const router = useRouter();
   const { user } = useAuth();
-  const { isDarkMode } = useTheme();
   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
   const { apiGames: contextApiGames, inplayEvents: contextInplayEvents, loading: gamesLoading, error: gamesError, lastUpdated, isDemoMode } = useGames();
   const { matchup, opponent, myProfile, myBalance: matchupBalance, opponentBalance, myLiveBalance, opponentLiveBalance, myUnrealizedPnl, opponentUnrealizedPnl, myPendingAtRiskCount, myBets, opponentBets, canSeeOpponentBets, hasActiveMatchup, isWaiting, isQueued, queueEntry, hasAnyMatchup, timeRemaining, refresh: refreshMatchup } = useMatchup();
@@ -533,7 +531,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: isDarkMode ? '#000000' : '#f5f5f5' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#000000' }}>
       <TopNavbar 
         bankroll={bankroll}
         pnl={pnl}
@@ -584,9 +582,9 @@ export default function Dashboard() {
               ) : isQueued && queueEntry ? (
                 <WaitingBattleCard queueEntry={queueEntry} myProfile={myProfile} />
               ) : (
-                <FireBattleContainer isDarkMode={isDarkMode} />
+                <FireBattleContainer />
               )}
-              <PoolContainer isDarkMode={isDarkMode} />
+              <PoolContainer />
             </div>
           </div>
         </div>
@@ -595,7 +593,7 @@ export default function Dashboard() {
           className="sticky z-40 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-2 mb-3"
           style={{ 
             top: 'var(--top-nav-height, 70px)',
-            backgroundColor: isDarkMode ? '#000000' : '#f5f5f5',
+            backgroundColor: '#000000',
           }}
         >
           <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-hide">
@@ -611,7 +609,7 @@ export default function Dashboard() {
               activeColor="#dc2626"
               inactiveColor="transparent"
               activeTextColor="#ffffff"
-              inactiveTextColor={isDarkMode ? '#9ca3af' : '#6b7280'}
+              inactiveTextColor={'#9ca3af'}
               style={{
                 flexShrink: 0,
                 display: 'flex',
@@ -623,7 +621,7 @@ export default function Dashboard() {
                 fontWeight: '600',
                 borderWidth: '1px',
                 borderStyle: 'solid',
-                borderColor: selectedSport === 'Live' ? '#dc2626' : (isDarkMode ? '#1f2937' : '#d1d5db')
+                borderColor: selectedSport === 'Live' ? '#dc2626' : ('#1f2937')
               }}
             >
               <span 
@@ -641,10 +639,10 @@ export default function Dashboard() {
                 key={sport}
                 onTap={() => handleSportClick(sport)}
                 isActive={selectedSport === sport}
-                activeColor={isDarkMode ? '#1a1a1a' : '#e5e7eb'}
+                activeColor={'#1a1a1a'}
                 inactiveColor="transparent"
-                activeTextColor={isDarkMode ? '#ffffff' : '#111827'}
-                inactiveTextColor={isDarkMode ? '#9ca3af' : '#6b7280'}
+                activeTextColor={'#ffffff'}
+                inactiveTextColor={'#9ca3af'}
                 style={{
                   flexShrink: 0,
                   display: 'flex',
@@ -656,7 +654,7 @@ export default function Dashboard() {
                   fontWeight: '500',
                   borderWidth: '1px',
                   borderStyle: 'solid',
-                  borderColor: selectedSport === sport ? (isDarkMode ? '#4b5563' : '#9ca3af') : (isDarkMode ? '#1f2937' : '#d1d5db')
+                  borderColor: selectedSport === sport ? ('#4b5563') : ('#1f2937')
                 }}
               >
                 <span style={{ fontSize: '16px' }}>{getSportIcon(sport)}</span>
@@ -670,7 +668,7 @@ export default function Dashboard() {
 
         <div className="mb-6">
           <div className="flex items-center justify-between px-1 mb-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: isDarkMode ? '#6b7280' : '#6b7280' }}>Featured</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Featured</h2>
           </div>
           <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
             {categorizedGames.liveGames.filter(g => g.lines && g.lines.moneyline).slice(0, 3).map((game) => {
@@ -679,7 +677,7 @@ export default function Dashboard() {
                 <div 
                   key={game.id} 
                   className="flex-shrink-0 w-[260px] rounded-xl overflow-hidden" 
-                  style={{ backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)' }}
+                  style={{ backgroundColor: '#0d0d0d', border: `1px solid ${'#1a1a1a'}`, boxShadow: 'none' }}
                 >
                   <div className="p-3.5">
                     <div className="flex items-center gap-2 mb-2.5">
@@ -698,12 +696,12 @@ export default function Dashboard() {
                       onClick={() => router.push(`/game/${game.id}`)}
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium text-sm truncate" style={{ color: isDarkMode ? '#ffffff' : '#111827', maxWidth: '170px' }}>{game.awayTeamFull || game.awayTeam}</span>
-                        {isLive && <span className="font-bold text-sm tabular-nums" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.scores?.away?.total || 0}</span>}
+                        <span className="font-medium text-sm truncate" style={{ color: '#ffffff', maxWidth: '170px' }}>{game.awayTeamFull || game.awayTeam}</span>
+                        {isLive && <span className="font-bold text-sm tabular-nums" style={{ color: '#ffffff' }}>{game.scores?.away?.total || 0}</span>}
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="font-medium text-sm truncate" style={{ color: isDarkMode ? '#ffffff' : '#111827', maxWidth: '170px' }}>{game.homeTeamFull || game.homeTeam}</span>
-                        {isLive && <span className="font-bold text-sm tabular-nums" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.scores?.home?.total || 0}</span>}
+                        <span className="font-medium text-sm truncate" style={{ color: '#ffffff', maxWidth: '170px' }}>{game.homeTeamFull || game.homeTeam}</span>
+                        {isLive && <span className="font-bold text-sm tabular-nums" style={{ color: '#ffffff' }}>{game.scores?.home?.total || 0}</span>}
                       </div>
                     </div>
                     <div className="flex gap-1.5">
@@ -712,8 +710,8 @@ export default function Dashboard() {
                           onTap={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeamFull || game.awayTeam)}
                           isActive={isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam)}
                           activeColor="#2563eb"
-                          inactiveColor={isDarkMode ? '#141414' : '#eef0f3'}
-                          style={{ flex: 1, borderRadius: '8px', padding: '8px 6px', textAlign: 'center', border: `1px solid ${isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#3b82f6' : (isDarkMode ? '#222' : '#d1d5db')}` }}
+                          inactiveColor={'#141414'}
+                          style={{ flex: 1, borderRadius: '8px', padding: '8px 6px', textAlign: 'center', border: `1px solid ${isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#3b82f6' : ('#222')}` }}
                         >
                           <div style={{ fontSize: '10px', marginBottom: '1px', color: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#ffffff' : '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getShortTeamName(game.awayTeamFull || game.awayTeam, game.homeTeamFull || game.homeTeam)}</div>
                           <div style={{ fontWeight: '600', fontSize: '13px', color: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#ffffff' : '#3b82f6' }}>
@@ -721,7 +719,7 @@ export default function Dashboard() {
                           </div>
                         </TapSurface>
                       ) : (
-                        <div style={{ flex: 1, borderRadius: '8px', padding: '8px 6px', textAlign: 'center', backgroundColor: isDarkMode ? '#141414' : '#eef0f3', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.4 }}>
+                        <div style={{ flex: 1, borderRadius: '8px', padding: '8px 6px', textAlign: 'center', backgroundColor: '#141414', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.4 }}>
                           <svg className="w-4 h-4" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                         </div>
                       )}
@@ -730,8 +728,8 @@ export default function Dashboard() {
                           onTap={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeamFull || game.homeTeam)}
                           isActive={isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam)}
                           activeColor="#2563eb"
-                          inactiveColor={isDarkMode ? '#141414' : '#eef0f3'}
-                          style={{ flex: 1, borderRadius: '8px', padding: '8px 6px', textAlign: 'center', border: `1px solid ${isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#3b82f6' : (isDarkMode ? '#222' : '#d1d5db')}` }}
+                          inactiveColor={'#141414'}
+                          style={{ flex: 1, borderRadius: '8px', padding: '8px 6px', textAlign: 'center', border: `1px solid ${isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#3b82f6' : ('#222')}` }}
                         >
                           <div style={{ fontSize: '10px', marginBottom: '1px', color: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#ffffff' : '#6b7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getShortTeamName(game.homeTeamFull || game.homeTeam, game.awayTeamFull || game.awayTeam)}</div>
                           <div style={{ fontWeight: '600', fontSize: '13px', color: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#ffffff' : '#3b82f6' }}>
@@ -739,7 +737,7 @@ export default function Dashboard() {
                           </div>
                         </TapSurface>
                       ) : (
-                        <div style={{ flex: 1, borderRadius: '8px', padding: '8px 6px', textAlign: 'center', backgroundColor: isDarkMode ? '#141414' : '#eef0f3', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.4 }}>
+                        <div style={{ flex: 1, borderRadius: '8px', padding: '8px 6px', textAlign: 'center', backgroundColor: '#141414', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0.4 }}>
                           <svg className="w-4 h-4" fill="none" stroke="#6b7280" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                         </div>
                       )}
@@ -754,7 +752,7 @@ export default function Dashboard() {
         <div>
           <div className="flex items-center justify-between mb-3 px-1">
             <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: isDarkMode ? '#6b7280' : '#6b7280' }}>{selectedSport === 'Live' ? 'Live Now' : getSportLabel(selectedSport)}</h2>
+              <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>{selectedSport === 'Live' ? 'Live Now' : getSportLabel(selectedSport)}</h2>
               {selectedSport === 'Live' && <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>}
             </div>
           </div>
@@ -763,7 +761,7 @@ export default function Dashboard() {
             {loading ? (
               <div className="text-center py-12">
                 <div className="w-10 h-10 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto mb-3"></div>
-                <p className="text-sm" style={{ color: isDarkMode ? '#6b7280' : '#6b7280' }}>Loading games...</p>
+                <p className="text-sm" style={{ color: '#6b7280' }}>Loading games...</p>
               </div>
             ) : games.length > 0 ? (
               games.map(game => {
@@ -778,7 +776,7 @@ export default function Dashboard() {
                   <div 
                     key={game.id} 
                     className="rounded-xl overflow-hidden" 
-                    style={{ backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)' }}
+                    style={{ backgroundColor: '#0d0d0d', border: `1px solid ${'#1a1a1a'}`, boxShadow: 'none' }}
                   >
                     <div className="px-3.5 py-3">
                       <div className="flex items-center justify-between mb-2">
@@ -807,17 +805,17 @@ export default function Dashboard() {
                         onClick={() => router.push(`/game/${game.id}`)}
                       >
                         <div className="flex items-center justify-between mb-1">
-                          <span className="font-medium text-sm truncate" style={{ color: isDarkMode ? '#ffffff' : '#111827', maxWidth: 'calc(100% - 40px)' }}>{game.awayTeamFull || game.awayTeam}</span>
+                          <span className="font-medium text-sm truncate" style={{ color: '#ffffff', maxWidth: 'calc(100% - 40px)' }}>{game.awayTeamFull || game.awayTeam}</span>
                           {(isLive || isFinal) ? (
-                            <span className="font-bold text-sm tabular-nums flex-shrink-0 ml-2" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.scores?.away?.total || 0}</span>
+                            <span className="font-bold text-sm tabular-nums flex-shrink-0 ml-2" style={{ color: '#ffffff' }}>{game.scores?.away?.total || 0}</span>
                           ) : (
                             <span className="text-gray-600 text-sm flex-shrink-0 ml-2">-</span>
                           )}
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="font-medium text-sm truncate" style={{ color: isDarkMode ? '#ffffff' : '#111827', maxWidth: 'calc(100% - 40px)' }}>{game.homeTeamFull || game.homeTeam}</span>
+                          <span className="font-medium text-sm truncate" style={{ color: '#ffffff', maxWidth: 'calc(100% - 40px)' }}>{game.homeTeamFull || game.homeTeam}</span>
                           {(isLive || isFinal) ? (
-                            <span className="font-bold text-sm tabular-nums flex-shrink-0 ml-2" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>{game.scores?.home?.total || 0}</span>
+                            <span className="font-bold text-sm tabular-nums flex-shrink-0 ml-2" style={{ color: '#ffffff' }}>{game.scores?.home?.total || 0}</span>
                           ) : (
                             <span className="text-gray-600 text-sm flex-shrink-0 ml-2">-</span>
                           )}
@@ -828,63 +826,31 @@ export default function Dashboard() {
                       {linesLocked ? (
                         <div>
                           <div className="flex gap-1.5 mb-1">
-                            <div className="flex-1 text-center text-[9px] font-medium uppercase tracking-wider" style={{ color: isDarkMode ? '#4b5563' : '#9ca3af' }}>Spread</div>
-                            <div className="flex-1 text-center text-[9px] font-medium uppercase tracking-wider" style={{ color: isDarkMode ? '#4b5563' : '#9ca3af' }}>ML</div>
-                            <div className="flex-1 text-center text-[9px] font-medium uppercase tracking-wider" style={{ color: isDarkMode ? '#4b5563' : '#9ca3af' }}>Total</div>
+                            <div className="flex-1 text-center text-[9px] font-medium uppercase tracking-wider" style={{ color: '#4b5563' }}>Spread</div>
+                            <div className="flex-1 text-center text-[9px] font-medium uppercase tracking-wider" style={{ color: '#4b5563' }}>ML</div>
+                            <div className="flex-1 text-center text-[9px] font-medium uppercase tracking-wider" style={{ color: '#4b5563' }}>Total</div>
                           </div>
                           <div className="flex gap-1.5 mb-1.5">
                             {[0,1,2].map(i => (
-                              <div key={`lock-a-${i}`} className="flex-1 rounded-lg flex items-center justify-center" style={{ padding: '6px 2px', backgroundColor: isDarkMode ? '#111' : '#eef0f3', opacity: 0.35 }}>
+                              <div key={`lock-a-${i}`} className="flex-1 rounded-lg flex items-center justify-center" style={{ padding: '6px 2px', backgroundColor: '#111', opacity: 0.35 }}>
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="#4b5563" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                               </div>
                             ))}
                           </div>
                           <div className="flex gap-1.5">
                             {[0,1,2].map(i => (
-                              <div key={`lock-h-${i}`} className="flex-1 rounded-lg flex items-center justify-center" style={{ padding: '6px 2px', backgroundColor: isDarkMode ? '#111' : '#eef0f3', opacity: 0.35 }}>
+                              <div key={`lock-h-${i}`} className="flex-1 rounded-lg flex items-center justify-center" style={{ padding: '6px 2px', backgroundColor: '#111', opacity: 0.35 }}>
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="#4b5563" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                               </div>
                             ))}
                           </div>
                         </div>
                       ) : (
-                        /* MINIMIZED VIEW - Saved for future use
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeamFull || game.awayTeam)}
-                            className="flex-1 rounded-lg py-3 px-3"
-                            style={{
-                              backgroundColor: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
-                              borderWidth: 1,
-                              borderColor: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#3b82f6' : (isDarkMode ? '#374151' : '#d1d5db')
-                            }}
-                          >
-                            <div className="text-xs mb-0.5" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{(game.awayTeamFull || game.awayTeam).split(' ').pop()} ML</div>
-                            <div className="font-bold text-lg" style={{ color: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>
-                              {formatOdds(game.lines.moneyline.away)}
-                            </div>
-                          </button>
-                          <button
-                            onClick={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeamFull || game.homeTeam)}
-                            className="flex-1 rounded-lg py-3 px-3"
-                            style={{
-                              backgroundColor: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#2563eb' : (isDarkMode ? '#1a1a1a' : '#f3f4f6'),
-                              borderWidth: 1,
-                              borderColor: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#3b82f6' : (isDarkMode ? '#374151' : '#d1d5db')
-                            }}
-                          >
-                            <div className="text-xs mb-0.5" style={{ color: isDarkMode ? '#9ca3af' : '#6b7280' }}>{(game.homeTeamFull || game.homeTeam).split(' ').pop()} ML</div>
-                            <div className="font-bold text-lg" style={{ color: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#ffffff' : (isDarkMode ? '#ffffff' : '#111827') }}>
-                              {formatOdds(game.lines.moneyline.home)}
-                            </div>
-                          </button>
-                        </div>
-                        */
                         <div>
                           <div className="flex gap-1.5 mb-1">
-                            <div className="flex-1 text-center text-[9px] font-medium uppercase tracking-wider" style={{ color: isDarkMode ? '#4b5563' : '#9ca3af' }}>Spread</div>
-                            <div className="flex-1 text-center text-[9px] font-medium uppercase tracking-wider" style={{ color: isDarkMode ? '#4b5563' : '#9ca3af' }}>ML</div>
-                            <div className="flex-1 text-center text-[9px] font-medium uppercase tracking-wider" style={{ color: isDarkMode ? '#4b5563' : '#9ca3af' }}>Total</div>
+                            <div className="flex-1 text-center text-[9px] font-medium uppercase tracking-wider" style={{ color: '#4b5563' }}>Spread</div>
+                            <div className="flex-1 text-center text-[9px] font-medium uppercase tracking-wider" style={{ color: '#4b5563' }}>ML</div>
+                            <div className="flex-1 text-center text-[9px] font-medium uppercase tracking-wider" style={{ color: '#4b5563' }}>Total</div>
                           </div>
                           <div className="flex gap-1.5 mb-1.5">
                             {game.lines?.spread?.away ? (
@@ -892,16 +858,16 @@ export default function Dashboard() {
                                 onTap={() => addToBetSlip(game, 'spread', game.lines.spread.away, `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`)}
                                 isActive={isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`)}
                                 activeColor="#2563eb"
-                                inactiveColor={isDarkMode ? '#111' : '#eef0f3'}
-                                style={{ flex: 1, borderRadius: '6px', padding: '5px 2px', textAlign: 'center', border: `1px solid ${isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#3b82f6' : (isDarkMode ? '#1a1a1a' : '#e5e7eb')}` }}
+                                inactiveColor={'#111'}
+                                style={{ flex: 1, borderRadius: '6px', padding: '5px 2px', textAlign: 'center', border: `1px solid ${isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#3b82f6' : ('#1a1a1a')}` }}
                               >
-                                <div style={{ fontSize: '11px', color: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#fff' : (isDarkMode ? '#d1d5db' : '#111') }}>{formatSpread(game.lines.spread.away.point)}</div>
+                                <div style={{ fontSize: '11px', color: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#fff' : ('#d1d5db') }}>{formatSpread(game.lines.spread.away.point)}</div>
                                 <div style={{ fontWeight: '600', fontSize: '12px', color: isBetInSlip(game, 'spread', `${game.awayTeamFull || game.awayTeam} ${game.lines.spread.away.point}`) ? '#fff' : '#3b82f6' }}>
                                   {formatOdds(game.lines.spread.away.odds)}
                                 </div>
                               </TapSurface>
                             ) : (
-                              <div className="flex-1 rounded-md flex items-center justify-center" style={{ padding: '5px 2px', backgroundColor: isDarkMode ? '#111' : '#eef0f3', opacity: 0.35 }}>
+                              <div className="flex-1 rounded-md flex items-center justify-center" style={{ padding: '5px 2px', backgroundColor: '#111', opacity: 0.35 }}>
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="#4b5563" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                               </div>
                             )}
@@ -910,15 +876,15 @@ export default function Dashboard() {
                                 onTap={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.away, game.awayTeamFull || game.awayTeam)}
                                 isActive={isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam)}
                                 activeColor="#2563eb"
-                                inactiveColor={isDarkMode ? '#111' : '#eef0f3'}
-                                style={{ flex: 1, borderRadius: '6px', padding: '5px 2px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', border: `1px solid ${isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#3b82f6' : (isDarkMode ? '#1a1a1a' : '#e5e7eb')}` }}
+                                inactiveColor={'#111'}
+                                style={{ flex: 1, borderRadius: '6px', padding: '5px 2px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', border: `1px solid ${isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#3b82f6' : ('#1a1a1a')}` }}
                               >
                                 <div style={{ fontWeight: '600', fontSize: '12px', color: isBetInSlip(game, 'moneyline', game.awayTeamFull || game.awayTeam) ? '#fff' : '#3b82f6' }}>
                                   {formatOdds(game.lines.moneyline.away)}
                                 </div>
                               </TapSurface>
                             ) : (
-                              <div className="flex-1 rounded-md flex items-center justify-center" style={{ padding: '5px 2px', backgroundColor: isDarkMode ? '#111' : '#eef0f3', opacity: 0.35 }}>
+                              <div className="flex-1 rounded-md flex items-center justify-center" style={{ padding: '5px 2px', backgroundColor: '#111', opacity: 0.35 }}>
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="#4b5563" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                               </div>
                             )}
@@ -927,16 +893,16 @@ export default function Dashboard() {
                                 onTap={() => addToBetSlip(game, 'total', game.lines.total.over, `Over ${game.lines.total.over.point}`)}
                                 isActive={isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`)}
                                 activeColor="#2563eb"
-                                inactiveColor={isDarkMode ? '#111' : '#eef0f3'}
-                                style={{ flex: 1, borderRadius: '6px', padding: '5px 2px', textAlign: 'center', border: `1px solid ${isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#3b82f6' : (isDarkMode ? '#1a1a1a' : '#e5e7eb')}` }}
+                                inactiveColor={'#111'}
+                                style={{ flex: 1, borderRadius: '6px', padding: '5px 2px', textAlign: 'center', border: `1px solid ${isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#3b82f6' : ('#1a1a1a')}` }}
                               >
-                                <div style={{ fontSize: '11px', color: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#fff' : (isDarkMode ? '#d1d5db' : '#111') }}>{formatTotal(game.lines.total.over.point, 'over')}</div>
+                                <div style={{ fontSize: '11px', color: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#fff' : ('#d1d5db') }}>{formatTotal(game.lines.total.over.point, 'over')}</div>
                                 <div style={{ fontWeight: '600', fontSize: '12px', color: isBetInSlip(game, 'total', `Over ${game.lines.total.over.point}`) ? '#fff' : '#3b82f6' }}>
                                   {formatOdds(game.lines.total.over.odds)}
                                 </div>
                               </TapSurface>
                             ) : (
-                              <div className="flex-1 rounded-md flex items-center justify-center" style={{ padding: '5px 2px', backgroundColor: isDarkMode ? '#111' : '#eef0f3', opacity: 0.35 }}>
+                              <div className="flex-1 rounded-md flex items-center justify-center" style={{ padding: '5px 2px', backgroundColor: '#111', opacity: 0.35 }}>
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="#4b5563" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                               </div>
                             )}
@@ -947,16 +913,16 @@ export default function Dashboard() {
                                 onTap={() => addToBetSlip(game, 'spread', game.lines.spread.home, `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`)}
                                 isActive={isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`)}
                                 activeColor="#2563eb"
-                                inactiveColor={isDarkMode ? '#111' : '#eef0f3'}
-                                style={{ flex: 1, borderRadius: '6px', padding: '5px 2px', textAlign: 'center', border: `1px solid ${isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#3b82f6' : (isDarkMode ? '#1a1a1a' : '#e5e7eb')}` }}
+                                inactiveColor={'#111'}
+                                style={{ flex: 1, borderRadius: '6px', padding: '5px 2px', textAlign: 'center', border: `1px solid ${isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#3b82f6' : ('#1a1a1a')}` }}
                               >
-                                <div style={{ fontSize: '11px', color: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#fff' : (isDarkMode ? '#d1d5db' : '#111') }}>{formatSpread(game.lines.spread.home.point)}</div>
+                                <div style={{ fontSize: '11px', color: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#fff' : ('#d1d5db') }}>{formatSpread(game.lines.spread.home.point)}</div>
                                 <div style={{ fontWeight: '600', fontSize: '12px', color: isBetInSlip(game, 'spread', `${game.homeTeamFull || game.homeTeam} ${game.lines.spread.home.point}`) ? '#fff' : '#3b82f6' }}>
                                   {formatOdds(game.lines.spread.home.odds)}
                                 </div>
                               </TapSurface>
                             ) : (
-                              <div className="flex-1 rounded-md flex items-center justify-center" style={{ padding: '5px 2px', backgroundColor: isDarkMode ? '#111' : '#eef0f3', opacity: 0.35 }}>
+                              <div className="flex-1 rounded-md flex items-center justify-center" style={{ padding: '5px 2px', backgroundColor: '#111', opacity: 0.35 }}>
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="#4b5563" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                               </div>
                             )}
@@ -965,15 +931,15 @@ export default function Dashboard() {
                                 onTap={() => addToBetSlip(game, 'moneyline', game.lines.moneyline.home, game.homeTeamFull || game.homeTeam)}
                                 isActive={isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam)}
                                 activeColor="#2563eb"
-                                inactiveColor={isDarkMode ? '#111' : '#eef0f3'}
-                                style={{ flex: 1, borderRadius: '6px', padding: '5px 2px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', border: `1px solid ${isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#3b82f6' : (isDarkMode ? '#1a1a1a' : '#e5e7eb')}` }}
+                                inactiveColor={'#111'}
+                                style={{ flex: 1, borderRadius: '6px', padding: '5px 2px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', border: `1px solid ${isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#3b82f6' : ('#1a1a1a')}` }}
                               >
                                 <div style={{ fontWeight: '600', fontSize: '12px', color: isBetInSlip(game, 'moneyline', game.homeTeamFull || game.homeTeam) ? '#fff' : '#3b82f6' }}>
                                   {formatOdds(game.lines.moneyline.home)}
                                 </div>
                               </TapSurface>
                             ) : (
-                              <div className="flex-1 rounded-md flex items-center justify-center" style={{ padding: '5px 2px', backgroundColor: isDarkMode ? '#111' : '#eef0f3', opacity: 0.35 }}>
+                              <div className="flex-1 rounded-md flex items-center justify-center" style={{ padding: '5px 2px', backgroundColor: '#111', opacity: 0.35 }}>
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="#4b5563" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                               </div>
                             )}
@@ -982,16 +948,16 @@ export default function Dashboard() {
                                 onTap={() => addToBetSlip(game, 'total', game.lines.total.under, `Under ${game.lines.total.under.point}`)}
                                 isActive={isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`)}
                                 activeColor="#2563eb"
-                                inactiveColor={isDarkMode ? '#111' : '#eef0f3'}
-                                style={{ flex: 1, borderRadius: '6px', padding: '5px 2px', textAlign: 'center', border: `1px solid ${isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#3b82f6' : (isDarkMode ? '#1a1a1a' : '#e5e7eb')}` }}
+                                inactiveColor={'#111'}
+                                style={{ flex: 1, borderRadius: '6px', padding: '5px 2px', textAlign: 'center', border: `1px solid ${isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#3b82f6' : ('#1a1a1a')}` }}
                               >
-                                <div style={{ fontSize: '11px', color: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#fff' : (isDarkMode ? '#d1d5db' : '#111') }}>{formatTotal(game.lines.total.under.point, 'under')}</div>
+                                <div style={{ fontSize: '11px', color: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#fff' : ('#d1d5db') }}>{formatTotal(game.lines.total.under.point, 'under')}</div>
                                 <div style={{ fontWeight: '600', fontSize: '12px', color: isBetInSlip(game, 'total', `Under ${game.lines.total.under.point}`) ? '#fff' : '#3b82f6' }}>
                                   {formatOdds(game.lines.total.under.odds)}
                                 </div>
                               </TapSurface>
                             ) : (
-                              <div className="flex-1 rounded-md flex items-center justify-center" style={{ padding: '5px 2px', backgroundColor: isDarkMode ? '#111' : '#eef0f3', opacity: 0.35 }}>
+                              <div className="flex-1 rounded-md flex items-center justify-center" style={{ padding: '5px 2px', backgroundColor: '#111', opacity: 0.35 }}>
                                 <svg className="w-3.5 h-3.5" fill="none" stroke="#4b5563" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                               </div>
                             )}
@@ -1004,9 +970,9 @@ export default function Dashboard() {
               })
             ) : (
               <div className="text-center py-10">
-                <div className="rounded-xl p-6 max-w-sm mx-auto" style={{ backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)' }}>
-                  <p className="text-sm font-medium mb-1" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>No Games Available</p>
-                  <p className="text-xs" style={{ color: isDarkMode ? '#6b7280' : '#6b7280' }}>Check back later for {selectedSport} games.</p>
+                <div className="rounded-xl p-6 max-w-sm mx-auto" style={{ backgroundColor: '#0d0d0d', border: `1px solid ${'#1a1a1a'}`, boxShadow: 'none' }}>
+                  <p className="text-sm font-medium mb-1" style={{ color: '#ffffff' }}>No Games Available</p>
+                  <p className="text-xs" style={{ color: '#6b7280' }}>Check back later for {selectedSport} games.</p>
                 </div>
               </div>
             )}
@@ -1024,7 +990,7 @@ export default function Dashboard() {
       />
 
       {showBattleWalkthrough && hasActiveMatchup && matchup && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ backgroundColor: isDarkMode ? 'rgba(0,0,0,0.88)' : 'rgba(0,0,0,0.4)' }}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto" style={{ backgroundColor: 'rgba(0,0,0,0.88)' }}>
           <style>{`
             @keyframes wtSlideUp {
               from { opacity: 0; transform: translateY(30px) scale(0.95); }
@@ -1042,17 +1008,17 @@ export default function Dashboard() {
           <div 
             className="w-full max-w-[380px] rounded-2xl overflow-hidden flex flex-col"
             style={{ 
-              background: isDarkMode ? 'linear-gradient(180deg, #0a1628 0%, #0d0d0d 100%)' : '#ffffff',
-              border: isDarkMode ? '2px solid rgba(59, 130, 246, 0.4)' : '1px solid #e5e7eb',
+              background: 'linear-gradient(180deg, #0a1628 0%, #0d0d0d 100%)',
+              border: '2px solid rgba(59, 130, 246, 0.4)',
               animation: 'wtSlideUp 0.4s ease-out, wtPulse 3s ease-in-out infinite',
-              boxShadow: isDarkMode ? 'none' : '0 25px 50px -12px rgba(0,0,0,0.15)',
+              boxShadow: 'none',
               maxHeight: 'calc(100dvh - 2rem)',
             }}
           >
             <div className="flex items-center justify-between px-5 pt-4 pb-2 flex-shrink-0">
               <div className="flex gap-1.5">
                 {[0, 1, 2].map(i => (
-                  <div key={i} className="h-1 rounded-full transition-all duration-300" style={{ width: walkthroughStep === i ? '24px' : '8px', backgroundColor: walkthroughStep >= i ? '#3b82f6' : (isDarkMode ? '#333' : '#d1d5db') }}></div>
+                  <div key={i} className="h-1 rounded-full transition-all duration-300" style={{ width: walkthroughStep === i ? '24px' : '8px', backgroundColor: walkthroughStep >= i ? '#3b82f6' : ('#333') }}></div>
                 ))}
               </div>
               <button onClick={() => { setShowBattleWalkthrough(false); setWalkthroughDismissed(true); setWalkthroughStep(0); }} className="text-gray-600 text-xs">Skip</button>
@@ -1066,47 +1032,47 @@ export default function Dashboard() {
                       <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                       <span className="text-green-400 text-xs font-bold uppercase tracking-wider">Battle Started</span>
                     </div>
-                    <h2 className={`text-xl font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>You're Matched!</h2>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>You've been paired for a 1v1 battle.</p>
+                    <h2 className={`text-xl font-bold mb-1 ${'text-white'}`}>You're Matched!</h2>
+                    <p className={`text-sm ${'text-gray-400'}`}>You've been paired for a 1v1 battle.</p>
                   </div>
                   <div className="px-5 py-3">
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col items-center flex-1">
-                        <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#dbeafe', border: '2px solid #3b82f6' }}>
+                        <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{ backgroundColor: '#1a1a1a', border: '2px solid #3b82f6' }}>
                           {(myProfile?.avatar || user?.avatar) ? (
                             <img src={myProfile?.avatar || user?.avatar} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <span className={`font-bold text-lg ${isDarkMode ? 'text-white' : 'text-gray-600'}`}>{(myProfile?.username || user?.username || user?.name || '')[0]?.toUpperCase() || 'P'}</span>
+                            <span className={`font-bold text-lg ${'text-white'}`}>{(myProfile?.username || user?.username || user?.name || '')[0]?.toUpperCase() || 'P'}</span>
                           )}
                         </div>
-                        <p className={`text-xs font-semibold truncate max-w-[90px] ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{myProfile?.username || user?.username || user?.name || ''}</p>
+                        <p className={`text-xs font-semibold truncate max-w-[90px] ${'text-white'}`}>{myProfile?.username || user?.username || user?.name || ''}</p>
                       </div>
                       <div className="flex flex-col items-center px-3">
                         <span className="text-2xl font-black text-blue-400">VS</span>
                       </div>
                       <div className="flex flex-col items-center flex-1">
-                        <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#ecfdf5', border: '2px solid #06b6d4' }}>
+                        <div className="w-14 h-14 rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{ backgroundColor: '#1a1a1a', border: '2px solid #06b6d4' }}>
                           {opponent?.avatar ? (
                             <img src={opponent.avatar} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <span className={`font-bold text-lg ${isDarkMode ? 'text-white' : 'text-gray-600'}`}>{(opponent?.username || 'O')[0]?.toUpperCase()}</span>
+                            <span className={`font-bold text-lg ${'text-white'}`}>{(opponent?.username || 'O')[0]?.toUpperCase()}</span>
                           )}
                         </div>
-                        <p className={`text-xs font-semibold truncate max-w-[90px] ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{opponent?.username || 'Opponent'}</p>
+                        <p className={`text-xs font-semibold truncate max-w-[90px] ${'text-white'}`}>{opponent?.username || 'Opponent'}</p>
                       </div>
                     </div>
                     <div className="mt-4 grid grid-cols-3 gap-3">
-                      <div className="rounded-lg p-2.5 text-center" style={{ background: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#222' : '#e5e7eb'}` }}>
+                      <div className="rounded-lg p-2.5 text-center" style={{ background: '#111', border: `1px solid ${'#222'}` }}>
                         <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Mode</p>
-                        <p className={`font-bold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{matchup.durationMinutes <= 200 ? 'RUSH' : matchup.durationMinutes <= 1500 ? 'ORIGINAL' : 'TOURNAMENT'}</p>
+                        <p className={`font-bold text-sm ${'text-white'}`}>{matchup.durationMinutes <= 200 ? 'RUSH' : matchup.durationMinutes <= 1500 ? 'ORIGINAL' : 'TOURNAMENT'}</p>
                       </div>
-                      <div className="rounded-lg p-2.5 text-center" style={{ background: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#222' : '#e5e7eb'}` }}>
+                      <div className="rounded-lg p-2.5 text-center" style={{ background: '#111', border: `1px solid ${'#222'}` }}>
                         <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Pot</p>
-                        <p className={`font-bold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${parseFloat(matchup.potSize || matchup.startingBalance * 2 || 20000).toLocaleString()}</p>
+                        <p className={`font-bold text-sm ${'text-white'}`}>${parseFloat(matchup.potSize || matchup.startingBalance * 2 || 20000).toLocaleString()}</p>
                       </div>
-                      <div className="rounded-lg p-2.5 text-center" style={{ background: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#222' : '#e5e7eb'}` }}>
+                      <div className="rounded-lg p-2.5 text-center" style={{ background: '#111', border: `1px solid ${'#222'}` }}>
                         <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Time</p>
-                        <p className={`font-bold text-sm ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                        <p className={`font-bold text-sm ${'text-white'}`}>
                           {timeRemaining ? (() => {
                             const m = Math.floor(timeRemaining / 60000);
                             const h = Math.floor(m / 60);
@@ -1128,34 +1094,34 @@ export default function Dashboard() {
                     <div className="w-12 h-12 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
                       <span className="text-2xl">🎯</span>
                     </div>
-                    <h2 className={`text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>How It Works</h2>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Three simple steps to win</p>
+                    <h2 className={`text-lg font-bold mb-1 ${'text-white'}`}>How It Works</h2>
+                    <p className={`text-sm ${'text-gray-400'}`}>Three simple steps to win</p>
                   </div>
                   <div className="space-y-3">
-                    <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#222' : '#e5e7eb'}` }}>
+                    <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: '#111', border: `1px solid ${'#222'}` }}>
                       <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <span className="text-blue-400 text-xs font-bold">1</span>
                       </div>
                       <div>
-                        <p className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Place Your Picks</p>
+                        <p className={`text-sm font-semibold ${'text-white'}`}>Place Your Picks</p>
                         <p className="text-gray-500 text-xs">Browse games below and add bets to your slip. Pick spreads, moneylines, or totals.</p>
                       </div>
                     </div>
-                    <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#222' : '#e5e7eb'}` }}>
+                    <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: '#111', border: `1px solid ${'#222'}` }}>
                       <div className="w-7 h-7 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <span className="text-emerald-400 text-xs font-bold">2</span>
                       </div>
                       <div>
-                        <p className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Grow Your Balance</p>
+                        <p className={`text-sm font-semibold ${'text-white'}`}>Grow Your Balance</p>
                         <p className="text-gray-500 text-xs">You both start with ${parseFloat(matchup.startingBalance || 10000).toLocaleString()}. Winning picks grow your bankroll.</p>
                       </div>
                     </div>
-                    <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#222' : '#e5e7eb'}` }}>
+                    <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: '#111', border: `1px solid ${'#222'}` }}>
                       <div className="w-7 h-7 rounded-lg bg-orange-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
                         <span className="text-orange-400 text-xs font-bold">3</span>
                       </div>
                       <div>
-                        <p className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Highest Balance Wins</p>
+                        <p className={`text-sm font-semibold ${'text-white'}`}>Highest Balance Wins</p>
                         <p className="text-gray-500 text-xs">When time runs out, the player with the higher balance takes 90% of the pot.</p>
                       </div>
                     </div>
@@ -1169,28 +1135,28 @@ export default function Dashboard() {
                     <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center justify-center mx-auto mb-3">
                       <span className="text-2xl">💡</span>
                     </div>
-                    <h2 className={`text-lg font-bold mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Tips to Win</h2>
-                    <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Quick strategy guide</p>
+                    <h2 className={`text-lg font-bold mb-1 ${'text-white'}`}>Tips to Win</h2>
+                    <p className={`text-sm ${'text-gray-400'}`}>Quick strategy guide</p>
                   </div>
                   <div className="space-y-3">
-                    <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#222' : '#e5e7eb'}` }}>
+                    <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: '#111', border: `1px solid ${'#222'}` }}>
                       <span className="text-lg mt-0.5">📊</span>
                       <div>
-                        <p className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Track the Banner</p>
+                        <p className={`text-sm font-semibold ${'text-white'}`}>Track the Banner</p>
                         <p className="text-gray-500 text-xs">Your battle status bar at the top shows both balances and time left in real-time.</p>
                       </div>
                     </div>
-                    <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#222' : '#e5e7eb'}` }}>
+                    <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: '#111', border: `1px solid ${'#222'}` }}>
                       <span className="text-lg mt-0.5">🔒</span>
                       <div>
-                        <p className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Hidden Bets</p>
+                        <p className={`text-sm font-semibold ${'text-white'}`}>Hidden Bets</p>
                         <p className="text-gray-500 text-xs">Your opponent can't see your picks until you've placed at least one bet — and vice versa.</p>
                       </div>
                     </div>
-                    <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#222' : '#e5e7eb'}` }}>
+                    <div className="flex items-start gap-3 rounded-xl p-3" style={{ background: '#111', border: `1px solid ${'#222'}` }}>
                       <span className="text-lg mt-0.5">⚡</span>
                       <div>
-                        <p className={`text-sm font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Manage Risk</p>
+                        <p className={`text-sm font-semibold ${'text-white'}`}>Manage Risk</p>
                         <p className="text-gray-500 text-xs">Don't go all-in early. Spread your bets across games to build a steady lead.</p>
                       </div>
                     </div>
