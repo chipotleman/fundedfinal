@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { formatSeenAgo } from '../../utils/relativeTime';
 import ActiveStatus, { isUserOnline } from '../ActiveStatus';
+import UserAvatar, { UserNameLink } from '../UserAvatar';
 
 function timeAgo(iso) {
   if (!iso) return '';
@@ -15,39 +16,11 @@ function timeAgo(iso) {
   return `${d}d`;
 }
 
-function Avatar({ user, size = 40, isOnline = false, onlineDotBorderColor = '#0a0a0a' }) {
-  const initial = (user?.username || user?.name || '?')[0]?.toUpperCase();
-  const dotSize = Math.max(8, Math.round(size * 0.26));
-  const dotBorder = Math.max(1, Math.round(size * 0.05));
-  return (
-    <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
-      <div className="rounded-full bg-gray-700 flex items-center justify-center overflow-hidden w-full h-full">
-        {user?.avatar ? (
-          <img src={user.avatar} className="w-full h-full object-cover" alt="" />
-        ) : (
-          <span className="text-sm font-bold text-white">{initial}</span>
-        )}
-      </div>
-      {isOnline && (
-        <span
-          aria-label="Active now"
-          title="Active now"
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            right: 0,
-            width: dotSize,
-            height: dotSize,
-            borderRadius: '9999px',
-            background: '#22c55e',
-            border: `${dotBorder}px solid ${onlineDotBorderColor}`,
-            boxSizing: 'border-box',
-            boxShadow: '0 0 6px rgba(34,197,94,0.5)',
-          }}
-        />
-      )}
-    </div>
-  );
+// Local Avatar wrapper kept as a thin alias so older call sites continue to
+// work; under the hood it renders the new shared UserAvatar with deterministic
+// colored initials and optional profile linking.
+function Avatar(props) {
+  return <UserAvatar {...props} />;
 }
 
 // Scroll only the inner chat container — never call scrollIntoView, which can
@@ -278,14 +251,15 @@ function ConversationThread({ friend, ctx, myId }) {
         className="flex items-center gap-3 px-4 py-3 flex-shrink-0"
         style={{ borderBottom: `1px solid ${cardBorder}` }}
       >
-        <Avatar
+        <UserAvatar
           user={friend}
           isOnline={friend?.isOnline ?? isUserOnline(friend?.lastSeenAt)}
           onlineDotBorderColor={'#0a0a0a'}
+          link
         />
         <div className="flex-1 min-w-0">
           <div className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
-            {friend.username || 'Player'}
+            <UserNameLink user={friend} style={{ color: textPrimary }} />
           </div>
           <div className="flex items-center gap-2 mt-0.5">
             <ActiveStatus
@@ -744,7 +718,7 @@ export default function MessagesPanel({
                 onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = rowHover; }}
                 onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent'; }}
               >
-                <Avatar
+                <UserAvatar
                   user={f}
                   size={36}
                   isOnline={f.isOnline ?? isUserOnline(f.lastSeenAt)}

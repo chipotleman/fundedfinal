@@ -583,10 +583,9 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                     <svg
                       className="w-5 h-5 sm:w-6 sm:h-6"
                       fill="none"
-                      stroke={notifTotal > 0 ? '#34d399' : '#e5e7eb'}
+                      stroke="#e5e7eb"
                       strokeWidth={1.8}
                       viewBox="0 0 24 24"
-                      style={notifTotal > 0 ? { filter: 'drop-shadow(0 0 4px rgba(52,211,153,0.6))' } : undefined}
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                     </svg>
@@ -622,17 +621,16 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                     <svg
                       className="w-5 h-5 sm:w-6 sm:h-6"
                       fill="none"
-                      stroke={notifMessages > 0 ? '#34d399' : '#e5e7eb'}
+                      stroke="#e5e7eb"
                       strokeWidth={1.8}
                       viewBox="0 0 24 24"
-                      style={notifMessages > 0 ? { filter: 'drop-shadow(0 0 4px rgba(52,211,153,0.6))' } : undefined}
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
                     </svg>
                     {notifMessages > 0 && (
                       <span
-                        className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-emerald-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
-                        style={{ boxShadow: '0 0 8px rgba(16,185,129,0.7)' }}
+                        className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
+                        style={{ boxShadow: '0 0 6px rgba(239,68,68,0.6)' }}
                       >
                         {notifMessages > 9 ? '9+' : notifMessages}
                       </span>
@@ -737,6 +735,19 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
 
                           {/* Menu Items */}
                           <div className="py-1">
+                            {(currentUser?.id || session?.user?.id) && (
+                              <Link
+                                href={`/profile/${currentUser?.id || session?.user?.id}`}
+                                onClick={() => setShowUserMenu(false)}
+                                className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-[#1a1a1a] text-gray-300 hover:text-green-400 transition-colors"
+                              >
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                                </svg>
+                                <span className="font-medium">My Profile</span>
+                              </Link>
+                            )}
+
                             <Link
                               href="/bet-history"
                               onClick={() => setShowUserMenu(false)}
@@ -759,19 +770,6 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                               </svg>
                               <span className="font-medium">The Lab</span>
                             </Link>
-
-                            {(currentUser?.id || session?.user?.id) && (
-                              <Link
-                                href={`/profile/${currentUser?.id || session?.user?.id}`}
-                                onClick={() => setShowUserMenu(false)}
-                                className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-[#1a1a1a] text-gray-300 hover:text-green-400 transition-colors"
-                              >
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                                </svg>
-                                <span className="font-medium">My Profile</span>
-                              </Link>
-                            )}
 
                             <Link
                               href="/settings"

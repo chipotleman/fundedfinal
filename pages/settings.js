@@ -265,62 +265,9 @@ export default function Settings() {
             <h2 className="text-xl font-bold text-white mb-6">Profile</h2>
 
             <div className="space-y-5">
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-gray-500 mb-2">Banner</label>
-                <div className="relative w-full h-28 rounded-lg overflow-hidden bg-[#1a1a1a] border border-[#222] mb-2">
-                  {form.bannerUrl ? (
-                    <img src={form.bannerUrl} alt="Banner" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-500 text-sm">
-                      No banner selected
-                    </div>
-                  )}
-                  {form.bannerUrl && (
-                    <button
-                      type="button"
-                      onClick={() => update('bannerUrl', '')}
-                      className="absolute top-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {BANNER_LIBRARY.map((b) => {
-                    const selected = form.bannerUrl === b.url;
-                    return (
-                      <button
-                        key={b.id}
-                        type="button"
-                        onClick={() => update('bannerUrl', b.url)}
-                        className="rounded-md overflow-hidden"
-                        style={{
-                          width: 88,
-                          height: 44,
-                          border: `2px solid ${selected ? '#22c55e' : '#222'}`,
-                        }}
-                        title={b.name}
-                      >
-                        <img src={b.url} alt={b.name} className="w-full h-full object-cover" />
-                      </button>
-                    );
-                  })}
-                </div>
-                <input
-                  ref={bannerInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleFile(e.target.files?.[0], 'banner')}
-                  className="hidden"
-                />
-                <button
-                  type="button"
-                  onClick={() => bannerInputRef.current?.click()}
-                  disabled={uploadingBanner}
-                  className="text-xs font-medium px-3 py-1.5 rounded-md bg-[#1a1a1a] border border-[#222] text-gray-200"
-                >
-                  {uploadingBanner ? 'Uploading…' : 'Upload custom banner'}
-                </button>
+              <div className="text-xs text-gray-500">
+                Want to change your banner or avatar with the full editor? Visit{' '}
+                <a href={`/profile/${session?.user?.id || ''}`} className="text-green-400 hover:text-green-300 underline">My Profile</a>.
               </div>
 
               <div>

@@ -1,36 +1,67 @@
+import Link from 'next/link';
 import { getFrameById } from '../lib/profileFrames';
 
+const PALETTE = [
+  '#10b981', '#06b6d4', '#3b82f6', '#f97316', '#facc15',
+  '#ef4444', '#14b8a6', '#22c55e', '#0ea5e9', '#eab308',
+];
+
+function hashString(str) {
+  let h = 0;
+  const s = String(str || '');
+  for (let i = 0; i < s.length; i++) {
+    h = (h << 5) - h + s.charCodeAt(i);
+    h |= 0;
+  }
+  return Math.abs(h);
+}
+
+export function colorForUser(user) {
+  const seed = (user && (user.id || user.username || user.name)) || '?';
+  return PALETTE[hashString(seed) % PALETTE.length];
+}
+
+export function initialFor(user, fallback = '?') {
+  const name = (user && (user.username || user.name)) || fallback;
+  return (String(name)[0] || fallback).toUpperCase();
+}
+
 /**
- * Shared avatar component that renders a user's avatar with their
- * equipped profile frame as a colored ring.
+ * Shared avatar component. Supports BOTH legacy flat props
+ * (`avatar`, `username`, `frameId`, `frame`, ...) AND a newer
+ * `user={{ id, username, avatar }}` shape with optional profile linking.
  *
- * Props:
- *  - avatar: string (URL or data URI)
- *  - username: string (used for fallback initial)
- *  - frameId: string (id of equipped frame, optional)
- *  - frame: object (optional, full frame override)
- *  - size: number (px), default 40
- *  - className: string (extra classes for outer wrapper)
- *  - rounded: 'full' | 'lg' (defaults to 'full')
- *  - bgColor: string (fallback background color)
- *  - textColor: string (fallback initial color)
+ * When no avatar image is set, a deterministic colored circle with the
+ * user's initial is rendered so every user always has a visible avatar.
  */
 export default function UserAvatar({
+  // legacy flat props
   avatar,
   username,
   frameId,
   frame: frameProp,
+  // newer user-object prop (takes precedence for id/link, but flat props win
+  // when explicitly passed for backward compatibility)
+  user,
   size = 40,
   className = '',
   rounded = 'full',
-  bgColor = '#1a1a1a',
-  textColor = '#fff',
+  bgColor,
+  textColor = '#ffffff',
   showFrameBadge = false,
   isOnline = false,
   onlineDotBorderColor = '#0a0a0a',
+  link = false,
 }) {
-  const frame = frameProp || getFrameById(frameId) || null;
-  const initial = (username && String(username)[0]) || '?';
+  const resolvedAvatar = avatar !== undefined ? avatar : user?.avatar;
+  const resolvedUsername = username !== undefined ? username : (user?.username || user?.name);
+  const resolvedFrameId = frameId !== undefined ? frameId : user?.frameId;
+  const frame = frameProp || getFrameById(resolvedFrameId) || null;
+
+  const initial = initialFor({ username: resolvedUsername }, '?');
+  const seedColor = colorForUser({ id: user?.id, username: resolvedUsername });
+  const fallbackBg = bgColor || (resolvedAvatar ? '#1a1a1a' : seedColor);
+
   const radius = rounded === 'full' ? '9999px' : '12px';
   const ring = frame?.ring;
   const ringWidth = Math.max(2, Math.round(size * 0.07));
@@ -45,7 +76,7 @@ export default function UserAvatar({
     ringStyle = { background: 'transparent' };
   }
 
-  return (
+  const node = (
     <div
       className={`relative inline-flex items-center justify-center ${className}`}
       style={{
@@ -64,13 +95,13 @@ export default function UserAvatar({
           width: ring ? `${innerSize}px` : `${size}px`,
           height: ring ? `${innerSize}px` : `${size}px`,
           borderRadius: radius,
-          background: bgColor,
+          background: fallbackBg,
         }}
       >
-        {avatar ? (
+        {resolvedAvatar ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={avatar}
+            src={resolvedAvatar}
             alt=""
             style={{
               width: '100%',
@@ -83,7 +114,7 @@ export default function UserAvatar({
           <span
             style={{
               color: textColor,
-              fontWeight: 700,
+              fontWeight: 800,
               fontSize: `${Math.max(10, Math.round(size * 0.42))}px`,
               lineHeight: 1,
               textTransform: 'uppercase',
@@ -128,4 +159,36 @@ export default function UserAvatar({
       )}
     </div>
   );
+
+  if (link && user?.id) {
+    return (
+      <Link
+        href={`/profile/${user.id}`}
+        aria-label={`View ${resolvedUsername || 'profile'}`}
+        className="inline-block"
+      >
+        {node}
+      </Link>
+    );
+  }
+  return node;
+}
+
+/**
+ * Username text that links to the user's profile page when clicked.
+ */
+export function UserNameLink({ user, className = '', style, fallback = 'Player' }) {
+  const name = user?.username || user?.name || fallback;
+  if (user?.id) {
+    return (
+      <Link
+        href={`/profile/${user.id}`}
+        className={`hover:underline hover:text-emerald-300 transition-colors ${className}`}
+        style={style}
+      >
+        {name}
+      </Link>
+    );
+  }
+  return <span className={className} style={style}>{name}</span>;
 }

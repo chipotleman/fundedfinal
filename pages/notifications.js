@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import TopNavbar from '../components/TopNavbar';
 import { useNotifications } from '../contexts/NotificationsContext';
 import { isUserOnline } from '../components/ActiveStatus';
-import MessagesPanel from '../components/messages/MessagesPanel';
+import UserAvatar, { UserNameLink } from '../components/UserAvatar';
 
 function timeAgo(iso) {
   if (!iso) return '';
@@ -19,39 +19,8 @@ function timeAgo(iso) {
   return `${d}d`;
 }
 
-function Avatar({ user, size = 40, isOnline = false, onlineDotBorderColor = '#0a0a0a' }) {
-  const initial = (user?.username || user?.name || '?')[0]?.toUpperCase();
-  const dotSize = Math.max(8, Math.round(size * 0.26));
-  const dotBorder = Math.max(1, Math.round(size * 0.05));
-  return (
-    <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
-      <div className="rounded-full bg-gray-700 flex items-center justify-center overflow-hidden w-full h-full">
-        {user?.avatar ? (
-          <img src={user.avatar} className="w-full h-full object-cover" alt="" />
-        ) : (
-          <span className="text-sm font-bold text-white">{initial}</span>
-        )}
-      </div>
-      {isOnline && (
-        <span
-          aria-label="Active now"
-          title="Active now"
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            right: 0,
-            width: dotSize,
-            height: dotSize,
-            borderRadius: '9999px',
-            background: '#22c55e',
-            border: `${dotBorder}px solid ${onlineDotBorderColor}`,
-            boxSizing: 'border-box',
-            boxShadow: '0 0 6px rgba(34,197,94,0.5)',
-          }}
-        />
-      )}
-    </div>
-  );
+function Avatar(props) {
+  return <UserAvatar {...props} link />;
 }
 
 function NotificationsFeed({ ctx, router }) {
@@ -84,15 +53,7 @@ function NotificationsFeed({ ctx, router }) {
         className="px-4 py-3 flex items-center justify-between"
         style={{ borderBottom: `1px solid ${cardBorder}` }}
       >
-        <span
-          className="text-sm font-bold tracking-wide"
-          style={{
-            background: 'linear-gradient(90deg, #34d399 0%, #22d3ee 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}
-        >
+        <span className="text-sm font-bold tracking-wide" style={{ color: '#34d399' }}>
           Notifications
         </span>
         <span
@@ -132,7 +93,7 @@ function NotificationsFeed({ ctx, router }) {
                 <Avatar user={inv.sender} isOnline={inv.sender?.isOnline ?? isUserOnline(inv.sender?.lastSeenAt)} onlineDotBorderColor={cardBg} />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
-                    {inv.sender?.username || 'Someone'} challenged you
+                    <UserNameLink user={inv.sender} fallback="Someone" /> challenged you
                   </div>
                   <div className="text-xs" style={{ color: textSecondary }}>
                     ${buyIn} buy-in · ${buyIn * 2} pot{inv.duration ? ` · ${inv.duration}h` : ''}
@@ -187,7 +148,7 @@ function NotificationsFeed({ ctx, router }) {
                   <div className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
                     <span style={{ color: accent }}>{label}</span>
                     {' vs '}
-                    {r.opponent?.username || 'Opponent'}
+                    <UserNameLink user={r.opponent} fallback="Opponent" />
                   </div>
                   <div className="text-xs" style={{ color: textSecondary }}>
                     {r.outcome === 'won' && r.winnerPayout > 0
@@ -238,7 +199,7 @@ function NotificationsFeed({ ctx, router }) {
               <Avatar user={fr.sender} isOnline={fr.sender?.isOnline ?? isUserOnline(fr.sender?.lastSeenAt)} onlineDotBorderColor={cardBg} />
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
-                  {fr.sender?.username || 'Someone'} wants to be friends
+                  <UserNameLink user={fr.sender} fallback="Someone" /> wants to be friends
                 </div>
                 <div className="flex gap-2 mt-2">
                   <button
@@ -270,14 +231,9 @@ export default function NotificationsPage() {
   const { data: session, status } = useSession();
   const ctx = useNotifications();
 
-  const [selectedId, setSelectedId] = useState(null);
-
-  const myId = session?.user?.id;
   const isAuthed = status === 'authenticated';
-  const unreadCount = ctx.counts?.unreadMessages || 0;
 
-  // ?chat=<id> deep link → forward to /messenger so the dedicated experience
-  // takes the user straight into the conversation.
+  // ?chat=<id> deep link → forward to /messenger.
   useEffect(() => {
     if (!router.isReady) return;
     const chatId = router.query.chat;
@@ -286,20 +242,7 @@ export default function NotificationsPage() {
     }
   }, [router.isReady, router.query.chat]);
 
-  useEffect(() => {
-    if (!isAuthed || !selectedId) return;
-    const hasUnread = (ctx.unreadMessages || []).some((m) => m.sender?.id === selectedId);
-    if (hasUnread) {
-      ctx.markMessagesRead([selectedId]);
-    }
-  }, [isAuthed, selectedId, ctx.unreadMessages?.length]);
-
-  const handleSelect = useCallback((id) => {
-    setSelectedId(id);
-  }, []);
-
   const bg = '#000000';
-  const pageBg = 'radial-gradient(ellipse 70% 40% at 50% 0%, rgba(16,185,129,0.10), transparent 70%), radial-gradient(ellipse 60% 35% at 100% 100%, rgba(34,211,238,0.06), transparent 70%), #000000';
   const textPrimary = '#ffffff';
   const textSecondary = '#9ca3af';
 
@@ -328,53 +271,13 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div style={{ background: pageBg, minHeight: '100vh' }}>
+    <div style={{ backgroundColor: bg, minHeight: '100vh' }}>
       <TopNavbar />
-      <div className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
-        <h1
-          className="text-xl sm:text-2xl font-bold mb-4 tracking-tight"
-          style={{
-            background: 'linear-gradient(90deg, #34d399 0%, #22d3ee 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-          }}
-        >
+      <div className="max-w-2xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
+        <h1 className="text-xl sm:text-2xl font-bold mb-4 tracking-tight" style={{ color: '#34d399' }}>
           Notifications
         </h1>
-
-        {/* Desktop: alerts main (left) + messages side container (right).
-            Mobile: alerts on top, messages stacked below in their own
-            clearly-labeled container. Each panel scrolls independently. */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div className="md:col-span-3">
-            <NotificationsFeed ctx={ctx} router={router} />
-          </div>
-
-          <div className="md:col-span-2">
-            <div className="flex items-center justify-between mb-2 md:hidden">
-              <h2 className="text-sm font-bold uppercase tracking-wider" style={{ color: textSecondary }}>
-                Messages {unreadCount > 0 && (
-                  <span className="ml-1 text-emerald-400">({unreadCount})</span>
-                )}
-              </h2>
-              <button
-                type="button"
-                onClick={() => router.push('/messenger')}
-                className="text-[11px] font-semibold text-emerald-400 hover:text-emerald-300"
-              >
-                Open messenger →
-              </button>
-            </div>
-            <MessagesPanel
-              selectedId={selectedId}
-              onSelect={handleSelect}
-              ctx={ctx}
-              myId={myId}
-              minHeight={520}
-            />
-          </div>
-        </div>
+        <NotificationsFeed ctx={ctx} router={router} />
       </div>
     </div>
   );

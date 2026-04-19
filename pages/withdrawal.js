@@ -163,13 +163,8 @@ export default function WithdrawalPage() {
     fetchData();
   }, [session, status, router]);
 
-  const challengeData = userProfile?.challenge || (typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('purchased_challenge') || '{}') : {});
-  const startingBalance = challengeData?.startingBalance || 10000;
-  const currentBalance = userProfile?.bankroll ? parseFloat(userProfile.bankroll) : startingBalance;
-  const profit = Math.max(0, currentBalance - startingBalance);
-  const userSplit = challengeData?.userSplit || challengeData?.split || 80;
-  const platformSplit = 100 - userSplit;
-  const availableToWithdraw = Math.floor(profit * (userSplit / 100));
+  const currentBalance = userProfile?.bankroll ? parseFloat(userProfile.bankroll) : 0;
+  const availableToWithdraw = Math.max(0, Math.floor(currentBalance));
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -731,16 +726,6 @@ export default function WithdrawalPage() {
       
       <div className="min-h-screen bg-black pt-4 pb-20 px-4">
         <div className="max-w-2xl mx-auto">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition-colors"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back
-          </button>
-
           <div className="flex items-center justify-between mb-2">
             <h1 className="text-2xl sm:text-3xl font-bold text-white">Withdraw Funds</h1>
             {withdrawals.length > 0 && (
@@ -958,33 +943,11 @@ export default function WithdrawalPage() {
           )}
 
           <div className="bg-[#111111] rounded-2xl p-6 border border-[#1a1a1a]/50 mb-8">
-            <div className="mb-4 pb-4 border-b border-[#1a1a1a]">
-              <div className="flex items-center justify-between">
-                <div className="text-gray-400 text-sm">Your Profit Split</div>
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold text-green-400">{userSplit}%</span>
-                  <span className="text-gray-500">You</span>
-                  <span className="text-gray-600 mx-2">/</span>
-                  <span className="text-gray-500">{platformSplit}%</span>
-                  <span className="text-gray-500">Piks</span>
-                </div>
-              </div>
+            <div className="text-gray-500 text-sm mb-1">Available to Withdraw</div>
+            <div className="text-3xl font-bold text-green-400">
+              ${availableToWithdraw.toLocaleString()}
             </div>
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <div className="text-gray-500 text-sm mb-1">Total Profit</div>
-                <div className={`text-2xl font-bold ${profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                  ${profit.toLocaleString()}
-                </div>
-              </div>
-              <div>
-                <div className="text-gray-500 text-sm mb-1">Available to Withdraw</div>
-                <div className="text-2xl font-bold text-white">
-                  ${availableToWithdraw.toLocaleString()}
-                </div>
-                <div className="text-xs text-gray-500">({userSplit}% of ${profit.toLocaleString()} profit)</div>
-              </div>
-            </div>
+            <div className="text-xs text-gray-500 mt-1">Your full cash balance is withdrawable.</div>
           </div>
 
           {availableToWithdraw <= 0 ? (
@@ -996,7 +959,7 @@ export default function WithdrawalPage() {
               </div>
               <h3 className="text-xl font-bold text-white mb-2">No Funds Available</h3>
               <p className="text-gray-400 mb-6">
-                You need to earn profits in your challenge before you can withdraw. Keep betting and hit your targets!
+                Your cash balance is currently $0. Win some battles to build it up — your full balance is withdrawable at any time.
               </p>
               <button
                 onClick={() => router.push('/')}

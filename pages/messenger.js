@@ -39,7 +39,6 @@ export default function MessengerPage() {
   }, []);
 
   const bg = '#000000';
-  const pageBg = 'radial-gradient(ellipse 60% 35% at 50% 0%, rgba(16,185,129,0.12), transparent 70%), radial-gradient(ellipse 50% 30% at 100% 100%, rgba(34,211,238,0.06), transparent 70%), #000000';
   const textPrimary = '#ffffff';
   const textSecondary = '#9ca3af';
 
@@ -67,34 +66,16 @@ export default function MessengerPage() {
     );
   }
 
-  // The page itself does not scroll — the MessagesPanel fills the available
-  // space below the nav bar and only its inner thread body scrolls. This is
-  // what keeps the composer + send button pinned alongside the site nav.
+  // Use a dynamic viewport-relative height for the chat surface so the inner
+  // thread body scrolls but page-level navigation (TopNavbar links, dropdowns,
+  // etc.) keep working — wrapping the entire page in `overflow: hidden` was
+  // intercepting clicks on iOS Safari and trapping the user on this page.
   return (
-    <div
-      style={{
-        background: pageBg,
-        height: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        overflow: 'hidden',
-      }}
-    >
+    <div style={{ backgroundColor: bg, minHeight: '100vh' }}>
       <TopNavbar />
-      <div
-        className="flex-1 min-h-0 max-w-7xl w-full mx-auto px-2 sm:px-4 py-2 sm:py-4"
-        style={{ display: 'flex', flexDirection: 'column' }}
-      >
-        <div className="flex items-center justify-between mb-2 sm:mb-3 flex-shrink-0">
-          <h1
-            className="text-lg sm:text-2xl font-bold tracking-tight"
-            style={{
-              background: 'linear-gradient(90deg, #34d399 0%, #22d3ee 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}
-          >
+      <div className="max-w-7xl w-full mx-auto px-2 sm:px-4 py-2 sm:py-4">
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
+          <h1 className="text-lg sm:text-2xl font-bold tracking-tight" style={{ color: '#34d399' }}>
             Messenger
           </h1>
           <button
@@ -105,7 +86,7 @@ export default function MessengerPage() {
             ← Notifications
           </button>
         </div>
-        <div className="flex-1 min-h-0">
+        <div style={{ height: 'calc(100vh - 160px)', minHeight: 480 }}>
           <MessagesPanel
             selectedId={selectedId}
             onSelect={handleSelect}
