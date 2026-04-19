@@ -26,6 +26,15 @@ export function initialFor(user, fallback = '?') {
   return (String(name)[0] || fallback).toUpperCase();
 }
 
+const DICEBEAR_STYLE = 'bottts-neutral';
+
+export function generatedAvatarUrl(user) {
+  const seed = encodeURIComponent(
+    String((user && (user.id || user.username || user.name)) || 'piks-user')
+  );
+  return `https://api.dicebear.com/7.x/${DICEBEAR_STYLE}/svg?seed=${seed}`;
+}
+
 /**
  * Shared avatar component. Supports BOTH legacy flat props
  * (`avatar`, `username`, `frameId`, `frame`, ...) AND a newer
@@ -58,8 +67,8 @@ export default function UserAvatar({
   const resolvedFrameId = frameId !== undefined ? frameId : user?.frameId;
   const frame = frameProp || getFrameById(resolvedFrameId) || null;
 
-  const initial = initialFor({ username: resolvedUsername }, '?');
   const seedColor = colorForUser({ id: user?.id, username: resolvedUsername });
+  const generatedUrl = generatedAvatarUrl({ id: user?.id, username: resolvedUsername });
   const fallbackBg = bgColor || (resolvedAvatar ? '#1a1a1a' : seedColor);
 
   const radius = rounded === 'full' ? '9999px' : '12px';
@@ -98,31 +107,18 @@ export default function UserAvatar({
           background: fallbackBg,
         }}
       >
-        {resolvedAvatar ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={resolvedAvatar}
-            alt=""
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              borderRadius: radius,
-            }}
-          />
-        ) : (
-          <span
-            style={{
-              color: textColor,
-              fontWeight: 800,
-              fontSize: `${Math.max(10, Math.round(size * 0.42))}px`,
-              lineHeight: 1,
-              textTransform: 'uppercase',
-            }}
-          >
-            {initial}
-          </span>
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={resolvedAvatar || generatedUrl}
+          alt=""
+          loading="lazy"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            borderRadius: radius,
+          }}
+        />
       </div>
       {isOnline && (
         <span

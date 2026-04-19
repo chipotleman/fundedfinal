@@ -3,6 +3,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import TopNavbar from '../components/TopNavbar';
+import UserAvatar from '../components/UserAvatar';
 
 export default function FriendsPage() {
   const { data: session, status } = useSession();
@@ -275,23 +276,35 @@ export default function FriendsPage() {
                             onClick={() => setSelectedChat(friend)}
                             className={`flex items-center gap-3 p-4 cursor-pointer transition ${selectedChat?.id === friend.id ? 'bg-blue-600/20' : 'hover:bg-[#1a1a1a]'}`}
                           >
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center overflow-hidden">
-                              {friend.avatar ? (
-                                <img src={friend.avatar} alt="" className="w-full h-full object-cover" />
-                              ) : (
-                                <span className="text-xl">{friend.username?.charAt(0)?.toUpperCase()}</span>
-                              )}
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-medium">{friend.username}</p>
+                            <UserAvatar user={friend} size={48} />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate">{friend.username}</p>
                               <p className="text-sm text-gray-400">{friend.battleWins || 0}W - {friend.battleLosses || 0}L</p>
                             </div>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); router.push(`/profile/${friend.id}`); }}
-                              className="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg"
-                            >
-                              View
-                            </button>
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
+                              {/* Mobile: icon-only message */}
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setSelectedChat(friend); }}
+                                className="sm:hidden p-2 rounded-lg text-blue-400 hover:bg-blue-500/15"
+                                title="Message"
+                                aria-label="Message"
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                              </button>
+                              {/* Desktop: text message button */}
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setSelectedChat(friend); }}
+                                className="hidden sm:inline-flex px-2.5 py-1 text-xs font-semibold rounded-lg text-blue-400 hover:bg-blue-500/15"
+                              >
+                                Message
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); router.push(`/battle?play=${friend.id}`); }}
+                                className="inline-flex px-2.5 py-1 text-xs font-semibold rounded-lg text-purple-400 hover:bg-purple-500/15"
+                              >
+                                Play
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -307,13 +320,7 @@ export default function FriendsPage() {
                         <div className="divide-y divide-gray-800">
                           {requests.map((request) => (
                             <div key={request.id} className="flex items-center gap-3 p-4">
-                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center overflow-hidden">
-                                {request.sender?.avatar ? (
-                                  <img src={request.sender.avatar} alt="" className="w-full h-full object-cover" />
-                                ) : (
-                                  request.sender?.username?.charAt(0)?.toUpperCase()
-                                )}
-                              </div>
+                              <UserAvatar user={request.sender} size={40} />
                               <div className="flex-1">
                                 <p className="font-medium">{request.sender?.username}</p>
                               </div>
@@ -332,13 +339,7 @@ export default function FriendsPage() {
                         <div className="divide-y divide-gray-800">
                           {sentRequests.map((request) => (
                             <div key={request.id} className="flex items-center gap-3 p-4">
-                              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center overflow-hidden">
-                                {request.receiver?.avatar ? (
-                                  <img src={request.receiver.avatar} alt="" className="w-full h-full object-cover" />
-                                ) : (
-                                  request.receiver?.username?.charAt(0)?.toUpperCase()
-                                )}
-                              </div>
+                              <UserAvatar user={request.receiver} size={40} />
                               <div className="flex-1">
                                 <p className="font-medium">{request.receiver?.username}</p>
                                 <p className="text-xs text-gray-500">Pending</p>
@@ -365,13 +366,7 @@ export default function FriendsPage() {
                       <div className="divide-y divide-gray-800">
                         {searchResults.map((user) => (
                           <div key={user.id} className="flex items-center gap-3 p-4">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center overflow-hidden">
-                              {user.avatar ? (
-                                <img src={user.avatar} alt="" className="w-full h-full object-cover" />
-                              ) : (
-                                user.username?.charAt(0)?.toUpperCase()
-                              )}
-                            </div>
+                            <UserAvatar user={user} size={40} />
                             <div className="flex-1">
                               <p className="font-medium">{user.username}</p>
                               <p className="text-xs text-gray-400">{user.battleWins || 0}W - {user.battleLosses || 0}L</p>
@@ -391,13 +386,7 @@ export default function FriendsPage() {
                 {selectedChat ? (
                   <>
                     <div className="flex items-center gap-3 p-4 border-b border-[#1a1a1a]">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center overflow-hidden">
-                        {selectedChat.avatar ? (
-                          <img src={selectedChat.avatar} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          selectedChat.username?.charAt(0)?.toUpperCase()
-                        )}
-                      </div>
+                      <UserAvatar user={selectedChat} size={40} />
                       <div>
                         <p className="font-semibold">{selectedChat.username}</p>
                         <p className="text-xs text-gray-400">{selectedChat.battleWins || 0}W - {selectedChat.battleLosses || 0}L</p>

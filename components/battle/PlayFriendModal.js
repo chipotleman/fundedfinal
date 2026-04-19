@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
+import SharedUserAvatar from '../UserAvatar';
 
 const BUY_IN_OPTIONS = [5, 10, 25, 50, 100];
 const GAME_MODE_OPTIONS = [
@@ -18,25 +19,7 @@ const TABS = [
 ];
 
 function UserAvatar({ user, size = 36 }) {
-  return (
-    <div
-      className="rounded-full flex items-center justify-center overflow-hidden flex-shrink-0"
-      style={{
-        width: size,
-        height: size,
-        backgroundColor: '#374151',
-        border: `2px solid ${'#4b5563'}`,
-      }}
-    >
-      {user?.avatar ? (
-        <img src={user.avatar} className="w-full h-full object-cover" alt="" />
-      ) : (
-        <span className="font-bold" style={{ fontSize: size * 0.35, color: '#fff' }}>
-          {user?.username?.[0]?.toUpperCase() || '?'}
-        </span>
-      )}
-    </div>
-  );
+  return <SharedUserAvatar user={user} size={size} />;
 }
 
 export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onSwitchToPrivate, initialFriend = null }) {
@@ -365,37 +348,64 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                   </div>
                 ) : (
                   <div className="space-y-1.5">
-                    {filteredFriends.map((friend, i) => (
-                      <button
-                        key={friend.id}
-                        onClick={() => setSelectedFriend(selectedFriend?.id === friend.id ? null : friend)}
-                        className="pfm-list-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all"
-                        style={{
-                          backgroundColor: selectedFriend?.id === friend.id ? ('rgba(59,130,246,0.12)') : elevatedBg,
-                          border: `1px solid ${selectedFriend?.id === friend.id ? 'rgba(59,130,246,0.3)' : 'transparent'}`,
-                          animationDelay: `${i * 40}ms`,
-                        }}
-                      >
-                        <button type="button" className="cursor-pointer flex-shrink-0" onClick={(e) => { e.stopPropagation(); navigateToProfile(friend.id); }} aria-label={`View ${friend.username}'s profile`}>
-                          <UserAvatar user={friend} size={38} />
-                        </button>
-                        <div className="text-left flex-1 min-w-0">
-                          <div className="text-sm font-medium truncate" style={{ color: textPrimary }}>{friend.username}</div>
-                          <div className="text-xs" style={{ color: textMuted }}>
-                            <span className="text-green-400 font-medium">{friend.battleWins || 0}W</span>
-                            <span className="mx-1">·</span>
-                            <span className="text-red-400 font-medium">{friend.battleLosses || 0}L</span>
+                    {filteredFriends.map((friend, i) => {
+                      const isSelected = selectedFriend?.id === friend.id;
+                      const togglePlay = () => setSelectedFriend(isSelected ? null : friend);
+                      const openMessage = () => { onClose && onClose(); router.push(`/notifications?chat=${friend.id}`); };
+                      return (
+                        <div
+                          key={friend.id}
+                          className="pfm-list-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all"
+                          style={{
+                            backgroundColor: isSelected ? ('rgba(59,130,246,0.12)') : elevatedBg,
+                            border: `1px solid ${isSelected ? 'rgba(59,130,246,0.3)' : 'transparent'}`,
+                            animationDelay: `${i * 40}ms`,
+                          }}
+                        >
+                          <button type="button" className="cursor-pointer flex-shrink-0" onClick={(e) => { e.stopPropagation(); navigateToProfile(friend.id); }} aria-label={`View ${friend.username}'s profile`}>
+                            <UserAvatar user={friend} size={38} />
+                          </button>
+                          <button type="button" onClick={togglePlay} className="text-left flex-1 min-w-0 cursor-pointer">
+                            <div className="text-sm font-medium truncate" style={{ color: textPrimary }}>{friend.username}</div>
+                            <div className="text-xs" style={{ color: textMuted }}>
+                              <span className="text-green-400 font-medium">{friend.battleWins || 0}W</span>
+                              <span className="mx-1">·</span>
+                              <span className="text-red-400 font-medium">{friend.battleLosses || 0}L</span>
+                            </div>
+                          </button>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <button
+                              type="button"
+                              onClick={openMessage}
+                              className="sm:hidden p-2 rounded-lg text-blue-400 hover:bg-blue-500/15"
+                              title="Message"
+                              aria-label="Message"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={openMessage}
+                              className="hidden sm:inline-flex px-2.5 py-1 text-xs font-semibold rounded-lg text-blue-400 hover:bg-blue-500/15"
+                            >
+                              Message
+                            </button>
+                            <button
+                              type="button"
+                              onClick={togglePlay}
+                              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg text-purple-400 hover:bg-purple-500/15"
+                            >
+                              {isSelected ? (
+                                <>
+                                  <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                                  Selected
+                                </>
+                              ) : 'Play'}
+                            </button>
                           </div>
                         </div>
-                        {selectedFriend?.id === friend.id ? (
-                          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center flex-shrink-0">
-                            <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                          </div>
-                        ) : (
-                          <svg className="w-4 h-4 flex-shrink-0" style={{ color: textMuted }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                        )}
-                      </button>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>

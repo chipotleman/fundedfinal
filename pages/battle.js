@@ -52,6 +52,7 @@ export default function BattlePage() {
 
   const [showQuickMatch, setShowQuickMatch] = useState(false);
   const [showPlayFriend, setShowPlayFriend] = useState(false);
+  const [playFriendInitial, setPlayFriendInitial] = useState(null);
   const [showPrivateMatch, setShowPrivateMatch] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [socialExpanded, setSocialExpanded] = useState(false);
@@ -234,6 +235,20 @@ export default function BattlePage() {
     }, 5000);
     return () => clearInterval(interval);
   }, [userId, activeMatchup?.status]);
+
+  // ?play=<friendId> opens the PlayFriendModal with that friend pre-selected.
+  useEffect(() => {
+    if (!router.isReady) return;
+    const playId = router.query.play;
+    if (!playId) return;
+    const id = Array.isArray(playId) ? playId[0] : playId;
+    const friend = friends.find(f => String(f.id) === String(id));
+    setPlayFriendInitial(friend || { id });
+    setShowPlayFriend(true);
+    const cleaned = { ...router.query };
+    delete cleaned.play;
+    router.replace({ pathname: '/battle', query: cleaned }, undefined, { shallow: true });
+  }, [router.isReady, router.query.play, friends]);
 
   // ?chat=<id> on /battle is a legacy entry point — forward it to /notifications.
   useEffect(() => {
@@ -526,15 +541,9 @@ export default function BattlePage() {
                 const lastSeenLabel = !friend.isOnline && friend.lastSeenAt != null ? formatLastSeen(friend.lastSeenAt) : '';
                 return (
                 <div key={friend.id} className="flex items-center gap-2.5 px-3 py-2.5 group">
-                  <div
-                    className="flex-shrink-0 cursor-pointer"
-                    onClick={() => router.push(`/profile/${friend.id}`)}
-                  >
+                  <div className="flex-shrink-0 cursor-pointer" onClick={() => router.push(`/profile/${friend.id}`)}>
                     <FramedAvatar
                       user={friend}
-                      avatar={friend.avatar}
-                      username={friend.username}
-                      frameId={friend.frameId}
                       size={32}
                       isOnline={friend.isOnline}
                       onlineDotBorderColor={cardBg}
@@ -553,20 +562,28 @@ export default function BattlePage() {
                     )}
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
+                    {/* Mobile: icon-only message */}
                     <button
                       onClick={() => { router.push(`/notifications?chat=${friend.id}`); }}
-                      className="p-1.5 rounded-lg transition-colors hover:bg-blue-500/20 active:bg-blue-500/20 text-blue-400"
+                      className="sm:hidden p-1.5 rounded-lg transition-colors hover:bg-blue-500/20 active:bg-blue-500/20 text-blue-400"
                       title="Message"
+                      aria-label="Message"
                     >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
                     </button>
+                    {/* Desktop: text message button */}
+                    <button
+                      onClick={() => { router.push(`/notifications?chat=${friend.id}`); }}
+                      className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors hover:bg-blue-500/20 active:bg-blue-500/20 text-blue-400"
+                    >
+                      Message
+                    </button>
+                    {/* Play: text on both mobile and desktop */}
                     <button
                       onClick={() => { setShowPlayFriend(true); }}
-                      className="p-1.5 rounded-lg transition-colors hover:bg-purple-500/20 active:bg-purple-500/20 text-purple-400"
-                      title="Challenge"
-                      aria-label="Challenge to a battle"
+                      className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors hover:bg-purple-500/20 active:bg-purple-500/20 text-purple-400"
                     >
-                      <svg className="w-3.5 h-3.5" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5v14l11-7z" /></svg>
+                      Play
                     </button>
                   </div>
                 </div>
@@ -1245,10 +1262,11 @@ export default function BattlePage() {
 
       <PlayFriendModal
         isOpen={showPlayFriend}
-        onClose={() => setShowPlayFriend(false)}
+        onClose={() => { setShowPlayFriend(false); setPlayFriendInitial(null); }}
         friends={friends}
+        initialFriend={playFriendInitial}
         onInviteSent={() => fetchData()}
-        onSwitchToPrivate={() => { setShowPlayFriend(false); setShowPrivateMatch(true); }}
+        onSwitchToPrivate={() => { setShowPlayFriend(false); setPlayFriendInitial(null); setShowPrivateMatch(true); }}
       />
 
       <PrivateMatchModal
