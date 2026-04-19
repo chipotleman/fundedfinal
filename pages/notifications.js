@@ -489,6 +489,147 @@ function ConversationThread({ friend, ctx, myId, isDarkMode }) {
   );
 }
 
+function NotFriendsCard({ userId, isDarkMode, onFriendAdded }) {
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState(null);
+  const [requestStatus, setRequestStatus] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setLoadError(null);
+    setProfile(null);
+    setRequestStatus(null);
+    setSendError(null);
+    (async () => {
+      try {
+        const res = await fetch(`/api/profiles/${userId}`, { credentials: 'include' });
+        if (!res.ok) {
+          if (!cancelled) setLoadError(res.status === 404 ? 'User not found.' : 'Could not load user.');
+          return;
+        }
+        const data = await res.json();
+        if (!cancelled) setProfile(data);
+      } catch {
+        if (!cancelled) setLoadError('Could not load user.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  const handleAdd = async () => {
+    if (sending) return;
+    setSending(true);
+    setSendError(null);
+    try {
+      const res = await fetch('/api/friends', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ friendId: userId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (/already friends/i.test(data?.error || '')) {
+          onFriendAdded?.();
+          return;
+        }
+        setSendError(data?.error || 'Could not send friend request.');
+        return;
+      }
+      const status = data?.status === 'accepted' ? 'accepted' : 'pending';
+      setRequestStatus(status);
+      if (status === 'accepted') onFriendAdded?.();
+    } catch {
+      setSendError('Could not send friend request.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const cardBorder = isDarkMode ? '#1a1a1a' : '#e5e7eb';
+  const textPrimary = isDarkMode ? '#ffffff' : '#111111';
+  const textSecondary = isDarkMode ? '#9ca3af' : '#6b7280';
+  const cardBg = isDarkMode ? '#0a0a0a' : '#ffffff';
+  const innerBg = isDarkMode ? '#111111' : '#f9fafb';
+
+  return (
+    <div className="flex flex-col h-full min-h-0">
+      <div
+        className="flex items-center gap-3 px-4 py-3 flex-shrink-0"
+        style={{ borderBottom: `1px solid ${cardBorder}` }}
+      >
+        <Avatar
+          user={profile || {}}
+          isOnline={profile?.isOnline ?? isUserOnline(profile?.lastSeenAt)}
+          onlineDotBorderColor={cardBg}
+        />
+        <div className="flex-1 min-w-0">
+          <div className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
+            {loading ? 'Loading…' : (profile?.username || 'Player')}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 flex items-center justify-center px-6 py-8 min-h-0">
+        {loading ? (
+          <div className="text-xs" style={{ color: textSecondary }}>Loading…</div>
+        ) : loadError ? (
+          <div className="text-xs text-red-400 text-center">{loadError}</div>
+        ) : (
+          <div
+            className="w-full max-w-sm rounded-xl p-5 text-center"
+            style={{ backgroundColor: innerBg, border: `1px solid ${cardBorder}` }}
+          >
+            <div
+              className="mx-auto mb-3 w-10 h-10 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: 'rgba(16,185,129,0.12)' }}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="#10b981" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+            </div>
+            <div className="text-sm font-semibold mb-1" style={{ color: textPrimary }}>
+              You're not friends yet
+            </div>
+            <p className="text-xs mb-4" style={{ color: textSecondary }}>
+              You can only message friends — send {profile?.username || 'this player'} a friend request first.
+            </p>
+            {requestStatus === 'pending' && (
+              <div className="text-xs mb-3" style={{ color: textSecondary }}>
+                Friend request sent. You'll be able to message them once they accept.
+              </div>
+            )}
+            {requestStatus === 'accepted' && (
+              <div className="text-xs mb-3 text-emerald-400">
+                You're now friends! Opening conversation…
+              </div>
+            )}
+            {!requestStatus && (
+              <button
+                type="button"
+                onClick={handleAdd}
+                disabled={sending}
+                className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-lg"
+              >
+                {sending ? 'Sending…' : 'Add friend'}
+              </button>
+            )}
+            {sendError && (
+              <div className="text-red-400 text-[11px] mt-2">{sendError}</div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function MessagesPanel({ selectedId, onSelect, ctx, myId, isDarkMode }) {
   const [friends, setFriends] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -507,19 +648,31 @@ function MessagesPanel({ selectedId, onSelect, ctx, myId, isDarkMode }) {
     return m;
   }, [ctx.unreadMessages]);
 
+  const [friendsError, setFriendsError] = useState(false);
+
+  const loadFriends = useCallback(async () => {
+    try {
+      const res = await fetch('/api/friends', { credentials: 'include' });
+      if (!res.ok) {
+        setFriendsError(true);
+        return;
+      }
+      const data = await res.json();
+      setFriends(data.friends || []);
+      setFriendsError(false);
+    } catch {
+      setFriendsError(true);
+    }
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      try {
-        const res = await fetch('/api/friends', { credentials: 'include' });
-        if (!res.ok) return;
-        const data = await res.json();
-        if (!cancelled) setFriends(data.friends || []);
-      } catch {}
-      finally { if (!cancelled) setLoading(false); }
+      await loadFriends();
+      if (!cancelled) setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [loadFriends]);
 
   const sorted = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -553,7 +706,7 @@ function MessagesPanel({ selectedId, onSelect, ctx, myId, isDarkMode }) {
       style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, minHeight: 520 }}
     >
       <div
-        className={`md:w-72 flex-shrink-0 flex flex-col ${selectedFriend ? 'hidden md:flex' : 'flex'}`}
+        className={`md:w-72 flex-shrink-0 flex flex-col ${selectedId ? 'hidden md:flex' : 'flex'}`}
         style={{ borderRight: `1px solid ${cardBorder}` }}
       >
         <div className="px-4 py-3 flex-shrink-0" style={{ borderBottom: `1px solid ${cardBorder}` }}>
@@ -620,27 +773,48 @@ function MessagesPanel({ selectedId, onSelect, ctx, myId, isDarkMode }) {
         </div>
       </div>
 
-      <div className={`flex-1 min-w-0 ${selectedFriend ? 'flex' : 'hidden md:flex'} flex-col`}>
+      <div className={`flex-1 min-w-0 ${selectedId ? 'flex' : 'hidden md:flex'} flex-col`}>
+        {selectedId && (
+          <div className="md:hidden px-3 pt-2">
+            <button
+              type="button"
+              onClick={() => onSelect(null)}
+              className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+              Back to messages
+            </button>
+          </div>
+        )}
         {selectedFriend ? (
-          <>
-            <div className="md:hidden px-3 pt-2">
-              <button
-                type="button"
-                onClick={() => onSelect(null)}
-                className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
-                Back to messages
-              </button>
-            </div>
-            <ConversationThread
-              key={selectedFriend.id}
-              friend={selectedFriend}
-              ctx={ctx}
-              myId={myId}
-              isDarkMode={isDarkMode}
-            />
-          </>
+          <ConversationThread
+            key={selectedFriend.id}
+            friend={selectedFriend}
+            ctx={ctx}
+            myId={myId}
+            isDarkMode={isDarkMode}
+          />
+        ) : selectedId && !loading && !friendsError ? (
+          <NotFriendsCard
+            key={selectedId}
+            userId={selectedId}
+            isDarkMode={isDarkMode}
+            onFriendAdded={loadFriends}
+          />
+        ) : selectedId && friendsError ? (
+          <div
+            className="flex-1 flex items-center justify-center text-sm px-6 text-center text-red-400"
+            style={{ minHeight: 320 }}
+          >
+            Could not load your friends list. Please try again.
+          </div>
+        ) : selectedId ? (
+          <div
+            className="flex-1 flex items-center justify-center text-sm px-6 text-center"
+            style={{ color: textSecondary, minHeight: 320 }}
+          >
+            Loading…
+          </div>
         ) : (
           <div
             className="flex-1 flex items-center justify-center text-sm px-6 text-center"
