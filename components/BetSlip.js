@@ -7,6 +7,7 @@ import { useGames } from '../contexts/GamesContext';
 import { useMatchup } from '../contexts/MatchupContext';
 import ShareableBetSlip from './ShareableBetSlip';
 import PiksBetCard from './PiksBetCard';
+import BalanceExplainerModal from './BalanceExplainerModal';
 import CoinRain from './CoinRain';
 import haptic from '../utils/haptics';
 import { formatMoney } from '../utils/formatMoney';
@@ -58,6 +59,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
   //   deactivates): freeze the last known balances as the final result.
   // - If there is no head-to-head context AND we never captured a settled
   //   snapshot, fall back to the single-balance UI immediately.
+  const [showCoinsExplainer, setShowCoinsExplainer] = useState(false);
   const [stickyMatchup, setStickyMatchup] = useState(null);
   // Track the last live snapshot we saw while the matchup was active so
   // that when it deactivates we can freeze it as the settled result even
@@ -1133,10 +1135,19 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                               {betType === 'single' && (
                                 <div className="flex items-center gap-3 mt-4">
                                   <div className="relative flex-1">
-                                    <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#6b7280' }}>$</span>
+                                    <button
+                                      type="button"
+                                      onClick={() => setShowCoinsExplainer(true)}
+                                      className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded hover:bg-orange-400/10 transition-colors"
+                                      style={{ color: '#fb923c' }}
+                                      aria-label="What are battle coins?"
+                                      title="Battle coins — tap for details"
+                                    >
+                                      <span className="text-base leading-none">⚔</span>
+                                    </button>
                                     {betsReadOnly ? (
                                       <div
-                                        className="w-full pl-8 pr-3 py-3 rounded-lg text-base"
+                                        className="w-full pl-9 pr-3 py-3 rounded-lg text-base"
                                         style={{
                                           backgroundColor: 'rgba(30, 41, 59, 0.4)',
                                           borderWidth: 1,
@@ -1152,14 +1163,14 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                                         inputMode="decimal"
                                         value={getStakeDisplayValue(bet)}
                                         onChange={(e) => handleStakeInputChange(bet.id, e)}
-                                        className="w-full pl-8 pr-3 py-3 rounded-lg text-base focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        className="w-full pl-9 pr-3 py-3 rounded-lg text-base focus:outline-none focus:ring-1 focus:ring-blue-500"
                                         style={{ 
                                           backgroundColor: 'rgba(30, 41, 59, 0.8)',
                                           borderWidth: 1,
                                           borderColor: 'rgba(55, 65, 81, 0.5)',
                                           color: '#ffffff'
                                         }}
-                                        placeholder={`Min $${minBetAmount}`}
+                                        placeholder={`Min ${minBetAmount}`}
                                       />
                                     )}
                                   </div>
@@ -1202,15 +1213,24 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                   <div className="mb-4">
                     <div className="flex items-center gap-3">
                       <div className="relative flex-1">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#6b7280' }}>$</span>
+                        <button
+                          type="button"
+                          onClick={() => setShowCoinsExplainer(true)}
+                          className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded hover:bg-orange-400/10 transition-colors"
+                          style={{ color: '#fb923c' }}
+                          aria-label="What are battle coins?"
+                          title="Battle coins — tap for details"
+                        >
+                          <span className="text-base leading-none">⚔</span>
+                        </button>
                         <input
                           type="text"
                           inputMode="decimal"
                           value={getParlayStakeDisplayValue()}
                           onChange={handleParlayStakeInputChange}
-                          className="w-full pl-8 pr-3 py-3 rounded-lg text-base focus:outline-none focus:border-blue-500"
+                          className="w-full pl-9 pr-3 py-3 rounded-lg text-base focus:outline-none focus:border-blue-500"
                           style={{ backgroundColor: '#1a1a1a', borderWidth: 1, borderColor: '#374151', color: '#ffffff' }}
-                          placeholder={`Min $${minBetAmount}`}
+                          placeholder={`Min ${minBetAmount}`}
                         />
                       </div>
                       <div className="text-right min-w-[100px]">
@@ -1458,7 +1478,16 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
           `}</style>
         </div>
       )}
-      
+
+      <BalanceExplainerModal
+        type="coins"
+        isOpen={showCoinsExplainer}
+        onClose={() => setShowCoinsExplainer(false)}
+        coinsBalance={matchupBalance}
+        matchup={matchupData?.matchup || null}
+        opponent={matchupOpponent}
+      />
+
           </>
   );
 

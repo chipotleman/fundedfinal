@@ -63,6 +63,10 @@ export default async function handler(req, res) {
     let challengeType = null;
     let currentBankroll = 0;
 
+    if (isFakeOpponent && activeMatchup) {
+      currentBankroll = parseFloat(activeMatchup.user2Balance || activeMatchup.startingBalance || '0') || 0;
+    }
+
     const [userActiveMatchup] = await db
       .select()
       .from(matchups)
@@ -102,9 +106,11 @@ export default async function handler(req, res) {
         challengeType = 'pool';
         activeChallenge = poolParticipation;
         currentBankroll = parseFloat(poolParticipation.participant.balance) || 0;
-      } else {
-        currentBankroll = parseFloat(userProfile.bankroll) || 0;
       }
+    }
+
+    if (!isFakeOpponent && !activeChallenge) {
+      return res.status(400).json({ error: 'No active battle. Piks can only be placed using battle coins.' });
     }
 
     let totalStake = 0;
@@ -307,16 +313,6 @@ export default async function handler(req, res) {
         })
         .where(eq(poolParticipants.id, activeChallenge.participant.id));
       console.log('[Place Bet] Updated pool participant balance:', newBankroll.toFixed(2));
-    } else {
-      await db
-        .update(profiles)
-        .set({ 
-          bankroll: newBankroll.toFixed(2),
-          totalBets: (userProfile.totalBets || 0) + insertedBets.length,
-          lastBetDate: new Date(),
-          updatedAt: new Date()
-        })
-        .where(eq(profiles.id, userId));
     }
 
     await db
