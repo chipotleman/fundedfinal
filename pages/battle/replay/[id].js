@@ -159,6 +159,7 @@ export default function BattleReplayPage() {
   const [battle, setBattle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [moreBattles, setMoreBattles] = useState([]);
 
   useEffect(() => {
     if (!router.isReady || !id) return;
@@ -192,6 +193,24 @@ export default function BattleReplayPage() {
     })();
     return () => { cancelled = true; };
   }, [router.isReady, id]);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/battles/recent?limit=10');
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (cancelled) return;
+        const list = Array.isArray(data?.battles) ? data.battles : [];
+        setMoreBattles(list);
+      } catch {
+        // ignore
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [router.isReady]);
 
   if (loading) {
     return (
@@ -328,6 +347,57 @@ export default function BattleReplayPage() {
             side="right"
           />
         </div>
+
+        {(() => {
+          const others = moreBattles.filter(b => String(b.id) !== String(id)).slice(0, 5);
+          if (others.length === 0) return null;
+          return (
+            <div
+              className="mt-5 rounded-xl p-3"
+              style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: textSecondary }}>
+                  More recent battles
+                </span>
+                <span className="text-[10px]" style={{ color: textSecondary }}>
+                  Just finished
+                </span>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                {others.map((b) => (
+                  <Link
+                    key={b.id}
+                    href={`/battle/replay/${b.id}`}
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left transition-colors hover:bg-white/5"
+                    style={{ background: '#0a0a0a', border: `1px solid ${cardBorder}` }}
+                  >
+                    <FramedAvatar user={b.winner} size={28} />
+                    <div className="min-w-0 flex-1 text-[11px] leading-tight" style={{ color: textPrimary }}>
+                      <div className="truncate">
+                        <span className="font-semibold text-green-400">
+                          {b.winner?.username || 'Player'}
+                        </span>
+                        <span style={{ color: textSecondary }}> beat </span>
+                        <span className="font-medium">
+                          {b.loser?.username || 'Player'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5" style={{ color: textSecondary }}>
+                        <span className="font-semibold text-yellow-400">${formatMoney(b.potSize, 0)} pot</span>
+                        <span>·</span>
+                        <span>{formatLastSeen(b.endedAt)}</span>
+                      </div>
+                    </div>
+                    <svg className="w-3.5 h-3.5 flex-shrink-0" style={{ color: textSecondary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
 
         <div className="mt-5 text-center">
           <Link
