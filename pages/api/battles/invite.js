@@ -18,7 +18,7 @@ export default async function handler(req, res) {
     try {
       const now = new Date();
 
-      await db
+      const expiredRows = await db
         .update(battleInvites)
         .set({ status: 'expired', respondedAt: now })
         .where(
@@ -26,7 +26,34 @@ export default async function handler(req, res) {
             eq(battleInvites.status, 'pending'),
             lt(battleInvites.expiresAt, now)
           )
-        );
+        )
+        .returning({ id: battleInvites.id, senderId: battleInvites.senderId, receiverId: battleInvites.receiverId, buyIn: battleInvites.buyIn });
+      if (expiredRows && expiredRows.length > 0) {
+        try {
+          const recvIds = [...new Set(expiredRows.map(r => r.receiverId).filter(Boolean))];
+          const recvProfMap = new Map();
+          if (recvIds.length > 0) {
+            const recvProfs = await db
+              .select({ id: profiles.id, username: profiles.username })
+              .from(profiles)
+              .where(inArray(profiles.id, recvIds));
+            recvProfs.forEach(p => recvProfMap.set(p.id, p));
+          }
+          for (const row of expiredRows) {
+            if (!row.senderId) continue;
+            const recvName = recvProfMap.get(row.receiverId)?.username || 'Your friend';
+            const buyInLabel = row.buyIn ? ` $${parseFloat(row.buyIn)}` : '';
+            sendPushToUsers(row.senderId, {
+              category: 'invite',
+              title: 'Battle invite expired',
+              body: `${recvName} didn't respond to your${buyInLabel} battle invite in time`,
+              url: '/battle',
+              tag: `invite_expired:${row.id}`,
+              data: { inviteId: row.id, type: 'invite_expired' },
+            }).catch(() => {});
+          }
+        } catch (e) { console.error('[invite_expired push]', e.message); }
+      }
 
       const receivedInvites = await db
         .select()

@@ -3,6 +3,7 @@ import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { messages, friendships, battleInvites, profiles, users, matchups, fakeOpponents } from '../../../shared/schema';
 import { eq, and, or, desc, lt, inArray, gte, isNotNull, isNull } from 'drizzle-orm';
+const { sendPushToUsers } = require('../../../lib/web-push');
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -18,11 +19,38 @@ export default async function handler(req, res) {
 
   try {
     // Expire any stale battle invites so the receiver doesn't keep seeing them.
+    // Notify the senders via web-push so they learn about the expiry even when
+    // the app is closed.
     try {
-      await db
+      const expiredRows = await db
         .update(battleInvites)
         .set({ status: 'expired', respondedAt: new Date() })
-        .where(and(eq(battleInvites.status, 'pending'), lt(battleInvites.expiresAt, new Date())));
+        .where(and(eq(battleInvites.status, 'pending'), lt(battleInvites.expiresAt, new Date())))
+        .returning({ id: battleInvites.id, senderId: battleInvites.senderId, receiverId: battleInvites.receiverId, buyIn: battleInvites.buyIn });
+      if (expiredRows && expiredRows.length > 0) {
+        const receiverIds = [...new Set(expiredRows.map(r => r.receiverId).filter(Boolean))];
+        const recvProfMap = new Map();
+        if (receiverIds.length > 0) {
+          const recvProfs = await db
+            .select({ id: profiles.id, username: profiles.username })
+            .from(profiles)
+            .where(inArray(profiles.id, receiverIds));
+          recvProfs.forEach(p => recvProfMap.set(p.id, p));
+        }
+        for (const row of expiredRows) {
+          if (!row.senderId) continue;
+          const recvName = recvProfMap.get(row.receiverId)?.username || 'Your friend';
+          const buyInLabel = row.buyIn ? ` $${parseFloat(row.buyIn)}` : '';
+          sendPushToUsers(row.senderId, {
+            category: 'invite',
+            title: 'Battle invite expired',
+            body: `${recvName} didn't respond to your${buyInLabel} battle invite in time`,
+            url: '/battle',
+            tag: `invite_expired:${row.id}`,
+            data: { inviteId: row.id, type: 'invite_expired' },
+          }).catch(() => {});
+        }
+      }
     } catch (_e) {}
 
     const [pendingInvites, pendingFriends, unreadMsgs, outgoingPendingInvitesRows] = await Promise.all([

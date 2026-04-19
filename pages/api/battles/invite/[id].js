@@ -98,6 +98,23 @@ export default async function handler(req, res) {
         try {
           publishBattleEvent([battleInvite.senderId, battleInvite.receiverId], { type: 'notification:refresh' });
         } catch (_e) {}
+        try {
+          const [receiverProfile] = await db
+            .select({ username: profiles.username })
+            .from(profiles)
+            .where(eq(profiles.id, battleInvite.receiverId))
+            .limit(1);
+          const receiverName = receiverProfile?.username || 'Your friend';
+          const buyInLabel = battleInvite.buyIn ? ` $${parseFloat(battleInvite.buyIn)}` : '';
+          sendPushToUsers(battleInvite.senderId, {
+            category: 'invite',
+            title: 'Battle invite declined',
+            body: `${receiverName} declined your${buyInLabel} battle invite`,
+            url: '/battle',
+            tag: `invite_declined:${battleInvite.id}`,
+            data: { inviteId: battleInvite.id, type: 'invite_declined' },
+          }).catch(() => {});
+        } catch (e) { console.error('[invite_declined push]', e.message); }
         return res.status(200).json({ message: 'Battle invite declined' });
       }
 
