@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useSession, signOut } from 'next-auth/react';
+import UserAvatar from './UserAvatar';
 import BalanceModal from './BalanceModal';
 import WithdrawModal from './WithdrawModal';
 import BalanceExplainerModal from './BalanceExplainerModal';
@@ -731,11 +732,18 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                   <div className="relative">
                     <button
                       onClick={() => setShowUserMenu(!showUserMenu)}
+                      aria-label="Open user menu"
                       className="flex items-center justify-center w-10 h-10 hover:bg-[#1a1a1a] rounded-full transition-all duration-300"
                     >
-                      <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
-                      </svg>
+                      <UserAvatar
+                        user={{
+                          id: userProfile?.id || currentUser?.id || session?.user?.id,
+                          username: userProfile?.username || currentUser?.username || currentUser?.name || session?.user?.username || session?.user?.name,
+                          avatar: userProfile?.avatar ?? currentUser?.avatar ?? session?.user?.avatar ?? null,
+                          frameId: userProfile?.equippedFrame ?? userProfile?.frameId ?? currentUser?.equippedFrame ?? null,
+                        }}
+                        size={32}
+                      />
                     </button>
 
                     {/* Dropdown Menu */}
