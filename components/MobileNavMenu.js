@@ -17,7 +17,8 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
   const router = useRouter();
   const { data: session, status } = useSession();
   const { counts: notifCounts } = useNotifications();
-  const socialBadge = notifCounts?.total || 0;
+  const alertsBadge = (notifCounts?.battleInvites || 0) + (notifCounts?.friendRequests || 0);
+  const messagesBadge = notifCounts?.unreadMessages || 0;
   
   // Use session directly for login state - more reliable than prop
   const isLoggedIn = status === 'authenticated' && !!session?.user;
@@ -214,9 +215,24 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 className="flex items-center justify-between text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
                 <span>Battle</span>
-                {socialBadge > 0 && (
+                {alertsBadge > 0 && (
                   <span className="ml-2 min-w-[20px] h-[20px] px-1.5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center">
-                    {socialBadge > 9 ? '9+' : socialBadge}
+                    {alertsBadge > 9 ? '9+' : alertsBadge}
+                  </span>
+                )}
+              </Link>
+              <Link
+                href="/messenger"
+                onClick={onClose}
+                className="flex items-center justify-between text-gray-300 font-light text-base uppercase tracking-wider py-3"
+              >
+                <span>Messages</span>
+                {messagesBadge > 0 && (
+                  <span className="ml-2 min-w-[20px] h-[20px] px-1.5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center" aria-label={`${messagesBadge} unread messages`}>
+                    <svg className="w-2.5 h-2.5 mr-0.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                      <path d="M4 4h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H8l-4 4V6a2 2 0 0 1 2-2z" />
+                    </svg>
+                    {messagesBadge > 9 ? '9+' : messagesBadge}
                   </span>
                 )}
               </Link>
