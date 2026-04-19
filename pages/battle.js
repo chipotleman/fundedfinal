@@ -63,6 +63,7 @@ export default function BattlePage() {
   const [friends, setFriends] = useState([]);
   const [invites, setInvites] = useState({ received: [], sent: [] });
   const [recentMatches, setRecentMatches] = useState([]);
+  const [recentHighlights, setRecentHighlights] = useState([]);
   const [activeMatchup, setActiveMatchup] = useState(null);
   const [matchupData, setMatchupData] = useState(null);
   const [friendRequests, setFriendRequests] = useState([]);
@@ -165,6 +166,21 @@ export default function BattlePage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await fetch('/api/battles/recent?limit=3');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!cancelled) setRecentHighlights(Array.isArray(data.battles) ? data.battles : []);
+      } catch {}
+    };
+    load();
+    const interval = setInterval(load, 30000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
 
   useEffect(() => {
     if (globalMatchup && globalHasAny) {
@@ -1397,6 +1413,58 @@ export default function BattlePage() {
                       >
                         Sign Up Free
                       </button>
+                    </div>
+                  )}
+
+                  {recentHighlights.length > 0 && (
+                    <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${cardBorder}` }}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: textSecondary }}>
+                          Recent battles
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-[10px]" style={{ color: textSecondary }}>
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                          Live
+                        </span>
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        {recentHighlights.slice(0, 3).map((b) => (
+                          <button
+                            key={b.id}
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); if (b.winner?.id) goToProfile(b.winner); }}
+                            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left transition-colors hover:bg-white/5"
+                            style={{ background: '#0a0a0a', border: `1px solid ${cardBorder}` }}
+                          >
+                            <UserAvatar user={b.winner} size="sm" />
+                            <div className="min-w-0 flex-1 text-[11px] leading-tight" style={{ color: textPrimary }}>
+                              <div className="truncate">
+                                <span
+                                  className="font-semibold text-green-400 hover:underline"
+                                  onClick={(e) => { e.stopPropagation(); if (b.winner?.id) goToProfile(b.winner); }}
+                                >
+                                  {b.winner?.username || 'Player'}
+                                </span>
+                                <span style={{ color: textSecondary }}> beat </span>
+                                <span
+                                  className="font-medium hover:underline"
+                                  onClick={(e) => { e.stopPropagation(); if (b.loser?.id) goToProfile(b.loser); }}
+                                >
+                                  {b.loser?.username || 'Player'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1.5 mt-0.5" style={{ color: textSecondary }}>
+                                <span className="font-semibold text-yellow-400">${formatMoney(b.potSize, 0)} pot</span>
+                                <span>·</span>
+                                <span>{formatLastSeen(b.endedAt)}</span>
+                              </div>
+                            </div>
+                            <svg className="w-3.5 h-3.5 flex-shrink-0" style={{ color: textSecondary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
