@@ -503,6 +503,24 @@ button:not(.no-hover-effect):not(.bet-btn):hover, .btn:not(.no-hover-effect):not
   transform: none !important;
 }
 
+/* Hamburger button - perfectly stationary across all states.
+   Positioning is handled via top/margin (no transform), so we can
+   safely force transform/transition/animation off everywhere. */
+.hamburger-btn,
+.hamburger-btn:hover,
+.hamburger-btn:focus,
+.hamburger-btn:focus-visible,
+.hamburger-btn:active {
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  filter: none !important;
+  -webkit-filter: none !important;
+  opacity: 1 !important;
+}
+
 /* Bet button - no effects, just toggle */
 .bet-btn {
   outline: none !important;
@@ -618,13 +636,22 @@ button.no-hover-effect.rounded-lg:focus-visible {
     text-shadow: none !important;
   }
   
-  /* Hamburger button - preserve transform positioning */
+  /* Hamburger button - perfectly stationary on touch devices.
+     No transform, no transition, no animation across any state. */
   .hamburger-btn,
   .hamburger-btn:hover,
   .hamburger-btn:focus,
+  .hamburger-btn:focus-visible,
   .hamburger-btn:active {
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
     outline: none !important;
     box-shadow: none !important;
+    filter: none !important;
+    -webkit-filter: none !important;
+    opacity: 1 !important;
+    background-color: transparent !important;
   }
   
   /* Bet buttons - absolutely no effects */
