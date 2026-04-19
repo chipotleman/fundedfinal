@@ -26,13 +26,11 @@ export function initialFor(user, fallback = '?') {
   return (String(name)[0] || fallback).toUpperCase();
 }
 
-const DICEBEAR_STYLE = 'bottts-neutral';
-
 export function generatedAvatarUrl(user) {
   const seed = encodeURIComponent(
     String((user && (user.id || user.username || user.name)) || 'piks-user')
   );
-  return `https://api.dicebear.com/7.x/${DICEBEAR_STYLE}/svg?seed=${seed}`;
+  return `/api/avatar/${seed}.svg`;
 }
 
 /**
