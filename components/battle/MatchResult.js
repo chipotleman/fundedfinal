@@ -36,6 +36,7 @@ function PlayerBlock({
   isTie,
   rematchStatus,
   side,
+  reactions = [],
 }) {
   const ringColor = isWinner ? '#facc15' : isLoser ? '#ef4444' : '#06b6d4';
   const ringGlow = isWinner
@@ -51,6 +52,22 @@ function PlayerBlock({
   return (
     <div className="flex flex-col items-center min-w-0">
       <div className="relative" style={{ width: sizePx, height: sizePx }}>
+        {reactions.map((r) => (
+          <div
+            key={r.id}
+            className="mr-reaction-float pointer-events-none absolute left-1/2 -translate-x-1/2 -top-2 z-10 whitespace-nowrap"
+          >
+            {r.emoji && (
+              <span className="text-3xl" style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.6))' }}>{r.emoji}</span>
+            )}
+            {r.text && (
+              <span
+                className="ml-1 inline-block text-xs font-black px-2 py-1 rounded-full text-white align-middle"
+                style={{ background: 'rgba(15,23,42,0.85)', border: '1px solid rgba(255,255,255,0.15)' }}
+              >{r.text}</span>
+            )}
+          </div>
+        ))}
         <div
           className="rounded-full overflow-hidden flex items-center justify-center"
           style={{
@@ -111,11 +128,17 @@ function PlayerBlock({
   );
 }
 
+const REACTION_EMOJIS = ['👍', '🔥', '😂', '🎯', '👏'];
+const REACTION_TEXTS = ['GG', 'Nice!', 'Close one', 'WP'];
+const REACTION_TTL_MS = 1800;
+
 export default function MatchResult({
   matchup,
   currentUserId,
   resultData,
   rematchState,
+  incomingReaction,
+  onSendReaction,
   opponent: opponentOverride,
   onRematchAccept,
   onRematchDecline,
@@ -126,6 +149,9 @@ export default function MatchResult({
   const [showTitle, setShowTitle] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [myReactions, setMyReactions] = useState([]);
+  const [oppReactions, setOppReactions] = useState([]);
+  const lastSendRef = useRef(0);
   const declineFiredRef = useRef(false);
 
   const isCompleted = matchup && matchup.status === 'completed';
@@ -205,6 +231,42 @@ export default function MatchResult({
       setTimeout(() => setCopied(false), 2000);
     }).catch(() => {});
   }, [prizeWon]);
+
+  // Consume incoming reactions: route to my-side or opponent-side and auto-expire.
+  // Each reaction owns its own timer so rapid-fire reactions all expire
+  // independently — the effect cleanup must NOT cancel the previous reaction's
+  // removal timer when a new reaction arrives.
+  const reactionTimersRef = useRef(new Map());
+  useEffect(() => {
+    if (!incomingReaction || !incomingReaction.id) return;
+    const fromMe = incomingReaction.fromUserId === currentUserId;
+    const item = {
+      id: incomingReaction.id,
+      emoji: incomingReaction.emoji || null,
+      text: incomingReaction.text || null,
+    };
+    const setter = fromMe ? setMyReactions : setOppReactions;
+    setter((prev) => (prev.some((r) => r.id === item.id) ? prev : [...prev, item]));
+    if (!reactionTimersRef.current.has(item.id)) {
+      const t = setTimeout(() => {
+        setter((prev) => prev.filter((r) => r.id !== item.id));
+        reactionTimersRef.current.delete(item.id);
+      }, REACTION_TTL_MS);
+      reactionTimersRef.current.set(item.id, t);
+    }
+  }, [incomingReaction, currentUserId]);
+
+  useEffect(() => () => {
+    for (const t of reactionTimersRef.current.values()) clearTimeout(t);
+    reactionTimersRef.current.clear();
+  }, []);
+
+  const sendReaction = useCallback((payload) => {
+    const now = Date.now();
+    if (now - lastSendRef.current < 450) return;
+    lastSendRef.current = now;
+    try { onSendReaction?.(payload); } catch {}
+  }, [onSendReaction]);
 
   const handleClose = useCallback(() => {
     // Treat closing without accepting as an implicit decline so the
@@ -308,6 +370,21 @@ export default function MatchResult({
           animation: mr-stats-slide 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
                      mr-result-highlight-anim 1.4s ease-in-out 0.5s 2;
         }
+        @keyframes mr-reaction-float-anim {
+          0% { transform: translate(-50%, 10px) scale(0.6); opacity: 0; }
+          15% { transform: translate(-50%, -4px) scale(1.15); opacity: 1; }
+          70% { transform: translate(-50%, -38px) scale(1); opacity: 1; }
+          100% { transform: translate(-50%, -64px) scale(0.9); opacity: 0; }
+        }
+        .mr-reaction-float {
+          animation: mr-reaction-float-anim 1.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        @keyframes mr-chip-pop {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.15); }
+          100% { transform: scale(1); }
+        }
+        .mr-chip:active { animation: mr-chip-pop 0.18s ease-out; }
         .mr-red-vignette {
           position: fixed;
           inset: 0;
@@ -383,6 +460,7 @@ export default function MatchResult({
                   isLoser={isLoser}
                   isTie={isTie}
                   rematchStatus={isFakeOpponent ? null : myRematchStatus}
+                  reactions={myReactions}
                 />
 
                 <div className="flex-1 flex flex-col items-center pb-3 min-w-0">
@@ -422,6 +500,7 @@ export default function MatchResult({
                   isLoser={isWinner}
                   isTie={isTie}
                   rematchStatus={isFakeOpponent ? null : oppRematchStatus}
+                  reactions={oppReactions}
                 />
               </div>
             </div>
@@ -476,6 +555,39 @@ export default function MatchResult({
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {showStats && !isFakeOpponent && (
+            <div
+              className="mr-stats-card mb-3 rounded-xl px-3 py-2"
+              style={{ background: '#0d0d0d', border: '1px solid #1a1a1a' }}
+            >
+              <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                {REACTION_EMOJIS.map((e) => (
+                  <button
+                    key={e}
+                    type="button"
+                    onClick={() => sendReaction({ emoji: e })}
+                    className="mr-chip text-xl leading-none px-2 py-1.5 rounded-lg hover:bg-white/5 active:bg-white/10 transition-colors"
+                    aria-label={`Send ${e} reaction`}
+                  >
+                    {e}
+                  </button>
+                ))}
+                <div className="w-px h-6 bg-white/10 mx-1" />
+                {REACTION_TEXTS.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => sendReaction({ text: t })}
+                    className="mr-chip text-xs font-bold text-gray-200 px-2.5 py-1.5 rounded-full hover:bg-white/5 active:bg-white/10 transition-colors"
+                    style={{ border: '1px solid #2a2a2a' }}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 

@@ -391,7 +391,22 @@ export default function BattlePage() {
     setShowResult(null);
     setResultData(null);
     setRematchState(null);
+    setIncomingReaction(null);
   }, [showResult]);
+
+  const [incomingReaction, setIncomingReaction] = useState(null);
+
+  const handleSendReaction = useCallback(async (payload) => {
+    if (!showResult?.id) return;
+    if (showResult?.isFakeOpponent || resultData?.isFakeOpponent) return;
+    try {
+      await fetch(`/api/matchups/${showResult.id}/reaction`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    } catch {}
+  }, [showResult, resultData]);
 
   // SSE listener for two-sided rematch handshake updates.
   useEffect(() => {
@@ -401,13 +416,21 @@ export default function BattlePage() {
     const matchupId = showResult.id;
 
     const unsubscribe = client.subscribe((ev) => {
-      if (ev?.type !== 'matchup:rematch') return;
-      if (ev.matchupId !== matchupId) return;
-      setRematchState({
-        user1Rematch: ev.user1Rematch,
-        user2Rematch: ev.user2Rematch,
-        rematchMatchupId: ev.rematchMatchupId || null,
-      });
+      if (!ev || ev.matchupId !== matchupId) return;
+      if (ev.type === 'matchup:rematch') {
+        setRematchState({
+          user1Rematch: ev.user1Rematch,
+          user2Rematch: ev.user2Rematch,
+          rematchMatchupId: ev.rematchMatchupId || null,
+        });
+      } else if (ev.type === 'matchup:reaction') {
+        setIncomingReaction({
+          id: ev.id,
+          fromUserId: ev.fromUserId,
+          emoji: ev.emoji || null,
+          text: ev.text || null,
+        });
+      }
     });
     return () => unsubscribe();
   }, [showResult?.id, isGuest]);
@@ -923,6 +946,8 @@ export default function BattlePage() {
           currentUserId={userId}
           resultData={resultData}
           rematchState={rematchState}
+          incomingReaction={incomingReaction}
+          onSendReaction={handleSendReaction}
           opponent={resultData?.opponent}
           highlight={highlightResult}
           onRematchAccept={
