@@ -82,17 +82,10 @@ export default function MessengerPage() {
     <div style={{ backgroundColor: bg, minHeight: '100dvh' }}>
       <TopNavbar />
       <div className="max-w-7xl w-full mx-auto px-2 sm:px-4 py-2 sm:py-4">
-        <div className="flex items-center justify-between mb-2 sm:mb-3">
+        <div className="flex items-center mb-2 sm:mb-3">
           <h1 className="text-lg sm:text-2xl font-bold tracking-tight" style={{ color: '#34d399' }}>
             Messenger
           </h1>
-          <button
-            type="button"
-            onClick={() => router.push('/notifications')}
-            className="text-[11px] sm:text-xs font-semibold text-emerald-400 hover:text-emerald-300"
-          >
-            ← Notifications
-          </button>
         </div>
         <div
           className="messenger-surface"
