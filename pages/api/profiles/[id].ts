@@ -137,7 +137,7 @@ export default async function handler(
         console.error("[ACHIEVEMENTS] progress lookup error:", progErr);
       }
 
-      const storedUnlocked = Array.isArray(profile.unlockedFrames)
+      const storedUnlocked: string[] = Array.isArray(profile.unlockedFrames)
         ? profile.unlockedFrames.filter((f): f is string => typeof f === 'string')
         : [];
       const derivedUnlocked = deriveUnlockedFrameIds({
