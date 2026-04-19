@@ -9,6 +9,7 @@ import WaitingBattleCard from '../components/WaitingBattleCard';
 import PoolContainer from '../components/PoolContainer';
 import FireBattleContainer from '../components/FireBattleContainer';
 import DepositMatchContainer from '../components/DepositMatchContainer';
+import DepositMatchAppliedBanner from '../components/DepositMatchAppliedBanner';
 import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
 import LiveBattlesSection from '../components/battle/LiveBattlesSection';
 import Footer from '../components/Footer';
@@ -587,6 +588,7 @@ export default function Dashboard() {
               )}
               <PoolContainer />
               <DepositMatchContainer />
+              <DepositMatchAppliedBanner />
             </div>
           </div>
         </div>

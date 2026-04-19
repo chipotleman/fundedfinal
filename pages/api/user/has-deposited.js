@@ -39,12 +39,22 @@ export default async function handler(req, res) {
     ]);
 
     const matchGranted = !!profileRows[0]?.grantedAt;
+    const profileGrantedAmount = profileRows[0]?.grantedAmount != null
+      ? parseFloat(profileRows[0].grantedAmount)
+      : null;
 
     if (rows.length === 0) {
+      const matchAmount = profileGrantedAmount != null && !Number.isNaN(profileGrantedAmount)
+        ? profileGrantedAmount
+        : null;
       return res.status(200).json({
         hasDeposited: matchGranted,
         matchGranted,
         signedIn: true,
+        matchAmount,
+        grantedAt: profileRows[0]?.grantedAt
+          ? new Date(profileRows[0].grantedAt).toISOString()
+          : null,
       });
     }
 
