@@ -84,7 +84,7 @@ export default function BalanceModal({
       onClick={onClose}
     >
       <div 
-        className="relative bg-[#0a0a0a] rounded-2xl border border-gray-800/50 w-full max-w-2xl my-auto overflow-hidden"
+        className="popup-content relative bg-[#0a0a0a] rounded-2xl border border-gray-800/50 w-full max-w-2xl my-auto overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6">

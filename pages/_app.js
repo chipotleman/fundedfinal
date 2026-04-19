@@ -462,17 +462,14 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
                   }}
                 />
                 
-                {/* Page wrapper that slides left on mobile when menu opens */}
+                {/* Page wrapper - menu opens instantly with no slide animation */}
                 <div 
                   style={{
-                    transform: mobileMenuOpen ? 'translateX(-256px)' : 'translateX(0)',
-                    transition: 'transform 0.3s ease-in-out',
                     minHeight: '100vh',
                     backgroundColor: '#000000',
                     width: '100vw',
                     position: 'relative',
                   }}
-                  className="lg:transform-none"
                 >
                   <Component {...pageProps} />
                 </div>

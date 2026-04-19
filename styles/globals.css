@@ -499,6 +499,27 @@ body {
   scrollbar-width: none;
 }
 
+/* Shared popup/modal centering on mobile - guarantees no horizontal cutoff
+   for AuthPopup, ChallengePopup, BalanceModal, DemoPopup, etc. */
+@media (max-width: 639px) {
+  .popup-content {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    max-width: calc(100vw - 16px) !important;
+  }
+}
+
+/* Mobile nav drawer - guarantee no slide/transform animation regardless of
+   inherited transitions, so it appears/disappears instantly. */
+.mobile-menu-drawer,
+.mobile-menu-drawer * {
+  transition: none !important;
+  animation: none !important;
+}
+.mobile-menu-drawer {
+  transform: none !important;
+}
+
 /* Responsive Design */
 @media (max-width: 640px) {
   .modern-card {
@@ -783,4 +804,25 @@ button.no-hover-effect.rounded-lg:focus-visible {
     -webkit-user-select: text !important;
     user-select: text !important;
   }
+}
+
+/* Shared popup/modal centering on mobile - guarantees no horizontal cutoff
+   for AuthPopup, ChallengePopup, BalanceModal, DemoPopup, etc. */
+@media (max-width: 639px) {
+  .popup-content {
+    margin-left: auto !important;
+    margin-right: auto !important;
+    max-width: calc(100vw - 16px) !important;
+  }
+}
+
+/* Mobile nav drawer - guarantee no slide/transform animation regardless of
+   inherited transitions, so it appears/disappears instantly. */
+.mobile-menu-drawer,
+.mobile-menu-drawer * {
+  transition: none !important;
+  animation: none !important;
+}
+.mobile-menu-drawer {
+  transform: none !important;
 }

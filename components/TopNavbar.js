@@ -533,7 +533,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                   {hasActiveChallenge && userProfile ? (
                     <div className="rounded-lg px-3 py-2 transition-colors" style={{ backgroundColor: isDarkMode ? '#111111' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#d1d5db' }}>
                       <button
-                        onClick={() => router.push('/withdrawal')}
+                        onClick={() => router.push('/bet-history')}
                         className="flex items-center space-x-2"
                       >
                         <svg className="w-4 h-4" style={{ color: isDarkMode ? '#ffffff' : '#111827' }} fill="currentColor" viewBox="0 0 20 20">
@@ -599,13 +599,13 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                 if (displayValue == null) return null;
                 return (
                   <button
-                    onClick={() => router.push('/withdrawal')}
+                    onClick={() => router.push('/bet-history')}
                     className="sm:hidden flex items-center gap-1 rounded-md px-2 py-1.5 transition-colors"
                     style={{
                       backgroundColor: isDarkMode ? '#111111' : '#f3f4f6',
                       borderWidth: 1,
                       borderColor: isDarkMode ? 'rgba(55, 65, 81, 0.5)' : '#d1d5db',
-                      marginRight: betSlipCount > 0 ? 0 : 50,
+                      marginRight: betSlipCount > 0 ? 0 : 60,
                     }}
                   >
                     {showMatchup ? (

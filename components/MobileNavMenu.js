@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { signOut, useSession } from 'next-auth/react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNotifications } from '../contexts/NotificationsContext';
+import useModalScrollLock from '../hooks/useModalScrollLock';
 import { formatMoney } from '../utils/formatMoney';
 
 export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurrentUser, isLoggedIn: propIsLoggedIn }) {
@@ -72,26 +73,8 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
     };
   }, [session]);
 
-  // Lock body scroll when menu is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-      document.body.style.height = '100vh';
-    } else {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.height = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.height = '';
-    };
-  }, [isOpen]);
+  // Lock body scroll when menu is open (preserves scroll position)
+  useModalScrollLock(isOpen, { restoreScroll: true });
 
   // Always close the menu (and release the body scroll lock) when the
   // route changes, even if a Link's onClick somehow didn't fire. This
@@ -160,9 +143,9 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
             className="fixed inset-0 right-0 left-auto w-64 bg-black lg:hidden z-[59]"
           />
           
-          {/* Menu drawer - appears instantly when open */}
+          {/* Menu drawer - appears instantly when open (no transform/transition) */}
           <div 
-            className="fixed inset-0 right-0 left-auto w-64 bg-black shadow-xl lg:hidden z-[60] overflow-hidden"
+            className="mobile-menu-drawer fixed inset-0 right-0 left-auto w-64 bg-black shadow-xl lg:hidden z-[60] overflow-hidden"
             onTouchStart={onTouchStart}
             onTouchMove={onTouchMove}
             onTouchEnd={onTouchEnd}
