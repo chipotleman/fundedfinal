@@ -37,6 +37,7 @@ export default async function handler(req, res) {
             avatar: profiles.avatar,
             battleWins: profiles.battleWins,
             battleLosses: profiles.battleLosses,
+            lastSeenAt: profiles.lastSeenAt,
           })
           .from(profiles)
           .where(inArray(profiles.id, senderIds)),
@@ -46,10 +47,15 @@ export default async function handler(req, res) {
           .where(inArray(users.id, senderIds)),
       ]);
 
+      const ONLINE_THRESHOLD_MS = 5 * 60 * 1000;
+      const nowMs = Date.now();
+
       const requests = pendingRequests.map(req => {
         const profile = senderProfiles.find(p => p.id === req.userId);
         const user = senderUsers.find(u => u.id === req.userId);
         const emailHandle = user?.email ? user.email.split('@')[0] : null;
+        const lastSeen = profile?.lastSeenAt ? new Date(profile.lastSeenAt) : null;
+        const isOnline = lastSeen ? (nowMs - lastSeen.getTime()) <= ONLINE_THRESHOLD_MS : false;
         return {
           id: req.id,
           sender: {
@@ -58,6 +64,8 @@ export default async function handler(req, res) {
             avatar: profile?.avatar || user?.image || null,
             battleWins: profile?.battleWins ?? 0,
             battleLosses: profile?.battleLosses ?? 0,
+            lastSeenAt: lastSeen ? lastSeen.toISOString() : null,
+            isOnline,
           },
           createdAt: req.createdAt,
         };

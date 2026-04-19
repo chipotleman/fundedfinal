@@ -50,7 +50,7 @@ export default async function handler(req, res) {
     const userMap = new Map();
     if (senderIds.length > 0) {
       const [p, u] = await Promise.all([
-        db.select({ id: profiles.id, username: profiles.username, avatar: profiles.avatar, equippedFrame: profiles.equippedFrame })
+        db.select({ id: profiles.id, username: profiles.username, avatar: profiles.avatar, equippedFrame: profiles.equippedFrame, lastSeenAt: profiles.lastSeenAt })
           .from(profiles).where(inArray(profiles.id, senderIds)),
         db.select({ id: users.id, email: users.email, image: users.image })
           .from(users).where(inArray(users.id, senderIds)),
@@ -59,15 +59,22 @@ export default async function handler(req, res) {
       u.forEach(x => userMap.set(x.id, x));
     }
 
+    const ONLINE_THRESHOLD_MS = 5 * 60 * 1000;
+    const nowMs = Date.now();
+
     const buildSender = (id) => {
       const p = profMap.get(id);
       const u = userMap.get(id);
       const handle = u?.email ? u.email.split('@')[0] : null;
+      const lastSeen = p?.lastSeenAt ? new Date(p.lastSeenAt) : null;
+      const isOnline = lastSeen ? (nowMs - lastSeen.getTime()) <= ONLINE_THRESHOLD_MS : false;
       return {
         id,
         username: p?.username || handle || 'Player',
         avatar: p?.avatar || u?.image || null,
         equippedFrame: p?.equippedFrame || null,
+        lastSeenAt: lastSeen ? lastSeen.toISOString() : null,
+        isOnline,
       };
     };
 

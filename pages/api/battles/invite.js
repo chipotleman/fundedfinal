@@ -75,6 +75,7 @@ export default async function handler(req, res) {
             avatar: profiles.avatar,
             battleWins: profiles.battleWins,
             battleLosses: profiles.battleLosses,
+            lastSeenAt: profiles.lastSeenAt,
           })
           .from(profiles)
           .where(
@@ -82,19 +83,32 @@ export default async function handler(req, res) {
           );
       }
 
+      const ONLINE_THRESHOLD_MS = 5 * 60 * 1000;
+      const nowMs = Date.now();
+      const decorate = (p) => {
+        if (!p) return p;
+        const lastSeen = p.lastSeenAt ? new Date(p.lastSeenAt) : null;
+        const isOnline = lastSeen ? (nowMs - lastSeen.getTime()) <= ONLINE_THRESHOLD_MS : false;
+        return {
+          ...p,
+          lastSeenAt: lastSeen ? lastSeen.toISOString() : null,
+          isOnline,
+        };
+      };
+
       const enrichedReceived = receivedInvites.map(invite => ({
         ...invite,
-        sender: userProfiles.find(p => p.id === invite.senderId),
+        sender: decorate(userProfiles.find(p => p.id === invite.senderId)),
       }));
 
       const enrichedSent = sentInvites.map(invite => ({
         ...invite,
-        receiver: userProfiles.find(p => p.id === invite.receiverId),
+        receiver: decorate(userProfiles.find(p => p.id === invite.receiverId)),
       }));
 
       const enrichedRecentlyClosed = recentlyClosed.map(invite => ({
         ...invite,
-        receiver: userProfiles.find(p => p.id === invite.receiverId),
+        receiver: decorate(userProfiles.find(p => p.id === invite.receiverId)),
       }));
 
       return res.status(200).json({

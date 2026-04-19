@@ -137,7 +137,7 @@ function NotificationsFeed({ ctx, router, isDarkMode, onOpenChat }) {
                 className="px-4 py-3 flex items-start gap-3"
                 style={{ borderTop: `1px solid ${cardBorder}` }}
               >
-                <Avatar user={inv.sender} />
+                <Avatar user={inv.sender} isOnline={inv.sender?.isOnline ?? isUserOnline(inv.sender?.lastSeenAt)} onlineDotBorderColor={cardBg} />
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
                     {inv.sender?.username || 'Someone'} challenged you
@@ -185,7 +185,7 @@ function NotificationsFeed({ ctx, router, isDarkMode, onOpenChat }) {
               className="w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-white/5 transition-colors"
               style={{ borderTop: `1px solid ${cardBorder}` }}
             >
-              <Avatar user={m.sender} />
+              <Avatar user={m.sender} isOnline={m.sender?.isOnline ?? isUserOnline(m.sender?.lastSeenAt)} onlineDotBorderColor={cardBg} />
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
                   {m.sender?.username || 'Someone'}
@@ -221,7 +221,7 @@ function NotificationsFeed({ ctx, router, isDarkMode, onOpenChat }) {
               className="px-4 py-3 flex items-start gap-3"
               style={{ borderTop: `1px solid ${cardBorder}` }}
             >
-              <Avatar user={fr.sender} />
+              <Avatar user={fr.sender} isOnline={fr.sender?.isOnline ?? isUserOnline(fr.sender?.lastSeenAt)} onlineDotBorderColor={cardBg} />
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
                   {fr.sender?.username || 'Someone'} wants to be friends
@@ -383,7 +383,11 @@ function ConversationThread({ friend, ctx, myId, isDarkMode }) {
         className="flex items-center gap-3 px-4 py-3 flex-shrink-0"
         style={{ borderBottom: `1px solid ${cardBorder}` }}
       >
-        <Avatar user={friend} />
+        <Avatar
+          user={friend}
+          isOnline={friend?.isOnline ?? isUserOnline(friend?.lastSeenAt)}
+          onlineDotBorderColor={isDarkMode ? '#0a0a0a' : '#ffffff'}
+        />
         <div className="flex-1 min-w-0">
           <div className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
             {friend.username || 'Player'}
