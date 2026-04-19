@@ -354,10 +354,6 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
           0%, 100% { opacity: 1; }
           50% { opacity: 0.4; }
         }
-        @keyframes qm-scan-sweep {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(200%); }
-        }
         @keyframes qm-ring-spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
@@ -410,19 +406,14 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
       <div className={`fixed inset-0 ${th.overlay} backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto`} onClick={() => { if (step === 'found') return; if (step === 'searching') { cancelSearch(); } onClose(); }}>
         <div
           className="rounded-2xl max-w-md w-full overflow-hidden my-auto"
-          style={
-            step === 'found' || step === 'searching'
-              ? {
-                  background:
-                    'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.95) 45%, rgba(6,78,59,0.95) 100%)',
-                  border: '1px solid rgba(16,185,129,0.5)',
-                  boxShadow:
-                    '0 0 0 1px rgba(16,185,129,0.15) inset, 0 10px 40px rgba(16,185,129,0.25), 0 0 80px rgba(59,130,246,0.18)',
-                  backdropFilter: 'blur(14px)',
-                  WebkitBackdropFilter: 'blur(14px)',
-                }
-              : { backgroundColor: th.cardBg, border: `1px solid ${th.cardBorder}`, boxShadow: 'none' }
-          }
+          style={{
+            backgroundColor: th.cardBg,
+            border: `1px solid ${th.cardBorder}`,
+            boxShadow:
+              step === 'found' || step === 'searching'
+                ? '0 10px 40px rgba(0,0,0,0.6), 0 0 60px rgba(0,0,0,0.4)'
+                : 'none',
+          }}
           onClick={e => e.stopPropagation()}
         >
           {step === 'config' && (
@@ -518,19 +509,6 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
             <div className="relative overflow-hidden" style={{
               background: 'transparent',
             }}>
-              <div
-                className="absolute inset-0 pointer-events-none"
-                style={{
-                  background: 'radial-gradient(ellipse at center bottom, rgba(16,185,129,0.15) 0%, transparent 65%), radial-gradient(ellipse at top left, rgba(59,130,246,0.15) 0%, transparent 55%)',
-                }}
-              />
-              <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ opacity: 0.08 }}>
-                <div className="absolute inset-0" style={{
-                  background: 'linear-gradient(90deg, transparent, rgba(59,130,246,0.5), transparent)',
-                  animation: 'qm-scan-sweep 3s ease-in-out infinite',
-                }} />
-              </div>
-
               <div className="flex items-center justify-center gap-4 md:gap-8 relative px-4" style={{ minHeight: '280px' }}>
                 <div className="flex flex-col items-center justify-center">
                   <div className="relative mb-2">
@@ -641,17 +619,34 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                 </div>
               </div>
 
-              <div className="text-center pb-2 pt-1">
-                <div className="flex items-center justify-center gap-1 mb-1">
+              <div className="text-center pb-2 pt-1 px-4">
+                <div className="flex items-center justify-center gap-1 mb-2">
                   <span className="text-[10px]">{selectedMode?.icon}</span>
                   <span className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">{selectedMode?.label}</span>
                 </div>
-                <p className="text-[8px] text-gray-500 uppercase tracking-widest mb-0.5">Win Up To</p>
-                <p className="text-2xl md:text-3xl font-black text-emerald-400 leading-none" style={{
-                  textShadow: '0 0 20px rgba(16,185,129,0.5)',
-                }}>
-                  ${payout}
-                </p>
+                <div
+                  className="inline-flex flex-col items-center rounded-xl px-6 py-2"
+                  style={{
+                    background: 'rgba(245,158,11,0.10)',
+                    border: '1px solid rgba(250,204,21,0.55)',
+                    boxShadow: '0 0 30px rgba(250,204,21,0.20), inset 0 0 14px rgba(250,204,21,0.06)',
+                  }}
+                >
+                  <span className="text-[8px] uppercase tracking-[0.25em] mb-0.5" style={{ color: '#fde68a' }}>Win Up To</span>
+                  <span
+                    className="text-2xl md:text-3xl font-black leading-none"
+                    style={{
+                      background: 'linear-gradient(180deg, #fde68a 0%, #f59e0b 55%, #b45309 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                      textShadow: '0 0 20px rgba(250,204,21,0.30)',
+                      filter: 'drop-shadow(0 2px 6px rgba(180,83,9,0.40))',
+                    }}
+                  >
+                    ${payout}
+                  </span>
+                </div>
               </div>
 
               <div className="px-5 pb-3 pt-1">
@@ -696,7 +691,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
               <div
                 className="absolute inset-0 pointer-events-none"
                 style={{
-                  background: 'radial-gradient(ellipse at center bottom, rgba(16,185,129,0.18) 0%, transparent 65%), radial-gradient(ellipse at top left, rgba(59,130,246,0.12) 0%, transparent 55%)',
+                  background: 'radial-gradient(ellipse at center bottom, rgba(250,204,21,0.10) 0%, transparent 65%)',
                 }}
               />
 
@@ -782,7 +777,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                   </div>
                 </div>
 
-                <div className="mx-4 mb-4 rounded-xl p-3 flex items-center justify-between" style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(16,185,129,0.25)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
+                <div className="mx-4 mb-4 rounded-xl p-3 flex items-center justify-between" style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
                   <div>
                     <div className={`${th.infoLabel} text-[10px] uppercase tracking-wider`}>Mode</div>
                     <div className={`${th.infoValue} font-bold text-sm flex items-center gap-1`}>
@@ -796,7 +791,12 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                   </div>
                   <div className="text-right">
                     <div className={`${th.infoLabel} text-[10px] uppercase tracking-wider`}>Win</div>
-                    <div className="text-emerald-400 font-bold text-sm">${payout}</div>
+                    <div className="font-bold text-sm" style={{
+                      background: 'linear-gradient(180deg, #fde68a 0%, #f59e0b 55%, #b45309 100%)',
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                    }}>${payout}</div>
                   </div>
                 </div>
 
