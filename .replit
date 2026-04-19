@@ -66,3 +66,7 @@ NEXTAUTH_SECRET = "62HlAI9+LH0Q7tl8WjI7nWhbWWMxDIMfDAMqSPq9Zy0="
 
 [userenv.development]
 NEXTAUTH_SECRET = "62HlAI9+LH0Q7tl8WjI7nWhbWWMxDIMfDAMqSPq9Zy0="
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 180000

@@ -102,7 +102,10 @@ export default async function handler(req, res) {
       seenSenders.add(m.senderId);
       messagesOut.push({
         id: m.id,
-        preview: (m.content || '').slice(0, 80),
+        preview: m.messageType === 'voice'
+          ? '🎤 Voice message'
+          : (m.content || '').slice(0, 80),
+        messageType: m.messageType || 'text',
         createdAt: m.createdAt,
         sender: buildSender(m.senderId),
       });

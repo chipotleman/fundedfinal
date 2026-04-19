@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
 import ProfileModal from '../components/ProfileModal';
-import UserAvatar from '../components/UserAvatar';
+import UserAvatar, { UserNameLink } from '../components/UserAvatar';
 import TapSurface from '../components/TapSurface';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserProfiles } from '../contexts/UserProfilesContext';
@@ -16,13 +16,13 @@ const Leaderboard = () => {
   const [timeframe, setTimeframe] = useState('monthly');
   const [category, setCategory] = useState('all');
   const [bankroll, setBankroll] = useState(10000);
-  const [activeIndex, setActiveIndex] = useState(0);
   const [leaderboardData, setLeaderboardData] = useState([]);
   const [communityStats, setCommunityStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const carouselRef = useRef(null);
   const profileRequestRef = useRef(0);
+  const listRef = useRef(null);
+  const userRowRefs = useRef({});
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -35,8 +35,8 @@ const Leaderboard = () => {
               setBankroll(profile.bankroll);
             }
           }
-        } catch (error) {
-          console.error('Error fetching profile:', error);
+        } catch (err) {
+          console.error('Error fetching profile:', err);
         }
       }
     };
@@ -127,171 +127,211 @@ const Leaderboard = () => {
     }
   };
 
-  // Reset carousel position when filters change
-  useEffect(() => {
-    setActiveIndex(0);
-    if (carouselRef.current) {
-      carouselRef.current.scrollTo({ left: 0, behavior: 'auto' });
-    }
-  }, [timeframe, category]);
-
-  // Use actual child offsets so indicator math stays correct even if
-  // card width, gap, or padding change in the future.
-  const handleScroll = useCallback(() => {
-    const el = carouselRef.current;
-    if (!el || !el.children.length) return;
-    const center = el.scrollLeft + el.clientWidth / 2;
-    let nearestIdx = 0;
-    let nearestDist = Infinity;
-    for (let i = 0; i < el.children.length; i++) {
-      const child = el.children[i];
-      const childCenter = child.offsetLeft + child.offsetWidth / 2;
-      const dist = Math.abs(center - childCenter);
-      if (dist < nearestDist) {
-        nearestDist = dist;
-        nearestIdx = i;
-      }
-    }
-    if (nearestIdx !== activeIndex) {
-      setActiveIndex(nearestIdx);
-    }
-  }, [activeIndex]);
-
-  const scrollToCard = (idx) => {
-    const el = carouselRef.current;
-    if (!el) return;
-    const child = el.children[idx];
-    if (!child) return;
-    const target = child.offsetLeft - (el.clientWidth - child.offsetWidth) / 2;
-    el.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
-  };
-
-  const getTierStyles = (tier) => {
-    switch (tier) {
-      case 'Elite':
-        return {
-          chipBg: 'bg-yellow-400/10 border-yellow-400/30 text-yellow-300',
-          accent: 'from-yellow-500/20 via-yellow-500/5 to-transparent',
-          dot: 'bg-yellow-400'
-        };
-      case 'Pro':
-        return {
-          chipBg: 'bg-blue-400/10 border-blue-400/30 text-blue-300',
-          accent: 'from-blue-500/20 via-blue-500/5 to-transparent',
-          dot: 'bg-blue-400'
-        };
-      case 'Starter':
-        return {
-          chipBg: 'bg-green-400/10 border-green-400/30 text-green-300',
-          accent: 'from-green-500/20 via-green-500/5 to-transparent',
-          dot: 'bg-green-400'
-        };
-      default:
-        return {
-          chipBg: 'bg-gray-400/10 border-gray-400/30 text-gray-300',
-          accent: 'from-gray-500/20 via-gray-500/5 to-transparent',
-          dot: 'bg-gray-400'
-        };
-    }
-  };
-
-  const getRankBadge = (rank) => {
-    if (rank === 1) return { label: '1st', icon: '🏆', ring: 'ring-2 ring-yellow-400/60', glow: 'shadow-[0_0_30px_-8px_rgba(250,204,21,0.6)]' };
-    if (rank === 2) return { label: '2nd', icon: '🥈', ring: 'ring-1 ring-gray-300/40', glow: '' };
-    if (rank === 3) return { label: '3rd', icon: '🥉', ring: 'ring-1 ring-orange-400/40', glow: '' };
-    return { label: `#${rank}`, icon: null, ring: 'ring-1 ring-white/5', glow: '' };
-  };
-
-  const initials = (name) => name.slice(0, 2).toUpperCase();
-
   const formatProfit = (n) => {
-    const sign = n < 0 ? '-' : '';
-    const abs = Math.abs(n);
+    const value = Number(n) || 0;
+    const sign = value < 0 ? '-' : '';
+    const abs = Math.abs(value);
     if (abs >= 1_000_000) return `${sign}$${(abs / 1_000_000).toFixed(1)}M`;
     if (abs >= 1_000) return `${sign}$${(abs / 1_000).toFixed(1)}K`;
     return `${sign}$${abs.toLocaleString()}`;
   };
 
-  const renderLeaderCard = (leader, opts = {}) => {
-    const { variant = 'carousel' } = opts;
-    const tier = getTierStyles(leader.tier);
-    const badge = getRankBadge(leader.rank);
-    const winRate = ((leader.wins / leader.totalBets) * 100).toFixed(0);
+  const winRateOf = (leader) => {
+    if (!leader?.totalBets) return 0;
+    return (leader.wins / leader.totalBets) * 100;
+  };
+
+  const keyStatFor = (leader) => {
+    if (category === 'all') {
+      return { label: 'PnL', value: formatProfit(leader.profit) };
+    }
+    const wr = winRateOf(leader);
+    return { label: 'Win Rate', value: `${wr.toFixed(0)}%` };
+  };
+
+  const top3 = useMemo(() => leaderboardData.slice(0, 3), [leaderboardData]);
+  const rest = useMemo(() => leaderboardData.slice(3), [leaderboardData]);
+
+  const userRank = useMemo(() => {
+    if (!user?.id) return null;
+    const me = leaderboardData.find((l) => l.id === user.id);
+    return me || null;
+  }, [user, leaderboardData]);
+
+  const scrollToMyRank = () => {
+    if (!userRank) return;
+    let el = userRowRefs.current[userRank.id];
+    // If the user is in the top 3 their row lives in the podium and won't have
+    // a row ref — fall back to scrolling the page to the very top so the
+    // podium is in view.
+    if (!el && userRank.rank <= 3) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    if (el && typeof el.scrollIntoView === 'function') {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('lb-row-flash');
+      setTimeout(() => el.classList.remove('lb-row-flash'), 1600);
+    }
+  };
+
+  const userToProps = (leader) => ({
+    id: leader.id,
+    username: leader.username,
+    avatar: leader.avatar || null,
+    frameId: leader.equippedFrame,
+  });
+
+  // Podium order: 2 - 1 - 3 (so #1 stands tallest in the middle)
+  const podiumOrder = useMemo(() => {
+    const map = new Map(top3.map((l) => [l.rank, l]));
+    return [map.get(2), map.get(1), map.get(3)].filter(Boolean);
+  }, [top3]);
+
+  const renderPodiumItem = (leader) => {
+    if (!leader) return null;
+    const isFirst = leader.rank === 1;
+    const size = isFirst ? 120 : 96;
+    const stat = keyStatFor(leader);
+    const medal = leader.rank === 1 ? '👑' : leader.rank === 2 ? '🥈' : '🥉';
+    const ringColor = leader.rank === 1
+      ? 'ring-yellow-400/70'
+      : leader.rank === 2
+      ? 'ring-cyan-300/60'
+      : 'ring-orange-400/60';
+    const glow = leader.rank === 1
+      ? 'shadow-[0_0_60px_-12px_rgba(250,204,21,0.55)]'
+      : leader.rank === 2
+      ? 'shadow-[0_0_40px_-14px_rgba(103,232,249,0.5)]'
+      : 'shadow-[0_0_40px_-14px_rgba(251,146,60,0.5)]';
 
     return (
-      <TapSurface
-        key={leader.rank}
-        onTap={() => handleOpenLeader(leader)}
-        activeColor="transparent"
-        inactiveColor="transparent"
-        activeTextColor="#ffffff"
-        inactiveTextColor="#ffffff"
-        className={`relative rounded-2xl overflow-hidden border border-white/10 backdrop-blur-xl ${badge.ring} ${badge.glow}`}
-        style={{
-          background: 'linear-gradient(160deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.02) 50%, rgba(0,0,0,0.4) 100%)',
-          width: variant === 'carousel' ? '85vw' : '100%',
-          maxWidth: variant === 'carousel' ? '340px' : '100%',
-          flex: variant === 'carousel' ? '0 0 auto' : undefined,
-          scrollSnapAlign: variant === 'carousel' ? 'center' : undefined,
-        }}
+      <div
+        key={leader.id || leader.rank}
+        className={`flex flex-col items-center ${isFirst ? 'order-2 -mt-2 sm:-mt-4' : leader.rank === 2 ? 'order-1' : 'order-3'}`}
+        style={{ minWidth: 0, flex: '1 1 0' }}
       >
-        {/* Tier accent gradient */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${tier.accent} pointer-events-none`} />
-
-        <div className="relative p-5 flex flex-col h-full">
-          {/* Header row: rank + tier */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40 border border-white/10`}>
-                {badge.icon && <span className="text-base leading-none">{badge.icon}</span>}
-                <span className="text-xs font-bold text-white tracking-wide">{badge.label}</span>
-              </div>
-            </div>
-            <span className={`px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider border ${tier.chipBg}`}>
-              {leader.tier}
-            </span>
+        <div className="relative">
+          <div
+            className={`absolute -top-3 left-1/2 -translate-x-1/2 z-10 text-2xl sm:text-3xl select-none`}
+            style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.6))' }}
+            aria-hidden="true"
+          >
+            {medal}
           </div>
-
-          {/* Avatar + name */}
-          <div className="flex items-center gap-3 mb-5">
-            <UserAvatar
-              avatar={leader.avatar}
-              username={leader.username}
-              frameId={leader.equippedFrame}
-              size={56}
-              bgColor="#0f172a"
-              textColor="#ffffff"
-              isOnline={!!leader.isOnline}
-              onlineDotBorderColor="#0f172a"
-            />
-            <div className="min-w-0 flex-1">
-              <div className="text-white font-bold text-base truncate">{leader.username}</div>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className={`w-1.5 h-1.5 rounded-full ${tier.dot}`} />
-                <span className="text-gray-400 text-xs">{leader.totalBets} bets</span>
-              </div>
-            </div>
+          <div
+            className={`rounded-full p-1 ring-2 ${ringColor} ${glow} bg-black/40 transition-transform duration-200 active:scale-95`}
+          >
+            <Link
+              href={leader.id ? `/profile/${leader.id}` : '#'}
+              aria-label={`View ${leader.username}'s profile`}
+              className="block rounded-full"
+            >
+              <UserAvatar
+                user={userToProps(leader)}
+                size={size}
+                isOnline={!!leader.isOnline}
+                onlineDotBorderColor="#0a0a0a"
+              />
+            </Link>
           </div>
-
-          {/* Profit hero */}
-          <div className="mb-4 rounded-xl bg-black/30 border border-white/5 p-3 text-center">
-            <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Profit</div>
-            <div className="text-2xl font-black text-green-400">${leader.profit.toLocaleString()}</div>
+          <div
+            className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-black/80 border border-white/10 text-[10px] font-bold text-white tracking-wider"
+          >
+            #{leader.rank}
           </div>
+        </div>
 
-          {/* Stats row */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="rounded-lg bg-black/30 border border-white/5 p-2.5 text-center">
-              <div className="text-[10px] text-gray-400 uppercase tracking-wider">ROI</div>
-              <div className="text-base font-bold text-blue-400 mt-0.5">{leader.roi.toFixed(1)}%</div>
+        <div className="mt-5 text-center w-full px-1">
+          <UserNameLink
+            user={userToProps(leader)}
+            className="block text-white font-semibold text-sm sm:text-base truncate"
+          />
+          <div className="mt-1.5">
+            <div className="text-[10px] text-gray-400 uppercase tracking-wider">
+              {stat.label}
             </div>
-            <div className="rounded-lg bg-black/30 border border-white/5 p-2.5 text-center">
-              <div className="text-[10px] text-gray-400 uppercase tracking-wider">Win Rate</div>
-              <div className="text-base font-bold text-white mt-0.5">{winRate}%</div>
+            <div className="text-base sm:text-lg font-black text-emerald-400">
+              {stat.value}
             </div>
           </div>
         </div>
-      </TapSurface>
+      </div>
+    );
+  };
+
+  const renderListRow = (leader) => {
+    const wr = winRateOf(leader);
+    const losses = Math.max(0, (leader.totalBets || 0) - (leader.wins || 0));
+    const isMe = user?.id && leader.id === user.id;
+
+    return (
+      <div
+        key={leader.id || leader.rank}
+        ref={(el) => { if (leader.id) userRowRefs.current[leader.id] = el; }}
+        className={`group flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3 sm:py-4 transition-colors ${
+          isMe ? 'bg-emerald-500/5' : ''
+        } lb-row`}
+      >
+        <div className="w-8 sm:w-10 text-center text-sm sm:text-base font-bold text-gray-400 tabular-nums">
+          {leader.rank}
+        </div>
+
+        <Link
+          href={leader.id ? `/profile/${leader.id}` : '#'}
+          aria-label={`View ${leader.username}'s profile`}
+          className="shrink-0 rounded-full"
+        >
+          <UserAvatar
+            user={userToProps(leader)}
+            size={52}
+            isOnline={!!leader.isOnline}
+            onlineDotBorderColor="#111111"
+          />
+        </Link>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 min-w-0">
+            <UserNameLink
+              user={userToProps(leader)}
+              className="text-white font-semibold text-sm sm:text-base truncate"
+            />
+            {isMe && (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                You
+              </span>
+            )}
+          </div>
+          <div className="mt-0.5 text-xs text-gray-400 truncate">
+            {leader.totalBets || 0} bets · {leader.tier || 'Player'}
+          </div>
+        </div>
+
+        <div className="hidden sm:flex items-center gap-2">
+          <StatPill label="PnL" value={formatProfit(leader.profit)} tone="emerald" />
+          <StatPill label="W-L" value={`${leader.wins || 0}-${losses}`} tone="cyan" />
+          <StatPill label="ROI" value={`${(leader.roi || 0).toFixed(1)}%`} tone="blue" />
+        </div>
+
+        <div className="sm:hidden flex flex-col items-end gap-1">
+          <div className="text-emerald-400 font-bold text-sm tabular-nums">
+            {formatProfit(leader.profit)}
+          </div>
+          <div className="text-[10px] text-gray-400 uppercase tracking-wider">
+            {wr.toFixed(0)}% WR
+          </div>
+        </div>
+
+        <button
+          onClick={() => handleOpenLeader(leader)}
+          aria-label={`Quick view ${leader.username}`}
+          className="hidden sm:inline-flex shrink-0 items-center justify-center w-8 h-8 rounded-full bg-white/5 border border-white/10 text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      </div>
     );
   };
 
@@ -304,14 +344,28 @@ const Leaderboard = () => {
         onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
 
-      <div className="pt-4 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <div className="pt-4 pb-24 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-5">
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">Leaderboard</h1>
-          <p className="text-gray-400 text-sm">Top performers across all challenges</p>
+          <p className="text-gray-400 text-sm">The community's top performers</p>
         </div>
 
-        {/* Filters - glassmorphism */}
+        {/* Sticky "You're #N" pill — sits just under the TopNavbar so it's
+            always reachable while scrolling the long ranks list. */}
+        {userRank && (
+          <div className="sticky top-2 z-30 mb-4 flex justify-end pointer-events-none">
+            <button
+              onClick={scrollToMyRank}
+              className="pointer-events-auto inline-flex items-center gap-2 px-3 py-2 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs font-semibold backdrop-blur-md shadow-lg shadow-emerald-500/10 transition-colors active:bg-emerald-500/25"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              You're #{userRank.rank}
+            </button>
+          </div>
+        )}
+
+        {/* Filters */}
         <div
           className="rounded-2xl p-3 sm:p-4 border border-white/10 backdrop-blur-xl mb-5"
           style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)' }}
@@ -327,7 +381,7 @@ const Leaderboard = () => {
                   key={tf.id}
                   onTap={() => setTimeframe(tf.id)}
                   isActive={timeframe === tf.id}
-                  activeColor="#16a34a"
+                  activeColor="#10b981"
                   inactiveColor="rgba(255,255,255,0.04)"
                   activeTextColor="#ffffff"
                   inactiveTextColor="#9ca3af"
@@ -349,7 +403,7 @@ const Leaderboard = () => {
                   key={cat.id}
                   onTap={() => setCategory(cat.id)}
                   isActive={category === cat.id}
-                  activeColor="#2563eb"
+                  activeColor="#0891b2"
                   inactiveColor="rgba(255,255,255,0.04)"
                   activeTextColor="#ffffff"
                   inactiveTextColor="#9ca3af"
@@ -376,61 +430,46 @@ const Leaderboard = () => {
           </div>
         ) : (
           <>
-            {/* Mobile: Swipeable carousel */}
-            <div className="lg:hidden">
-              <div className="flex items-center justify-between mb-3 px-1">
-                <h2 className="text-sm font-semibold text-white uppercase tracking-wider">
-                  Swipe to browse
-                </h2>
-                <span className="text-xs text-gray-400">
-                  {activeIndex + 1} / {leaderboardData.length}
-                </span>
-              </div>
-
+            {/* Podium */}
+            {top3.length > 0 && (
               <div
-                ref={carouselRef}
-                onScroll={handleScroll}
-                className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 -mx-4 px-4"
+                className="rounded-3xl border border-white/10 backdrop-blur-xl mb-6 overflow-hidden"
                 style={{
-                  scrollSnapType: 'x mandatory',
-                  WebkitOverflowScrolling: 'touch',
-                  scrollPaddingLeft: '1rem',
-                  scrollPaddingRight: '1rem',
+                  background:
+                    'radial-gradient(120% 80% at 50% 0%, rgba(16,185,129,0.10) 0%, rgba(8,145,178,0.06) 35%, rgba(0,0,0,0) 70%), linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
                 }}
               >
-                {leaderboardData.map((leader) => renderLeaderCard(leader, { variant: 'carousel' }))}
-              </div>
-
-              {/* Dot indicators */}
-              <div className="flex items-center justify-center gap-1.5 mt-4">
-                {leaderboardData.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => scrollToCard(i)}
-                    aria-label={`Go to user ${i + 1}`}
-                    className={`transition-all duration-200 rounded-full ${
-                      i === activeIndex
-                        ? 'w-6 h-1.5 bg-white'
-                        : 'w-1.5 h-1.5 bg-white/30'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-
-            {/* Desktop: Grid of same cards */}
-            <div className="hidden lg:block">
-              <h2 className="text-sm font-semibold text-white uppercase tracking-wider mb-3">
-                Rankings
-              </h2>
-              <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
-                {leaderboardData.map((leader) => (
-                  <div key={leader.rank}>
-                    {renderLeaderCard(leader, { variant: 'grid' })}
+                <div className="px-4 sm:px-6 pt-6 pb-8">
+                  <div className="text-[11px] text-emerald-300/80 font-semibold uppercase tracking-[0.18em] text-center mb-6">
+                    Top Performers
                   </div>
-                ))}
+                  <div className="flex items-end justify-center gap-3 sm:gap-8">
+                    {podiumOrder.map((leader) => renderPodiumItem(leader))}
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Rest of the list */}
+            {rest.length > 0 && (
+              <div
+                ref={listRef}
+                className="rounded-2xl border border-white/10 overflow-hidden"
+                style={{ background: '#111111' }}
+              >
+                <div className="px-4 sm:px-5 py-3 border-b border-white/5 flex items-center justify-between">
+                  <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                    Rankings
+                  </h2>
+                  <span className="text-[11px] text-gray-500">
+                    {leaderboardData.length} players
+                  </span>
+                </div>
+                <div className="divide-y divide-white/5">
+                  {rest.map((leader) => renderListRow(leader))}
+                </div>
+              </div>
+            )}
           </>
         )}
 
@@ -442,28 +481,28 @@ const Leaderboard = () => {
                 ? communityStats.activeBettors.toLocaleString()
                 : '—',
               label: 'Active Bettors',
-              color: 'text-green-400',
+              color: 'text-emerald-400',
             },
             {
               value: communityStats
                 ? formatProfit(communityStats.totalProfits)
                 : '—',
               label: 'Total Profits',
-              color: 'text-green-400',
+              color: 'text-emerald-400',
             },
             {
               value: communityStats
                 ? `${communityStats.avgWinRate.toFixed(1)}%`
                 : '—',
               label: 'Avg Win Rate',
-              color: 'text-blue-400',
+              color: 'text-cyan-400',
             },
-            { value: '24/7', label: 'Live Updates', color: 'text-yellow-400' },
+            { value: '24/7', label: 'Live Updates', color: 'text-orange-400' },
           ].map((s, i) => (
             <div
               key={i}
-              className="rounded-2xl p-4 sm:p-5 border border-white/10 backdrop-blur-xl text-center"
-              style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)' }}
+              className="rounded-2xl p-4 sm:p-5 border border-white/10 text-center"
+              style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)' }}
             >
               <div className={`text-xl sm:text-2xl font-black mb-1 ${s.color}`}>{s.value}</div>
               <div className="text-gray-400 text-xs">{s.label}</div>
@@ -472,23 +511,25 @@ const Leaderboard = () => {
         </div>
 
         {/* CTA */}
-        <div className="mt-6">
-          <div
-            className="rounded-2xl p-6 sm:p-8 border border-white/10 backdrop-blur-xl text-center"
-            style={{ background: 'linear-gradient(160deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%)' }}
-          >
-            <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Ready to Climb the Rankings?</h2>
-            <p className="text-gray-400 mb-5 text-sm">Join the competition and prove you belong among the elite bettors.</p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href="/auth" className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition-all text-sm">
-                Start Your Journey
-              </Link>
-              <Link href="/" className="bg-white/5 hover:bg-white/10 text-white font-bold py-3 px-6 rounded-xl transition-all text-sm border border-white/10">
-                View Dashboard
-              </Link>
+        {!user && (
+          <div className="mt-6">
+            <div
+              className="rounded-2xl p-6 sm:p-8 border border-white/10 text-center"
+              style={{ background: 'linear-gradient(160deg, rgba(16,185,129,0.08) 0%, rgba(8,145,178,0.04) 100%)' }}
+            >
+              <h2 className="text-xl sm:text-2xl font-bold text-white mb-2">Ready to Climb the Rankings?</h2>
+              <p className="text-gray-400 mb-5 text-sm">Join the competition and prove you belong among the elite bettors.</p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                <Link href="/auth" className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 px-6 rounded-xl transition-all text-sm">
+                  Start Your Journey
+                </Link>
+                <Link href="/" className="bg-white/5 hover:bg-white/10 text-white font-bold py-3 px-6 rounded-xl transition-all text-sm border border-white/10">
+                  View Dashboard
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       {showBetSlip && (
@@ -507,7 +548,7 @@ const Leaderboard = () => {
         />
       )}
 
-      <style jsx>{`
+      <style>{`
         .scrollbar-hide {
           -ms-overflow-style: none;
           scrollbar-width: none;
@@ -515,9 +556,36 @@ const Leaderboard = () => {
         .scrollbar-hide::-webkit-scrollbar {
           display: none;
         }
+        @media (hover: hover) {
+          .lb-row:hover {
+            background: rgba(255, 255, 255, 0.03);
+          }
+        }
+        .lb-row-flash {
+          animation: lbFlash 1.6s ease-out;
+        }
+        @keyframes lbFlash {
+          0% { background-color: rgba(16, 185, 129, 0.25); }
+          100% { background-color: rgba(16, 185, 129, 0); }
+        }
       `}</style>
     </div>
   );
 };
+
+function StatPill({ label, value, tone = 'emerald' }) {
+  const tones = {
+    emerald: 'text-emerald-300 border-emerald-500/20 bg-emerald-500/5',
+    cyan: 'text-cyan-300 border-cyan-500/20 bg-cyan-500/5',
+    blue: 'text-blue-300 border-blue-500/20 bg-blue-500/5',
+    orange: 'text-orange-300 border-orange-500/20 bg-orange-500/5',
+  };
+  return (
+    <div className={`px-2.5 py-1 rounded-lg border text-[11px] font-semibold tabular-nums whitespace-nowrap ${tones[tone] || tones.emerald}`}>
+      <span className="opacity-60 mr-1 uppercase tracking-wider text-[9px]">{label}</span>
+      {value}
+    </div>
+  );
+}
 
 export default Leaderboard;

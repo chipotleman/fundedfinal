@@ -31,6 +31,35 @@ function scrollToBottom(scrollEl) {
   scrollEl.scrollTop = scrollEl.scrollHeight;
 }
 
+const MAX_VOICE_MS = 60000;
+
+function formatDuration(ms) {
+  if (!Number.isFinite(ms) || ms <= 0) return '0:00';
+  const total = Math.round(ms / 1000);
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+function VoiceBubble({ url, durationMs, mine }) {
+  return (
+    <div className="flex items-center gap-2">
+      <audio
+        controls
+        preload="metadata"
+        src={url}
+        style={{ height: 32, maxWidth: 200 }}
+      />
+      <span
+        className="text-[10px] tabular-nums"
+        style={{ color: mine ? 'rgba(255,255,255,0.85)' : '#9ca3af' }}
+      >
+        {formatDuration(durationMs)}
+      </span>
+    </div>
+  );
+}
+
 function ConversationThread({ friend, ctx, myId }) {
   const [thread, setThread] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -38,6 +67,15 @@ function ConversationThread({ friend, ctx, myId }) {
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState(null);
+  const [recording, setRecording] = useState(false);
+  const [recordElapsed, setRecordElapsed] = useState(0);
+  const [voiceError, setVoiceError] = useState(null);
+  const recorderRef = useRef(null);
+  const recordChunksRef = useRef([]);
+  const recordStartRef = useRef(0);
+  const recordTimerRef = useRef(null);
+  const recordCancelledRef = useRef(false);
+  const recordMimeRef = useRef('audio/webm');
   const scrollRef = useRef(null);
   const lastTypingSentRef = useRef(0);
   const lastTypingFriendRef = useRef(null);
@@ -179,6 +217,188 @@ function ConversationThread({ friend, ctx, myId }) {
     ctx.notifyTyping?.(friend.id);
   };
 
+  const sendMessagePayload = useCallback(async (payload) => {
+    const res = await fetch('/api/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+    return res;
+  }, []);
+
+  const stopRecordingTimer = () => {
+    if (recordTimerRef.current) {
+      clearInterval(recordTimerRef.current);
+      recordTimerRef.current = null;
+    }
+  };
+
+  const cleanupRecorderStream = () => {
+    const rec = recorderRef.current;
+    if (rec?.stream) {
+      try { rec.stream.getTracks().forEach((t) => t.stop()); } catch {}
+    }
+    recorderRef.current = null;
+  };
+
+  const uploadVoiceBlob = async (blob, durationMs) => {
+    const ext = blob.type.includes('mp4') ? 'm4a'
+      : blob.type.includes('ogg') ? 'ogg'
+      : 'webm';
+    const filename = `voice-${Date.now()}.${ext}`;
+    const reqRes = await fetch('/api/uploads/request-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        name: filename,
+        size: blob.size,
+        contentType: blob.type || 'audio/webm',
+        kind: 'voice-note',
+      }),
+    });
+    if (!reqRes.ok) throw new Error('upload-url-failed');
+    const { uploadURL, objectPath } = await reqRes.json();
+    const putRes = await fetch(uploadURL, {
+      method: 'PUT',
+      headers: { 'Content-Type': blob.type || 'audio/webm' },
+      body: blob,
+    });
+    if (!putRes.ok) throw new Error('upload-failed');
+    return { attachmentUrl: objectPath, attachmentDurationMs: durationMs };
+  };
+
+  const handleStartRecording = async () => {
+    if (recording || sending) return;
+    setVoiceError(null);
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      setVoiceError('Recording not supported on this device.');
+      return;
+    }
+    if (typeof window === 'undefined' || typeof window.MediaRecorder === 'undefined') {
+      setVoiceError('Recording not supported on this device.');
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      let mimeType = 'audio/webm';
+      try {
+        if (!window.MediaRecorder.isTypeSupported('audio/webm')) {
+          if (window.MediaRecorder.isTypeSupported('audio/mp4')) mimeType = 'audio/mp4';
+          else mimeType = '';
+        }
+      } catch { mimeType = ''; }
+      const recorder = mimeType
+        ? new window.MediaRecorder(stream, { mimeType })
+        : new window.MediaRecorder(stream);
+      recordMimeRef.current = recorder.mimeType || mimeType || 'audio/webm';
+      recordChunksRef.current = [];
+      recordCancelledRef.current = false;
+      recorder.ondataavailable = (ev) => {
+        if (ev.data && ev.data.size > 0) recordChunksRef.current.push(ev.data);
+      };
+      recorder.onstop = async () => {
+        stopRecordingTimer();
+        const elapsed = Date.now() - recordStartRef.current;
+        const chunks = recordChunksRef.current;
+        recordChunksRef.current = [];
+        cleanupRecorderStream();
+        setRecording(false);
+        setRecordElapsed(0);
+        if (recordCancelledRef.current) return;
+        if (!chunks.length) return;
+        const blob = new Blob(chunks, { type: recordMimeRef.current || 'audio/webm' });
+        if (!friend?.id) return;
+        setSending(true);
+        setSendError(null);
+        try {
+          const { attachmentUrl, attachmentDurationMs } = await uploadVoiceBlob(blob, elapsed);
+          const res = await sendMessagePayload({
+            receiverId: friend.id,
+            content: '',
+            messageType: 'voice',
+            attachmentUrl,
+            attachmentDurationMs,
+          });
+          if (!res.ok) {
+            setSendError(res.status === 403 ? 'You can only message friends.' : 'Could not send voice note.');
+            return;
+          }
+          const data = await res.json();
+          if (data?.message) {
+            setThread((prev) => [...prev, data.message]);
+            if (typeof window !== 'undefined') {
+              const m = data.message;
+              window.dispatchEvent(
+                new CustomEvent('piks:message:new', {
+                  detail: {
+                    id: m.id,
+                    senderId: m.senderId,
+                    receiverId: m.receiverId,
+                    content: m.content,
+                    messageType: m.messageType || 'voice',
+                    attachmentUrl: m.attachmentUrl || attachmentUrl,
+                    attachmentDurationMs: m.attachmentDurationMs ?? attachmentDurationMs,
+                    createdAt:
+                      m.createdAt instanceof Date
+                        ? m.createdAt.toISOString()
+                        : m.createdAt,
+                  },
+                })
+              );
+            }
+          }
+          ctx.refresh?.();
+        } catch (err) {
+          setSendError('Could not send voice note.');
+        } finally {
+          setSending(false);
+        }
+      };
+      recorderRef.current = recorder;
+      recordStartRef.current = Date.now();
+      setRecordElapsed(0);
+      recorder.start();
+      setRecording(true);
+      recordTimerRef.current = setInterval(() => {
+        const elapsed = Date.now() - recordStartRef.current;
+        setRecordElapsed(elapsed);
+        if (elapsed >= MAX_VOICE_MS) {
+          try { recorder.stop(); } catch {}
+        }
+      }, 100);
+    } catch (err) {
+      setVoiceError('Microphone access denied.');
+    }
+  };
+
+  const handleStopRecording = () => {
+    const rec = recorderRef.current;
+    if (!rec || rec.state === 'inactive') return;
+    recordCancelledRef.current = false;
+    try { rec.stop(); } catch {}
+  };
+
+  const handleCancelRecording = () => {
+    const rec = recorderRef.current;
+    if (!rec) return;
+    recordCancelledRef.current = true;
+    try { if (rec.state !== 'inactive') rec.stop(); } catch {}
+  };
+
+  useEffect(() => {
+    return () => {
+      stopRecordingTimer();
+      const rec = recorderRef.current;
+      if (rec && rec.state !== 'inactive') {
+        recordCancelledRef.current = true;
+        try { rec.stop(); } catch {}
+      }
+      cleanupRecorderStream();
+    };
+  }, []);
+
   const handleSend = async (e) => {
     e?.preventDefault?.();
     const text = reply.trim();
@@ -186,12 +406,7 @@ function ConversationThread({ friend, ctx, myId }) {
     setSending(true);
     setSendError(null);
     try {
-      const res = await fetch('/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ receiverId: friend.id, content: text }),
-      });
+      const res = await sendMessagePayload({ receiverId: friend.id, content: text });
       if (!res.ok) {
         setSendError(res.status === 403 ? 'You can only message friends.' : 'Could not send.');
         return;
@@ -308,7 +523,15 @@ function ConversationThread({ friend, ctx, myId }) {
                   : { backgroundColor: '#161b18', border: '1px solid rgba(16,185,129,0.18)' }
               }
             >
-              {m.content}
+              {m.messageType === 'voice' && m.attachmentUrl ? (
+                <VoiceBubble
+                  url={m.attachmentUrl}
+                  durationMs={m.attachmentDurationMs}
+                  mine={m.senderId === myId}
+                />
+              ) : (
+                m.content
+              )}
             </div>
             {showSeen && idx === lastOutgoingIdx && (
               <p className="text-[10px] mt-0.5 mr-0.5" style={{ color: textSecondary }}>
@@ -336,38 +559,99 @@ function ConversationThread({ friend, ctx, myId }) {
 
       {!loadError && (
         <form onSubmit={handleSend} className="p-3 flex-shrink-0" style={{ borderTop: `1px solid ${cardBorder}` }}>
-          <div className="flex gap-2">
-            <input
-              ref={inputRef}
-              type="text"
-              value={reply}
-              onChange={handleReplyChange}
-              placeholder="Write a message…"
-              className="flex-1 min-w-0 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-emerald-400"
+          {recording ? (
+            <div
+              className="flex items-center gap-2 px-3 py-2 rounded-lg"
               style={{
                 backgroundColor: inputBg,
-                border: `1px solid ${cardBorder}`,
-                color: textPrimary,
-                boxShadow: 'inset 0 0 0 1px rgba(16,185,129,0.05)',
-              }}
-              maxLength={1000}
-              disabled={sending}
-            />
-            <button
-              type="submit"
-              disabled={!reply.trim() || sending}
-              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition-shadow"
-              style={{
-                boxShadow: !reply.trim() || sending
-                  ? 'none'
-                  : '0 0 14px rgba(16,185,129,0.5)',
+                border: '1px solid rgba(239,68,68,0.4)',
               }}
             >
-              {sending ? '…' : 'Send'}
-            </button>
-          </div>
+              <span
+                className="inline-block w-2 h-2 rounded-full bg-red-500"
+                style={{ boxShadow: '0 0 10px rgba(239,68,68,0.7)', animation: 'piksRecPulse 1s ease-in-out infinite' }}
+              />
+              <span className="text-xs text-red-300 font-medium">Recording</span>
+              <span className="text-xs tabular-nums" style={{ color: textSecondary }}>
+                {formatDuration(recordElapsed)} / {formatDuration(MAX_VOICE_MS)}
+              </span>
+              <div className="ml-auto flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleCancelRecording}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold"
+                  style={{ backgroundColor: '#1f1f1f', color: '#e5e7eb', border: `1px solid ${cardBorder}` }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleStopRecording}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-500"
+                  style={{ boxShadow: '0 0 14px rgba(16,185,129,0.5)' }}
+                >
+                  Send
+                </button>
+              </div>
+              <style>{`@keyframes piksRecPulse{0%,100%{opacity:1}50%{opacity:0.35}}`}</style>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <input
+                ref={inputRef}
+                type="text"
+                value={reply}
+                onChange={handleReplyChange}
+                placeholder="Write a message…"
+                className="flex-1 min-w-0 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-emerald-400"
+                style={{
+                  backgroundColor: inputBg,
+                  border: `1px solid ${cardBorder}`,
+                  color: textPrimary,
+                  boxShadow: 'inset 0 0 0 1px rgba(16,185,129,0.05)',
+                }}
+                maxLength={1000}
+                disabled={sending}
+              />
+              {!reply.trim() ? (
+                <button
+                  type="button"
+                  onClick={handleStartRecording}
+                  disabled={sending}
+                  aria-label="Record voice message"
+                  className="px-3 py-2 rounded-lg text-white disabled:opacity-50"
+                  style={{
+                    backgroundColor: '#0d1310',
+                    border: `1px solid ${cardBorder}`,
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="2" width="6" height="12" rx="3" />
+                    <path d="M5 10v2a7 7 0 0 0 14 0v-2" />
+                    <line x1="12" y1="19" x2="12" y2="22" />
+                  </svg>
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={!reply.trim() || sending}
+                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition-shadow"
+                  style={{
+                    boxShadow: !reply.trim() || sending
+                      ? 'none'
+                      : '0 0 14px rgba(16,185,129,0.5)',
+                  }}
+                >
+                  {sending ? '…' : 'Send'}
+                </button>
+              )}
+            </div>
+          )}
           {sendError && (
             <div className="text-red-400 text-[11px] mt-1">{sendError}</div>
+          )}
+          {voiceError && (
+            <div className="text-red-400 text-[11px] mt-1">{voiceError}</div>
           )}
         </form>
       )}

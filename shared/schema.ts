@@ -124,6 +124,9 @@ export const messages = pgTable("messages", {
   content: text("content").notNull(),
   read: boolean("read").default(false).notNull(),
   readAt: timestamp("read_at"),
+  messageType: varchar("message_type", { length: 20 }).default('text'),
+  attachmentUrl: text("attachment_url"),
+  attachmentDurationMs: integer("attachment_duration_ms"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   senderIdIdx: index("messages_sender_id_idx").on(table.senderId),

@@ -81,9 +81,22 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    const { receiverId, content } = req.body;
+    const { receiverId, content, messageType, attachmentUrl, attachmentDurationMs } = req.body;
 
-    if (!receiverId || !content?.trim()) {
+    const isVoice = messageType === 'voice';
+    if (!receiverId) {
+      return res.status(400).json({ error: 'Receiver ID required' });
+    }
+    if (isVoice) {
+      if (!attachmentUrl || typeof attachmentUrl !== 'string') {
+        return res.status(400).json({ error: 'Voice message requires attachmentUrl' });
+      }
+      // Only accept first-party object-storage paths so attachers can't smuggle
+      // off-platform tracking/beacon URLs into a chat.
+      if (!attachmentUrl.startsWith('/objects/')) {
+        return res.status(400).json({ error: 'Invalid attachment URL' });
+      }
+    } else if (!content?.trim()) {
       return res.status(400).json({ error: 'Receiver ID and content required' });
     }
 
@@ -106,13 +119,25 @@ export default async function handler(req, res) {
         return res.status(403).json({ error: 'You can only message friends' });
       }
 
+      const insertValues = {
+        senderId: userId,
+        receiverId,
+        content: isVoice ? (content?.trim() || '🎤 Voice message') : content.trim(),
+        messageType: isVoice ? 'voice' : 'text',
+      };
+      if (isVoice) {
+        insertValues.attachmentUrl = attachmentUrl;
+        if (Number.isFinite(Number(attachmentDurationMs))) {
+          insertValues.attachmentDurationMs = Math.max(
+            0,
+            Math.min(120000, Math.round(Number(attachmentDurationMs)))
+          );
+        }
+      }
+
       const [newMessage] = await db
         .insert(messages)
-        .values({
-          senderId: userId,
-          receiverId,
-          content: content.trim(),
-        })
+        .values(insertValues)
         .returning();
 
       try {
@@ -121,6 +146,9 @@ export default async function handler(req, res) {
           senderId: userId,
           receiverId,
           content: newMessage.content,
+          messageType: newMessage.messageType || 'text',
+          attachmentUrl: newMessage.attachmentUrl || null,
+          attachmentDurationMs: newMessage.attachmentDurationMs || null,
           createdAt:
             newMessage.createdAt instanceof Date
               ? newMessage.createdAt.toISOString()
