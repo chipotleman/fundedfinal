@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import TopNavbar from '../components/TopNavbar';
+import FramedAvatar from '../components/UserAvatar';
 import QuickMatchModal from '../components/battle/QuickMatchModal';
 import PlayFriendModal from '../components/battle/PlayFriendModal';
 import PrivateMatchModal from '../components/battle/PrivateMatchModal';
@@ -855,8 +856,10 @@ export default function BattlePage() {
             const opp = matchupData?.opponent;
             const myName = profile?.username || session?.user?.name || '';
             const myAvatar = profile?.avatar;
+            const myFrameId = profile?.equippedFrame;
             const oppName = opp?.username || opp?.displayName || 'Opponent';
             const oppAvatar = opp?.avatar;
+            const oppFrameId = opp?.equippedFrame;
             const totalBal = myBal + oppBal;
             const myPercent = totalBal > 0 ? Math.max(5, Math.min(95, (myBal / totalBal) * 100)) : 50;
             const endsAt = activeMatchup.endsAt;
@@ -901,12 +904,14 @@ export default function BattlePage() {
                 <div className="relative px-4 py-4">
                   <div className="flex items-center">
                     <div className="flex-1 flex flex-col items-center text-center">
-                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{ backgroundColor: '#1a1a1a', border: '2px solid #333' }}>
-                        {myAvatar ? (
-                          <img src={myAvatar} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-white font-bold text-lg">{(myName || 'Y')[0]?.toUpperCase()}</span>
-                        )}
+                      <div className="mb-1.5">
+                        <FramedAvatar
+                          avatar={myAvatar}
+                          username={myName || 'Y'}
+                          frameId={myFrameId}
+                          size={64}
+                          bgColor="#1a1a1a"
+                        />
                       </div>
                       <p className="text-white font-semibold text-xs truncate max-w-[100px] min-h-[16px]">{myName || '\u00A0'}</p>
                       <p className={`text-sm font-bold mt-0.5 ${myPnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>${formatMoney(myBal, 0)}</p>
@@ -922,19 +927,21 @@ export default function BattlePage() {
 
                     <div className="flex-1 flex flex-col items-center text-center">
                       <div
-                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden flex items-center justify-center mb-1.5"
+                        className="mb-1.5 rounded-full inline-flex items-center justify-center"
                         style={{
-                          backgroundColor: '#1a1a1a',
-                          border: `2px solid ${oppSpeaking ? '#22c55e' : '#333'}`,
+                          padding: 2,
+                          border: `2px solid ${oppSpeaking ? '#22c55e' : 'transparent'}`,
                           boxShadow: oppSpeaking ? '0 0 14px rgba(34,197,94,0.55)' : 'none',
                           transition: 'border-color 150ms ease, box-shadow 150ms ease',
                         }}
                       >
-                        {oppAvatar ? (
-                          <img src={oppAvatar} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-white font-bold text-lg">{oppName[0]?.toUpperCase()}</span>
-                        )}
+                        <FramedAvatar
+                          avatar={oppAvatar}
+                          username={oppName}
+                          frameId={oppFrameId}
+                          size={64}
+                          bgColor="#1a1a1a"
+                        />
                       </div>
                       <div className="flex items-center justify-center gap-1 max-w-[100px] min-h-[16px]">
                         <p className="text-white font-semibold text-xs truncate">{oppName}</p>

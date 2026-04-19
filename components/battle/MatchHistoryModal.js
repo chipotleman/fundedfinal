@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
+import UserAvatar from '../UserAvatar';
 
 export default function MatchHistoryModal({ isOpen, onClose }) {
   const [matches, setMatches] = useState([]);
@@ -89,13 +90,13 @@ export default function MatchHistoryModal({ isOpen, onClose }) {
                 return (
                   <div key={match.id} className="rounded-xl p-3.5 transition-colors" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ backgroundColor: '#1a1a1a' }}>
-                        {match.opponent?.avatar ? (
-                          <img src={match.opponent.avatar} className="w-full h-full object-cover" alt="" />
-                        ) : (
-                          <span className="text-sm font-bold text-white">{match.opponent?.username?.[0]?.toUpperCase() || '?'}</span>
-                        )}
-                      </div>
+                      <UserAvatar
+                        avatar={match.opponent?.avatar}
+                        username={match.opponent?.username}
+                        frameId={match.opponent?.equippedFrame}
+                        size={40}
+                        className="flex-shrink-0"
+                      />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-white text-sm font-medium truncate">{match.opponent?.username || 'Unknown'}</span>

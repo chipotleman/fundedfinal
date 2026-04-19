@@ -122,8 +122,8 @@ export default async function handler(req, res) {
         .where(eq(matchups.id, matchup.id))
         .returning();
 
-      const [p1] = await db.select({ username: profiles.username, avatar: profiles.avatar }).from(profiles).where(eq(profiles.id, matchup.user1Id));
-      const [p2] = await db.select({ username: profiles.username, avatar: profiles.avatar }).from(profiles).where(eq(profiles.id, userId));
+      const [p1] = await db.select({ username: profiles.username, avatar: profiles.avatar, equippedFrame: profiles.equippedFrame }).from(profiles).where(eq(profiles.id, matchup.user1Id));
+      const [p2] = await db.select({ username: profiles.username, avatar: profiles.avatar, equippedFrame: profiles.equippedFrame }).from(profiles).where(eq(profiles.id, userId));
 
       // Friends going live: notify both players' friends.
       try {

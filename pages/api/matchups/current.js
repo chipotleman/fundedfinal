@@ -223,6 +223,7 @@ export default async function handler(req, res) {
         id: myProfileRow.id,
         username: myProfileRow.username,
         avatar: myProfileRow.avatar,
+        equippedFrame: myProfileRow.equippedFrame,
       };
     }
 
@@ -239,6 +240,7 @@ export default async function handler(req, res) {
         id: opponentId,
         username: profile?.username || 'Opponent',
         avatar: profile?.avatar,
+        equippedFrame: profile?.equippedFrame,
         winRate: profile?.winRate,
         isReal: true,
       };
@@ -323,6 +325,7 @@ export default async function handler(req, res) {
           id: opponentId,
           username: profile?.username || 'Opponent',
           avatar: profile?.avatar,
+          equippedFrame: profile?.equippedFrame,
           winRate: profile?.winRate,
           isReal: true,
         };
