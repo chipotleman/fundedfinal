@@ -169,9 +169,10 @@ export default function BattlePage() {
 
   useEffect(() => {
     let cancelled = false;
+    const limit = isGuest ? 5 : 3;
     const load = async () => {
       try {
-        const res = await fetch('/api/battles/recent?limit=3');
+        const res = await fetch(`/api/battles/recent?limit=${limit}`);
         if (!res.ok) return;
         const data = await res.json();
         if (!cancelled) setRecentHighlights(Array.isArray(data.battles) ? data.battles : []);
@@ -180,7 +181,7 @@ export default function BattlePage() {
     load();
     const interval = setInterval(load, 30000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, []);
+  }, [isGuest]);
 
   useEffect(() => {
     if (globalMatchup && globalHasAny) {
@@ -1420,7 +1421,7 @@ export default function BattlePage() {
                     <div className="mt-4 pt-3" style={{ borderTop: `1px solid ${cardBorder}` }}>
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: textSecondary }}>
-                          Recent battles
+                          {isGuest ? 'Live on Piks · Recent winners' : 'Recent battles'}
                         </span>
                         <span className="inline-flex items-center gap-1 text-[10px]" style={{ color: textSecondary }}>
                           <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
@@ -1428,7 +1429,7 @@ export default function BattlePage() {
                         </span>
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        {recentHighlights.slice(0, 3).map((b) => (
+                        {recentHighlights.slice(0, isGuest ? 5 : 3).map((b) => (
                           <button
                             key={b.id}
                             type="button"
