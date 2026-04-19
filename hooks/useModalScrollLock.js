@@ -1,6 +1,9 @@
 import { useEffect, useRef } from 'react';
 
-export default function useModalScrollLock(isOpen, { restoreScroll = false } = {}) {
+export default function useModalScrollLock(
+  isOpen,
+  { restoreScroll = false, allowScrollRef = null } = {},
+) {
   const savedScrollY = useRef(0);
 
   useEffect(() => {
@@ -19,6 +22,9 @@ export default function useModalScrollLock(isOpen, { restoreScroll = false } = {
       right: body.style.right,
       width: body.style.width,
       overflow: body.style.overflow,
+      overscrollBehavior: body.style.overscrollBehavior,
+      htmlOverflow: html.style.overflow,
+      htmlOverscrollBehavior: html.style.overscrollBehavior,
     };
 
     if (restoreScroll) {
@@ -33,13 +39,60 @@ export default function useModalScrollLock(isOpen, { restoreScroll = false } = {
       window.scrollTo(0, 0);
     }
 
+    const strict = !!allowScrollRef;
+    if (strict) {
+      html.style.overflow = 'hidden';
+      body.style.overscrollBehavior = 'none';
+      html.style.overscrollBehavior = 'none';
+    }
+
+    const isInsideAllowed = (target) => {
+      const el = allowScrollRef && allowScrollRef.current;
+      if (!el || !target) return false;
+      return el.contains(target);
+    };
+
+    const preventIfOutside = (e) => {
+      if (e.touches && e.touches.length > 1) return;
+      if (!isInsideAllowed(e.target)) {
+        if (e.cancelable) e.preventDefault();
+      }
+    };
+
+    const preventKeyScroll = (e) => {
+      const keys = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', ' ', 'Spacebar'];
+      if (!keys.includes(e.key)) return;
+      const target = e.target;
+      const tag = target && target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (target && target.isContentEditable)) return;
+      if (!isInsideAllowed(target)) {
+        if (e.cancelable) e.preventDefault();
+      }
+    };
+
+    const hasGuard = !!allowScrollRef;
+    if (hasGuard) {
+      document.addEventListener('touchmove', preventIfOutside, { passive: false });
+      document.addEventListener('wheel', preventIfOutside, { passive: false });
+      document.addEventListener('keydown', preventKeyScroll, { passive: false });
+    }
+
     return () => {
+      if (hasGuard) {
+        document.removeEventListener('touchmove', preventIfOutside);
+        document.removeEventListener('wheel', preventIfOutside);
+        document.removeEventListener('keydown', preventKeyScroll);
+      }
+
       body.style.position = prev.position;
       body.style.top = prev.top;
       body.style.left = prev.left;
       body.style.right = prev.right;
       body.style.width = prev.width;
       body.style.overflow = prev.overflow;
+      body.style.overscrollBehavior = prev.overscrollBehavior;
+      html.style.overflow = prev.htmlOverflow;
+      html.style.overscrollBehavior = prev.htmlOverscrollBehavior;
 
       if (restoreScroll) {
         const prevHtmlBehavior = html.style.scrollBehavior;
@@ -51,5 +104,5 @@ export default function useModalScrollLock(isOpen, { restoreScroll = false } = {
         body.style.scrollBehavior = prevBodyBehavior;
       }
     };
-  }, [isOpen, restoreScroll]);
+  }, [isOpen, restoreScroll, allowScrollRef]);
 }

@@ -141,8 +141,9 @@ export default function BattleOverviewPopup({
   const [activeTab, setActiveTab] = useState('mine');
   const [shareToast, setShareToast] = useState(null);
   const toastTimerRef = useRef(null);
+  const scrollContainerRef = useRef(null);
 
-  useModalScrollLock(true, { restoreScroll: true });
+  useModalScrollLock(true, { restoreScroll: true, allowScrollRef: scrollContainerRef });
 
   useEffect(() => () => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -237,18 +238,21 @@ export default function BattleOverviewPopup({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto backdrop-blur-sm bg-black/60"
+      className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/85 p-3"
       onClick={onClose}
+      style={{ overscrollBehavior: 'contain' }}
     >
       <div
-        className="relative w-full max-w-lg mx-auto my-6 px-3"
+        className="relative w-full max-w-lg mx-auto flex flex-col"
+        style={{ maxHeight: '100%' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div
-          className="rounded-2xl overflow-hidden"
+          className="rounded-2xl overflow-hidden flex flex-col relative"
           style={{
             background: theme.cardBg,
             border: `2px solid ${outcomeBadge.border}`,
+            maxHeight: '100%',
           }}
         >
           <div
@@ -256,7 +260,15 @@ export default function BattleOverviewPopup({
             style={{ background: `radial-gradient(ellipse at center bottom, ${theme.glowColor} 0%, transparent 60%)` }}
           />
 
-          <div className="relative z-10">
+          <div
+            ref={scrollContainerRef}
+            className="relative z-10 overflow-y-auto flex-1 min-h-0"
+            style={{
+              overscrollBehavior: 'contain',
+              WebkitOverflowScrolling: 'touch',
+              maxHeight: 'calc(100dvh - 1.5rem)',
+            }}
+          >
             {/* Header bar */}
             <div className="flex items-center justify-between px-3 pt-2.5 pb-1.5">
               <div className="flex items-center gap-1.5 min-w-0">
@@ -402,7 +414,7 @@ export default function BattleOverviewPopup({
 
             {/* Tab toggle + carousel */}
             {(myBetCards || opponentBetCards) && (
-              <div className="px-3 pb-3">
+              <div className="px-3 pb-5">
                 <div
                   className="inline-flex rounded-full p-1 mb-2"
                   style={{
