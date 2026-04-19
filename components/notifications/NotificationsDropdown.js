@@ -170,6 +170,11 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                     className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
                     style={{ boxShadow: '0 0 12px rgba(16,185,129,0.45)' }}
                   >View</button>
+                  <button
+                    disabled={busyId === rm.id}
+                    onClick={() => wrap(rm.id, async () => { await ctx.declineRematch(rm.matchupId); })}
+                    className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-medium py-1.5 rounded-lg disabled:opacity-50"
+                  >Decline</button>
                 </div>
               </Row>
             ))}

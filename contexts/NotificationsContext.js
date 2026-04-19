@@ -482,6 +482,41 @@ export function NotificationsProvider({ children }) {
     }
   }, [refresh]);
 
+  const declineRematch = useCallback(async (matchupId) => {
+    if (!matchupId) return;
+    // Optimistically remove the rematch row from local state so the bell
+    // updates immediately even before the server responds.
+    setData(prev => {
+      const remaining = (prev.pendingRematches || []).filter(r => r.matchupId !== matchupId);
+      if (remaining.length === (prev.pendingRematches || []).length) return prev;
+      return {
+        ...prev,
+        pendingRematches: remaining,
+        counts: {
+          ...prev.counts,
+          pendingRematches: remaining.length,
+          total:
+            prev.counts.battleInvites +
+            prev.counts.friendRequests +
+            prev.counts.unreadMessages +
+            (prev.counts.gameResults || 0) +
+            remaining.length,
+        },
+      };
+    });
+    try {
+      const res = await fetch(`/api/matchups/${encodeURIComponent(matchupId)}/rematch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ action: 'decline' }),
+      });
+      if (!res.ok) refresh();
+    } catch {
+      refresh();
+    }
+  }, [refresh]);
+
   const declineFriend = useCallback(async (id) => {
     try {
       await fetch(`/api/friends/${id}`, {
@@ -503,6 +538,7 @@ export function NotificationsProvider({ children }) {
     declineInvite,
     acceptFriend,
     declineFriend,
+    declineRematch,
     ackGameResult,
     markMessagesRead,
     typingSenderIds,
@@ -533,6 +569,7 @@ export function useNotifications() {
       declineInvite: async () => {},
       acceptFriend: async () => {},
       declineFriend: async () => {},
+      declineRematch: async () => {},
       markMessagesRead: async () => 0,
       typingSenderIds: new Set(),
       notifyTyping: async () => {},

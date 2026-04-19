@@ -237,10 +237,13 @@ function Toast({ toast, ctx, router }) {
             className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
           >{busy === 'view' ? '…' : 'View'}</button>
           <button
-            disabled={!!busy}
-            onClick={() => ctx.dismissToast(toast.id)}
-            className="px-3 bg-emerald-900/60 hover:bg-emerald-900/80 text-emerald-100 text-xs font-medium py-1.5 rounded-lg disabled:opacity-50"
-          >Later</button>
+            disabled={!!busy || !matchupId}
+            onClick={() => wrap('decline', async () => {
+              ctx.dismissToast(toast.id);
+              if (matchupId) await ctx.declineRematch(matchupId);
+            })}
+            className="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-200 text-xs font-medium py-1.5 rounded-lg disabled:opacity-50"
+          >{busy === 'decline' ? '…' : 'Decline'}</button>
         </div>
       </div>
     );
