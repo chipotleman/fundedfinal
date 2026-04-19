@@ -160,6 +160,8 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
   const [isPlacing, setIsPlacing] = useState(false);
   const [betType, setBetType] = useState('single');
   const [parlayStake, setParlayStake] = useState(0);
+  const [stakeDrafts, setStakeDrafts] = useState({});
+  const [parlayStakeDraft, setParlayStakeDraft] = useState('');
   const [showShareModal, setShowShareModal] = useState(false);
   const [selectedWinningBet, setSelectedWinningBet] = useState(null);
   const [showReceipt, setShowReceipt] = useState(false);
@@ -393,6 +395,86 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
 
   const getMinBetAmount = () => challengeMinBets[userChallenge] || 10;
   const minBetAmount = getMinBetAmount();
+
+  const sanitizeStakeInput = (raw) => {
+    let cleaned = String(raw ?? '').replace(/[^\d.]/g, '');
+    const parts = cleaned.split('.');
+    if (parts.length > 2) {
+      cleaned = parts[0] + '.' + parts.slice(1).join('');
+    }
+    let [intPart, decPart] = cleaned.split('.');
+    if (decPart !== undefined && decPart.length > 2) {
+      decPart = decPart.slice(0, 2);
+    }
+    if (intPart && intPart.length > 1) {
+      intPart = intPart.replace(/^0+/, '') || '0';
+    }
+    if (decPart !== undefined) return `${intPart || '0'}.${decPart}`;
+    return intPart || '';
+  };
+
+  const formatStakeDisplay = (rawString) => {
+    if (!rawString) return '';
+    const [intPart, decPart] = rawString.split('.');
+    const formattedInt = intPart
+      ? Number(intPart).toLocaleString('en-US')
+      : '0';
+    return decPart !== undefined ? `${formattedInt}.${decPart}` : formattedInt;
+  };
+
+  const restoreStakeCursor = (input, oldFormatted, newFormatted, cursorPos) => {
+    const digitsBefore = (oldFormatted.slice(0, cursorPos).match(/[\d.]/g) || []).length;
+    let newPos = 0;
+    let seen = 0;
+    while (newPos < newFormatted.length && seen < digitsBefore) {
+      if (/[\d.]/.test(newFormatted[newPos])) seen++;
+      newPos++;
+    }
+    requestAnimationFrame(() => {
+      if (input && typeof input.setSelectionRange === 'function' && document.activeElement === input) {
+        input.setSelectionRange(newPos, newPos);
+      }
+    });
+  };
+
+  const handleStakeInputChange = (betId, e) => {
+    const input = e.target;
+    const oldFormatted = input.value;
+    const cursorPos = input.selectionStart ?? oldFormatted.length;
+    const cleaned = sanitizeStakeInput(oldFormatted);
+    const formatted = formatStakeDisplay(cleaned);
+    setStakeDrafts(prev => ({ ...prev, [betId]: cleaned }));
+    updateStake(betId, cleaned);
+    restoreStakeCursor(input, oldFormatted, formatted, cursorPos);
+  };
+
+  const handleParlayStakeInputChange = (e) => {
+    const input = e.target;
+    const oldFormatted = input.value;
+    const cursorPos = input.selectionStart ?? oldFormatted.length;
+    const cleaned = sanitizeStakeInput(oldFormatted);
+    const formatted = formatStakeDisplay(cleaned);
+    setParlayStakeDraft(cleaned);
+    setParlayStake(parseFloat(cleaned) || 0);
+    restoreStakeCursor(input, oldFormatted, formatted, cursorPos);
+  };
+
+  const getStakeDisplayValue = (bet) => {
+    const draft = stakeDrafts[bet.id];
+    const stakeNum = bet.stake || 0;
+    if (draft !== undefined && (parseFloat(draft) || 0) === stakeNum) {
+      return formatStakeDisplay(draft);
+    }
+    return stakeNum ? formatStakeDisplay(String(stakeNum)) : '';
+  };
+
+  const getParlayStakeDisplayValue = () => {
+    const stakeNum = parlayStake || 0;
+    if (parlayStakeDraft !== '' && (parseFloat(parlayStakeDraft) || 0) === stakeNum) {
+      return formatStakeDisplay(parlayStakeDraft);
+    }
+    return stakeNum ? formatStakeDisplay(String(stakeNum)) : '';
+  };
 
   const calculatePayout = (odds, stake) => {
     const oddsValue = typeof odds === 'object' ? odds.odds || odds.value || 0 : odds;
@@ -1036,9 +1118,10 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                                   <div className="relative flex-1">
                                     <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: isDarkMode ? '#6b7280' : '#6b7280' }}>$</span>
                                     <input
-                                      type="number"
-                                      value={bet.stake || ''}
-                                      onChange={(e) => updateStake(bet.id, e.target.value)}
+                                      type="text"
+                                      inputMode="decimal"
+                                      value={getStakeDisplayValue(bet)}
+                                      onChange={(e) => handleStakeInputChange(bet.id, e)}
                                       className="w-full pl-8 pr-3 py-3 rounded-lg text-base focus:outline-none focus:ring-1 focus:ring-blue-500"
                                       style={{ 
                                         backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : '#f1f5f9',
@@ -1090,9 +1173,10 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                       <div className="relative flex-1">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: isDarkMode ? '#6b7280' : '#111827' }}>$</span>
                         <input
-                          type="number"
-                          value={parlayStake || ''}
-                          onChange={(e) => setParlayStake(parseFloat(e.target.value) || 0)}
+                          type="text"
+                          inputMode="decimal"
+                          value={getParlayStakeDisplayValue()}
+                          onChange={handleParlayStakeInputChange}
                           className="w-full pl-8 pr-3 py-3 rounded-lg text-base focus:outline-none focus:border-blue-500"
                           style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#f3f4f6', borderWidth: 1, borderColor: isDarkMode ? '#374151' : '#000000', color: isDarkMode ? '#ffffff' : '#111827' }}
                           placeholder={`Min $${minBetAmount}`}
