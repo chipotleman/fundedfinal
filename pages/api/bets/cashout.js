@@ -64,6 +64,10 @@ export default async function handler(req, res) {
         .limit(1);
       if (m && (m.status === 'active' || m.status === 'matched')) {
         liveMatchup = m;
+      } else if (m) {
+        return res.status(400).json({
+          error: 'Bet cannot be cashed out - battle has ended',
+        });
       }
     }
 

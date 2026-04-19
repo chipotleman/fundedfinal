@@ -3,7 +3,7 @@ import TapSurface from './TapSurface';
 import { formatMoney } from '../utils/formatMoney';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 
-export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, isOpponent = false, opponentName, opponentAvatar, compactHeader = false }) {
+export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, isOpponent = false, opponentName, opponentAvatar, compactHeader = false, isBattleEnded = false }) {
   const [confirmingCashOut, setConfirmingCashOut] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const buttonRef = useRef(null);
@@ -768,7 +768,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
           <div>PLACED: {formatPlacedDate()}</div>
         </div>
 
-        {!isOpponent && isOpen && onCashOut && (() => {
+        {!isOpponent && isOpen && onCashOut && !isBattleEnded && !bet.forfeitedAtBattleEnd && (() => {
           // Only allow cashout if NO game has started (not live, not completed)
           const now = new Date();
           let anyGameStarted = false;

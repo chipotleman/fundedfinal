@@ -562,6 +562,7 @@ export default function BetHistory() {
                 const battle = battlesMap[mid];
                 const myBetsSorted = [...bets].sort(sortByDateDesc);
                 const oppBetsSorted = [...(battle.opponentBets || [])].sort(sortByDateDesc);
+                const isBattleEnded = battle.status !== 'active' && battle.status !== 'matched';
                 return (
                   <BattleHistoryGroup
                     key={mid}
@@ -579,6 +580,7 @@ export default function BetHistory() {
                         onCashOut={cashOutBet}
                         onShare={(b) => setShareModalBet(b)}
                         compactHeader
+                        isBattleEnded={isBattleEnded}
                       />
                     ))}
                     opponentBetCards={oppBetsSorted.map(bet => (
@@ -589,6 +591,7 @@ export default function BetHistory() {
                         opponentName={battle.opponent?.username}
                         opponentAvatar={battle.opponent?.avatar}
                         compactHeader
+                        isBattleEnded={isBattleEnded}
                       />
                     ))}
                   />
