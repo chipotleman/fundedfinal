@@ -82,6 +82,18 @@ export function NotificationsProvider({ children }) {
     } catch {}
   }, [isAuthed]);
 
+  const notifyStoppedTyping = useCallback(async (receiverId) => {
+    if (!isAuthed || !receiverId) return;
+    try {
+      await fetch('/api/messages/typing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ receiverId, stop: true }),
+      });
+    } catch {}
+  }, [isAuthed]);
+
   const isSuppressed = useCallback((key) => {
     if (!key) return false;
     for (const k of suppressRef.current) {
@@ -210,7 +222,10 @@ export function NotificationsProvider({ children }) {
         return;
       }
       if (ev.type === 'notification:typing') {
-        if (ev.senderId) markTyping(ev.senderId);
+        if (ev.senderId) {
+          if (ev.stop) clearTyping(ev.senderId);
+          else markTyping(ev.senderId);
+        }
       } else if (ev.type === 'notification:forfeit') {
         // Second independent push path for forfeit wins.  Dispatch a window
         // event so MatchupContext can surface the modal without a round-trip,
@@ -411,6 +426,7 @@ export function NotificationsProvider({ children }) {
     markMessagesRead,
     typingSenderIds,
     notifyTyping,
+    notifyStoppedTyping,
     clearTyping,
   };
 
@@ -435,6 +451,7 @@ export function useNotifications() {
       markMessagesRead: async () => 0,
       typingSenderIds: new Set(),
       notifyTyping: async () => {},
+      notifyStoppedTyping: async () => {},
       clearTyping: () => {},
     };
   }

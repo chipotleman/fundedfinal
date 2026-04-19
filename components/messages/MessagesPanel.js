@@ -67,6 +67,7 @@ function ConversationThread({ friend, ctx, myId }) {
   const [sendError, setSendError] = useState(null);
   const scrollRef = useRef(null);
   const lastTypingSentRef = useRef(0);
+  const lastTypingFriendRef = useRef(null);
   const inputRef = useRef(null);
   const isTyping = !!friend?.id && ctx.typingSenderIds?.has?.(friend.id);
 
@@ -151,18 +152,57 @@ function ConversationThread({ friend, ctx, myId }) {
   }, [thread, loading]);
 
   useEffect(() => {
+    // If we were broadcasting typing in a previous chat, send a stop ping so
+    // the previous friend's open thread clears their indicator immediately
+    // instead of waiting for the TTL to expire.
+    const prevTypingFriend = lastTypingFriendRef.current;
+    if (prevTypingFriend && prevTypingFriend !== friend?.id) {
+      ctx.notifyStoppedTyping?.(prevTypingFriend);
+    }
+    lastTypingSentRef.current = 0;
+    lastTypingFriendRef.current = null;
     setReply('');
     setSendError(null);
     inputRef.current?.focus();
   }, [friend?.id]);
 
+  // On unmount (navigating away from the messenger entirely, closing the
+  // panel, etc.) make sure we tell the friend we stopped typing so their
+  // indicator doesn't linger for the full TTL. ctxRef avoids re-running
+  // the cleanup on every context value identity change.
+  const ctxRef = useRef(ctx);
+  useEffect(() => { ctxRef.current = ctx; }, [ctx]);
+  useEffect(() => {
+    return () => {
+      const f = lastTypingFriendRef.current;
+      if (f) {
+        ctxRef.current?.notifyStoppedTyping?.(f);
+        lastTypingFriendRef.current = null;
+      }
+    };
+  }, []);
+
   const handleReplyChange = (e) => {
     const v = e.target.value;
+    const prev = reply;
     setReply(v);
-    if (!friend?.id || !v.trim()) return;
+    if (!friend?.id) return;
+    // Clearing the input after typing — proactively tell the friend we
+    // stopped so their indicator clears immediately rather than after TTL.
+    if (!v.trim()) {
+      if (prev.trim() && lastTypingFriendRef.current === friend.id) {
+        ctx.notifyStoppedTyping?.(friend.id);
+        lastTypingFriendRef.current = null;
+        lastTypingSentRef.current = 0;
+      }
+      return;
+    }
     const now = Date.now();
-    if (now - lastTypingSentRef.current < 2500) return;
+    // Throttle to once every 2 s. The receiver TTL is 4 s, so each ping
+    // refreshes well before the indicator would expire mid-typing.
+    if (now - lastTypingSentRef.current < 2000) return;
     lastTypingSentRef.current = now;
+    lastTypingFriendRef.current = friend.id;
     ctx.notifyTyping?.(friend.id);
   };
 
@@ -205,6 +245,14 @@ function ConversationThread({ friend, ctx, myId }) {
         }
       }
       setReply('');
+      // Sending implicitly ends the typing session — tell the friend so their
+      // indicator clears the moment our message lands, not 4 s later. Also
+      // reset the throttle so a follow-up message broadcasts on first stroke.
+      if (lastTypingFriendRef.current === friend.id) {
+        ctx.notifyStoppedTyping?.(friend.id);
+        lastTypingFriendRef.current = null;
+      }
+      lastTypingSentRef.current = 0;
       ctx.refresh?.();
     } catch {
       setSendError('Could not send.');

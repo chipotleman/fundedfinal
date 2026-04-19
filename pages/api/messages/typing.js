@@ -14,10 +14,11 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
   const userId = session.user.id;
-  const { receiverId } = req.body || {};
+  const { receiverId, stop } = req.body || {};
   if (!receiverId) {
     return res.status(400).json({ error: 'Receiver ID required' });
   }
+  const isStop = stop === true;
 
   try {
     const areFriends = await db
@@ -42,6 +43,7 @@ export default async function handler(req, res) {
       publishBattleEvent(receiverId, {
         type: 'notification:typing',
         senderId: userId,
+        stop: isStop,
       });
     } catch (_e) {}
 

@@ -219,10 +219,25 @@ function MessageToast({ toast, ctx, router, baseStyle }) {
   const [sent, setSent] = useState(false);
   const inputElRef = useRef(null);
   const lastTypingSentRef = useRef(0);
+  const wasTypingRef = useRef(false);
 
   useEffect(() => {
     if (expanded) inputElRef.current?.focus();
   }, [expanded]);
+
+  // If the toast unmounts (auto-dismiss, manual dismiss, collapse) while the
+  // user was mid-composition, tell the friend we stopped typing so their
+  // indicator clears immediately instead of lingering for the full TTL.
+  const ctxRef = useRef(ctx);
+  useEffect(() => { ctxRef.current = ctx; }, [ctx]);
+  useEffect(() => {
+    return () => {
+      if (wasTypingRef.current && sender.id) {
+        ctxRef.current?.notifyStoppedTyping?.(sender.id);
+        wasTypingRef.current = false;
+      }
+    };
+  }, [sender.id]);
 
   // Suppress further toasts for this conversation while expanded so a fast
   // back-and-forth doesn't stack new toasts on top of the open reply.
@@ -235,11 +250,21 @@ function MessageToast({ toast, ctx, router, baseStyle }) {
 
   const handleChange = (e) => {
     const v = e.target.value;
+    const prev = reply;
     setReply(v);
-    if (!sender.id || !v.trim()) return;
+    if (!sender.id) return;
+    if (!v.trim()) {
+      if (prev.trim() && wasTypingRef.current) {
+        ctx.notifyStoppedTyping?.(sender.id);
+        wasTypingRef.current = false;
+        lastTypingSentRef.current = 0;
+      }
+      return;
+    }
     const now = Date.now();
-    if (now - lastTypingSentRef.current < 2500) return;
+    if (now - lastTypingSentRef.current < 2000) return;
     lastTypingSentRef.current = now;
+    wasTypingRef.current = true;
     ctx.notifyTyping?.(sender.id);
   };
 
@@ -263,6 +288,13 @@ function MessageToast({ toast, ctx, router, baseStyle }) {
       // Mark this conversation read so the bell badge clears.
       ctx.markMessagesRead?.([sender.id]);
       setReply('');
+      // Sending ends the typing session — tell the friend immediately so
+      // their indicator clears instead of lingering for the full TTL.
+      if (wasTypingRef.current) {
+        ctx.notifyStoppedTyping?.(sender.id);
+        wasTypingRef.current = false;
+      }
+      lastTypingSentRef.current = 0;
       setSent(true);
       setTimeout(() => ctx.dismissToast(toast.id), 1200);
     } catch {
