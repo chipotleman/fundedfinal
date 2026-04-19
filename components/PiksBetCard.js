@@ -3,7 +3,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import TapSurface from './TapSurface';
 import { formatMoney } from '../utils/formatMoney';
 
-export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, isOpponent = false, opponentName, opponentAvatar }) {
+export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, isOpponent = false, opponentName, opponentAvatar, compactHeader = false }) {
   const { isDarkMode } = useTheme();
   const [confirmingCashOut, setConfirmingCashOut] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -416,22 +416,34 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
       )}
       <div className="relative" style={isOpponent ? { zIndex: 10 } : undefined}>
       <div className="px-4 pt-0 pb-0 bg-transparent">
-        <div className="flex items-center justify-between -mt-2">
-          <img src="/pikslogotransparent.png" alt="Piks" className="h-24 object-contain -ml-[24px]" style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }} />
-          
+        <div className={`flex items-center justify-between ${compactHeader ? '' : '-mt-2'}`}>
+          <img
+            src="/pikslogotransparent.png"
+            alt="Piks"
+            className={`object-contain ${compactHeader ? 'h-12 -ml-[12px]' : 'h-24 -ml-[24px]'}`}
+            style={{ filter: isDarkMode ? 'none' : 'invert(1) brightness(0.1)' }}
+          />
+
           {isWon && (
-            <div className="flex-1 flex justify-end" style={{ marginRight: -27, marginTop: -13 }}>
-              <img 
-                src="/trophy-winner.png" 
-                alt="Winner" 
-                className="h-[72px] w-auto"
+            <div
+              className="flex-1 flex justify-end"
+              style={
+                compactHeader
+                  ? { marginRight: -16, marginTop: -6 }
+                  : { marginRight: -27, marginTop: -13 }
+              }
+            >
+              <img
+                src="/trophy-winner.png"
+                alt="Winner"
+                className={compactHeader ? 'h-[48px] w-auto' : 'h-[72px] w-auto'}
               />
             </div>
           )}
         </div>
       </div>
 
-      <div className="px-4 pt-0 pb-3 -mt-3">
+      <div className={`px-4 pt-0 pb-3 ${compactHeader ? '' : '-mt-3'}`}>
 
         <div 
           className={`flex justify-between items-start mb-2 ${isParlay && isSettled ? 'cursor-pointer' : ''}`}

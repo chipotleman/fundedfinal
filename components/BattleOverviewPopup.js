@@ -260,17 +260,20 @@ export default function BattleOverviewPopup({
 
           <div className="relative z-10">
             {/* Header bar */}
-            <div className="flex items-center justify-between px-4 pt-4 pb-2">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between px-3 pt-2.5 pb-1.5">
+              <div className="flex items-center gap-1.5 min-w-0">
                 <div className="flex items-center gap-1 px-2 py-0.5 rounded-full" style={{ background: theme.badgeBg }}>
                   <span className="text-[10px]">{theme.icon}</span>
                   <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: theme.accentColor }}>
                     {theme.label}
                   </span>
                 </div>
-                <span className="text-[10px] text-gray-400">{formatDate(battle.endsAt || battle.createdAt)}</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider truncate" style={{ color: theme.accentColor }}>
+                  Battle
+                </span>
+                <span className="text-[10px] text-gray-400 whitespace-nowrap">{formatDate(battle.endsAt || battle.createdAt)}</span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <div className={`px-2 py-0.5 rounded-full ${outcomeBadge.bg}`}>
                   <span className={`text-[10px] font-bold uppercase tracking-wider ${outcomeBadge.text}`}>
                     {outcomeBadge.label}
@@ -278,50 +281,43 @@ export default function BattleOverviewPopup({
                 </div>
                 <button
                   onClick={handleShare}
-                  className="w-7 h-7 rounded-full flex items-center justify-center transition-colors"
+                  className="w-6 h-6 rounded-full flex items-center justify-center transition-colors"
                   style={{ background: 'rgba(255,255,255,0.08)' }}
                   aria-label="Share battle link"
                   title="Share battle link"
                   type="button"
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" stroke={theme.accentColor} viewBox="0 0 24 24">
+                  <svg className="w-3 h-3" fill="none" stroke={theme.accentColor} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                   </svg>
                 </button>
                 <button
                   onClick={onClose}
-                  className="w-7 h-7 rounded-full flex items-center justify-center transition-colors"
+                  className="w-6 h-6 rounded-full flex items-center justify-center transition-colors"
                   style={{ background: 'rgba(255,255,255,0.08)' }}
                   aria-label="Close"
                 >
-                  <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
               </div>
             </div>
 
-            {/* Battle Overview title */}
-            <div className="px-4 pb-1">
-              <p className="text-[11px] font-bold uppercase tracking-widest" style={{ color: theme.accentColor }}>
-                Battle Overview
-              </p>
-            </div>
-
             {/* Matchup row */}
-            <div className="flex items-center w-full px-4 pb-3">
+            <div className="flex items-center w-full px-3 pb-2">
               <div className="flex flex-col items-center" style={{ width: '32%' }}>
                 <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden"
-                  style={{ border: `3px solid ${theme.avatarRing}`, boxShadow: theme.avatarGlow, background: '#111' }}
+                  className="w-11 h-11 rounded-full flex items-center justify-center overflow-hidden"
+                  style={{ border: `2px solid ${theme.avatarRing}`, boxShadow: theme.avatarGlow, background: '#111' }}
                 >
                   {userAvatar ? (
                     <img src={userAvatar} alt="" className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-lg font-black text-white/70">{userName?.[0]?.toUpperCase() || 'Y'}</span>
+                    <span className="text-base font-black text-white/70">{userName?.[0]?.toUpperCase() || 'Y'}</span>
                   )}
                 </div>
-                <p className="text-white text-[11px] font-bold truncate max-w-[90px] text-center mt-1">{userName}</p>
+                <p className="text-white text-[11px] font-bold truncate max-w-[90px] text-center mt-0.5 leading-tight">{userName}</p>
                 <p className={`text-[10px] font-bold leading-tight ${myPnL > 0 ? 'text-green-400' : myPnL < 0 ? 'text-red-400' : 'text-yellow-400'}`}>
                   ${formatMoney(myBalance, 0)}
                 </p>
@@ -329,23 +325,23 @@ export default function BattleOverviewPopup({
 
               <div className="flex flex-col items-center justify-center" style={{ width: '36%' }}>
                 <div
-                  className="text-2xl md:text-3xl font-black italic text-transparent bg-clip-text"
+                  className="text-xl md:text-2xl font-black italic text-transparent bg-clip-text leading-none"
                   style={{ backgroundImage: theme.vsGradient, WebkitBackgroundClip: 'text' }}
                 >
                   VS
                 </div>
-                <div className="text-center mt-0.5">
+                <div className="text-center mt-0.5 flex items-baseline gap-1 justify-center">
                   <p className="text-[8px] text-gray-500 uppercase tracking-wider leading-none">
                     {isActive ? 'Prize' : 'Pot'}
                   </p>
-                  <p className="text-sm md:text-base font-black leading-tight" style={{
+                  <p className="text-sm font-black leading-none" style={{
                     color: theme.prizeColor,
                     textShadow: `0 0 10px rgba(${theme.accentRgb},0.4)`,
                   }}>
                     ${formatMoney(battle.winnerPayout || battle.potSize || 0, 0)}
                   </p>
                 </div>
-                <div className="mt-1 flex items-center gap-1.5 text-[10px] leading-none">
+                <div className="mt-0.5 flex items-center gap-1.5 text-[10px] leading-none">
                   <span style={{ color: theme.accentColor }}>
                     <span className="font-bold">You</span>
                     <span className="text-white/80 ml-0.5">{betCount}</span>
@@ -360,16 +356,16 @@ export default function BattleOverviewPopup({
 
               <div className="flex flex-col items-center" style={{ width: '32%' }}>
                 <div
-                  className="w-14 h-14 rounded-full flex items-center justify-center overflow-hidden"
-                  style={{ border: '3px solid #ef4444', boxShadow: '0 0 20px rgba(239,68,68,0.3)', background: '#111' }}
+                  className="w-11 h-11 rounded-full flex items-center justify-center overflow-hidden"
+                  style={{ border: '2px solid #ef4444', boxShadow: '0 0 20px rgba(239,68,68,0.3)', background: '#111' }}
                 >
                   {opponent.avatar ? (
                     <img src={opponent.avatar} alt={opponent.username} className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-lg font-black text-white/70">{(opponent.username || 'O')[0].toUpperCase()}</span>
+                    <span className="text-base font-black text-white/70">{(opponent.username || 'O')[0].toUpperCase()}</span>
                   )}
                 </div>
-                <p className="text-white text-[11px] font-bold truncate max-w-[90px] text-center mt-1">{opponent.username}</p>
+                <p className="text-white text-[11px] font-bold truncate max-w-[90px] text-center mt-0.5 leading-tight">{opponent.username}</p>
                 <p className="text-[10px] font-bold text-red-400 leading-tight">
                   ${formatMoney(oppBalance, 0)}
                 </p>
@@ -379,7 +375,7 @@ export default function BattleOverviewPopup({
             {/* Pending note */}
             {showPendingNote && (
               <div
-                className="mx-4 mb-3 px-3 py-2 rounded-lg flex items-start gap-2"
+                className="mx-3 mb-2 px-3 py-1.5 rounded-lg flex items-start gap-2"
                 style={{
                   background: 'rgba(234,179,8,0.10)',
                   border: '1px solid rgba(234,179,8,0.45)',
@@ -404,13 +400,13 @@ export default function BattleOverviewPopup({
             )}
 
             {/* Divider */}
-            <div className="mx-4 mb-4" style={{ height: 1, background: `${theme.borderColor}` }} />
+            <div className="mx-3 mb-2" style={{ height: 1, background: `${theme.borderColor}` }} />
 
             {/* Tab toggle + carousel */}
             {(myBetCards || opponentBetCards) && (
-              <div className="px-4 pb-5">
+              <div className="px-3 pb-3">
                 <div
-                  className="inline-flex rounded-full p-1 mb-3"
+                  className="inline-flex rounded-full p-1 mb-2"
                   style={{
                     background: isDarkMode ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)',
                     border: `1px solid ${theme.borderColor}`,
@@ -438,14 +434,6 @@ export default function BattleOverviewPopup({
                   >
                     {opponent.username}'s Piks ({opponentBetCount})
                   </button>
-                </div>
-
-                <div className="mb-2 flex items-center gap-1.5">
-                  <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: theme.accentColor }}>
-                    {activeTab === 'mine'
-                      ? 'Your Piks in this battle'
-                      : `${opponent.username}'s Piks in this battle`}
-                  </span>
                 </div>
 
                 {activeTab === 'mine' ? (

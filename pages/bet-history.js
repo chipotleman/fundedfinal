@@ -578,6 +578,7 @@ export default function BetHistory() {
                         bet={enrichBet(bet)}
                         onCashOut={cashOutBet}
                         onShare={(b) => setShareModalBet(b)}
+                        compactHeader
                       />
                     ))}
                     opponentBetCards={oppBetsSorted.map(bet => (
@@ -587,6 +588,7 @@ export default function BetHistory() {
                         isOpponent
                         opponentName={battle.opponent?.username}
                         opponentAvatar={battle.opponent?.avatar}
+                        compactHeader
                       />
                     ))}
                   />
