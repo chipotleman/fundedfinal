@@ -10,6 +10,7 @@ import MatchHistoryModal from '../components/battle/MatchHistoryModal';
 import MatchLobby from '../components/battle/MatchLobby';
 import MatchResult from '../components/battle/MatchResult';
 import LiveBattlesSection from '../components/battle/LiveBattlesSection';
+import BattleVoiceChat from '../components/battle/BattleVoiceChat';
 import ForfeitModal from '../components/battle/ForfeitModal';
 import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
 import { useMatchup } from '../contexts/MatchupContext';
@@ -773,6 +774,8 @@ export default function BattlePage() {
               </div>
             </div>
           )}
+
+          {activeMatchup && (activeMatchup.status === 'active' || activeMatchup.status === 'matched') && <BattleVoiceChat />}
 
           {activeMatchup && (activeMatchup.status === 'active' || activeMatchup.status === 'matched') && (() => {
             const startBal = parseFloat(activeMatchup.startingBalance || 0);
