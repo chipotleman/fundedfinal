@@ -22,7 +22,6 @@ export default function ProfileEditPanel({
   onSave,
   onCancel,
   saving,
-  true,
 }) {
   const avatarInputRef = useRef(null);
   const bannerInputRef = useRef(null);
