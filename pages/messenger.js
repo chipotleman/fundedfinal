@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import TopNavbar from '../components/TopNavbar';
+import BetSlip from '../components/BetSlip';
+import { useBetSlip } from '../contexts/BetSlipContext';
 import { useNotifications } from '../contexts/NotificationsContext';
 import MessagesPanel from '../components/messages/MessagesPanel';
 import PlayFriendModal from '../components/battle/PlayFriendModal';
@@ -10,6 +12,7 @@ export default function MessengerPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const ctx = useNotifications();
+  const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
 
   const [selectedId, setSelectedId] = useState(null);
   const [battleFriend, setBattleFriend] = useState(null);
@@ -73,7 +76,13 @@ export default function MessengerPage() {
   if (status === 'loading') {
     return (
       <div style={{ backgroundColor: bg, minHeight: '100vh' }}>
-        <TopNavbar />
+        <TopNavbar
+          betSlipCount={betSlip.length}
+          onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
+        />
+        {showBetSlip && (
+          <BetSlip isOpen={showBetSlip} onClose={() => setShowBetSlip(false)} />
+        )}
       </div>
     );
   }
@@ -81,7 +90,13 @@ export default function MessengerPage() {
   if (!isAuthed) {
     return (
       <div style={{ backgroundColor: bg, minHeight: '100vh' }}>
-        <TopNavbar />
+        <TopNavbar
+          betSlipCount={betSlip.length}
+          onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
+        />
+        {showBetSlip && (
+          <BetSlip isOpen={showBetSlip} onClose={() => setShowBetSlip(false)} />
+        )}
         <div className="max-w-md mx-auto mt-20 px-4 text-center">
           <h1 className="text-2xl font-bold mb-2" style={{ color: textPrimary }}>
             Sign in to send messages
@@ -108,7 +123,13 @@ export default function MessengerPage() {
   const headerRowHeightMobile = 56;
   return (
     <div style={{ backgroundColor: bg, minHeight: '100dvh' }}>
-      <TopNavbar />
+      <TopNavbar
+        betSlipCount={betSlip.length}
+        onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
+      />
+      {showBetSlip && (
+        <BetSlip isOpen={showBetSlip} onClose={() => setShowBetSlip(false)} />
+      )}
       <div className="max-w-7xl w-full mx-auto px-2 sm:px-4 py-2 sm:py-4">
         <div className="flex items-center mb-2 sm:mb-3">
           <h1 className="text-lg sm:text-2xl font-bold tracking-tight" style={{ color: '#34d399' }}>

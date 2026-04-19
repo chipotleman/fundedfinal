@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
+import BetSlip from '../components/BetSlip';
 import { useBetSlip } from '../contexts/BetSlipContext';
 
 export default function Profile() {
@@ -17,7 +18,7 @@ export default function Profile() {
     avatar: ''
   });
   const fileInputRef = useRef(null);
-  const { betSlip } = useBetSlip();
+  const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -177,7 +178,14 @@ export default function Profile() {
         bankroll={1000}
         pnl={250}
         betSlipCount={betSlip.length}
+        onBetSlipClick={() => setShowBetSlip(!showBetSlip)}
       />
+      {showBetSlip && (
+        <BetSlip
+          isOpen={showBetSlip}
+          onClose={() => setShowBetSlip(false)}
+        />
+      )}
       
       <div className="pt-20 pb-16">
         {/* Header */}

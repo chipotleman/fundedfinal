@@ -6,12 +6,16 @@ import BalanceModal from './BalanceModal';
 import WithdrawModal from './WithdrawModal';
 import BalanceExplainerModal from './BalanceExplainerModal';
 import { useMatchup } from '../contexts/MatchupContext';
+import { useBetSlip } from '../contexts/BetSlipContext';
 import { useNotifications } from '../contexts/NotificationsContext';
 import NotificationsDropdown from './notifications/NotificationsDropdown';
 import MessagesDropdown from './notifications/MessagesDropdown';
 import { formatMoney } from '../utils/formatMoney';
 
 export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
+  const { betSlip: ctxBetSlip, showBetSlip: ctxShowBetSlip, setShowBetSlip: ctxSetShowBetSlip } = useBetSlip();
+  const effectiveBetSlipCount = betSlipCount !== undefined ? betSlipCount : (ctxBetSlip?.length || 0);
+  const effectiveOnBetSlipClick = onBetSlipClick || (() => ctxSetShowBetSlip(!ctxShowBetSlip));
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
@@ -651,7 +655,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                 return (
                   <div
                     className="sm:hidden flex items-center gap-1"
-                    style={{ marginRight: betSlipCount > 0 ? 0 : 60 }}
+                    style={{ marginRight: effectiveBetSlipCount > 0 ? 0 : 60 }}
                   >
                     <button
                       onClick={() => setExplainerType('cash')}
@@ -688,9 +692,9 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
               })()}
 
               {/* Bet Slip Button - Only show when there are bets */}
-              {betSlipCount > 0 && (
+              {effectiveBetSlipCount > 0 && (
                 <button
-                  onClick={onBetSlipClick}
+                  onClick={effectiveOnBetSlipClick}
                   className="relative font-bold py-2 sm:py-3 px-2 sm:px-6 rounded-lg flex items-center space-x-1 sm:space-x-2 text-sm sm:text-base no-hover-effect"
                   style={{ backgroundColor: '#2563eb', marginRight: '50px', color: '#ffffff' }}
                 >
@@ -699,7 +703,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                   </svg>
                   <span className="text-xs sm:text-base" style={{ color: '#ffffff' }}>Bet Slip</span>
                   <span className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full h-5 w-5 flex items-center justify-center" style={{ color: '#ffffff' }}>
-                    {betSlipCount}
+                    {effectiveBetSlipCount}
                   </span>
                 </button>
               )}
