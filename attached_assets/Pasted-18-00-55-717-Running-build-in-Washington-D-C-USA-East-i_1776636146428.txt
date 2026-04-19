@@ -1,0 +1,47 @@
+18:00:55.717 Running build in Washington, D.C., USA (East) – iad1 (Static IPs)
+18:00:55.718 Build machine configuration: 4 cores, 8 GB
+18:00:55.872 Cloning github.com/chipotleman/fundedfinal (Branch: main, Commit: 931cc2c)
+18:01:08.900 Cloning completed: 13.028s
+18:01:09.017 Restored build cache from previous deployment (6G6ehvtjM9WQNgxN1xW4kKvGYhf1)
+18:01:09.247 Running "vercel build"
+18:01:09.866 Vercel CLI 51.6.1
+18:01:10.195 Installing dependencies...
+18:01:11.834 
+18:01:11.834 up to date in 1s
+18:01:11.834 
+18:01:11.834 178 packages are looking for funding
+18:01:11.834   run `npm fund` for details
+18:01:11.862 Detected Next.js version: 14.2.35
+18:01:11.867 Running "npm run build"
+18:01:11.973 
+18:01:11.973 > fundedfinal@1.0.0 build
+18:01:11.973 > next build
+18:01:11.973 
+18:01:13.184   ▲ Next.js 14.2.35
+18:01:13.185   - Environments: .env.local
+18:01:13.185   - Experiments (use with caution):
+18:01:13.186     · instrumentationHook
+18:01:13.186 
+18:01:13.244    Creating an optimized production build ...
+18:01:13.821 > [PWA] Compile server
+18:01:13.822 > [PWA] Compile server
+18:01:13.824 > [PWA] Compile client (static)
+18:01:13.824 > [PWA] Custom worker found: /vercel/path0/worker/index.js
+18:01:13.824 > [PWA] Build custom worker: /vercel/path0/public/worker-YGvXoiMhJHufJ0tJnHvT3.js
+18:01:14.045 > [PWA] Auto register service worker with: /vercel/path0/node_modules/next-pwa/register.js
+18:01:14.045 > [PWA] Service worker: /vercel/path0/public/sw.js
+18:01:14.045 > [PWA]   url: /sw.js
+18:01:14.045 > [PWA]   scope: /
+18:01:14.084 > [PWA] Fallback to precache routes when fetch failed from cache or network:
+18:01:14.084 > [PWA]   document (page): /offline
+18:01:29.069 <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (695kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+18:01:29.136 Failed to compile.
+18:01:29.136 
+18:01:29.136 ./pages/api/matchups/resolve.js
+18:01:29.136 Module not found: Can't resolve '../bets/cashout'
+18:01:29.136 
+18:01:29.139 https://nextjs.org/docs/messages/module-not-found
+18:01:29.140 
+18:01:29.140 
+18:01:29.140 > Build failed because of webpack errors
+18:01:29.194 Error: Command "npm run build" exited with 1

@@ -3,7 +3,7 @@ import { matchups, fakeOpponents, profiles, userBets, fakeOpponentBets, userChal
 import { eq, and, or, lt, gte, lte } from 'drizzle-orm';
 import { publishBattleEvent } from '../../../lib/battle-events';
 import { sendPushToUsers } from '../../../lib/web-push';
-import { CASHOUT_FEE_RATIO } from '../bets/cashout';
+const CASHOUT_FEE_RATIO = 0.2;
 import { evaluateAndAwardAchievements } from '../../../lib/achievements';
 
 export default async function handler(req, res) {
