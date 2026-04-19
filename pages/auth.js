@@ -19,6 +19,11 @@ export default function AuthPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotMessage, setForgotMessage] = useState('');
+  const [forgotError, setForgotError] = useState('');
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const router = useRouter();
   const { login, signUp: signUpUser } = useAuth();
@@ -189,6 +194,59 @@ export default function AuthPage() {
     }
   };
 
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setForgotError('');
+    setForgotMessage('');
+
+    const trimmed = forgotEmail.trim();
+    if (!trimmed) {
+      setForgotError('Please enter your email address.');
+      return;
+    }
+
+    setForgotLoading(true);
+    try {
+      const response = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: trimmed }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (response.status === 429) {
+        setForgotError(data.error || 'Too many requests. Please try again later.');
+      } else if (!response.ok) {
+        setForgotError(data.error || 'Something went wrong. Please try again.');
+      } else {
+        setForgotMessage(
+          data.message ||
+            'If an account exists for that email, we have sent a password reset link.'
+        );
+      }
+    } catch (err) {
+      console.error('Forgot password error:', err);
+      setForgotError('Network error. Please try again.');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const openForgotPassword = () => {
+    setForgotEmail(email.trim());
+    setForgotError('');
+    setForgotMessage('');
+    setShowForgotPassword(true);
+  };
+
+  const closeForgotPassword = () => {
+    setShowForgotPassword(false);
+    setForgotError('');
+    setForgotMessage('');
+    setForgotLoading(false);
+  };
 
   const handleChallengeStart = async () => {
     if (!selectedChallenge) {
@@ -537,18 +595,29 @@ export default function AuthPage() {
                 </div>
               )}
 
-              {/* Remember Me Checkbox */}
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="rememberMe"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 bg-[#1a1a1a] border border-[#1a1a1a] rounded focus:ring-2 focus:ring-blue-500 text-green-500"
-                />
-                <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-400 cursor-pointer">
-                  Remember my email
-                </label>
+              {/* Remember Me + Forgot Password */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="rememberMe"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 bg-[#1a1a1a] border border-[#1a1a1a] rounded focus:ring-2 focus:ring-blue-500 text-green-500"
+                  />
+                  <label htmlFor="rememberMe" className="ml-2 text-sm text-gray-400 cursor-pointer">
+                    Remember my email
+                  </label>
+                </div>
+                {!isSignUp && (
+                  <button
+                    type="button"
+                    onClick={openForgotPassword}
+                    className="text-sm font-medium text-green-400 hover:text-green-300 transition-colors"
+                  >
+                    Forgot password?
+                  </button>
+                )}
               </div>
 
               <button
@@ -578,6 +647,88 @@ export default function AuthPage() {
           </div>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotPassword && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          onClick={closeForgotPassword}
+        >
+          <div
+            className="relative w-full max-w-md bg-black border-2 border-green-500 rounded-3xl p-6 sm:p-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={closeForgotPassword}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-300 transition-colors"
+              aria-label="Close"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <h2 className="text-2xl font-bold text-white mb-2">Reset your password</h2>
+            <p className="text-sm text-gray-400 mb-6">
+              Enter your account email and we'll send you a link to choose a new password.
+            </p>
+
+            {forgotMessage && (
+              <div className="mb-4 p-4 rounded-xl border bg-green-500/10 border-green-500/20 text-green-400">
+                <p className="text-sm font-medium">{forgotMessage}</p>
+              </div>
+            )}
+            {forgotError && (
+              <div className="mb-4 p-4 rounded-xl border bg-red-500/10 border-red-500/20 text-red-400">
+                <p className="text-sm font-medium">{forgotError}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleForgotPassword} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={forgotEmail}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  className="w-full bg-[#111] border border-[#1a1a1a] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all duration-200"
+                  placeholder="you@example.com"
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={forgotLoading || !!forgotMessage}
+                className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 disabled:from-gray-600 disabled:to-gray-700 text-white font-bold py-3.5 rounded-xl transition-all duration-300 transform hover:scale-[1.02] disabled:scale-100 shadow-lg"
+              >
+                {forgotLoading ? (
+                  <div className="flex items-center justify-center space-x-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Sending...</span>
+                  </div>
+                ) : forgotMessage ? (
+                  'Email sent'
+                ) : (
+                  'Send reset link'
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={closeForgotPassword}
+                className="w-full text-sm text-gray-500 hover:text-gray-300 font-medium transition-colors"
+              >
+                Back to sign in
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Bet Slip */}
       {showBetSlip && (
