@@ -8,7 +8,9 @@ import { ThemeProvider } from '../contexts/ThemeContext';
 import { GamesProvider } from '../contexts/GamesContext';
 import { MatchupProvider, useMatchup } from '../contexts/MatchupContext';
 import { NotificationsProvider } from '../contexts/NotificationsContext';
+import { PushNotificationsProvider } from '../contexts/PushNotificationsContext';
 import GlobalToastContainer from '../components/notifications/GlobalToastContainer';
+import PushOptInPrompt from '../components/notifications/PushOptInPrompt';
 import WonByForfeitModal from '../components/WonByForfeitModal';
 import ChallengePopup from '../components/ChallengePopup';
 import HowItWorksPopup from '../components/HowItWorksPopup';
@@ -343,11 +345,13 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
               <GamesProvider initialInplayEvents={pageProps.initialInplayEvents} initialApiGames={pageProps.initialApiGames}>
                 <MatchupProvider>
                 <NotificationsProvider>
+                <PushNotificationsProvider>
                 <ForfeitNoticeOverlay />
                 <AnalyticsTracker />
                 <PresenceHeartbeat isLoggedIn={isLoggedIn} />
                 <AutoGrader />
                 <GlobalToastContainer />
+                <PushOptInPrompt />
                 {/* Solid Black Background */}
                 <div
                   style={{
@@ -448,6 +452,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
                   currentUser={currentUser}
                   isLoggedIn={isLoggedIn}
                 />
+                </PushNotificationsProvider>
                 </NotificationsProvider>
                 </MatchupProvider>
               </GamesProvider>

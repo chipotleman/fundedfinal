@@ -834,3 +834,28 @@ export const battleAvatarLibrary = pgTable("battle_avatar_library", {
 
 export type BattleAvatar = typeof battleAvatarLibrary.$inferSelect;
 export type InsertBattleAvatar = typeof battleAvatarLibrary.$inferInsert;
+
+// Web push notification subscriptions (one row per device/browser)
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  deviceLabel: varchar("device_label", { length: 255 }),
+  userAgent: text("user_agent"),
+  // Per-category opt-in toggles, default everything on.
+  catInvites: boolean("cat_invites").default(true).notNull(),
+  catForfeits: boolean("cat_forfeits").default(true).notNull(),
+  catResults: boolean("cat_results").default(true).notNull(),
+  catFriendsLive: boolean("cat_friends_live").default(true).notNull(),
+  enabled: boolean("enabled").default(true).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  lastSeen: timestamp("last_seen").defaultNow().notNull(),
+}, (table) => ({
+  userIdIdx: index("push_subscriptions_user_id_idx").on(table.userId),
+}));
+
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+export type InsertPushSubscription = typeof pushSubscriptions.$inferInsert;
+

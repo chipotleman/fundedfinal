@@ -2,6 +2,7 @@ import { db } from '../../../lib/db';
 import { matchups, fakeOpponents, profiles, userBets, fakeOpponentBets, userChallenges } from '../../../shared/schema';
 import { eq, and, or, lt, gte, lte } from 'drizzle-orm';
 import { publishBattleEvent } from '../../../lib/battle-events';
+import { sendPushToUsers } from '../../../lib/web-push';
 import { CASHOUT_FEE_RATIO } from '../bets/cashout';
 import { evaluateAndAwardAchievements } from '../../../lib/achievements';
 
@@ -292,6 +293,47 @@ export default async function handler(req, res) {
           });
         } catch (e) {
           console.error('[Resolve] publish event error:', e);
+        }
+
+        // Push notification for battle finished — separate body for winner/loser/tie.
+        try {
+          const sendResultPush = async (uid, isWinner, isTie, payout) => {
+            if (!uid) return;
+            let title, body;
+            if (isTie) {
+              title = 'Battle ended in a tie';
+              body = `Your battle settled as a tie. Half-pot refunded.`;
+            } else if (isWinner) {
+              title = 'You won the battle!';
+              body = payout != null ? `You won $${Number(payout).toFixed(2)}.` : 'Your battle just finished — go check your payout.';
+            } else {
+              title = 'Battle finished';
+              body = 'Your opponent edged you out this time. Tap to see the results.';
+            }
+            await sendPushToUsers(uid, {
+              category: 'result',
+              title,
+              body,
+              url: `/battles?result=${matchup.id}`,
+              tag: `result:${matchup.id}`,
+              data: { matchupId: matchup.id, type: 'result' },
+            }).catch(err => console.error('[result push]', err.message));
+          };
+          if (winnerType === 'tie') {
+            await sendResultPush(matchup.user1Id, false, true, null);
+            if (matchup.user2Id && !matchup.isFakeOpponent) await sendResultPush(matchup.user2Id, false, true, null);
+          } else {
+            const winnerUid = winnerType === 'user1' ? matchup.user1Id : matchup.user2Id;
+            const loserUid = winnerType === 'user1' ? matchup.user2Id : matchup.user1Id;
+            if (winnerUid && (winnerType !== 'user2' || !matchup.isFakeOpponent)) await sendResultPush(winnerUid, true, false, winnerPayout);
+            if (loserUid && (winnerType !== 'user1' || matchup.user2Id) && !matchup.isFakeOpponent) await sendResultPush(loserUid, false, false, null);
+            // If user2 is fake, only user1 exists.
+            if (matchup.isFakeOpponent && winnerType === 'user2' && matchup.user1Id) {
+              await sendResultPush(matchup.user1Id, false, false, null);
+            }
+          }
+        } catch (pushErr) {
+          console.error('[Resolve] push error:', pushErr);
         }
 
         results.push({

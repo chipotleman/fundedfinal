@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import TopNavbar from '../components/TopNavbar';
 import { useBetSlip } from '../contexts/BetSlipContext';
+import PushSettingsSection from '../components/notifications/PushSettingsSection';
 
 export default function Settings() {
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
@@ -46,6 +47,9 @@ export default function Settings() {
       <div className="pt-20 pb-16">
         <div className="max-w-4xl mx-auto px-6">
           <h1 className="text-3xl font-bold text-white mb-8">Settings</h1>
+
+          {/* Push Notifications */}
+          <PushSettingsSection />
 
           {/* Notifications */}
           <div className="bg-[#111] backdrop-blur-lg rounded-2xl border border-[#1a1a1a] p-8 mb-8">

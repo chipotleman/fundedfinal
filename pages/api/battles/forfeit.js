@@ -4,6 +4,7 @@ import { db } from '../../../lib/db';
 import { matchups, profiles, userChallenges } from '../../../shared/schema';
 import { eq, and, or, inArray } from 'drizzle-orm';
 const { publishBattleEvent } = require('../../../lib/battle-events');
+const { sendPushToUsers } = require('../../../lib/web-push');
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -107,6 +108,21 @@ export default async function handler(req, res) {
       }
     } catch (e) {
       console.error('[Forfeit] publish event error:', e);
+    }
+
+    // Push notification to the opponent ("Won by forfeit").
+    if (opponentId && !matchup.isFakeOpponent) {
+      try {
+        const loserName = userProfile?.username || 'Your opponent';
+        sendPushToUsers(opponentId, {
+          category: 'forfeit',
+          title: 'You won by forfeit!',
+          body: `${loserName} forfeited. You collected $${winnerPayout.toFixed(2)}.`,
+          url: `/battles?forfeit=${matchup.id}`,
+          tag: `forfeit:${matchup.id}`,
+          data: { matchupId: matchup.id, type: 'forfeit', winnerPayout },
+        }).catch(err => console.error('[forfeit push]', err.message));
+      } catch (err) { console.error('[forfeit push outer]', err.message); }
     }
 
     if (userProfile) {

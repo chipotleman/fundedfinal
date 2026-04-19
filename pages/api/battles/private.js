@@ -3,6 +3,7 @@ import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { matchups, profiles } from '../../../shared/schema';
 import { eq, and } from 'drizzle-orm';
+const { sendPushToUsers, getAcceptedFriendIds } = require('../../../lib/web-push');
 
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -123,6 +124,37 @@ export default async function handler(req, res) {
 
       const [p1] = await db.select({ username: profiles.username, avatar: profiles.avatar }).from(profiles).where(eq(profiles.id, matchup.user1Id));
       const [p2] = await db.select({ username: profiles.username, avatar: profiles.avatar }).from(profiles).where(eq(profiles.id, userId));
+
+      // Friends going live: notify both players' friends.
+      try {
+        const [friendsOfHost, friendsOfJoiner] = await Promise.all([
+          getAcceptedFriendIds(matchup.user1Id),
+          getAcceptedFriendIds(userId),
+        ]);
+        const exclude = new Set([matchup.user1Id, userId]);
+        const targetsHost = friendsOfHost.filter(id => !exclude.has(id));
+        const targetsJoiner = friendsOfJoiner.filter(id => !exclude.has(id));
+        if (targetsHost.length > 0) {
+          sendPushToUsers(targetsHost, {
+            category: 'friend_live',
+            title: `${p1?.username || 'Your friend'} just started a battle`,
+            body: 'Tap to spectate or jump into your own.',
+            url: `/battles?live=${updated.id}`,
+            tag: `friend_live:${matchup.user1Id}:${updated.id}`,
+            data: { matchupId: updated.id, type: 'friend_live', friendId: matchup.user1Id },
+          }).catch(() => {});
+        }
+        if (targetsJoiner.length > 0) {
+          sendPushToUsers(targetsJoiner, {
+            category: 'friend_live',
+            title: `${p2?.username || 'Your friend'} just started a battle`,
+            body: 'Tap to spectate or jump into your own.',
+            url: `/battles?live=${updated.id}`,
+            tag: `friend_live:${userId}:${updated.id}`,
+            data: { matchupId: updated.id, type: 'friend_live', friendId: userId },
+          }).catch(() => {});
+        }
+      } catch (e) { console.error('[private friend_live push]', e.message); }
 
       return res.status(200).json({
         message: 'Joined match! Battle starting now.',

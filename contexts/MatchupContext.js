@@ -149,6 +149,11 @@ export function MatchupProvider({ children }) {
         // the result modal and final balances appear without
         // waiting for the next safety poll.
         fetchCurrentMatchup();
+        try {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('piks:firstBattleCompleted'));
+          }
+        } catch (_e) {}
       } else if (data?.type === 'matchup:pnl') {
         // Push-based live PnL. If the payload carries
         // mark-to-market live balances, merge them into local

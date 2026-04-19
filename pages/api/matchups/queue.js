@@ -3,6 +3,7 @@ import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { matchups, matchupQueue, fakeOpponents, profiles, userChallenges, poolParticipants, pikPools } from '../../../shared/schema';
 import { eq, and, ne, or, inArray } from 'drizzle-orm';
+const { sendPushToUsers, getAcceptedFriendIds } = require('../../../lib/web-push');
 
 const DURATION_CONFIGS = {
   '30_min': { minutes: 30, label: '30 Minutes' },
@@ -152,6 +153,38 @@ export default async function handler(req, res) {
           .select()
           .from(profiles)
           .where(eq(profiles.id, potentialMatch.userId));
+
+        // Friends going live: notify both players' friends.
+        try {
+          const [friendsOfA, friendsOfB] = await Promise.all([
+            getAcceptedFriendIds(potentialMatch.userId),
+            getAcceptedFriendIds(userId),
+          ]);
+          const exclude = new Set([potentialMatch.userId, userId]);
+          const targetsA = friendsOfA.filter(id => !exclude.has(id));
+          const targetsB = friendsOfB.filter(id => !exclude.has(id));
+          const [profA] = await db.select({ username: profiles.username }).from(profiles).where(eq(profiles.id, userId));
+          if (targetsA.length > 0) {
+            sendPushToUsers(targetsA, {
+              category: 'friend_live',
+              title: `${matchedProfile?.username || 'Your friend'} just started a battle`,
+              body: 'Tap to spectate or jump into your own.',
+              url: `/battles?live=${newMatchup.id}`,
+              tag: `friend_live:${potentialMatch.userId}:${newMatchup.id}`,
+              data: { matchupId: newMatchup.id, type: 'friend_live', friendId: potentialMatch.userId },
+            }).catch(() => {});
+          }
+          if (targetsB.length > 0) {
+            sendPushToUsers(targetsB, {
+              category: 'friend_live',
+              title: `${profA?.username || 'Your friend'} just started a battle`,
+              body: 'Tap to spectate or jump into your own.',
+              url: `/battles?live=${newMatchup.id}`,
+              tag: `friend_live:${userId}:${newMatchup.id}`,
+              data: { matchupId: newMatchup.id, type: 'friend_live', friendId: userId },
+            }).catch(() => {});
+          }
+        } catch (e) { console.error('[queue friend_live push]', e.message); }
 
         return res.status(200).json({
           status: 'matched',

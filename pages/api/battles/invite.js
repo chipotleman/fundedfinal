@@ -4,6 +4,7 @@ import { db } from '../../../lib/db';
 import { battleInvites, profiles, friendships } from '../../../shared/schema';
 import { eq, and, or, lt, gt, inArray } from 'drizzle-orm';
 const { publishBattleEvent } = require('../../../lib/battle-events');
+const { sendPushToUsers } = require('../../../lib/web-push');
 
 export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions);
@@ -184,6 +185,24 @@ export default async function handler(req, res) {
       try {
         publishBattleEvent(receiverId, { type: 'notification:invite' });
       } catch (_e) {}
+
+      // Fire push notification to the receiver in the background.
+      try {
+        const [senderProfile] = await db
+          .select({ username: profiles.username })
+          .from(profiles)
+          .where(eq(profiles.id, userId))
+          .limit(1);
+        const senderName = senderProfile?.username || 'A friend';
+        sendPushToUsers(receiverId, {
+          category: 'invite',
+          title: 'New battle invite',
+          body: `${senderName} challenged you to a $${parsedBuyIn} battle`,
+          url: '/battles?invite=' + newInvite.id,
+          tag: `invite:${newInvite.id}`,
+          data: { inviteId: newInvite.id, type: 'invite' },
+        }).catch(e => console.error('[invite push]', e.message));
+      } catch (e) { console.error('[invite push outer]', e.message); }
 
       return res.status(201).json({ 
         message: 'Battle invite sent',
