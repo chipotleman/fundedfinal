@@ -22,6 +22,7 @@ import SessionSummaryPopup from '../components/SessionSummaryPopup';
 import MyChallengePopup from '../components/MyChallengePopup';
 import MobileNavMenu from '../components/MobileNavMenu';
 import BetaLanding from '../components/BetaLanding';
+import PublicBattlePreview from '../components/PublicBattlePreview';
 import { useEventTracking } from '../hooks/useEventTracking';
 import { useRouter } from 'next/router';
 
@@ -348,6 +349,45 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
   ) : null;
 
   if (!betaAuthenticated && !isDebugPage && !isAdminPage && !isCheckoutPage) {
+    if (battlePreview) {
+      return (
+        <>
+          {battlePreviewHead}
+          <div
+            style={{
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100vh',
+              zIndex: -1,
+              backgroundColor: '#000000',
+            }}
+          />
+          <PublicBattlePreview
+            preview={battlePreview}
+            onJoinClick={() => {
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('beta_access', 'true');
+              }
+              setBetaAuthenticated(true);
+              setJustAuthenticated(true);
+              setAuthPopupMode('signup');
+              setShowAuthPopup(true);
+            }}
+            onLoginClick={() => {
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('beta_access', 'true');
+              }
+              setBetaAuthenticated(true);
+              setJustAuthenticated(true);
+              setAuthPopupMode('signin');
+              setShowAuthPopup(true);
+            }}
+          />
+        </>
+      );
+    }
     return (
       <>
         {battlePreviewHead}
