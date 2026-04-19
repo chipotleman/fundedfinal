@@ -62,37 +62,40 @@ export default async function handler(req, res) {
   }
   const userId = session.user.id;
 
+  const selfTest = req.query?.selfTest === '1' || req.query?.selfTest === 'true';
   const matchupId = req.query?.matchupId;
-  if (!matchupId || typeof matchupId !== 'string') {
+  if (!selfTest && (!matchupId || typeof matchupId !== 'string')) {
     return res.status(400).json({ error: 'matchupId required' });
   }
 
-  try {
-    const [matchup] = await db
-      .select({
-        id: matchups.id,
-        user1Id: matchups.user1Id,
-        user2Id: matchups.user2Id,
-        status: matchups.status,
-        isFakeOpponent: matchups.isFakeOpponent,
-      })
-      .from(matchups)
-      .where(eq(matchups.id, matchupId))
-      .limit(1);
+  if (!selfTest) {
+    try {
+      const [matchup] = await db
+        .select({
+          id: matchups.id,
+          user1Id: matchups.user1Id,
+          user2Id: matchups.user2Id,
+          status: matchups.status,
+          isFakeOpponent: matchups.isFakeOpponent,
+        })
+        .from(matchups)
+        .where(eq(matchups.id, matchupId))
+        .limit(1);
 
-    if (!matchup) return res.status(404).json({ error: 'Matchup not found' });
-    if (matchup.isFakeOpponent) {
-      return res.status(400).json({ error: 'Voice chat not available against bot opponents' });
+      if (!matchup) return res.status(404).json({ error: 'Matchup not found' });
+      if (matchup.isFakeOpponent) {
+        return res.status(400).json({ error: 'Voice chat not available against bot opponents' });
+      }
+      if (matchup.status !== 'active' && matchup.status !== 'matched') {
+        return res.status(400).json({ error: 'Matchup is not active' });
+      }
+      if (userId !== matchup.user1Id && userId !== matchup.user2Id) {
+        return res.status(403).json({ error: 'Not a participant in this matchup' });
+      }
+    } catch (err) {
+      console.error('ice-servers: matchup check failed', err);
+      return res.status(500).json({ error: 'Failed to verify matchup' });
     }
-    if (matchup.status !== 'active' && matchup.status !== 'matched') {
-      return res.status(400).json({ error: 'Matchup is not active' });
-    }
-    if (userId !== matchup.user1Id && userId !== matchup.user2Id) {
-      return res.status(403).json({ error: 'Not a participant in this matchup' });
-    }
-  } catch (err) {
-    console.error('ice-servers: matchup check failed', err);
-    return res.status(500).json({ error: 'Failed to verify matchup' });
   }
 
   const iceServers = [...DEFAULT_STUN];

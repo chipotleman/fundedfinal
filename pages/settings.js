@@ -2,6 +2,7 @@ import { useState } from 'react';
 import TopNavbar from '../components/TopNavbar';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import PushSettingsSection from '../components/notifications/PushSettingsSection';
+import VoiceChatTest from '../components/settings/VoiceChatTest';
 
 export default function Settings() {
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
@@ -50,6 +51,9 @@ export default function Settings() {
 
           {/* Push Notifications */}
           <PushSettingsSection />
+
+          {/* Voice Chat Self-Test */}
+          <VoiceChatTest />
 
           {/* Notifications */}
           <div className="bg-[#111] backdrop-blur-lg rounded-2xl border border-[#1a1a1a] p-8 mb-8">
