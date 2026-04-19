@@ -93,7 +93,10 @@ export default function UserAvatar({
 }) {
   const resolvedAvatar = avatar !== undefined ? avatar : user?.avatar;
   const resolvedUsername = username !== undefined ? username : (user?.username || user?.name);
-  const resolvedFrameId = frameId !== undefined ? frameId : user?.frameId;
+  const resolvedFrameId =
+    frameId !== undefined
+      ? frameId
+      : (user?.frameId ?? user?.equippedFrame ?? null);
   const frame = frameProp || getFrameById(resolvedFrameId) || null;
 
   const seedColor = colorForUser({ id: user?.id, username: resolvedUsername });
