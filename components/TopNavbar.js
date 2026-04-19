@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import { useSession, signOut } from 'next-auth/react';
 import BalanceModal from './BalanceModal';
 import WithdrawModal from './WithdrawModal';
+import BalanceExplainerModal from './BalanceExplainerModal';
 import { useMatchup } from '../contexts/MatchupContext';
 import { useNotifications } from '../contexts/NotificationsContext';
 import NotificationsDropdown from './notifications/NotificationsDropdown';
@@ -14,6 +15,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [explainerType, setExplainerType] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
@@ -23,7 +25,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
   const navRef = useRef(null);
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { hasActiveMatchup, myBalance: matchupBalance } = useMatchup();
+  const { hasActiveMatchup, myBalance: matchupBalance, matchup: activeMatchup, opponent: activeOpponent } = useMatchup();
   const { counts: notifCounts } = useNotifications();
   const notifTotal = notifCounts?.total || 0;
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
@@ -525,28 +527,39 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
 
             {/* Right Side - Desktop: Bankroll + Bet Slip + Buttons, Mobile: Hamburger + Bet Slip */}
             <div className="flex items-center space-x-2 sm:space-x-4 absolute right-3 sm:relative sm:right-0">
-              {/* Desktop Bankroll - Always show when logged in */}
-              {isLoggedIn && (
-                <div className="hidden sm:flex items-center space-x-4">
-                  {hasActiveChallenge && userProfile ? (
-                    <div className="rounded-lg px-3 py-2 transition-colors" style={{ backgroundColor: '#111111', borderWidth: 1, borderColor: 'rgba(55, 65, 81, 0.5)' }}>
-                      <button
-                        onClick={() => router.push('/bet-history')}
-                        className="flex items-center space-x-2"
-                      >
-                        <svg className="w-4 h-4" style={{ color: '#ffffff' }} fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
-                        </svg>
-                        <span className="font-bold text-sm" style={{ color: '#ffffff' }}>
-                          {hasActiveMatchup && matchupBalance != null
-                            ? <><span className="text-orange-400">⚔</span> ${formatMoney(parseFloat(matchupBalance), 0)}</>
-                            : `$${formatMoney(parseFloat(userProfile.bankroll), 0)}`
-                          }
-                        </span>
-                      </button>
-                    </div>
-                  ) : null}
+              {/* Desktop Balances - Cash (always) + Coins (only when in active battle) */}
+              {isLoggedIn && hasActiveChallenge && userProfile && (
+                <div className="hidden sm:flex items-center gap-2">
+                  <button
+                    onClick={() => setExplainerType('cash')}
+                    title="Real cash balance — click for details"
+                    className="flex items-center gap-1.5 rounded-lg px-3 py-2 transition-colors hover:brightness-110"
+                    style={{
+                      background: 'linear-gradient(180deg, rgba(34,197,94,0.15) 0%, rgba(21,128,61,0.08) 100%)',
+                      border: '1px solid rgba(34,197,94,0.45)',
+                    }}
+                  >
+                    <span className="text-base leading-none">💵</span>
+                    <span className="font-bold text-sm" style={{ color: '#86efac' }}>
+                      ${formatMoney(parseFloat(userProfile.bankroll), 0)}
+                    </span>
+                  </button>
+                  {hasActiveMatchup && matchupBalance != null && (
+                    <button
+                      onClick={() => setExplainerType('coins')}
+                      title="In-battle play coins — click for details"
+                      className="flex items-center gap-1.5 rounded-lg px-3 py-2 transition-colors hover:brightness-110"
+                      style={{
+                        background: 'linear-gradient(180deg, rgba(251,146,60,0.15) 0%, rgba(194,65,12,0.08) 100%)',
+                        border: '1px solid rgba(251,146,60,0.45)',
+                      }}
+                    >
+                      <span className="text-base leading-none" style={{ color: '#fb923c' }}>⚔</span>
+                      <span className="font-bold text-sm" style={{ color: '#fed7aa' }}>
+                        {formatMoney(parseFloat(matchupBalance), 0)}
+                      </span>
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -587,37 +600,46 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                 </div>
               )}
 
-              {/* Mobile Bankroll - compact pill, always visible when logged in */}
-              {isLoggedIn && (() => {
-                const showMatchup = hasActiveMatchup && matchupBalance != null;
-                const bankrollNum = userProfile?.bankroll != null ? parseFloat(userProfile.bankroll) : null;
-                const displayValue = showMatchup
-                  ? parseFloat(matchupBalance)
-                  : (Number.isFinite(bankrollNum) ? bankrollNum : null);
-                if (displayValue == null) return null;
+              {/* Mobile Balances - compact pills */}
+              {isLoggedIn && userProfile?.bankroll != null && (() => {
+                const cashNum = parseFloat(userProfile.bankroll);
+                const showCoins = hasActiveMatchup && matchupBalance != null;
                 return (
-                  <button
-                    onClick={() => router.push('/bet-history')}
-                    className="sm:hidden flex items-center gap-1 rounded-md px-2 py-1.5 transition-colors"
-                    style={{
-                      backgroundColor: '#111111',
-                      borderWidth: 1,
-                      borderColor: 'rgba(55, 65, 81, 0.5)',
-                      marginRight: betSlipCount > 0 ? 0 : 60,
-                    }}
+                  <div
+                    className="sm:hidden flex items-center gap-1"
+                    style={{ marginRight: betSlipCount > 0 ? 0 : 60 }}
                   >
-                    {showMatchup ? (
-                      <span className="text-orange-400 text-xs leading-none">⚔</span>
-                    ) : (
-                      <svg className="w-3.5 h-3.5" style={{ color: '#ffffff' }} fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M8.433 7.418c.155-.103.346-.196.567-.267v1.698a2.305 2.305 0 01-.567-.267C8.07 8.34 8 8.114 8 8c0-.114.07-.34.433-.582zM11 12.849v-1.698c.22.071.412.164.567.267.364.243.433.468.433.582 0 .114-.07.34-.433.582a2.305 2.305 0 01-.567.267z" />
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-13a1 1 0 10-2 0v.092a4.535 4.535 0 00-1.676.662C6.602 6.234 6 7.009 6 8c0 .99.602 1.765 1.324 2.246.48.32 1.054.545 1.676.662v1.941c-.391-.127-.68-.317-.843-.504a1 1 0 10-1.51 1.31c.562.649 1.413 1.076 2.353 1.253V15a1 1 0 102 0v-.092a4.535 4.535 0 001.676-.662C13.398 13.766 14 12.991 14 12c0-.99-.602-1.765-1.324-2.246A4.535 4.535 0 0011 9.092V7.151c.391.127.68.317.843.504a1 1 0 101.511-1.31c-.563-.649-1.413-1.076-2.354-1.253V5z" clipRule="evenodd" />
-                      </svg>
+                    <button
+                      onClick={() => setExplainerType('cash')}
+                      className="flex items-center gap-1 rounded-md px-2 py-1.5"
+                      style={{
+                        background: 'linear-gradient(180deg, rgba(34,197,94,0.15) 0%, rgba(21,128,61,0.08) 100%)',
+                        border: '1px solid rgba(34,197,94,0.45)',
+                      }}
+                      aria-label="Cash balance details"
+                    >
+                      <span className="text-xs leading-none">💵</span>
+                      <span className="font-bold text-xs whitespace-nowrap" style={{ color: '#86efac' }}>
+                        ${formatMoney(cashNum, 0)}
+                      </span>
+                    </button>
+                    {showCoins && (
+                      <button
+                        onClick={() => setExplainerType('coins')}
+                        className="flex items-center gap-1 rounded-md px-2 py-1.5"
+                        style={{
+                          background: 'linear-gradient(180deg, rgba(251,146,60,0.15) 0%, rgba(194,65,12,0.08) 100%)',
+                          border: '1px solid rgba(251,146,60,0.45)',
+                        }}
+                        aria-label="Battle coins details"
+                      >
+                        <span className="text-xs leading-none" style={{ color: '#fb923c' }}>⚔</span>
+                        <span className="font-bold text-xs whitespace-nowrap" style={{ color: '#fed7aa' }}>
+                          {formatMoney(parseFloat(matchupBalance), 0)}
+                        </span>
+                      </button>
                     )}
-                    <span className="font-bold text-xs whitespace-nowrap" style={{ color: '#ffffff' }}>
-                      ${formatMoney(displayValue, 0)}
-                    </span>
-                  </button>
+                  </div>
                 );
               })()}
 
@@ -786,6 +808,16 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
           bankroll={parseFloat(userProfile.bankroll)}
         />
       )}
+
+      <BalanceExplainerModal
+        type={explainerType || 'cash'}
+        isOpen={!!explainerType}
+        onClose={() => setExplainerType(null)}
+        cashBalance={userProfile?.bankroll}
+        coinsBalance={matchupBalance}
+        matchup={activeMatchup}
+        opponent={activeOpponent}
+      />
 
       <style jsx>{`
         @keyframes logoRedYellowGlow {
