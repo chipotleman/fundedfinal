@@ -1,9 +1,10 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import TopNavbar from '../components/TopNavbar';
 import { useNotifications } from '../contexts/NotificationsContext';
 import MessagesPanel from '../components/messages/MessagesPanel';
+import PlayFriendModal from '../components/battle/PlayFriendModal';
 
 export default function MessengerPage() {
   const router = useRouter();
@@ -11,9 +12,36 @@ export default function MessengerPage() {
   const ctx = useNotifications();
 
   const [selectedId, setSelectedId] = useState(null);
+  const [battleFriend, setBattleFriend] = useState(null);
+  const [inviteConfirmation, setInviteConfirmation] = useState(null);
+  const confirmTimerRef = useRef(null);
 
   const myId = session?.user?.id;
   const isAuthed = status === 'authenticated';
+
+  const handleStartBattle = useCallback((friend) => {
+    if (!friend?.id) return;
+    setBattleFriend(friend);
+  }, []);
+
+  const handleCloseBattle = useCallback(() => {
+    setBattleFriend(null);
+  }, []);
+
+  const handleInviteSent = useCallback((sentFriend) => {
+    const friend = sentFriend || battleFriend;
+    setBattleFriend(null);
+    if (!friend?.id) return;
+    setInviteConfirmation({ friendId: friend.id, username: friend.username, at: Date.now() });
+    if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
+    confirmTimerRef.current = setTimeout(() => setInviteConfirmation(null), 4000);
+  }, [battleFriend]);
+
+  useEffect(() => {
+    return () => {
+      if (confirmTimerRef.current) clearTimeout(confirmTimerRef.current);
+    };
+  }, []);
 
   // Pre-select a conversation from ?chat=<id>.
   useEffect(() => {
@@ -107,9 +135,18 @@ export default function MessengerPage() {
             ctx={ctx}
             myId={myId}
             variant="fullpage"
+            onStartBattle={handleStartBattle}
+            inviteConfirmation={inviteConfirmation}
           />
         </div>
       </div>
+      <PlayFriendModal
+        isOpen={!!battleFriend}
+        onClose={handleCloseBattle}
+        friends={battleFriend ? [battleFriend] : []}
+        lockedFriend={battleFriend}
+        onInviteSent={handleInviteSent}
+      />
     </div>
   );
 }

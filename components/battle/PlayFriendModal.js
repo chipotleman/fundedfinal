@@ -23,7 +23,7 @@ function UserAvatar({ user, size = 36 }) {
   return <SharedUserAvatar user={user} size={size} />;
 }
 
-export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onSwitchToPrivate, initialFriend = null }) {
+export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onSwitchToPrivate, initialFriend = null, lockedFriend = null }) {
   const router = useRouter();
   const profileCache = useProfileCacheOptional();
   useModalScrollLock(isOpen);
@@ -64,11 +64,14 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
       setInviteCountdown(0);
       setActiveTab('friends');
       if (countdownRef.current) clearInterval(countdownRef.current);
+    } else if (lockedFriend) {
+      setSelectedFriend(lockedFriend);
+      setActiveTab('friends');
     } else if (initialFriend) {
       setSelectedFriend(initialFriend);
       setActiveTab('friends');
     }
-  }, [isOpen, initialFriend]);
+  }, [isOpen, initialFriend, lockedFriend]);
 
   useEffect(() => {
     return () => {
@@ -150,7 +153,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
           return prev - 1;
         });
       }, 1000);
-      if (onInviteSent) onInviteSent();
+      if (onInviteSent) onInviteSent(selectedFriend);
     } catch {
       setError('Network error. Please try again.');
     } finally {
@@ -264,7 +267,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
             </button>
           </div>
 
-          {!sent && (
+          {!sent && !lockedFriend && (
             <div className="flex gap-1 p-1 rounded-xl mb-4" style={{ backgroundColor: elevatedBg }}>
               {TABS.map(tab => (
                 <button
@@ -319,7 +322,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-400 text-sm mb-4 pfm-fade-in">{error}</div>
             )}
 
-            {activeTab === 'friends' && (
+            {activeTab === 'friends' && !lockedFriend && (
               <div className="space-y-3 pfm-fade-in">
                 {friends.length > 3 && (
                   <div className="relative">
@@ -625,7 +628,9 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                   <div className="flex-1 min-w-0">
                     <span className="text-sm font-semibold" style={{ color: textPrimary }}>Challenging {selectedFriend.username}</span>
                   </div>
-                  <button onClick={() => setSelectedFriend(null)} className="text-xs" style={{ color: textMuted }}>Change</button>
+                  {!lockedFriend && (
+                    <button onClick={() => setSelectedFriend(null)} className="text-xs" style={{ color: textMuted }}>Change</button>
+                  )}
                 </div>
 
                 <div>

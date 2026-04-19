@@ -60,7 +60,7 @@ function VoiceBubble({ url, durationMs, mine }) {
   );
 }
 
-function ConversationThread({ friend, ctx, myId }) {
+function ConversationThread({ friend, ctx, myId, onStartBattle, inviteConfirmation }) {
   const [thread, setThread] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -489,7 +489,47 @@ function ConversationThread({ friend, ctx, myId }) {
             )}
           </div>
         </div>
+        {onStartBattle && (
+          <>
+            <button
+              type="button"
+              onClick={() => onStartBattle(friend)}
+              className="sm:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg text-purple-300 transition-colors flex-shrink-0"
+              style={{ backgroundColor: 'rgba(147,51,234,0.12)', border: '1px solid rgba(147,51,234,0.3)' }}
+              title="Start Battle"
+              aria-label={`Start battle with ${friend?.username || 'friend'}`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => onStartBattle(friend)}
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-purple-200 transition-colors flex-shrink-0"
+              style={{ backgroundColor: 'rgba(147,51,234,0.15)', border: '1px solid rgba(147,51,234,0.35)' }}
+              aria-label={`Start battle with ${friend?.username || 'friend'}`}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              Start Battle
+            </button>
+          </>
+        )}
       </div>
+      {inviteConfirmation && inviteConfirmation.friendId === friend?.id && (
+        <div
+          className="mx-4 mt-3 px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-2 flex-shrink-0"
+          style={{ backgroundColor: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)', color: '#34d399' }}
+          role="status"
+        >
+          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span>Battle invite sent to {friend?.username || 'your friend'}.</span>
+        </div>
+      )}
 
       <div
         ref={scrollRef}
@@ -829,6 +869,8 @@ export default function MessagesPanel({
   myId,
   variant = 'card', // 'card' | 'fullpage'
   minHeight = 520,
+  onStartBattle,
+  inviteConfirmation,
 }) {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -1071,6 +1113,8 @@ export default function MessagesPanel({
             friend={selectedFriend}
             ctx={ctx}
             myId={myId}
+            onStartBattle={onStartBattle}
+            inviteConfirmation={inviteConfirmation}
           />
         ) : selectedId && !loading && !friendsError ? (
           <NotFriendsCard
