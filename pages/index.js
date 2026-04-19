@@ -19,6 +19,7 @@ import { useGames } from '../contexts/GamesContext';
 import { useMatchup } from '../contexts/MatchupContext';
 import { categorizeGames, filterGamesBySport } from '../lib/gamesUtils';
 import { useGoalserveLive } from '../hooks/useGoalserveLive';
+import useModalScrollLock from '../hooks/useModalScrollLock';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -35,22 +36,7 @@ export default function Dashboard() {
 
   const battleStartedRetryRef = useRef(null);
 
-  useEffect(() => {
-    if (showBattleWalkthrough) {
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.width = '';
-        document.body.style.overflow = '';
-        window.scrollTo(0, scrollY);
-      };
-    }
-  }, [showBattleWalkthrough]);
+  useModalScrollLock(showBattleWalkthrough, { restoreScroll: true });
 
   useEffect(() => {
     if (router.query.battleStarted !== 'true') return;
@@ -1042,7 +1028,7 @@ export default function Dashboard() {
       />
 
       {showBattleWalkthrough && hasActiveMatchup && matchup && (
-        <div className="fixed inset-0 z-[9999] flex items-start justify-center p-4 pt-4 sm:pt-6 overflow-y-auto" style={{ backgroundColor: isDarkMode ? 'rgba(0,0,0,0.88)' : 'rgba(0,0,0,0.4)' }}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto" style={{ backgroundColor: isDarkMode ? 'rgba(0,0,0,0.88)' : 'rgba(0,0,0,0.4)' }}>
           <style>{`
             @keyframes wtSlideUp {
               from { opacity: 0; transform: translateY(30px) scale(0.95); }
@@ -1058,7 +1044,7 @@ export default function Dashboard() {
             }
           `}</style>
           <div 
-            className="w-full max-w-[380px] rounded-2xl overflow-hidden"
+            className="w-full max-w-[380px] my-auto rounded-2xl overflow-hidden"
             style={{ 
               background: isDarkMode ? 'linear-gradient(180deg, #0a1628 0%, #0d0d0d 100%)' : '#ffffff',
               border: isDarkMode ? '2px solid rgba(59, 130, 246, 0.4)' : '1px solid #e5e7eb',

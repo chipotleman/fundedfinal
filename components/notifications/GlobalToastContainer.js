@@ -16,13 +16,14 @@ export default function GlobalToastContainer() {
 
   return ReactDOM.createPortal(
     <div
-      className="fixed z-[80] flex flex-col gap-2 pointer-events-none"
+      className="fixed z-[80] flex flex-col gap-2 pointer-events-none toast-stack"
       style={{
         top: 'calc(var(--top-nav-height, 70px) + 12px)',
-        right: 12,
         left: 12,
+        right: 12,
         maxWidth: 360,
         marginLeft: 'auto',
+        marginRight: 'auto',
       }}
     >
       {toasts.map(t => (
@@ -30,10 +31,16 @@ export default function GlobalToastContainer() {
           <Toast toast={t} ctx={ctx} router={router} />
         </div>
       ))}
-      <style jsx>{`
+      <style>{`
         @keyframes notifSlideIn {
-          from { transform: translateX(120%); opacity: 0; }
-          to { transform: translateX(0); opacity: 1; }
+          from { transform: translateY(-120%); opacity: 0; }
+          to { transform: translateY(0); opacity: 1; }
+        }
+        @media (min-width: 640px) {
+          .toast-stack {
+            margin-left: auto !important;
+            margin-right: 0 !important;
+          }
         }
       `}</style>
     </div>,

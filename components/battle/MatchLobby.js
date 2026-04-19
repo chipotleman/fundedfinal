@@ -149,7 +149,7 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
         }
       `}</style>
 
-      <div className={`fixed inset-0 z-50 flex items-start justify-center pt-10 px-4 pb-4 overflow-y-auto`} style={{ background: isDarkMode ? '#050a15' : '#f5f5f5' }}>
+      <div className={`fixed inset-0 z-50 flex items-center justify-center px-4 py-6 overflow-y-auto`} style={{ background: isDarkMode ? '#050a15' : '#f5f5f5' }}>
         <div className="absolute inset-0" style={{
           background: isDarkMode
             ? `radial-gradient(ellipse at 25% 30%, rgba(${theme.rgb},0.08) 0%, transparent 50%), radial-gradient(ellipse at 75% 30%, rgba(251,146,60,0.08) 0%, transparent 50%)`
@@ -157,7 +157,7 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
           animation: 'bgPulse 3s ease-in-out infinite',
         }} />
 
-        <div className="max-w-lg w-full text-center relative z-10">
+        <div className="max-w-lg w-full my-auto text-center relative z-10">
           <div className="lobby-label mb-1">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full" style={{ background: `rgba(${theme.rgb},0.15)` }}>
               <span className="text-xs">{theme.icon}</span>
