@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
@@ -34,6 +34,14 @@ export default function PublicProfile() {
   const [battleInviteLoading, setBattleInviteLoading] = useState(false);
   const [inviteBuyIn, setInviteBuyIn] = useState(100);
   const [inviteDuration, setInviteDuration] = useState(24);
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [usernameDraft, setUsernameDraft] = useState('');
+  const [editingBio, setEditingBio] = useState(false);
+  const [bioDraft, setBioDraft] = useState('');
+  const [savingInline, setSavingInline] = useState(null);
+  const [inlineError, setInlineError] = useState(null);
+  const avatarFileRef = useRef(null);
+  const bannerFileRef = useRef(null);
   
   const { betSlip } = useBetSlip();
   const { data: session } = useSession();
@@ -42,6 +50,9 @@ export default function PublicProfile() {
 
   useEffect(() => {
     if (id) {
+      setEditingUsername(false);
+      setEditingBio(false);
+      setInlineError(null);
       fetchProfile();
       if (session?.user?.id && session.user.id !== id) {
         checkFriendStatus();
@@ -280,6 +291,139 @@ export default function PublicProfile() {
     reader.readAsDataURL(file);
   };
 
+  const uploadFileToObjectStorage = async (file) => {
+    if (!file.type.startsWith('image/')) {
+      throw new Error('Please choose an image file');
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error('Image must be smaller than 5MB');
+    }
+    const urlRes = await fetch('/api/uploads/request-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
+    });
+    if (!urlRes.ok) {
+      const data = await urlRes.json().catch(() => ({}));
+      throw new Error(data.error || 'Could not start upload');
+    }
+    const { uploadURL, objectPath } = await urlRes.json();
+    const putRes = await fetch(uploadURL, {
+      method: 'PUT',
+      body: file,
+      headers: { 'Content-Type': file.type },
+    });
+    if (!putRes.ok) throw new Error('Upload failed');
+    return objectPath;
+  };
+
+  const persistProfile = async (payload) => {
+    const res = await fetch('/api/profiles/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Could not save changes');
+    }
+    return res.json();
+  };
+
+  const handleInlineAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setSavingInline('avatar');
+    setInlineError(null);
+    try {
+      const path = await uploadFileToObjectStorage(file);
+      await persistProfile({ avatar: path });
+      setProfile((p) => ({ ...p, avatar: path }));
+      setFormData((f) => ({ ...f, avatar: path }));
+    } catch (err) {
+      setInlineError(err.message);
+    } finally {
+      setSavingInline(null);
+    }
+  };
+
+  const handleInlineBannerChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setSavingInline('banner');
+    setInlineError(null);
+    try {
+      const path = await uploadFileToObjectStorage(file);
+      await persistProfile({ bannerUrl: path });
+      setProfile((p) => ({ ...p, bannerUrl: path }));
+      setFormData((f) => ({ ...f, bannerUrl: path }));
+    } catch (err) {
+      setInlineError(err.message);
+    } finally {
+      setSavingInline(null);
+    }
+  };
+
+  const startEditUsername = () => {
+    setUsernameDraft(profile?.username || '');
+    setInlineError(null);
+    setEditingUsername(true);
+  };
+
+  const saveUsername = async () => {
+    const next = usernameDraft.trim();
+    if (!next) {
+      setInlineError('Username cannot be empty');
+      return;
+    }
+    if (next === (profile?.username || '')) {
+      setEditingUsername(false);
+      return;
+    }
+    setSavingInline('username');
+    setInlineError(null);
+    try {
+      await persistProfile({ username: next });
+      setProfile((p) => ({ ...p, username: next }));
+      setFormData((f) => ({ ...f, username: next }));
+      setEditingUsername(false);
+    } catch (err) {
+      setInlineError(err.message);
+    } finally {
+      setSavingInline(null);
+    }
+  };
+
+  const startEditBio = () => {
+    setBioDraft(profile?.bio || '');
+    setInlineError(null);
+    setEditingBio(true);
+  };
+
+  const saveBio = async () => {
+    const next = bioDraft.trim();
+    if (next === (profile?.bio || '')) {
+      setEditingBio(false);
+      return;
+    }
+    setSavingInline('bio');
+    setInlineError(null);
+    try {
+      await persistProfile({ bio: next });
+      setProfile((p) => ({ ...p, bio: next }));
+      setFormData((f) => ({ ...f, bio: next }));
+      setEditingBio(false);
+    } catch (err) {
+      setInlineError(err.message);
+    } finally {
+      setSavingInline(null);
+    }
+  };
+
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -337,14 +481,43 @@ export default function PublicProfile() {
       <div className="pt-16 pb-24 px-4 max-w-4xl mx-auto">
         <div className="rounded-2xl overflow-hidden mb-6" style={{ backgroundColor: '#0d0d0d', border: `1px solid ${'#1a1a1a'}`, boxShadow: 'none' }}>
           <div
-            className="relative w-full"
+            className={`relative w-full group ${isOwnProfile ? 'cursor-pointer' : ''}`}
             style={{
               height: '160px',
               background: profile.bannerUrl
                 ? `url(${profile.bannerUrl}) center/cover`
                 : 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
             }}
-          />
+            onClick={isOwnProfile ? () => bannerFileRef.current?.click() : undefined}
+            role={isOwnProfile ? 'button' : undefined}
+            aria-label={isOwnProfile ? 'Change cover photo' : undefined}
+          >
+            {isOwnProfile && (
+              <>
+                <input
+                  ref={bannerFileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleInlineBannerChange}
+                />
+                <div className={`absolute inset-0 bg-black/40 transition-opacity flex items-center justify-center ${profile.bannerUrl ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/60 text-white text-xs font-semibold">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {savingInline === 'banner' ? 'Uploading...' : (profile.bannerUrl ? 'Change cover' : 'Add cover photo')}
+                  </div>
+                </div>
+                {savingInline === 'banner' && (
+                  <div className="absolute top-2 right-2 px-2 py-1 rounded bg-black/70 text-white text-[10px] font-semibold">
+                    Saving...
+                  </div>
+                )}
+              </>
+            )}
+          </div>
           <div className="p-6 sm:p-8 -mt-12 relative">
             {editing ? (
               <ProfileEditPanel
@@ -373,10 +546,13 @@ export default function PublicProfile() {
             <div className="flex flex-col md:flex-row items-center md:items-start gap-5">
               <div className="relative">
                 <div
-                  className="rounded-full p-1"
+                  className={`rounded-full p-1 group relative ${isOwnProfile ? 'cursor-pointer' : ''}`}
                   style={{
                     backgroundColor: '#0d0d0d',
                   }}
+                  onClick={isOwnProfile ? () => avatarFileRef.current?.click() : undefined}
+                  role={isOwnProfile ? 'button' : undefined}
+                  aria-label={isOwnProfile ? 'Change profile picture' : undefined}
                 >
                   <UserAvatar
                     avatar={profile.avatar}
@@ -388,6 +564,28 @@ export default function PublicProfile() {
                     isOnline={!profile.isFakeOpponent && !!profile.isOnline}
                     onlineDotBorderColor={'#0d0d0d'}
                   />
+                  {isOwnProfile && (
+                    <>
+                      <input
+                        ref={avatarFileRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleInlineAvatarChange}
+                      />
+                      <div className="absolute inset-1 rounded-full bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+                        <span className="text-white text-[10px] font-semibold text-center px-1">
+                          {savingInline === 'avatar' ? 'Saving...' : (profile.avatar ? 'Change' : 'Add photo')}
+                        </span>
+                      </div>
+                      <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-blue-600 border-2 border-[#0d0d0d] flex items-center justify-center pointer-events-none">
+                        <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </div>
+                    </>
+                  )}
                 </div>
                 {winRate >= 60 && (
                   <div className="absolute -bottom-1 -right-1 bg-yellow-500 text-black text-[9px] font-bold px-1.5 py-0.5 rounded-full">
@@ -398,9 +596,48 @@ export default function PublicProfile() {
 
               <div className="flex-1 text-center md:text-left">
                 <>
-                  <h1 className={`text-2xl font-black mb-1 ${'text-white'}`}>
-                    {profile.username || 'Anonymous'}
-                  </h1>
+                  {editingUsername ? (
+                    <div className="flex items-center gap-2 mb-1 justify-center md:justify-start">
+                      <input
+                        type="text"
+                        value={usernameDraft}
+                        onChange={(e) => setUsernameDraft(e.target.value)}
+                        autoFocus
+                        maxLength={32}
+                        className="bg-[#111] border border-[#1a1a1a] rounded-lg px-3 py-1.5 text-white text-xl font-bold focus:outline-none focus:border-blue-500"
+                      />
+                      <button
+                        onClick={saveUsername}
+                        disabled={savingInline === 'username'}
+                        className="bg-blue-600 disabled:opacity-40 text-white text-xs font-semibold py-1.5 px-3 rounded-lg"
+                      >
+                        {savingInline === 'username' ? '...' : 'Save'}
+                      </button>
+                      <button
+                        onClick={() => { setEditingUsername(false); setInlineError(null); }}
+                        className="text-gray-400 text-xs font-semibold py-1.5 px-3 rounded-lg bg-[#111] border border-[#1a1a1a]"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 mb-1 justify-center md:justify-start">
+                      <h1 className={`text-2xl font-black ${'text-white'}`}>
+                        {profile.username || 'Anonymous'}
+                      </h1>
+                      {isOwnProfile && (
+                        <button
+                          onClick={startEditUsername}
+                          className="text-gray-500 hover:text-blue-400 transition-colors p-1"
+                          aria-label="Edit username"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  )}
                   {!profile.isFakeOpponent && (
                     <div className="mb-2 flex justify-center md:justify-start">
                       <ActiveStatus
@@ -410,7 +647,53 @@ export default function PublicProfile() {
                       />
                     </div>
                   )}
-                  <p className="text-gray-500 text-sm mb-3">{profile.bio || 'No bio yet'}</p>
+                  {editingBio ? (
+                    <div className="mb-3">
+                      <textarea
+                        value={bioDraft}
+                        onChange={(e) => setBioDraft(e.target.value)}
+                        autoFocus
+                        maxLength={200}
+                        rows={3}
+                        className="w-full bg-[#111] border border-[#1a1a1a] rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500 resize-none"
+                        placeholder="Tell people about yourself..."
+                      />
+                      <div className="flex items-center gap-2 mt-2 justify-center md:justify-start">
+                        <button
+                          onClick={saveBio}
+                          disabled={savingInline === 'bio'}
+                          className="bg-blue-600 disabled:opacity-40 text-white text-xs font-semibold py-1.5 px-3 rounded-lg"
+                        >
+                          {savingInline === 'bio' ? '...' : 'Save'}
+                        </button>
+                        <button
+                          onClick={() => { setEditingBio(false); setInlineError(null); }}
+                          className="text-gray-400 text-xs font-semibold py-1.5 px-3 rounded-lg bg-[#111] border border-[#1a1a1a]"
+                        >
+                          Cancel
+                        </button>
+                        <span className="text-[10px] text-gray-500 ml-auto">{bioDraft.length}/200</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-start gap-2 mb-3 justify-center md:justify-start">
+                      <p className="text-gray-500 text-sm">{profile.bio || (isOwnProfile ? 'Add a bio' : 'No bio yet')}</p>
+                      {isOwnProfile && (
+                        <button
+                          onClick={startEditBio}
+                          className="text-gray-500 hover:text-blue-400 transition-colors p-1 mt-[-2px]"
+                          aria-label="Edit bio"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  {isOwnProfile && inlineError && (
+                    <p className="text-red-400 text-xs mb-2">{inlineError}</p>
+                  )}
                   {(() => {
                     const equipped = profile.equippedFrame ? getFrameById(profile.equippedFrame) : null;
                     if (!equipped) return null;
