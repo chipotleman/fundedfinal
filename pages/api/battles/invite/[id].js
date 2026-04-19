@@ -15,6 +15,41 @@ export default async function handler(req, res) {
   const userId = session.user.id;
   const { id } = req.query;
 
+  if (req.method === 'GET') {
+    try {
+      const rows = await db
+        .select({
+          id: battleInvites.id,
+          senderId: battleInvites.senderId,
+          receiverId: battleInvites.receiverId,
+          status: battleInvites.status,
+          expiresAt: battleInvites.expiresAt,
+          respondedAt: battleInvites.respondedAt,
+        })
+        .from(battleInvites)
+        .where(eq(battleInvites.id, id))
+        .limit(1);
+
+      if (rows.length === 0) {
+        return res.status(404).json({ error: 'Battle invite not found' });
+      }
+      const row = rows[0];
+      if (row.senderId !== userId && row.receiverId !== userId) {
+        return res.status(403).json({ error: 'Not your invite' });
+      }
+      // Reflect server-side expiry without writing — the existing accept path
+      // and the notifications cleanup already persist the state transition.
+      let status = row.status;
+      if (status === 'pending' && row.expiresAt && new Date(row.expiresAt) < new Date()) {
+        status = 'expired';
+      }
+      return res.status(200).json({ invite: { ...row, status } });
+    } catch (error) {
+      console.error('Error fetching battle invite:', error);
+      return res.status(500).json({ error: 'Failed to fetch battle invite' });
+    }
+  }
+
   if (req.method === 'PATCH') {
     const { action } = req.body;
 

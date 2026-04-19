@@ -174,6 +174,33 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
     }
   };
 
+  const dispatchInviteEnded = (reason, friendForEvent = selectedFriend) => {
+    if (typeof window === 'undefined') return;
+    if (!friendForEvent?.id) return;
+    window.dispatchEvent(new CustomEvent('piks:invite:ended', {
+      detail: {
+        otherUserId: friendForEvent.id,
+        otherUsername: friendForEvent.username || null,
+        reason,
+      },
+    }));
+  };
+
+  const finishWaiting = (reason) => {
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    dispatchInviteEnded(reason);
+    setSent(false);
+    setSentInviteId(null);
+    setInviteCountdown(0);
+    if (lockedFriend) {
+      onClose();
+    } else {
+      setSelectedFriend(null);
+      setActiveTab('friends');
+    }
+    if (onInviteCancelled) onInviteCancelled();
+  };
+
   const cancelInvite = async () => {
     if (!sentInviteId || cancelling) return;
     setCancelling(true);
@@ -189,23 +216,60 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
         setError(data.error || 'Failed to cancel invite');
         return;
       }
-      if (countdownRef.current) clearInterval(countdownRef.current);
-      setSent(false);
-      setSentInviteId(null);
-      setInviteCountdown(0);
-      if (lockedFriend) {
-        onClose();
-      } else {
-        setSelectedFriend(null);
-        setActiveTab('friends');
-      }
-      if (onInviteCancelled) onInviteCancelled();
+      finishWaiting('cancelled');
     } catch {
       setError('Network error. Please try again.');
     } finally {
       setCancelling(false);
     }
   };
+
+  // While the waiting screen is showing, poll the invite so we can detect
+  // a decline (the recipient pressed "decline") or a server-side expiry and
+  // surface a quiet note in the conversation header — instead of the modal
+  // silently sitting on "Waiting…" forever.
+  useEffect(() => {
+    if (!sent || !sentInviteId) return undefined;
+    let cancelledLocal = false;
+    let interval = null;
+    const stop = () => { if (interval) { clearInterval(interval); interval = null; } };
+    const checkStatus = async () => {
+      try {
+        const res = await fetch(`/api/battles/invite/${sentInviteId}`);
+        if (cancelledLocal) return;
+        if (!res.ok) {
+          if (res.status === 404) { stop(); finishWaiting('cancelled'); }
+          return;
+        }
+        const data = await res.json();
+        const status = data?.invite?.status;
+        if (cancelledLocal) return;
+        if (!status || status === 'pending') return;
+        // Stop polling for any terminal status — including 'accepted', where
+        // MatchupContext handles the redirect into the live battle.
+        stop();
+        if (status === 'declined') finishWaiting('declined');
+        else if (status === 'cancelled') finishWaiting('cancelled');
+        else if (status === 'expired') finishWaiting('expired');
+      } catch {}
+    };
+    interval = setInterval(checkStatus, 5000);
+    checkStatus();
+    return () => { cancelledLocal = true; stop(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sent, sentInviteId]);
+
+  // Local countdown hitting zero means the invite expired client-side; fire
+  // the same quiet note so the conversation header reflects it.
+  const expiredFiredRef = useRef(false);
+  useEffect(() => {
+    if (sent && inviteCountdown === 0 && sentInviteId && !expiredFiredRef.current) {
+      expiredFiredRef.current = true;
+      dispatchInviteEnded('expired');
+    }
+    if (!sent) expiredFiredRef.current = false;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sent, inviteCountdown, sentInviteId]);
 
   const addFriend = async (userId) => {
     setAddingFriend(prev => ({ ...prev, [userId]: 'loading' }));

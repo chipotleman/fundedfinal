@@ -464,12 +464,39 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   }
   const showSeen = lastOutgoingIdx >= 0 && thread[lastOutgoingIdx].read;
 
+  // Quiet "invite cancelled / declined / expired" note in the header. Driven
+  // by a window event fired from PlayFriendModal so the same note shows up
+  // regardless of where the invite was started (messenger, battle page,
+  // friend's profile). Auto-clears after a few seconds so it stays unobtrusive.
+  const [inviteEndedNote, setInviteEndedNote] = useState(null);
+  useEffect(() => {
+    if (!friend?.id || typeof window === 'undefined') return undefined;
+    const handler = (e) => {
+      const d = e?.detail;
+      if (!d || d.otherUserId !== friend.id) return;
+      const name = friend.username || d.otherUsername || 'They';
+      const text =
+        d.reason === 'declined' ? `${name} declined the battle invite`
+        : d.reason === 'expired' ? 'Battle invite expired'
+        : 'Battle invite cancelled';
+      setInviteEndedNote(text);
+    };
+    window.addEventListener('piks:invite:ended', handler);
+    return () => window.removeEventListener('piks:invite:ended', handler);
+  }, [friend?.id, friend?.username]);
+  useEffect(() => {
+    if (!inviteEndedNote) return undefined;
+    const t = setTimeout(() => setInviteEndedNote(null), 6000);
+    return () => clearTimeout(t);
+  }, [inviteEndedNote]);
+
   return (
     <div className="flex flex-col h-full min-h-0">
       <div
-        className="flex items-center gap-3 px-4 py-3 flex-shrink-0"
+        className="flex flex-col flex-shrink-0"
         style={{ borderBottom: `1px solid ${cardBorder}` }}
       >
+      <div className="flex items-center gap-3 px-4 py-3">
         <UserAvatar
           user={friend}
           isOnline={friend?.isOnline ?? isUserOnline(friend?.lastSeenAt)}
@@ -545,6 +572,17 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
         {hasActiveMatchup && onStartBattle && (
           <span className="sr-only">{ACTIVE_BATTLE_BLOCK_MESSAGE}</span>
         )}
+      </div>
+      {inviteEndedNote && (
+        <div
+          className="px-4 pb-2 -mt-1 text-[11px] flex items-center gap-1.5"
+          style={{ color: textSecondary }}
+          aria-live="polite"
+        >
+          <span aria-hidden="true">⚔️</span>
+          <span>{inviteEndedNote}</span>
+        </div>
+      )}
       </div>
 
       <div
