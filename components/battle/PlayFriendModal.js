@@ -182,6 +182,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
         otherUserId: friendForEvent.id,
         otherUsername: friendForEvent.username || null,
         reason,
+        inviteId: sentInviteId || null,
       },
     }));
   };

@@ -44,6 +44,10 @@ export function NotificationsProvider({ children }) {
   const seenRef = useRef(readSeen());
   const suppressRef = useRef(new Set());
   const initialLoadRef = useRef(true);
+  // Tracks outgoing pending invites by id so we can detect when one ends
+  // (declined / expired) without the sender's waiting screen being open and
+  // surface a global toast + dispatch the same piks:invite:ended event.
+  const outgoingInvitesRef = useRef(new Map());
   const isAuthed = status === 'authenticated' && !!session?.user?.id;
 
   const clearTyping = useCallback((sid) => {
@@ -154,6 +158,7 @@ export function NotificationsProvider({ children }) {
       if (!res.ok) return;
       const json = await res.json();
       const battleInvites = json.battleInvites || [];
+      const outgoingBattleInvites = json.outgoingBattleInvites || [];
       const friendRequests = json.friendRequests || [];
       const unreadMessages = json.unreadMessages || [];
       const gameResults = json.gameResults || [];
@@ -180,6 +185,53 @@ export function NotificationsProvider({ children }) {
 
       const isInitial = initialLoadRef.current;
       initialLoadRef.current = false;
+
+      // Detect outgoing invites that ended (declined / expired) since the
+      // previous refresh. We compare the current pending set against the
+      // tracked one — anything that disappeared has reached a terminal
+      // status. Fetch the invite to learn which terminal status it hit so we
+      // can show an accurate toast and fire piks:invite:ended for any open
+      // conversation header. Skip on the initial load — only the receiver
+      // would have been seen them then anyway.
+      const previousOutgoing = outgoingInvitesRef.current;
+      const currentOutgoingMap = new Map();
+      for (const inv of outgoingBattleInvites) {
+        currentOutgoingMap.set(inv.id, inv);
+      }
+      if (!isInitial) {
+        for (const [id, prev] of previousOutgoing) {
+          if (currentOutgoingMap.has(id)) continue;
+          // Avoid double-handling the same ended invite across refreshes.
+          if (seenRef.current.has(`invite_ended:${id}`)) continue;
+          (async () => {
+            try {
+              const r = await fetch(`/api/battles/invite/${id}`);
+              if (!r.ok) return;
+              const j = await r.json();
+              const status = j?.invite?.status;
+              if (status !== 'declined' && status !== 'expired' && status !== 'cancelled') return;
+              const receiver = prev.receiver || {};
+              if (typeof window !== 'undefined' && receiver.id) {
+                window.dispatchEvent(new CustomEvent('piks:invite:ended', {
+                  detail: {
+                    otherUserId: receiver.id,
+                    otherUsername: receiver.username || null,
+                    reason: status,
+                    inviteId: id,
+                  },
+                }));
+              }
+              enqueueToast({
+                id: `invite_ended:${id}`,
+                type: 'invite_ended',
+                sender: receiver,
+                payload: { reason: status, inviteId: id },
+              });
+            } catch {}
+          })();
+        }
+      }
+      outgoingInvitesRef.current = currentOutgoingMap;
 
       if (isInitial) {
         for (const it of battleInvites) seenRef.current.add(`invite:${it.id}`);
@@ -239,6 +291,7 @@ export function NotificationsProvider({ children }) {
       setConversationsLoaded(false);
       setConversationsError(null);
       conversationsInflightRef.current = null;
+      outgoingInvitesRef.current = new Map();
       return;
     }
     refresh();
@@ -339,9 +392,25 @@ export function NotificationsProvider({ children }) {
     };
     document.addEventListener('visibilitychange', handleVisibility);
 
+    // The waiting-screen modal (PlayFriendModal) handles its own
+    // decline/expire/cancel feedback. When it dispatches piks:invite:ended,
+    // pre-mark the invite id so our outgoing watcher won't fire a duplicate
+    // global toast on the next refresh.
+    const handleInviteEndedFromModal = (e) => {
+      const id = e?.detail?.inviteId;
+      if (!id) return;
+      seenRef.current.add(`invite_ended:${id}`);
+      writeSeen(seenRef.current);
+      if (outgoingInvitesRef.current.has(id)) {
+        outgoingInvitesRef.current.delete(id);
+      }
+    };
+    window.addEventListener('piks:invite:ended', handleInviteEndedFromModal);
+
     return () => {
       unsubscribe();
       document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('piks:invite:ended', handleInviteEndedFromModal);
     };
   }, [isAuthed, refresh, markTyping, enqueueToast, session?.user?.id]);
 

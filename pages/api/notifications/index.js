@@ -25,7 +25,7 @@ export default async function handler(req, res) {
         .where(and(eq(battleInvites.status, 'pending'), lt(battleInvites.expiresAt, new Date())));
     } catch (_e) {}
 
-    const [pendingInvites, pendingFriends, unreadMsgs] = await Promise.all([
+    const [pendingInvites, pendingFriends, unreadMsgs, outgoingPendingInvitesRows] = await Promise.all([
       db.select().from(battleInvites)
         .where(and(eq(battleInvites.receiverId, userId), eq(battleInvites.status, 'pending')))
         .orderBy(desc(battleInvites.createdAt))
@@ -38,12 +38,17 @@ export default async function handler(req, res) {
         .where(and(eq(messages.receiverId, userId), eq(messages.read, false)))
         .orderBy(desc(messages.createdAt))
         .limit(50),
+      db.select().from(battleInvites)
+        .where(and(eq(battleInvites.senderId, userId), eq(battleInvites.status, 'pending')))
+        .orderBy(desc(battleInvites.createdAt))
+        .limit(20),
     ]);
 
     const senderIds = [...new Set([
       ...pendingInvites.map(i => i.senderId),
       ...pendingFriends.map(f => f.userId),
       ...unreadMsgs.map(m => m.senderId),
+      ...outgoingPendingInvitesRows.map(i => i.receiverId),
     ].filter(Boolean))];
 
     const profMap = new Map();
@@ -85,6 +90,16 @@ export default async function handler(req, res) {
       gameMode: i.gameMode,
       createdAt: i.createdAt,
       sender: buildSender(i.senderId),
+    }));
+
+    const outgoingPendingInvites = outgoingPendingInvitesRows.map(i => ({
+      id: i.id,
+      buyIn: i.buyIn,
+      duration: i.duration,
+      gameMode: i.gameMode,
+      createdAt: i.createdAt,
+      expiresAt: i.expiresAt,
+      receiver: buildSender(i.receiverId),
     }));
 
     const friendRequestsOut = pendingFriends.map(f => ({
@@ -313,6 +328,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       battleInvites: battleInvitesOut,
+      outgoingBattleInvites: outgoingPendingInvites,
       friendRequests: friendRequestsOut,
       unreadMessages: messagesOut,
       gameResults,

@@ -200,6 +200,38 @@ function Toast({ toast, ctx, router }) {
     );
   }
 
+  if (toast.type === 'invite_ended') {
+    const reason = toast.payload?.reason;
+    const name = sender.username || 'Your friend';
+    let title;
+    let subtitle;
+    if (reason === 'declined') {
+      title = `${name} declined your battle invite`;
+      subtitle = 'They passed on this one.';
+    } else if (reason === 'cancelled') {
+      title = 'Battle invite cancelled';
+      subtitle = `Your invite to ${name} was cancelled.`;
+    } else {
+      title = 'Your battle invite expired';
+      subtitle = `${name} didn\u2019t respond in time.`;
+    }
+    return (
+      <div
+        className="bg-gradient-to-r from-slate-900/95 to-slate-800/95 border border-slate-500/50 rounded-xl p-3"
+        style={baseStyle}
+      >
+        <div className="flex items-center gap-3">
+          <Avatar sender={sender} />
+          <div className="flex-1 min-w-0">
+            <div className="text-white text-sm font-bold truncate">{title}</div>
+            <div className="text-gray-300 text-xs">{subtitle}</div>
+          </div>
+          <CloseBtn onClick={() => ctx.dismissToast(toast.id)} />
+        </div>
+      </div>
+    );
+  }
+
   if (toast.type === 'message') {
     return (
       <MessageToast toast={toast} ctx={ctx} router={router} baseStyle={baseStyle} />
