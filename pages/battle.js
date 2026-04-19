@@ -230,10 +230,15 @@ export default function BattlePage() {
 
   // ?chat=<id> on /battle is a legacy entry point — forward it to /notifications.
   useEffect(() => {
+    if (!router.isReady) return;
     const chatId = router.query.chat;
     if (!chatId) return;
-    router.replace(`/notifications?chat=${chatId}`);
-  }, [router.query.chat]);
+    const chatName = router.query.name;
+    const target = chatName
+      ? `/notifications?chat=${chatId}&name=${encodeURIComponent(Array.isArray(chatName) ? chatName[0] : chatName)}`
+      : `/notifications?chat=${chatId}`;
+    router.replace(target);
+  }, [router.isReady, router.query.chat, router.query.name]);
 
   const handleSearch = useCallback((query) => {
     setSearchQuery(query);
