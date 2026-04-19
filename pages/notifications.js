@@ -318,6 +318,26 @@ function ConversationThread({ friend, ctx, myId, isDarkMode }) {
     };
   }, [friend?.id]);
 
+  // Append messages pushed via SSE instantly so the open thread doesn't
+  // wait up to 5s for the next poll tick.
+  useEffect(() => {
+    if (!friend?.id || typeof window === 'undefined') return undefined;
+    const handler = (e) => {
+      const m = e?.detail;
+      if (!m || !m.id) return;
+      const fromFriend = m.senderId === friend.id && (myId == null || m.receiverId === myId);
+      const fromMeToFriend = myId != null && m.senderId === myId && m.receiverId === friend.id;
+      if (!fromFriend && !fromMeToFriend) return;
+      setThread((prev) => {
+        if (prev.some((x) => x.id === m.id)) return prev;
+        return [...prev, m];
+      });
+      if (fromFriend) ctx.clearTyping?.(friend.id);
+    };
+    window.addEventListener('piks:message:new', handler);
+    return () => window.removeEventListener('piks:message:new', handler);
+  }, [friend?.id, myId, ctx]);
+
   useEffect(() => {
     threadEndRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }, [thread]);
