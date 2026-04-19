@@ -51,7 +51,9 @@ export default function BattlePage() {
   const [showPlayFriend, setShowPlayFriend] = useState(false);
   const [showPrivateMatch, setShowPrivateMatch] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
-  const [showSidebar, setShowSidebar] = useState(false);
+  const [socialSheetOpen, setSocialSheetOpen] = useState(false);
+  const [sheetDragY, setSheetDragY] = useState(0);
+  const sheetDragStartRef = useRef(null);
   const [showLobby, setShowLobby] = useState(null);
   const [showResult, setShowResult] = useState(null);
   const [showForfeitModal, setShowForfeitModal] = useState(false);
@@ -457,14 +459,14 @@ export default function BattlePage() {
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <button
-                      onClick={() => { router.push(`/notifications?chat=${friend.id}`); if (inDrawer) setShowSidebar(false); }}
+                      onClick={() => { router.push(`/notifications?chat=${friend.id}`); if (inDrawer) setSocialSheetOpen(false); }}
                       className="p-1.5 rounded-lg transition-colors hover:bg-blue-500/20 active:bg-blue-500/20 text-blue-400"
                       title="Message"
                     >
                       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
                     </button>
                     <button
-                      onClick={() => { setShowPlayFriend(true); if (inDrawer) setShowSidebar(false); }}
+                      onClick={() => { setShowPlayFriend(true); if (inDrawer) setSocialSheetOpen(false); }}
                       className="p-1.5 rounded-lg transition-colors hover:bg-purple-500/20 active:bg-purple-500/20 text-purple-400"
                       title="Challenge"
                     >
@@ -671,22 +673,6 @@ export default function BattlePage() {
 
       <div className="pt-14">
         <div className="max-w-5xl mx-auto px-4">
-          {!isGuest && (
-            <div className="flex items-center justify-end py-2 sm:py-3">
-              <button
-                onClick={() => setShowSidebar(!showSidebar)}
-                className="lg:hidden w-9 h-9 rounded-lg flex items-center justify-center text-gray-400 transition-colors relative"
-                style={{ backgroundColor: isDarkMode ? '#1a1a1a' : '#eef0f3', border: `1px solid ${cardBorder}` }}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                {(inviteCount + requestCount > 0) && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[9px] font-bold flex items-center justify-center text-white">
-                    {Math.min(inviteCount + requestCount, 9)}
-                  </span>
-                )}
-              </button>
-            </div>
-          )}
 
           {!isGuest && invites.received?.length > 0 && (
             <div className="mb-4 space-y-2">
@@ -977,17 +963,6 @@ export default function BattlePage() {
                     <LiveBattlesSection focusBattleId={router.query.battle} currentUserId={userId} />
                   </div>
 
-                  {!isGuest && (
-                    <div className="lg:hidden mt-6">
-                      <div className="flex items-center gap-2 mb-3">
-                        <h3 className="text-sm font-semibold" style={{ color: textPrimary }}>Friends & Invites</h3>
-                        {(requestCount + inviteCount) > 0 && (
-                          <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full">{requestCount + inviteCount}</span>
-                        )}
-                      </div>
-                      <SocialSection inDrawer={false} />
-                    </div>
-                  )}
                 </div>
 
                 <div className="lg:w-[340px] flex-shrink-0 order-1 lg:order-2">
@@ -1002,25 +977,96 @@ export default function BattlePage() {
                   </div>
                 </div>
 
-                {showSidebar && (
-                  <div className={`lg:hidden fixed inset-0 z-40 bg-black/80`}>
-                    <div className="absolute inset-0" onClick={() => setShowSidebar(false)}></div>
-                    <div className="absolute right-0 top-0 bottom-0 w-80 p-4 overflow-y-auto z-50 space-y-4" style={{ backgroundColor: isDarkMode ? '#0a0a0a' : '#f5f5f5', borderLeft: `1px solid ${cardBorder}` }}>
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-bold" style={{ color: textPrimary }}>Friends & Invites</h3>
-                        <button onClick={() => setShowSidebar(false)} className="text-gray-400 hover:text-white">
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                      </div>
-                      <SocialSection inDrawer={true} />
-                    </div>
-                  </div>
-                )}
               </div>
             );
           })()}
         </div>
       </div>
+
+      {!isGuest && (
+        <>
+          <button
+            onClick={() => setSocialSheetOpen(true)}
+            onTouchStart={(e) => { sheetDragStartRef.current = e.touches[0].clientY; }}
+            onTouchMove={(e) => {
+              if (sheetDragStartRef.current == null) return;
+              const dy = sheetDragStartRef.current - e.touches[0].clientY;
+              if (dy > 30) {
+                sheetDragStartRef.current = null;
+                setSocialSheetOpen(true);
+              }
+            }}
+            onTouchEnd={() => { sheetDragStartRef.current = null; }}
+            aria-label="Open Friends & Invites"
+            className={`lg:hidden fixed left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1 px-5 py-2 rounded-t-2xl shadow-lg active:scale-95 transition-all ${socialSheetOpen ? 'translate-y-full opacity-0 pointer-events-none' : ''}`}
+            style={{
+              bottom: 'env(safe-area-inset-bottom, 0px)',
+              backgroundColor: isDarkMode ? '#1a1a1a' : '#ffffff',
+              border: `1px solid ${cardBorder}`,
+              borderBottom: 'none',
+            }}
+          >
+            <div className="w-10 h-1 rounded-full" style={{ backgroundColor: isDarkMode ? '#3a3a3a' : '#cbd5e1' }} />
+            <div className="flex items-center gap-2">
+              <svg className="w-4 h-4" style={{ color: textSecondary }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+              <span className="text-xs font-semibold" style={{ color: textPrimary }}>Friends & Invites</span>
+              {(inviteCount + requestCount) > 0 && (
+                <span className="px-1.5 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full">{inviteCount + requestCount}</span>
+              )}
+            </div>
+          </button>
+
+          <div
+            className={`lg:hidden fixed inset-0 z-40 transition-opacity duration-300 ${socialSheetOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+            style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+            onClick={() => { setSocialSheetOpen(false); setSheetDragY(0); }}
+          />
+
+          <div
+            className={`lg:hidden fixed left-0 right-0 bottom-0 z-50 rounded-t-2xl flex flex-col`}
+            style={{
+              backgroundColor: isDarkMode ? '#0a0a0a' : '#f5f5f5',
+              borderTop: `1px solid ${cardBorder}`,
+              maxHeight: '85vh',
+              height: '85vh',
+              transform: socialSheetOpen
+                ? `translateY(${sheetDragY}px)`
+                : 'translateY(100%)',
+              transition: sheetDragStartRef.current ? 'none' : 'transform 300ms cubic-bezier(0.32, 0.72, 0, 1)',
+              boxShadow: '0 -8px 24px rgba(0,0,0,0.3)',
+            }}
+          >
+            <div
+              className="flex flex-col items-center pt-2 pb-2 cursor-grab active:cursor-grabbing select-none flex-shrink-0"
+              onTouchStart={(e) => { sheetDragStartRef.current = e.touches[0].clientY; }}
+              onTouchMove={(e) => {
+                if (sheetDragStartRef.current == null) return;
+                const dy = e.touches[0].clientY - sheetDragStartRef.current;
+                if (dy > 0) setSheetDragY(dy);
+              }}
+              onTouchEnd={() => {
+                const dy = sheetDragY;
+                sheetDragStartRef.current = null;
+                if (dy > 100) {
+                  setSocialSheetOpen(false);
+                }
+                setSheetDragY(0);
+              }}
+            >
+              <div className="w-10 h-1 rounded-full" style={{ backgroundColor: isDarkMode ? '#3a3a3a' : '#cbd5e1' }} />
+              <div className="flex items-center justify-between w-full px-4 mt-2">
+                <h3 className="font-bold" style={{ color: textPrimary }}>Friends & Invites</h3>
+                <button onClick={() => { setSocialSheetOpen(false); setSheetDragY(0); }} className="text-gray-400 hover:text-white" aria-label="Close">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-y-auto px-4 pb-6 overscroll-contain">
+              <SocialSection inDrawer={true} />
+            </div>
+          </div>
+        </>
+      )}
 
       {showBattleOptions && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowBattleOptions(false)}>
