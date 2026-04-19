@@ -8,6 +8,7 @@ import BalanceExplainerModal from './BalanceExplainerModal';
 import { useMatchup } from '../contexts/MatchupContext';
 import { useNotifications } from '../contexts/NotificationsContext';
 import NotificationsDropdown from './notifications/NotificationsDropdown';
+import MessagesDropdown from './notifications/MessagesDropdown';
 import { formatMoney } from '../utils/formatMoney';
 
 export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
@@ -27,9 +28,13 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
   const { data: session, status } = useSession();
   const { hasActiveMatchup, myBalance: matchupBalance, matchup: activeMatchup, opponent: activeOpponent } = useMatchup();
   const { counts: notifCounts } = useNotifications();
-  const notifTotal = notifCounts?.total || 0;
+  const notifAlerts = (notifCounts?.battleInvites || 0) + (notifCounts?.friendRequests || 0);
+  const notifMessages = notifCounts?.unreadMessages || 0;
+  const notifTotal = notifAlerts;
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const notifBellRef = useRef(null);
+  const [showMsgDropdown, setShowMsgDropdown] = useState(false);
+  const msgBtnRef = useRef(null);
   
   // Prefetch dashboard for instant navigation
   useEffect(() => {
@@ -563,13 +568,13 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                 </div>
               )}
 
-              {/* Notifications Bell - opens dropdown of pending invites/requests/messages */}
+              {/* Notifications Bell - alerts only (battle invites, friend requests) */}
               {isLoggedIn && (
                 <div className="relative">
                   <button
                     ref={notifBellRef}
-                    onClick={() => setShowNotifDropdown(v => !v)}
-                    className="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-colors hover:bg-[#1a1a1a]"
+                    onClick={() => { setShowMsgDropdown(false); setShowNotifDropdown(v => !v); }}
+                    className="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-colors hover:bg-emerald-400/10"
                     title={notifTotal > 0 ? `${notifTotal} new notification${notifTotal > 1 ? 's' : ''}` : 'Notifications'}
                     aria-label="Notifications"
                     aria-haspopup="true"
@@ -578,15 +583,17 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                     <svg
                       className="w-5 h-5 sm:w-6 sm:h-6"
                       fill="none"
-                      stroke={'#e5e7eb'}
+                      stroke={notifTotal > 0 ? '#34d399' : '#e5e7eb'}
                       strokeWidth={1.8}
                       viewBox="0 0 24 24"
+                      style={notifTotal > 0 ? { filter: 'drop-shadow(0 0 4px rgba(52,211,153,0.6))' } : undefined}
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                     </svg>
                     {notifTotal > 0 && (
                       <span
                         className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
+                        style={{ boxShadow: '0 0 6px rgba(239,68,68,0.6)' }}
                       >
                         {notifTotal > 9 ? '9+' : notifTotal}
                       </span>
@@ -596,6 +603,45 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                     open={showNotifDropdown}
                     onClose={() => setShowNotifDropdown(false)}
                     anchorRef={notifBellRef}
+                  />
+                </div>
+              )}
+
+              {/* Messages icon - chat bubble, separate from alerts */}
+              {isLoggedIn && (
+                <div className="relative">
+                  <button
+                    ref={msgBtnRef}
+                    onClick={() => { setShowNotifDropdown(false); setShowMsgDropdown(v => !v); }}
+                    className="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-colors hover:bg-emerald-400/10"
+                    title={notifMessages > 0 ? `${notifMessages} unread message${notifMessages > 1 ? 's' : ''}` : 'Messages'}
+                    aria-label="Messages"
+                    aria-haspopup="true"
+                    aria-expanded={showMsgDropdown}
+                  >
+                    <svg
+                      className="w-5 h-5 sm:w-6 sm:h-6"
+                      fill="none"
+                      stroke={notifMessages > 0 ? '#34d399' : '#e5e7eb'}
+                      strokeWidth={1.8}
+                      viewBox="0 0 24 24"
+                      style={notifMessages > 0 ? { filter: 'drop-shadow(0 0 4px rgba(52,211,153,0.6))' } : undefined}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
+                    </svg>
+                    {notifMessages > 0 && (
+                      <span
+                        className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-emerald-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center"
+                        style={{ boxShadow: '0 0 8px rgba(16,185,129,0.7)' }}
+                      >
+                        {notifMessages > 9 ? '9+' : notifMessages}
+                      </span>
+                    )}
+                  </button>
+                  <MessagesDropdown
+                    open={showMsgDropdown}
+                    onClose={() => setShowMsgDropdown(false)}
+                    anchorRef={msgBtnRef}
                   />
                 </div>
               )}

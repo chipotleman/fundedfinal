@@ -79,6 +79,23 @@ export default async function handler(req, res) {
       });
     }
 
+    // Per-friend unread count (messages I haven't read from each friend).
+    const unreadCountsResult = await db.execute(sql`
+      SELECT sender_id AS other_id, COUNT(*)::int AS unread_count
+      FROM messages
+      WHERE receiver_id = ${userId}
+        AND read = false
+        AND sender_id IN (${friendIdList})
+      GROUP BY sender_id
+    `);
+    const unreadCountRows = Array.isArray(unreadCountsResult)
+      ? unreadCountsResult
+      : (unreadCountsResult.rows || []);
+    const unreadCountByFriend = new Map();
+    for (const r of unreadCountRows) {
+      unreadCountByFriend.set(r.other_id, Number(r.unread_count) || 0);
+    }
+
     const [friendProfiles, friendUsers] = await Promise.all([
       db
         .select({
@@ -142,6 +159,7 @@ export default async function handler(req, res) {
           isOnline,
         },
         lastMessage,
+        unreadCount: unreadCountByFriend.get(fid) || 0,
       };
     });
 
