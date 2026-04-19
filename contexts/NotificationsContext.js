@@ -26,14 +26,59 @@ const EMPTY = {
   counts: { battleInvites: 0, friendRequests: 0, unreadMessages: 0, total: 0 },
 };
 
+const TYPING_TTL_MS = 4000;
+
 export function NotificationsProvider({ children }) {
   const { data: session, status } = useSession();
   const [data, setData] = useState(EMPTY);
   const [toasts, setToasts] = useState([]);
+  const [typingSenderIds, setTypingSenderIds] = useState(() => new Set());
+  const typingTimersRef = useRef(new Map());
   const seenRef = useRef(readSeen());
   const suppressRef = useRef(new Set());
   const initialLoadRef = useRef(true);
   const isAuthed = status === 'authenticated' && !!session?.user?.id;
+
+  const clearTyping = useCallback((sid) => {
+    if (!sid) return;
+    const t = typingTimersRef.current.get(sid);
+    if (t) {
+      clearTimeout(t);
+      typingTimersRef.current.delete(sid);
+    }
+    setTypingSenderIds((prev) => {
+      if (!prev.has(sid)) return prev;
+      const next = new Set(prev);
+      next.delete(sid);
+      return next;
+    });
+  }, []);
+
+  const markTyping = useCallback((sid) => {
+    if (!sid) return;
+    const existing = typingTimersRef.current.get(sid);
+    if (existing) clearTimeout(existing);
+    const timer = setTimeout(() => clearTyping(sid), TYPING_TTL_MS);
+    typingTimersRef.current.set(sid, timer);
+    setTypingSenderIds((prev) => {
+      if (prev.has(sid)) return prev;
+      const next = new Set(prev);
+      next.add(sid);
+      return next;
+    });
+  }, [clearTyping]);
+
+  const notifyTyping = useCallback(async (receiverId) => {
+    if (!isAuthed || !receiverId) return;
+    try {
+      await fetch('/api/messages/typing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ receiverId }),
+      });
+    } catch {}
+  }, [isAuthed]);
 
   const isSuppressed = useCallback((key) => {
     if (!key) return false;
@@ -121,6 +166,9 @@ export function NotificationsProvider({ children }) {
       initialLoadRef.current = true;
       setData(EMPTY);
       setToasts([]);
+      for (const t of typingTimersRef.current.values()) clearTimeout(t);
+      typingTimersRef.current.clear();
+      setTypingSenderIds(new Set());
       return;
     }
     refresh();
@@ -140,7 +188,9 @@ export function NotificationsProvider({ children }) {
         try {
           const ev = JSON.parse(msg.data);
           if (!ev?.type) return;
-          if (ev.type === 'notification:refresh' || ev.type.startsWith('notification:')) {
+          if (ev.type === 'notification:typing') {
+            if (ev.senderId) markTyping(ev.senderId);
+          } else if (ev.type === 'notification:refresh' || ev.type.startsWith('notification:')) {
             refresh();
           } else if (ev.type === 'achievement:earned' && ev.achievement?.id) {
             enqueueToast({
@@ -283,6 +333,9 @@ export function NotificationsProvider({ children }) {
     acceptFriend,
     declineFriend,
     markMessagesRead,
+    typingSenderIds,
+    notifyTyping,
+    clearTyping,
   };
 
   return (
@@ -304,6 +357,9 @@ export function useNotifications() {
       acceptFriend: async () => {},
       declineFriend: async () => {},
       markMessagesRead: async () => 0,
+      typingSenderIds: new Set(),
+      notifyTyping: async () => {},
+      clearTyping: () => {},
     };
   }
   return ctx;

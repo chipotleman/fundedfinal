@@ -663,6 +663,8 @@ function MessageItem({ item, ctx, router, onClose, expanded, onToggle, onCollaps
   const inputRef = useRef(null);
   const atBottomRef = useRef(true);
   const lastMessageIdRef = useRef(null);
+  const lastTypingSentRef = useRef(0);
+  const isTyping = !!sender.id && ctx.typingSenderIds?.has?.(sender.id);
 
   // Suppress duplicate toast notifications for this conversation while open.
   useEffect(() => {
@@ -702,6 +704,9 @@ function MessageItem({ item, ctx, router, onClose, expanded, onToggle, onCollaps
           const incomingFromFriend = next.some(
             (m) => !prevIds.has(m.id) && m.senderId === sender.id
           );
+          if (incomingFromFriend) {
+            ctx.clearTyping?.(sender.id);
+          }
           if (!initial && incomingFromFriend && !atBottomRef.current) {
             setHasNew(true);
           }
@@ -775,6 +780,16 @@ function MessageItem({ item, ctx, router, onClose, expanded, onToggle, onCollaps
     atBottomRef.current = true;
     setAtBottom(true);
     setHasNew(false);
+  };
+
+  const handleReplyChange = (e) => {
+    const v = e.target.value;
+    setReply(v);
+    if (!sender.id || !v.trim()) return;
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < 2500) return;
+    lastTypingSentRef.current = now;
+    ctx.notifyTyping?.(sender.id);
   };
 
   const handleSend = async (e) => {
@@ -883,6 +898,19 @@ function MessageItem({ item, ctx, router, onClose, expanded, onToggle, onCollaps
           )}
           </div>
 
+          <div className="h-4 mt-1" aria-live="polite">
+            {isTyping && (
+              <div className="flex items-center gap-1.5 text-[11px] text-gray-500 italic">
+                <span className="flex gap-0.5">
+                  <span className="w-1 h-1 rounded-full bg-gray-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <span className="w-1 h-1 rounded-full bg-gray-500 animate-bounce" style={{ animationDelay: '120ms' }} />
+                  <span className="w-1 h-1 rounded-full bg-gray-500 animate-bounce" style={{ animationDelay: '240ms' }} />
+                </span>
+                <span>{sender.username || 'Friend'} is typing…</span>
+              </div>
+            )}
+          </div>
+
           {!loadError && (
             <form onSubmit={handleSend} className="mt-2">
               <div className="flex gap-2">
@@ -890,7 +918,7 @@ function MessageItem({ item, ctx, router, onClose, expanded, onToggle, onCollaps
                   ref={inputRef}
                   type="text"
                   value={reply}
-                  onChange={(e) => setReply(e.target.value)}
+                  onChange={handleReplyChange}
                   placeholder="Reply…"
                   className="flex-1 min-w-0 px-3 py-1.5 bg-[#111] border border-[#1a1a1a] rounded-lg text-white text-xs focus:outline-none focus:border-emerald-500"
                   maxLength={1000}
