@@ -5,8 +5,10 @@ import BetReceipt from './BetReceipt';
 import LiveCommunityStats from './LiveCommunityStats';
 import { categorizeGames } from '../lib/gamesUtils';
 import { formatMoney } from '../utils/formatMoney';
+import { useUserPreferences } from '../contexts/UserPreferencesContext';
 
 export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, showDemoBetSlip, setShowDemoBetSlip }) {
+  const { formatOdds } = useUserPreferences();
   const [selectedBets, setSelectedBets] = useState([]);
   const [betAmount, setBetAmount] = useState(100);
   const [demoBalance, setDemoBalance] = useState(10000);
@@ -267,7 +269,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                   {betType === 'parlay' && (
                     <div className="mt-3 lg:mt-4 p-3 lg:p-4 bg-green-500/10 border border-green-500/20 rounded-lg">
                       <p className="text-green-400 font-bold text-center text-sm lg:text-base">
-                        Parlay Odds: {calculateParlayOdds() > 0 ? '+' : ''}{calculateParlayOdds()}
+                        Parlay Odds: {formatOdds(calculateParlayOdds())}
                       </p>
                     </div>
                   )}
@@ -299,7 +301,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                           </div>
                           <div className="flex items-center space-x-2 lg:space-x-3">
                             <span className="bg-green-500/20 text-green-400 px-2 lg:px-3 py-1 lg:py-2 rounded-lg font-bold text-base lg:text-lg">
-                              {bet.odds > 0 ? '+' : ''}{bet.odds}
+                              {formatOdds(bet.odds)}
                             </span>
                             <button
                               onClick={() => removeBet(bet.id)}
@@ -686,7 +688,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                                 : 'bg-[#1a1a1a] hover:bg-[#252525]'
                             }`}
                           >
-                            <div className={`text-sm font-bold ${isBetSelected(`${game.id}-moneyline-away`) ? 'text-white' : 'text-green-400'}`}>{game.moneylineAway > 0 ? '+' : ''}{game.moneylineAway}</div>
+                            <div className={`text-sm font-bold ${isBetSelected(`${game.id}-moneyline-away`) ? 'text-white' : 'text-green-400'}`}>{formatOdds(game.moneylineAway)}</div>
                           </button>
                         </div>
 
@@ -725,7 +727,7 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                                 : 'bg-[#1a1a1a] hover:bg-[#252525]'
                             }`}
                           >
-                            <div className={`text-sm font-bold ${isBetSelected(`${game.id}-moneyline-home`) ? 'text-white' : 'text-green-400'}`}>{game.moneylineHome > 0 ? '+' : ''}{game.moneylineHome}</div>
+                            <div className={`text-sm font-bold ${isBetSelected(`${game.id}-moneyline-home`) ? 'text-white' : 'text-green-400'}`}>{formatOdds(game.moneylineHome)}</div>
                           </button>
                         </div>
                       </div>

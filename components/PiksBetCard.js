@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import TapSurface from './TapSurface';
 import { formatMoney } from '../utils/formatMoney';
+import { useUserPreferences } from '../contexts/UserPreferencesContext';
 
 export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, isOpponent = false, opponentName, opponentAvatar, compactHeader = false }) {
   const [confirmingCashOut, setConfirmingCashOut] = useState(false);
@@ -31,9 +32,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
     }
   }, [confirmingCashOut]);
 
-  const formatOdds = (odds) => {
-    return odds > 0 ? `+${odds}` : odds.toString();
-  };
+  const { formatOdds } = useUserPreferences();
 
   const calculatePayout = (odds, stake) => {
     if (odds > 0) {
@@ -506,7 +505,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                     </div>
                     {parlayLegs.hasRealData && leg.odds && (
                       <div className="text-white font-bold text-lg">
-                        {leg.odds > 0 ? `+${leg.odds}` : leg.odds}
+                        {formatOdds(leg.odds)}
                       </div>
                     )}
                   </div>
@@ -656,8 +655,8 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                           </div>
                         </div>
                         {parlayLegs.hasRealData && leg.odds && (
-                          <div className="font-bold text-lg" style={{ color: '#ffffff' }}>
-                            {leg.odds > 0 ? `+${leg.odds}` : leg.odds}
+                          <div className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+                            {formatOdds(leg.odds)}
                           </div>
                         )}
                       </div>

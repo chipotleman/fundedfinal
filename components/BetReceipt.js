@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
 import { formatMoney } from '../utils/formatMoney';
 import useModalScrollLock from '../hooks/useModalScrollLock';
+import { useUserPreferences } from '../contexts/UserPreferencesContext';
 
 export default function BetReceipt({ bet, isDemo = false, onClose }) {
   console.log('[BetReceipt v2.0] Received bet:', { isLive: bet?.isLive, awayScore: bet?.awayScore, homeScore: bet?.homeScore });
@@ -27,9 +28,7 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
     }, 300);
   };
 
-  const formatOdds = (odds) => {
-    return odds > 0 ? `+${odds}` : odds.toString();
-  };
+  const { formatOdds } = useUserPreferences();
 
   const formatPlacedDate = () => {
     const date = new Date();
@@ -232,7 +231,7 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                             </div>
                             {leg.odds && (
                               <div className="font-bold text-sm text-blue-400">
-                                {leg.odds > 0 ? `+${leg.odds}` : leg.odds}
+                                {formatOdds(leg.odds)}
                               </div>
                             )}
                           </div>

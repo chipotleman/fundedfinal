@@ -7,8 +7,10 @@ import BetReceipt from '../components/BetReceipt';
 import CoinRain from '../components/CoinRain';
 import { categorizeGames, filterGamesBySport } from '../lib/gamesUtils';
 import { formatMoney } from '../utils/formatMoney';
+import { useUserPreferences } from '../contexts/UserPreferencesContext';
 
 export default function DemoDashboard() {
+  const { formatOdds: formatOddsPref } = useUserPreferences();
   const router = useRouter();
   const [demoChallenge, setDemoChallenge] = useState(null);
   const [selectedSport, setSelectedSport] = useState('All Sports');
@@ -182,9 +184,7 @@ export default function DemoDashboard() {
     };
   }, [showBetSlip]);
 
-  const formatOdds = (odds) => {
-    return odds > 0 ? `+${odds}` : odds.toString();
-  };
+  const formatOdds = (odds) => formatOddsPref(odds);
 
   const OddsDisplay = ({ odds, isSelected }) => {
     const baseClass = isSelected ? 'text-white' : 'text-green-400';

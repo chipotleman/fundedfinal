@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { formatMoney } from '../utils/formatMoney';
+import { useUserPreferences } from '../contexts/UserPreferencesContext';
 
 export default function OpponentBets({ 
   matchupId, 
@@ -9,6 +10,7 @@ export default function OpponentBets({
   onRefresh 
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { formatOdds } = useUserPreferences();
 
   if (!canSeeBets) {
     return (
@@ -94,7 +96,7 @@ export default function OpponentBets({
                     ${formatMoney(parseFloat(bet.stake || 0), 0)}
                   </p>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs ${'text-gray-400'}`}>@ {bet.odds}</span>
+                    <span className={`text-xs ${'text-gray-400'}`}>@ {formatOdds(bet.odds)}</span>
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${
                       bet.status === 'won' ? 'bg-green-500/20 text-green-500' :
                       bet.status === 'lost' ? 'bg-red-500/20 text-red-500' :

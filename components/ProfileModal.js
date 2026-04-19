@@ -2,9 +2,11 @@
 import { Fragment, useEffect } from 'react';
 import useModalScrollLock from '../hooks/useModalScrollLock';
 import { formatMoney } from '../utils/formatMoney';
+import { useUserPreferences } from '../contexts/UserPreferencesContext';
 
 export default function ProfileModal({ profile, isOpen, onClose }) {
   useModalScrollLock(isOpen);
+  const { formatOdds } = useUserPreferences();
 
   if (!isOpen || !profile) return null;
 
@@ -189,7 +191,7 @@ export default function ProfileModal({ profile, isOpen, onClose }) {
                               <div className="min-w-0 pr-3">
                                 <div className="text-white font-medium text-sm truncate">{bet.game}</div>
                                 <div className="text-gray-500 text-sm truncate">
-                                  {bet.bet}{bet.odds ? ` (${bet.odds})` : ''}
+                                  {bet.bet}{bet.odds ? ` (${formatOdds(bet.odds)})` : ''}
                                 </div>
                               </div>
                               <div className="text-right">

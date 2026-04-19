@@ -10,6 +10,7 @@ import PiksBetCard from './PiksBetCard';
 import CoinRain from './CoinRain';
 import haptic from '../utils/haptics';
 import { formatMoney } from '../utils/formatMoney';
+import { useUserPreferences } from '../contexts/UserPreferencesContext';
 
 // Capitalize league identifiers like (w) -> (W), (m) -> (M)
 const capitalizeLeagueId = (text) => {
@@ -670,9 +671,10 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
     }
   };
 
+  const { formatOdds: formatOddsPref } = useUserPreferences();
   const formatOdds = (odds) => {
     const oddsValue = typeof odds === 'object' ? odds.odds || odds.value || 0 : odds;
-    return oddsValue > 0 ? `+${oddsValue}` : oddsValue.toString();
+    return formatOddsPref(oddsValue);
   };
 
   if (!mounted) return null;

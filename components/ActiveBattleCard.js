@@ -6,6 +6,7 @@ import ConnectionBadge from './battle/ConnectionBadge';
 import { formatMoney } from '../utils/formatMoney';
 import UserAvatar from './UserAvatar';
 import { useVoiceChat } from '../contexts/VoiceChatContext';
+import { useUserPreferences } from '../contexts/UserPreferencesContext';
 
 function SpeakingIndicator({ active, size = 10 }) {
   if (!active) return null;
@@ -132,6 +133,7 @@ export default function ActiveBattleCard({
   const [showForfeitModal, setShowForfeitModal] = useState(false);
   const [mounted, setMounted] = useState(false);
   const { data: session } = useSession();
+  const { formatOdds } = useUserPreferences();
   const { oppSpeaking } = useVoiceChat();
 
   useEffect(() => { setMounted(true); }, []);
@@ -666,7 +668,7 @@ export default function ActiveBattleCard({
                               <div key={i} className="flex justify-between items-center px-3 py-2.5">
                                 <div className="flex-1 truncate mr-2">
                                   <span className={`text-xs ${'text-white'}`}>{bet.selection}</span>
-                                  <span className="text-[10px] text-gray-500 ml-1.5">({bet.odds})</span>
+                                  <span className="text-[10px] text-gray-500 ml-1.5">({formatOdds(bet.odds)})</span>
                                 </div>
                                 <div className="flex items-center gap-2 flex-shrink-0">
                                   <span className="text-[10px] text-gray-500">${formatMoney(bet.stake, 0)}</span>

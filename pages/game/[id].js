@@ -4,6 +4,7 @@ import Head from 'next/head';
 import { useBetSlip } from '../../contexts/BetSlipContext';
 import { useGames } from '../../contexts/GamesContext';
 import LiveGameTracker from '../../components/LiveGameTracker';
+import { useUserPreferences } from '../../contexts/UserPreferencesContext';
 
 export default function GameDetail() {
   const router = useRouter();
@@ -14,6 +15,7 @@ export default function GameDetail() {
   const [activeTab, setActiveTab] = useState('Popular');
   const { betSlip, addToBetSlip, isBetInSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const { getPossession, possessionConnected, apiGames, inplayEvents } = useGames();
+  const { formatOdds: formatOddsPref } = useUserPreferences();
   
   const possession = useMemo(() => {
     if (!id) return null;
@@ -153,8 +155,8 @@ export default function GameDetail() {
   }, [id, game]);
 
   const formatOdds = (odds) => {
-    if (typeof odds !== 'number') return odds;
-    return odds > 0 ? `+${odds}` : odds.toString();
+    if (odds === null || odds === undefined) return odds;
+    return formatOddsPref(odds);
   };
 
   const formatSpread = (point) => {
