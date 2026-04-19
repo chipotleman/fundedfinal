@@ -13,6 +13,7 @@ import LiveBattlesSection from '../components/battle/LiveBattlesSection';
 import BattleVoiceChat from '../components/battle/BattleVoiceChat';
 import ForfeitModal from '../components/battle/ForfeitModal';
 import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
+import ConnectionBadge from '../components/battle/ConnectionBadge';
 import { useMatchup } from '../contexts/MatchupContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNotifications } from '../contexts/NotificationsContext';
@@ -813,6 +814,7 @@ export default function BattlePage() {
                   <div className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 bg-green-500 rounded-full battle-hero-pulse"></div>
                     <span className="text-[10px] font-semibold uppercase tracking-wider text-green-400">Live Battle</span>
+                    <ConnectionBadge className="ml-1" />
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-[10px] text-gray-500">{formatTime(timeLeft)}</span>

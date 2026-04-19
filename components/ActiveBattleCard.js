@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useSession } from 'next-auth/react';
 import { useTheme } from '../contexts/ThemeContext';
 import ForfeitModal from './battle/ForfeitModal';
+import ConnectionBadge from './battle/ConnectionBadge';
 import { formatMoney } from '../utils/formatMoney';
 import UserAvatar from './UserAvatar';
 
@@ -248,6 +249,10 @@ export default function ActiveBattleCard({
               }}
             />
           ))}
+        </div>
+
+        <div className="absolute top-1.5 right-1.5 z-30 pointer-events-none">
+          <ConnectionBadge />
         </div>
 
         {showUngradedWarning && (

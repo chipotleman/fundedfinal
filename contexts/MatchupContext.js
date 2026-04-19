@@ -362,6 +362,7 @@ export function MatchupProvider({ children }) {
     refresh: fetchCurrentMatchup,
     forfeitNotice,
     acknowledgeForfeit,
+    sseHealthy,
   };
 
   return (
