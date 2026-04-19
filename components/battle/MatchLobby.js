@@ -21,6 +21,7 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
   const [countdown, setCountdown] = useState(5);
   const [showBattle, setShowBattle] = useState(false);
   const [entered, setEntered] = useState(false);
+  const [fetchedOpponent, setFetchedOpponent] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -56,30 +57,85 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
     }
   }, [countdown, router, onDismiss]);
 
+  // Field-by-field merge of every source the lobby might receive opponent
+  // data from. Earlier sources win per-field but never block later sources
+  // from filling in missing fields.
+  const isUser1 = matchup?.user1Id === currentUser?.id;
+  const opponentId = matchup ? (isUser1 ? matchup.user2Id : matchup.user1Id) : null;
+
+  const pickFirst = (sources, key) => {
+    for (const s of sources) {
+      if (!s || typeof s !== 'object') continue;
+      const v = s[key];
+      if (v !== undefined && v !== null && v !== '') return v;
+    }
+    return null;
+  };
+
+  const oppSources = [
+    opponent,
+    matchup?.opponent,
+    isUser1 ? matchup?.user2Info : matchup?.user1Info,
+    isUser1 ? matchup?.player2 : matchup?.player1,
+    fetchedOpponent,
+  ];
+
+  const oppUsername = pickFirst(oppSources, 'username') || pickFirst(oppSources, 'name');
+  const oppAvatar = pickFirst(oppSources, 'avatar');
+  const oppFrame = pickFirst(oppSources, 'equippedFrame') ?? pickFirst(oppSources, 'frameId');
+  const oppResolvedId = pickFirst(oppSources, 'id') || opponentId || null;
+
+  // Hydrate from /api/profiles when we still lack username or avatar for a
+  // real opponent. This keeps any partial source from blocking the fetch.
+  useEffect(() => {
+    if (!matchup || !opponentId) return;
+    if (matchup.isFakeOpponent) return;
+    if (oppUsername && oppAvatar) return;
+    if (fetchedOpponent && fetchedOpponent.id === opponentId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/profiles/${opponentId}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const p = data.profile || data;
+        if (!cancelled && p) {
+          setFetchedOpponent({
+            id: p.id || opponentId,
+            username: p.username || null,
+            avatar: p.avatar || null,
+            equippedFrame: p.equippedFrame ?? null,
+          });
+        }
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [matchup, opponentId, oppUsername, oppAvatar, fetchedOpponent]);
+
   if (!matchup) return null;
 
   const mode = getGameMode(matchup);
   const theme = MODE_THEMES[mode] || MODE_THEMES.original;
 
-  const isUser1 = matchup.user1Id === currentUser?.id;
   const buyIn = matchup.startingBalance || (isUser1 ? matchup.user1Balance : matchup.user2Balance);
   const potSize = matchup.potSize;
   const payout = parseFloat(matchup.winnerPayout ?? 0);
 
-  const meInfo = myProfile || {
-    username: currentUser?.username || currentUser?.name || 'You',
-    avatar: currentUser?.avatar || currentUser?.image,
+  const meInfo = {
+    id: myProfile?.id || currentUser?.id || null,
+    username: myProfile?.username || currentUser?.username || currentUser?.name || 'You',
+    avatar: myProfile?.avatar || currentUser?.avatar || currentUser?.image || null,
+    equippedFrame: myProfile?.equippedFrame ?? null,
   };
-  const oppInfo = opponent || matchup.opponent || {};
-  const oppFallback = {
-    username: oppInfo.username || (isUser1 ? matchup.user2Info?.username : matchup.user1Info?.username) || 'Opponent',
-    avatar: oppInfo.avatar || (isUser1 ? matchup.user2Info?.avatar : matchup.user1Info?.avatar),
+  const oppInfo = {
+    id: oppResolvedId,
+    username: oppUsername || 'Opponent',
+    avatar: oppAvatar,
+    equippedFrame: oppFrame,
   };
 
-  const leftPlayer = matchup.player1 || (isUser1 ? meInfo : oppFallback);
-  const rightPlayer = matchup.player2 || (isUser1 ? oppFallback : meInfo);
-  const player1 = leftPlayer;
-  const player2 = rightPlayer;
+  const player1 = isUser1 ? meInfo : oppInfo;
+  const player2 = isUser1 ? oppInfo : meInfo;
 
   const matchTypeLabel = {
     random: 'Quick Match',
@@ -192,7 +248,7 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
                   }}
                 >
                   <UserAvatar
-                    user={{ id: player1.id, username: player1.username, avatar: player1.avatar }}
+                    user={{ id: player1.id, username: player1.username, avatar: player1.avatar, equippedFrame: player1.equippedFrame }}
                     size={96}
                   />
                 </div>
@@ -225,7 +281,7 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
                   }}
                 >
                   <UserAvatar
-                    user={{ id: player2.id, username: player2.username, avatar: player2.avatar }}
+                    user={{ id: player2.id, username: player2.username, avatar: player2.avatar, equippedFrame: player2.equippedFrame }}
                     size={96}
                   />
                 </div>
