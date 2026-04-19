@@ -568,9 +568,9 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                 </div>
               )}
 
-              {/* Notifications Bell - alerts only (battle invites, friend requests) */}
+              {/* Notifications Bell - alerts only (battle invites, friend requests) - desktop only */}
               {isLoggedIn && (
-                <div className="relative">
+                <div className="relative hidden lg:block">
                   <button
                     ref={notifBellRef}
                     onClick={() => { setShowMsgDropdown(false); setShowNotifDropdown(v => !v); }}
@@ -606,9 +606,9 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                 </div>
               )}
 
-              {/* Messages icon - chat bubble, separate from alerts */}
+              {/* Messages icon - chat bubble, separate from alerts - desktop only */}
               {isLoggedIn && (
-                <div className="relative">
+                <div className="relative hidden lg:block">
                   <button
                     ref={msgBtnRef}
                     onClick={() => { setShowNotifDropdown(false); setShowMsgDropdown(v => !v); }}
@@ -830,10 +830,18 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                   onClick={toggleMobileMenu}
                   className="lg:hidden absolute no-hover-effect hamburger-btn"
                   style={{ WebkitTapHighlightColor: 'transparent', right: '4px', top: '50%', marginTop: '-12px', WebkitUserSelect: 'none', userSelect: 'none', zIndex: 60 }}
+                  aria-label={isLoggedIn && (notifAlerts + notifMessages) > 0 ? 'Open menu (you have unread notifications)' : 'Open menu'}
                 >
                   <svg className="w-7 h-7 text-gray-300 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                     <path d="M3 7h18M3 12h18M3 17h18" />
                   </svg>
+                  {isLoggedIn && (notifAlerts + notifMessages) > 0 && (
+                    <span
+                      className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full pointer-events-none"
+                      style={{ boxShadow: '0 0 6px rgba(239,68,68,0.8)' }}
+                      aria-hidden="true"
+                    />
+                  )}
                 </button>
               )}
             </div>

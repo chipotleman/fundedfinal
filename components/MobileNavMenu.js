@@ -18,6 +18,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
   const { data: session, status } = useSession();
   const { counts: notifCounts } = useNotifications();
   const alertsBadge = (notifCounts?.battleInvites || 0) + (notifCounts?.friendRequests || 0);
+  const notificationsBadge = (notifCounts?.battleInvites || 0) + (notifCounts?.friendRequests || 0) + (notifCounts?.gameResults || 0);
   const messagesBadge = notifCounts?.unreadMessages || 0;
   
   // Use session directly for login state - more reliable than prop
@@ -224,6 +225,18 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 {alertsBadge > 0 && (
                   <span className="ml-2 min-w-[20px] h-[20px] px-1.5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center">
                     {alertsBadge > 9 ? '9+' : alertsBadge}
+                  </span>
+                )}
+              </Link>
+              <Link
+                href="/notifications"
+                onClick={onClose}
+                className="flex items-center justify-between text-gray-300 font-light text-base uppercase tracking-wider py-3"
+              >
+                <span>Notifications</span>
+                {notificationsBadge > 0 && (
+                  <span className="ml-2 min-w-[20px] h-[20px] px-1.5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center" aria-label={`${notificationsBadge} unread notifications`}>
+                    {notificationsBadge > 9 ? '9+' : notificationsBadge}
                   </span>
                 )}
               </Link>
