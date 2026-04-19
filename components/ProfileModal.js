@@ -63,32 +63,118 @@ export default function ProfileModal({ profile, isOpen, onClose }) {
           </div>
 
           {(() => {
-            const achievements = Array.isArray(profile.achievements) ? profile.achievements : [];
+            const earnedAchievements = Array.isArray(profile.achievements) ? profile.achievements : [];
+            const allAchievements = Array.isArray(profile.allAchievements) ? profile.allAchievements : [];
             const recentBets = Array.isArray(profile.recentBets) ? profile.recentBets : [];
-            const hasAchievements = achievements.length > 0;
+
+            const earnedById = new Map(
+              earnedAchievements
+                .filter((a) => a && typeof a === 'object' && a.id)
+                .map((a) => [a.id, a])
+            );
+
+            let gallery = allAchievements;
+            if (gallery.length === 0 && earnedAchievements.length > 0) {
+              gallery = earnedAchievements.map((a) => ({
+                id: a.id,
+                icon: a.icon,
+                name: a.name || a.title,
+                description: a.description,
+                earned: true,
+                earnedAt: a.earnedAt || null,
+                progressPercent: 100,
+                progressText: '',
+                progressLabel: '',
+              }));
+            }
+
+            const sortedGallery = [...gallery].sort((a, b) => {
+              if (a.earned !== b.earned) return a.earned ? -1 : 1;
+              return (b.progressPercent || 0) - (a.progressPercent || 0);
+            });
+
+            const earnedCount = sortedGallery.filter((a) => a.earned).length;
+            const hasGallery = sortedGallery.length > 0;
             const formatAmount = (n) => {
               const num = Number(n);
               if (!Number.isFinite(num)) return '0';
               return Math.abs(num).toLocaleString(undefined, { maximumFractionDigits: 2 });
             };
-            const gridCols = hasAchievements ? 'md:grid-cols-2' : 'md:grid-cols-1';
+            const formatEarnedAt = (iso) => {
+              if (!iso) return '';
+              try {
+                return new Date(iso).toLocaleDateString();
+              } catch {
+                return '';
+              }
+            };
+            const gridCols = hasGallery ? 'md:grid-cols-2' : 'md:grid-cols-1';
             return (
               <div className={`grid ${gridCols} gap-6`}>
-                {hasAchievements && (
+                {hasGallery && (
                   <div>
-                    <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Achievements</h3>
-                    <div className="space-y-2">
-                      {achievements.map((achievement, index) => (
-                        <div key={index} className="flex items-center space-x-3 rounded-lg p-3" style={{ backgroundColor: '#111', border: '1px solid #1a1a1a' }}>
-                          <span className="text-2xl">{achievement.icon || '🏅'}</span>
-                          <div>
-                            <div className="text-white font-medium text-sm">{achievement.name || achievement.title}</div>
-                            {achievement.description && (
-                              <div className="text-gray-500 text-xs">{achievement.description}</div>
+                    <div className="flex items-baseline justify-between mb-3">
+                      <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Achievements</h3>
+                      <span className="text-xs text-gray-500">{earnedCount} / {sortedGallery.length}</span>
+                    </div>
+                    <div className="space-y-2 max-h-96 overflow-y-auto pr-1">
+                      {sortedGallery.map((achievement, index) => {
+                        const isEarned = !!achievement.earned;
+                        const pct = Math.max(0, Math.min(100, Number(achievement.progressPercent) || 0));
+                        const earnedDate = formatEarnedAt(achievement.earnedAt) || formatEarnedAt(earnedById.get(achievement.id)?.earnedAt);
+                        return (
+                          <div
+                            key={achievement.id || index}
+                            className="rounded-lg p-3"
+                            style={{
+                              backgroundColor: isEarned ? '#111' : '#0a0a0a',
+                              border: `1px solid ${isEarned ? '#1a1a1a' : '#161616'}`,
+                              opacity: isEarned ? 1 : 0.65,
+                            }}
+                          >
+                            <div className="flex items-center space-x-3">
+                              <span
+                                className="text-2xl relative inline-flex items-center justify-center"
+                                style={{ filter: isEarned ? 'none' : 'grayscale(1)', opacity: isEarned ? 1 : 0.6 }}
+                                aria-label={isEarned ? 'Unlocked' : 'Locked'}
+                                title={isEarned ? 'Unlocked' : 'Locked'}
+                              >
+                                {achievement.icon || '🏅'}
+                                {!isEarned && (
+                                  <span className="absolute -bottom-1 -right-1 text-[10px]" aria-hidden="true">🔒</span>
+                                )}
+                              </span>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className={`font-medium text-sm truncate ${isEarned ? 'text-white' : 'text-gray-400'}`}>
+                                    {achievement.name || achievement.title}
+                                  </div>
+                                  {isEarned && earnedDate && (
+                                    <div className="text-[10px] text-green-400 whitespace-nowrap">Earned {earnedDate}</div>
+                                  )}
+                                </div>
+                                {achievement.description && (
+                                  <div className="text-gray-500 text-xs">{achievement.description}</div>
+                                )}
+                              </div>
+                            </div>
+                            {!isEarned && achievement.progressText && (
+                              <div className="mt-2">
+                                <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: '#1a1a1a' }}>
+                                  <div
+                                    className="h-full bg-blue-500 transition-all"
+                                    style={{ width: `${pct}%` }}
+                                  />
+                                </div>
+                                <div className="mt-1 flex items-center justify-between text-[10px] text-gray-500">
+                                  <span>{achievement.progressText}{achievement.progressLabel ? ` ${achievement.progressLabel}` : ''}</span>
+                                  <span>{pct}%</span>
+                                </div>
+                              </div>
                             )}
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}

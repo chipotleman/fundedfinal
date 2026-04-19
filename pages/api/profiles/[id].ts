@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { db } from "../../../lib/db";
 import { profiles, userBets, fakeOpponents } from "../../../shared/schema";
 import { desc, eq } from "drizzle-orm";
-import { evaluateAndAwardAchievements } from "../../../lib/achievements";
+import { evaluateAndAwardAchievements, getAchievementsWithProgress } from "../../../lib/achievements";
 
 function parseAmericanOdds(odds: unknown): number | null {
   if (odds === null || odds === undefined) return null;
@@ -128,6 +128,13 @@ export default async function handler(
         : [];
       const achievements: Achievement[] = rawAchievements.filter(isAchievement);
 
+      let allAchievements: Awaited<ReturnType<typeof getAchievementsWithProgress>> = [];
+      try {
+        allAchievements = await getAchievementsWithProgress(id);
+      } catch (progErr) {
+        console.error("[ACHIEVEMENTS] progress lookup error:", progErr);
+      }
+
       return res.status(200).json({
         ...profile,
         total_bets: totalBets,
@@ -135,6 +142,7 @@ export default async function handler(
         losses,
         recentBets,
         achievements,
+        allAchievements,
         currentStreak,
         avgOdds,
       });
