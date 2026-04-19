@@ -4,25 +4,52 @@ export default function useModalScrollLock(isOpen, { restoreScroll = false } = {
   const savedScrollY = useRef(0);
 
   useEffect(() => {
-    if (isOpen) {
-      if (restoreScroll) {
-        savedScrollY.current = window.scrollY;
-      } else {
-        window.scrollTo(0, 0);
-      }
-      document.body.style.overflow = 'hidden';
+    if (!isOpen) return undefined;
+
+    const body = document.body;
+    const html = document.documentElement;
+
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+    savedScrollY.current = scrollY;
+
+    const prev = {
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+      overflow: body.style.overflow,
+    };
+
+    if (restoreScroll) {
+      body.style.position = 'fixed';
+      body.style.top = `-${scrollY}px`;
+      body.style.left = '0';
+      body.style.right = '0';
+      body.style.width = '100%';
+      body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = '';
-      if (restoreScroll && savedScrollY.current > 0) {
-        const y = savedScrollY.current;
-        requestAnimationFrame(() => {
-          window.scrollTo({ top: y, behavior: 'smooth' });
-        });
-        savedScrollY.current = 0;
-      }
+      body.style.overflow = 'hidden';
+      window.scrollTo(0, 0);
     }
+
     return () => {
-      document.body.style.overflow = '';
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.left = prev.left;
+      body.style.right = prev.right;
+      body.style.width = prev.width;
+      body.style.overflow = prev.overflow;
+
+      if (restoreScroll) {
+        const prevHtmlBehavior = html.style.scrollBehavior;
+        const prevBodyBehavior = body.style.scrollBehavior;
+        html.style.scrollBehavior = 'auto';
+        body.style.scrollBehavior = 'auto';
+        window.scrollTo(0, savedScrollY.current);
+        html.style.scrollBehavior = prevHtmlBehavior;
+        body.style.scrollBehavior = prevBodyBehavior;
+      }
     };
   }, [isOpen, restoreScroll]);
 }
