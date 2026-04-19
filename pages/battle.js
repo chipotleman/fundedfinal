@@ -319,6 +319,11 @@ export default function BattlePage() {
     setShowResult(synthetic);
     setResultData({
       opponent: payload.opponent || null,
+      myProfile: payload.myProfile || (profile ? {
+        username: profile.username,
+        avatar: profile.avatar,
+        equippedFrame: profile.equippedFrame,
+      } : null),
       cashBuyIn: Number(payload.buyIn ?? 0),
       cashPnl: Number(payload.pnl ?? 0),
       potSize: Number(payload.potSize ?? 0),
@@ -328,7 +333,7 @@ export default function BattlePage() {
       isFakeOpponent: isFake,
     });
     setRematchState(null);
-  }, [userId]);
+  }, [userId, profile]);
 
   const loadResultDetails = useCallback(async (resultId) => {
     if (!resultId) return;

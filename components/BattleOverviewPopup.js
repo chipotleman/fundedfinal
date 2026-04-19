@@ -20,7 +20,7 @@ function getPopupTheme(theme) {
   };
 }
 
-function TicketCarousel({ cards, theme, emptyMessage }) {
+export function TicketCarousel({ cards, theme, emptyMessage }) {
   const [index, setIndex] = useState(0);
   const touchStartX = useRef(null);
   const mouseStartX = useRef(null);
