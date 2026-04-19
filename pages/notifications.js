@@ -631,65 +631,94 @@ function NotFriendsCard({ userId, isDarkMode, onFriendAdded }) {
 }
 
 function MessagesPanel({ selectedId, onSelect, ctx, myId, isDarkMode }) {
-  const [friends, setFriends] = useState([]);
+  const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
-  const unreadIds = useMemo(() => {
+
+  // Live unread set from the notifications context — used to bubble
+  // freshly-arrived conversations even before we refetch.
+  const liveUnreadIds = useMemo(() => {
     const s = new Set();
     (ctx.unreadMessages || []).forEach(m => { if (m.sender?.id) s.add(m.sender.id); });
     return s;
   }, [ctx.unreadMessages]);
 
-  const previewBySender = useMemo(() => {
-    const m = new Map();
-    (ctx.unreadMessages || []).forEach(u => {
-      if (u.sender?.id) m.set(u.sender.id, u.preview || '');
-    });
-    return m;
-  }, [ctx.unreadMessages]);
-
   const [friendsError, setFriendsError] = useState(false);
 
-  const loadFriends = useCallback(async () => {
+  const fetchConversations = useCallback(async () => {
     try {
-      const res = await fetch('/api/friends', { credentials: 'include' });
+      const res = await fetch('/api/messages/conversations', { credentials: 'include' });
       if (!res.ok) {
         setFriendsError(true);
         return;
       }
       const data = await res.json();
-      setFriends(data.friends || []);
+      setConversations(data.conversations || []);
       setFriendsError(false);
     } catch {
       setFriendsError(true);
     }
+    finally { setLoading(false); }
   }, []);
+
+  // Reloading after adding a friend should refresh the conversations
+  // (which already include every accepted friend, with or without history).
+  const loadFriends = fetchConversations;
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      await loadFriends();
-      if (!cancelled) setLoading(false);
+      try {
+        const res = await fetch('/api/messages/conversations', { credentials: 'include' });
+        if (!res.ok) {
+          if (!cancelled) setFriendsError(true);
+          return;
+        }
+        const data = await res.json();
+        if (!cancelled) {
+          setConversations(data.conversations || []);
+          setFriendsError(false);
+        }
+      } catch {
+        if (!cancelled) setFriendsError(true);
+      }
+      finally { if (!cancelled) setLoading(false); }
     })();
     return () => { cancelled = true; };
-  }, [loadFriends]);
+  }, []);
+
+  // Refetch when the unread set or selection changes — covers new
+  // incoming messages, the user opening a chat (read state), and replies.
+  const unreadKey = useMemo(
+    () => Array.from(liveUnreadIds).sort().join(','),
+    [liveUnreadIds]
+  );
+  useEffect(() => {
+    if (loading) return;
+    fetchConversations();
+  }, [unreadKey, selectedId, fetchConversations]);
 
   const sorted = useMemo(() => {
     const q = query.trim().toLowerCase();
     const filtered = q
-      ? friends.filter(f => (f.username || '').toLowerCase().includes(q))
-      : friends;
+      ? conversations.filter(c => (c.friend?.username || '').toLowerCase().includes(q))
+      : conversations;
     return [...filtered].sort((a, b) => {
-      const au = unreadIds.has(a.id) ? 1 : 0;
-      const bu = unreadIds.has(b.id) ? 1 : 0;
+      const au = (a.lastMessage?.unread || liveUnreadIds.has(a.friend.id)) ? 1 : 0;
+      const bu = (b.lastMessage?.unread || liveUnreadIds.has(b.friend.id)) ? 1 : 0;
       if (au !== bu) return bu - au;
-      return (a.username || '').localeCompare(b.username || '');
+
+      const at = a.lastMessage?.createdAt ? new Date(a.lastMessage.createdAt).getTime() : 0;
+      const bt = b.lastMessage?.createdAt ? new Date(b.lastMessage.createdAt).getTime() : 0;
+      if (at !== bt) return bt - at;
+
+      return (a.friend?.username || '').localeCompare(b.friend?.username || '');
     });
-  }, [friends, query, unreadIds]);
+  }, [conversations, query, liveUnreadIds]);
 
   const selectedFriend = useMemo(
-    () => friends.find(f => f.id === selectedId) || null,
-    [friends, selectedId]
+    () => conversations.find(c => c.friend?.id === selectedId)?.friend || null,
+    [conversations, selectedId]
   );
 
   const cardBg = isDarkMode ? '#0a0a0a' : '#ffffff';
@@ -729,9 +758,14 @@ function MessagesPanel({ selectedId, onSelect, ctx, myId, isDarkMode }) {
               {query ? 'No matches.' : 'No friends yet. Add friends to start messaging.'}
             </div>
           )}
-          {!loading && sorted.map(f => {
+          {!loading && sorted.map(c => {
+            const f = c.friend;
+            const last = c.lastMessage;
             const isSelected = selectedId === f.id;
-            const unread = unreadIds.has(f.id);
+            const unread = (last?.unread || liveUnreadIds.has(f.id)) && !isSelected;
+            const previewText = last
+              ? `${last.fromMe ? 'You: ' : ''}${last.preview || last.content || ''}`
+              : `${f.battleWins || 0}W-${f.battleLosses || 0}L`;
             return (
               <button
                 key={f.id}
@@ -754,17 +788,28 @@ function MessagesPanel({ selectedId, onSelect, ctx, myId, isDarkMode }) {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span
-                      className={`text-sm truncate ${unread ? 'font-bold' : 'font-medium'}`}
+                      className={`text-sm truncate flex-1 min-w-0 ${unread ? 'font-bold' : 'font-medium'}`}
                       style={{ color: textPrimary }}
                     >
                       {f.username || 'Player'}
                     </span>
+                    {last?.createdAt && (
+                      <span
+                        className="text-[10px] flex-shrink-0"
+                        style={{ color: textSecondary }}
+                      >
+                        {timeAgo(last.createdAt)}
+                      </span>
+                    )}
                     {unread && (
                       <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
                     )}
                   </div>
-                  <div className="text-[11px] truncate" style={{ color: textSecondary }}>
-                    {previewBySender.get(f.id) || `${f.battleWins || 0}W-${f.battleLosses || 0}L`}
+                  <div
+                    className={`text-[11px] truncate ${unread ? 'font-semibold' : ''}`}
+                    style={{ color: unread ? textPrimary : textSecondary }}
+                  >
+                    {previewText}
                   </div>
                 </div>
               </button>
