@@ -283,7 +283,7 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
 
       <div className="border-t border-[#1a1a1a]">
         <button
-          onClick={() => { onClose?.(); router.push('/social'); }}
+          onClick={() => { onClose?.(); router.push('/battle'); }}
           className="w-full text-center text-xs font-semibold text-gray-300 hover:text-white py-3"
         >
           View all
@@ -979,7 +979,7 @@ function MessageItem({ item, ctx, router, onClose, expanded, onToggle, onCollaps
                 onClick={() => {
                   onClose?.();
                   const name = encodeURIComponent(sender.username || 'User');
-                  router.push(`/social?chat=${sender.id}&name=${name}`);
+                  router.push(`/battle?chat=${sender.id}&name=${name}`);
                 }}
                 className="mt-1.5 text-[11px] text-blue-400 hover:text-blue-300"
               >

@@ -209,7 +209,7 @@ function Toast({ toast, ctx, router }) {
             onClick={() => {
               ctx.dismissToast(toast.id);
               const name = encodeURIComponent(sender.username || 'User');
-              router.push(`/social?chat=${sender.id}&name=${name}`);
+              router.push(`/battle?chat=${sender.id}&name=${name}`);
             }}
             className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-1.5 rounded-lg"
           >Reply</button>

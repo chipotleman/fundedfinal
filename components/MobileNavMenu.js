@@ -205,13 +205,6 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 The Lab
               </Link>
               <Link
-                href="/battle"
-                onClick={onClose}
-                className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
-              >
-                Battle
-              </Link>
-              <Link
                 href="/bet-history"
                 onClick={onClose}
                 className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
@@ -227,12 +220,12 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 Leaderboard
               </Link>
               <Link
-                href="/social"
+                href="/battle"
                 prefetch={true}
                 onClick={onClose}
                 className="flex items-center justify-between text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
-                <span>Social</span>
+                <span>Battle</span>
                 {socialBadge > 0 && (
                   <span className="ml-2 min-w-[20px] h-[20px] px-1.5 bg-red-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center">
                     {socialBadge > 9 ? '9+' : socialBadge}
