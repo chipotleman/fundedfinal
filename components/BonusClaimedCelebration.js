@@ -6,6 +6,19 @@ const STORAGE_PREFIX = 'piks_bonus_claimed_shown_v1:';
 const FRESHNESS_WINDOW_MS = 24 * 60 * 60 * 1000;
 const POLL_INTERVAL_MS = 20000;
 
+async function postAcknowledge() {
+  try {
+    await fetch('/api/user/has-deposited', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'acknowledgeBonusClaimed' }),
+    });
+  } catch (_e) {
+    // Best effort; the next check will retry persisting if needed.
+  }
+}
+
 function formatAmount(value) {
   const n = Number(value) || 0;
   if (Number.isInteger(n)) return `$${n}`;
@@ -56,21 +69,33 @@ export default function BonusClaimedCelebration() {
 
     const check = async () => {
       if (cancelled || dismissedRef.current) return;
-      if (alreadyShown()) return;
       try {
         const res = await fetch('/api/user/has-deposited', { credentials: 'include' });
         if (!res.ok) return;
         const data = await res.json();
         if (cancelled || dismissedRef.current) return;
+        // Server-side acknowledgement is the source of truth across devices.
+        if (data?.bonusClaimedAcknowledgedAt) {
+          markShown();
+          return;
+        }
+        // Migrate legacy per-device dismissals: if this browser already saw
+        // the popup but the server doesn't know yet, persist it now and skip.
+        if (alreadyShown()) {
+          postAcknowledge();
+          return;
+        }
         if (!data?.hasDeposited) return;
         const grantedAt = data.grantedAt ? Date.parse(data.grantedAt) : null;
         // Only celebrate if the match was credited recently. Prevents a
         // celebratory popup for users who deposited long before this
-        // feature shipped, or who already saw it on another device.
+        // feature shipped.
         if (!grantedAt || Number.isNaN(grantedAt)) return;
         if (Date.now() - grantedAt > FRESHNESS_WINDOW_MS) {
-          // Too old — treat as already-acknowledged so we never show it.
+          // Too old — treat as already-acknowledged so we never show it,
+          // and persist that to the server so other devices agree.
           markShown();
+          postAcknowledge();
           return;
         }
         const amount = Number(data.matchAmount) || 0;
@@ -115,6 +140,7 @@ export default function BonusClaimedCelebration() {
   const handleClose = useCallback(() => {
     dismissedRef.current = true;
     markShown();
+    postAcknowledge();
     setOpen(false);
   }, [markShown]);
 

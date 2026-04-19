@@ -18,6 +18,7 @@ export const users = pgTable("users", {
   password: varchar("password", { length: 255 }), // Hashed password (null for OAuth users)
   emailVerified: timestamp("email_verified"),
   image: text("image"),
+  bonusClaimedAcknowledgedAt: timestamp("bonus_claimed_acknowledged_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

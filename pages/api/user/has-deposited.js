@@ -1,11 +1,11 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { userChallenges, profiles } from '../../../shared/schema';
+import { userChallenges, profiles, users } from '../../../shared/schema';
 import { eq, asc } from 'drizzle-orm';
 
 export default async function handler(req, res) {
-  if (req.method !== 'GET') {
+  if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
@@ -15,7 +15,21 @@ export default async function handler(req, res) {
       return res.status(200).json({ hasDeposited: false, signedIn: false });
     }
 
-    const [rows, profileRows] = await Promise.all([
+    if (req.method === 'POST') {
+      // Idempotently mark the bonus-claimed celebration as acknowledged for
+      // this user so we never show it again on any device.
+      const action = req.body?.action;
+      if (action !== 'acknowledgeBonusClaimed') {
+        return res.status(400).json({ error: 'Unknown action' });
+      }
+      await db
+        .update(users)
+        .set({ bonusClaimedAcknowledgedAt: new Date() })
+        .where(eq(users.id, session.user.id));
+      return res.status(200).json({ ok: true });
+    }
+
+    const [rows, profileRows, userRows] = await Promise.all([
       db
         .select({
           id: userChallenges.id,
@@ -36,11 +50,20 @@ export default async function handler(req, res) {
         .from(profiles)
         .where(eq(profiles.id, session.user.id))
         .limit(1),
+      db
+        .select({ bonusClaimedAcknowledgedAt: users.bonusClaimedAcknowledgedAt })
+        .from(users)
+        .where(eq(users.id, session.user.id))
+        .limit(1),
     ]);
 
     const matchGranted = !!profileRows[0]?.grantedAt;
     const profileGrantedAmount = profileRows[0]?.grantedAmount != null
       ? parseFloat(profileRows[0].grantedAmount)
+      : null;
+    const bonusClaimedAcknowledgedAt = userRows[0]?.bonusClaimedAcknowledgedAt || null;
+    const bonusClaimedAcknowledgedAtIso = bonusClaimedAcknowledgedAt
+      ? new Date(bonusClaimedAcknowledgedAt).toISOString()
       : null;
 
     if (rows.length === 0) {
@@ -55,17 +78,15 @@ export default async function handler(req, res) {
         grantedAt: profileRows[0]?.grantedAt
           ? new Date(profileRows[0].grantedAt).toISOString()
           : null,
+        bonusClaimedAcknowledgedAt: bonusClaimedAcknowledgedAtIso,
       });
     }
 
     const first = rows[0];
     const startingBalance = parseFloat(first.startingBalance) || 0;
     const pricePaid = parseFloat(first.pricePaid) || 0;
-    const grantedAmount = profileRows[0]?.grantedAmount != null
-      ? parseFloat(profileRows[0].grantedAmount)
-      : null;
-    const matchAmount = grantedAmount != null && !Number.isNaN(grantedAmount)
-      ? grantedAmount
+    const matchAmount = profileGrantedAmount != null && !Number.isNaN(profileGrantedAmount)
+      ? profileGrantedAmount
       : Math.max(0, startingBalance - pricePaid);
     const grantedAt = profileRows[0]?.grantedAt || first.activatedAt || first.createdAt;
 
@@ -78,6 +99,7 @@ export default async function handler(req, res) {
       pricePaid,
       matchAmount,
       grantedAt: grantedAt ? new Date(grantedAt).toISOString() : null,
+      bonusClaimedAcknowledgedAt: bonusClaimedAcknowledgedAtIso,
     });
   } catch (error) {
     console.error('has-deposited error:', error);
