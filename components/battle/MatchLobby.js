@@ -60,9 +60,6 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
   // Field-by-field merge of every source the lobby might receive opponent
   // data from. Earlier sources win per-field but never block later sources
   // from filling in missing fields.
-  const isUser1 = matchup?.user1Id === currentUser?.id;
-  const opponentId = matchup ? (isUser1 ? matchup.user2Id : matchup.user1Id) : null;
-
   const pickFirst = (sources, key) => {
     for (const s of sources) {
       if (!s || typeof s !== 'object') continue;
@@ -72,11 +69,50 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
     return null;
   };
 
+  // Reset any cached fetched opponent whenever the matchup itself changes,
+  // so a previous lobby's opponent can't bleed into a new lobby.
+  useEffect(() => {
+    setFetchedOpponent(null);
+  }, [matchup?.id]);
+
+  // Resolve the opponent's id without requiring currentUser to be ready yet.
+  // The explicit `opponent` prop and `matchup.opponent` are already viewer-
+  // perspective from the server, so they're the most reliable source. We fall
+  // back to deriving from user1Id/user2Id only when we know which side we are.
+  // Note: we intentionally do NOT include `fetchedOpponent?.id` here — that
+  // value is derived from this id and using it would let stale state pin the
+  // opponent identity for a new matchup.
+  const explicitOpponentId =
+    opponent?.id ||
+    matchup?.opponent?.id ||
+    null;
+
+  // Only compute side perspective when currentUser is actually known, so a
+  // briefly-null session doesn't make us treat the viewer as the opponent.
+  let derivedIsUser1 = null;
+  if (matchup && currentUser?.id) {
+    if (matchup.user1Id === currentUser.id) derivedIsUser1 = true;
+    else if (matchup.user2Id === currentUser.id) derivedIsUser1 = false;
+  }
+  // If we have an explicit opponent id, we can also infer perspective from it.
+  if (derivedIsUser1 === null && matchup && explicitOpponentId) {
+    if (matchup.user1Id && matchup.user1Id === explicitOpponentId) derivedIsUser1 = false;
+    else if (matchup.user2Id && matchup.user2Id === explicitOpponentId) derivedIsUser1 = true;
+  }
+  const isUser1 = derivedIsUser1 === true;
+
+  const derivedOpponentId =
+    derivedIsUser1 === true ? matchup?.user2Id :
+    derivedIsUser1 === false ? matchup?.user1Id :
+    null;
+
+  const opponentId = explicitOpponentId || derivedOpponentId || null;
+
   const oppSources = [
     opponent,
     matchup?.opponent,
-    isUser1 ? matchup?.user2Info : matchup?.user1Info,
-    isUser1 ? matchup?.player2 : matchup?.player1,
+    derivedIsUser1 === true ? matchup?.user2Info : matchup?.user1Info,
+    derivedIsUser1 === true ? matchup?.player2 : matchup?.player1,
     fetchedOpponent,
   ];
 
@@ -85,11 +121,12 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
   const oppFrame = pickFirst(oppSources, 'equippedFrame') ?? pickFirst(oppSources, 'frameId');
   const oppResolvedId = pickFirst(oppSources, 'id') || opponentId || null;
 
-  // Hydrate from /api/profiles when we still lack username or avatar for a
-  // real opponent. This keeps any partial source from blocking the fetch.
+  // Hydrate from /api/profiles whenever we know an opponent id but are still
+  // missing either the username or a non-empty avatar. This is independent of
+  // currentUser/session readiness so a briefly-null session can't block it.
   useEffect(() => {
-    if (!matchup || !opponentId) return;
-    if (matchup.isFakeOpponent) return;
+    if (!opponentId) return;
+    if (matchup?.isFakeOpponent) return;
     if (oppUsername && oppAvatar) return;
     if (fetchedOpponent && fetchedOpponent.id === opponentId) return;
     let cancelled = false;
@@ -110,7 +147,7 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
       } catch {}
     })();
     return () => { cancelled = true; };
-  }, [matchup, opponentId, oppUsername, oppAvatar, fetchedOpponent]);
+  }, [matchup?.isFakeOpponent, opponentId, oppUsername, oppAvatar, fetchedOpponent]);
 
   if (!matchup) return null;
 
@@ -235,8 +272,8 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
           <div className={`lobby-label text-2xl md:text-3xl font-black mb-1 ${'text-white'}`}>1v1 MATCH</div>
           <div className="lobby-label text-xs text-gray-500 mb-8">Get ready. The game is about to begin.</div>
 
-          <div className="flex items-center justify-center gap-0 mb-8 relative" style={{ minHeight: '200px' }}>
-            <div className={`text-center flex-1 ${entered ? 'lobby-player-left' : 'opacity-0'}`}>
+          <div className="flex items-stretch justify-center gap-0 mb-8 relative" style={{ minHeight: '200px' }}>
+            <div className={`text-center ${entered ? 'lobby-player-left' : 'opacity-0'}`} style={{ flex: '1 1 0%', minWidth: 0 }}>
               <div className="relative inline-block mb-3">
                 <div
                   className="w-28 h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center overflow-hidden relative"
@@ -270,7 +307,7 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
               )}
             </div>
 
-            <div className={`text-center flex-1 ${entered ? 'lobby-player-right' : 'opacity-0'}`}>
+            <div className={`text-center ${entered ? 'lobby-player-right' : 'opacity-0'}`} style={{ flex: '1 1 0%', minWidth: 0 }}>
               <div className="relative inline-block mb-3">
                 <div
                   className="w-28 h-28 md:w-32 md:h-32 rounded-full flex items-center justify-center overflow-hidden relative"
