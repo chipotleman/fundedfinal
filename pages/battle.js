@@ -20,6 +20,7 @@ import { useMatchup } from '../contexts/MatchupContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNotifications } from '../contexts/NotificationsContext';
 import { formatMoney } from '../utils/formatMoney';
+import { formatLastSeen } from '../utils/relativeTime';
 
 function UserAvatar({ user, size = 'md' }) {
   const sizeMap = { sm: 'w-8 h-8 text-xs', md: 'w-10 h-10 text-sm', lg: 'w-12 h-12 text-base' };
@@ -526,7 +527,9 @@ export default function BattlePage() {
             </div>
           ) : (
             <div className="divide-y" style={{ borderColor: cardBorder }}>
-              {friends.map(friend => (
+              {friends.map(friend => {
+                const lastSeenLabel = !friend.isOnline && friend.lastSeenAt != null ? formatLastSeen(friend.lastSeenAt) : '';
+                return (
                 <div key={friend.id} className="flex items-center gap-2.5 px-3 py-2.5 group">
                   <div className="relative flex-shrink-0">
                     <div
@@ -557,6 +560,9 @@ export default function BattlePage() {
                       )}
                     </div>
                     <div className="text-[10px]" style={{ color: textSecondary }}>{friend.battleWins || 0}W-{friend.battleLosses || 0}L</div>
+                    {lastSeenLabel && (
+                      <div className="text-[10px]" style={{ color: textSecondary }}>Last seen {lastSeenLabel}</div>
+                    )}
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">
                     <button
@@ -575,7 +581,8 @@ export default function BattlePage() {
                     </button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )
         )}
