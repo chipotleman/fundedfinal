@@ -28,7 +28,7 @@ function useCountUp(target, duration = 1000, shouldStart = false) {
   return value;
 }
 
-export default function MatchResult({ matchup, currentUserId, onRematch, onClose }) {
+export default function MatchResult({ matchup, currentUserId, onRematch, onClose, highlight = false }) {
   const { isDarkMode } = useTheme();
   const [showStats, setShowStats] = useState(false);
   const [showTitle, setShowTitle] = useState(false);
@@ -164,6 +164,15 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
         .mr-stats-card {
           animation: mr-stats-slide 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
+        @keyframes mr-result-highlight-anim {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
+          25% { box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.55), 0 0 28px rgba(6, 182, 212, 0.5); }
+          75% { box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.3), 0 0 20px rgba(6, 182, 212, 0.35); }
+        }
+        .mr-result-highlight {
+          animation: mr-stats-slide 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+                     mr-result-highlight-anim 1.4s ease-in-out 0.5s 2;
+        }
         .mr-pulse-rematch {
           animation: mr-pulse-btn 1.5s ease-in-out infinite;
         }
@@ -243,7 +252,14 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
           )}
 
           {showStats && (
-            <div className="mr-stats-card rounded-xl p-5 mb-6 space-y-4" style={{ background: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 4px 12px rgba(0,0,0,0.08)' }}>
+            <div
+              className={`mr-stats-card rounded-xl p-5 mb-6 space-y-4 ${highlight ? 'mr-result-highlight' : ''}`}
+              style={{
+                background: isDarkMode ? '#0d0d0d' : '#ffffff',
+                border: `1px solid ${highlight ? 'rgba(6, 182, 212, 0.55)' : (isDarkMode ? '#1a1a1a' : '#e5e7eb')}`,
+                boxShadow: isDarkMode ? 'none' : '0 4px 12px rgba(0,0,0,0.08)',
+              }}
+            >
               <div className="flex justify-between items-center">
                 <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Starting Balance</span>
                 <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${formatMoney(animatedStarting)}</span>

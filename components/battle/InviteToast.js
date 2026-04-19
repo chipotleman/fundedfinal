@@ -1,7 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
-export default function InviteToast({ invite, onAccept, onDecline }) {
+export default function InviteToast({ invite, onAccept, onDecline, highlight = false }) {
   const [loading, setLoading] = useState(null);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!highlight || !ref.current) return;
+    try {
+      ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch {}
+  }, [highlight]);
 
   const handleAction = async (action) => {
     setLoading(action);
@@ -18,7 +26,20 @@ export default function InviteToast({ invite, onAccept, onDecline }) {
   const potSize = buyIn * 2;
 
   return (
-    <div className="bg-gradient-to-r from-blue-900/40 to-blue-800/30 border border-blue-500/30 rounded-xl p-4 animate-slideIn">
+    <div
+      ref={ref}
+      className={`bg-gradient-to-r from-blue-900/40 to-blue-800/30 border rounded-xl p-4 animate-slideIn transition-all duration-500 ${highlight ? 'invite-highlight border-blue-400' : 'border-blue-500/30'}`}
+    >
+      <style jsx>{`
+        @keyframes inviteHighlightPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+          25% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.45), 0 0 24px rgba(59, 130, 246, 0.5); }
+          75% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25), 0 0 18px rgba(59, 130, 246, 0.35); }
+        }
+        .invite-highlight {
+          animation: inviteHighlightPulse 1.4s ease-in-out 2;
+        }
+      `}</style>
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
           {sender.avatar ? (

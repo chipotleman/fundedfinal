@@ -230,6 +230,7 @@ function BattleCard({ battle, compact, focused }) {
   const router = useRouter();
   const [timeLeft, setTimeLeft] = useState(battle.remainingMs || 0);
   const [expanded, setExpanded] = useState(false);
+  const cardRef = useRef(null);
 
   useEffect(() => {
     if (!battle.endsAt) return;
@@ -241,6 +242,16 @@ function BattleCard({ battle, compact, focused }) {
     const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
   }, [battle.endsAt]);
+
+  useEffect(() => {
+    if (!focused || !cardRef.current) return;
+    const t = setTimeout(() => {
+      try {
+        cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } catch {}
+    }, 100);
+    return () => clearTimeout(t);
+  }, [focused]);
 
   const user1 = battle.user1 || {};
   const user2 = battle.user2 || {};
@@ -262,11 +273,12 @@ function BattleCard({ battle, compact, focused }) {
   if (compact) {
     return (
       <div
-        className="flex-shrink-0 w-[360px] rounded-xl p-3 cursor-pointer flex flex-col"
+        ref={cardRef}
+        className={`flex-shrink-0 w-[360px] rounded-xl p-3 cursor-pointer flex flex-col ${focused ? 'live-battle-highlight' : ''}`}
         onClick={() => router.push(`/battle?battle=${battle.id}`)}
         style={{
           backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff',
-          border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`,
+          border: focused ? '1px solid rgba(6, 182, 212, 0.5)' : `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`,
           boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08)',
         }}
       >
@@ -343,10 +355,11 @@ function BattleCard({ battle, compact, focused }) {
 
   return (
     <div
-      className="rounded-xl overflow-hidden"
+      ref={cardRef}
+      className={`rounded-xl overflow-hidden ${focused ? 'live-battle-highlight' : ''}`}
       style={{
         backgroundColor: isDarkMode ? '#0d0d0d' : '#ffffff',
-        border: focused ? '1px solid rgba(6, 182, 212, 0.3)' : `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`,
+        border: focused ? '1px solid rgba(6, 182, 212, 0.5)' : `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`,
         boxShadow: isDarkMode ? 'none' : '0 1px 3px rgba(0,0,0,0.08)',
       }}
     >

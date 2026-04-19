@@ -63,6 +63,9 @@ export default function BattlePage() {
   const [forfeitConfirmation, setForfeitConfirmation] = useState(null);
   const [showBattleOptions, setShowBattleOptions] = useState(false);
   const [focusLiveBattleId, setFocusLiveBattleId] = useState(null);
+  const [highlightInviteId, setHighlightInviteId] = useState(null);
+  const [highlightResult, setHighlightResult] = useState(false);
+  const inviteRowRef = useRef(null);
 
   const [socialTab, setSocialTab] = useState('friends');
   const [searchQuery, setSearchQuery] = useState('');
@@ -279,6 +282,9 @@ export default function BattlePage() {
         if (typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches) {
           setSocialSheetOpen(true);
         }
+        // Briefly highlight the targeted invite so the user can spot it.
+        setHighlightInviteId(inviteId);
+        setTimeout(() => setHighlightInviteId(prev => (prev === inviteId ? null : prev)), 3500);
         // Refresh invites so the deep-linked one is present even if it
         // arrived after the initial fetch.
         fetchData();
@@ -301,6 +307,10 @@ export default function BattlePage() {
                 user1FinalBalance: match.user1FinalBalance || match.user1_final_balance,
                 user2FinalBalance: match.user2FinalBalance || match.user2_final_balance,
               });
+              // Briefly highlight the result panel so the user sees this is
+              // the exact match the notification pointed to.
+              setHighlightResult(true);
+              setTimeout(() => setHighlightResult(false), 3500);
             }
           }
         } catch {}
@@ -308,6 +318,8 @@ export default function BattlePage() {
       if (liveId) {
         // LiveBattlesSection focuses the matching battle via focusBattleId.
         setFocusLiveBattleId(liveId);
+        // Auto-clear focus so the highlight effect fades after a couple seconds.
+        setTimeout(() => setFocusLiveBattleId(prev => (prev === liveId ? null : prev)), 3500);
       }
 
       // Clear the consumed query param so a refresh doesn't re-trigger.
@@ -433,6 +445,17 @@ export default function BattlePage() {
     window.addEventListener('resumeBattleOptions', handleResume);
     return () => window.removeEventListener('resumeBattleOptions', handleResume);
   }, []);
+
+  // Scroll the highlighted invite row into view once it renders.
+  useEffect(() => {
+    if (!highlightInviteId) return;
+    const t = setTimeout(() => {
+      try {
+        inviteRowRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } catch {}
+    }, 100);
+    return () => clearTimeout(t);
+  }, [highlightInviteId, socialTab, socialSheetOpen, invites.received?.length, invites.sent?.length]);
 
   const totalBattles = (profile?.battleWins || 0) + (profile?.battleLosses || 0);
   const winRate = totalBattles > 0 ? Math.round(((profile?.battleWins || 0) / totalBattles) * 100) : 0;
@@ -605,7 +628,11 @@ export default function BattlePage() {
           ) : (
             <div className="divide-y" style={{ borderColor: cardBorder }}>
               {(invites.received || []).map(invite => (
-                <div key={invite.id} className="px-3 py-2.5 bg-gradient-to-r from-blue-900/20 to-transparent">
+                <div
+                  key={invite.id}
+                  ref={invite.id === highlightInviteId ? inviteRowRef : null}
+                  className={`px-3 py-2.5 bg-gradient-to-r from-blue-900/20 to-transparent transition-all duration-500 ${invite.id === highlightInviteId ? 'invite-row-highlight' : ''}`}
+                >
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ backgroundColor: isDarkMode ? '#374151' : '#e5e7eb' }}>
                       {invite.sender?.avatar ? <img src={invite.sender.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-[10px] font-bold text-white">{invite.sender?.username?.[0]?.toUpperCase() || '?'}</span>}
@@ -622,7 +649,11 @@ export default function BattlePage() {
                 </div>
               ))}
               {(invites.sent || []).map(invite => (
-                <div key={invite.id} className="flex items-center gap-2.5 px-3 py-2.5">
+                <div
+                  key={invite.id}
+                  ref={invite.id === highlightInviteId ? inviteRowRef : null}
+                  className={`flex items-center gap-2.5 px-3 py-2.5 transition-all duration-500 ${invite.id === highlightInviteId ? 'invite-row-highlight' : ''}`}
+                >
                   <div className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ backgroundColor: isDarkMode ? '#374151' : '#e5e7eb' }}>
                     {invite.receiver?.avatar ? <img src={invite.receiver.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-[10px] font-bold text-white">{invite.receiver?.username?.[0]?.toUpperCase() || '?'}</span>}
                   </div>
@@ -692,6 +723,24 @@ export default function BattlePage() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: isDarkMode ? '#000000' : '#f5f5f5' }}>
+      <style jsx global>{`
+        @keyframes inviteRowHighlightAnim {
+          0%, 100% { background-color: rgba(59, 130, 246, 0); box-shadow: inset 0 0 0 0 rgba(59, 130, 246, 0); }
+          25% { background-color: rgba(59, 130, 246, 0.18); box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.55); }
+          75% { background-color: rgba(59, 130, 246, 0.10); box-shadow: inset 0 0 0 2px rgba(59, 130, 246, 0.35); }
+        }
+        .invite-row-highlight {
+          animation: inviteRowHighlightAnim 1.4s ease-in-out 2;
+        }
+        @keyframes liveBattleHighlightAnim {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
+          25% { box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.55), 0 0 24px rgba(6, 182, 212, 0.45); }
+          75% { box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.3), 0 0 18px rgba(6, 182, 212, 0.3); }
+        }
+        .live-battle-highlight {
+          animation: liveBattleHighlightAnim 1.4s ease-in-out 2;
+        }
+      `}</style>
       <TopNavbar />
 
       {showLobby && (
@@ -706,6 +755,7 @@ export default function BattlePage() {
         <MatchResult
           matchup={showResult}
           currentUserId={userId}
+          highlight={highlightResult}
           onRematch={() => { setShowResult(null); setShowQuickMatch(true); }}
           onClose={() => setShowResult(null)}
         />
@@ -760,6 +810,7 @@ export default function BattlePage() {
                   invite={invite}
                   onAccept={handleAcceptInvite}
                   onDecline={handleDeclineInvite}
+                  highlight={invite.id === highlightInviteId}
                 />
               ))}
             </div>
