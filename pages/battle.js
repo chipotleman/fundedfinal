@@ -419,19 +419,34 @@ export default function BattlePage() {
             <div className="divide-y" style={{ borderColor: cardBorder }}>
               {friends.map(friend => (
                 <div key={friend.id} className="flex items-center gap-2.5 px-3 py-2.5 group">
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer"
-                    style={{ backgroundColor: isDarkMode ? '#374151' : '#e5e7eb' }}
-                    onClick={() => router.push(`/profile/${friend.id}`)}
-                  >
-                    {friend.avatar ? (
-                      <img src={friend.avatar} className="w-full h-full object-cover" alt="" />
-                    ) : (
-                      <span className="text-xs font-bold" style={{ color: textPrimary }}>{friend.username?.[0]?.toUpperCase()}</span>
+                  <div className="relative flex-shrink-0">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden cursor-pointer"
+                      style={{ backgroundColor: isDarkMode ? '#374151' : '#e5e7eb' }}
+                      onClick={() => router.push(`/profile/${friend.id}`)}
+                    >
+                      {friend.avatar ? (
+                        <img src={friend.avatar} className="w-full h-full object-cover" alt="" />
+                      ) : (
+                        <span className="text-xs font-bold" style={{ color: textPrimary }}>{friend.username?.[0]?.toUpperCase()}</span>
+                      )}
+                    </div>
+                    {friend.isOnline && (
+                      <span
+                        className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-green-500"
+                        style={{ border: `2px solid ${cardBg}` }}
+                        title="Active now"
+                        aria-label="Active now"
+                      />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate cursor-pointer" style={{ color: textPrimary }} onClick={() => router.push(`/profile/${friend.id}`)}>{friend.username}</div>
+                    <div className="text-sm font-medium truncate cursor-pointer flex items-center gap-1.5" style={{ color: textPrimary }} onClick={() => router.push(`/profile/${friend.id}`)}>
+                      <span className="truncate">{friend.username}</span>
+                      {friend.isOnline && (
+                        <span className="text-[9px] font-semibold uppercase tracking-wide text-green-500 flex-shrink-0">Active now</span>
+                      )}
+                    </div>
                     <div className="text-[10px]" style={{ color: textSecondary }}>{friend.battleWins || 0}W-{friend.battleLosses || 0}L</div>
                   </div>
                   <div className="flex items-center gap-1 flex-shrink-0">

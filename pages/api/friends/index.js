@@ -45,6 +45,7 @@ export default async function handler(req, res) {
             battleWins: profiles.battleWins,
             battleLosses: profiles.battleLosses,
             status: profiles.status,
+            lastSeenAt: profiles.lastSeenAt,
           })
           .from(profiles)
           .where(inArray(profiles.id, friendIds)),
@@ -54,10 +55,15 @@ export default async function handler(req, res) {
           .where(inArray(users.id, friendIds)),
       ]);
 
+      const ONLINE_THRESHOLD_MS = 5 * 60 * 1000;
+      const nowMs = Date.now();
+
       const friends = friendIds.map(fid => {
         const profile = friendProfiles.find(p => p.id === fid);
         const user = friendUsers.find(u => u.id === fid);
         const emailHandle = user?.email ? user.email.split('@')[0] : null;
+        const lastSeenAt = profile?.lastSeenAt ? new Date(profile.lastSeenAt) : null;
+        const isOnline = lastSeenAt ? (nowMs - lastSeenAt.getTime()) <= ONLINE_THRESHOLD_MS : false;
         return {
           id: fid,
           username: profile?.username || emailHandle || 'Player',
@@ -65,7 +71,17 @@ export default async function handler(req, res) {
           battleWins: profile?.battleWins ?? 0,
           battleLosses: profile?.battleLosses ?? 0,
           status: profile?.status || 'inactive',
+          lastSeenAt: lastSeenAt ? lastSeenAt.toISOString() : null,
+          isOnline,
         };
+      });
+
+      friends.sort((a, b) => {
+        if (a.isOnline !== b.isOnline) return a.isOnline ? -1 : 1;
+        const aT = a.lastSeenAt ? new Date(a.lastSeenAt).getTime() : 0;
+        const bT = b.lastSeenAt ? new Date(b.lastSeenAt).getTime() : 0;
+        if (aT !== bT) return bT - aT;
+        return (a.username || '').localeCompare(b.username || '');
       });
 
       return res.status(200).json({ friends });

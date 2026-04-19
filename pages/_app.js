@@ -68,6 +68,40 @@ function ForfeitNoticeOverlay() {
   );
 }
 
+function PresenceHeartbeat({ isLoggedIn }) {
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    let cancelled = false;
+    const ping = async () => {
+      if (cancelled) return;
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+      try {
+        await fetch('/api/user/heartbeat', { method: 'POST' });
+      } catch (_e) {}
+    };
+
+    ping();
+    const interval = setInterval(ping, 60000);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') ping();
+    };
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibility);
+    }
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibility);
+      }
+    };
+  }, [isLoggedIn]);
+
+  return null;
+}
+
 function AutoGrader() {
   useEffect(() => {
     const gradeBets = async () => {
@@ -311,6 +345,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
                 <NotificationsProvider>
                 <ForfeitNoticeOverlay />
                 <AnalyticsTracker />
+                <PresenceHeartbeat isLoggedIn={isLoggedIn} />
                 <AutoGrader />
                 <GlobalToastContainer />
                 {/* Solid Black Background */}

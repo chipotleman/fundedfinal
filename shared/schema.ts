@@ -52,6 +52,7 @@ export const profiles = pgTable("profiles", {
   bettingStyle: varchar("betting_style", { length: 50 }),
   experienceLevel: varchar("experience_level", { length: 50 }),
   onboardingCompleted: boolean("onboarding_completed").default(false),
+  lastSeenAt: timestamp("last_seen_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => ({
