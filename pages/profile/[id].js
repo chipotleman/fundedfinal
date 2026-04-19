@@ -347,6 +347,7 @@ export default function PublicProfile() {
       await persistProfile({ avatar: path });
       setProfile((p) => ({ ...p, avatar: path }));
       setFormData((f) => ({ ...f, avatar: path }));
+      cache.setProfileData(id, { avatar: path });
     } catch (err) {
       setInlineError(err.message);
     } finally {
@@ -365,6 +366,7 @@ export default function PublicProfile() {
       await persistProfile({ bannerUrl: path });
       setProfile((p) => ({ ...p, bannerUrl: path }));
       setFormData((f) => ({ ...f, bannerUrl: path }));
+      cache.setProfileData(id, { bannerUrl: path });
     } catch (err) {
       setInlineError(err.message);
     } finally {
@@ -448,6 +450,7 @@ export default function PublicProfile() {
       await persistProfile({ username: next });
       setProfile((p) => ({ ...p, username: next }));
       setFormData((f) => ({ ...f, username: next }));
+      cache.setProfileData(id, { username: next });
       setEditingUsername(false);
       setInlineUsernameStatus({ checking: false, available: null, error: null });
     } catch (err) {
@@ -476,6 +479,7 @@ export default function PublicProfile() {
       await persistProfile({ bio: next });
       setProfile((p) => ({ ...p, bio: next }));
       setFormData((f) => ({ ...f, bio: next }));
+      cache.setProfileData(id, { bio: next });
       setEditingBio(false);
     } catch (err) {
       setInlineError(err.message);
