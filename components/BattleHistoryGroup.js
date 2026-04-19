@@ -1,6 +1,7 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import { formatMoney } from '../utils/formatMoney';
+import BattleOverviewPopup from './BattleOverviewPopup';
 
 const MODE_THEMES = {
   rush: {
@@ -60,144 +61,6 @@ function formatDate(date) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function TicketCarousel({ cards, theme, emptyMessage }) {
-  const [index, setIndex] = useState(0);
-  const touchStartX = useRef(null);
-  const mouseStartX = useRef(null);
-  const isDragging = useRef(false);
-
-  const total = cards ? cards.length : 0;
-
-  const prev = useCallback((e) => {
-    e && e.stopPropagation();
-    setIndex(i => Math.max(0, i - 1));
-  }, []);
-
-  const next = useCallback((e) => {
-    e && e.stopPropagation();
-    setIndex(i => Math.min(total - 1, i + 1));
-  }, [total]);
-
-  const onTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-
-  const onTouchEnd = (e) => {
-    if (touchStartX.current === null) return;
-    const diff = touchStartX.current - e.changedTouches[0].clientX;
-    if (Math.abs(diff) > 40) {
-      diff > 0 ? next() : prev();
-    }
-    touchStartX.current = null;
-  };
-
-  const onMouseDown = (e) => {
-    mouseStartX.current = e.clientX;
-    isDragging.current = true;
-  };
-
-  const onMouseUp = (e) => {
-    if (!isDragging.current) return;
-    isDragging.current = false;
-    const diff = mouseStartX.current - e.clientX;
-    if (Math.abs(diff) > 40) {
-      diff > 0 ? next() : prev();
-    }
-    mouseStartX.current = null;
-  };
-
-  const onMouseLeave = () => {
-    isDragging.current = false;
-    mouseStartX.current = null;
-  };
-
-  const onKeyDown = (e) => {
-    if (e.key === 'ArrowLeft') prev(e);
-    if (e.key === 'ArrowRight') next(e);
-  };
-
-  if (!cards || total === 0) {
-    return <p className="text-xs text-gray-500 py-4 text-center">{emptyMessage}</p>;
-  }
-
-  if (total === 1) {
-    return <div>{cards[0]}</div>;
-  }
-
-  return (
-    <div className="select-none" onKeyDown={onKeyDown} tabIndex={0} style={{ outline: 'none' }}>
-      <div
-        className="relative overflow-hidden cursor-grab active:cursor-grabbing"
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-        onMouseDown={onMouseDown}
-        onMouseUp={onMouseUp}
-        onMouseLeave={onMouseLeave}
-      >
-        <div
-          className="flex transition-transform duration-300 ease-in-out"
-          style={{ transform: `translateX(-${index * 100}%)` }}
-        >
-          {cards.map((card, i) => (
-            <div key={i} className="w-full flex-shrink-0">
-              {card}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex items-center justify-center gap-3 mt-3" onClick={e => e.stopPropagation()}>
-        <button
-          type="button"
-          onClick={prev}
-          disabled={index === 0}
-          className="w-7 h-7 rounded-full flex items-center justify-center transition-opacity disabled:opacity-25"
-          style={{ background: 'rgba(255,255,255,0.08)', border: `1px solid ${theme.borderColor}` }}
-          aria-label="Previous ticket"
-        >
-          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-
-        <div className="flex items-center gap-1.5">
-          {cards.map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              onClick={(e) => { e.stopPropagation(); setIndex(i); }}
-              className="rounded-full transition-all duration-200"
-              style={{
-                width: i === index ? 16 : 6,
-                height: 6,
-                background: i === index ? theme.accentColor : 'rgba(255,255,255,0.2)',
-              }}
-              aria-label={`Go to ticket ${i + 1}`}
-            />
-          ))}
-        </div>
-
-        <button
-          type="button"
-          onClick={next}
-          disabled={index === total - 1}
-          className="w-7 h-7 rounded-full flex items-center justify-center transition-opacity disabled:opacity-25"
-          style={{ background: 'rgba(255,255,255,0.08)', border: `1px solid ${theme.borderColor}` }}
-          aria-label="Next ticket"
-        >
-          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-          </svg>
-        </button>
-
-        <span className="text-[11px] font-bold tabular-nums" style={{ color: theme.accentColor }}>
-          {index + 1} / {total}
-        </span>
-      </div>
-    </div>
-  );
-}
-
 export default function BattleHistoryGroup({
   battle,
   myProfile,
@@ -206,10 +69,8 @@ export default function BattleHistoryGroup({
   myBetCards,
   opponentBetCards,
   children,
-  defaultExpanded = false,
 }) {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
-  const [activeTab, setActiveTab] = useState('mine');
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
   const { isDarkMode } = useTheme();
 
   const mode = getGameMode(battle);
@@ -246,7 +107,7 @@ export default function BattleHistoryGroup({
   return (
     <div className="w-full">
       <div
-        onClick={() => setIsExpanded(v => !v)}
+        onClick={() => setIsPopupOpen(true)}
         className="w-full rounded-2xl overflow-hidden cursor-pointer transition-all duration-200 relative active:scale-[0.99]"
         style={{
           background: theme.cardBg,
@@ -278,12 +139,13 @@ export default function BattleHistoryGroup({
                 </span>
               </div>
               <svg
-                className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                className="w-4 h-4 text-gray-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
               </svg>
             </div>
           </div>
@@ -395,71 +257,18 @@ export default function BattleHistoryGroup({
         </div>
       </div>
 
-      {isExpanded && (
-        <div className="mt-3 pl-2 md:pl-4 border-l-2" style={{ borderColor: theme.borderColor }}>
-          {(myBetCards || opponentBetCards) ? (
-            <>
-              {/* Mine / Theirs toggle */}
-              <div
-                className="inline-flex rounded-full p-1 mb-3"
-                style={{
-                  background: isDarkMode ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)',
-                  border: `1px solid ${theme.borderColor}`,
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setActiveTab('mine'); }}
-                  className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-colors"
-                  style={{
-                    background: activeTab === 'mine' ? theme.accentColor : 'transparent',
-                    color: activeTab === 'mine' ? '#fff' : (isDarkMode ? '#9ca3af' : '#6b7280'),
-                  }}
-                >
-                  Your Piks ({betCount})
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setActiveTab('theirs'); }}
-                  className="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider transition-colors"
-                  style={{
-                    background: activeTab === 'theirs' ? '#ef4444' : 'transparent',
-                    color: activeTab === 'theirs' ? '#fff' : (isDarkMode ? '#9ca3af' : '#6b7280'),
-                  }}
-                >
-                  {opponent.username}'s Piks ({opponentBetCount})
-                </button>
-              </div>
-
-              {/* Context caption */}
-              <div className="mb-2 flex items-center gap-1.5">
-                <span className="text-[10px] uppercase tracking-wider font-bold" style={{ color: theme.accentColor }}>
-                  {activeTab === 'mine'
-                    ? `Your Piks in this battle`
-                    : `${opponent.username}'s Piks in this battle`}
-                </span>
-              </div>
-
-              {activeTab === 'mine' ? (
-                <TicketCarousel
-                  key="mine"
-                  cards={myBetCards && myBetCards.length > 0 ? myBetCards : null}
-                  theme={theme}
-                  emptyMessage="No piks placed in this battle."
-                />
-              ) : (
-                <TicketCarousel
-                  key="theirs"
-                  cards={opponentBetCards && opponentBetCards.length > 0 ? opponentBetCards : null}
-                  theme={theme}
-                  emptyMessage={`${opponent.username} hasn't placed any piks yet.`}
-                />
-              )}
-            </>
-          ) : (
-            <div className="grid grid-cols-1 gap-3">{children}</div>
-          )}
-        </div>
+      {isPopupOpen && (
+        <BattleOverviewPopup
+          battle={battle}
+          theme={theme}
+          myProfile={myProfile}
+          betCount={betCount}
+          opponentBetCount={opponentBetCount}
+          myBetCards={myBetCards}
+          opponentBetCards={opponentBetCards}
+          outcomeBadge={outcomeBadge}
+          onClose={() => setIsPopupOpen(false)}
+        />
       )}
     </div>
   );

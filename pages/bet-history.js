@@ -163,7 +163,6 @@ export default function BetHistory() {
   const matchesBetStatus = (bet) => {
     if (selectedFilter === 'all') return true;
     if (selectedFilter === 'won') return bet.status === 'won';
-    if (selectedFilter === 'cashed_out') return bet.status === 'cashed_out';
     return bet.status === selectedFilter;
   };
 
@@ -174,7 +173,7 @@ export default function BetHistory() {
     if (selectedFilter === 'open') return battle.outcome === 'active';
     if (selectedFilter === 'won') return battle.outcome === 'won';
     if (selectedFilter === 'lost') return battle.outcome === 'lost';
-    return false; // cashed_out is per-bet only
+    return false;
   };
 
   const sortByDateDesc = (a, b) => {
@@ -369,7 +368,7 @@ export default function BetHistory() {
                   boxShadow: selectedFilter === 'won' ? '0 2px 8px rgba(234, 179, 8, 0.4)' : selectedFilter === 'lost' ? '0 2px 8px rgba(239, 68, 68, 0.4)' : '0 2px 8px rgba(37, 99, 235, 0.4)'
                 }}
               />
-              {['all', 'open', 'won', 'cashed_out', 'lost'].map((filter, index) => (
+              {['all', 'open', 'won', 'lost'].map((filter, index) => (
                 <button
                   key={filter}
                   data-filter={filter}
@@ -408,7 +407,7 @@ export default function BetHistory() {
                     }
                   }}
                 >
-                  {filter === 'cashed_out' ? 'Cashed' : filter.charAt(0).toUpperCase() + filter.slice(1)}
+                  {filter.charAt(0).toUpperCase() + filter.slice(1)}
                 </button>
               ))}
             </div>
@@ -494,23 +493,12 @@ export default function BetHistory() {
                 });
 
               // Filter standalone bets by per-bet status.
-              // For the cashed_out tab, also surface battle-attached cashed_out
-              // bets as ungrouped per-bet cards (since cashed_out is a per-bet
-              // concept, not a battle outcome).
-              let standalonePool = allStandalone;
-              if (selectedFilter === 'cashed_out') {
-                const battleCashedOut = Object.values(allBattleBets)
-                  .flat()
-                  .filter(b => b.status === 'cashed_out');
-                standalonePool = [...allStandalone, ...battleCashedOut];
-              }
-              const standaloneBets = standalonePool
+              const standaloneBets = allStandalone
                 .filter(matchesBetStatus)
                 .sort(sortByDateDesc);
 
               const groupNodes = battleEntries.map(([mid, bets]) => {
                 const battle = battlesMap[mid];
-                const isActive = battle.outcome === 'active';
                 const myBetsSorted = [...bets].sort(sortByDateDesc);
                 const oppBetsSorted = [...(battle.opponentBets || [])].sort(sortByDateDesc);
                 return (
@@ -520,7 +508,6 @@ export default function BetHistory() {
                     myProfile={myProfile}
                     betCount={bets.length}
                     opponentBetCount={oppBetsSorted.length}
-                    defaultExpanded={isActive}
                     myBetCards={myBetsSorted.map(bet => (
                       <PiksBetCard
                         key={bet.id}
