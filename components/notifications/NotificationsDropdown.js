@@ -40,6 +40,8 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
   const markedRef = useRef(false);
   const [expandedMessageIds, setExpandedMessageIds] = useState(() => new Set());
   const messageCacheRef = useRef(new Map());
+  const [composeOpen, setComposeOpen] = useState(false);
+  const [composeFriend, setComposeFriend] = useState(null);
 
   const battleInvites = ctx.battleInvites || [];
   const friendRequests = ctx.friendRequests || [];
@@ -87,6 +89,8 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
     if (!open) {
       setExpandedMessageIds(new Set());
       messageCacheRef.current = new Map();
+      setComposeOpen(false);
+      setComposeFriend(null);
     }
   }, [open]);
 
@@ -151,15 +155,44 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
       className="absolute right-0 mt-2 w-80 sm:w-96 max-w-[calc(100vw-24px)] bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl shadow-2xl z-[70] overflow-hidden"
       style={{ maxHeight: '70vh', top: '100%' }}
     >
-      <div className="px-4 py-3 border-b border-[#1a1a1a] flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-[#1a1a1a] flex items-center justify-between gap-2">
         <span className="text-white font-bold text-sm">Notifications</span>
-        {total > 0 && (
-          <span className="text-xs text-gray-400">{total} new</span>
-        )}
+        <div className="flex items-center gap-3">
+          {total > 0 && (
+            <span className="text-xs text-gray-400">{total} new</span>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              setComposeOpen((v) => !v);
+              setComposeFriend(null);
+            }}
+            className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
+            aria-expanded={composeOpen}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            New message
+          </button>
+        </div>
       </div>
 
       <div className="overflow-y-auto" style={{ maxHeight: 'calc(70vh - 96px)' }}>
-        {visibleTotal === 0 && (
+        {composeOpen && (
+          <ComposeNew
+            friend={composeFriend}
+            onSelectFriend={setComposeFriend}
+            onCancel={() => { setComposeOpen(false); setComposeFriend(null); }}
+            onSent={() => {
+              setComposeOpen(false);
+              setComposeFriend(null);
+              ctx.refresh?.();
+            }}
+          />
+        )}
+
+        {!composeOpen && visibleTotal === 0 && (
           <div className="px-4 py-8 text-center text-gray-500 text-sm">
             You're all caught up.
           </div>
@@ -255,6 +288,168 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
           View all
         </button>
       </div>
+    </div>
+  );
+}
+
+function ComposeNew({ friend, onSelectFriend, onCancel, onSent }) {
+  const [friends, setFriends] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState(null);
+  const [query, setQuery] = useState('');
+  const [content, setContent] = useState('');
+  const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState(null);
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    if (friend) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setLoadError(null);
+      try {
+        const res = await fetch('/api/friends', { credentials: 'include' });
+        if (!res.ok) {
+          if (!cancelled) setLoadError('Could not load friends.');
+          return;
+        }
+        const data = await res.json();
+        if (!cancelled) setFriends(data.friends || []);
+      } catch {
+        if (!cancelled) setLoadError('Could not load friends.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [friend]);
+
+  useEffect(() => {
+    if (friend) inputRef.current?.focus();
+  }, [friend]);
+
+  const filtered = friends.filter(f =>
+    !query.trim() || (f.username || '').toLowerCase().includes(query.trim().toLowerCase())
+  );
+
+  const handleSend = async (e) => {
+    e?.preventDefault?.();
+    const text = content.trim();
+    if (!text || !friend?.id || sending) return;
+    setSending(true);
+    setSendError(null);
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ receiverId: friend.id, content: text }),
+      });
+      if (!res.ok) {
+        setSendError(res.status === 403 ? 'You can only message friends.' : 'Could not send.');
+        return;
+      }
+      onSent?.();
+    } catch {
+      setSendError('Could not send.');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="px-4 py-3 border-b border-[#1a1a1a] bg-[#0d0d0d]">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+          {friend ? `To ${friend.username || 'friend'}` : 'New message'}
+        </span>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="text-[11px] text-gray-400 hover:text-white"
+        >
+          Cancel
+        </button>
+      </div>
+
+      {!friend && (
+        <div>
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search friends…"
+            className="w-full px-3 py-1.5 bg-[#111] border border-[#1a1a1a] rounded-lg text-white text-xs focus:outline-none focus:border-emerald-500"
+          />
+          <div className="mt-2 max-h-48 overflow-y-auto">
+            {loading && (
+              <div className="text-gray-500 text-xs text-center py-3">Loading…</div>
+            )}
+            {!loading && loadError && (
+              <div className="text-red-400 text-xs text-center py-3">{loadError}</div>
+            )}
+            {!loading && !loadError && filtered.length === 0 && (
+              <div className="text-gray-500 text-xs text-center py-3">
+                {friends.length === 0 ? 'No friends yet.' : 'No matches.'}
+              </div>
+            )}
+            {!loading && !loadError && filtered.map(f => (
+              <button
+                key={f.id}
+                type="button"
+                onClick={() => onSelectFriend?.(f)}
+                className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-[#1a1a1a] text-left"
+              >
+                <Avatar sender={f} size={28} />
+                <span className="text-white text-xs font-medium truncate">
+                  {f.username || 'Player'}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {friend && (
+        <form onSubmit={handleSend}>
+          <div className="flex items-center gap-2 mb-2">
+            <Avatar sender={friend} size={28} />
+            <span className="text-white text-xs font-semibold truncate flex-1">
+              {friend.username || 'Player'}
+            </span>
+            <button
+              type="button"
+              onClick={() => onSelectFriend?.(null)}
+              className="text-[11px] text-gray-400 hover:text-white"
+            >
+              Change
+            </button>
+          </div>
+          <div className="flex gap-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder="Write a message…"
+              className="flex-1 min-w-0 px-3 py-1.5 bg-[#111] border border-[#1a1a1a] rounded-lg text-white text-xs focus:outline-none focus:border-emerald-500"
+              maxLength={1000}
+              disabled={sending}
+            />
+            <button
+              type="submit"
+              disabled={!content.trim() || sending}
+              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold rounded-lg"
+            >
+              {sending ? '…' : 'Send'}
+            </button>
+          </div>
+          {sendError && (
+            <div className="text-red-400 text-[11px] mt-1">{sendError}</div>
+          )}
+        </form>
+      )}
     </div>
   );
 }
