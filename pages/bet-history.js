@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import PiksBetCard from '../components/PiksBetCard';
@@ -11,6 +12,7 @@ import { useGames } from '../contexts/GamesContext';
 import { formatMoney } from '../utils/formatMoney';
 
 export default function BetHistory() {
+  const router = useRouter();
   const { user } = useAuth();
   const { isDarkMode } = useTheme();
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
@@ -26,6 +28,38 @@ export default function BetHistory() {
   const [bankroll, setBankroll] = useState(10000);
 
   const [loading, setLoading] = useState(true);
+  const [openBattleId, setOpenBattleId] = useState(null);
+
+  // Sync open battle popup with the ?battle= URL query so users can deep-link
+  useEffect(() => {
+    if (!router.isReady) return;
+    const queryBattle = router.query.battle;
+    const next = typeof queryBattle === 'string' && queryBattle ? queryBattle : null;
+    setOpenBattleId(prev => (prev === next ? prev : next));
+  }, [router.isReady, router.query.battle]);
+
+  const handleBattleOpenChange = (matchupId, open) => {
+    if (open) {
+      setOpenBattleId(matchupId);
+      if (router.query.battle !== matchupId) {
+        router.replace(
+          { pathname: router.pathname, query: { ...router.query, battle: matchupId } },
+          undefined,
+          { shallow: true }
+        );
+      }
+    } else {
+      setOpenBattleId(prev => (prev === matchupId ? null : prev));
+      if (router.query.battle) {
+        const { battle: _omit, ...rest } = router.query;
+        router.replace(
+          { pathname: router.pathname, query: rest },
+          undefined,
+          { shallow: true }
+        );
+      }
+    }
+  };
   
   // Build live games map from GamesContext (same source as dashboard)
   const liveGames = useMemo(() => {
@@ -485,7 +519,7 @@ export default function BetHistory() {
 
               // Filter battle groups by battle outcome
               const battleEntries = Object.entries(allBattleBets)
-                .filter(([mid]) => battleMatchesFilter(battlesMap[mid]))
+                .filter(([mid]) => mid === openBattleId || battleMatchesFilter(battlesMap[mid]))
                 .sort((a, b) => {
                   const aMax = Math.max(...a[1].map(x => new Date(x.placedAt || 0).getTime()));
                   const bMax = Math.max(...b[1].map(x => new Date(x.placedAt || 0).getTime()));
@@ -508,6 +542,8 @@ export default function BetHistory() {
                     myProfile={myProfile}
                     betCount={bets.length}
                     opponentBetCount={oppBetsSorted.length}
+                    isOpen={openBattleId === mid}
+                    onOpenChange={(open) => handleBattleOpenChange(mid, open)}
                     myBetCards={myBetsSorted.map(bet => (
                       <PiksBetCard
                         key={bet.id}

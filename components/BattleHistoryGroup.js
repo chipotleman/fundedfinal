@@ -68,9 +68,18 @@ export default function BattleHistoryGroup({
   opponentBetCount = 0,
   myBetCards,
   opponentBetCards,
+  isOpen,
+  onOpenChange,
   children,
 }) {
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const isControlled = typeof isOpen === 'boolean';
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isPopupOpen = isControlled ? isOpen : internalOpen;
+  const setIsPopupOpen = (next) => {
+    const value = typeof next === 'function' ? next(isPopupOpen) : next;
+    if (!isControlled) setInternalOpen(value);
+    if (onOpenChange) onOpenChange(value);
+  };
   const { isDarkMode } = useTheme();
 
   const mode = getGameMode(battle);
