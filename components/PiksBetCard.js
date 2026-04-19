@@ -21,15 +21,25 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
   }, [bet.id, bet.pikId]);
 
   useEffect(() => {
-    if (confirmingCashOut) {
-      const handleClickOutside = (e) => {
-        if (buttonRef.current && !buttonRef.current.contains(e.target)) {
-          setConfirmingCashOut(false);
-        }
-      };
-      document.addEventListener('click', handleClickOutside);
-      return () => document.removeEventListener('click', handleClickOutside);
-    }
+    if (!confirmingCashOut) return;
+    // Use `click` (not `mousedown`) so the original tap target receives its
+    // click first. On iOS Safari, closing this popover during `mousedown`
+    // can change the layout and cause the subsequent `click` on a link or
+    // button to be dropped, which manifests as a "stuck" tap.
+    const handleClickOutside = (e) => {
+      if (buttonRef.current && !buttonRef.current.contains(e.target)) {
+        setConfirmingCashOut(false);
+      }
+    };
+    const handleKey = (e) => {
+      if (e.key === 'Escape') setConfirmingCashOut(false);
+    };
+    document.addEventListener('click', handleClickOutside);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('keydown', handleKey);
+    };
   }, [confirmingCashOut]);
 
   const { formatOdds } = useUserPreferences();

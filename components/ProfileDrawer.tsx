@@ -7,14 +7,27 @@ export default function ProfileDrawer() {
   const drawerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!open) return;
+    // Use `click` (not `mousedown`) so the original tap target — e.g. a Link
+    // or button — receives its click first. On iOS Safari, closing this
+    // drawer during `mousedown` can change the layout (the drawer unmounts)
+    // and cause the subsequent `click` on the link to be dropped, which
+    // manifests as a "stuck" page where taps no longer navigate.
     const handleClickOutside = (e: MouseEvent) => {
       if (drawerRef.current && !drawerRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('click', handleClickOutside);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [open]);
 
   const handleSignOut = async () => {
     await signOut({ redirect: false });
