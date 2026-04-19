@@ -1432,7 +1432,7 @@ export default function BattlePage() {
                           <button
                             key={b.id}
                             type="button"
-                            onClick={(e) => { e.stopPropagation(); if (b.winner?.id) goToProfile(b.winner); }}
+                            onClick={(e) => { e.stopPropagation(); router.push(`/battle/replay/${b.id}`); }}
                             className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left transition-colors hover:bg-white/5"
                             style={{ background: '#0a0a0a', border: `1px solid ${cardBorder}` }}
                           >
