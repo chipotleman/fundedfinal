@@ -364,11 +364,23 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
   const battlePreviewMeta = battlePreview ? (() => {
     const u1 = battlePreview.user1?.username || 'Player 1';
     const u2 = battlePreview.user2?.username || 'Opponent';
-    const title = `${u1} vs ${u2} on Piks`;
-    const description = `${battlePreview.mode} battle · ${battlePreview.prize} prize pool · ${battlePreview.statusLabel}.`;
+    let title;
+    if (battlePreview.winnerName) {
+      title = `${battlePreview.winnerName} won · ${u1} vs ${u2} on Piks`;
+    } else if (battlePreview.isTie) {
+      title = `${u1} vs ${u2} ended in a tie on Piks`;
+    } else {
+      title = `${u1} vs ${u2} on Piks`;
+    }
+    const descParts = [`${battlePreview.mode} battle`];
+    if (battlePreview.scoreText) descParts.push(`Final ${battlePreview.scoreText}`);
+    descParts.push(`${battlePreview.prize} prize pool`);
+    descParts.push(battlePreview.statusLabel);
+    const description = `${descParts.join(' · ')}.`;
     const origin = battlePreview.origin || '';
     const image = `${origin}/api/og/battle/${encodeURIComponent(battlePreview.matchupId)}`;
-    const url = `${origin}/bet-history?battle=${encodeURIComponent(battlePreview.matchupId)}`;
+    const sharePath = battlePreview.sharePath || `/bet-history?battle=${encodeURIComponent(battlePreview.matchupId)}`;
+    const url = `${origin}${sharePath}`;
     return { title, description, image, url };
   })() : null;
 

@@ -6,6 +6,7 @@ import TopNavbar from '../../../components/TopNavbar';
 import FramedAvatar from '../../../components/UserAvatar';
 import { formatMoney } from '../../../utils/formatMoney';
 import { formatLastSeen } from '../../../utils/relativeTime';
+import { getBattlePreview } from '../../../lib/battle-preview';
 
 const cardBg = '#0d0d0d';
 const cardBorder = '#1a1a1a';
@@ -411,4 +412,45 @@ export default function BattleReplayPage() {
       </div>
     </div>
   );
+}
+
+function getRequestOrigin(req) {
+  if (!req) return '';
+  const proto =
+    (req.headers['x-forwarded-proto'] || '').toString().split(',')[0] ||
+    (req.socket && req.socket.encrypted ? 'https' : 'http');
+  const host =
+    (req.headers['x-forwarded-host'] || req.headers.host || '')
+      .toString()
+      .split(',')[0] || '';
+  return host ? `${proto}://${host}` : '';
+}
+
+export async function getServerSideProps(context) {
+  const rawId = context?.params?.id;
+  const id = Array.isArray(rawId) ? rawId[0] : rawId;
+  if (!id || typeof id !== 'string') {
+    return { props: {} };
+  }
+
+  let preview = null;
+  try {
+    preview = await getBattlePreview(id);
+  } catch (_) {
+    preview = null;
+  }
+  if (!preview) return { props: {} };
+
+  const origin = getRequestOrigin(context?.req);
+  const sharePath = `/battle/replay/${encodeURIComponent(id)}`;
+
+  return {
+    props: {
+      battlePreview: {
+        ...preview,
+        origin,
+        sharePath,
+      },
+    },
+  };
 }
