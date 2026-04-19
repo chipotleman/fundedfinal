@@ -768,7 +768,7 @@ export default function BattlePage() {
                     </button>
                     {/* Play: text on both mobile and desktop */}
                     <button
-                      onClick={() => { setShowPlayFriend(true); }}
+                      onClick={() => { setPlayFriendInitial(friend); setShowPlayFriend(true); }}
                       className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors hover:bg-purple-500/20 active:bg-purple-500/20 text-purple-400"
                     >
                       Play
