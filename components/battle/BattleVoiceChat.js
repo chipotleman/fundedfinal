@@ -14,12 +14,18 @@ const DEFAULT_ICE_CACHE_MS = 4 * 60 * 1000;
 
 const iceServersCache = new Map(); // matchupId -> { servers, expiresAt }
 
+function entryHasTurn(entry) {
+  if (!entry) return false;
+  const urls = Array.isArray(entry.urls) ? entry.urls : [entry.urls];
+  return urls.some(u => typeof u === 'string' && u.toLowerCase().startsWith('turn'));
+}
+
 async function fetchIceServers(matchupId) {
-  if (!matchupId) return FALLBACK_ICE_SERVERS;
+  if (!matchupId) return { servers: FALLBACK_ICE_SERVERS, hasTurn: false };
   const now = Date.now();
   const cached = iceServersCache.get(matchupId);
   if (cached && now < cached.expiresAt) {
-    return cached.servers;
+    return { servers: cached.servers, hasTurn: cached.hasTurn };
   }
   try {
     const resp = await fetch(
@@ -32,15 +38,19 @@ async function fetchIceServers(matchupId) {
         const ttlMs = Number.isFinite(data?.ttl) && data.ttl > 0
           ? Math.min(data.ttl * 1000 * 0.9, 60 * 60 * 1000)
           : DEFAULT_ICE_CACHE_MS;
+        const hasTurn = typeof data.hasTurn === 'boolean'
+          ? data.hasTurn
+          : data.iceServers.some(entryHasTurn);
         iceServersCache.set(matchupId, {
           servers: data.iceServers,
+          hasTurn,
           expiresAt: now + ttlMs,
         });
-        return data.iceServers;
+        return { servers: data.iceServers, hasTurn };
       }
     }
   } catch (_e) {}
-  return FALLBACK_ICE_SERVERS;
+  return { servers: FALLBACK_ICE_SERVERS, hasTurn: false };
 }
 
 async function postSignal(type, matchupId, payload) {
@@ -82,6 +92,9 @@ export default function BattleVoiceChat() {
   const pendingIceRef = useRef([]);
   const remoteDescSetRef = useRef(false);
   const inviteTimerRef = useRef(null);
+  const hasTurnRef = useRef(false);
+  const sawRelayCandidateRef = useRef(false);
+  const iceGatheredRef = useRef(false);
   const audioCtxRef = useRef(null);
   const meterRafRef = useRef(null);
   const localAnalyserRef = useRef(null);
@@ -133,6 +146,8 @@ export default function BattleVoiceChat() {
     pendingIceRef.current = [];
     remoteDescSetRef.current = false;
     isCallerRef.current = false;
+    sawRelayCandidateRef.current = false;
+    iceGatheredRef.current = false;
     cleanupAudioMeters();
     setMuted(false);
     setIncomingSender(null);
@@ -209,12 +224,26 @@ export default function BattleVoiceChat() {
 
   const ensurePeer = useCallback(async () => {
     if (pcRef.current) return pcRef.current;
-    const iceServers = await fetchIceServers(matchupIdRef.current);
+    const { servers: iceServers, hasTurn } = await fetchIceServers(matchupIdRef.current);
+    hasTurnRef.current = !!hasTurn;
+    sawRelayCandidateRef.current = false;
+    iceGatheredRef.current = false;
     const pc = new RTCPeerConnection({ iceServers });
     pc.onicecandidate = (e) => {
-      if (e.candidate && matchupIdRef.current) {
-        postSignal('voice:ice', matchupIdRef.current, { candidate: e.candidate });
+      if (e.candidate) {
+        if (e.candidate.candidate && /typ relay/i.test(e.candidate.candidate)) {
+          sawRelayCandidateRef.current = true;
+        }
+        if (matchupIdRef.current) {
+          postSignal('voice:ice', matchupIdRef.current, { candidate: e.candidate });
+        }
+      } else {
+        // Null candidate => ICE gathering complete
+        iceGatheredRef.current = true;
       }
+    };
+    pc.onicegatheringstatechange = () => {
+      if (pc.iceGatheringState === 'complete') iceGatheredRef.current = true;
     };
     pc.ontrack = (e) => {
       const stream = e.streams && e.streams[0] ? e.streams[0] : new MediaStream([e.track]);
@@ -234,8 +263,18 @@ export default function BattleVoiceChat() {
       if (cs === 'connected') {
         setState('connected');
         setStatusMessage('');
-      } else if (cs === 'failed' || cs === 'closed') {
-        teardown(cs === 'failed' ? 'Connection failed' : null);
+      } else if (cs === 'failed') {
+        let msg;
+        if (!hasTurnRef.current) {
+          msg = "Couldn't connect — your network is blocking direct calls. Ask an admin to enable a relay server.";
+        } else if (iceGatheredRef.current && !sawRelayCandidateRef.current) {
+          msg = "Couldn't connect — your network blocked the relay. Try a different network (Wi-Fi or mobile data).";
+        } else {
+          msg = "Couldn't connect — try a different network (Wi-Fi or mobile data).";
+        }
+        teardown(msg);
+      } else if (cs === 'closed') {
+        teardown(null);
       } else if (cs === 'disconnected') {
         setStatusMessage('Reconnecting...');
       }

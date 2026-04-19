@@ -100,21 +100,37 @@ export default async function handler(req, res) {
 
   const iceServers = [...DEFAULT_STUN];
   let ttl = 3600;
+  let hasTurn = false;
+
+  const entryHasTurn = (entry) => {
+    if (!entry) return false;
+    const urls = Array.isArray(entry.urls) ? entry.urls : [entry.urls];
+    return urls.some(u => typeof u === 'string' && u.toLowerCase().startsWith('turn'));
+  };
 
   try {
     const twilio = await fetchTwilioIceServers();
     if (twilio && twilio.length) {
-      for (const entry of twilio) iceServers.push(entry);
+      for (const entry of twilio) {
+        iceServers.push(entry);
+        if (entryHasTurn(entry)) hasTurn = true;
+      }
     } else {
       const staticTurn = buildStaticTurn();
-      if (staticTurn) iceServers.push(staticTurn);
+      if (staticTurn) {
+        iceServers.push(staticTurn);
+        if (entryHasTurn(staticTurn)) hasTurn = true;
+      }
     }
   } catch (err) {
     console.error('ice-servers: provider lookup failed', err);
     const staticTurn = buildStaticTurn();
-    if (staticTurn) iceServers.push(staticTurn);
+    if (staticTurn) {
+      iceServers.push(staticTurn);
+      if (entryHasTurn(staticTurn)) hasTurn = true;
+    }
   }
 
   res.setHeader('Cache-Control', 'private, max-age=300');
-  return res.status(200).json({ iceServers, ttl });
+  return res.status(200).json({ iceServers, ttl, hasTurn });
 }
