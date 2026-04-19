@@ -94,23 +94,48 @@ function NotificationsFeed({ ctx, router, isDarkMode, onOpenChat }) {
   const empty = totalNew === 0;
 
   const cardBg = isDarkMode ? '#0a0a0a' : '#ffffff';
-  const cardBorder = isDarkMode ? '#1a1a1a' : '#e5e7eb';
+  const cardBorder = isDarkMode
+    ? 'rgba(16,185,129,0.22)'
+    : 'rgba(16,185,129,0.35)';
   const textPrimary = isDarkMode ? '#ffffff' : '#111111';
   const textSecondary = isDarkMode ? '#9ca3af' : '#6b7280';
+  const accent = isDarkMode ? '#34d399' : '#059669';
+  const cardShadow = isDarkMode
+    ? '0 0 0 1px rgba(16,185,129,0.08), 0 8px 32px -8px rgba(16,185,129,0.18)'
+    : '0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(16,185,129,0.12)';
 
   return (
     <div
       className="rounded-2xl overflow-hidden"
-      style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}
+      style={{
+        backgroundColor: cardBg,
+        border: `1px solid ${cardBorder}`,
+        boxShadow: cardShadow,
+      }}
     >
       <div
         className="px-4 py-3 flex items-center justify-between"
         style={{ borderBottom: `1px solid ${cardBorder}` }}
       >
-        <span className="text-sm font-bold" style={{ color: textPrimary }}>
+        <span
+          className="text-sm font-bold tracking-wide"
+          style={{
+            background: 'linear-gradient(90deg, #34d399 0%, #22d3ee 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}
+        >
           Notifications
         </span>
-        <span className="text-xs" style={{ color: textSecondary }}>
+        <span
+          className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+          style={{
+            color: accent,
+            backgroundColor: isDarkMode ? 'rgba(16,185,129,0.10)' : 'rgba(16,185,129,0.12)',
+            border: `1px solid ${isDarkMode ? 'rgba(16,185,129,0.25)' : 'rgba(16,185,129,0.30)'}`,
+          }}
+        >
           {totalNew} new
         </span>
       </div>
@@ -152,12 +177,13 @@ function NotificationsFeed({ ctx, router, isDarkMode, onOpenChat }) {
                         const data = await ctx.acceptInvite(inv.id);
                         if (data) router.push('/?battleStarted=true');
                       })}
-                      className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-50"
+                      className="bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-50 transition-shadow"
+                      style={{ boxShadow: '0 0 12px rgba(16,185,129,0.45)' }}
                     >Accept</button>
                     <button
                       disabled={busyId === inv.id}
                       onClick={() => wrap(inv.id, () => ctx.declineInvite(inv.id))}
-                      className="bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50"
+                      className={`text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50 ${isDarkMode ? 'bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10' : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200'}`}
                     >Decline</button>
                   </div>
                 </div>
@@ -182,7 +208,7 @@ function NotificationsFeed({ ctx, router, isDarkMode, onOpenChat }) {
             <button
               key={`msg-${m.sender.id}`}
               onClick={() => onOpenChat?.(m.sender.id)}
-              className="w-full text-left px-4 py-3 flex items-start gap-3 hover:bg-white/5 transition-colors"
+              className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors ${isDarkMode ? 'hover:bg-emerald-400/5' : 'hover:bg-emerald-50'}`}
               style={{ borderTop: `1px solid ${cardBorder}` }}
             >
               <Avatar user={m.sender} isOnline={m.sender?.isOnline ?? isUserOnline(m.sender?.lastSeenAt)} onlineDotBorderColor={cardBg} />
@@ -192,6 +218,7 @@ function NotificationsFeed({ ctx, router, isDarkMode, onOpenChat }) {
                   {m.count > 1 && (
                     <span
                       className="ml-2 inline-flex items-center justify-center text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-emerald-500 text-white"
+                      style={{ boxShadow: '0 0 8px rgba(16,185,129,0.6)' }}
                     >{m.count}</span>
                   )}
                 </div>
@@ -230,12 +257,13 @@ function NotificationsFeed({ ctx, router, isDarkMode, onOpenChat }) {
                   <button
                     disabled={busyId === fr.id}
                     onClick={() => wrap(fr.id, () => ctx.acceptFriend(fr.id))}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-50"
+                    className="bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-50"
+                    style={{ boxShadow: '0 0 12px rgba(16,185,129,0.45)' }}
                   >Accept</button>
                   <button
                     disabled={busyId === fr.id}
                     onClick={() => wrap(fr.id, () => ctx.declineFriend(fr.id))}
-                    className="bg-gray-800 hover:bg-gray-700 text-gray-200 text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50"
+                    className={`text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50 ${isDarkMode ? 'bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10' : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-200'}`}
                   >Decline</button>
                 </div>
               </div>
@@ -407,10 +435,12 @@ function ConversationThread({ friend, ctx, myId, isDarkMode }) {
     }
   };
 
-  const cardBorder = isDarkMode ? '#1a1a1a' : '#e5e7eb';
+  const cardBorder = isDarkMode
+    ? 'rgba(16,185,129,0.18)'
+    : 'rgba(16,185,129,0.30)';
   const textPrimary = isDarkMode ? '#ffffff' : '#111111';
   const textSecondary = isDarkMode ? '#9ca3af' : '#6b7280';
-  const inputBg = isDarkMode ? '#111' : '#f3f4f6';
+  const inputBg = isDarkMode ? '#0d1310' : '#f3f4f6';
 
   let lastOutgoingIdx = -1;
   for (let i = thread.length - 1; i >= 0; i--) {
@@ -468,9 +498,21 @@ function ConversationThread({ friend, ctx, myId, isDarkMode }) {
             <div
               className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm leading-snug break-words ${
                 m.senderId === myId
-                  ? 'bg-emerald-600 text-white rounded-br-sm'
-                  : 'bg-gray-700 text-white rounded-bl-sm'
+                  ? 'bg-emerald-500 text-white rounded-br-sm'
+                  : isDarkMode
+                    ? 'text-white rounded-bl-sm'
+                    : 'bg-gray-200 text-gray-900 rounded-bl-sm'
               }`}
+              style={
+                m.senderId === myId
+                  ? { boxShadow: '0 0 14px rgba(16,185,129,0.35)' }
+                  : isDarkMode
+                    ? {
+                        backgroundColor: '#161b18',
+                        border: '1px solid rgba(16,185,129,0.18)',
+                      }
+                    : undefined
+              }
             >
               {m.content}
             </div>
@@ -508,15 +550,25 @@ function ConversationThread({ friend, ctx, myId, isDarkMode }) {
               value={reply}
               onChange={handleReplyChange}
               placeholder="Write a message…"
-              className="flex-1 min-w-0 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-emerald-500"
-              style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }}
+              className="flex-1 min-w-0 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-emerald-400"
+              style={{
+                backgroundColor: inputBg,
+                border: `1px solid ${cardBorder}`,
+                color: textPrimary,
+                boxShadow: isDarkMode ? 'inset 0 0 0 1px rgba(16,185,129,0.05)' : 'none',
+              }}
               maxLength={1000}
               disabled={sending}
             />
             <button
               type="submit"
               disabled={!reply.trim() || sending}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-sm font-bold rounded-lg"
+              className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition-shadow"
+              style={{
+                boxShadow: !reply.trim() || sending
+                  ? 'none'
+                  : '0 0 14px rgba(16,185,129,0.5)',
+              }}
             >
               {sending ? '…' : 'Send'}
             </button>
@@ -593,11 +645,13 @@ function NotFriendsCard({ userId, isDarkMode, onFriendAdded }) {
     }
   };
 
-  const cardBorder = isDarkMode ? '#1a1a1a' : '#e5e7eb';
+  const cardBorder = isDarkMode
+    ? 'rgba(16,185,129,0.18)'
+    : 'rgba(16,185,129,0.30)';
   const textPrimary = isDarkMode ? '#ffffff' : '#111111';
   const textSecondary = isDarkMode ? '#9ca3af' : '#6b7280';
   const cardBg = isDarkMode ? '#0a0a0a' : '#ffffff';
-  const innerBg = isDarkMode ? '#111111' : '#f9fafb';
+  const innerBg = isDarkMode ? '#0d1310' : '#f0fdf4';
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -842,17 +896,27 @@ function MessagesPanel({ selectedId, onSelect, ctx, myId, isDarkMode }) {
   );
 
   const cardBg = isDarkMode ? '#0a0a0a' : '#ffffff';
-  const cardBorder = isDarkMode ? '#1a1a1a' : '#e5e7eb';
+  const cardBorder = isDarkMode
+    ? 'rgba(16,185,129,0.22)'
+    : 'rgba(16,185,129,0.35)';
   const textPrimary = isDarkMode ? '#ffffff' : '#111111';
   const textSecondary = isDarkMode ? '#9ca3af' : '#6b7280';
-  const inputBg = isDarkMode ? '#111' : '#f3f4f6';
-  const rowHover = isDarkMode ? '#111111' : '#f9fafb';
-  const rowSelected = isDarkMode ? '#16181c' : '#eff6ff';
+  const inputBg = isDarkMode ? '#0d1310' : '#f3f4f6';
+  const rowHover = isDarkMode ? 'rgba(16,185,129,0.06)' : '#ecfdf5';
+  const rowSelected = isDarkMode ? 'rgba(16,185,129,0.12)' : '#d1fae5';
+  const cardShadow = isDarkMode
+    ? '0 0 0 1px rgba(16,185,129,0.08), 0 8px 32px -8px rgba(16,185,129,0.18)'
+    : '0 1px 3px rgba(0,0,0,0.06), 0 0 0 1px rgba(16,185,129,0.12)';
 
   return (
     <div
       className="rounded-2xl overflow-hidden flex flex-col md:flex-row"
-      style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, minHeight: 520 }}
+      style={{
+        backgroundColor: cardBg,
+        border: `1px solid ${cardBorder}`,
+        minHeight: 520,
+        boxShadow: cardShadow,
+      }}
     >
       <div
         className={`md:w-72 flex-shrink-0 flex flex-col ${selectedId ? 'hidden md:flex' : 'flex'}`}
@@ -891,10 +955,13 @@ function MessagesPanel({ selectedId, onSelect, ctx, myId, isDarkMode }) {
                 key={f.id}
                 type="button"
                 onClick={() => onSelect(f.id)}
-                className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors"
+                className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors relative"
                 style={{
                   backgroundColor: isSelected ? rowSelected : 'transparent',
                   borderBottom: `1px solid ${cardBorder}`,
+                  borderLeft: isSelected
+                    ? '2px solid #34d399'
+                    : '2px solid transparent',
                 }}
                 onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = rowHover; }}
                 onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent'; }}
@@ -922,7 +989,10 @@ function MessagesPanel({ selectedId, onSelect, ctx, myId, isDarkMode }) {
                       </span>
                     )}
                     {unread && (
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0" />
+                      <span
+                        className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"
+                        style={{ boxShadow: '0 0 8px rgba(52,211,153,0.85)' }}
+                      />
                     )}
                   </div>
                   <div
@@ -1036,6 +1106,9 @@ export default function NotificationsPage() {
   }, []);
 
   const bg = isDarkMode ? '#000000' : '#f3f4f6';
+  const pageBg = isDarkMode
+    ? 'radial-gradient(ellipse 70% 40% at 50% 0%, rgba(16,185,129,0.10), transparent 70%), radial-gradient(ellipse 60% 35% at 100% 100%, rgba(34,211,238,0.06), transparent 70%), #000000'
+    : 'radial-gradient(ellipse 70% 40% at 50% 0%, rgba(16,185,129,0.08), transparent 70%), #f3f4f6';
   const textPrimary = isDarkMode ? '#ffffff' : '#111111';
   const textSecondary = isDarkMode ? '#9ca3af' : '#6b7280';
 
@@ -1064,10 +1137,20 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div style={{ backgroundColor: bg, minHeight: '100vh' }}>
+    <div style={{ background: pageBg, minHeight: '100vh' }}>
       <TopNavbar />
       <div className="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
-        <h1 className="text-xl sm:text-2xl font-bold mb-4" style={{ color: textPrimary }}>
+        <h1
+          className="text-xl sm:text-2xl font-bold mb-4 tracking-tight"
+          style={{
+            background: isDarkMode
+              ? 'linear-gradient(90deg, #34d399 0%, #22d3ee 100%)'
+              : 'linear-gradient(90deg, #059669 0%, #0891b2 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}
+        >
           Notifications
         </h1>
 
@@ -1083,16 +1166,30 @@ export default function NotificationsPage() {
                 key={tab.key}
                 type="button"
                 onClick={() => setMobileTab(tab.key)}
-                className="flex-1 py-2 rounded-lg text-sm font-semibold relative"
+                className="flex-1 py-2 rounded-lg text-sm font-semibold relative transition-shadow"
                 style={{
-                  backgroundColor: active ? '#10b981' : (isDarkMode ? '#0a0a0a' : '#ffffff'),
+                  backgroundColor: active
+                    ? '#10b981'
+                    : (isDarkMode ? '#0a0a0a' : '#ffffff'),
                   color: active ? '#ffffff' : textPrimary,
-                  border: `1px solid ${active ? '#10b981' : (isDarkMode ? '#1a1a1a' : '#e5e7eb')}`,
+                  border: `1px solid ${
+                    active
+                      ? '#10b981'
+                      : (isDarkMode
+                          ? 'rgba(16,185,129,0.22)'
+                          : 'rgba(16,185,129,0.30)')
+                  }`,
+                  boxShadow: active
+                    ? '0 0 16px rgba(16,185,129,0.45)'
+                    : 'none',
                 }}
               >
                 {tab.label}
                 {tab.count > 0 && !active && (
-                  <span className="absolute top-1 right-2 min-w-[18px] h-[18px] bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white px-1">
+                  <span
+                    className="absolute top-1 right-2 min-w-[18px] h-[18px] bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white px-1"
+                    style={{ boxShadow: '0 0 10px rgba(239,68,68,0.7)' }}
+                  >
                     {tab.count > 9 ? '9+' : tab.count}
                   </span>
                 )}
