@@ -3,6 +3,7 @@ import { useSession } from 'next-auth/react';
 import { useMatchup } from '../../contexts/MatchupContext';
 import { useVoiceChat } from '../../contexts/VoiceChatContext';
 import { getBattleStreamClient } from '../../lib/battleStreamClient';
+import useVoiceChatProbe, { VOICE_PROBE_STATUS } from '../../hooks/useVoiceChatProbe';
 
 const FALLBACK_ICE_SERVERS = [
   { urls: 'stun:stun.l.google.com:19302' },
@@ -80,6 +81,7 @@ export default function BattleVoiceChat() {
   const [muted, setMuted] = useState(false);
   const [mySpeaking, setMySpeaking] = useState(false);
   const { oppSpeaking, setOppSpeaking } = useVoiceChat();
+  const { status: probeStatus, message: probeMessage, runProbe } = useVoiceChatProbe();
 
   const lastStateRef = useRef('idle');
   useEffect(() => { lastStateRef.current = state; }, [state]);
@@ -161,6 +163,19 @@ export default function BattleVoiceChat() {
       teardown('Battle ended');
     }
   }, [eligible, state, teardown]);
+
+  // Auto-run the voice chat health probe once when the user becomes eligible,
+  // so they can see whether voice will work before pressing the talk button.
+  const probeStartedRef = useRef(false);
+  useEffect(() => {
+    if (eligible && !probeStartedRef.current) {
+      probeStartedRef.current = true;
+      runProbe();
+    }
+    if (!eligible) {
+      probeStartedRef.current = false;
+    }
+  }, [eligible, runProbe]);
 
   // Listen for voice events on the shared battle SSE singleton so we don't
   // open a second EventSource (which would race with the existing
@@ -461,9 +476,59 @@ export default function BattleVoiceChat() {
   const oppName = incomingSender?.username || opponent?.username || 'Opponent';
   const oppAvatar = incomingSender?.avatar || opponent?.avatar || null;
 
+  const probeDot =
+    probeStatus === VOICE_PROBE_STATUS.SUCCESS ? '#22c55e' :
+    probeStatus === VOICE_PROBE_STATUS.WARNING ? '#facc15' :
+    probeStatus === VOICE_PROBE_STATUS.ERROR ? '#dc2626' :
+    probeStatus === VOICE_PROBE_STATUS.RUNNING ? '#3b82f6' : '#6b7280';
+  const probeLabel =
+    probeStatus === VOICE_PROBE_STATUS.SUCCESS ? 'Voice chat ready' :
+    probeStatus === VOICE_PROBE_STATUS.WARNING ? 'Network may block voice chat' :
+    probeStatus === VOICE_PROBE_STATUS.ERROR ? 'Voice chat unreachable' :
+    probeStatus === VOICE_PROBE_STATUS.RUNNING ? 'Checking voice chat…' : 'Tap to test voice chat';
+  const probeIsRunning = probeStatus === VOICE_PROBE_STATUS.RUNNING;
+  const probeFailed = probeStatus === VOICE_PROBE_STATUS.WARNING || probeStatus === VOICE_PROBE_STATUS.ERROR;
+
   return (
     <>
       <audio ref={remoteAudioRef} autoPlay playsInline />
+      <style>{`
+        @keyframes voice-probe-pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.35; }
+        }
+        .voice-probe-pulse { animation: voice-probe-pulse 1.2s ease-in-out infinite; }
+      `}</style>
+
+      {/* Voice chat health pill — shown above the Voice button when idle so
+          users see whether voice chat will work before pressing the talk button. */}
+      {eligible && state === 'idle' && (
+        <button
+          type="button"
+          onClick={runProbe}
+          disabled={probeIsRunning}
+          className="fixed z-[55] flex items-center gap-1.5 rounded-full px-2.5 py-1 shadow-md transition-colors"
+          style={{
+            right: '16px',
+            bottom: 'calc(118px + env(safe-area-inset-bottom, 0px))',
+            background: 'rgba(10,10,10,0.92)',
+            border: `1px solid ${probeDot}`,
+            color: '#fff',
+            cursor: probeIsRunning ? 'default' : 'pointer',
+            maxWidth: 'min(80vw, 280px)',
+          }}
+          title={probeFailed ? `${probeMessage} Tap to re-test.` : `${probeLabel}. Tap to re-test.`}
+          aria-label={probeFailed ? `${probeLabel}. Tap to re-test voice chat.` : `${probeLabel}. Tap to re-test.`}
+        >
+          <span
+            className={`w-1.5 h-1.5 rounded-full flex-shrink-0${probeIsRunning ? ' voice-probe-pulse' : ''}`}
+            style={{ background: probeDot }}
+          />
+          <span className="text-[10px] font-bold uppercase tracking-wider truncate">
+            {probeLabel}
+          </span>
+        </button>
+      )}
 
       {/* Floating Voice button — shown when eligible and idle */}
       {eligible && state === 'idle' && (
