@@ -54,7 +54,7 @@ function ThunderCardModule() {
 
           {/* Title */}
           <h2 className="text-3xl sm:text-4xl font-black mb-3" style={{ color: '#ffffff' }}>
-            Introducing the <span className="bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent">Piks Card</span>
+            Introducing the <span className="bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent">Piks Card</span>
           </h2>
           <p className="text-base mb-4 max-w-lg mx-auto" style={{ color: '#d1d5db' }}>
             The first prepaid bank card that gets funded directly from your betting profits. Use it anywhere.
@@ -317,7 +317,7 @@ export default function Home() {
               >
                 <div className="text-center mb-6">
                   <h2 className="text-2xl sm:text-3xl font-bold mb-2" style={{ color: '#ffffff' }}>
-                    Compare <span style={{ color: undefined }} className={"bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent"}>{'Challenges'}</span>
+                    Compare <span style={{ color: undefined }} className={"bg-gradient-to-r from-blue-500 to-cyan-500 bg-clip-text text-transparent"}>{'Challenges'}</span>
                   </h2>
                   <p className="text-sm" style={{ color: '#9ca3af' }}>
                     See what's included at each level

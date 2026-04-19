@@ -134,7 +134,7 @@ export default function DataPrivacyRequest() {
                   type="submit"
                   className="w-full py-3 px-4 rounded-lg font-semibold transition-colors"
                   style={{
-                    backgroundColor: '#22c55e',
+                    backgroundColor: '#3b82f6',
                     color: '#ffffff'
                   }}
                 >

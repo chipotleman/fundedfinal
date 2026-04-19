@@ -260,7 +260,7 @@ export default function CapperProfile() {
                           <div className="mt-2 space-y-1">
                             {product.features.slice(0, 3).map((feature, i) => (
                               <div key={i} className="flex items-center gap-2 text-sm text-gray-400">
-                                <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
                                 {feature}
