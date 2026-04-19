@@ -1097,13 +1097,14 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                               {/* Game Info Box - compact, LIVE is on header row */}
                               <div className="rounded-lg px-3 py-2" style={{ backgroundColor: 'rgba(30, 41, 59, 0.4)', borderWidth: 1, borderColor: 'rgba(55, 65, 81, 0.3)' }}>
                                 <div className="space-y-0.5">
+                                  {!isLive && gameTime && (
+                                    <div className="flex justify-end">
+                                      <span className="text-gray-500 text-[10px]">{gameTime}</span>
+                                    </div>
+                                  )}
                                   <div className="flex justify-between items-center">
                                     <span className="text-sm" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.awayTeamFull || bet.awayTeam || bet.matchup?.split(' @ ')[0] || 'Away')}</span>
-                                    <div className="flex items-center gap-2">
-                                      {awayScore !== null && <span className="font-bold text-sm" style={{ color: '#ffffff' }}>{awayScore}</span>}
-                                      {/* Game time only - LIVE is on header */}
-                                      {!isLive && <span className="text-gray-500 text-[10px]">{gameTime}</span>}
-                                    </div>
+                                    {awayScore !== null && <span className="font-bold text-sm" style={{ color: '#ffffff' }}>{awayScore}</span>}
                                   </div>
                                   <div className="flex justify-between items-center">
                                     <span className="text-sm" style={{ color: '#ffffff' }}>{capitalizeLeagueId(bet.homeTeamFull || bet.homeTeam || bet.matchup?.split(' @ ')[1] || 'Home')}</span>
