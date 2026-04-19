@@ -18,6 +18,7 @@ import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
 import ConnectionBadge from '../components/battle/ConnectionBadge';
 import { useMatchup } from '../contexts/MatchupContext';
 import { useNotifications } from '../contexts/NotificationsContext';
+import MessagePopup from '../components/messages/MessagePopup';
 import { useProfileCache } from '../contexts/ProfileCacheContext';
 import { formatMoney } from '../utils/formatMoney';
 import { formatLastSeen } from '../utils/relativeTime';
@@ -90,7 +91,14 @@ export default function BattlePage() {
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
 
-  const { setSuppress } = useNotifications();
+  const notificationsCtx = useNotifications();
+  const { setSuppress } = notificationsCtx;
+  const [messageFriend, setMessageFriend] = useState(null);
+  const openMessagePopup = useCallback((friend) => {
+    if (!friend?.id) return;
+    setMessageFriend(friend);
+  }, []);
+  const closeMessagePopup = useCallback(() => setMessageFriend(null), []);
   const { oppSpeaking } = useVoiceChat();
   const isGuest = status !== 'authenticated';
   const userId = session?.user?.id;
@@ -752,7 +760,7 @@ export default function BattlePage() {
                   <div className="flex items-center gap-1 flex-shrink-0">
                     {/* Mobile: icon-only message */}
                     <button
-                      onClick={() => { router.push(`/notifications?chat=${friend.id}`); }}
+                      onClick={() => openMessagePopup(friend)}
                       className="sm:hidden p-1.5 rounded-lg transition-colors hover:bg-blue-500/20 active:bg-blue-500/20 text-blue-400"
                       title="Message"
                       aria-label="Message"
@@ -761,7 +769,7 @@ export default function BattlePage() {
                     </button>
                     {/* Desktop: text message button */}
                     <button
-                      onClick={() => { router.push(`/notifications?chat=${friend.id}`); }}
+                      onClick={() => openMessagePopup(friend)}
                       className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors hover:bg-blue-500/20 active:bg-blue-500/20 text-blue-400"
                     >
                       Message
@@ -908,7 +916,7 @@ export default function BattlePage() {
                   </div>
                   {userId !== user.id && (
                     friendIds.has(user.id) ? (
-                      <button onClick={() => router.push(`/notifications?chat=${user.id}`)} className="px-2 py-1 bg-blue-500/20 text-blue-400 text-[10px] font-semibold rounded-md">Message</button>
+                      <button onClick={() => openMessagePopup(friends.find(f => f.id === user.id) || user)} className="px-2 py-1 bg-blue-500/20 text-blue-400 text-[10px] font-semibold rounded-md">Message</button>
                     ) : (
                       <button onClick={() => handleAddFriend(user.id)} className="px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-semibold rounded-md transition">Add</button>
                     )
@@ -1477,6 +1485,14 @@ export default function BattlePage() {
         onInviteSent={() => fetchData()}
         onInviteCancelled={() => fetchData()}
         onSwitchToPrivate={() => { setShowPlayFriend(false); setPlayFriendInitial(null); setShowPrivateMatch(true); }}
+      />
+
+      <MessagePopup
+        isOpen={!!messageFriend}
+        friend={messageFriend}
+        ctx={notificationsCtx}
+        myId={userId}
+        onClose={closeMessagePopup}
       />
 
       <PrivateMatchModal

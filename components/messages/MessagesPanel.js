@@ -60,7 +60,7 @@ function VoiceBubble({ url, durationMs, mine }) {
   );
 }
 
-function ConversationThread({ friend, ctx, myId, onStartBattle, inviteConfirmation }) {
+export function ConversationThread({ friend, ctx, myId, onStartBattle, inviteConfirmation }) {
   const [thread, setThread] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
