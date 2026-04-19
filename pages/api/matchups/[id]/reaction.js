@@ -1,8 +1,8 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../../lib/auth';
 import { db } from '../../../../lib/db';
-import { matchups } from '../../../../shared/schema';
-import { eq } from 'drizzle-orm';
+import { matchups, messages, friendships, profiles } from '../../../../shared/schema';
+import { eq, and, or } from 'drizzle-orm';
 import { publishBattleEvent } from '../../../../lib/battle-events';
 
 // Keep this list in lockstep with REACTION_EMOJIS / REACTION_TEXTS in
@@ -120,6 +120,70 @@ export default async function handler(req, res) {
       id: `${now}-${Math.random().toString(36).slice(2, 8)}`,
     };
     publishBattleEvent(recipients, payload);
+
+    // Persist custom text into the regular chat thread (best-effort).
+    // Canned reactions stay ephemeral. Skip silently if the two users aren't
+    // friends or the opponent is a fake/bot user, so the live bubble still
+    // works regardless.
+    if (customText) {
+      const opponentId = m.user1Id === userId ? m.user2Id : m.user1Id;
+      if (opponentId) {
+        try {
+          const friendRow = await db
+            .select({ id: friendships.id })
+            .from(friendships)
+            .where(
+              and(
+                or(
+                  and(eq(friendships.userId, userId), eq(friendships.friendId, opponentId)),
+                  and(eq(friendships.userId, opponentId), eq(friendships.friendId, userId))
+                ),
+                eq(friendships.status, 'accepted')
+              )
+            )
+            .limit(1);
+          if (friendRow.length > 0) {
+            const [opponentProfile] = await db
+              .select({ isFakeAccount: profiles.isFakeAccount })
+              .from(profiles)
+              .where(eq(profiles.id, opponentId))
+              .limit(1);
+            if (!opponentProfile?.isFakeAccount) {
+              const [newMessage] = await db
+                .insert(messages)
+                .values({
+                  senderId: userId,
+                  receiverId: opponentId,
+                  content: customText,
+                  messageType: 'text',
+                })
+                .returning();
+              try {
+                publishBattleEvent([opponentId, userId], {
+                  type: 'notification:message',
+                  message: {
+                    id: newMessage.id,
+                    senderId: userId,
+                    receiverId: opponentId,
+                    content: newMessage.content,
+                    messageType: newMessage.messageType || 'text',
+                    attachmentUrl: newMessage.attachmentUrl || null,
+                    attachmentDurationMs: newMessage.attachmentDurationMs || null,
+                    createdAt:
+                      newMessage.createdAt instanceof Date
+                        ? newMessage.createdAt.toISOString()
+                        : newMessage.createdAt,
+                  },
+                });
+              } catch (_e) {}
+            }
+          }
+        } catch (persistErr) {
+          console.error('Reaction message persist error:', persistErr);
+        }
+      }
+    }
+
     return res.status(200).json({ ok: true, ...payload });
   } catch (error) {
     console.error('Reaction error:', error);
