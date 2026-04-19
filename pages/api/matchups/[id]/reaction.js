@@ -13,15 +13,6 @@ const ALLOWED_EMOJIS = new Set(['👍', '🔥', '😂', '🎯', '👏']);
 const ALLOWED_TEXTS = new Set(['GG', 'Nice!', 'Close one', 'WP']);
 
 const CUSTOM_TEXT_MAX = 60;
-// Light, broad-strokes blocklist. Substring match on the normalized message
-// (lower-cased, alphanumerics only) so common leetspeak/spacing tricks are
-// still caught. Intentionally short — the goal is to filter the obvious
-// stuff, not to be a comprehensive moderation system.
-const PROFANITY_LIST = [
-  'fuck', 'fck', 'shit', 'sht', 'bitch', 'btch', 'cunt', 'asshole',
-  'dick', 'pussy', 'cock', 'faggot', 'fag', 'nigger', 'nigga',
-  'retard', 'slut', 'whore', 'rape', 'kys', 'kkk',
-];
 
 function sanitizeCustomText(raw) {
   if (typeof raw !== 'string') return null;
@@ -32,12 +23,6 @@ function sanitizeCustomText(raw) {
   if (!s) return null;
   if (s.length > CUSTOM_TEXT_MAX) s = s.slice(0, CUSTOM_TEXT_MAX);
   return s;
-}
-
-function containsProfanity(s) {
-  const norm = s.toLowerCase().replace(/[^a-z0-9]/g, '');
-  if (!norm) return false;
-  return PROFANITY_LIST.some((w) => norm.includes(w));
 }
 
 const recentByUser = global.__piks_reaction_rl__ || (global.__piks_reaction_rl__ = new Map());
@@ -78,9 +63,6 @@ export default async function handler(req, res) {
     customText = sanitizeCustomText(customTextRaw);
     if (!customText) {
       return res.status(400).json({ error: 'Empty message' });
-    }
-    if (containsProfanity(customText)) {
-      return res.status(400).json({ error: 'Message blocked' });
     }
   }
 
