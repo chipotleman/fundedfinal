@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import useModalScrollLock from '../hooks/useModalScrollLock';
 
 export default function WithdrawModal({ isOpen, onClose, bankroll = 10000 }) {
   const [selectedMethod, setSelectedMethod] = useState('');
@@ -21,18 +22,7 @@ export default function WithdrawModal({ isOpen, onClose, bankroll = 10000 }) {
     paypalEmail: ''
   });
 
-  // Lock body scroll when modal is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
+  useModalScrollLock(isOpen);
 
   useEffect(() => {
     if (!isOpen) {
@@ -269,16 +259,14 @@ export default function WithdrawModal({ isOpen, onClose, bankroll = 10000 }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen px-4 py-8">
-        {/* Backdrop */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/70 backdrop-blur-sm p-4">
         <div 
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
+          className="fixed inset-0"
           onClick={onClose}
         ></div>
 
         {/* Modal */}
-        <div className="relative bg-[#0d0d0d] rounded-2xl border border-[#1a1a1a] max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="relative bg-[#0d0d0d] rounded-2xl border border-[#1a1a1a] max-w-4xl w-full my-auto max-h-[90vh] overflow-y-auto shadow-2xl">
           {/* Header */}
           <div className="bg-gradient-to-r from-green-500 to-emerald-600 px-6 py-4 rounded-t-2xl">
             <div className="flex items-center justify-between">
@@ -416,7 +404,6 @@ export default function WithdrawModal({ isOpen, onClose, bankroll = 10000 }) {
             </form>
           </div>
         </div>
-      </div>
     </div>
   );
 }

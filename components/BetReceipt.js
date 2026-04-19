@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { formatMoney } from '../utils/formatMoney';
+import useModalScrollLock from '../hooks/useModalScrollLock';
 
 export default function BetReceipt({ bet, isDemo = false, onClose }) {
   console.log('[BetReceipt v2.0] Received bet:', { isLive: bet?.isLive, awayScore: bet?.awayScore, homeScore: bet?.homeScore });
@@ -9,6 +10,8 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
   const pikId = useMemo(() => {
     return `${Date.now().toString().slice(-10)}${Math.floor(Math.random() * 100).toString().padStart(2, '0')}`;
   }, [bet]);
+
+  useModalScrollLock(!!bet && isVisible);
 
   useEffect(() => {
     if (!bet) return;
@@ -130,7 +133,7 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
   };
 
   return (
-    <div className={`fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 transition-all duration-300 ${isVisible ? 'backdrop-blur-sm bg-black/50' : ''}`} onClick={handleClose}>
+    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto transition-all duration-300 ${isVisible ? 'backdrop-blur-sm bg-black/50' : ''}`} onClick={handleClose}>
       <div 
         className={`w-full max-w-md transform transition-all duration-300 ${isVisible ? 'translate-y-0 opacity-100' : '-translate-y-10 opacity-0'}`}
         onClick={(e) => e.stopPropagation()}

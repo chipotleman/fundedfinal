@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import useModalScrollLock from '../hooks/useModalScrollLock';
 import { useRouter } from 'next/router';
 import { useSession, signIn } from 'next-auth/react';
 import { useTheme } from '../contexts/ThemeContext';
@@ -52,6 +53,8 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
   const { data: session, update: updateSession } = useSession();
   const { isDarkMode } = useTheme();
 
+  useModalScrollLock(isOpen);
+
   useEffect(() => {
     if (isOpen) {
       setCurrentIndex(initialIndex);
@@ -60,25 +63,7 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
       setAuthPassword('');
       setConfirmPassword('');
       setAuthError('');
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
-    } else {
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-      window.scrollTo(0, parseInt(scrollY || '0') * -1);
     }
-    return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-    };
   }, [isOpen, initialIndex]);
 
   const handleChallengeSelect = (index) => {
@@ -231,7 +216,7 @@ export default function DemoPopup({ isOpen, onClose, initialIndex = 1 }) {
   const theme = getThemeColors();
 
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-start justify-center z-50 p-4 pt-10 overflow-y-auto">
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div 
         className="popup-content relative bg-black rounded-3xl max-w-md w-full my-auto border-2"
         style={{ 

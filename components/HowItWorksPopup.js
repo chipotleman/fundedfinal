@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import useModalScrollLock from '../hooks/useModalScrollLock';
 import { useRouter } from 'next/router';
 import TapSurface from './TapSurface';
 
@@ -55,16 +56,7 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
   const [touchEnd, setTouchEnd] = useState(0);
   const router = useRouter();
 
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
+  useModalScrollLock(isOpen);
 
   const handleTouchStart = (e) => {
     setTouchStart(e.targetTouches[0].clientX);
@@ -115,7 +107,7 @@ export default function HowItWorksPopup({ isOpen, onClose }) {
   const currentStep = steps[currentIndex];
 
   return (
-    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center overflow-y-auto z-50 p-4">
       <div className="relative bg-[#0a0a0a] border border-gray-800/50 rounded-2xl max-w-md w-full overflow-hidden">
         <TapSurface
           onTap={onClose}

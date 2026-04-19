@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import { formatMoney } from '../../utils/formatMoney';
+import useModalScrollLock from '../../hooks/useModalScrollLock';
 
 export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
   const [isForfeiting, setIsForfeiting] = useState(false);
   const { isDarkMode } = useTheme();
+  useModalScrollLock(isOpen);
 
   if (!isOpen) return null;
 

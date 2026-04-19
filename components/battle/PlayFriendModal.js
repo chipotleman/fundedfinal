@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useTheme } from '../../contexts/ThemeContext';
+import useModalScrollLock from '../../hooks/useModalScrollLock';
 
 const BUY_IN_OPTIONS = [5, 10, 25, 50, 100];
 const GAME_MODE_OPTIONS = [
@@ -42,6 +43,7 @@ function UserAvatar({ user, size = 36, isDarkMode }) {
 export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onSwitchToPrivate, initialFriend = null }) {
   const router = useRouter();
   const { isDarkMode } = useTheme();
+  useModalScrollLock(isOpen);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [buyIn, setBuyIn] = useState(10);
   const [gameMode, setGameMode] = useState('original');
@@ -249,12 +251,12 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
   const requestCount = friendRequests.length;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-start justify-center pt-12 sm:pt-16 p-4" onClick={onClose} onKeyDown={e => { if (e.key === 'Escape') onClose(); }}>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose} onKeyDown={e => { if (e.key === 'Escape') onClose(); }}>
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="pfm-title"
-        className="rounded-2xl max-w-md w-full max-h-[88vh] overflow-hidden flex flex-col pfm-slide-in"
+        className="rounded-2xl max-w-md w-full max-h-[88vh] overflow-hidden flex flex-col pfm-slide-in my-auto"
         style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, boxShadow: isDarkMode ? '0 25px 50px rgba(0,0,0,0.5)' : '0 25px 50px rgba(0,0,0,0.15)' }}
         onClick={e => e.stopPropagation()}
       >

@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import CoinRain from './CoinRain';
+import useModalScrollLock from '../hooks/useModalScrollLock';
 
 export default function WonByForfeitModal({ isOpen, onClose, opponent, payout }) {
   const [show, setShow] = useState(false);
   const [celebrating, setCelebrating] = useState(false);
   const celebrationTimerRef = useRef(null);
+
+  useModalScrollLock(isOpen);
 
   useEffect(() => {
     if (isOpen) {

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import useModalScrollLock from '../hooks/useModalScrollLock';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
@@ -30,6 +31,8 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
   const isPasswordStrong = hasMinLength && hasNumber && hasUppercase;
   const passwordsMatch = confirmPassword.length > 0 && password === confirmPassword;
 
+  useModalScrollLock(isOpen);
+
   useEffect(() => {
     if (isOpen) {
       setIsSignUp(initialMode === 'signup');
@@ -42,25 +45,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
         setEmail(savedEmail);
         setRememberMe(true);
       }
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
-    } else {
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-      window.scrollTo(0, parseInt(scrollY || '0') * -1);
     }
-    return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-    };
   }, [isOpen, initialMode]);
 
   const checkEmail = useCallback(async (val) => {
@@ -204,7 +189,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
 
   return (
     <div 
-      className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-start justify-center z-50 p-4 pt-10 overflow-hidden"
+      className="fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto"
       style={{ opacity: isOpen ? 1 : 0, animation: 'none', transition: 'none', ...hiddenStyle }}
     >
       <div 

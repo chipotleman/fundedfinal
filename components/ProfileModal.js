@@ -1,27 +1,17 @@
 
 import { Fragment, useEffect } from 'react';
+import useModalScrollLock from '../hooks/useModalScrollLock';
 
 export default function ProfileModal({ profile, isOpen, onClose }) {
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen]);
+  useModalScrollLock(isOpen);
 
   if (!isOpen || !profile) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 transition-opacity bg-black/90" onClick={onClose}></div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/90 p-4">
+      <div className="fixed inset-0" onClick={onClose}></div>
 
-        <div className="inline-block w-full max-w-2xl p-6 my-8 overflow-hidden text-left align-middle transition-all transform shadow-2xl rounded-2xl" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }}>
+        <div className="relative w-full max-w-2xl p-6 my-auto overflow-hidden text-left shadow-2xl rounded-2xl" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }}>
           <div className="flex justify-between items-start mb-6">
             <div>
               <h2 className="text-3xl font-bold text-white">{profile.username}</h2>
@@ -225,7 +215,6 @@ export default function ProfileModal({ profile, isOpen, onClose }) {
             </div>
           </div>
         </div>
-      </div>
     </div>
   );
 }

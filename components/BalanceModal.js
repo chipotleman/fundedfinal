@@ -1,5 +1,6 @@
 
 import { useState, useEffect } from 'react';
+import useModalScrollLock from '../hooks/useModalScrollLock';
 
 export default function BalanceModal({ 
   isOpen, 
@@ -16,33 +17,15 @@ export default function BalanceModal({
   const [activeTab, setActiveTab] = useState('overview');
   const [challengeData, setChallengeData] = useState(null);
 
+  useModalScrollLock(isOpen);
+
   useEffect(() => {
     if (isOpen) {
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
-
       const stored = localStorage.getItem('purchased_challenge');
       if (stored) {
         setChallengeData(JSON.parse(stored));
       }
-    } else {
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-      window.scrollTo(0, parseInt(scrollY || '0') * -1);
     }
-    
-    return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-    };
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -96,11 +79,11 @@ export default function BalanceModal({
 
   return (
     <div 
-      className="fixed inset-0 bg-black/90 backdrop-blur-sm flex justify-center items-start pt-10 z-50 overflow-y-auto"
+      className="fixed inset-0 bg-black/90 backdrop-blur-sm flex justify-center items-center z-50 overflow-y-auto p-4"
       onClick={onClose}
     >
       <div 
-        className="relative bg-[#0a0a0a] rounded-2xl border border-gray-800/50 w-full max-w-2xl mx-4 mb-10 overflow-hidden"
+        className="relative bg-[#0a0a0a] rounded-2xl border border-gray-800/50 w-full max-w-2xl my-auto overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-6">

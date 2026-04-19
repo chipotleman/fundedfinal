@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import useModalScrollLock from '../hooks/useModalScrollLock';
 import { useRouter } from 'next/router';
 import { useTheme } from '../contexts/ThemeContext';
 
@@ -6,28 +7,7 @@ export default function SessionSummaryPopup({ isOpen, onClose, sessionData }) {
   const router = useRouter();
   const { isDarkMode } = useTheme();
   
-  useEffect(() => {
-    if (isOpen) {
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
-    } else {
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-      window.scrollTo(0, parseInt(scrollY || '0') * -1);
-    }
-    return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
+  useModalScrollLock(isOpen);
 
   if (!isOpen || !sessionData) return null;
 
@@ -67,7 +47,7 @@ export default function SessionSummaryPopup({ isOpen, onClose, sessionData }) {
 
   return (
     <div 
-      className={`fixed inset-0 backdrop-blur-md flex items-start justify-center z-50 p-4 pt-10 overflow-y-auto`}
+      className={`fixed inset-0 backdrop-blur-md flex items-center justify-center z-50 p-4 overflow-y-auto`}
       style={{ background: isDarkMode ? 'rgba(0,0,0,0.9)' : 'rgba(0,0,0,0.4)' }}
     >
       <div 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
+import useModalScrollLock from '../../hooks/useModalScrollLock';
 
 const BUY_IN_OPTIONS = [5, 10, 25, 50, 100];
 const GAME_MODE_OPTIONS = [
@@ -9,6 +10,7 @@ const GAME_MODE_OPTIONS = [
 ];
 
 export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
+  useModalScrollLock(isOpen);
   const [mode, setMode] = useState('choose');
   const [buyIn, setBuyIn] = useState(10);
   const [gameMode, setGameMode] = useState('original');
@@ -133,8 +135,8 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="rounded-2xl max-w-md w-full overflow-hidden" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }} onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+      <div className="rounded-2xl max-w-md w-full overflow-hidden my-auto" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }} onClick={e => e.stopPropagation()}>
         <div className="p-5" style={{ borderBottom: '1px solid #1a1a1a' }}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">

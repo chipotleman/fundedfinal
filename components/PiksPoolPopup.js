@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import useModalScrollLock from '../hooks/useModalScrollLock';
 import { useRouter } from 'next/router';
 import { formatMoney } from '../utils/formatMoney';
 
@@ -9,18 +10,14 @@ export default function PiksPoolPopup({ isOpen, onClose, pool, onJoinSuccess }) 
   const [neededAmount, setNeededAmount] = useState(0);
   const router = useRouter();
 
+  useModalScrollLock(isOpen);
+
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
       setError(null);
       setShowDepositPrompt(false);
       setIsJoining(false);
-    } else {
-      document.body.style.overflow = 'unset';
     }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -87,13 +84,13 @@ export default function PiksPoolPopup({ isOpen, onClose, pool, onJoinSuccess }) 
 
   return (
     <div 
-      className="fixed inset-0 z-[100] flex items-start justify-center pt-4 px-4 overflow-y-auto"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4 overflow-y-auto"
       onClick={onClose}
     >
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
       
       <div 
-        className="relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl"
+        className="relative w-full max-w-md rounded-3xl overflow-hidden shadow-2xl my-auto"
         onClick={(e) => e.stopPropagation()}
         style={{
           background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 25%, #0369a1 50%, #075985 75%, #0c4a6e 100%)',

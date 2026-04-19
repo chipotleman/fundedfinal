@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import useModalScrollLock from '../hooks/useModalScrollLock';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { useTheme } from '../contexts/ThemeContext';
@@ -40,28 +41,7 @@ export default function OnboardingPopup({ isOpen, onClose }) {
 
   const totalSteps = 4;
 
-  useEffect(() => {
-    if (isOpen) {
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
-      document.body.style.overflow = 'hidden';
-    } else {
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-      window.scrollTo(0, parseInt(scrollY || '0') * -1);
-    }
-    return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
+  useModalScrollLock(isOpen);
 
   const toggleSport = (sportId) => {
     setSelectedSports(prev => 

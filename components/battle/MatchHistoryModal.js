@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
+import useModalScrollLock from '../../hooks/useModalScrollLock';
 
 export default function MatchHistoryModal({ isOpen, onClose }) {
   const [matches, setMatches] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useModalScrollLock(isOpen);
 
   useEffect(() => {
     if (isOpen) {
@@ -47,8 +50,8 @@ export default function MatchHistoryModal({ isOpen, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-start justify-center pt-16 sm:pt-20 p-4" onClick={onClose}>
-      <div className="rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }} onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
+      <div className="rounded-2xl max-w-lg w-full max-h-[80vh] overflow-hidden flex flex-col my-auto" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }} onClick={e => e.stopPropagation()}>
         <div className="p-5 flex-shrink-0" style={{ borderBottom: '1px solid #1a1a1a' }}>
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-bold text-white">Match History</h2>

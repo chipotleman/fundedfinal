@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { useTheme } from '../../contexts/ThemeContext';
+import useModalScrollLock from '../../hooks/useModalScrollLock';
 
 const GAME_MODE_OPTIONS = [
   {
@@ -65,6 +66,7 @@ const TIPS = [
 
 export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound }) {
   const { isDarkMode } = useTheme();
+  useModalScrollLock(isOpen);
   const [step, setStep] = useState('config');
   const [buyIn, setBuyIn] = useState(10);
   const [gameMode, setGameMode] = useState('original');
@@ -412,8 +414,8 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
           100% { background-position: 100% 100%; }
         }
       `}</style>
-      <div className={`fixed inset-0 ${th.overlay} backdrop-blur-sm z-50 flex items-center justify-center p-4`} onClick={() => { if (step === 'found') return; if (step === 'searching') { cancelSearch(); } onClose(); }}>
-        <div className="rounded-2xl max-w-md w-full overflow-hidden" style={{ backgroundColor: th.cardBg, border: `1px solid ${th.cardBorder}`, boxShadow: isDarkMode ? 'none' : '0 25px 50px -12px rgba(0,0,0,0.15)' }} onClick={e => e.stopPropagation()}>
+      <div className={`fixed inset-0 ${th.overlay} backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto`} onClick={() => { if (step === 'found') return; if (step === 'searching') { cancelSearch(); } onClose(); }}>
+        <div className="rounded-2xl max-w-md w-full overflow-hidden my-auto" style={{ backgroundColor: th.cardBg, border: `1px solid ${th.cardBorder}`, boxShadow: isDarkMode ? 'none' : '0 25px 50px -12px rgba(0,0,0,0.15)' }} onClick={e => e.stopPropagation()}>
           {step === 'config' && (
             <>
               <div className="p-5" style={{ borderBottom: `1px solid ${th.cardBorder}` }}>

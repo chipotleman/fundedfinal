@@ -1,15 +1,8 @@
 
-import { useEffect } from 'react';
+import useModalScrollLock from '../hooks/useModalScrollLock';
 
 export default function ChallengeModal({ pnl, progressPercent, challengeGoal, onClose }) {
-  // Lock body scroll when modal is open
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, []);
+  useModalScrollLock(true);
 
   return (
     <div
