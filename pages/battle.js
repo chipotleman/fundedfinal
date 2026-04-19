@@ -703,30 +703,42 @@ export default function BattlePage() {
         </div>
       )}
 
-      <div className="flex" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+      <div className="flex gap-1 p-1.5" style={{ borderBottom: `1px solid ${cardBorder}` }}>
         {[
           { key: 'friends', label: 'Friends', count: 0 },
           { key: 'requests', label: 'Requests', count: requestCount },
           { key: 'invites', label: 'Invites', count: inviteCount },
           { key: 'search', label: 'Find', count: 0 },
-        ].map(tab => (
-          <button
-            key={tab.key}
-            onClick={() => setSocialTab(tab.key)}
-            className="relative flex-1 py-2 text-[11px] font-semibold transition-colors"
-            style={{
-              color: socialTab === tab.key ? '#3b82f6' : textSecondary,
-              borderBottom: socialTab === tab.key ? '2px solid #3b82f6' : '2px solid transparent',
-            }}
-          >
-            {tab.label}
-            {tab.count > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-[8px] font-bold flex items-center justify-center text-white">
-                {tab.count > 9 ? '9+' : tab.count}
+        ].map(tab => {
+          const active = socialTab === tab.key;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => setSocialTab(tab.key)}
+              className="relative flex-1 py-1.5 text-[11px] font-bold rounded-lg transition-all"
+              style={{
+                color: active ? '#fff' : textSecondary,
+                background: active ? 'linear-gradient(135deg, #2563eb, #7c3aed)' : 'transparent',
+                boxShadow: active ? '0 2px 8px rgba(59,130,246,0.35)' : 'none',
+              }}
+            >
+              <span className="inline-flex items-center gap-1.5 justify-center">
+                {tab.label}
+                {tab.count > 0 && (
+                  <span
+                    className="inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full text-[9px] font-bold"
+                    style={{
+                      backgroundColor: active ? 'rgba(255,255,255,0.25)' : '#ef4444',
+                      color: '#fff',
+                    }}
+                  >
+                    {tab.count > 9 ? '9+' : tab.count}
+                  </span>
+                )}
               </span>
-            )}
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </div>
 
       <div className="max-h-72 overflow-y-auto">
@@ -741,32 +753,39 @@ export default function BattlePage() {
               {friends.map(friend => {
                 const lastSeenLabel = !friend.isOnline && friend.lastSeenAt != null ? formatLastSeen(friend.lastSeenAt) : '';
                 return (
-                <div key={friend.id} className="flex items-center gap-2.5 px-3 py-2.5 group">
+                <div key={friend.id} className="flex items-center gap-3 px-3 py-3 group transition-colors hover:bg-white/[0.02]">
                   <div className="flex-shrink-0 cursor-pointer" onClick={() => goToProfile(friend)}>
                     <FramedAvatar
                       user={friend}
-                      size={32}
+                      size={44}
                       isOnline={friend.isOnline}
                       onlineDotBorderColor={cardBg}
                     />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate cursor-pointer flex items-center gap-1.5" style={{ color: textPrimary }} onClick={() => goToProfile(friend)}>
-                      <span className="truncate">{friend.username}</span>
-                      {friend.isOnline && (
-                        <span className="text-[9px] font-semibold uppercase tracking-wide text-green-500 flex-shrink-0">Active now</span>
-                      )}
+                    <div className="text-sm font-bold truncate cursor-pointer" style={{ color: textPrimary }} onClick={() => goToProfile(friend)}>
+                      {friend.username}
                     </div>
-                    <div className="text-[10px]" style={{ color: textSecondary }}>{friend.battleWins || 0}W-{friend.battleLosses || 0}L</div>
-                    {lastSeenLabel && (
-                      <div className="text-[10px]" style={{ color: textSecondary }}>Last seen {lastSeenLabel}</div>
-                    )}
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                        <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.39 4.84L20 8l-4 3.9.94 5.49L12 14.77 7.06 17.39 8 11.9 4 8l5.61-1.16L12 2z" /></svg>
+                        {friend.battleWins || 0}W · {friend.battleLosses || 0}L
+                      </span>
+                      {friend.isOnline ? (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-green-500/15 text-green-300 border border-green-500/30">
+                          <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                          Online
+                        </span>
+                      ) : lastSeenLabel ? (
+                        <span className="text-[10px]" style={{ color: textSecondary }}>{lastSeenLabel}</span>
+                      ) : null}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
                     {/* Mobile: icon-only message */}
                     <button
                       onClick={() => openMessagePopup(friend)}
-                      className="sm:hidden p-1.5 rounded-lg transition-colors hover:bg-blue-500/20 active:bg-blue-500/20 text-blue-400"
+                      className="sm:hidden p-2 rounded-lg transition-colors bg-blue-500/10 hover:bg-blue-500/20 active:bg-blue-500/30 text-blue-300 border border-blue-500/20"
                       title="Message"
                       aria-label="Message"
                     >
@@ -775,15 +794,17 @@ export default function BattlePage() {
                     {/* Desktop: text message button */}
                     <button
                       onClick={() => openMessagePopup(friend)}
-                      className="hidden sm:inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors hover:bg-blue-500/20 active:bg-blue-500/20 text-blue-400"
+                      className="hidden sm:inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors bg-blue-500/10 hover:bg-blue-500/20 active:bg-blue-500/30 text-blue-300 border border-blue-500/20"
                     >
                       Message
                     </button>
-                    {/* Play: text on both mobile and desktop */}
+                    {/* Play: gamified gradient button */}
                     <button
                       onClick={() => { setPlayFriendInitial(friend); setShowPlayFriend(true); }}
-                      className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors hover:bg-purple-500/20 active:bg-purple-500/20 text-purple-400"
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:scale-[1.03] active:scale-[0.97]"
+                      style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 2px 8px rgba(124,58,237,0.35)' }}
                     >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                       Play
                     </button>
                   </div>
@@ -802,30 +823,26 @@ export default function BattlePage() {
           ) : (
             <div className="divide-y" style={{ borderColor: cardBorder }}>
               {friendRequests.map(req => (
-                <div key={req.id} className="flex items-center gap-2.5 px-3 py-2.5">
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer"
-                    style={{ backgroundColor: '#374151' }}
-                    onClick={() => goToProfile(req.sender)}
-                  >
-                    {req.sender?.avatar ? (
-                      <img src={req.sender.avatar} className="w-full h-full object-cover" alt="" />
-                    ) : (
-                      <span className="text-xs font-bold" style={{ color: textPrimary }}>{req.sender?.username?.[0]?.toUpperCase()}</span>
-                    )}
+                <div key={req.id} className="flex items-center gap-3 px-3 py-3 hover:bg-white/[0.02] transition-colors">
+                  <div className="flex-shrink-0 cursor-pointer" onClick={() => goToProfile(req.sender)}>
+                    <FramedAvatar user={req.sender} size={40} onlineDotBorderColor={cardBg} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-medium truncate" style={{ color: textPrimary }}>{req.sender?.username}</div>
-                    <div className="text-[10px] text-purple-400">wants to be friends</div>
+                    <div className="text-sm font-bold truncate cursor-pointer" style={{ color: textPrimary }} onClick={() => goToProfile(req.sender)}>{req.sender?.username}</div>
+                    <div className="inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                      <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                      Wants to be friends
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
                     <button
                       onClick={() => handleAcceptFriendRequest(req.id)}
-                      className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold rounded-md transition"
+                      className="px-2.5 py-1.5 text-white text-[10px] font-bold rounded-md transition hover:scale-[1.03] active:scale-[0.97]"
+                      style={{ background: 'linear-gradient(135deg, #16a34a, #059669)' }}
                     >Accept</button>
                     <button
                       onClick={() => handleDeclineFriendRequest(req.id)}
-                      className="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 text-[10px] font-medium rounded-md transition"
+                      className="px-2.5 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-[10px] font-bold rounded-md transition"
                     >Decline</button>
                   </div>
                 </div>
@@ -845,20 +862,23 @@ export default function BattlePage() {
                 <div
                   key={invite.id}
                   ref={invite.id === highlightInviteId ? inviteRowRef : null}
-                  className={`px-3 py-2.5 bg-gradient-to-r from-blue-900/20 to-transparent transition-all duration-500 ${invite.id === highlightInviteId ? 'invite-row-highlight' : ''}`}
+                  className={`px-3 py-3 bg-gradient-to-r from-blue-900/25 via-purple-900/10 to-transparent transition-all duration-500 ${invite.id === highlightInviteId ? 'invite-row-highlight' : ''}`}
                 >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ backgroundColor: '#374151' }}>
-                      {invite.sender?.avatar ? <img src={invite.sender.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-[10px] font-bold text-white">{invite.sender?.username?.[0]?.toUpperCase() || '?'}</span>}
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="flex-shrink-0">
+                      <FramedAvatar user={invite.sender} size={40} onlineDotBorderColor={cardBg} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-xs font-semibold truncate" style={{ color: textPrimary }}>{invite.sender?.username} challenged you!</div>
-                      <div className="text-[10px]" style={{ color: textSecondary }}>${invite.buyIn} buy-in · ${parseFloat(invite.buyIn) * 2} pot</div>
+                      <div className="text-sm font-bold truncate" style={{ color: textPrimary }}>{invite.sender?.username} <span className="text-blue-300">challenged you!</span></div>
+                      <div className="inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-yellow-500/15 text-yellow-300 border border-yellow-500/30">
+                        <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 9v1" /></svg>
+                        ${invite.buyIn} buy-in · ${parseFloat(invite.buyIn) * 2} pot
+                      </div>
                     </div>
                   </div>
                   <div className="flex gap-1.5">
-                    <button onClick={() => handleAcceptInvite(invite.id)} className="flex-1 py-1 bg-green-600 hover:bg-green-700 text-white text-[10px] font-bold rounded-md transition">Accept</button>
-                    <button onClick={() => handleDeclineInvite(invite.id)} className="flex-1 py-1 bg-gray-700 hover:bg-gray-600 text-gray-300 text-[10px] font-medium rounded-md transition">Decline</button>
+                    <button onClick={() => handleAcceptInvite(invite.id)} className="flex-1 py-1.5 text-white text-[11px] font-bold rounded-md transition hover:scale-[1.01] active:scale-[0.99]" style={{ background: 'linear-gradient(135deg, #16a34a, #059669)' }}>Accept</button>
+                    <button onClick={() => handleDeclineInvite(invite.id)} className="flex-1 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-[11px] font-bold rounded-md transition">Decline</button>
                   </div>
                 </div>
               ))}
@@ -866,31 +886,43 @@ export default function BattlePage() {
                 <div
                   key={invite.id}
                   ref={invite.id === highlightInviteId ? inviteRowRef : null}
-                  className={`flex items-center gap-2.5 px-3 py-2.5 transition-all duration-500 ${invite.id === highlightInviteId ? 'invite-row-highlight' : ''}`}
+                  className={`flex items-center gap-3 px-3 py-3 transition-all duration-500 ${invite.id === highlightInviteId ? 'invite-row-highlight' : ''}`}
                 >
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ backgroundColor: '#374151' }}>
-                    {invite.receiver?.avatar ? <img src={invite.receiver.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-[10px] font-bold text-white">{invite.receiver?.username?.[0]?.toUpperCase() || '?'}</span>}
+                  <div className="flex-shrink-0">
+                    <FramedAvatar user={invite.receiver} size={36} onlineDotBorderColor={cardBg} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs truncate" style={{ color: textPrimary }}>{invite.receiver?.username || 'User'}</div>
-                    <div className="text-[10px] text-orange-400">Pending response…</div>
+                    <div className="text-sm font-bold truncate" style={{ color: textPrimary }}>{invite.receiver?.username || 'User'}</div>
+                    <span className="inline-flex items-center gap-1 mt-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-orange-500/15 text-orange-300 border border-orange-500/30">
+                      <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
+                      Pending response
+                    </span>
                   </div>
-                  <button onClick={() => handleCancelInvite(invite.id)} className="text-[10px] font-medium text-gray-500 hover:text-red-400 transition flex-shrink-0">Cancel</button>
+                  <button onClick={() => handleCancelInvite(invite.id)} className="text-[10px] font-bold text-gray-500 hover:text-red-400 transition flex-shrink-0">Cancel</button>
                 </div>
               ))}
-              {(invites.recentlyClosed || []).map(invite => (
-                <div key={invite.id} className="flex items-center gap-2.5 px-3 py-2.5">
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0" style={{ backgroundColor: '#374151' }}>
-                    {invite.receiver?.avatar ? <img src={invite.receiver.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-[10px] font-bold text-white">{invite.receiver?.username?.[0]?.toUpperCase() || '?'}</span>}
+              {(invites.recentlyClosed || []).map(invite => {
+                const statusStyles = invite.status === 'accepted'
+                  ? { bg: 'bg-green-500/15', border: 'border-green-500/30', text: 'text-green-300', label: 'Accepted' }
+                  : invite.status === 'expired'
+                    ? { bg: 'bg-orange-500/15', border: 'border-orange-500/30', text: 'text-orange-300', label: 'Expired' }
+                    : invite.status === 'declined'
+                      ? { bg: 'bg-red-500/15', border: 'border-red-500/30', text: 'text-red-300', label: 'Declined' }
+                      : { bg: 'bg-gray-500/15', border: 'border-gray-500/30', text: 'text-gray-300', label: invite.status };
+                return (
+                  <div key={invite.id} className="flex items-center gap-3 px-3 py-3 opacity-80">
+                    <div className="flex-shrink-0">
+                      <FramedAvatar user={invite.receiver} size={36} onlineDotBorderColor={cardBg} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-bold truncate" style={{ color: textPrimary }}>{invite.receiver?.username || 'User'}</div>
+                    </div>
+                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold border flex-shrink-0 ${statusStyles.bg} ${statusStyles.border} ${statusStyles.text}`}>
+                      {statusStyles.label}
+                    </span>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs truncate" style={{ color: textPrimary }}>{invite.receiver?.username || 'User'}</div>
-                  </div>
-                  <span className={`text-[10px] font-medium flex-shrink-0 ${invite.status === 'accepted' ? 'text-green-400' : invite.status === 'expired' ? 'text-orange-400' : invite.status === 'declined' ? 'text-red-400' : 'text-gray-400'}`}>
-                    {invite.status === 'accepted' ? 'Accepted' : invite.status === 'expired' ? 'Expired' : invite.status === 'declined' ? 'Declined' : invite.status}
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )
         )}
@@ -1295,56 +1327,72 @@ export default function BattlePage() {
 
           {(() => {
             const battleCTA = (
-              <div className="rounded-xl overflow-hidden mb-5" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, boxShadow: cardShadow }}>
-                <div className="p-5 sm:p-6 text-center">
-                  <h2 className="text-xl sm:text-2xl font-bold mb-2" style={{ color: textPrimary }}>1v1 Betting Battles</h2>
-                  <p className="text-sm mb-5 max-w-md mx-auto" style={{ color: textSecondary }}>
-                    Go head-to-head against another player. Both start with the same bankroll, make your piks on live games, and the best record takes the pot.
-                  </p>
+              <div className="rounded-xl overflow-hidden mb-5 relative" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, boxShadow: cardShadow }}>
+                <div className="absolute inset-x-0 top-0 h-24 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 0% 0%, rgba(59,130,246,0.18), transparent 60%), radial-gradient(ellipse at 100% 0%, rgba(249,115,22,0.16), transparent 60%)' }} />
+                <div className="relative p-4 sm:p-5">
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-500/15 text-blue-300 border border-blue-500/30">
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                      1v1 Battle
+                    </span>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: textSecondary }}>Winner takes pot · 5% rake</span>
+                  </div>
 
-                  <div className="grid grid-cols-3 gap-3 mb-5">
-                    <div className="rounded-lg p-3 text-center" style={{ backgroundColor: '#111', border: `1px solid ${cardBorder}` }}>
-                      <div className="w-9 h-9 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-2 border border-blue-500/20">
-                        <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  <div className="flex items-center justify-center gap-3 sm:gap-4 mb-4">
+                    <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border-2 border-blue-500/40 bg-gradient-to-br from-blue-500/20 to-blue-600/5">
+                        <svg className="w-6 h-6 sm:w-7 sm:h-7 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                       </div>
-                      <p className="text-[11px] font-semibold" style={{ color: textPrimary }}>Pick Games</p>
-                      <p className="text-[10px] mt-0.5" style={{ color: textSecondary }}>Both players make piks on live games</p>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-blue-300">You</span>
                     </div>
-                    <div className="rounded-lg p-3 text-center" style={{ backgroundColor: '#111', border: `1px solid ${cardBorder}` }}>
-                      <div className="w-9 h-9 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-2 border border-emerald-500/20">
-                        <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+
+                    <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                      <div className="text-2xl sm:text-3xl font-black bg-gradient-to-br from-orange-400 to-red-500 bg-clip-text text-transparent leading-none">VS</div>
+                      <div className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: textSecondary }}>Head to head</div>
+                    </div>
+
+                    <div className="flex flex-col items-center gap-1 flex-1 min-w-0">
+                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center border-2 border-orange-500/40 bg-gradient-to-br from-orange-500/20 to-red-600/5">
+                        <svg className="w-6 h-6 sm:w-7 sm:h-7 text-orange-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
                       </div>
-                      <p className="text-[11px] font-semibold" style={{ color: textPrimary }}>Track Live</p>
-                      <p className="text-[10px] mt-0.5" style={{ color: textSecondary }}>Watch your balance move in real time</p>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-orange-300">Rival</span>
                     </div>
-                    <div className="rounded-lg p-3 text-center" style={{ backgroundColor: '#111', border: `1px solid ${cardBorder}` }}>
-                      <div className="w-9 h-9 rounded-full bg-orange-500/10 flex items-center justify-center mx-auto mb-2 border border-orange-500/20">
-                        <svg className="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                      </div>
-                      <p className="text-[11px] font-semibold" style={{ color: textPrimary }}>Winner Takes Pot</p>
-                      <p className="text-[10px] mt-0.5" style={{ color: textSecondary }}>Keep the entire pot, just a 5% rake</p>
-                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-center gap-1.5 mb-4">
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold border" style={{ backgroundColor: '#111', borderColor: cardBorder, color: textPrimary }}>
+                      <svg className="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 9v1" /></svg>
+                      Same bankroll
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold border" style={{ backgroundColor: '#111', borderColor: cardBorder, color: textPrimary }}>
+                      <svg className="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                      Live piks
+                    </span>
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold border" style={{ backgroundColor: '#111', borderColor: cardBorder, color: textPrimary }}>
+                      <svg className="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.39 4.84L20 8l-4 3.9.94 5.49L12 14.77 7.06 17.39 8 11.9 4 8l5.61-1.16L12 2z" /></svg>
+                      Best record wins
+                    </span>
                   </div>
 
                   {!activeMatchup && (
                     <button
                       onClick={() => requireAuth(() => setShowBattleOptions(true))}
-                      className="w-full relative overflow-hidden rounded-xl py-4 sm:py-5 font-bold text-lg text-white border border-blue-500/30 transition-all duration-300"
+                      className="w-full relative overflow-hidden rounded-xl py-3.5 sm:py-4 font-bold text-base sm:text-lg text-white border border-blue-500/30 transition-all duration-300 hover:scale-[1.01] active:scale-[0.99]"
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-500"></div>
-                      <div className="relative flex items-center justify-center gap-3">
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-blue-500 to-purple-500"></div>
+                      <div className="relative flex items-center justify-center gap-2.5">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                         <span>Start a Battle</span>
                       </div>
                     </button>
                   )}
 
                   {isGuest && (
-                    <div className="text-center mt-4 pt-4" style={{ borderTop: `1px solid ${cardBorder}` }}>
-                      <p className="text-sm mb-3" style={{ color: textSecondary }}>Create an account to start battling</p>
+                    <div className="text-center mt-3 pt-3" style={{ borderTop: `1px solid ${cardBorder}` }}>
+                      <p className="text-xs mb-2" style={{ color: textSecondary }}>Create an account to start battling</p>
                       <button
                         onClick={() => window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signup' } }))}
-                        className="font-semibold py-2.5 px-8 rounded-lg transition-colors text-sm"
+                        className="font-semibold py-2 px-6 rounded-lg transition-colors text-sm"
                         style={{ backgroundColor: '#fff', color: '#000' }}
                       >
                         Sign Up Free
@@ -1365,12 +1413,23 @@ export default function BattlePage() {
                   onClick={() => setSocialExpanded(v => !v)}
                   aria-expanded={socialExpanded}
                   aria-controls="battle-social-panel"
-                  className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left"
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left relative overflow-hidden"
+                  style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.08), rgba(124,58,237,0.06) 60%, transparent)' }}
                 >
                   <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#111', border: `1px solid ${cardBorder}` }}>
-                      <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                    </div>
+                    {friends.length > 0 ? (
+                      <div className="flex -space-x-2 flex-shrink-0">
+                        {friends.slice(0, 3).map((f) => (
+                          <div key={f.id} className="rounded-full ring-2" style={{ '--tw-ring-color': cardBg }}>
+                            <FramedAvatar user={f} size={28} isOnline={f.isOnline} onlineDotBorderColor={cardBg} />
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, #2563eb, #7c3aed)' }}>
+                        <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                      </div>
+                    )}
                     <div className="min-w-0 flex-1">
                       <div className="text-sm font-bold leading-tight" style={{ color: textPrimary }}>Friends &amp; Invites</div>
                       <div className="text-[11px] leading-tight" style={{ color: textSecondary }}>
