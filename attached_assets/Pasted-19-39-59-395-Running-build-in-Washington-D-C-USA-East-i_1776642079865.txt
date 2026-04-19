@@ -1,0 +1,414 @@
+19:39:59.395 Running build in Washington, D.C., USA (East) – iad1 (Static IPs)
+19:39:59.395 Build machine configuration: 4 cores, 8 GB
+19:39:59.549 Cloning github.com/chipotleman/fundedfinal (Branch: main, Commit: 81bf1fc)
+19:40:13.523 Cloning completed: 13.974s
+19:40:13.645 Restored build cache from previous deployment (3qEwqiWK5yzvHDwQjy2ZFgsSgWcr)
+19:40:13.843 Running "vercel build"
+19:40:14.483 Vercel CLI 51.6.1
+19:40:14.804 Installing dependencies...
+19:40:16.358 
+19:40:16.358 up to date in 1s
+19:40:16.358 
+19:40:16.359 178 packages are looking for funding
+19:40:16.359   run `npm fund` for details
+19:40:16.383 Detected Next.js version: 14.2.35
+19:40:16.389 Running "npm run build"
+19:40:16.494 
+19:40:16.494 > fundedfinal@1.0.0 build
+19:40:16.494 > next build
+19:40:16.495 
+19:40:17.668   ▲ Next.js 14.2.35
+19:40:17.668   - Environments: .env.local
+19:40:17.668   - Experiments (use with caution):
+19:40:17.668     · instrumentationHook
+19:40:17.668 
+19:40:17.738    Creating an optimized production build ...
+19:40:18.353 > [PWA] Compile server
+19:40:18.355 > [PWA] Compile server
+19:40:18.356 > [PWA] Compile client (static)
+19:40:18.356 > [PWA] Custom worker found: /vercel/path0/worker/index.js
+19:40:18.357 > [PWA] Build custom worker: /vercel/path0/public/worker-J7EV7MQLFCDInc4KA1VXR.js
+19:40:18.562 > [PWA] Auto register service worker with: /vercel/path0/node_modules/next-pwa/register.js
+19:40:18.563 > [PWA] Service worker: /vercel/path0/public/sw.js
+19:40:18.563 > [PWA]   url: /sw.js
+19:40:18.563 > [PWA]   scope: /
+19:40:18.603 > [PWA] Fallback to precache routes when fetch failed from cache or network:
+19:40:18.603 > [PWA]   document (page): /offline
+19:40:26.199 <w> [webpack.cache.PackFileCacheStrategy] Serializing big strings (695kiB) impacts deserialization performance (consider using Buffer instead and decode when needed)
+19:40:26.229 Failed to compile.
+19:40:26.229 
+19:40:26.229 ./pages/battle/replay/[id].js
+19:40:26.229 Error: 
+19:40:26.230   [31mx[0m the name `getServerSideProps` is defined multiple times
+19:40:26.230      ,-[[36;1;4m/vercel/path0/pages/battle/replay/[id].js[0m:154:1]
+19:40:26.230  [2m154[0m |   );
+19:40:26.230  [2m155[0m | }
+19:40:26.230  [2m156[0m | 
+19:40:26.230  [2m157[0m | export async function getServerSideProps(context) {
+19:40:26.230      : [31;1m                      ^^^^^^^^^|^^^^^^^^[0m
+19:40:26.231      :                                [31;1m`-- [31;1mprevious definition of `getServerSideProps` here[0m[0m
+19:40:26.231  [2m158[0m |   const { id } = context.params || {};
+19:40:26.231  [2m159[0m |   if (!id || typeof id !== 'string') return { props: {} };
+19:40:26.231  [2m160[0m |   try {
+19:40:26.231  [2m161[0m |     const { getBattlePreview } = await import('../../../lib/battle-preview');
+19:40:26.232  [2m162[0m |     const preview = await getBattlePreview(id);
+19:40:26.232  [2m163[0m |     if (!preview) return { props: {} };
+19:40:26.232  [2m164[0m | 
+19:40:26.232  [2m165[0m |     const proto = (context.req?.headers['x-forwarded-proto'] || '').toString().split(',')[0]
+19:40:26.232  [2m166[0m |       || (context.req?.socket?.encrypted ? 'https' : 'http');
+19:40:26.232  [2m167[0m |     const host = (context.req?.headers['x-forwarded-host'] || context.req?.headers?.host || '')
+19:40:26.232  [2m168[0m |       .toString().split(',')[0] || '';
+19:40:26.232  [2m169[0m |     const origin = host ? `${proto}://${host}` : '';
+19:40:26.232  [2m170[0m | 
+19:40:26.232  [2m171[0m |     const u1 = preview.user1?.username || 'Player 1';
+19:40:26.233  [2m172[0m |     const u2 = preview.user2?.username || 'Player 2';
+19:40:26.233  [2m173[0m | 
+19:40:26.233  [2m174[0m |     let title;
+19:40:26.233  [2m175[0m |     let description;
+19:40:26.233  [2m176[0m |     if (preview.status === 'completed') {
+19:40:26.233  [2m177[0m |       if (preview.winnerType === 'tie') {
+19:40:26.233  [2m178[0m |         title = `${u1} vs ${u2} ended in a tie · Piks`;
+19:40:26.233  [2m179[0m |         description = `Tied ${preview.mode.toLowerCase()} battle on Piks · ${preview.prize} pot. See every pick from the matchup.`;
+19:40:26.233  [2m180[0m |       } else if (preview.winnerUsername) {
+19:40:26.233  [2m181[0m |         title = `${preview.winnerUsername} beat ${preview.loserUsername || 'their opponent'} on Piks`;
+19:40:26.233  [2m182[0m |         description = `${preview.winnerUsername} won a ${preview.mode.toLowerCase()} battle on Piks and took home ${preview.prize}. Watch the replay.`;
+19:40:26.234  [2m183[0m |       } else {
+19:40:26.234  [2m184[0m |         title = `${u1} vs ${u2} · Battle replay · Piks`;
+19:40:26.234  [2m185[0m |         description = `${preview.mode} battle replay on Piks · ${preview.prize} pot.`;
+19:40:26.234  [2m186[0m |       }
+19:40:26.234  [2m187[0m |     } else {
+19:40:26.234  [2m188[0m |       title = `${u1} vs ${u2} · Battle replay · Piks`;
+19:40:26.234  [2m189[0m |       description = `${preview.mode} battle on Piks · ${preview.prize} prize pool · ${preview.statusLabel}.`;
+19:40:26.234  [2m190[0m |     }
+19:40:26.234  [2m191[0m | 
+19:40:26.234  [2m192[0m |     return {
+19:40:26.235  [2m193[0m |       props: {
+19:40:26.235  [2m194[0m |         battlePreview: {
+19:40:26.235  [2m195[0m |           ...preview,
+19:40:26.235  [2m196[0m |           origin,
+19:40:26.235  [2m197[0m |           title,
+19:40:26.235  [2m198[0m |           description,
+19:40:26.235  [2m199[0m |           url: `/battle/replay/${encodeURIComponent(id)}`,
+19:40:26.235  [2m200[0m |         },
+19:40:26.235  [2m201[0m |       },
+19:40:26.235  [2m202[0m |     };
+19:40:26.236  [2m203[0m |   } catch (_err) {
+19:40:26.236  [2m204[0m |     return { props: {} };
+19:40:26.236  [2m205[0m |   }
+19:40:26.236  [2m206[0m | }
+19:40:26.236  [2m207[0m | 
+19:40:26.236  [2m208[0m | export default function BattleReplayPage() {
+19:40:26.236  [2m209[0m |   const router = useRouter();
+19:40:26.236  [2m210[0m |   const { id } = router.query;
+19:40:26.236  [2m211[0m |   const auth = useAuth();
+19:40:26.236  [2m212[0m |   const isSignedIn = !!auth?.user;
+19:40:26.236  [2m213[0m | 
+19:40:26.236  [2m214[0m |   const handleSignUpClick = () => {
+19:40:26.236  [2m215[0m |     if (typeof window === 'undefined') return;
+19:40:26.236  [2m216[0m |     try {
+19:40:26.236  [2m217[0m |       localStorage.setItem('beta_access', 'true');
+19:40:26.236  [2m218[0m |     } catch (_e) {}
+19:40:26.236  [2m219[0m |     window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signup' } }));
+19:40:26.236  [2m220[0m |   };
+19:40:26.237  [2m221[0m |   const [battle, setBattle] = useState(null);
+19:40:26.237  [2m222[0m |   const [loading, setLoading] = useState(true);
+19:40:26.237  [2m223[0m |   const [error, setError] = useState(null);
+19:40:26.237  [2m224[0m |   const [moreBattles, setMoreBattles] = useState([]);
+19:40:26.237  [2m225[0m | 
+19:40:26.237  [2m226[0m |   useEffect(() => {
+19:40:26.237  [2m227[0m |     if (!router.isReady || !id) return;
+19:40:26.237  [2m228[0m |     let cancelled = false;
+19:40:26.237  [2m229[0m |     setLoading(true);
+19:40:26.237  [2m230[0m |     setError(null);
+19:40:26.237  [2m231[0m |     (async () => {
+19:40:26.237  [2m232[0m |       try {
+19:40:26.237  [2m233[0m |         const res = await fetch(`/api/battles/public/${encodeURIComponent(id)}`);
+19:40:26.237  [2m234[0m |         if (cancelled) return;
+19:40:26.237  [2m235[0m |         if (res.status === 404) {
+19:40:26.237  [2m236[0m |           setError('not_found');
+19:40:26.237  [2m237[0m |           setLoading(false);
+19:40:26.238  [2m238[0m |           return;
+19:40:26.238  [2m239[0m |         }
+19:40:26.238  [2m240[0m |         if (!res.ok) {
+19:40:26.238  [2m241[0m |           setError('error');
+19:40:26.238  [2m242[0m |           setLoading(false);
+19:40:26.238  [2m243[0m |           return;
+19:40:26.238  [2m244[0m |         }
+19:40:26.238  [2m245[0m |         const data = await res.json();
+19:40:26.238  [2m246[0m |         if (cancelled) return;
+19:40:26.238  [2m247[0m |         setBattle(data?.battle || null);
+19:40:26.238  [2m248[0m |         setLoading(false);
+19:40:26.238  [2m249[0m |       } catch {
+19:40:26.238  [2m250[0m |         if (!cancelled) {
+19:40:26.239  [2m251[0m |           setError('error');
+19:40:26.239  [2m252[0m |           setLoading(false);
+19:40:26.239  [2m253[0m |         }
+19:40:26.239  [2m254[0m |       }
+19:40:26.239  [2m255[0m |     })();
+19:40:26.239  [2m256[0m |     return () => { cancelled = true; };
+19:40:26.239  [2m257[0m |   }, [router.isReady, id]);
+19:40:26.239  [2m258[0m | 
+19:40:26.240  [2m259[0m |   useEffect(() => {
+19:40:26.240  [2m260[0m |     if (!router.isReady) return;
+19:40:26.240  [2m261[0m |     let cancelled = false;
+19:40:26.240  [2m262[0m |     (async () => {
+19:40:26.240  [2m263[0m |       try {
+19:40:26.240  [2m264[0m |         const res = await fetch('/api/battles/recent?limit=10');
+19:40:26.240  [2m265[0m |         if (!res.ok || cancelled) return;
+19:40:26.240  [2m266[0m |         const data = await res.json();
+19:40:26.240  [2m267[0m |         if (cancelled) return;
+19:40:26.240  [2m268[0m |         const list = Array.isArray(data?.battles) ? data.battles : [];
+19:40:26.240  [2m269[0m |         setMoreBattles(list);
+19:40:26.240  [2m270[0m |       } catch {
+19:40:26.240  [2m271[0m |         // ignore
+19:40:26.240  [2m272[0m |       }
+19:40:26.240  [2m273[0m |     })();
+19:40:26.240  [2m274[0m |     return () => { cancelled = true; };
+19:40:26.240  [2m275[0m |   }, [router.isReady]);
+19:40:26.240  [2m276[0m | 
+19:40:26.240  [2m277[0m |   if (loading) {
+19:40:26.240  [2m278[0m |     return (
+19:40:26.240  [2m279[0m |       <div className="min-h-screen bg-black text-white">
+19:40:26.240  [2m280[0m |         <TopNavbar />
+19:40:26.241  [2m281[0m |         <div className="max-w-md mx-auto px-4 py-10">
+19:40:26.241  [2m282[0m |           <div
+19:40:26.241  [2m283[0m |             className="rounded-xl p-6 animate-pulse"
+19:40:26.241  [2m284[0m |             style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}
+19:40:26.241  [2m285[0m |           >
+19:40:26.241  [2m286[0m |             <div className="h-4 w-24 rounded mb-4" style={{ background: '#1a1a1a' }} />
+19:40:26.241  [2m287[0m |             <div className="h-20 rounded mb-3" style={{ background: '#1a1a1a' }} />
+19:40:26.241  [2m288[0m |             <div className="h-20 rounded" style={{ background: '#1a1a1a' }} />
+19:40:26.241  [2m289[0m |           </div>
+19:40:26.241  [2m290[0m |         </div>
+19:40:26.241  [2m291[0m |       </div>
+19:40:26.241  [2m292[0m |     );
+19:40:26.241  [2m293[0m |   }
+19:40:26.241  [2m294[0m | 
+19:40:26.241  [2m295[0m |   if (error === 'not_found') {
+19:40:26.241  [2m296[0m |     return (
+19:40:26.241  [2m297[0m |       <StatusMessage
+19:40:26.241  [2m298[0m |         title="Replay not found"
+19:40:26.241  [2m299[0m |         message="This battle doesn't exist or is no longer available."
+19:40:26.241  [2m300[0m |       />
+19:40:26.241  [2m301[0m |     );
+19:40:26.241  [2m302[0m |   }
+19:40:26.241  [2m303[0m | 
+19:40:26.241  [2m304[0m |   if (error || !battle) {
+19:40:26.241  [2m305[0m |     return (
+19:40:26.241  [2m306[0m |       <StatusMessage
+19:40:26.241  [2m307[0m |         title="Couldn't load replay"
+19:40:26.241  [2m308[0m |         message="Something went wrong loading this battle. Please try again in a moment."
+19:40:26.241  [2m309[0m |       />
+19:40:26.241  [2m310[0m |     );
+19:40:26.242  [2m311[0m |   }
+19:40:26.242  [2m312[0m | 
+19:40:26.242  [2m313[0m |   if (battle.status === 'cancelled') {
+19:40:26.242  [2m314[0m |     return (
+19:40:26.242  [2m315[0m |       <StatusMessage
+19:40:26.242  [2m316[0m |         title="Battle cancelled"
+19:40:26.242  [2m317[0m |         message="This matchup was cancelled before it finished, so there's nothing to replay."
+19:40:26.242  [2m318[0m |       />
+19:40:26.242  [2m319[0m |     );
+19:40:26.242  [2m320[0m |   }
+19:40:26.242  [2m321[0m | 
+19:40:26.242  [2m322[0m |   if (battle.status !== 'completed') {
+19:40:26.242  [2m323[0m |     return (
+19:40:26.242  [2m324[0m |       <StatusMessage
+19:40:26.242  [2m325[0m |         title="Battle still in progress"
+19:40:26.242  [2m326[0m |         message="Replays only become available after a battle ends."
+19:40:26.242  [2m327[0m |       />
+19:40:26.242  [2m328[0m |     );
+19:40:26.242  [2m329[0m |   }
+19:40:26.243  [2m330[0m | 
+19:40:26.243  [2m331[0m |   const { player, opponent, myBalance, oppBalance, myBets = [], opponentBets = [], potSize, winnerPayout, outcome, endsAt } = battle;
+19:40:26.243  [2m332[0m | 
+19:40:26.243  [2m333[0m |   const player1IsWinner = outcome === 'won';
+19:40:26.243  [2m334[0m |   const player2IsWinner = outcome === 'lost';
+19:40:26.243  [2m335[0m |   const isTie = outcome === 'tie';
+19:40:26.243  [2m336[0m | 
+19:40:26.243  [2m337[0m |   const headline = isTie
+19:40:26.243  [2m338[0m |     ? 'It was a tie'
+19:40:26.243  [2m339[0m |     : `${(player1IsWinner ? player?.username : opponent?.username) || 'Player'} won`;
+19:40:26.243  [2m340[0m | 
+19:40:26.243  [2m341[0m |   return (
+19:40:26.243  [2m342[0m |     <div className="min-h-screen bg-black text-white">
+19:40:26.243  [2m343[0m |       <TopNavbar />
+19:40:26.243  [2m344[0m |       <div className="max-w-md mx-auto px-4 py-5">
+19:40:26.243  [2m345[0m |         <div className="mb-3 flex items-center justify-between">
+19:40:26.243  [2m346[0m |           <Link
+19:40:26.243  [2m347[0m |             href="/battle"
+19:40:26.244  [2m348[0m |             className="text-[12px] font-semibold inline-flex items-center gap-1 hover:underline"
+19:40:26.244  [2m349[0m |             style={{ color: textSecondary }}
+19:40:26.244  [2m350[0m |           >
+19:40:26.244  [2m351[0m |             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+19:40:26.244  [2m352[0m |               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+19:40:26.244  [2m353[0m |             </svg>
+19:40:26.244  [2m354[0m |             Back to battles
+19:40:26.244  [2m355[0m |           </Link>
+19:40:26.244  [2m356[0m |           {endsAt && (
+19:40:26.244  [2m357[0m |             <span className="text-[11px]" style={{ color: textSecondary }}>
+19:40:26.244  [2m358[0m |               {formatLastSeen(endsAt)}
+19:40:26.244  [2m359[0m |             </span>
+19:40:26.244  [2m360[0m |           )}
+19:40:26.244  [2m361[0m |         </div>
+19:40:26.244  [2m362[0m | 
+19:40:26.245  [2m363[0m |         <div
+19:40:26.245  [2m364[0m |           className="rounded-xl p-4 mb-4 text-center"
+19:40:26.245  [2m365[0m |           style={{
+19:40:26.245  [2m366[0m |             background: 'linear-gradient(160deg, rgba(30,41,59,0.6) 0%, rgba(15,15,15,0.95) 100%)',
+19:40:26.245  [2m367[0m |             border: '1px solid rgba(250,204,21,0.35)',
+19:40:26.245  [2m368[0m |           }}
+19:40:26.245  [2m369[0m |         >
+19:40:26.245  [2m370[0m |           <div className="text-[10px] font-bold uppercase tracking-widest" style={{ color: textSecondary }}>
+19:40:26.245  [2m371[0m |             Battle replay
+19:40:26.245  [2m372[0m |           </div>
+19:40:26.245  [2m373[0m |           <div className="text-xl font-black mt-1" style={{ color: textPrimary }}>
+19:40:26.245  [2m374[0m |             {headline}
+19:40:26.245  [2m375[0m |           </div>
+19:40:26.245  [2m376[0m |           <div className="mt-3 inline-flex flex-col items-center px-4 py-2 rounded-lg" style={{ background: '#0a0a0a', border: `1px solid ${cardBorder}` }}>
+19:40:26.245  [2m377[0m |             <div className="text-[10px] uppercase tracking-wider" style={{ color: textSecondary }}>
+19:40:26.245  [2m378[0m |               {isTie ? 'Pot' : 'Winner payout'}
+19:40:26.245  [2m379[0m |             </div>
+19:40:26.246  [2m380[0m |             <div className="text-2xl font-black" style={{ color: '#facc15' }}>
+19:40:26.246  [2m381[0m |               ${formatMoney(isTie ? potSize : (winnerPayout || potSize), 2)}
+19:40:26.246  [2m382[0m |             </div>
+19:40:26.246  [2m383[0m |             {!isTie && potSize > 0 && (
+19:40:26.246  [2m384[0m |               <div className="text-[10px] mt-0.5" style={{ color: textSecondary }}>
+19:40:26.246  [2m385[0m |                 Pot ${formatMoney(potSize, 2)}
+19:40:26.246  [2m386[0m |               </div>
+19:40:26.246  [2m387[0m |             )}
+19:40:26.246  [2m388[0m |           </div>
+19:40:26.246  [2m389[0m |         </div>
+19:40:26.246  [2m390[0m | 
+19:40:26.246  [2m391[0m |         <div className="grid grid-cols-2 gap-3">
+19:40:26.246  [2m392[0m |           <PlayerColumn
+19:40:26.246  [2m393[0m |             player={player}
+19:40:26.246  [2m394[0m |             balance={myBalance}
+19:40:26.246  [2m395[0m |             isWinner={player1IsWinner}
+19:40:26.246  [2m396[0m |             isTie={isTie}
+19:40:26.246  [2m397[0m |             picks={myBets}
+19:40:26.246  [2m398[0m |             side="left"
+19:40:26.247  [2m399[0m |           />
+19:40:26.247  [2m400[0m |           <PlayerColumn
+19:40:26.247  [2m401[0m |             player={opponent}
+19:40:26.247  [2m402[0m |             balance={oppBalance}
+19:40:26.247  [2m403[0m |             isWinner={player2IsWinner}
+19:40:26.247  [2m404[0m |             isTie={isTie}
+19:40:26.247  [2m405[0m |             picks={opponentBets}
+19:40:26.247  [2m406[0m |             side="right"
+19:40:26.247  [2m407[0m |           />
+19:40:26.247  [2m408[0m |         </div>
+19:40:26.247  [2m409[0m | 
+19:40:26.247  [2m410[0m |         {(() => {
+19:40:26.247  [2m411[0m |           const others = moreBattles.filter(b => String(b.id) !== String(id)).slice(0, 5);
+19:40:26.247  [2m412[0m |           if (others.length === 0) return null;
+19:40:26.248  [2m413[0m |           return (
+19:40:26.248  [2m414[0m |             <div
+19:40:26.248  [2m415[0m |               className="mt-5 rounded-xl p-3"
+19:40:26.248  [2m416[0m |               style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}
+19:40:26.248  [2m417[0m |             >
+19:40:26.248  [2m418[0m |               <div className="flex items-center justify-between mb-2">
+19:40:26.248  [2m419[0m |                 <span className="text-[10px] font-bold uppercase tracking-wider" style={{ color: textSecondary }}>
+19:40:26.248  [2m420[0m |                   More recent battles
+19:40:26.248  [2m421[0m |                 </span>
+19:40:26.248  [2m422[0m |                 <span className="text-[10px]" style={{ color: textSecondary }}>
+19:40:26.248  [2m423[0m |                   Just finished
+19:40:26.248  [2m424[0m |                 </span>
+19:40:26.248  [2m425[0m |               </div>
+19:40:26.248  [2m426[0m |               <div className="flex flex-col gap-1.5">
+19:40:26.248  [2m427[0m |                 {others.map((b) => (
+19:40:26.248  [2m428[0m |                   <Link
+19:40:26.248  [2m429[0m |                     key={b.id}
+19:40:26.248  [2m430[0m |                     href={`/battle/replay/${b.id}`}
+19:40:26.248  [2m431[0m |                     className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-left transition-colors hover:bg-white/5"
+19:40:26.248  [2m432[0m |                     style={{ background: '#0a0a0a', border: `1px solid ${cardBorder}` }}
+19:40:26.248  [2m433[0m |                   >
+19:40:26.248  [2m434[0m |                     <FramedAvatar user={b.winner} size={28} />
+19:40:26.248  [2m435[0m |                     <div className="min-w-0 flex-1 text-[11px] leading-tight" style={{ color: textPrimary }}>
+19:40:26.248  [2m436[0m |                       <div className="truncate">
+19:40:26.248  [2m437[0m |                         <span className="font-semibold text-green-400">
+19:40:26.248  [2m438[0m |                           {b.winner?.username || 'Player'}
+19:40:26.248  [2m439[0m |                         </span>
+19:40:26.248  [2m440[0m |                         <span style={{ color: textSecondary }}> beat </span>
+19:40:26.248  [2m441[0m |                         <span className="font-medium">
+19:40:26.248  [2m442[0m |                           {b.loser?.username || 'Player'}
+19:40:26.248  [2m443[0m |                         </span>
+19:40:26.248  [2m444[0m |                       </div>
+19:40:26.249  [2m445[0m |                       <div className="flex items-center gap-1.5 mt-0.5" style={{ color: textSecondary }}>
+19:40:26.249  [2m446[0m |                         <span className="font-semibold text-yellow-400">${formatMoney(b.potSize, 0)} pot</span>
+19:40:26.249  [2m447[0m |                         <span>·</span>
+19:40:26.249  [2m448[0m |                         <span>{formatLastSeen(b.endedAt)}</span>
+19:40:26.249  [2m449[0m |                       </div>
+19:40:26.249  [2m450[0m |                     </div>
+19:40:26.249  [2m451[0m |                     <svg className="w-3.5 h-3.5 flex-shrink-0" style={{ color: textSecondary }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+19:40:26.249  [2m452[0m |                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+19:40:26.249  [2m453[0m |                     </svg>
+19:40:26.249  [2m454[0m |                   </Link>
+19:40:26.249  [2m455[0m |                 ))}
+19:40:26.249  [2m456[0m |               </div>
+19:40:26.249  [2m457[0m |             </div>
+19:40:26.249  [2m458[0m |           );
+19:40:26.249  [2m459[0m |         })()}
+19:40:26.249  [2m460[0m | 
+19:40:26.249  [2m461[0m |         <div className="mt-5 text-center">
+19:40:26.249  [2m462[0m |           {isSignedIn ? (
+19:40:26.249  [2m463[0m |             <Link
+19:40:26.249  [2m464[0m |               href="/battle"
+19:40:26.249  [2m465[0m |               className="inline-block px-5 py-2.5 rounded-lg text-sm font-bold"
+19:40:26.249  [2m466[0m |               style={{ background: 'linear-gradient(135deg, #facc15 0%, #f97316 100%)', color: '#000' }}
+19:40:26.249  [2m467[0m |             >
+19:40:26.249  [2m468[0m |               Start your own battle
+19:40:26.249  [2m469[0m |             </Link>
+19:40:26.249  [2m470[0m |           ) : (
+19:40:26.249  [2m471[0m |             <div
+19:40:26.249  [2m472[0m |               className="rounded-xl p-4"
+19:40:26.249  [2m473[0m |               style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}
+19:40:26.249  [2m474[0m |             >
+19:40:26.249  [2m475[0m |               <div className="text-sm font-semibold mb-1" style={{ color: textPrimary }}>
+19:40:26.249  [2m476[0m |                 Want in on the action?
+19:40:26.249  [2m477[0m |               </div>
+19:40:26.249  [2m478[0m |               <div className="text-[12px] mb-3" style={{ color: textSecondary }}>
+19:40:26.249  [2m479[0m |                 Create a free account and battle your friends head-to-head.
+19:40:26.250  [2m480[0m |               </div>
+19:40:26.250  [2m481[0m |               <button
+19:40:26.250  [2m482[0m |                 type="button"
+19:40:26.250  [2m483[0m |                 onClick={handleSignUpClick}
+19:40:26.250  [2m484[0m |                 className="inline-block w-full px-5 py-2.5 rounded-lg text-sm font-bold"
+19:40:26.250  [2m485[0m |                 style={{ background: 'linear-gradient(135deg, #facc15 0%, #f97316 100%)', color: '#000' }}
+19:40:26.250  [2m486[0m |               >
+19:40:26.250  [2m487[0m |                 Sign up to play your own battle
+19:40:26.250  [2m488[0m |               </button>
+19:40:26.250  [2m489[0m |             </div>
+19:40:26.250  [2m490[0m |           )}
+19:40:26.250  [2m491[0m |         </div>
+19:40:26.250  [2m492[0m |       </div>
+19:40:26.250  [2m493[0m |     </div>
+19:40:26.250  [2m494[0m |   );
+19:40:26.250  [2m495[0m | }
+19:40:26.250  [2m496[0m | 
+19:40:26.250  [2m497[0m | function getRequestOrigin(req) {
+19:40:26.250  [2m498[0m |   if (!req) return '';
+19:40:26.250  [2m499[0m |   const proto =
+19:40:26.250  [2m500[0m |     (req.headers['x-forwarded-proto'] || '').toString().split(',')[0] ||
+19:40:26.250  [2m501[0m |     (req.socket && req.socket.encrypted ? 'https' : 'http');
+19:40:26.250  [2m502[0m |   const host =
+19:40:26.250  [2m503[0m |     (req.headers['x-forwarded-host'] || req.headers.host || '')
+19:40:26.250  [2m504[0m |       .toString()
+19:40:26.250  [2m505[0m |       .split(',')[0] || '';
+19:40:26.250  [2m506[0m |   return host ? `${proto}://${host}` : '';
+19:40:26.250  [2m507[0m | }
+19:40:26.250  [2m508[0m | 
+19:40:26.250  [2m509[0m | export async function getServerSideProps(context) {
+19:40:26.250      : [33;1m                      ^^^^^^^^^|^^^^^^^^[0m
+19:40:26.250      :                                [33;1m`-- [33;1m`getServerSideProps` redefined here[0m[0m
+19:40:26.250  [2m510[0m |   const rawId = context?.params?.id;
+19:40:26.250  [2m511[0m |   const id = Array.isArray(rawId) ? rawId[0] : rawId;
+19:40:26.251  [2m512[0m |   if (!id || typeof id !== 'string') {
+19:40:26.251      `----
+19:40:26.251 
+19:40:26.251 Import trace for requested module:
+19:40:26.251 ./pages/battle/replay/[id].js
+19:40:26.251 
+19:40:26.252 
+19:40:26.253 > Build failed because of webpack errors
+19:40:26.285 Error: Command "npm run build" exited with 1
