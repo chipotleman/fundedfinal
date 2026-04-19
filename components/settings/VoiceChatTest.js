@@ -17,7 +17,7 @@ export default function VoiceChatTest() {
       </p>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <button
-          onClick={runProbe}
+          onClick={() => runProbe({ force: true })}
           disabled={status === VOICE_PROBE_STATUS.RUNNING}
           className={`px-4 py-2 rounded-lg font-medium transition-colors ${
             status === VOICE_PROBE_STATUS.RUNNING

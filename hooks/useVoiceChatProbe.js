@@ -8,129 +8,187 @@ export const VOICE_PROBE_STATUS = {
   ERROR: 'error',
 };
 
-export default function useVoiceChatProbe() {
-  const [status, setStatus] = useState(VOICE_PROBE_STATUS.IDLE);
-  const [message, setMessage] = useState('');
-  const [details, setDetails] = useState(null);
-  const pcRef = useRef(null);
-  const timeoutRef = useRef(null);
-  const mountedRef = useRef(true);
+const FRESHNESS_MS = 10 * 60 * 1000;
+const PROBE_TIMEOUT_MS = 8000;
+const IDLE_SNAPSHOT = {
+  status: VOICE_PROBE_STATUS.IDLE,
+  message: '',
+  details: null,
+  timestamp: 0,
+};
 
-  const cleanup = useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
+let cached = null;
+const subscribers = new Set();
+
+function publish(snap) {
+  cached = snap;
+  subscribers.forEach((fn) => {
+    try { fn(snap); } catch (_e) {}
+  });
+}
+
+function invalidate() {
+  if (!cached) return;
+  if (cached.status === VOICE_PROBE_STATUS.RUNNING) return;
+  cached = null;
+  subscribers.forEach((fn) => {
+    try { fn(IDLE_SNAPSHOT); } catch (_e) {}
+  });
+}
+
+if (typeof window !== 'undefined' && !window.__voiceProbeCacheBound) {
+  window.__voiceProbeCacheBound = true;
+  window.addEventListener('online', invalidate);
+  window.addEventListener('offline', invalidate);
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') invalidate();
+    });
+  }
+}
+
+function isFresh(snap) {
+  if (!snap) return false;
+  if (snap.status === VOICE_PROBE_STATUS.RUNNING) return false;
+  if (snap.status === VOICE_PROBE_STATUS.IDLE) return false;
+  return Date.now() - snap.timestamp < FRESHNESS_MS;
+}
+
+async function runProbeInternal() {
+  if (cached && cached.status === VOICE_PROBE_STATUS.RUNNING) return;
+
+  publish({
+    status: VOICE_PROBE_STATUS.RUNNING,
+    message: 'Checking your network…',
+    details: null,
+    timestamp: Date.now(),
+  });
+
+  if (typeof window === 'undefined' || typeof RTCPeerConnection === 'undefined') {
+    publish({
+      status: VOICE_PROBE_STATUS.ERROR,
+      message: 'Voice chat is not supported in this browser.',
+      details: null,
+      timestamp: Date.now(),
+    });
+    return;
+  }
+
+  let iceServers;
+  try {
+    const resp = await fetch('/api/battles/voice/ice-servers?selfTest=1');
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+    iceServers = data.iceServers || [];
+  } catch (_err) {
+    publish({
+      status: VOICE_PROBE_STATUS.ERROR,
+      message: "Couldn't reach the voice chat server. Check your connection and try again.",
+      details: null,
+      timestamp: Date.now(),
+    });
+    return;
+  }
+
+  let pc;
+  try {
+    pc = new RTCPeerConnection({ iceServers, iceTransportPolicy: 'all' });
+  } catch (_err) {
+    publish({
+      status: VOICE_PROBE_STATUS.ERROR,
+      message: 'Voice chat could not be initialized on this device.',
+      details: null,
+      timestamp: Date.now(),
+    });
+    return;
+  }
+
+  const found = { host: 0, srflx: 0, relay: 0 };
+  let finished = false;
+  let timeoutId = null;
+
+  const finish = (status, message) => {
+    if (finished) return;
+    finished = true;
+    if (timeoutId) { clearTimeout(timeoutId); timeoutId = null; }
+    try { pc.close(); } catch (_e) {}
+    publish({
+      status,
+      message,
+      details: { ...found },
+      timestamp: Date.now(),
+    });
+  };
+
+  const conclude = () => {
+    if (found.relay > 0) {
+      finish(VOICE_PROBE_STATUS.SUCCESS, 'Voice chat should work on this network.');
+    } else if (found.srflx > 0 || found.host > 0) {
+      finish(
+        VOICE_PROBE_STATUS.WARNING,
+        'Your network may block voice chat — try mobile data or a different network.',
+      );
+    } else {
+      finish(
+        VOICE_PROBE_STATUS.ERROR,
+        "Couldn't gather any network candidates. Voice chat is unlikely to work here.",
+      );
     }
-    if (pcRef.current) {
-      try { pcRef.current.close(); } catch (_e) {}
-      pcRef.current = null;
+  };
+
+  pc.onicecandidate = (e) => {
+    if (!e.candidate) { conclude(); return; }
+    const type = e.candidate.type;
+    if (type && found[type] !== undefined) found[type] += 1;
+    if (type === 'relay') {
+      finish(VOICE_PROBE_STATUS.SUCCESS, 'Voice chat should work on this network.');
     }
-  }, []);
+  };
+
+  pc.onicegatheringstatechange = () => {
+    if (pc.iceGatheringState === 'complete' && !finished) conclude();
+  };
+
+  try {
+    pc.createDataChannel('probe');
+    const offer = await pc.createOffer({ offerToReceiveAudio: true });
+    await pc.setLocalDescription(offer);
+  } catch (_err) {
+    finish(VOICE_PROBE_STATUS.ERROR, 'Voice chat could not start a test connection on this device.');
+    return;
+  }
+
+  timeoutId = setTimeout(conclude, PROBE_TIMEOUT_MS);
+}
+
+export default function useVoiceChatProbe() {
+  const [snap, setSnap] = useState(() => cached || IDLE_SNAPSHOT);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
     mountedRef.current = true;
+    const fn = (s) => { if (mountedRef.current) setSnap(s || IDLE_SNAPSHOT); };
+    subscribers.add(fn);
+    if (cached) setSnap(cached);
     return () => {
       mountedRef.current = false;
-      cleanup();
+      subscribers.delete(fn);
     };
-  }, [cleanup]);
+  }, []);
 
-  const runProbe = useCallback(async () => {
-    cleanup();
-    if (!mountedRef.current) return;
-    setStatus(VOICE_PROBE_STATUS.RUNNING);
-    setMessage('Checking your network…');
-    setDetails(null);
-
-    if (typeof window === 'undefined' || typeof RTCPeerConnection === 'undefined') {
-      if (!mountedRef.current) return;
-      setStatus(VOICE_PROBE_STATUS.ERROR);
-      setMessage('Voice chat is not supported in this browser.');
+  const runProbe = useCallback((opts) => {
+    const force = opts === true || (opts && opts.force === true);
+    if (!force && isFresh(cached)) {
+      if (mountedRef.current && cached) setSnap(cached);
       return;
     }
+    runProbeInternal();
+  }, []);
 
-    let iceServers;
-    try {
-      const resp = await fetch('/api/battles/voice/ice-servers?selfTest=1');
-      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-      const data = await resp.json();
-      iceServers = data.iceServers || [];
-    } catch (_err) {
-      if (!mountedRef.current) return;
-      setStatus(VOICE_PROBE_STATUS.ERROR);
-      setMessage("Couldn't reach the voice chat server. Check your connection and try again.");
-      return;
-    }
-
-    if (!mountedRef.current) return;
-
-    let pc;
-    try {
-      pc = new RTCPeerConnection({ iceServers, iceTransportPolicy: 'all' });
-    } catch (_err) {
-      if (!mountedRef.current) return;
-      setStatus(VOICE_PROBE_STATUS.ERROR);
-      setMessage('Voice chat could not be initialized on this device.');
-      return;
-    }
-    pcRef.current = pc;
-
-    const found = { host: 0, srflx: 0, relay: 0 };
-    let finished = false;
-
-    const finish = (resultStatus, resultMessage) => {
-      if (finished) return;
-      finished = true;
-      cleanup();
-      if (!mountedRef.current) return;
-      setStatus(resultStatus);
-      setMessage(resultMessage);
-      setDetails({ ...found });
-    };
-
-    const conclude = () => {
-      if (found.relay > 0) {
-        finish(VOICE_PROBE_STATUS.SUCCESS, 'Voice chat should work on this network.');
-      } else if (found.srflx > 0 || found.host > 0) {
-        finish(
-          VOICE_PROBE_STATUS.WARNING,
-          'Your network may block voice chat — try mobile data or a different network.',
-        );
-      } else {
-        finish(
-          VOICE_PROBE_STATUS.ERROR,
-          "Couldn't gather any network candidates. Voice chat is unlikely to work here.",
-        );
-      }
-    };
-
-    pc.onicecandidate = (e) => {
-      if (!e.candidate) {
-        conclude();
-        return;
-      }
-      const type = e.candidate.type;
-      if (type && found[type] !== undefined) found[type] += 1;
-      if (type === 'relay') {
-        finish(VOICE_PROBE_STATUS.SUCCESS, 'Voice chat should work on this network.');
-      }
-    };
-
-    pc.onicegatheringstatechange = () => {
-      if (pc.iceGatheringState === 'complete' && !finished) conclude();
-    };
-
-    try {
-      pc.createDataChannel('probe');
-      const offer = await pc.createOffer({ offerToReceiveAudio: true });
-      await pc.setLocalDescription(offer);
-    } catch (_err) {
-      finish(VOICE_PROBE_STATUS.ERROR, 'Voice chat could not start a test connection on this device.');
-      return;
-    }
-
-    timeoutRef.current = setTimeout(conclude, 8000);
-  }, [cleanup]);
-
-  return { status, message, details, runProbe };
+  return {
+    status: snap.status,
+    message: snap.message,
+    details: snap.details,
+    runProbe,
+  };
 }

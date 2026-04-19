@@ -505,7 +505,7 @@ export default function BattleVoiceChat() {
       {eligible && state === 'idle' && (
         <button
           type="button"
-          onClick={runProbe}
+          onClick={() => runProbe({ force: true })}
           disabled={probeIsRunning}
           className="fixed z-[55] flex items-center gap-1.5 rounded-full px-2.5 py-1 shadow-md transition-colors"
           style={{
