@@ -70,8 +70,16 @@ export default function MessengerPage() {
   // thread body scrolls but page-level navigation (TopNavbar links, dropdowns,
   // etc.) keep working — wrapping the entire page in `overflow: hidden` was
   // intercepting clicks on iOS Safari and trapping the user on this page.
+  // The chat surface is sized to fill the viewport below the live top nav
+  // height (exposed by TopNavbar as `--top-nav-height`) and the Messenger
+  // title row, so the piks logo, nav, conversation header, messages, and
+  // input row all stay visible at once. We deliberately avoid wrapping the
+  // page in `overflow: hidden` so nav dropdowns aren't clipped and iOS
+  // Safari clicks aren't trapped.
+  const headerRowHeightDesktop = 80;
+  const headerRowHeightMobile = 56;
   return (
-    <div style={{ backgroundColor: bg, minHeight: '100vh' }}>
+    <div style={{ backgroundColor: bg, minHeight: '100dvh' }}>
       <TopNavbar />
       <div className="max-w-7xl w-full mx-auto px-2 sm:px-4 py-2 sm:py-4">
         <div className="flex items-center justify-between mb-2 sm:mb-3">
@@ -86,7 +94,20 @@ export default function MessengerPage() {
             ← Notifications
           </button>
         </div>
-        <div style={{ height: 'calc(100vh - 160px)', minHeight: 480 }}>
+        <div
+          className="messenger-surface"
+          style={{
+            height: `calc(100dvh - var(--top-nav-height, 70px) - ${headerRowHeightMobile}px)`,
+            minHeight: 320,
+          }}
+        >
+          <style jsx>{`
+            @media (min-width: 640px) {
+              .messenger-surface {
+                height: calc(100dvh - var(--top-nav-height, 48px) - ${headerRowHeightDesktop}px) !important;
+              }
+            }
+          `}</style>
           <MessagesPanel
             selectedId={selectedId}
             onSelect={handleSelect}
