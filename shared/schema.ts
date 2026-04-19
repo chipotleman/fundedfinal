@@ -641,6 +641,15 @@ export const matchups = pgTable("matchups", {
   user1ResultAckAt: timestamp("user1_result_ack_at"),
   user2ResultAckAt: timestamp("user2_result_ack_at"),
 
+  // Two-sided rematch handshake. Each side records its own intent
+  // (accepted/declined) for the completed matchup. When both sides
+  // accept, rematchMatchupId is set to the freshly-created matchup.
+  user1RematchAt: timestamp("user1_rematch_at"),
+  user2RematchAt: timestamp("user2_rematch_at"),
+  user1RematchDeclinedAt: timestamp("user1_rematch_declined_at"),
+  user2RematchDeclinedAt: timestamp("user2_rematch_declined_at"),
+  rematchMatchupId: varchar("rematch_matchup_id"),
+
   // Private match code
   privateCode: varchar("private_code", { length: 10 }),
   matchType: varchar("match_type", { length: 20 }).default('random'), // random, friend, private

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useNotifications } from '../../contexts/NotificationsContext';
 import UserAvatar from '../UserAvatar';
+import { formatMoney } from '../../utils/formatMoney';
+import { cacheBattleResult } from '../../utils/battleResultCache';
 
 function Avatar({ sender, size = 36 }) {
   return (
@@ -153,7 +155,7 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
               const accent = r.outcome === 'won' ? '#34d399' : r.outcome === 'lost' ? '#f87171' : '#facc15';
               const label = r.outcome === 'won' ? 'Won' : r.outcome === 'lost' ? 'Lost' : 'Graded';
               const pnl = Number.isFinite(r.pnl) ? r.pnl : 0;
-              const pnlText = `${pnl >= 0 ? '+' : '−'}$${Math.abs(pnl).toFixed(2)}`;
+              const pnlText = `${pnl >= 0 ? '+' : '−'}$${formatMoney(Math.abs(pnl))}`;
               return (
                 <Row key={`result:${r.id}`} sender={r.opponent} time={r.endedAt}>
                   <div className="text-white text-sm font-semibold truncate">
@@ -163,17 +165,21 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                   </div>
                   <div className="text-gray-400 text-xs">
                     {r.outcome === 'won' && r.winnerPayout > 0
-                      ? `Payout $${r.winnerPayout.toFixed(2)}`
+                      ? `Payout $${formatMoney(r.winnerPayout)}`
                       : `P/L ${pnlText}`}
-                    {r.buyIn > 0 ? ` · $${r.buyIn} buy-in` : ''}
+                    {r.buyIn > 0 ? ` · $${formatMoney(r.buyIn)} buy-in` : ''}
                   </div>
                   <div className="flex gap-2 mt-2">
                     <button
                       disabled={busyId === r.id}
                       onClick={() => wrap(r.id, async () => {
-                        await ctx.ackGameResult(r.matchupId);
+                        // Hand off the payload so /battle can open the popup
+                        // instantly without waiting for a history fetch.
+                        cacheBattleResult(r.matchupId, r);
                         onClose?.();
                         router.push(`/battle?result=${encodeURIComponent(r.matchupId)}`);
+                        // Ack after navigation so the popup is rendered first.
+                        ctx.ackGameResult(r.matchupId);
                       })}
                       className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
                       style={{ boxShadow: '0 0 12px rgba(16,185,129,0.45)' }}

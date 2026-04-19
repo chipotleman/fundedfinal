@@ -20,6 +20,8 @@ import { useMatchup } from '../contexts/MatchupContext';
 import { useNotifications } from '../contexts/NotificationsContext';
 import { formatMoney } from '../utils/formatMoney';
 import { formatLastSeen } from '../utils/relativeTime';
+import { readBattleResult, clearBattleResult } from '../utils/battleResultCache';
+import { getBattleStreamClient } from '../lib/battleStreamClient';
 
 function UserAvatar({ user, size = 'md' }) {
   const sizeMap = { sm: 'w-8 h-8 text-xs', md: 'w-10 h-10 text-sm', lg: 'w-12 h-12 text-base' };
@@ -58,6 +60,8 @@ export default function BattlePage() {
   const [socialExpanded, setSocialExpanded] = useState(false);
   const [showLobby, setShowLobby] = useState(null);
   const [showResult, setShowResult] = useState(null);
+  const [resultData, setResultData] = useState(null);
+  const [rematchState, setRematchState] = useState(null);
   const [showForfeitModal, setShowForfeitModal] = useState(false);
   const [forfeitConfirmation, setForfeitConfirmation] = useState(null);
   const [showBattleOptions, setShowBattleOptions] = useState(false);
@@ -200,6 +204,8 @@ export default function BattlePage() {
                   user1FinalBalance: lastMatch.user1FinalBalance || lastMatch.user1_final_balance || activeMatchup.user1Balance,
                   user2FinalBalance: lastMatch.user2FinalBalance || lastMatch.user2_final_balance || activeMatchup.user2Balance,
                 });
+                // Pull authoritative data (cash P&L, rematch state, opponent profile)
+                loadResultDetails(lastMatch.id);
                 fetchData();
               }
             }
@@ -265,6 +271,146 @@ export default function BattlePage() {
   // Push notification deep links: /battle?invite=<id>, ?forfeit=<matchupId>,
   // ?result=<matchupId>, ?live=<matchupId>. Open the relevant view, then strip
   // the query param so a refresh doesn't re-trigger it.
+  // Build a synthetic matchup-shaped object from a notification/history
+  // payload so MatchResult can render instantly before the full /api fetch
+  // returns. Only the fields MatchResult reads are required.
+  const openResultFromPayload = useCallback((resultId, payload) => {
+    if (!payload || !resultId) return;
+    const isFake = !!payload.isFakeOpponent;
+    const myScore = Number(payload.myScore ?? payload.startingBalance ?? 0);
+    const oppScore = Number(payload.opponentScore ?? payload.startingBalance ?? 0);
+    const synthetic = {
+      id: resultId,
+      status: 'completed',
+      user1Id: userId,
+      user2Id: payload.opponent?.id || null,
+      user1FinalBalance: myScore,
+      user2FinalBalance: oppScore,
+      startingBalance: Number(payload.startingBalance ?? 0),
+      potSize: Number(payload.potSize ?? 0),
+      winnerPayout: Number(payload.winnerPayout ?? 0),
+      winnerType: payload.winnerType || null,
+      winnerId: payload.winnerId || (payload.outcome === 'won' ? userId : null),
+      isFakeOpponent: isFake,
+    };
+    setShowResult(synthetic);
+    setResultData({
+      opponent: payload.opponent || null,
+      cashBuyIn: Number(payload.buyIn ?? 0),
+      cashPnl: Number(payload.pnl ?? 0),
+      potSize: Number(payload.potSize ?? 0),
+      winnerPayout: Number(payload.winnerPayout ?? 0),
+      myScore,
+      opponentScore: oppScore,
+      isFakeOpponent: isFake,
+    });
+    setRematchState(null);
+  }, [userId]);
+
+  const loadResultDetails = useCallback(async (resultId) => {
+    if (!resultId) return;
+    try {
+      const res = await fetch(`/api/matchups/${resultId}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const m = data.matchup;
+      if (!m || m.status !== 'completed') return;
+      setShowResult(prev => {
+        const merged = { ...(prev || {}), ...m, status: 'completed' };
+        return merged;
+      });
+      setResultData({
+        opponent: data.opponent,
+        myProfile: profile ? {
+          username: profile.username,
+          avatar: profile.avatar,
+          equippedFrame: profile.equippedFrame,
+        } : null,
+        cashBuyIn: Number(data.cashBuyIn ?? 0),
+        cashPnl: Number(data.cashPnl ?? 0),
+        potSize: Number(data.potSize ?? 0),
+        winnerPayout: Number(data.winnerPayout ?? 0),
+        myScore: Number(data.myScore ?? 0),
+        opponentScore: Number(data.opponentScore ?? 0),
+        isFakeOpponent: !!m.isFakeOpponent,
+      });
+      if (data.rematchState) setRematchState(data.rematchState);
+    } catch {}
+  }, [profile]);
+
+  const callRematch = useCallback(async (resultId, action) => {
+    if (!resultId) return null;
+    try {
+      const res = await fetch(`/api/matchups/${resultId}/rematch`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ action }),
+      });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const handleRematchAccept = useCallback(async () => {
+    if (!showResult?.id) return;
+    // Optimistic: mark my side accepted instantly.
+    const isUser1 = showResult.user1Id === userId;
+    setRematchState(prev => ({
+      user1Rematch: isUser1 ? 'accepted' : (prev?.user1Rematch || 'pending'),
+      user2Rematch: !isUser1 ? 'accepted' : (prev?.user2Rematch || 'pending'),
+      rematchMatchupId: prev?.rematchMatchupId || null,
+    }));
+    const next = await callRematch(showResult.id, 'accept');
+    if (next) setRematchState(next);
+  }, [showResult, userId, callRematch]);
+
+  const handleRematchDecline = useCallback(() => {
+    if (!showResult?.id) return;
+    callRematch(showResult.id, 'decline');
+  }, [showResult, callRematch]);
+
+  const closeResultPopup = useCallback(() => {
+    if (showResult?.id) clearBattleResult(showResult.id);
+    setShowResult(null);
+    setResultData(null);
+    setRematchState(null);
+  }, [showResult]);
+
+  // SSE listener for two-sided rematch handshake updates.
+  useEffect(() => {
+    if (!showResult?.id || isGuest || typeof window === 'undefined') return;
+    const client = getBattleStreamClient();
+    if (!client) return;
+    const matchupId = showResult.id;
+
+    const unsubscribe = client.subscribe((ev) => {
+      if (ev?.type !== 'matchup:rematch') return;
+      if (ev.matchupId !== matchupId) return;
+      setRematchState({
+        user1Rematch: ev.user1Rematch,
+        user2Rematch: ev.user2Rematch,
+        rematchMatchupId: ev.rematchMatchupId || null,
+      });
+    });
+    return () => unsubscribe();
+  }, [showResult?.id, isGuest]);
+
+  // When both sides accept and a new matchup is created, navigate both users
+  // straight into the new battle.
+  useEffect(() => {
+    const newId = rematchState?.rematchMatchupId;
+    if (!newId) return;
+    if (showResult?.id) clearBattleResult(showResult.id);
+    setShowResult(null);
+    setResultData(null);
+    setRematchState(null);
+    refreshGlobalMatchup();
+    setTimeout(() => router.push('/?battleStarted=true'), 400);
+  }, [rematchState?.rematchMatchupId]);
+
   const consumedDeepLinkRef = useRef(null);
   useEffect(() => {
     if (!router.isReady) return;
@@ -304,26 +450,17 @@ export default function BattlePage() {
         // make sure that data is fresh.
         refreshGlobalMatchup();
       } else if (resultId) {
-        try {
-          const res = await fetch('/api/battles/history?limit=20');
-          if (res.ok) {
-            const data = await res.json();
-            const match = (data.matches || []).find(m => String(m.id) === String(resultId));
-            if (match) {
-              setShowResult({
-                ...match,
-                status: 'completed',
-                winnerId: match.winnerId || match.winner_id,
-                user1FinalBalance: match.user1FinalBalance || match.user1_final_balance,
-                user2FinalBalance: match.user2FinalBalance || match.user2_final_balance,
-              });
-              // Briefly highlight the result panel so the user sees this is
-              // the exact match the notification pointed to.
-              setHighlightResult(true);
-              setTimeout(() => setHighlightResult(false), 3500);
-            }
-          }
-        } catch {}
+        // Instant open: use the cached payload from the notifications dropdown
+        // (or the locally-typed `gameResults` row) so the popup appears with
+        // no perceptible delay. Then fetch the authoritative data in the
+        // background to fill in rematch state and confirm cash P&L.
+        const cached = readBattleResult(resultId);
+        if (cached) {
+          openResultFromPayload(resultId, cached);
+        }
+        setHighlightResult(true);
+        setTimeout(() => setHighlightResult(false), 3500);
+        loadResultDetails(resultId);
       }
       if (liveId) {
         // LiveBattlesSection focuses the matching battle via focusBattleId.
@@ -770,9 +907,17 @@ export default function BattlePage() {
         <MatchResult
           matchup={showResult}
           currentUserId={userId}
+          resultData={resultData}
+          rematchState={rematchState}
+          opponent={resultData?.opponent}
           highlight={highlightResult}
-          onRematch={() => { setShowResult(null); setShowQuickMatch(true); }}
-          onClose={() => setShowResult(null)}
+          onRematchAccept={
+            (showResult?.isFakeOpponent || resultData?.isFakeOpponent)
+              ? () => { closeResultPopup(); setShowQuickMatch(true); }
+              : handleRematchAccept
+          }
+          onRematchDecline={handleRematchDecline}
+          onClose={closeResultPopup}
         />
       )}
 

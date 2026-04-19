@@ -100,6 +100,37 @@ export default async function handler(req, res) {
         ? parseFloat(matchup.user2Balance || matchup.startingBalance)
         : parseFloat(matchup.user1Balance || matchup.startingBalance);
 
+      // Cash P&L computation. potSize / winnerPayout are stored in real cash;
+      // startingBalance is the play-money score (e.g. $10,000 coins).
+      const potSize = parseFloat(matchup.potSize || 0);
+      const winnerPayout = parseFloat(matchup.winnerPayout || 0);
+      const cashBuyIn = potSize / 2;
+      const startingBal = parseFloat(matchup.startingBalance || 0);
+      const myFinal = parseFloat(
+        (isUser1 ? matchup.user1FinalBalance : matchup.user2FinalBalance) ?? startingBal
+      );
+      const opponentFinal = parseFloat(
+        (isUser1 ? matchup.user2FinalBalance : matchup.user1FinalBalance) ?? startingBal
+      );
+
+      let cashPnl = 0;
+      if (matchup.status === 'completed') {
+        if (matchup.winnerType === 'tie') {
+          // Tie refunds 90% of half-pot — player loses 10% of their half (the fee).
+          cashPnl = -(cashBuyIn * 0.1);
+        } else if (matchup.winnerId === userId) {
+          cashPnl = winnerPayout - cashBuyIn;
+        } else {
+          cashPnl = -cashBuyIn;
+        }
+      }
+
+      const rematchState = {
+        user1Rematch: matchup.user1RematchDeclinedAt ? 'declined' : (matchup.user1RematchAt ? 'accepted' : 'pending'),
+        user2Rematch: matchup.user2RematchDeclinedAt ? 'declined' : (matchup.user2RematchAt ? 'accepted' : 'pending'),
+        rematchMatchupId: matchup.rematchMatchupId || null,
+      };
+
       return res.status(200).json({
         matchup,
         opponent,
@@ -109,6 +140,13 @@ export default async function handler(req, res) {
         isUser1,
         myBalance,
         opponentBalance,
+        cashBuyIn,
+        cashPnl,
+        myScore: myFinal,
+        opponentScore: opponentFinal,
+        winnerPayout,
+        potSize,
+        rematchState,
         timeRemaining: matchup.endsAt ? new Date(matchup.endsAt).getTime() - Date.now() : null,
       });
 

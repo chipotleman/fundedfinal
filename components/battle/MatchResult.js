@@ -27,21 +27,136 @@ function useCountUp(target, duration = 1000, shouldStart = false) {
   return value;
 }
 
-export default function MatchResult({ matchup, currentUserId, onRematch, onClose, highlight = false }) {
+function PlayerBlock({
+  username,
+  avatar,
+  score,
+  isWinner,
+  isLoser,
+  isTie,
+  rematchStatus,
+  side,
+}) {
+  const ringColor = isWinner ? '#facc15' : isLoser ? '#ef4444' : '#06b6d4';
+  const ringGlow = isWinner
+    ? '0 0 0 4px rgba(250,204,21,0.25), 0 0 30px rgba(250,204,21,0.55)'
+    : isLoser
+    ? '0 0 0 3px rgba(239,68,68,0.18), 0 0 20px rgba(239,68,68,0.35)'
+    : '0 0 0 3px rgba(6,182,212,0.18), 0 0 18px rgba(6,182,212,0.35)';
+  const sizePx = isWinner ? 96 : 76;
+
+  const initial = (username || (side === 'left' ? 'Y' : 'O'))[0]?.toUpperCase() || '?';
+  const status = rematchStatus || 'pending';
+
+  return (
+    <div className="flex flex-col items-center min-w-0">
+      <div className="relative" style={{ width: sizePx, height: sizePx }}>
+        <div
+          className="rounded-full overflow-hidden flex items-center justify-center"
+          style={{
+            width: sizePx,
+            height: sizePx,
+            border: `3px solid ${ringColor}`,
+            boxShadow: ringGlow,
+            background: '#111',
+          }}
+        >
+          {avatar ? (
+            <img src={avatar} alt={username || ''} className="w-full h-full object-cover" />
+          ) : (
+            <span className={`font-black text-white/80 ${isWinner ? 'text-3xl' : 'text-2xl'}`}>{initial}</span>
+          )}
+        </div>
+        {isWinner && (
+          <div
+            className="absolute left-1/2 -top-5 -translate-x-1/2 text-2xl"
+            style={{ filter: 'drop-shadow(0 2px 6px rgba(250,204,21,0.65))' }}
+            aria-label="Winner"
+          >
+            👑
+          </div>
+        )}
+      </div>
+      <div className="mt-2 flex items-center justify-center gap-1.5 max-w-[140px]">
+        <span
+          className={`truncate text-sm font-bold ${
+            isWinner ? 'text-yellow-300' : isLoser ? 'text-red-300' : 'text-cyan-200'
+          }`}
+          title={username || ''}
+        >
+          {username || (side === 'left' ? 'You' : 'Opponent')}
+        </span>
+        {status === 'accepted' && (
+          <span
+            className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-500/90 text-white text-[10px] font-black"
+            title="Wants a rematch"
+            aria-label="Wants a rematch"
+          >✓</span>
+        )}
+        {status === 'declined' && (
+          <span
+            className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-red-500/90 text-white text-[10px] font-black"
+            title="Declined rematch"
+            aria-label="Declined rematch"
+          >✕</span>
+        )}
+      </div>
+      <div className="text-[11px] uppercase tracking-wider text-gray-500 leading-none mt-1">Score</div>
+      <div className={`text-base font-black tabular-nums leading-tight ${
+        isWinner ? 'text-yellow-300' : isLoser ? 'text-red-300' : 'text-white'
+      }`}>
+        {formatMoney(score, 0)} <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">pts</span>
+      </div>
+    </div>
+  );
+}
+
+export default function MatchResult({
+  matchup,
+  currentUserId,
+  resultData,
+  rematchState,
+  opponent: opponentOverride,
+  onRematchAccept,
+  onRematchDecline,
+  onClose,
+  highlight = false,
+}) {
   const [showStats, setShowStats] = useState(false);
   const [showTitle, setShowTitle] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [copied, setCopied] = useState(false);
+  const declineFiredRef = useRef(false);
 
   const isCompleted = matchup && matchup.status === 'completed';
   const isUser1 = matchup?.user1Id === currentUserId;
-  const myFinalBalance = parseFloat(isUser1 ? matchup?.user1FinalBalance : matchup?.user2FinalBalance) || 0;
-  const opponentFinalBalance = parseFloat(isUser1 ? matchup?.user2FinalBalance : matchup?.user1FinalBalance) || 0;
+
+  // Score = play-money final balance. Cash P&L is computed from pot/payout.
   const startingBalance = parseFloat(matchup?.startingBalance) || 0;
-  const pnl = myFinalBalance - startingBalance;
+  const myFinalBalance = parseFloat(
+    isUser1 ? matchup?.user1FinalBalance : matchup?.user2FinalBalance
+  ) || startingBalance;
+  const opponentFinalBalance = parseFloat(
+    isUser1 ? matchup?.user2FinalBalance : matchup?.user1FinalBalance
+  ) || startingBalance;
+
   const isWinner = isCompleted && matchup?.winnerId === currentUserId;
   const isTie = matchup?.winnerType === 'tie';
-  const prizeWon = isWinner && matchup?.winnerPayout ? parseFloat(matchup.winnerPayout) : 0;
+  const isLoser = isCompleted && !isWinner && !isTie;
+
+  // Cash P&L — prefer server-supplied value, otherwise compute from potSize / winnerPayout.
+  const potSize = Number(resultData?.potSize ?? matchup?.potSize ?? 0) || 0;
+  const winnerPayoutRaw = Number(resultData?.winnerPayout ?? matchup?.winnerPayout ?? 0) || 0;
+  const cashBuyIn = Number(resultData?.cashBuyIn ?? (potSize / 2)) || 0;
+  let computedCashPnl = 0;
+  if (isCompleted) {
+    if (isTie) computedCashPnl = -(cashBuyIn * 0.1);
+    else if (isWinner) computedCashPnl = winnerPayoutRaw - cashBuyIn;
+    else computedCashPnl = -cashBuyIn;
+  }
+  const cashPnl = Number(resultData?.cashPnl) || computedCashPnl;
+  const prizeWon = isWinner ? winnerPayoutRaw : 0;
+
   const myPendingCount = Number(
     isUser1 ? matchup?.pendingCountUser1 : matchup?.pendingCountUser2
   ) || Number(matchup?.myPendingCount) || 0;
@@ -50,18 +165,38 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
   ) || Number(matchup?.opponentPendingCount) || 0;
   const totalPendingCount = myPendingCount + opponentPendingCount;
 
+  const myProfile = resultData?.myProfile;
+  const opponentProfile = opponentOverride || resultData?.opponent || matchup?.opponent;
+  const opponentName = opponentProfile?.username || opponentProfile?.displayName || 'Opponent';
+  const opponentAvatar = opponentProfile?.avatar || null;
+  const myName = myProfile?.username || 'You';
+  const myAvatar = myProfile?.avatar || null;
+
+  const isFakeOpponent = !!(matchup?.isFakeOpponent || resultData?.isFakeOpponent);
+
+  // Derive per-side rematch status
+  const myRematchStatus = rematchState
+    ? (isUser1 ? rematchState.user1Rematch : rematchState.user2Rematch)
+    : 'pending';
+  const oppRematchStatus = rematchState
+    ? (isUser1 ? rematchState.user2Rematch : rematchState.user1Rematch)
+    : 'pending';
+
   useEffect(() => {
     if (!isCompleted) return;
-    const t1 = setTimeout(() => setShowTitle(true), 100);
-    const t2 = setTimeout(() => setShowStats(true), 600);
-    const t3 = setTimeout(() => { if (isWinner) setShowConfetti(true); }, 200);
+    setShowTitle(false);
+    setShowStats(false);
+    setShowConfetti(false);
+    const t1 = setTimeout(() => setShowTitle(true), 30);
+    const t2 = setTimeout(() => setShowStats(true), 250);
+    const t3 = setTimeout(() => { if (isWinner) setShowConfetti(true); }, 80);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-  }, [isCompleted, isWinner]);
+  }, [isCompleted, isWinner, matchup?.id]);
 
-  const animatedStarting = useCountUp(startingBalance, 800, showStats);
   const animatedFinal = useCountUp(myFinalBalance, 1000, showStats);
-  const animatedPnl = useCountUp(Math.abs(pnl), 1200, showStats);
-  const animatedPrize = useCountUp(prizeWon, 1400, showStats);
+  const animatedOpp = useCountUp(opponentFinalBalance, 1000, showStats);
+  const animatedCashPnl = useCountUp(Math.abs(cashPnl), 1000, showStats);
+  const animatedPrize = useCountUp(prizeWon, 1100, showStats);
 
   const handleShare = useCallback(() => {
     const text = `I just won $${formatMoney(prizeWon)} on Piks! 🏆🔥`;
@@ -71,9 +206,33 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
     }).catch(() => {});
   }, [prizeWon]);
 
+  const handleClose = useCallback(() => {
+    // Treat closing without accepting as an implicit decline so the
+    // opponent's view shows an X next to this user's name.
+    if (
+      !declineFiredRef.current &&
+      !isFakeOpponent &&
+      myRematchStatus === 'pending' &&
+      typeof onRematchDecline === 'function'
+    ) {
+      declineFiredRef.current = true;
+      try { onRematchDecline(); } catch {}
+    }
+    onClose?.();
+  }, [isFakeOpponent, myRematchStatus, onRematchDecline, onClose]);
+
   if (!isCompleted) return null;
 
   const confettiColors = ['#3b82f6', '#10b981', '#06b6d4', '#f97316', '#fbbf24', '#22d3ee'];
+  const rematchAcceptedByMe = myRematchStatus === 'accepted';
+  const oppDeclined = oppRematchStatus === 'declined';
+  const rematchDisabled = isFakeOpponent || oppDeclined;
+
+  let rematchLabel = 'Rematch';
+  if (rematchAcceptedByMe && oppRematchStatus === 'pending') rematchLabel = 'Waiting for opponent…';
+  else if (rematchAcceptedByMe && oppRematchStatus === 'accepted') rematchLabel = 'Starting rematch…';
+  else if (oppDeclined) rematchLabel = 'Opponent declined';
+  else if (isFakeOpponent) rematchLabel = 'Find new match';
 
   return (
     <>
@@ -90,9 +249,8 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
           100% { transform: scale(1) rotate(0deg); opacity: 1; }
         }
         @keyframes mr-title-slam {
-          0% { transform: scale(3); opacity: 0; }
-          60% { transform: scale(0.9); opacity: 1; }
-          80% { transform: scale(1.05); }
+          0% { transform: scale(2.4); opacity: 0; }
+          60% { transform: scale(0.92); opacity: 1; }
           100% { transform: scale(1); opacity: 1; }
         }
         @keyframes mr-defeat-fade {
@@ -111,26 +269,17 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
           80% { transform: translateX(2px); }
         }
         @keyframes mr-stats-slide {
-          0% { transform: translateY(60px); opacity: 0; }
+          0% { transform: translateY(40px); opacity: 0; }
           100% { transform: translateY(0); opacity: 1; }
         }
         @keyframes mr-golden-glow {
           0%, 100% { text-shadow: 0 0 10px rgba(251,191,36,0.5), 0 0 30px rgba(251,191,36,0.3); }
           50% { text-shadow: 0 0 20px rgba(251,191,36,0.8), 0 0 50px rgba(251,191,36,0.5), 0 0 80px rgba(251,191,36,0.3); }
         }
-        @keyframes mr-pulse-btn {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.5); }
-          50% { box-shadow: 0 0 0 8px rgba(59,130,246,0); }
-        }
-        @keyframes mr-flash {
-          0% { opacity: 1; }
-          50% { opacity: 0.3; }
-          100% { opacity: 1; }
-        }
-        @keyframes mr-scale-balance {
-          0% { transform: scale(0) rotate(-10deg); opacity: 0; }
-          60% { transform: scale(1.1) rotate(3deg); }
-          100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        @keyframes mr-pot-flow {
+          0% { transform: translateX(0); opacity: 0; }
+          25% { opacity: 1; }
+          100% { transform: translateX(${isWinner ? '-' : '+'}60px); opacity: 0; }
         }
         @keyframes mr-vignette-pulse {
           0%, 100% { opacity: 0.4; }
@@ -144,35 +293,20 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
           z-index: 60;
           animation: mr-confetti-fall linear forwards;
         }
-        .mr-trophy {
-          animation: mr-trophy-bounce 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
-        .mr-title-win {
-          animation: mr-title-slam 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, mr-golden-glow 2s ease-in-out infinite;
-        }
-        .mr-title-lose {
-          animation: mr-defeat-fade 0.8s ease-out forwards;
-        }
-        .mr-title-tie {
-          animation: mr-scale-balance 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
-        .mr-shake {
-          animation: mr-shake 0.5s ease-out;
-        }
-        .mr-stats-card {
-          animation: mr-stats-slide 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
+        .mr-trophy { animation: mr-trophy-bounce 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        .mr-title-win { animation: mr-title-slam 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards, mr-golden-glow 2s ease-in-out infinite; }
+        .mr-title-lose { animation: mr-defeat-fade 0.6s ease-out forwards; }
+        .mr-title-tie { animation: mr-title-slam 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        .mr-shake { animation: mr-shake 0.5s ease-out; }
+        .mr-stats-card { animation: mr-stats-slide 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
         @keyframes mr-result-highlight-anim {
           0%, 100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
           25% { box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.55), 0 0 28px rgba(6, 182, 212, 0.5); }
           75% { box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.3), 0 0 20px rgba(6, 182, 212, 0.35); }
         }
         .mr-result-highlight {
-          animation: mr-stats-slide 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+          animation: mr-stats-slide 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
                      mr-result-highlight-anim 1.4s ease-in-out 0.5s 2;
-        }
-        .mr-pulse-rematch {
-          animation: mr-pulse-btn 1.5s ease-in-out infinite;
         }
         .mr-red-vignette {
           position: fixed;
@@ -208,73 +342,112 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
 
       {!isWinner && !isTie && <div className="mr-red-vignette" />}
 
-      <div className={`fixed inset-0 backdrop-blur-md z-50 flex items-center justify-center p-4 ${!isWinner && !isTie ? 'mr-shake' : ''}`} style={{ background: 'rgba(0,0,0,0.9)' }}>
-        <div className="max-w-md w-full text-center">
+      <div
+        className={`fixed inset-0 backdrop-blur-md z-50 flex items-center justify-center p-4 ${!isWinner && !isTie ? 'mr-shake' : ''}`}
+        style={{ background: 'rgba(0,0,0,0.9)' }}
+        onClick={handleClose}
+      >
+        <div className="max-w-md w-full text-center" onClick={(e) => e.stopPropagation()}>
 
           {showTitle && (
-            <div className="mb-6">
+            <div className="mb-4">
               {isTie ? (
                 <>
-                  <div className="mr-title-tie">
-                    <span className="text-6xl block mb-3">⚖️</span>
-                  </div>
-                  <h2 className="text-4xl font-black text-cyan-400 mr-title-tie" style={{ animationDelay: '0.15s' }}>
-                    DRAW!
-                  </h2>
-                  <p className={`mt-2 text-sm ${'text-gray-400'}`}>Evenly matched</p>
+                  <div className="mr-title-tie"><span className="text-5xl block mb-2">⚖️</span></div>
+                  <h2 className="text-3xl font-black text-cyan-400 mr-title-tie">DRAW!</h2>
                 </>
               ) : isWinner ? (
                 <>
-                  <div className="mr-trophy">
-                    <span className="text-7xl block mb-3">🏆</span>
-                  </div>
-                  <h2 className="text-4xl font-black text-yellow-400 mr-title-win tracking-wider">
-                    VICTORY!
-                  </h2>
-                  {prizeWon > 0 && (
-                    <p className="text-emerald-400 text-lg font-bold mt-2">
-                      +${formatMoney(animatedPrize)}
-                    </p>
-                  )}
+                  <div className="mr-trophy"><span className="text-6xl block mb-2">🏆</span></div>
+                  <h2 className="text-4xl font-black text-yellow-400 mr-title-win tracking-wider">VICTORY!</h2>
                 </>
               ) : (
                 <>
-                  <span className="text-6xl block mb-3 mr-title-lose">😤</span>
-                  <h2 className="text-4xl font-black text-red-500 mr-title-lose tracking-wider">
-                    DEFEAT
-                  </h2>
-                  <p className={`mt-2 text-sm ${'text-gray-500'}`}>Better luck next time</p>
+                  <span className="text-5xl block mb-2 mr-title-lose">😤</span>
+                  <h2 className="text-4xl font-black text-red-500 mr-title-lose tracking-wider">DEFEAT</h2>
                 </>
               )}
             </div>
           )}
 
+          {/* Dual-avatar layout with pot transfer cue */}
+          {showStats && (
+            <div className="mr-stats-card mb-5">
+              <div className="flex items-end justify-between gap-3 px-2">
+                <PlayerBlock
+                  side="left"
+                  username={myName}
+                  avatar={myAvatar}
+                  score={animatedFinal}
+                  isWinner={isWinner}
+                  isLoser={isLoser}
+                  isTie={isTie}
+                  rematchStatus={isFakeOpponent ? null : myRematchStatus}
+                />
+
+                <div className="flex-1 flex flex-col items-center pb-3 min-w-0">
+                  <div
+                    className="text-[10px] uppercase tracking-wider text-gray-500 leading-none"
+                  >
+                    {isTie ? 'Pot split' : 'Pot'}
+                  </div>
+                  <div
+                    className="text-xl font-black leading-tight"
+                    style={{
+                      color: isTie ? '#06b6d4' : '#facc15',
+                      textShadow: isTie
+                        ? '0 0 12px rgba(6,182,212,0.45)'
+                        : '0 0 14px rgba(250,204,21,0.55)',
+                    }}
+                  >
+                    ${formatMoney(potSize, 0)}
+                  </div>
+                  <div className="mt-1 text-[10px] leading-tight text-gray-400 flex items-center justify-center gap-1">
+                    {isTie ? (
+                      <span>↔︎ refunded ↔︎</span>
+                    ) : isWinner ? (
+                      <span className="text-emerald-300 font-bold">← won by you</span>
+                    ) : (
+                      <span className="text-red-300 font-bold">won by {opponentName} →</span>
+                    )}
+                  </div>
+                </div>
+
+                <PlayerBlock
+                  side="right"
+                  username={opponentName}
+                  avatar={opponentAvatar}
+                  score={animatedOpp}
+                  isWinner={!isWinner && !isTie}
+                  isLoser={isWinner}
+                  isTie={isTie}
+                  rematchStatus={isFakeOpponent ? null : oppRematchStatus}
+                />
+              </div>
+            </div>
+          )}
+
           {showStats && (
             <div
-              className={`mr-stats-card rounded-xl p-5 mb-6 space-y-4 ${highlight ? 'mr-result-highlight' : ''}`}
+              className={`mr-stats-card rounded-xl p-4 mb-5 space-y-3 ${highlight ? 'mr-result-highlight' : ''}`}
               style={{
                 background: '#0d0d0d',
-                border: `1px solid ${highlight ? 'rgba(6, 182, 212, 0.55)' : ('#1a1a1a')}`,
-                boxShadow: 'none',
+                border: `1px solid ${highlight ? 'rgba(6, 182, 212, 0.55)' : '#1a1a1a'}`,
               }}
             >
               <div className="flex justify-between items-center">
-                <span className={`text-sm ${'text-gray-400'}`}>Starting Balance</span>
-                <span className={`font-medium ${'text-white'}`}>${formatMoney(animatedStarting)}</span>
+                <span className="text-sm text-gray-400">Buy-in</span>
+                <span className="font-medium text-white">${formatMoney(cashBuyIn)}</span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className={`text-sm ${'text-gray-400'}`}>Final Balance</span>
-                <span className={`font-bold ${'text-white'}`}>${formatMoney(animatedFinal)}</span>
-              </div>
-              <div className="pt-3 flex justify-between items-center" style={{ borderTop: `1px solid ${'#1a1a1a'}` }}>
-                <span className={`text-sm ${'text-gray-400'}`}>P&L</span>
-                <span className={`font-bold text-lg ${pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {pnl >= 0 ? '+' : '-'}${formatMoney(animatedPnl)}
+              <div className="flex justify-between items-center pt-2" style={{ borderTop: '1px solid #1a1a1a' }}>
+                <span className="text-sm text-gray-400">P&amp;L</span>
+                <span className={`font-black text-xl tabular-nums ${cashPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {cashPnl >= 0 ? '+' : '−'}${formatMoney(animatedCashPnl)}
                 </span>
               </div>
               {isWinner && prizeWon > 0 && (
                 <div className="flex justify-between items-center">
-                  <span className={`text-sm ${'text-gray-400'}`}>Prize Won</span>
+                  <span className="text-sm text-gray-400">Prize Won</span>
                   <span className="text-emerald-400 font-bold text-lg">${formatMoney(animatedPrize)}</span>
                 </div>
               )}
@@ -291,7 +464,7 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
                     <div className="text-yellow-400 text-[11px] font-bold uppercase tracking-wide leading-tight">
                       {totalPendingCount} {totalPendingCount === 1 ? 'pik' : 'piks'} did not grade in time
                     </div>
-                    <div className={`text-[11px] mt-0.5 leading-snug ${'text-gray-300'}`}>
+                    <div className="text-[11px] mt-0.5 leading-snug text-gray-300">
                       {(() => {
                         const parts = [];
                         if (myPendingCount > 0) parts.push(`${myPendingCount} of yours`);
@@ -307,26 +480,37 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
           )}
 
           {showStats && (
-            <div className="flex gap-3 mr-stats-card" style={{ animationDelay: '0.15s' }}>
+            <div className="flex gap-3 mr-stats-card">
               <button
-                onClick={onRematch}
-                className={`flex-1 font-semibold py-3 rounded-lg transition-colors ${'bg-white text-black hover:bg-gray-100'}`}
+                onClick={() => {
+                  if (rematchDisabled || rematchAcceptedByMe) return;
+                  declineFiredRef.current = true; // accepting suppresses implicit decline
+                  onRematchAccept?.();
+                }}
+                disabled={rematchDisabled || rematchAcceptedByMe}
+                className={`flex-1 font-semibold py-3 rounded-lg transition-colors ${
+                  rematchDisabled
+                    ? 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                    : rematchAcceptedByMe
+                    ? 'bg-emerald-600 text-white cursor-default'
+                    : 'bg-white text-black hover:bg-gray-100'
+                }`}
               >
-                Rematch
+                {rematchLabel}
               </button>
               {isWinner ? (
                 <button
                   onClick={handleShare}
                   className="flex-1 text-emerald-400 font-semibold py-3 rounded-lg transition-colors"
-                  style={{ background: '#1a1a1a', border: `1px solid ${'#333'}` }}
+                  style={{ background: '#1a1a1a', border: '1px solid #333' }}
                 >
                   {copied ? 'Copied!' : 'Share Win'}
                 </button>
               ) : (
                 <button
-                  onClick={onClose}
-                  className={`flex-1 font-medium py-3 rounded-lg transition-colors ${'text-gray-300'}`}
-                  style={{ background: '#1a1a1a', border: `1px solid ${'#333'}` }}
+                  onClick={handleClose}
+                  className="flex-1 font-medium py-3 rounded-lg transition-colors text-gray-300"
+                  style={{ background: '#1a1a1a', border: '1px solid #333' }}
                 >
                   Back to Battle
                 </button>

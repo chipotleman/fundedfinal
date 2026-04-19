@@ -221,19 +221,34 @@ export default async function handler(req, res) {
         else outcome = 'lost';
 
         const myFinal = isUser1 ? m.user1FinalBalance : m.user2FinalBalance;
+        const oppFinal = isUser1 ? m.user2FinalBalance : m.user1FinalBalance;
         const start = m.startingBalance;
-        const pnl = (parseFloat(myFinal || start || 0)) - (parseFloat(start || 0));
+        const scorePnl = (parseFloat(myFinal || start || 0)) - (parseFloat(start || 0));
         const winnerPayout = parseFloat(m.winnerPayout || 0);
+        const potSize = parseFloat(m.potSize || 0);
+        const cashBuyIn = potSize / 2;
+        let cashPnl = 0;
+        if (m.winnerType === 'tie') cashPnl = -(cashBuyIn * 0.1);
+        else if (m.winnerId === userId) cashPnl = winnerPayout - cashBuyIn;
+        else cashPnl = -cashBuyIn;
 
         return {
           id: m.id,
           matchupId: m.id,
           outcome,
           opponent,
-          buyIn: parseFloat(start || 0),
+          buyIn: cashBuyIn,
           winnerPayout,
-          pnl,
+          pnl: cashPnl,
+          scorePnl,
+          myScore: parseFloat(myFinal || start || 0),
+          opponentScore: parseFloat(oppFinal || start || 0),
+          startingBalance: parseFloat(start || 0),
+          potSize,
+          winnerId: m.winnerId,
+          winnerType: m.winnerType,
           endedAt: m.endsAt,
+          isFakeOpponent: !!m.isFakeOpponent,
         };
       });
     } catch (_e) {}
