@@ -398,38 +398,6 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
     <div className={`relative rounded-2xl overflow-hidden mx-2 sm:mx-0 ${getCardBorder()}`} style={getCardStyle()}>
       {isOpponent && (
         <div
-          role="img"
-          aria-label={opponentName ? `Pik placed by ${opponentName}` : "Opponent's pik"}
-          className="absolute inset-0 pointer-events-none flex items-center justify-center"
-          style={{ zIndex: 0 }}
-        >
-          {opponentAvatar ? (
-            <img
-              src={opponentAvatar}
-              alt=""
-              style={{
-                width: 240,
-                height: 240,
-                borderRadius: '9999px',
-                objectFit: 'cover',
-                opacity: 0.07,
-                filter: 'grayscale(40%)',
-              }}
-            />
-          ) : (
-            <div
-              style={{
-                width: 240,
-                height: 240,
-                borderRadius: '9999px',
-                background: 'rgba(239,68,68,0.08)',
-              }}
-            />
-          )}
-        </div>
-      )}
-      {isOpponent && (
-        <div
           className="absolute"
           style={{ top: 8, right: 8, zIndex: 30 }}
         >
