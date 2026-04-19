@@ -23,7 +23,7 @@ function UserAvatar({ user, size = 36 }) {
   return <SharedUserAvatar user={user} size={size} />;
 }
 
-export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onSwitchToPrivate, initialFriend = null, lockedFriend = null }) {
+export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onSwitchToPrivate, initialFriend = null, lockedFriend = null, currentUser = null }) {
   const router = useRouter();
   const profileCache = useProfileCacheOptional();
   useModalScrollLock(isOpen);
@@ -293,18 +293,108 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
         </div>
 
         {sent ? (
-          <div className="p-8 text-center pfm-fade-in">
-            <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 pfm-bounce-in">
-              <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+          <div className="p-6 text-center pfm-fade-in">
+            <style jsx>{`
+              @keyframes pfmWaitPulse {
+                0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); transform: scale(1); }
+                50% { box-shadow: 0 0 0 10px rgba(59,130,246,0.0), 0 0 32px rgba(59,130,246,0.45); transform: scale(1.04); }
+              }
+              @keyframes pfmShimmer {
+                0% { background-position: -200% 0; }
+                100% { background-position: 200% 0; }
+              }
+              @keyframes pfmDots {
+                0%, 20% { opacity: 0.2; }
+                50% { opacity: 1; }
+                80%, 100% { opacity: 0.2; }
+              }
+              .pfm-wait-avatar {
+                animation: pfmWaitPulse 1.8s ease-in-out infinite;
+                border-radius: 9999px;
+              }
+              .pfm-wait-shimmer {
+                background: linear-gradient(90deg, rgba(59,130,246,0) 0%, rgba(59,130,246,0.45) 50%, rgba(59,130,246,0) 100%);
+                background-size: 200% 100%;
+                animation: pfmShimmer 1.6s linear infinite;
+              }
+              .pfm-dot { display: inline-block; animation: pfmDots 1.4s infinite; }
+              .pfm-dot:nth-child(2) { animation-delay: 0.2s; }
+              .pfm-dot:nth-child(3) { animation-delay: 0.4s; }
+            `}</style>
+
+            <div className="text-[10px] font-bold uppercase tracking-[0.25em] mb-3" style={{ color: textMuted }}>
+              Challenge Sent
             </div>
-            <h3 className="font-bold text-lg" style={{ color: textPrimary }}>Invite Sent!</h3>
-            <p className="text-sm mt-1" style={{ color: textSecondary }}>Waiting for {selectedFriend?.username} to accept</p>
+
+            <div className="flex items-center justify-center gap-2 mb-4 pfm-bounce-in">
+              <div className="flex flex-col items-center" style={{ width: 96 }}>
+                <div className="rounded-full p-[3px]" style={{ background: 'linear-gradient(135deg,#3b82f6,#8b5cf6)' }}>
+                  <div className="rounded-full" style={{ background: cardBg, padding: 2 }}>
+                    <UserAvatar
+                      user={currentUser ? { id: currentUser.id, username: currentUser.username, avatar: currentUser.avatar, frameId: currentUser.frameId } : { username: 'You' }}
+                      size={72}
+                    />
+                  </div>
+                </div>
+                <div className="mt-2 text-xs font-bold truncate max-w-[88px]" style={{ color: textPrimary }}>
+                  {currentUser?.username || 'You'}
+                </div>
+                <div className="text-[9px] uppercase tracking-wider" style={{ color: '#22c55e' }}>Ready</div>
+              </div>
+
+              <div className="flex flex-col items-center px-1">
+                <div className="text-2xl font-black italic" style={{ color: textPrimary, textShadow: '0 0 12px rgba(255,255,255,0.25)' }}>VS</div>
+              </div>
+
+              <div className="flex flex-col items-center" style={{ width: 96 }}>
+                <div className="pfm-wait-avatar rounded-full p-[3px]" style={{ background: 'linear-gradient(135deg,#3b82f6,#22d3ee)' }}>
+                  <div className="rounded-full" style={{ background: cardBg, padding: 2 }}>
+                    <UserAvatar
+                      user={{ id: selectedFriend?.id, username: selectedFriend?.username, avatar: selectedFriend?.avatar, frameId: selectedFriend?.equippedFrame }}
+                      size={72}
+                    />
+                  </div>
+                </div>
+                <div className="mt-2 text-xs font-bold truncate max-w-[88px]" style={{ color: textPrimary }}>
+                  {selectedFriend?.username}
+                </div>
+                <div className="text-[9px] uppercase tracking-wider" style={{ color: '#60a5fa' }}>
+                  Waiting<span className="pfm-dot">.</span><span className="pfm-dot">.</span><span className="pfm-dot">.</span>
+                </div>
+              </div>
+            </div>
+
+            <h3 className="font-bold text-base" style={{ color: textPrimary }}>
+              Waiting for {selectedFriend?.username || 'your opponent'}
+            </h3>
+
+            <div className="mt-4 rounded-xl p-3 text-left space-y-2" style={{ backgroundColor: elevatedBg, border: `1px solid ${cardBorder}` }}>
+              <div className="flex items-start gap-2">
+                <span className="text-sm leading-none mt-0.5">✅</span>
+                <p className="text-xs leading-snug" style={{ color: textSecondary }}>
+                  It's safe to close this — you can wait in the background.
+                </p>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-sm leading-none mt-0.5">⚔️</span>
+                <p className="text-xs leading-snug" style={{ color: textSecondary }}>
+                  When they accept, you'll be dropped straight into the match.
+                </p>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-sm leading-none mt-0.5">🔔</span>
+                <p className="text-xs leading-snug" style={{ color: textSecondary }}>
+                  If they decline, we'll let you know.
+                </p>
+              </div>
+            </div>
+
             {inviteCountdown > 0 ? (
               <div className="mt-4">
-                <div className="w-full rounded-full h-1.5 mb-2" style={{ backgroundColor: elevatedBg }}>
-                  <div className="bg-blue-500 h-1.5 rounded-full transition-all duration-1000" style={{ width: `${(inviteCountdown / (INVITE_EXPIRY_HOURS * 3600)) * 100}%` }}></div>
+                <div className="w-full rounded-full h-1.5 mb-2 overflow-hidden" style={{ backgroundColor: elevatedBg }}>
+                  <div className="pfm-wait-shimmer h-1.5 rounded-full" style={{ width: `${(inviteCountdown / (INVITE_EXPIRY_HOURS * 3600)) * 100}%`, background: '#3b82f6' }}></div>
                 </div>
-                <p className="text-xs" style={{ color: textMuted }}>Expires in {formatCountdown(inviteCountdown)}</p>
+                <p className="text-xs" style={{ color: textMuted }}>Invite expires in {formatCountdown(inviteCountdown)}</p>
               </div>
             ) : (
               <div className="mt-4">
@@ -314,7 +404,14 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                 </button>
               </div>
             )}
-            <button onClick={onClose} className="mt-3 text-xs transition-colors" style={{ color: textMuted }}>Close</button>
+
+            <button
+              onClick={onClose}
+              className="mt-4 w-full font-semibold text-sm py-3 rounded-xl transition-colors"
+              style={{ backgroundColor: elevatedBg, color: textPrimary, border: `1px solid ${cardBorder}` }}
+            >
+              I'll wait in the background
+            </button>
           </div>
         ) : (
           <div className="flex-1 overflow-y-auto px-5 pb-5">
@@ -654,7 +751,10 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-semibold uppercase tracking-wider mb-2 block" style={{ color: textMuted }}>Game Mode</label>
+                  <label className="text-[11px] font-semibold uppercase tracking-wider mb-1 block" style={{ color: textMuted }}>Game Mode</label>
+                  <p className="text-[10px] mb-2 leading-snug" style={{ color: textMuted }}>
+                    The ${buyIn} above is each player's wager. The coins below are the in-battle starting bankroll each player gets to bet with.
+                  </p>
                   <div className="grid grid-cols-3 gap-1.5">
                     {GAME_MODE_OPTIONS.map(mode => {
                       const selected = gameMode === mode.id;
@@ -673,6 +773,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                           )}
                           <span className="text-base leading-none mb-1">{mode.icon}</span>
                           <span className="font-bold text-[11px] leading-tight" style={{ color: textPrimary }}>{mode.label}</span>
+                          <span className="text-[8px] uppercase tracking-wider mt-1 leading-none" style={{ color: textMuted }}>Start with</span>
                           <span className="font-bold text-[10px] mt-0.5" style={{ color: textPrimary }}>{mode.coins.toLocaleString()}</span>
                           <span className="text-[9px]" style={{ color: textMuted }}>coins</span>
                         </button>

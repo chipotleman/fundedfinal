@@ -1464,6 +1464,7 @@ export default function BattlePage() {
         onClose={() => { setShowPlayFriend(false); setPlayFriendInitial(null); }}
         friends={friends}
         initialFriend={playFriendInitial}
+        currentUser={profile ? { id: userId, username: profile.username, avatar: profile.avatar, frameId: profile.equippedFrame } : (session?.user ? { id: userId, username: session.user.name, avatar: session.user.image } : null)}
         onInviteSent={() => fetchData()}
         onSwitchToPrivate={() => { setShowPlayFriend(false); setPlayFriendInitial(null); setShowPrivateMatch(true); }}
       />
