@@ -6,6 +6,38 @@ import ForfeitModal from './battle/ForfeitModal';
 import ConnectionBadge from './battle/ConnectionBadge';
 import { formatMoney } from '../utils/formatMoney';
 import UserAvatar from './UserAvatar';
+import { useVoiceChat } from '../contexts/VoiceChatContext';
+
+function SpeakingIndicator({ active, size = 10 }) {
+  if (!active) return null;
+  return (
+    <span
+      className="inline-flex items-center justify-center flex-shrink-0"
+      title="Speaking"
+      aria-label="Speaking"
+      style={{ width: size + 4, height: size + 4 }}
+    >
+      <style>{`
+        @keyframes abc-mic-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.55); } 50% { box-shadow: 0 0 0 5px rgba(34,197,94,0); } }
+      `}</style>
+      <span
+        className="inline-flex items-center justify-center rounded-full"
+        style={{
+          width: size + 4,
+          height: size + 4,
+          background: 'rgba(34,197,94,0.18)',
+          border: '1px solid rgba(34,197,94,0.7)',
+          animation: 'abc-mic-pulse 1.2s ease-in-out infinite',
+        }}
+      >
+        <svg viewBox="0 0 24 24" width={size - 2} height={size - 2} fill="#22c55e" aria-hidden="true">
+          <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+          <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+        </svg>
+      </span>
+    </span>
+  );
+}
 
 function formatTimer(ms) {
   if (!ms || ms <= 0) return '00:00';
@@ -102,6 +134,7 @@ export default function ActiveBattleCard({
   const [mounted, setMounted] = useState(false);
   const { data: session } = useSession();
   const { isDarkMode } = useTheme();
+  const { oppSpeaking } = useVoiceChat();
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -333,7 +366,17 @@ export default function ActiveBattleCard({
             </div>
 
             <div className="flex flex-col items-center" style={{ width: '25%' }}>
-              <div className="relative z-10" style={{ filter: opponent.equippedFrame ? 'none' : 'drop-shadow(0 0 20px rgba(239,68,68,0.3))' }}>
+              <div
+                className="relative z-10"
+                style={{
+                  filter: opponent.equippedFrame
+                    ? 'none'
+                    : oppSpeaking
+                      ? 'drop-shadow(0 0 14px rgba(34,197,94,0.7))'
+                      : 'drop-shadow(0 0 20px rgba(239,68,68,0.3))',
+                  transition: 'filter 150ms ease',
+                }}
+              >
                 <UserAvatar
                   avatar={opponent.avatar}
                   username={opponent.username}
@@ -342,7 +385,10 @@ export default function ActiveBattleCard({
                   bgColor="#111"
                 />
               </div>
-              <p className="text-white text-[11px] md:text-xs font-bold truncate max-w-[80px] md:max-w-[100px] text-center mt-1">{opponent.username || 'Opponent'}</p>
+              <div className="flex items-center justify-center gap-1 mt-1 max-w-[80px] md:max-w-[100px]">
+                <p className="text-white text-[11px] md:text-xs font-bold truncate text-center">{opponent.username || 'Opponent'}</p>
+                <SpeakingIndicator active={oppSpeaking} size={10} />
+              </div>
               <p className="text-[10px] md:text-xs font-bold text-red-400 leading-tight">
                 ${formatMoney(oppBalanceNum, 0)}
               </p>
@@ -456,9 +502,10 @@ export default function ActiveBattleCard({
                         <div
                           className="w-16 h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center overflow-hidden mb-2"
                           style={{
-                            border: '3px solid #ef4444',
-                            boxShadow: '0 0 20px rgba(239,68,68,0.3)',
+                            border: `3px solid ${oppSpeaking ? '#22c55e' : '#ef4444'}`,
+                            boxShadow: oppSpeaking ? '0 0 20px rgba(34,197,94,0.55)' : '0 0 20px rgba(239,68,68,0.3)',
                             background: '#111',
+                            transition: 'border-color 150ms ease, box-shadow 150ms ease',
                           }}
                         >
                           {opponent.avatar ? (
@@ -467,7 +514,10 @@ export default function ActiveBattleCard({
                             <span className="text-2xl font-black text-white/70">{(opponent.username || 'O')[0].toUpperCase()}</span>
                           )}
                         </div>
-                        <p className="text-white text-xs font-bold truncate max-w-[120px] text-center">{opponent.username || 'Opponent'}</p>
+                        <div className="flex items-center justify-center gap-1 max-w-[120px]">
+                          <p className="text-white text-xs font-bold truncate text-center">{opponent.username || 'Opponent'}</p>
+                          <SpeakingIndicator active={oppSpeaking} size={10} />
+                        </div>
                         <p className="text-[10px] text-red-400/60 mt-0.5">OPP</p>
                       </div>
                     </div>

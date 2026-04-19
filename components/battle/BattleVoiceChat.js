@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useMatchup } from '../../contexts/MatchupContext';
+import { useVoiceChat } from '../../contexts/VoiceChatContext';
 import { getBattleStreamClient } from '../../lib/battleStreamClient';
 
 const FALLBACK_ICE_SERVERS = [
@@ -68,7 +69,7 @@ export default function BattleVoiceChat() {
   const [incomingSender, setIncomingSender] = useState(null);
   const [muted, setMuted] = useState(false);
   const [mySpeaking, setMySpeaking] = useState(false);
-  const [oppSpeaking, setOppSpeaking] = useState(false);
+  const { oppSpeaking, setOppSpeaking } = useVoiceChat();
 
   const lastStateRef = useRef('idle');
   useEffect(() => { lastStateRef.current = state; }, [state]);

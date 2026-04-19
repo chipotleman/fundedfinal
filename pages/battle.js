@@ -11,6 +11,7 @@ import MatchLobby from '../components/battle/MatchLobby';
 import MatchResult from '../components/battle/MatchResult';
 import LiveBattlesSection from '../components/battle/LiveBattlesSection';
 import BattleVoiceChat from '../components/battle/BattleVoiceChat';
+import { useVoiceChat } from '../contexts/VoiceChatContext';
 import ForfeitModal from '../components/battle/ForfeitModal';
 import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
 import ConnectionBadge from '../components/battle/ConnectionBadge';
@@ -68,6 +69,7 @@ export default function BattlePage() {
 
   const { isDarkMode } = useTheme();
   const { setSuppress } = useNotifications();
+  const { oppSpeaking } = useVoiceChat();
   const isGuest = status !== 'authenticated';
   const userId = session?.user?.id;
   const debounceRef = useRef(null);
@@ -845,14 +847,43 @@ export default function BattlePage() {
                     </div>
 
                     <div className="flex-1 flex flex-col items-center text-center">
-                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden flex items-center justify-center mb-1.5" style={{ backgroundColor: '#1a1a1a', border: '2px solid #333' }}>
+                      <div
+                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden flex items-center justify-center mb-1.5"
+                        style={{
+                          backgroundColor: '#1a1a1a',
+                          border: `2px solid ${oppSpeaking ? '#22c55e' : '#333'}`,
+                          boxShadow: oppSpeaking ? '0 0 14px rgba(34,197,94,0.55)' : 'none',
+                          transition: 'border-color 150ms ease, box-shadow 150ms ease',
+                        }}
+                      >
                         {oppAvatar ? (
                           <img src={oppAvatar} alt="" className="w-full h-full object-cover" />
                         ) : (
                           <span className="text-white font-bold text-lg">{oppName[0]?.toUpperCase()}</span>
                         )}
                       </div>
-                      <p className="text-white font-semibold text-xs truncate max-w-[100px] min-h-[16px]">{oppName}</p>
+                      <div className="flex items-center justify-center gap-1 max-w-[100px] min-h-[16px]">
+                        <p className="text-white font-semibold text-xs truncate">{oppName}</p>
+                        {oppSpeaking && (
+                          <span
+                            className="inline-flex items-center justify-center rounded-full flex-shrink-0"
+                            title="Speaking"
+                            aria-label="Speaking"
+                            style={{
+                              width: 14,
+                              height: 14,
+                              background: 'rgba(34,197,94,0.18)',
+                              border: '1px solid rgba(34,197,94,0.7)',
+                              animation: 'battlePulse 1.2s ease-in-out infinite',
+                            }}
+                          >
+                            <svg viewBox="0 0 24 24" width={8} height={8} fill="#22c55e" aria-hidden="true">
+                              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+                              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+                            </svg>
+                          </span>
+                        )}
+                      </div>
                       <p className={`text-sm font-bold mt-0.5 ${oppPnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>${formatMoney(oppBal, 0)}</p>
                       <p className={`text-[10px] font-medium ${oppPnl >= 0 ? 'text-green-400/70' : 'text-red-400/70'}`}>{oppPnl >= 0 ? '+' : ''}{formatMoney(oppPnl, 0)}</p>
                     </div>
