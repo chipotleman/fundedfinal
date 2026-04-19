@@ -100,6 +100,7 @@ export default function WithdrawalPage() {
   const [savedMethods, setSavedMethods] = useState([]);
   const [selectedSavedMethod, setSelectedSavedMethod] = useState(null);
   const [withdrawals, setWithdrawals] = useState([]);
+  const [depositBonus, setDepositBonus] = useState(null);
   const [showHistory, setShowHistory] = useState(false);
   const [showNewMethodForm, setShowNewMethodForm] = useState(false);
   const [saveMethod, setSaveMethod] = useState(false);
@@ -136,10 +137,11 @@ export default function WithdrawalPage() {
 
     const fetchData = async () => {
       try {
-        const [profileRes, methodsRes, withdrawalsRes] = await Promise.all([
+        const [profileRes, methodsRes, withdrawalsRes, depositRes] = await Promise.all([
           fetch(`/api/profiles/${session.user.id}`),
           fetch(`/api/payment-methods`),
           fetch(`/api/withdrawals`),
+          fetch(`/api/user/has-deposited`, { credentials: 'include' }),
         ]);
 
         if (profileRes.ok) {
@@ -153,6 +155,15 @@ export default function WithdrawalPage() {
         if (withdrawalsRes.ok) {
           const wds = await withdrawalsRes.json();
           setWithdrawals(wds);
+        }
+        if (depositRes.ok) {
+          const data = await depositRes.json();
+          if (data?.matchGranted) {
+            const amt = parseFloat(data.matchAmount);
+            if (Number.isFinite(amt) && amt > 0) {
+              setDepositBonus({ amount: amt, grantedAt: data.grantedAt || null });
+            }
+          }
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -1051,7 +1062,7 @@ export default function WithdrawalPage() {
 
             {/* Right rail: recent activity */}
             <aside className={`lg:col-span-3 order-3 ${showHistory ? 'block' : 'hidden lg:block'}`}>
-              {withdrawals.length === 0 ? (
+              {withdrawals.length === 0 && !depositBonus ? (
                 <div className="bg-[#111111] rounded-2xl p-5 border border-[#1a1a1a]/50">
                   <h2 className="text-sm font-semibold text-white mb-2">Recent Activity</h2>
                   <p className="text-gray-500 text-xs">Your withdrawal history will appear here.</p>
@@ -1060,6 +1071,34 @@ export default function WithdrawalPage() {
                 <div className="bg-[#111111] rounded-2xl p-5 border border-[#1a1a1a]/50">
                   <h2 className="text-sm font-semibold text-white mb-3">Recent Activity</h2>
                   <div className="space-y-2 max-h-[70vh] overflow-y-auto pr-1">
+                    {depositBonus && (
+                      <div
+                        className="bg-[#0a0a0a] rounded-lg border border-emerald-500/30 p-3"
+                        title="First deposit match bonus"
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-emerald-400 font-semibold text-sm">
+                              +${depositBonus.amount.toLocaleString('en-US', {
+                                minimumFractionDigits: depositBonus.amount % 1 === 0 ? 0 : 2,
+                                maximumFractionDigits: 2,
+                              })}
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded-full text-[10px] text-emerald-400 bg-emerald-400/10">
+                              Bonus
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-gray-400 truncate">First Deposit Match</span>
+                          <span className="text-gray-500 shrink-0 ml-2">
+                            {depositBonus.grantedAt
+                              ? new Date(depositBonus.grantedAt).toLocaleDateString()
+                              : ''}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                     {withdrawals.map((w) => {
                       const methodInfo = withdrawalMethods.find(m => m.id === w.methodType);
                       const isExpanded = expandedWithdrawal === w.id;
