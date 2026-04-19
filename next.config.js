@@ -47,6 +47,15 @@ const nextConfig = {
     '*.repl.co',
     'a01a394d-2456-4999-a4ea-cf4251dbb624-00-2sfh6gnzo798j.janeway.replit.dev'
   ],
+  async redirects() {
+    return [
+      {
+        source: '/battles',
+        destination: '/battle',
+        permanent: false,
+      },
+    ];
+  },
   webpack: (config, { isServer }) => {
     config.watchOptions = {
       aggregateTimeout: 300,

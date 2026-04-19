@@ -1289,3 +1289,11 @@ export default function BattlePage() {
     </div>
   );
 }
+
+export async function getServerSideProps(context) {
+  const { getBattlePreviewProps } = await import('../lib/battle-preview');
+  return getBattlePreviewProps(context, {
+    queryKeys: ['battle', 'live', 'forfeit', 'result'],
+    inviteKeys: ['invite'],
+  });
+}
