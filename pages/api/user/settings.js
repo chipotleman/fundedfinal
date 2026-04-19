@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { profiles, users } from '../../../shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and, ne } from 'drizzle-orm';
 
 const ALLOWED_ODDS_FORMATS = ['american', 'decimal'];
 const ALLOWED_NOTIF_KEYS = ['betResults', 'challengeUpdates', 'promotions', 'weeklyReports'];
@@ -104,9 +104,17 @@ export default async function handler(req, res) {
       const updates = {};
 
       if (typeof body.username === 'string') {
-        const u = body.username.trim().slice(0, 100);
+        const u = body.username.trim().toLowerCase().slice(0, 100);
         if (u.length < 2) {
           return res.status(400).json({ error: 'Username must be at least 2 characters' });
+        }
+        const taken = await db
+          .select({ id: profiles.id })
+          .from(profiles)
+          .where(and(eq(profiles.username, u), ne(profiles.id, userId)))
+          .limit(1);
+        if (taken.length > 0) {
+          return res.status(409).json({ error: 'Username is already taken' });
         }
         updates.username = u;
       }

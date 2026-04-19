@@ -36,6 +36,7 @@ export default function PublicProfile() {
   const [inviteDuration, setInviteDuration] = useState(24);
   const [editingUsername, setEditingUsername] = useState(false);
   const [usernameDraft, setUsernameDraft] = useState('');
+  const [inlineUsernameStatus, setInlineUsernameStatus] = useState({ checking: false, available: null, error: null });
   const [editingBio, setEditingBio] = useState(false);
   const [bioDraft, setBioDraft] = useState('');
   const [savingInline, setSavingInline] = useState(null);
@@ -371,8 +372,58 @@ export default function PublicProfile() {
   const startEditUsername = () => {
     setUsernameDraft(profile?.username || '');
     setInlineError(null);
+    setInlineUsernameStatus({ checking: false, available: null, error: null });
     setEditingUsername(true);
   };
+
+  useEffect(() => {
+    if (!editingUsername) return;
+    const next = usernameDraft.trim();
+    if (next === (profile?.username || '')) {
+      setInlineUsernameStatus({ checking: false, available: null, error: null });
+      return;
+    }
+    if (next.length < 3) {
+      setInlineUsernameStatus({ checking: false, available: false, error: 'Username must be at least 3 characters' });
+      return;
+    }
+    if (next.length > 20) {
+      setInlineUsernameStatus({ checking: false, available: false, error: 'Username must be 20 characters or less' });
+      return;
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(next)) {
+      setInlineUsernameStatus({ checking: false, available: false, error: 'Letters, numbers and underscores only' });
+      return;
+    }
+    setInlineUsernameStatus({ checking: true, available: null, error: null });
+    let cancelled = false;
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/profiles/check-username?username=${encodeURIComponent(next)}`, {
+          credentials: 'include',
+        });
+        const data = await res.json();
+        if (cancelled) return;
+        if (data.available) {
+          setInlineUsernameStatus({ checking: false, available: true, error: null });
+        } else {
+          setInlineUsernameStatus({
+            checking: false,
+            available: false,
+            error: data.error || 'Username is already taken',
+          });
+        }
+      } catch {
+        if (!cancelled) {
+          setInlineUsernameStatus({ checking: false, available: null, error: 'Could not check availability' });
+        }
+      }
+    }, 400);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [usernameDraft, editingUsername, profile?.username]);
 
   const saveUsername = async () => {
     const next = usernameDraft.trim();
@@ -384,6 +435,10 @@ export default function PublicProfile() {
       setEditingUsername(false);
       return;
     }
+    if (inlineUsernameStatus.available === false) {
+      setInlineError(inlineUsernameStatus.error || 'Username is already taken');
+      return;
+    }
     setSavingInline('username');
     setInlineError(null);
     try {
@@ -391,8 +446,10 @@ export default function PublicProfile() {
       setProfile((p) => ({ ...p, username: next }));
       setFormData((f) => ({ ...f, username: next }));
       setEditingUsername(false);
+      setInlineUsernameStatus({ checking: false, available: null, error: null });
     } catch (err) {
       setInlineError(err.message);
+      setInlineUsernameStatus({ checking: false, available: false, error: err.message });
     } finally {
       setSavingInline(null);
     }
@@ -597,28 +654,49 @@ export default function PublicProfile() {
               <div className="flex-1 text-center md:text-left">
                 <>
                   {editingUsername ? (
-                    <div className="flex items-center gap-2 mb-1 justify-center md:justify-start">
-                      <input
-                        type="text"
-                        value={usernameDraft}
-                        onChange={(e) => setUsernameDraft(e.target.value)}
-                        autoFocus
-                        maxLength={32}
-                        className="bg-[#111] border border-[#1a1a1a] rounded-lg px-3 py-1.5 text-white text-xl font-bold focus:outline-none focus:border-blue-500"
-                      />
-                      <button
-                        onClick={saveUsername}
-                        disabled={savingInline === 'username'}
-                        className="bg-blue-600 disabled:opacity-40 text-white text-xs font-semibold py-1.5 px-3 rounded-lg"
-                      >
-                        {savingInline === 'username' ? '...' : 'Save'}
-                      </button>
-                      <button
-                        onClick={() => { setEditingUsername(false); setInlineError(null); }}
-                        className="text-gray-400 text-xs font-semibold py-1.5 px-3 rounded-lg bg-[#111] border border-[#1a1a1a]"
-                      >
-                        Cancel
-                      </button>
+                    <div className="mb-1">
+                      <div className="flex items-center gap-2 justify-center md:justify-start">
+                        <input
+                          type="text"
+                          value={usernameDraft}
+                          onChange={(e) => setUsernameDraft(e.target.value)}
+                          autoFocus
+                          maxLength={20}
+                          className="bg-[#111] border border-[#1a1a1a] rounded-lg px-3 py-1.5 text-white text-xl font-bold focus:outline-none focus:border-blue-500"
+                        />
+                        <button
+                          onClick={saveUsername}
+                          disabled={
+                            savingInline === 'username' ||
+                            inlineUsernameStatus.checking ||
+                            inlineUsernameStatus.available === false
+                          }
+                          className="bg-blue-600 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold py-1.5 px-3 rounded-lg"
+                        >
+                          {savingInline === 'username' ? '...' : 'Save'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingUsername(false);
+                            setInlineError(null);
+                            setInlineUsernameStatus({ checking: false, available: null, error: null });
+                          }}
+                          className="text-gray-400 text-xs font-semibold py-1.5 px-3 rounded-lg bg-[#111] border border-[#1a1a1a]"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                      <div className="mt-1 text-xs min-h-[16px] text-center md:text-left" aria-live="polite">
+                        {inlineUsernameStatus.checking && (
+                          <span className="text-gray-400">Checking availability…</span>
+                        )}
+                        {!inlineUsernameStatus.checking && inlineUsernameStatus.available === true && (
+                          <span className="text-green-400">Username available</span>
+                        )}
+                        {!inlineUsernameStatus.checking && inlineUsernameStatus.error && (
+                          <span className="text-red-400">{inlineUsernameStatus.error}</span>
+                        )}
+                      </div>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 mb-1 justify-center md:justify-start">
