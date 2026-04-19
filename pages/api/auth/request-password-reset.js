@@ -1,8 +1,20 @@
+import crypto from 'crypto';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { users } from '../../../shared/schema';
+import { users, passwordResets } from '../../../shared/schema';
 import { eq } from 'drizzle-orm';
+import { getUncachableResendClient } from '../../../lib/resend';
+
+const TOKEN_TTL_MINUTES = 30;
+
+function getBaseUrl(req) {
+  const envUrl = process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL;
+  if (envUrl) return envUrl.replace(/\/$/, '');
+  const proto = req.headers['x-forwarded-proto'] || 'https';
+  const host = req.headers['x-forwarded-host'] || req.headers.host;
+  return `${proto}://${host}`;
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -21,18 +33,58 @@ export default async function handler(req, res) {
       .limit(1);
 
     const email = user?.email || session.user.email;
-    if (!email) {
+    if (!email || !user?.id) {
       return res.status(400).json({ error: 'No email on file for this account' });
     }
 
-    // Email delivery is not yet wired to a provider on this project.
-    // Log the request so admins can manually act on it; respond success
-    // so the UX matches a real reset-email flow.
-    console.log(`[PasswordResetRequest] User ${session.user.id} (${email}) requested a password reset`);
+    const rawToken = crypto.randomBytes(32).toString('base64url');
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const expiresAt = new Date(Date.now() + TOKEN_TTL_MINUTES * 60 * 1000);
+
+    await db.insert(passwordResets).values({
+      userId: user.id,
+      tokenHash,
+      expiresAt,
+    });
+
+    const resetUrl = `${getBaseUrl(req)}/auth/reset-password?token=${encodeURIComponent(rawToken)}`;
+
+    const { client, fromEmail } = await getUncachableResendClient();
+
+    const { error: sendError } = await client.emails.send({
+      from: fromEmail,
+      to: email,
+      subject: 'Reset your password',
+      text: `We received a request to reset your password.\n\nClick the link below to choose a new password. This link expires in ${TOKEN_TTL_MINUTES} minutes and can only be used once.\n\n${resetUrl}\n\nIf you didn't request this, you can safely ignore this email.`,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #111;">
+          <h2 style="margin: 0 0 16px;">Reset your password</h2>
+          <p>We received a request to reset the password for your account.</p>
+          <p style="margin: 24px 0;">
+            <a href="${resetUrl}" style="background: #16a34a; color: #fff; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600;">
+              Choose a new password
+            </a>
+          </p>
+          <p style="font-size: 13px; color: #555;">
+            Or paste this link into your browser:<br />
+            <span style="word-break: break-all;">${resetUrl}</span>
+          </p>
+          <p style="font-size: 13px; color: #555;">
+            This link expires in ${TOKEN_TTL_MINUTES} minutes and can only be used once.
+            If you didn't request this, you can safely ignore this email.
+          </p>
+        </div>
+      `,
+    });
+
+    if (sendError) {
+      console.error('[request-password-reset] resend error', sendError);
+      return res.status(502).json({ error: 'Could not send reset email. Please try again shortly.' });
+    }
 
     return res.status(200).json({
       success: true,
-      message: `If an account exists for ${email}, a reset link will be sent shortly.`,
+      message: `Password reset link sent to ${email}.`,
     });
   } catch (err) {
     console.error('[request-password-reset]', err);
