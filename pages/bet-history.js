@@ -400,7 +400,10 @@ export default function BetHistory() {
       <div className="pt-8 px-4 sm:px-6 lg:px-8 pb-24">
         {/* Header */}
         <div className="max-w-6xl mx-auto">
-          
+          <h1 className="text-center text-white font-bold text-2xl sm:text-3xl mb-6 tracking-tight">
+            Battle History
+          </h1>
+
           {/* Sliding Filter Tabs */}
           <div className="flex justify-center mb-8">
             <div 

@@ -197,7 +197,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 onClick={onClose}
                 className="block text-gray-300 font-light text-base uppercase tracking-wider py-3"
               >
-                Bet History
+                Battle History
               </Link>
               <Link
                 href="/leaderboard"

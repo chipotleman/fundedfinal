@@ -468,22 +468,17 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
 
         {didNotGradeInTime && (
           <div
-            className="mb-3 px-3 py-2 rounded-lg flex items-start gap-2"
+            className="mb-3 px-2 py-1 rounded-md inline-flex items-center gap-1.5"
             title="This pik never graded before the battle ended, so its stake was forfeited toward the battle's score."
             style={{
               background: 'rgba(234,179,8,0.10)',
               border: '1px solid rgba(234,179,8,0.45)',
             }}
           >
-            <span className="text-base leading-none">⚠️</span>
-            <div className="flex-1">
-              <div className="text-yellow-400 text-xs font-bold uppercase tracking-wide">
-                Did not grade in time
-              </div>
-              <div className="text-[11px] mt-0.5" style={{ color: '#d1d5db' }}>
-                Battle ended before this pik settled — stake was forfeited toward the battle's score.
-              </div>
-            </div>
+            <span className="text-xs leading-none">⚠️</span>
+            <span className="text-yellow-400 text-[11px] font-bold uppercase tracking-wide">
+              Did not grade in time
+            </span>
           </div>
         )}
 
