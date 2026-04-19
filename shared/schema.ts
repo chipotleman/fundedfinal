@@ -198,6 +198,15 @@ export const passwordResets = pgTable("password_resets", {
   tokenHashIdx: index("password_resets_token_hash_idx").on(table.tokenHash),
 }));
 
+// Password reset rate limit counters (shared across processes / restarts)
+export const passwordResetRateLimits = pgTable("password_reset_rate_limits", {
+  key: varchar("key", { length: 320 }).primaryKey(),
+  count: integer("count").default(0).notNull(),
+  resetAt: timestamp("reset_at").notNull(),
+}, (table) => ({
+  resetAtIdx: index("password_reset_rate_limits_reset_at_idx").on(table.resetAt),
+}));
+
 export const userChallenges = pgTable("user_challenges", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull(),

@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { db } from '../../../lib/db';
 import { users, passwordResets } from '../../../shared/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { getUncachableResendClient } from '../../../lib/resend';
 
 const TOKEN_TTL_MINUTES = 30;
@@ -12,24 +12,46 @@ const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
 const MAX_REQUESTS_PER_EMAIL = 3;
 const MAX_REQUESTS_PER_IP = 10;
 
-const rateLimitStore = globalThis.__forgotPasswordRateLimit || new Map();
-globalThis.__forgotPasswordRateLimit = rateLimitStore;
+let lastPruneAt = 0;
+const PRUNE_INTERVAL_MS = 5 * 60 * 1000;
 
-function pruneExpired(now) {
-  for (const [key, entry] of rateLimitStore) {
-    if (entry.resetAt <= now) rateLimitStore.delete(key);
+async function pruneExpired(now) {
+  if (now - lastPruneAt < PRUNE_INTERVAL_MS) return;
+  lastPruneAt = now;
+  try {
+    await db.execute(
+      sql`DELETE FROM password_reset_rate_limits WHERE reset_at <= now()`
+    );
+  } catch (err) {
+    console.error('[forgot-password] prune error', err);
   }
 }
 
-function checkAndIncrement(key, limit, now) {
-  const entry = rateLimitStore.get(key);
-  if (!entry || entry.resetAt <= now) {
-    rateLimitStore.set(key, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+async function checkAndIncrement(key, limit, now) {
+  const resetAt = new Date(now + RATE_LIMIT_WINDOW_MS);
+  try {
+    const result = await db.execute(sql`
+      INSERT INTO password_reset_rate_limits (key, count, reset_at)
+      VALUES (${key}, 1, ${resetAt})
+      ON CONFLICT (key) DO UPDATE
+        SET count = CASE
+              WHEN password_reset_rate_limits.reset_at <= now() THEN 1
+              ELSE password_reset_rate_limits.count + 1
+            END,
+            reset_at = CASE
+              WHEN password_reset_rate_limits.reset_at <= now() THEN EXCLUDED.reset_at
+              ELSE password_reset_rate_limits.reset_at
+            END
+      RETURNING count
+    `);
+    const rows = Array.isArray(result) ? result : (result.rows || []);
+    const count = Number(rows[0]?.count ?? 0);
+    return count <= limit;
+  } catch (err) {
+    console.error('[forgot-password] rate limit error', err);
+    // Fail open so a transient DB error does not lock everyone out.
     return true;
   }
-  if (entry.count >= limit) return false;
-  entry.count += 1;
-  return true;
 }
 
 function getClientIp(req) {
@@ -59,18 +81,18 @@ export default async function handler(req, res) {
   }
 
   const now = Date.now();
-  pruneExpired(now);
+  await pruneExpired(now);
 
   const ip = getClientIp(req);
   const ipKey = `ip:${ip}`;
   const emailKey = `email:${rawEmail}`;
 
-  if (!checkAndIncrement(ipKey, MAX_REQUESTS_PER_IP, now)) {
+  if (!(await checkAndIncrement(ipKey, MAX_REQUESTS_PER_IP, now))) {
     return res
       .status(429)
       .json({ error: 'Too many requests. Please try again later.' });
   }
-  if (!checkAndIncrement(emailKey, MAX_REQUESTS_PER_EMAIL, now)) {
+  if (!(await checkAndIncrement(emailKey, MAX_REQUESTS_PER_EMAIL, now))) {
     return res.status(200).json({ success: true, message: GENERIC_SUCCESS_MESSAGE });
   }
 
