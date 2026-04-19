@@ -216,6 +216,17 @@ export function NotificationsProvider({ children }) {
           window.dispatchEvent(new CustomEvent('piks:forfeit:win', { detail: ev }));
         }
         refresh();
+      } else if (ev.type === 'notification:message') {
+        // Re-broadcast the message payload as a window event so the
+        // messages list can bump the row instantly without refetching.
+        if (ev.message && typeof window !== 'undefined') {
+          window.dispatchEvent(
+            new CustomEvent('piks:message:new', { detail: ev.message })
+          );
+        }
+        // Still refresh so the unread badge / unread set stay accurate
+        // (no-op for outgoing messages from the sender's own session).
+        refresh();
       } else if (ev.type === 'notification:refresh' || ev.type.startsWith('notification:')) {
         refresh();
       } else if (ev.type === 'achievement:earned' && ev.achievement?.id) {

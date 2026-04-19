@@ -116,7 +116,20 @@ export default async function handler(req, res) {
         .returning();
 
       try {
-        publishBattleEvent(receiverId, { type: 'notification:message' });
+        const messagePayload = {
+          id: newMessage.id,
+          senderId: userId,
+          receiverId,
+          content: newMessage.content,
+          createdAt:
+            newMessage.createdAt instanceof Date
+              ? newMessage.createdAt.toISOString()
+              : newMessage.createdAt,
+        };
+        publishBattleEvent([receiverId, userId], {
+          type: 'notification:message',
+          message: messagePayload,
+        });
       } catch (_e) {}
 
       return res.status(201).json({ message: newMessage });

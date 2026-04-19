@@ -356,7 +356,28 @@ function ConversationThread({ friend, ctx, myId, isDarkMode }) {
         return;
       }
       const data = await res.json();
-      if (data?.message) setThread((prev) => [...prev, data.message]);
+      if (data?.message) {
+        setThread((prev) => [...prev, data.message]);
+        // Dispatch locally so the messages list bumps instantly without
+        // waiting for the SSE round-trip from the server.
+        if (typeof window !== 'undefined') {
+          const m = data.message;
+          window.dispatchEvent(
+            new CustomEvent('piks:message:new', {
+              detail: {
+                id: m.id,
+                senderId: m.senderId,
+                receiverId: m.receiverId,
+                content: m.content,
+                createdAt:
+                  m.createdAt instanceof Date
+                    ? m.createdAt.toISOString()
+                    : m.createdAt,
+              },
+            })
+          );
+        }
+      }
       setReply('');
       ctx.refresh?.();
     } catch {
@@ -630,6 +651,39 @@ function NotFriendsCard({ userId, isDarkMode, onFriendAdded }) {
   );
 }
 
+function applyIncomingMessage(prev, msg, myId, selectedId) {
+  if (!msg || !myId) return prev;
+  const otherId = msg.senderId === myId ? msg.receiverId : msg.senderId;
+  if (!otherId) return prev;
+  const idx = prev.findIndex(c => c.friend?.id === otherId);
+  if (idx === -1) return null; // signal: needs a refetch
+  const target = prev[idx];
+  const existingTs = target.lastMessage?.createdAt
+    ? new Date(target.lastMessage.createdAt).getTime()
+    : 0;
+  const incomingTs = msg.createdAt ? new Date(msg.createdAt).getTime() : Date.now();
+  if (incomingTs < existingTs) return prev;
+  const fromMe = msg.senderId === myId;
+  const next = prev.slice();
+  next[idx] = {
+    ...target,
+    lastMessage: {
+      id: msg.id,
+      senderId: msg.senderId,
+      receiverId: msg.receiverId,
+      content: msg.content,
+      preview: (msg.content || '').slice(0, 120),
+      createdAt:
+        typeof msg.createdAt === 'string'
+          ? msg.createdAt
+          : new Date(incomingTs).toISOString(),
+      fromMe,
+      unread: !fromMe && otherId !== selectedId,
+    },
+  };
+  return next;
+}
+
 function MessagesPanel({ selectedId, onSelect, ctx, myId, isDarkMode }) {
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -697,6 +751,52 @@ function MessagesPanel({ selectedId, onSelect, ctx, myId, isDarkMode }) {
     if (loading) return;
     fetchConversations();
   }, [unreadKey, selectedId, fetchConversations]);
+
+  // Real-time bump: react to message events (incoming + outgoing) without
+  // needing a full refetch. Falls back to refetch only if the conversation
+  // row is missing locally (e.g. brand-new friend).
+  const selectedIdRef = useRef(selectedId);
+  useEffect(() => { selectedIdRef.current = selectedId; }, [selectedId]);
+  const myIdRef = useRef(myId);
+  useEffect(() => { myIdRef.current = myId; }, [myId]);
+  const conversationsRef = useRef(conversations);
+  useEffect(() => { conversationsRef.current = conversations; }, [conversations]);
+  const seenMessageIdsRef = useRef(new Set());
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const handler = (e) => {
+      const msg = e?.detail;
+      if (!msg) return;
+      // Dedupe: the same message often arrives twice (local dispatch on
+      // send + SSE echo from the server). A bounded set keeps this cheap.
+      if (msg.id) {
+        if (seenMessageIdsRef.current.has(msg.id)) return;
+        seenMessageIdsRef.current.add(msg.id);
+        if (seenMessageIdsRef.current.size > 200) {
+          // Drop the oldest half to avoid unbounded growth.
+          const arr = Array.from(seenMessageIdsRef.current);
+          seenMessageIdsRef.current = new Set(arr.slice(-100));
+        }
+      }
+      // Decide deterministically whether we have the row locally — using
+      // the ref snapshot rather than the state-updater's `prev` so the
+      // fallback fetch fires reliably on the same tick.
+      const next = applyIncomingMessage(
+        conversationsRef.current,
+        msg,
+        myIdRef.current,
+        selectedIdRef.current
+      );
+      if (next === null) {
+        fetchConversations();
+        return;
+      }
+      if (next !== conversationsRef.current) setConversations(next);
+    };
+    window.addEventListener('piks:message:new', handler);
+    return () => window.removeEventListener('piks:message:new', handler);
+  }, [fetchConversations]);
 
   const sorted = useMemo(() => {
     const q = query.trim().toLowerCase();
