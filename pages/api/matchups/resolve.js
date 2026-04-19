@@ -291,6 +291,16 @@ export default async function handler(req, res) {
             pendingCountUser1,
             pendingCountUser2,
           });
+          // Independent push for the bell-dropdown "Results" section so
+          // NotificationsContext refreshes immediately instead of waiting
+          // up to ~25s for the next poll. The generic `notification:*`
+          // handler triggers refresh() on receipt.
+          publishBattleEvent(recipients, {
+            type: 'notification:result',
+            matchupId: matchup.id,
+            winnerId,
+            winnerType,
+          });
         } catch (e) {
           console.error('[Resolve] publish event error:', e);
         }
