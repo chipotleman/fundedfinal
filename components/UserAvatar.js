@@ -1,5 +1,36 @@
 import Link from 'next/link';
 import { getFrameById } from '../lib/profileFrames';
+import { useProfileCacheOptional } from '../contexts/ProfileCacheContext';
+
+function buildSeedFromUser(user, extras) {
+  if (!user || !user.id) return null;
+  const seed = {
+    id: user.id,
+    username: user.username || user.name,
+    avatar: user.avatar ?? null,
+    bannerUrl: user.bannerUrl ?? user.banner ?? null,
+    equippedFrame: user.equippedFrame ?? user.frameId ?? null,
+  };
+  if (extras && typeof extras === 'object') Object.assign(seed, extras);
+  Object.keys(seed).forEach((k) => {
+    if (seed[k] === undefined) delete seed[k];
+  });
+  return seed;
+}
+
+export function useProfilePrefetchHandlers(user, extras) {
+  const cache = useProfileCacheOptional();
+  if (!cache || !user?.id) return {};
+  const seed = buildSeedFromUser(user, extras);
+  const prefetch = () => cache.prefetchProfile(user.id, seed);
+  const seedOnly = () => seed && cache.seedProfile(user.id, seed);
+  return {
+    onMouseEnter: prefetch,
+    onFocus: prefetch,
+    onTouchStart: prefetch,
+    onClick: seedOnly,
+  };
+}
 
 const PALETTE = [
   '#10b981', '#06b6d4', '#3b82f6', '#f97316', '#facc15',
@@ -154,12 +185,21 @@ export default function UserAvatar({
     </div>
   );
 
+  const prefetchHandlers = useProfilePrefetchHandlers(
+    user?.id
+      ? user
+      : (resolvedUsername || resolvedAvatar)
+        ? { id: user?.id, username: resolvedUsername, avatar: resolvedAvatar, frameId: resolvedFrameId }
+        : null,
+  );
+
   if (link && user?.id) {
     return (
       <Link
         href={`/profile/${user.id}`}
         aria-label={`View ${resolvedUsername || 'profile'}`}
         className="inline-block"
+        {...prefetchHandlers}
       >
         {node}
       </Link>
@@ -173,12 +213,14 @@ export default function UserAvatar({
  */
 export function UserNameLink({ user, className = '', style, fallback = 'Player' }) {
   const name = user?.username || user?.name || fallback;
+  const prefetchHandlers = useProfilePrefetchHandlers(user);
   if (user?.id) {
     return (
       <Link
         href={`/profile/${user.id}`}
         className={`hover:underline hover:text-emerald-300 transition-colors ${className}`}
         style={style}
+        {...prefetchHandlers}
       >
         {name}
       </Link>

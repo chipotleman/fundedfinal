@@ -2,12 +2,26 @@ import React, { useState, useEffect, useRef, useMemo } from "react";
 import Link from 'next/link';
 import TopNavbar from '../components/TopNavbar';
 import ProfileModal from '../components/ProfileModal';
-import UserAvatar, { UserNameLink } from '../components/UserAvatar';
+import UserAvatar, { UserNameLink, useProfilePrefetchHandlers } from '../components/UserAvatar';
 import TapSurface from '../components/TapSurface';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserProfiles } from '../contexts/UserProfilesContext';
 import { useAuth } from '../contexts/AuthContext';
 import BetSlip from '../components/BetSlip';
+
+function ProfileLink({ user, extras, children, className = '', ...rest }) {
+  const handlers = useProfilePrefetchHandlers(user, extras);
+  return (
+    <Link
+      href={user?.id ? `/profile/${user.id}` : '#'}
+      className={className}
+      {...handlers}
+      {...rest}
+    >
+      {children}
+    </Link>
+  );
+}
 
 const Leaderboard = () => {
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
@@ -222,8 +236,9 @@ const Leaderboard = () => {
           <div
             className={`rounded-full p-1 ring-2 ${ringColor} ${glow} bg-black/40 transition-transform duration-200 active:scale-95`}
           >
-            <Link
-              href={leader.id ? `/profile/${leader.id}` : '#'}
+            <ProfileLink
+              user={userToProps(leader)}
+              extras={{ tier: leader.tier }}
               aria-label={`View ${leader.username}'s profile`}
               className="block rounded-full"
             >
@@ -233,7 +248,7 @@ const Leaderboard = () => {
                 isOnline={!!leader.isOnline}
                 onlineDotBorderColor="#0a0a0a"
               />
-            </Link>
+            </ProfileLink>
           </div>
           <div
             className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-black/80 border border-white/10 text-[10px] font-bold text-white tracking-wider"
@@ -277,8 +292,9 @@ const Leaderboard = () => {
           {leader.rank}
         </div>
 
-        <Link
-          href={leader.id ? `/profile/${leader.id}` : '#'}
+        <ProfileLink
+          user={userToProps(leader)}
+          extras={{ tier: leader.tier }}
           aria-label={`View ${leader.username}'s profile`}
           className="shrink-0 rounded-full"
         >
@@ -288,7 +304,7 @@ const Leaderboard = () => {
             isOnline={!!leader.isOnline}
             onlineDotBorderColor="#111111"
           />
-        </Link>
+        </ProfileLink>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 min-w-0">

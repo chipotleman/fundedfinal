@@ -7,14 +7,37 @@ import UserAvatar from '../../components/UserAvatar';
 import ActiveStatus from '../../components/ActiveStatus';
 import ProfileEditPanel from '../../components/ProfileEditPanel';
 import { useBetSlip } from '../../contexts/BetSlipContext';
+import { useProfileCache } from '../../contexts/ProfileCacheContext';
 import { formatMoney } from '../../utils/formatMoney';
 import { getFrameById } from '../../lib/profileFrames';
 
+const EMPTY_PROFILE = {
+  username: '',
+  bio: '',
+  avatar: null,
+  bannerUrl: null,
+  favoriteTeams: [],
+  equippedFrame: null,
+  isOnline: false,
+  isFakeOpponent: true,
+  frames: [],
+};
+
 export default function PublicProfile() {
-  const [profile, setProfile] = useState(null);
-  const [battleHistory, setBattleHistory] = useState([]);
-  const [battleStats, setBattleStats] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const cache = useProfileCache();
+  const router = useRouter();
+  const { id } = router.query;
+
+  const cachedProfileEntry = id ? cache.getProfile(id) : null;
+  const cachedHistoryEntry = id ? cache.getHistory(id) : null;
+  const cachedFriendEntry = id ? cache.getFriendStatus(id) : null;
+
+  const [profile, setProfile] = useState(cachedProfileEntry?.data || EMPTY_PROFILE);
+  const [hasProfile, setHasProfile] = useState(!!cachedProfileEntry?.data);
+  const [battleHistory, setBattleHistory] = useState(cachedHistoryEntry?.battles || []);
+  const [battleStats, setBattleStats] = useState(cachedHistoryEntry?.stats || null);
+  const [historyLoaded, setHistoryLoaded] = useState(!!cachedHistoryEntry);
+  const [profileNotFound, setProfileNotFound] = useState(!!cachedProfileEntry?.notFound);
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState({
@@ -46,91 +69,71 @@ export default function PublicProfile() {
   
   const { betSlip } = useBetSlip();
   const { data: session } = useSession();
-  const router = useRouter();
-  const { id } = router.query;
 
+  // Sync local state from cache whenever the id changes or the cache updates.
   useEffect(() => {
-    if (id) {
-      setEditingUsername(false);
-      setEditingBio(false);
-      setInlineError(null);
-      fetchProfile();
-      if (session?.user?.id && session.user.id !== id) {
-        checkFriendStatus();
-      }
+    if (!id) return;
+    const entry = cache.getProfile(id);
+    if (entry?.data) {
+      setProfile(entry.data);
+      setHasProfile(true);
+      setFormData({
+        username: entry.data.username || '',
+        bio: entry.data.bio || '',
+        avatar: entry.data.avatar || '',
+        bannerUrl: entry.data.bannerUrl || '',
+        favoriteTeams: Array.isArray(entry.data.favoriteTeams)
+          ? entry.data.favoriteTeams.map((t) => ({ league: t.league, teamId: t.teamId }))
+          : [],
+        equippedFrame: entry.data.equippedFrame || null,
+      });
     }
-  }, [id, session]);
+    setProfileNotFound(!!entry?.notFound && !entry?.data);
+    const hist = cache.getHistory(id);
+    if (hist) {
+      setBattleHistory(hist.battles || []);
+      setBattleStats(hist.stats || null);
+      setHistoryLoaded(true);
+    }
+    const fs = cache.getFriendStatus(id);
+    if (fs) {
+      setFriendStatus(fs.status);
+      setFriendRequestId(fs.requestId || null);
+    }
+  }, [id, cache]);
+
+  // Reset edit state when navigating to a different profile.
+  useEffect(() => {
+    if (!id) return;
+    setEditingUsername(false);
+    setEditingBio(false);
+    setInlineError(null);
+  }, [id]);
+
+  // Determine "isOwnProfile" from session — does not block render.
+  useEffect(() => {
+    setIsOwnProfile(!!session?.user?.id && session.user.id === id);
+  }, [session, id]);
+
+  // Trigger background refresh on every navigation.
+  useEffect(() => {
+    if (!id) return;
+    cache.fetchProfileInBackground(id, { force: true });
+    cache.fetchHistoryInBackground(id, { force: true }).then(() => {
+      setHistoryLoaded(true);
+    });
+    if (session?.user?.id && session.user.id !== id) {
+      cache.fetchFriendStatusInBackground(id, { force: true });
+    }
+  }, [id, session, cache]);
 
   const fetchProfile = async () => {
-    try {
-      const [profileRes, historyRes] = await Promise.all([
-        fetch(`/api/profiles/${id}`, { credentials: 'include' }),
-        fetch(`/api/profiles/battle-history?userId=${id}`, { credentials: 'include' }),
-      ]);
-
-      if (profileRes.ok) {
-        const profileData = await profileRes.json();
-        setProfile(profileData);
-        setFormData({
-          username: profileData.username || '',
-          bio: profileData.bio || '',
-          avatar: profileData.avatar || '',
-          bannerUrl: profileData.bannerUrl || '',
-          favoriteTeams: Array.isArray(profileData.favoriteTeams)
-            ? profileData.favoriteTeams.map((t) => ({ league: t.league, teamId: t.teamId }))
-            : [],
-          equippedFrame: profileData.equippedFrame || null,
-        });
-        setIsOwnProfile(session?.user?.id === id);
-      }
-
-      if (historyRes.ok) {
-        const historyData = await historyRes.json();
-        setBattleHistory(historyData.battles || []);
-        setBattleStats(historyData.stats);
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const checkFriendStatus = async () => {
-    try {
-      const res = await fetch('/api/friends', { credentials: 'include' });
-      if (res.ok) {
-        const data = await res.json();
-        const isFriend = data.friends?.some(f => f.id === id);
-        if (isFriend) {
-          setFriendStatus('friends');
-          return;
-        }
-      }
-      const reqRes = await fetch('/api/friends/requests', { credentials: 'include' });
-      if (reqRes.ok) {
-        const reqData = await reqRes.json();
-        const hasPendingFromThem = reqData.requests?.some(r => r.sender?.id === id);
-        if (hasPendingFromThem) {
-          setFriendStatus('pending_received');
-          return;
-        }
-      }
-      const sentRes = await fetch('/api/friends/sent', { credentials: 'include' });
-      if (sentRes.ok) {
-        const sentData = await sentRes.json();
-        const sentToThem = sentData.requests?.find(r => r.receiver?.id === id);
-        if (sentToThem) {
-          setFriendStatus('pending_sent');
-          setFriendRequestId(sentToThem.id);
-          return;
-        }
-      }
-      setFriendStatus('none');
-    } catch (error) {
-      console.error('Error checking friend status:', error);
-      setFriendStatus('none');
-    }
+    if (!id) return;
+    await Promise.all([
+      cache.fetchProfileInBackground(id, { force: true }),
+      cache.fetchHistoryInBackground(id, { force: true }),
+    ]);
+    setHistoryLoaded(true);
   };
 
   const handleAddFriend = async () => {
@@ -503,15 +506,7 @@ export default function PublicProfile() {
     ? Math.round((battleStats.wins / battleStats.totalBattles) * 100) 
     : 0;
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#000' }}>
-        <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-      </div>
-    );
-  }
-
-  if (!profile) {
+  if (profileNotFound && !hasProfile) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#000' }}>
         <div className="text-center">
@@ -974,7 +969,28 @@ export default function PublicProfile() {
         <div className="rounded-2xl p-5" style={{ backgroundColor: '#0d0d0d', border: `1px solid ${'#1a1a1a'}`, boxShadow: 'none' }}>
           <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Battle History</h2>
           
-          {battleHistory.length > 0 ? (
+          {!historyLoaded && battleHistory.length === 0 ? (
+            <div className="space-y-2" aria-hidden="true">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="rounded-xl p-3.5 animate-pulse"
+                  style={{ backgroundColor: '#111', border: `1px solid ${'#1a1a1a'}` }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full" style={{ backgroundColor: '#1a1a1a' }} />
+                      <div className="space-y-1.5">
+                        <div className="h-3 w-32 rounded" style={{ backgroundColor: '#1a1a1a' }} />
+                        <div className="h-2.5 w-20 rounded" style={{ backgroundColor: '#1a1a1a' }} />
+                      </div>
+                    </div>
+                    <div className="h-3 w-12 rounded" style={{ backgroundColor: '#1a1a1a' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : battleHistory.length > 0 ? (
             <div className="space-y-2">
               {battleHistory.map((battle) => (
                 <div 

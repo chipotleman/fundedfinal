@@ -4,10 +4,22 @@ import { useRouter } from 'next/router';
 import Head from 'next/head';
 import TopNavbar from '../components/TopNavbar';
 import UserAvatar from '../components/UserAvatar';
+import { useProfileCache } from '../contexts/ProfileCacheContext';
 
 export default function FriendsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const profileCache = useProfileCache();
+
+  const goToProfile = (user) => {
+    if (!user?.id) return;
+    profileCache.prefetchProfile(user.id, {
+      id: user.id,
+      username: user.username,
+      avatar: user.avatar || null,
+    });
+    router.push(`/profile/${user.id}`);
+  };
   const [activeTab, setActiveTab] = useState('friends');
   const [friends, setFriends] = useState([]);
   const [requests, setRequests] = useState([]);
@@ -297,6 +309,12 @@ export default function FriendsPage() {
                                 className="hidden sm:inline-flex px-2.5 py-1 text-xs font-semibold rounded-lg text-blue-400 hover:bg-blue-500/15"
                               >
                                 Message
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); goToProfile(friend); }}
+                                className="inline-flex px-2.5 py-1 text-xs font-semibold rounded-lg text-gray-300 hover:bg-white/10"
+                              >
+                                View
                               </button>
                               <button
                                 onClick={(e) => { e.stopPropagation(); router.push(`/battle?play=${friend.id}`); }}
