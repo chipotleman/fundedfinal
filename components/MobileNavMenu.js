@@ -161,6 +161,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
         <div className="absolute top-0 right-0 pt-[22.5px] md:pt-[29.5px] pr-4 flex items-center">
           <button
             onClick={onClose}
+            aria-label="Close menu"
             style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             <svg className="w-[31px] h-[31px] text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">

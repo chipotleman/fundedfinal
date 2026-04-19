@@ -1,7 +1,35 @@
 # Messenger / Notifications Click-Trap Regression Checklist
 
-The "stuck on messages/notifications" bug — where taps on the top bar stop
-registering after opening or closing a dropdown — has regressed twice. Run
+## First line of defense: the automated smoke test
+
+Before going through the manual steps below, run the WebKit smoke test:
+
+```bash
+npm run test:e2e:install   # one-time: installs the WebKit browser binary
+npm run test:e2e           # runs the click-trap suite
+```
+
+The suite lives in `tests/e2e/`:
+- `messenger-click-trap.spec.js` — desktop Safari (>= 1024px wide), exercises
+  the bell + messages dropdowns.
+- `messenger-click-trap.mobile.spec.js` — iPhone 14 Pro viewport, exercises
+  the hamburger drawer + body scroll-lock.
+- `helpers/clickTrap.js` — shared API stubs and `<body>` style assertions.
+
+Both specs open `/messenger` and `/notifications` in WebKit, open and
+dismiss each top-bar dropdown / the mobile nav drawer, then assert that
+the next icon tap registers and that `document.body` has no leftover
+scroll-lock styles. If any spec fails, the regression is back — fix it
+before shipping and before bothering with the manual checklist.
+
+The automated test is configured to start `npm run dev` on port 3100 via
+Playwright's `webServer`. To run against an already-running server, set
+`E2E_BASE_URL=http://localhost:3000` (or wherever the dev server is).
+
+## When to still run the manual checklist
+
+WebKit emulation does **not** perfectly reproduce real iOS Safari's
+click-trap behavior, so after the automated test passes you must still run
 this checklist any time you touch:
 
 - `pages/messenger.js`
