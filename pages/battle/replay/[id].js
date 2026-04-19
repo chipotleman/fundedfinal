@@ -6,6 +6,7 @@ import FramedAvatar from '../../../components/UserAvatar';
 import { formatMoney } from '../../../utils/formatMoney';
 import { formatLastSeen } from '../../../utils/relativeTime';
 import { getBattlePreview } from '../../../lib/battle-preview';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const cardBg = '#0d0d0d';
 const cardBorder = '#1a1a1a';
@@ -207,6 +208,16 @@ export async function getServerSideProps(context) {
 export default function BattleReplayPage() {
   const router = useRouter();
   const { id } = router.query;
+  const auth = useAuth();
+  const isSignedIn = !!auth?.user;
+
+  const handleSignUpClick = () => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem('beta_access', 'true');
+    } catch (_e) {}
+    window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signup' } }));
+  };
   const [battle, setBattle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -448,13 +459,35 @@ export default function BattleReplayPage() {
         })()}
 
         <div className="mt-5 text-center">
-          <Link
-            href="/battle"
-            className="inline-block px-5 py-2.5 rounded-lg text-sm font-bold"
-            style={{ background: 'linear-gradient(135deg, #facc15 0%, #f97316 100%)', color: '#000' }}
-          >
-            Start your own battle
-          </Link>
+          {isSignedIn ? (
+            <Link
+              href="/battle"
+              className="inline-block px-5 py-2.5 rounded-lg text-sm font-bold"
+              style={{ background: 'linear-gradient(135deg, #facc15 0%, #f97316 100%)', color: '#000' }}
+            >
+              Start your own battle
+            </Link>
+          ) : (
+            <div
+              className="rounded-xl p-4"
+              style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }}
+            >
+              <div className="text-sm font-semibold mb-1" style={{ color: textPrimary }}>
+                Want in on the action?
+              </div>
+              <div className="text-[12px] mb-3" style={{ color: textSecondary }}>
+                Create a free account and battle your friends head-to-head.
+              </div>
+              <button
+                type="button"
+                onClick={handleSignUpClick}
+                className="inline-block w-full px-5 py-2.5 rounded-lg text-sm font-bold"
+                style={{ background: 'linear-gradient(135deg, #facc15 0%, #f97316 100%)', color: '#000' }}
+              >
+                Sign up to play your own battle
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -359,6 +359,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
   const isDebugPage = router?.pathname?.startsWith('/debug');
   const isAdminPage = router?.pathname?.startsWith('/admin');
   const isCheckoutPage = router?.pathname === '/checkout' || router?.pathname === '/checkout-design';
+  const isReplayPage = router?.pathname === '/battle/replay/[id]';
   
   const battlePreview = pageProps?.battlePreview;
   const battlePreviewMeta = battlePreview ? (() => {
@@ -408,7 +409,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
     </Head>
   ) : null;
 
-  if (!betaAuthenticated && !isDebugPage && !isAdminPage && !isCheckoutPage) {
+  if (!betaAuthenticated && !isDebugPage && !isAdminPage && !isCheckoutPage && !isReplayPage) {
     if (battlePreview) {
       return (
         <>
