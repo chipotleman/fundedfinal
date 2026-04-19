@@ -43,19 +43,18 @@ export default function ForfeitConfirmedModal({ isOpen, onClose, opponent, payou
     <div
       role="status"
       aria-live="polite"
-      className="fixed z-[100] pointer-events-none"
+      className="fixed inset-0 z-[100] flex items-center justify-center px-3 pointer-events-none overflow-y-auto"
       style={{
-        left: '50%',
-        top: 'calc(var(--top-nav-height, 70px) + 12px)',
-        transform: `translate(-50%, ${show ? '0' : '-20px'})`,
         opacity: show ? 1 : 0,
-        transition: 'transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1), opacity 220ms ease',
-        width: 'min(420px, calc(100vw - 24px))',
+        transition: 'opacity 220ms ease',
       }}
     >
       <div
-        className="pointer-events-auto rounded-2xl overflow-hidden relative"
+        className="pointer-events-auto rounded-2xl overflow-hidden relative my-auto w-full"
         style={{
+          maxWidth: '420px',
+          transform: `translateY(${show ? '0' : '12px'}) scale(${show ? 1 : 0.98})`,
+          transition: 'transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1)',
           background: 'linear-gradient(135deg, #1a0a0a 0%, #2a1010 60%, #1a0a0a 100%)',
           border: '1px solid rgba(239,68,68,0.45)',
           boxShadow: '0 18px 40px rgba(0,0,0,0.55), 0 0 28px rgba(239,68,68,0.18)',
