@@ -35,7 +35,8 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
     refresh: refreshMatchup,
   } = useMatchup();
 
-  const bankroll = hasActiveMatchup && matchupBalance != null ? matchupBalance : profileBankroll;
+  const bankroll = hasActiveMatchup && matchupBalance != null ? matchupBalance : 0;
+  const betsReadOnly = isLoggedIn && !hasActiveMatchup;
 
   useEffect(() => {
     if (isOpen && refreshMatchup) {
@@ -253,6 +254,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
   const FULL_DELETE_THRESHOLD = 200; // Swipe past this to delete immediately
   
   const handleTouchStart = (betId, e) => {
+    if (betsReadOnly) return;
     const touch = e.touches[0];
     const currentOffset = swipeStates[betId]?.offset || 0;
     swipeRefs.current[betId] = {
@@ -309,6 +311,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
   
   // Handle tap on delete button when revealed
   const handleDeleteTap = (betId) => {
+    if (betsReadOnly) return;
     setSwipeStates(prev => ({ ...prev, [betId]: { offset: REVEAL_WIDTH + 50, isOpen: true } }));
     setTimeout(() => {
       removeBet(betId);
@@ -741,9 +744,11 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                 {/* Logo placeholder - actual logo is in persistent layer above */}
                 <div className="absolute left-[-35px] top-1/2 -translate-y-1/2 w-[140px] h-[140px]"></div>
                 <div className="flex items-center gap-2 ml-auto mt-[2px] flex-wrap justify-end">
-                <div className="flex items-center gap-1.5 bg-green-500/20 border border-green-500/50 px-2.5 py-1 rounded-full">
-                  <span className="text-green-400 text-xs font-bold">${formatMoney(bankroll, 0)}</span>
-                </div>
+                {isLoggedIn && hasActiveMatchup && (
+                  <div className="flex items-center gap-1.5 bg-green-500/20 border border-green-500/50 px-2.5 py-1 rounded-full">
+                    <span className="text-green-400 text-xs font-bold">${formatMoney(bankroll, 0)}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-1.5 bg-blue-500/20 border border-blue-500/50 px-2.5 py-1 rounded-full">
                   <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
                   <span className="text-blue-400 text-xs font-bold">{bets.length} PIK{bets.length !== 1 ? 'S' : ''}</span>
@@ -879,22 +884,29 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                               </div>
                               
                               {/* Red minus circle */}
-                              <button 
-                                onClick={() => removeBet(bet.id)}
-                                className="flex-shrink-0 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors"
-                                style={{ 
-                                  width: '16px', 
-                                  height: '16px', 
-                                  minWidth: '16px', 
-                                  minHeight: '16px',
-                                  backgroundColor: '#000000'
-                                }}
-                                aria-label={`Remove ${bet.selection}`}
-                              >
-                                <svg style={{ width: '8px', height: '8px' }} className="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M20 12H4" />
-                                </svg>
-                              </button>
+                              {betsReadOnly ? (
+                                <div
+                                  className="flex-shrink-0 rounded-full border flex items-center justify-center"
+                                  style={{ width: '16px', height: '16px', minWidth: '16px', minHeight: '16px', backgroundColor: '#000000', borderColor: 'rgba(107, 114, 128, 0.6)' }}
+                                />
+                              ) : (
+                                <button 
+                                  onClick={() => removeBet(bet.id)}
+                                  className="flex-shrink-0 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors"
+                                  style={{ 
+                                    width: '16px', 
+                                    height: '16px', 
+                                    minWidth: '16px', 
+                                    minHeight: '16px',
+                                    backgroundColor: '#000000'
+                                  }}
+                                  aria-label={`Remove ${bet.selection}`}
+                                >
+                                  <svg style={{ width: '8px', height: '8px' }} className="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M20 12H4" />
+                                  </svg>
+                                </button>
+                              )}
                               
                               {/* Bottom segment - connects to next circle */}
                               <div 
@@ -947,15 +959,17 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                   </div>
                   
                   {/* Remove All Selections */}
-                  <button 
-                    onClick={() => clearBetSlip()}
-                    className="w-full mt-3 py-2.5 flex items-center justify-center gap-2 text-red-500 hover:text-red-400 transition-colors border-t border-gray-800/50"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                    </svg>
-                    <span className="text-sm font-medium">Remove all selections</span>
-                  </button>
+                  {!betsReadOnly && (
+                    <button 
+                      onClick={() => clearBetSlip()}
+                      className="w-full mt-3 py-2.5 flex items-center justify-center gap-2 text-red-500 hover:text-red-400 transition-colors border-t border-gray-800/50"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      <span className="text-sm font-medium">Remove all selections</span>
+                    </button>
+                  )}
                 </div>
               ) : (
                 /* Standard Single Bets View - Matching Reference Theme with Swipe-to-Delete */
@@ -1028,16 +1042,18 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                           >
                             <div className="flex items-center gap-2 flex-1 min-w-0">
                               {/* Red minus button to remove - matches arrow height (16px) */}
-                              <button 
-                                onClick={(e) => { e.stopPropagation(); removeBet(bet.id); }}
-                                className="flex-shrink-0 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors"
-                                style={{ width: '16px', height: '16px', minWidth: '16px', minHeight: '16px' }}
-                                aria-label={`Remove ${bet.selection}`}
-                              >
-                                <svg style={{ width: '8px', height: '8px' }} className="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M20 12H4" />
-                                </svg>
-                              </button>
+                              {!betsReadOnly && (
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); removeBet(bet.id); }}
+                                  className="flex-shrink-0 rounded-full border border-red-500/60 flex items-center justify-center hover:bg-red-500/20 transition-colors"
+                                  style={{ width: '16px', height: '16px', minWidth: '16px', minHeight: '16px' }}
+                                  aria-label={`Remove ${bet.selection}`}
+                                >
+                                  <svg style={{ width: '8px', height: '8px' }} className="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M20 12H4" />
+                                  </svg>
+                                </button>
+                              )}
                               
                               {isCollapsible && (
                                 <svg className="w-4 h-4 transition-transform flex-shrink-0" style={{ color: '#9ca3af', transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1118,20 +1134,34 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                                 <div className="flex items-center gap-3 mt-4">
                                   <div className="relative flex-1">
                                     <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: '#6b7280' }}>$</span>
-                                    <input
-                                      type="text"
-                                      inputMode="decimal"
-                                      value={getStakeDisplayValue(bet)}
-                                      onChange={(e) => handleStakeInputChange(bet.id, e)}
-                                      className="w-full pl-8 pr-3 py-3 rounded-lg text-base focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                      style={{ 
-                                        backgroundColor: 'rgba(30, 41, 59, 0.8)',
-                                        borderWidth: 1,
-                                        borderColor: 'rgba(55, 65, 81, 0.5)',
-                                        color: '#ffffff'
-                                      }}
-                                      placeholder={`Min $${minBetAmount}`}
-                                    />
+                                    {betsReadOnly ? (
+                                      <div
+                                        className="w-full pl-8 pr-3 py-3 rounded-lg text-base"
+                                        style={{
+                                          backgroundColor: 'rgba(30, 41, 59, 0.4)',
+                                          borderWidth: 1,
+                                          borderColor: 'rgba(55, 65, 81, 0.5)',
+                                          color: '#9ca3af'
+                                        }}
+                                      >
+                                        {bet.stake ? getStakeDisplayValue(bet) : '—'}
+                                      </div>
+                                    ) : (
+                                      <input
+                                        type="text"
+                                        inputMode="decimal"
+                                        value={getStakeDisplayValue(bet)}
+                                        onChange={(e) => handleStakeInputChange(bet.id, e)}
+                                        className="w-full pl-8 pr-3 py-3 rounded-lg text-base focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        style={{ 
+                                          backgroundColor: 'rgba(30, 41, 59, 0.8)',
+                                          borderWidth: 1,
+                                          borderColor: 'rgba(55, 65, 81, 0.5)',
+                                          color: '#ffffff'
+                                        }}
+                                        placeholder={`Min $${minBetAmount}`}
+                                      />
+                                    )}
                                   </div>
                                   <div className="text-right min-w-[70px]">
                                     <div className="text-gray-500 text-[10px] uppercase tracking-wide">To Win</div>
@@ -1149,7 +1179,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                   })}
                   
                   {/* Remove All Selections - show when more than one bet in straight mode */}
-                  {bets.length > 1 && (
+                  {bets.length > 1 && !betsReadOnly && (
                     <button 
                       onClick={() => clearBetSlip()}
                       className="w-full mt-3 py-2.5 flex items-center justify-center gap-2 text-red-500 hover:text-red-400 transition-colors border-t"
@@ -1168,7 +1198,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
             {bets.length > 0 && (
               <div className="flex-shrink-0 p-4" style={{ borderTopWidth: 1, borderColor: 'rgba(55, 65, 81, 0.5)', backgroundColor: '#000000' }}>
                 {/* Parlay Stake Input */}
-                {betType === 'parlay' && bets.length >= 2 && (
+                {betType === 'parlay' && bets.length >= 2 && !betsReadOnly && (
                   <div className="mb-4">
                     <div className="flex items-center gap-3">
                       <div className="relative flex-1">
@@ -1193,6 +1223,41 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                   </div>
                 )}
                 
+                {isLoggedIn && !hasActiveMatchup ? (
+                  <div className="rounded-lg p-4 mb-3 text-center" style={{ backgroundColor: 'rgba(15, 23, 42, 0.5)', borderWidth: 1, borderColor: 'rgba(55, 65, 81, 0.5)' }}>
+                    <p className="text-white font-semibold text-base mb-1">Start a match to place piks</p>
+                    <p className="text-gray-400 text-sm mb-4">Piks are played with battle coins. You need an active battle to submit your selections.</p>
+                    <button
+                      type="button"
+                      className="no-hover-effect"
+                      onClick={() => {
+                        setShowBetSlip(false);
+                        router.push('/battle');
+                      }}
+                      style={{
+                        display: 'block',
+                        width: '100%',
+                        padding: '14px 0',
+                        borderRadius: '12px',
+                        fontSize: '16px',
+                        fontWeight: 'bold',
+                        textAlign: 'center',
+                        appearance: 'none',
+                        WebkitAppearance: 'none',
+                        backgroundColor: '#2563eb',
+                        color: '#ffffff',
+                        cursor: 'pointer',
+                        border: 'none',
+                        outline: 'none',
+                        WebkitTapHighlightColor: 'transparent',
+                        transition: 'none'
+                      }}
+                    >
+                      Start a match
+                    </button>
+                  </div>
+                ) : (
+                <>
                 <div className="rounded-lg p-3 mb-4" style={{ backgroundColor: 'rgba(15, 23, 42, 0.5)' }}>
                   <div className="flex justify-between text-sm mb-2">
                     <span style={{ color: '#9ca3af' }}>Total Pikked</span>
@@ -1285,6 +1350,8 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                     </button>
                   );
                 })()}
+                </>
+                )}
               </div>
             )}
           </div>
