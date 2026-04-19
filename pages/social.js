@@ -190,12 +190,18 @@ const UserCard = ({ user, isFriend, session, onAction, compact = false }) => {
   );
 };
 
-const ChatModal = ({ friend, messages, onClose, onSend, messageInput, setMessageInput, sending, session, isFriend, messageError }) => {
+const ChatModal = ({ friend, messages, onClose, onSend, messageInput, setMessageInput, sending, session, isFriend, messageError, friendIsTyping, onTypingChange }) => {
   const messagesEndRef = useRef(null);
-  
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const handleInputChange = (e) => {
+    const v = e.target.value;
+    setMessageInput(v);
+    if (onTypingChange) onTypingChange(v);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
@@ -236,14 +242,27 @@ const ChatModal = ({ friend, messages, onClose, onSend, messageInput, setMessage
           )}
           <div ref={messagesEndRef} />
         </div>
-        
+
+        <div className="h-5 px-4" aria-live="polite">
+          {friendIsTyping && (
+            <div className="flex items-center gap-1.5 text-xs text-gray-500 italic">
+              <span className="flex gap-0.5">
+                <span className="w-1 h-1 rounded-full bg-gray-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                <span className="w-1 h-1 rounded-full bg-gray-500 animate-bounce" style={{ animationDelay: '120ms' }} />
+                <span className="w-1 h-1 rounded-full bg-gray-500 animate-bounce" style={{ animationDelay: '240ms' }} />
+              </span>
+              <span>{friend.username || 'Friend'} is typing…</span>
+            </div>
+          )}
+        </div>
+
         {!messageError && (
           <form onSubmit={onSend} className="p-4 border-t border-[#1a1a1a]">
             <div className="flex gap-2">
               <input
                 type="text"
                 value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
+                onChange={handleInputChange}
                 placeholder="Type a message..."
                 className="flex-1 px-4 py-2 bg-[#111] border border-[#1a1a1a] rounded-xl focus:outline-none focus:border-purple-500 text-sm"
               />
@@ -704,7 +723,17 @@ export default function SocialPage() {
 
   const [pendingInvites, setPendingInvites] = useState({ received: [], sent: [] });
 
-  const { setSuppress } = useNotifications();
+  const { setSuppress, typingSenderIds, notifyTyping, clearTyping } = useNotifications();
+  const lastTypingSentRef = useRef(0);
+  const friendIsTyping = !!selectedChat?.id && typingSenderIds?.has?.(selectedChat.id);
+
+  const handleTypingChange = useCallback((value) => {
+    if (!selectedChat?.id || !value.trim()) return;
+    const now = Date.now();
+    if (now - lastTypingSentRef.current < 2500) return;
+    lastTypingSentRef.current = now;
+    notifyTyping?.(selectedChat.id);
+  }, [selectedChat, notifyTyping]);
 
   // Suppress friend-request toasts while on the social page (which surfaces
   // them inline) and battle-invite toasts (also visible from here).
@@ -884,7 +913,15 @@ export default function SocialPage() {
       const res = await fetch(`/api/messages?friendId=${friendId}`, { credentials: 'include' });
       if (res.ok) {
         const data = await res.json();
-        setMessages(data.messages || []);
+        const next = data.messages || [];
+        setMessages((prev) => {
+          const prevIds = new Set(prev.map((m) => m.id));
+          const incomingFromFriend = next.some(
+            (m) => !prevIds.has(m.id) && m.senderId === friendId
+          );
+          if (incomingFromFriend) clearTyping?.(friendId);
+          return next;
+        });
         setMessageError(false);
       } else if (res.status === 403) {
         setMessages([]);
@@ -1297,6 +1334,8 @@ export default function SocialPage() {
             session={session}
             isFriend={friendIds.has(selectedChat?.id)}
             messageError={messageError}
+            friendIsTyping={friendIsTyping}
+            onTypingChange={handleTypingChange}
           />
         )}
 
