@@ -662,18 +662,21 @@ export default function ActiveBattleCard({
         );
       })(), document.body)}
 
-      <ForfeitModal
-        isOpen={showForfeitModal}
-        matchup={matchup}
-        onCancel={() => setShowForfeitModal(false)}
-        onConfirm={async () => {
-          if (onForfeit) {
-            await onForfeit();
-          }
-          setShowForfeitModal(false);
-          setShowModal(false);
-        }}
-      />
+      {typeof document !== 'undefined' && createPortal(
+        <ForfeitModal
+          isOpen={showForfeitModal}
+          matchup={matchup}
+          onCancel={() => setShowForfeitModal(false)}
+          onConfirm={async () => {
+            if (onForfeit) {
+              await onForfeit();
+            }
+            setShowForfeitModal(false);
+            setShowModal(false);
+          }}
+        />,
+        document.body
+      )}
     </>
   );
 }
