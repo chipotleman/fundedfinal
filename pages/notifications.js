@@ -639,18 +639,16 @@ export default function NotificationsPage() {
     }
   }, [router.isReady, router.query.chat]);
 
-  // When viewing the messages panel on mobile, mark all unread as read so the
-  // bell badge clears even if the user doesn't open every conversation.
+  // Mark only the actively-opened conversation as read. Other unread
+  // conversations remain bolded in the DM list and badged in the bell until
+  // the user explicitly opens them — matching FB/IG behaviour.
   useEffect(() => {
-    if (!isAuthed) return;
-    if (mobileTab !== 'messages' && typeof window !== 'undefined' && window.innerWidth < 768) return;
-    const senderIds = [...new Set(
-      (ctx.unreadMessages || []).map(m => m.sender?.id).filter(Boolean)
-    )];
-    if (senderIds.length > 0) {
-      ctx.markMessagesRead(senderIds);
+    if (!isAuthed || !selectedId) return;
+    const hasUnread = (ctx.unreadMessages || []).some(m => m.sender?.id === selectedId);
+    if (hasUnread) {
+      ctx.markMessagesRead([selectedId]);
     }
-  }, [isAuthed, mobileTab, ctx.unreadMessages?.length]);
+  }, [isAuthed, selectedId, ctx.unreadMessages?.length]);
 
   const handleSelect = useCallback((id) => {
     setSelectedId(id);
