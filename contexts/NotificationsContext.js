@@ -142,6 +142,12 @@ export function NotificationsProvider({ children }) {
           if (!ev?.type) return;
           if (ev.type === 'notification:refresh' || ev.type.startsWith('notification:')) {
             refresh();
+          } else if (ev.type === 'achievement:earned' && ev.achievement?.id) {
+            enqueueToast({
+              id: `achievement:${ev.achievement.id}`,
+              type: 'achievement',
+              payload: ev.achievement,
+            });
           }
         } catch {}
       };

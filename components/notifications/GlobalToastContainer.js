@@ -161,6 +161,34 @@ function Toast({ toast, ctx, router }) {
     );
   }
 
+  if (toast.type === 'achievement') {
+    const ach = toast.payload || {};
+    return (
+      <div
+        className="bg-gradient-to-r from-yellow-900/95 to-amber-800/95 border border-yellow-500/60 rounded-xl p-3"
+        style={baseStyle}
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-yellow-500/20 border border-yellow-400/50 flex items-center justify-center flex-shrink-0 text-2xl">
+            {ach.icon || '🏆'}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-yellow-200 text-[10px] uppercase tracking-wider font-bold">
+              Achievement Unlocked
+            </div>
+            <div className="text-white text-sm font-bold truncate">
+              {ach.name || 'New badge'}
+            </div>
+            {ach.description ? (
+              <div className="text-yellow-100/80 text-xs truncate">{ach.description}</div>
+            ) : null}
+          </div>
+          <CloseBtn onClick={() => ctx.dismissToast(toast.id)} />
+        </div>
+      </div>
+    );
+  }
+
   if (toast.type === 'message') {
     const preview = toast.payload?.preview || '';
     return (
