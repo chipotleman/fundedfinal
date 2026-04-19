@@ -51,16 +51,22 @@ export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
       `}</style>
 
       <div
-        className="fixed inset-0 z-[9999] flex items-center justify-center px-4 forfeit-overlay"
-        style={{ background: 'radial-gradient(ellipse at center, rgba(127,29,29,0.5) 0%, rgba(0,0,0,0.85) 100%)' }}
+        className="fixed inset-0 z-[9999] flex items-center justify-center px-4 forfeit-overlay overflow-y-auto overscroll-contain"
+        style={{
+          background: 'radial-gradient(ellipse at center, rgba(127,29,29,0.5) 0%, rgba(0,0,0,0.85) 100%)',
+          paddingTop: 'max(1rem, env(safe-area-inset-top))',
+          paddingBottom: 'max(1rem, env(safe-area-inset-bottom))',
+          minHeight: '100dvh',
+        }}
         onClick={onCancel}
       >
         <div
-          className="forfeit-modal w-full max-w-sm rounded-2xl overflow-hidden"
+          className="forfeit-modal w-full max-w-sm rounded-2xl overflow-y-auto my-auto"
           style={{
             background: isDarkMode ? 'linear-gradient(180deg, #1c1917 0%, #0c0a09 100%)' : '#ffffff',
             border: `1px solid ${isDarkMode ? 'rgba(239, 68, 68, 0.3)' : '#e5e7eb'}`,
             boxShadow: isDarkMode ? '0 0 60px rgba(239, 68, 68, 0.15), 0 25px 50px rgba(0,0,0,0.5)' : '0 25px 50px rgba(0,0,0,0.15)',
+            maxHeight: 'calc(100dvh - max(2rem, env(safe-area-inset-top) + env(safe-area-inset-bottom)))',
           }}
           onClick={(e) => e.stopPropagation()}
         >

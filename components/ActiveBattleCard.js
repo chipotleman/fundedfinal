@@ -696,15 +696,22 @@ export default function ActiveBattleCard({
                   </div>
 
                   {onForfeit && (
-                    <div className="pt-1 text-center">
+                    <div className="pt-2 flex justify-center">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           setShowForfeitModal(true);
                         }}
-                        className="text-red-500/60 hover:text-red-400 text-[10px] font-medium transition-colors"
+                        className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                        style={{
+                          background: 'rgba(239, 68, 68, 0.08)',
+                          border: '1px solid rgba(239, 68, 68, 0.45)',
+                          color: '#ef4444',
+                          boxShadow: '0 1px 2px rgba(239, 68, 68, 0.1)',
+                        }}
                       >
-                        Forfeit Battle
+                        <span>🏳️</span>
+                        <span>Forfeit Battle</span>
                       </button>
                     </div>
                   )}
