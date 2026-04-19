@@ -526,26 +526,19 @@ export default function BattlePage() {
                 const lastSeenLabel = !friend.isOnline && friend.lastSeenAt != null ? formatLastSeen(friend.lastSeenAt) : '';
                 return (
                 <div key={friend.id} className="flex items-center gap-2.5 px-3 py-2.5 group">
-                  <div className="relative flex-shrink-0">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden cursor-pointer"
-                      style={{ backgroundColor: '#374151' }}
-                      onClick={() => router.push(`/profile/${friend.id}`)}
-                    >
-                      {friend.avatar ? (
-                        <img src={friend.avatar} className="w-full h-full object-cover" alt="" />
-                      ) : (
-                        <span className="text-xs font-bold" style={{ color: textPrimary }}>{friend.username?.[0]?.toUpperCase()}</span>
-                      )}
-                    </div>
-                    {friend.isOnline && (
-                      <span
-                        className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-green-500"
-                        style={{ border: `2px solid ${cardBg}` }}
-                        title="Active now"
-                        aria-label="Active now"
-                      />
-                    )}
+                  <div
+                    className="flex-shrink-0 cursor-pointer"
+                    onClick={() => router.push(`/profile/${friend.id}`)}
+                  >
+                    <FramedAvatar
+                      user={friend}
+                      avatar={friend.avatar}
+                      username={friend.username}
+                      frameId={friend.frameId}
+                      size={32}
+                      isOnline={friend.isOnline}
+                      onlineDotBorderColor={cardBg}
+                    />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium truncate cursor-pointer flex items-center gap-1.5" style={{ color: textPrimary }} onClick={() => router.push(`/profile/${friend.id}`)}>
@@ -571,8 +564,9 @@ export default function BattlePage() {
                       onClick={() => { setShowPlayFriend(true); }}
                       className="p-1.5 rounded-lg transition-colors hover:bg-purple-500/20 active:bg-purple-500/20 text-purple-400"
                       title="Challenge"
+                      aria-label="Challenge to a battle"
                     >
-                      <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                      <svg className="w-3.5 h-3.5" fill="currentColor" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5v14l11-7z" /></svg>
                     </button>
                   </div>
                 </div>
