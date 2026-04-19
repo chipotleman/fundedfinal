@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../../lib/auth';
 import { db } from '../../../../lib/db';
-import { matchups } from '../../../../shared/schema';
+import { matchups, profiles, users } from '../../../../shared/schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { publishBattleEvent } from '../../../../lib/battle-events';
 
@@ -136,6 +136,63 @@ export default async function handler(req, res) {
       });
     } catch (e) {
       console.error('[rematch] publish error:', e);
+    }
+
+    // If the requester just accepted (and the opponent has not acted yet, and
+    // the rematch hasn't already been created), push a dedicated notification
+    // to the opponent so they see "Opponent wants a rematch" even when their
+    // result popup is closed. The matchup:rematch event above only updates
+    // the popup if it's still mounted.
+    if (action === 'accept' && !updated.rematchMatchupId) {
+      const opponentId = isUser1 ? updated.user2Id : updated.user1Id;
+      const opponentAlreadyAccepted = isUser1
+        ? !!updated.user2RematchAt
+        : !!updated.user1RematchAt;
+      if (opponentId && !opponentAlreadyAccepted) {
+        try {
+          let sender = { id: userId, username: 'Opponent', avatar: null, equippedFrame: null };
+          try {
+            const [p] = await db
+              .select({
+                id: profiles.id,
+                username: profiles.username,
+                avatar: profiles.avatar,
+                equippedFrame: profiles.equippedFrame,
+              })
+              .from(profiles)
+              .where(eq(profiles.id, userId));
+            if (p) {
+              sender = {
+                id: p.id,
+                username: p.username || 'Opponent',
+                avatar: p.avatar || null,
+                equippedFrame: p.equippedFrame || null,
+              };
+            } else {
+              const [u] = await db
+                .select({ id: users.id, email: users.email, image: users.image })
+                .from(users)
+                .where(eq(users.id, userId));
+              if (u) {
+                sender = {
+                  id: u.id,
+                  username: u.email ? u.email.split('@')[0] : 'Opponent',
+                  avatar: u.image || null,
+                  equippedFrame: null,
+                };
+              }
+            }
+          } catch (_e) {}
+
+          publishBattleEvent([opponentId], {
+            type: 'notification:rematch',
+            matchupId: updated.id,
+            sender,
+          });
+        } catch (e) {
+          console.error('[rematch] opponent notify error:', e);
+        }
+      }
     }
 
     return res.status(200).json(state);

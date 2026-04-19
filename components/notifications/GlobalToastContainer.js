@@ -206,6 +206,46 @@ function Toast({ toast, ctx, router }) {
     );
   }
 
+  if (toast.type === 'rematch') {
+    const matchupId = toast.payload?.matchupId;
+    return (
+      <div
+        className="bg-gradient-to-r from-emerald-900/95 to-teal-800/95 border border-emerald-500/50 rounded-xl p-3"
+        style={baseStyle}
+      >
+        <div className="flex items-center gap-3">
+          <Avatar sender={sender} />
+          <div className="flex-1 min-w-0">
+            <div className="text-white text-sm font-bold truncate">
+              {sender.username || 'Opponent'} wants a rematch
+            </div>
+            <div className="text-gray-300 text-xs truncate">
+              Tap view to accept or decline
+            </div>
+          </div>
+          <CloseBtn onClick={() => ctx.dismissToast(toast.id)} />
+        </div>
+        <div className="flex gap-2 mt-2">
+          <button
+            disabled={!!busy || !matchupId}
+            onClick={() => wrap('view', async () => {
+              ctx.dismissToast(toast.id);
+              if (matchupId) {
+                router.push(`/battle?result=${encodeURIComponent(matchupId)}&rematch=1`);
+              }
+            })}
+            className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
+          >{busy === 'view' ? '…' : 'View'}</button>
+          <button
+            disabled={!!busy}
+            onClick={() => ctx.dismissToast(toast.id)}
+            className="px-3 bg-emerald-900/60 hover:bg-emerald-900/80 text-emerald-100 text-xs font-medium py-1.5 rounded-lg disabled:opacity-50"
+          >Later</button>
+        </div>
+      </div>
+    );
+  }
+
   return null;
 }
 

@@ -25,7 +25,8 @@ const EMPTY = {
   friendRequests: [],
   unreadMessages: [],
   gameResults: [],
-  counts: { battleInvites: 0, friendRequests: 0, unreadMessages: 0, gameResults: 0, total: 0 },
+  pendingRematches: [],
+  counts: { battleInvites: 0, friendRequests: 0, unreadMessages: 0, gameResults: 0, pendingRematches: 0, total: 0 },
 };
 
 const TYPING_TTL_MS = 4000;
@@ -156,14 +157,16 @@ export function NotificationsProvider({ children }) {
       const friendRequests = json.friendRequests || [];
       const unreadMessages = json.unreadMessages || [];
       const gameResults = json.gameResults || [];
+      const pendingRematches = json.pendingRematches || [];
       const counts = {
         battleInvites: battleInvites.length,
         friendRequests: friendRequests.length,
         unreadMessages: unreadMessages.length,
         gameResults: gameResults.length,
-        total: battleInvites.length + friendRequests.length + unreadMessages.length + gameResults.length,
+        pendingRematches: pendingRematches.length,
+        total: battleInvites.length + friendRequests.length + unreadMessages.length + gameResults.length + pendingRematches.length,
       };
-      setData({ battleInvites, friendRequests, unreadMessages, gameResults, counts });
+      setData({ battleInvites, friendRequests, unreadMessages, gameResults, pendingRematches, counts });
 
       // Catch-up path: if the API found a recent forfeit win that the SSE push
       // may have missed, dispatch it so MatchupContext can surface the modal.
@@ -182,6 +185,7 @@ export function NotificationsProvider({ children }) {
         for (const it of battleInvites) seenRef.current.add(`invite:${it.id}`);
         for (const it of friendRequests) seenRef.current.add(`friend:${it.id}`);
         for (const it of unreadMessages) seenRef.current.add(`message:${it.id}`);
+        for (const it of pendingRematches) seenRef.current.add(`rematch:${it.matchupId}`);
         writeSeen(seenRef.current);
       } else {
         for (const it of battleInvites) {
@@ -209,6 +213,14 @@ export function NotificationsProvider({ children }) {
             sender: it.sender,
             payload: it,
             suppressKey: `message:${it.sender?.id}`,
+          });
+        }
+        for (const it of pendingRematches) {
+          enqueueToast({
+            id: `rematch:${it.matchupId}`,
+            type: 'rematch',
+            sender: it.opponent,
+            payload: it,
           });
         }
       }
@@ -277,6 +289,19 @@ export function NotificationsProvider({ children }) {
         // even if its own SSE handler was briefly in a reconnect window.
         if (userId && ev.winnerId === userId && ev.matchupId) {
           window.dispatchEvent(new CustomEvent('piks:forfeit:win', { detail: ev }));
+        }
+        refresh();
+      } else if (ev.type === 'notification:rematch') {
+        // Opponent accepted a rematch — show a toast immediately so the user
+        // sees it even when their result popup is closed. We still call
+        // refresh() below so the bell list (pendingRematches) updates too.
+        if (ev.matchupId) {
+          enqueueToast({
+            id: `rematch:${ev.matchupId}`,
+            type: 'rematch',
+            sender: ev.sender || null,
+            payload: { matchupId: ev.matchupId, opponent: ev.sender || null },
+          });
         }
         refresh();
       } else if (ev.type === 'notification:message') {
@@ -391,7 +416,12 @@ export function NotificationsProvider({ children }) {
         counts: {
           ...prev.counts,
           unreadMessages: remaining.length,
-          total: prev.counts.battleInvites + prev.counts.friendRequests + remaining.length,
+          total:
+            prev.counts.battleInvites +
+            prev.counts.friendRequests +
+            remaining.length +
+            (prev.counts.gameResults || 0) +
+            (prev.counts.pendingRematches || 0),
         },
       };
     });
@@ -427,7 +457,12 @@ export function NotificationsProvider({ children }) {
         counts: {
           ...prev.counts,
           gameResults: remaining.length,
-          total: prev.counts.battleInvites + prev.counts.friendRequests + prev.counts.unreadMessages + remaining.length,
+          total:
+            prev.counts.battleInvites +
+            prev.counts.friendRequests +
+            prev.counts.unreadMessages +
+            remaining.length +
+            (prev.counts.pendingRematches || 0),
         },
       };
     });

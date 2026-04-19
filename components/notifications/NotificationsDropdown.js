@@ -41,7 +41,8 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
   const battleInvites = ctx.battleInvites || [];
   const friendRequests = ctx.friendRequests || [];
   const gameResults = ctx.gameResults || [];
-  const total = battleInvites.length + friendRequests.length + gameResults.length;
+  const pendingRematches = ctx.pendingRematches || [];
+  const total = battleInvites.length + friendRequests.length + gameResults.length + pendingRematches.length;
 
   useEffect(() => {
     if (!open) return;
@@ -146,6 +147,32 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                 </Row>
               );
             })}
+          </Section>
+        )}
+
+        {pendingRematches.length > 0 && (
+          <Section title="Rematch Requests">
+            {pendingRematches.map((rm) => (
+              <Row key={rm.id} sender={rm.opponent} time={rm.requestedAt}>
+                <div className="text-white text-sm font-semibold truncate">
+                  {rm.opponent?.username || 'Opponent'} wants a rematch
+                </div>
+                <div className="text-gray-400 text-xs">
+                  Tap view to accept or decline
+                </div>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    disabled={busyId === rm.id}
+                    onClick={() => wrap(rm.id, async () => {
+                      onClose?.();
+                      router.push(`/battle?result=${encodeURIComponent(rm.matchupId)}&rematch=1`);
+                    })}
+                    className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
+                    style={{ boxShadow: '0 0 12px rgba(16,185,129,0.45)' }}
+                  >View</button>
+                </div>
+              </Row>
+            ))}
           </Section>
         )}
 

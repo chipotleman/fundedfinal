@@ -82,6 +82,7 @@ export default function BattlePage() {
   const [focusLiveBattleId, setFocusLiveBattleId] = useState(null);
   const [highlightInviteId, setHighlightInviteId] = useState(null);
   const [highlightResult, setHighlightResult] = useState(false);
+  const [highlightRematch, setHighlightRematch] = useState(false);
   const inviteRowRef = useRef(null);
 
   const [socialTab, setSocialTab] = useState('friends');
@@ -452,11 +453,12 @@ export default function BattlePage() {
   useEffect(() => {
     if (!router.isReady) return;
     if (isGuest) return;
-    const { invite, forfeit, result, live } = router.query;
+    const { invite, forfeit, result, live, rematch } = router.query;
     const inviteId = Array.isArray(invite) ? invite[0] : invite;
     const forfeitId = Array.isArray(forfeit) ? forfeit[0] : forfeit;
     const resultId = Array.isArray(result) ? result[0] : result;
     const liveId = Array.isArray(live) ? live[0] : live;
+    const rematchFlag = Array.isArray(rematch) ? rematch[0] : rematch;
     const key = inviteId
       ? `invite:${inviteId}`
       : forfeitId
@@ -497,6 +499,12 @@ export default function BattlePage() {
         }
         setHighlightResult(true);
         setTimeout(() => setHighlightResult(false), 3500);
+        if (rematchFlag) {
+          // Came in from a "Opponent wants a rematch" notification — keep the
+          // rematch CTA visually highlighted until the user acts on it.
+          setHighlightRematch(true);
+          setTimeout(() => setHighlightRematch(false), 6000);
+        }
         loadResultDetails(resultId);
       }
       if (liveId) {
@@ -512,9 +520,10 @@ export default function BattlePage() {
       delete cleaned.forfeit;
       delete cleaned.result;
       delete cleaned.live;
+      delete cleaned.rematch;
       router.replace({ pathname: router.pathname, query: cleaned }, undefined, { shallow: true });
     })();
-  }, [router.isReady, router.query.invite, router.query.forfeit, router.query.result, router.query.live, isGuest, fetchData, refreshGlobalMatchup]);
+  }, [router.isReady, router.query.invite, router.query.forfeit, router.query.result, router.query.live, router.query.rematch, isGuest, fetchData, refreshGlobalMatchup]);
 
   const handleSearch = useCallback((query) => {
     setSearchQuery(query);
@@ -950,6 +959,7 @@ export default function BattlePage() {
           onSendReaction={handleSendReaction}
           opponent={resultData?.opponent}
           highlight={highlightResult}
+          highlightRematch={highlightRematch}
           onRematchAccept={
             (showResult?.isFakeOpponent || resultData?.isFakeOpponent)
               ? () => { closeResultPopup(); setShowQuickMatch(true); }

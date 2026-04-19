@@ -253,12 +253,71 @@ export default async function handler(req, res) {
       });
     } catch (_e) {}
 
+    // Pending rematch requests: completed matchups where the opponent has
+    // accepted a rematch but this user has not yet acted (and no rematch has
+    // been created yet). Surfaces in the bell so users who closed the result
+    // popup can still see and respond to the request.
+    let pendingRematches = [];
+    try {
+      const REMATCH_LOOKBACK_MS = 24 * 60 * 60 * 1000;
+      const lookback = new Date(Date.now() - REMATCH_LOOKBACK_MS);
+      const candidates = await db
+        .select()
+        .from(matchups)
+        .where(and(
+          eq(matchups.status, 'completed'),
+          isNull(matchups.rematchMatchupId),
+          or(eq(matchups.user1Id, userId), eq(matchups.user2Id, userId)),
+          gte(matchups.endsAt, lookback),
+        ))
+        .orderBy(desc(matchups.endsAt))
+        .limit(10);
+
+      const filtered = candidates.filter(m => {
+        if (m.isFakeOpponent) return false;
+        const isUser1 = m.user1Id === userId;
+        const opponentAccepted = isUser1 ? !!m.user2RematchAt : !!m.user1RematchAt;
+        const meActed = isUser1
+          ? (!!m.user1RematchAt || !!m.user1RematchDeclinedAt)
+          : (!!m.user2RematchAt || !!m.user2RematchDeclinedAt);
+        return opponentAccepted && !meActed;
+      });
+
+      const oppIds = [...new Set(filtered.map(m => (m.user1Id === userId ? m.user2Id : m.user1Id)).filter(Boolean))];
+      const oppProfMap2 = new Map();
+      if (oppIds.length > 0) {
+        const ops = await db.select({
+          id: profiles.id,
+          username: profiles.username,
+          avatar: profiles.avatar,
+          equippedFrame: profiles.equippedFrame,
+        }).from(profiles).where(inArray(profiles.id, oppIds));
+        ops.forEach(p => oppProfMap2.set(p.id, p));
+      }
+
+      pendingRematches = filtered.map(m => {
+        const isUser1 = m.user1Id === userId;
+        const oppId = isUser1 ? m.user2Id : m.user1Id;
+        const op = oppId ? oppProfMap2.get(oppId) : null;
+        const requestedAtRaw = isUser1 ? m.user2RematchAt : m.user1RematchAt;
+        return {
+          id: `rematch:${m.id}`,
+          matchupId: m.id,
+          requestedAt: requestedAtRaw ? new Date(requestedAtRaw).toISOString() : null,
+          opponent: op
+            ? { id: op.id, username: op.username || 'Opponent', avatar: op.avatar, equippedFrame: op.equippedFrame }
+            : { id: oppId, username: 'Opponent', avatar: null, equippedFrame: null },
+        };
+      });
+    } catch (_e) {}
+
     return res.status(200).json({
       battleInvites: battleInvitesOut,
       friendRequests: friendRequestsOut,
       unreadMessages: messagesOut,
       gameResults,
-      counts: { ...counts, gameResults: gameResults.length, total: counts.total + gameResults.length },
+      pendingRematches,
+      counts: { ...counts, gameResults: gameResults.length, pendingRematches: pendingRematches.length, total: counts.total + gameResults.length + pendingRematches.length },
       recentForfeitWin,
       // Backwards-compat fields kept for any older callers.
       pendingBattleInvites: counts.battleInvites,

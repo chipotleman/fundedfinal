@@ -144,6 +144,7 @@ export default function MatchResult({
   onRematchDecline,
   onClose,
   highlight = false,
+  highlightRematch = false,
 }) {
   const [showStats, setShowStats] = useState(false);
   const [showTitle, setShowTitle] = useState(false);
@@ -606,10 +607,24 @@ export default function MatchResult({
                     : rematchAcceptedByMe
                     ? 'bg-emerald-600 text-white cursor-default'
                     : 'bg-white text-black hover:bg-gray-100'
-                }`}
+                } ${highlightRematch && !rematchDisabled && !rematchAcceptedByMe ? 'mr-rematch-pulse' : ''}`}
+                style={
+                  highlightRematch && !rematchDisabled && !rematchAcceptedByMe
+                    ? { boxShadow: '0 0 0 2px rgba(16,185,129,0.85), 0 0 24px rgba(16,185,129,0.55)' }
+                    : undefined
+                }
               >
                 {rematchLabel}
               </button>
+              <style jsx>{`
+                @keyframes mrRematchPulse {
+                  0%, 100% { transform: scale(1); }
+                  50% { transform: scale(1.03); }
+                }
+                .mr-rematch-pulse {
+                  animation: mrRematchPulse 1.4s ease-in-out infinite;
+                }
+              `}</style>
               {isWinner ? (
                 <button
                   onClick={handleShare}
