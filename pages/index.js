@@ -1028,7 +1028,7 @@ export default function Dashboard() {
       />
 
       {showBattleWalkthrough && hasActiveMatchup && matchup && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 overflow-y-auto" style={{ backgroundColor: isDarkMode ? 'rgba(0,0,0,0.88)' : 'rgba(0,0,0,0.4)' }}>
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4" style={{ backgroundColor: isDarkMode ? 'rgba(0,0,0,0.88)' : 'rgba(0,0,0,0.4)' }}>
           <style>{`
             @keyframes wtSlideUp {
               from { opacity: 0; transform: translateY(30px) scale(0.95); }
@@ -1044,15 +1044,16 @@ export default function Dashboard() {
             }
           `}</style>
           <div 
-            className="w-full max-w-[380px] my-auto rounded-2xl overflow-hidden"
+            className="w-full max-w-[380px] rounded-2xl overflow-hidden flex flex-col"
             style={{ 
               background: isDarkMode ? 'linear-gradient(180deg, #0a1628 0%, #0d0d0d 100%)' : '#ffffff',
               border: isDarkMode ? '2px solid rgba(59, 130, 246, 0.4)' : '1px solid #e5e7eb',
               animation: 'wtSlideUp 0.4s ease-out, wtPulse 3s ease-in-out infinite',
               boxShadow: isDarkMode ? 'none' : '0 25px 50px -12px rgba(0,0,0,0.15)',
+              maxHeight: 'calc(100dvh - 2rem)',
             }}
           >
-            <div className="flex items-center justify-between px-5 pt-4 pb-2">
+            <div className="flex items-center justify-between px-5 pt-4 pb-2 flex-shrink-0">
               <div className="flex gap-1.5">
                 {[0, 1, 2].map(i => (
                   <div key={i} className="h-1 rounded-full transition-all duration-300" style={{ width: walkthroughStep === i ? '24px' : '8px', backgroundColor: walkthroughStep >= i ? '#3b82f6' : (isDarkMode ? '#333' : '#d1d5db') }}></div>
@@ -1061,7 +1062,7 @@ export default function Dashboard() {
               <button onClick={() => { setShowBattleWalkthrough(false); setWalkthroughDismissed(true); setWalkthroughStep(0); }} className="text-gray-600 text-xs">Skip</button>
             </div>
 
-            <div key={walkthroughStep} style={{ animation: 'wtFadeIn 0.3s ease-out' }}>
+            <div key={walkthroughStep} className="flex-1 overflow-y-auto min-h-0" style={{ animation: 'wtFadeIn 0.3s ease-out' }}>
               {walkthroughStep === 0 && (
                 <>
                   <div className="px-5 pt-2 pb-3 text-center">
@@ -1202,7 +1203,7 @@ export default function Dashboard() {
               )}
             </div>
 
-            <div className="px-5 pb-5 pt-2">
+            <div className="px-5 pb-5 pt-2 flex-shrink-0">
               <button
                 onClick={() => {
                   if (walkthroughStep < 2) {
