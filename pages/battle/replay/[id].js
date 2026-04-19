@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import Head from 'next/head';
 import Link from 'next/link';
 import TopNavbar from '../../../components/TopNavbar';
 import FramedAvatar from '../../../components/UserAvatar';
@@ -154,6 +153,57 @@ function PlayerColumn({ player, balance, isWinner, isTie, picks, side }) {
   );
 }
 
+export async function getServerSideProps(context) {
+  const { id } = context.params || {};
+  if (!id || typeof id !== 'string') return { props: {} };
+  try {
+    const { getBattlePreview } = await import('../../../lib/battle-preview');
+    const preview = await getBattlePreview(id);
+    if (!preview) return { props: {} };
+
+    const proto = (context.req?.headers['x-forwarded-proto'] || '').toString().split(',')[0]
+      || (context.req?.socket?.encrypted ? 'https' : 'http');
+    const host = (context.req?.headers['x-forwarded-host'] || context.req?.headers?.host || '')
+      .toString().split(',')[0] || '';
+    const origin = host ? `${proto}://${host}` : '';
+
+    const u1 = preview.user1?.username || 'Player 1';
+    const u2 = preview.user2?.username || 'Player 2';
+
+    let title;
+    let description;
+    if (preview.status === 'completed') {
+      if (preview.winnerType === 'tie') {
+        title = `${u1} vs ${u2} ended in a tie · Piks`;
+        description = `Tied ${preview.mode.toLowerCase()} battle on Piks · ${preview.prize} pot. See every pick from the matchup.`;
+      } else if (preview.winnerUsername) {
+        title = `${preview.winnerUsername} beat ${preview.loserUsername || 'their opponent'} on Piks`;
+        description = `${preview.winnerUsername} won a ${preview.mode.toLowerCase()} battle on Piks and took home ${preview.prize}. Watch the replay.`;
+      } else {
+        title = `${u1} vs ${u2} · Battle replay · Piks`;
+        description = `${preview.mode} battle replay on Piks · ${preview.prize} pot.`;
+      }
+    } else {
+      title = `${u1} vs ${u2} · Battle replay · Piks`;
+      description = `${preview.mode} battle on Piks · ${preview.prize} prize pool · ${preview.statusLabel}.`;
+    }
+
+    return {
+      props: {
+        battlePreview: {
+          ...preview,
+          origin,
+          title,
+          description,
+          url: `/battle/replay/${encodeURIComponent(id)}`,
+        },
+      },
+    };
+  } catch (_err) {
+    return { props: {} };
+  }
+}
+
 export default function BattleReplayPage() {
   const router = useRouter();
   const { id } = router.query;
@@ -279,9 +329,6 @@ export default function BattleReplayPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Head>
-        <title>{headline} · Battle replay · Piks</title>
-      </Head>
       <TopNavbar />
       <div className="max-w-md mx-auto px-4 py-5">
         <div className="mb-3 flex items-center justify-between">
