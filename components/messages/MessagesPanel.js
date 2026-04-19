@@ -2,6 +2,9 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { formatSeenAgo } from '../../utils/relativeTime';
 import ActiveStatus, { isUserOnline } from '../ActiveStatus';
 import UserAvatar, { UserNameLink } from '../UserAvatar';
+import { useMatchup } from '../../contexts/MatchupContext';
+
+const ACTIVE_BATTLE_BLOCK_MESSAGE = "You're already in a battle — finish it before inviting someone else.";
 
 function timeAgo(iso) {
   if (!iso) return '';
@@ -61,6 +64,7 @@ function VoiceBubble({ url, durationMs, mine }) {
 }
 
 export function ConversationThread({ friend, ctx, myId, onStartBattle, inviteConfirmation }) {
+  const { hasActiveMatchup } = useMatchup();
   const [thread, setThread] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -493,11 +497,18 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, inviteCon
           <>
             <button
               type="button"
-              onClick={() => onStartBattle(friend)}
-              className="sm:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg text-purple-300 transition-colors flex-shrink-0"
+              onClick={() => {
+                if (hasActiveMatchup) {
+                  if (typeof window !== 'undefined') window.alert(ACTIVE_BATTLE_BLOCK_MESSAGE);
+                  return;
+                }
+                onStartBattle(friend);
+              }}
+              disabled={hasActiveMatchup}
+              title={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : 'Start Battle'}
+              className="sm:hidden inline-flex items-center justify-center w-9 h-9 rounded-lg text-purple-300 transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ backgroundColor: 'rgba(147,51,234,0.12)', border: '1px solid rgba(147,51,234,0.3)' }}
-              title="Start Battle"
-              aria-label={`Start battle with ${friend?.username || 'friend'}`}
+              aria-label={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : `Start battle with ${friend?.username || 'friend'}`}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -505,17 +516,28 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, inviteCon
             </button>
             <button
               type="button"
-              onClick={() => onStartBattle(friend)}
-              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-purple-200 transition-colors flex-shrink-0"
+              onClick={() => {
+                if (hasActiveMatchup) {
+                  if (typeof window !== 'undefined') window.alert(ACTIVE_BATTLE_BLOCK_MESSAGE);
+                  return;
+                }
+                onStartBattle(friend);
+              }}
+              disabled={hasActiveMatchup}
+              title={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : undefined}
+              className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-purple-200 transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{ backgroundColor: 'rgba(147,51,234,0.15)', border: '1px solid rgba(147,51,234,0.35)' }}
-              aria-label={`Start battle with ${friend?.username || 'friend'}`}
+              aria-label={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : `Start battle with ${friend?.username || 'friend'}`}
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
-              Start Battle
+              {hasActiveMatchup ? 'In a battle' : 'Start Battle'}
             </button>
           </>
+        )}
+        {hasActiveMatchup && onStartBattle && (
+          <span className="sr-only">{ACTIVE_BATTLE_BLOCK_MESSAGE}</span>
         )}
       </div>
       {inviteConfirmation && inviteConfirmation.friendId === friend?.id && (

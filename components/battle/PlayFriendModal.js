@@ -3,6 +3,9 @@ import { useRouter } from 'next/router';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
 import SharedUserAvatar from '../UserAvatar';
 import { useProfileCacheOptional } from '../../contexts/ProfileCacheContext';
+import { useMatchup } from '../../contexts/MatchupContext';
+
+const ACTIVE_BATTLE_BLOCK_MESSAGE = "You're already in a battle — finish it before inviting someone else.";
 
 const BUY_IN_OPTIONS = [5, 10, 25, 50, 100];
 const GAME_MODE_OPTIONS = [
@@ -26,6 +29,7 @@ function UserAvatar({ user, size = 36 }) {
 export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onInviteCancelled, onSwitchToPrivate, initialFriend = null, lockedFriend = null, currentUser = null, onOpenMessage = null }) {
   const router = useRouter();
   const profileCache = useProfileCacheOptional();
+  const { hasActiveMatchup } = useMatchup();
   useModalScrollLock(isOpen);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [buyIn, setBuyIn] = useState(10);
@@ -135,6 +139,10 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
 
   const sendInvite = async () => {
     if (!selectedFriend) return;
+    if (hasActiveMatchup) {
+      setError(ACTIVE_BATTLE_BLOCK_MESSAGE);
+      return;
+    }
     setSending(true);
     setError('');
     try {
@@ -843,12 +851,21 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                   </div>
                 </div>
 
+                {hasActiveMatchup && (
+                  <div
+                    className="rounded-xl px-3 py-2.5 text-xs leading-snug"
+                    style={{ backgroundColor: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', color: '#fca5a5' }}
+                  >
+                    {ACTIVE_BATTLE_BLOCK_MESSAGE}
+                  </div>
+                )}
                 <button
                   onClick={sendInvite}
-                  disabled={sending}
-                  className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl transition-all disabled:opacity-50 relative overflow-hidden pfm-cta-btn"
+                  disabled={sending || hasActiveMatchup}
+                  title={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : undefined}
+                  className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden pfm-cta-btn"
                 >
-                  <span className="relative z-10">{sending ? 'Sending...' : `Challenge ${selectedFriend.username}`}</span>
+                  <span className="relative z-10">{sending ? 'Sending...' : hasActiveMatchup ? 'In a battle' : `Challenge ${selectedFriend.username}`}</span>
                 </button>
               </div>
             )}

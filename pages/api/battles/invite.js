@@ -1,8 +1,8 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
-import { battleInvites, profiles, friendships } from '../../../shared/schema';
-import { eq, and, or, lt, gt, inArray } from 'drizzle-orm';
+import { battleInvites, profiles, friendships, matchups } from '../../../shared/schema';
+import { eq, and, or, lt, gt, inArray, isNotNull } from 'drizzle-orm';
 const { publishBattleEvent } = require('../../../lib/battle-events');
 const { sendPushToUsers } = require('../../../lib/web-push');
 
@@ -161,6 +161,26 @@ export default async function handler(req, res) {
 
       if (areFriends.length === 0) {
         return res.status(400).json({ error: 'You can only challenge friends' });
+      }
+
+      const existingBattle = await db
+        .select({ id: matchups.id })
+        .from(matchups)
+        .where(and(
+          or(eq(matchups.user1Id, userId), eq(matchups.user2Id, userId)),
+          or(
+            inArray(matchups.status, ['active', 'matched']),
+            and(
+              eq(matchups.status, 'waiting'),
+              isNotNull(matchups.user1Id),
+              isNotNull(matchups.user2Id),
+            ),
+          ),
+        ))
+        .limit(1);
+
+      if (existingBattle.length > 0) {
+        return res.status(400).json({ error: "You're already in a battle — finish it before inviting someone else." });
       }
 
       const existingInvite = await db

@@ -7,12 +7,16 @@ import UserAvatar from '../components/UserAvatar';
 import MessagePopup from '../components/messages/MessagePopup';
 import { useProfileCache } from '../contexts/ProfileCacheContext';
 import { useNotifications } from '../contexts/NotificationsContext';
+import { useMatchup } from '../contexts/MatchupContext';
+
+const ACTIVE_BATTLE_BLOCK_MESSAGE = "You're already in a battle — finish it before inviting someone else.";
 
 export default function FriendsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const profileCache = useProfileCache();
   const notificationsCtx = useNotifications();
+  const { hasActiveMatchup } = useMatchup();
   const [messageFriend, setMessageFriend] = useState(null);
 
   const goToProfile = (user) => {
@@ -265,8 +269,17 @@ export default function FriendsPage() {
                             View
                           </button>
                           <button
-                            onClick={(e) => { e.stopPropagation(); router.push(`/battle?play=${friend.id}`); }}
-                            className="inline-flex px-2.5 py-1 text-xs font-semibold rounded-lg text-purple-400 hover:bg-purple-500/15"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (hasActiveMatchup) {
+                                window.alert(ACTIVE_BATTLE_BLOCK_MESSAGE);
+                                return;
+                              }
+                              router.push(`/battle?play=${friend.id}`);
+                            }}
+                            disabled={hasActiveMatchup}
+                            title={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : undefined}
+                            className="inline-flex px-2.5 py-1 text-xs font-semibold rounded-lg text-purple-400 hover:bg-purple-500/15 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
                           >
                             Play
                           </button>
