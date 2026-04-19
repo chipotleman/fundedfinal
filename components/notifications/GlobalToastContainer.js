@@ -41,6 +41,10 @@ export default function GlobalToastContainer() {
             margin-left: auto !important;
             margin-right: 0 !important;
           }
+          @keyframes notifSlideIn {
+            from { transform: translateX(120%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+          }
         }
       `}</style>
     </div>,
