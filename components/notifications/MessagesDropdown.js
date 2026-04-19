@@ -88,7 +88,12 @@ export default function MessagesDropdown({ open, onClose, anchorRef }) {
     refreshConversations?.();
   }, [open, refreshConversations]);
 
-  // Close on outside click / Escape
+  // Close on outside click / Escape. Use `click` (not `mousedown`) so the
+  // original tap target — e.g. a Link or button — receives its click first.
+  // On iOS Safari, closing this dropdown during `mousedown` can change the
+  // layout (the fixed dropdown unmounts) and cause the subsequent `click`
+  // on the link to be dropped, which manifests as a "stuck" page where
+  // taps no longer navigate.
   useEffect(() => {
     if (!open) return;
     const handleClick = (e) => {
@@ -97,10 +102,10 @@ export default function MessagesDropdown({ open, onClose, anchorRef }) {
       onClose?.();
     };
     const handleKey = (e) => { if (e.key === 'Escape') onClose?.(); };
-    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('click', handleClick);
     document.addEventListener('keydown', handleKey);
     return () => {
-      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('click', handleClick);
       document.removeEventListener('keydown', handleKey);
     };
   }, [open, onClose, anchorRef]);

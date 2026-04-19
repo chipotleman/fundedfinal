@@ -78,14 +78,20 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
   // Always close the menu (and release the body scroll lock) when the
   // route changes, even if a Link's onClick somehow didn't fire. This
   // prevents the next page from loading underneath a stuck overlay /
-  // locked body that would swallow taps on the new page's nav.
+  // locked body that would swallow taps on the new page's nav. We clear
+  // every style useModalScrollLock could have set (overflow/position +
+  // top/left/right/width/height) so nothing lingers across navigations.
   useEffect(() => {
     const handleRouteChange = () => {
       if (isOpen) onClose?.();
-      document.body.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
-      document.body.style.height = '';
+      const b = document.body.style;
+      b.overflow = '';
+      b.position = '';
+      b.top = '';
+      b.left = '';
+      b.right = '';
+      b.width = '';
+      b.height = '';
     };
     router.events.on('routeChangeStart', handleRouteChange);
     return () => router.events.off('routeChangeStart', handleRouteChange);
