@@ -9,6 +9,7 @@ import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useGames } from '../contexts/GamesContext';
+import { useMatchup } from '../contexts/MatchupContext';
 import { formatMoney } from '../utils/formatMoney';
 
 export default function BetHistory() {
@@ -16,6 +17,7 @@ export default function BetHistory() {
   const { user } = useAuth();
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const { apiGames, inplayEvents } = useGames();
+  const { refresh: refreshMatchup } = useMatchup();
   const [allBets, setAllBets] = useState([]);
   const [battlesMap, setBattlesMap] = useState({});
   const [myProfile, setMyProfile] = useState(null);
@@ -255,8 +257,14 @@ export default function BetHistory() {
             : bet
         ));
         setBankroll(result.newBankroll);
-        // Emit global event so TopNavbar can update
-        window.dispatchEvent(new CustomEvent('bankrollUpdated', { detail: { bankroll: result.newBankroll } }));
+        // The cashout API returns the new MATCHUP (battle coins) balance,
+        // not the user's real cash. Refresh the matchup context so the
+        // battle balance updates immediately, without dispatching the
+        // `bankrollUpdated` event the cash pill listens to (which would
+        // briefly overwrite the real cash with the matchup balance).
+        if (refreshMatchup) {
+          refreshMatchup();
+        }
       } else {
         const error = await response.json();
         console.error('Cash out failed:', error.error);
