@@ -177,20 +177,28 @@ export default function Settings() {
       const urlRes = await fetch('/api/uploads/request-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
+        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type, kind }),
       });
-      if (!urlRes.ok) throw new Error('upload-url-failed');
+      if (!urlRes.ok) {
+        const data = await urlRes.json().catch(() => ({}));
+        if (urlRes.status === 413) throw new Error('That image is too large.');
+        if (urlRes.status === 401) throw new Error('Please sign in again to upload images.');
+        if (data?.code === 'storage_not_configured') {
+          throw new Error('Image uploads are temporarily unavailable. Please try again later.');
+        }
+        throw new Error(data?.error || 'Could not start upload.');
+      }
       const { uploadURL, objectPath } = await urlRes.json();
       const up = await fetch(uploadURL, {
         method: 'PUT',
         body: file,
         headers: { 'Content-Type': file.type },
       });
-      if (!up.ok) throw new Error('upload-failed');
+      if (!up.ok) throw new Error('Upload failed. Please try a different image.');
       if (kind === 'banner') update('bannerUrl', objectPath);
       else update('avatar', objectPath);
     } catch (err) {
-      showToast('Upload failed. Try a different image or paste a URL.', 'error');
+      showToast(err.message || 'Upload failed. Please try again.', 'error');
     } finally {
       if (kind === 'banner') setUploadingBanner(false); else setUploadingAvatar(false);
     }

@@ -1,49 +1,7 @@
-import { Storage } from '@google-cloud/storage';
 import { randomUUID } from 'crypto';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../lib/auth';
-
-const REPLIT_SIDECAR_ENDPOINT = 'http://127.0.0.1:1106';
-
-const storage = new Storage({
-  credentials: {
-    audience: 'replit',
-    subject_token_type: 'access_token',
-    token_url: `${REPLIT_SIDECAR_ENDPOINT}/token`,
-    type: 'external_account',
-    credential_source: {
-      url: `${REPLIT_SIDECAR_ENDPOINT}/credential`,
-      format: {
-        type: 'json',
-        subject_token_field_name: 'access_token',
-      },
-    },
-    universe_domain: 'googleapis.com',
-  },
-  projectId: '',
-});
-
-async function signObjectURL({ bucketName, objectName, method, ttlSec }) {
-  const request = {
-    bucket_name: bucketName,
-    object_name: objectName,
-    method,
-    expires_at: new Date(Date.now() + ttlSec * 1000).toISOString(),
-  };
-  const response = await fetch(
-    `${REPLIT_SIDECAR_ENDPOINT}/object-storage/signed-object-url`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(request),
-    }
-  );
-  if (!response.ok) {
-    throw new Error(`Failed to sign object URL: ${response.status}`);
-  }
-  const { signed_url } = await response.json();
-  return signed_url;
-}
+import { signObjectURL, resolvePrivateObjectPath } from '../../../lib/objectStorage';
 
 // Cap any single uploaded asset (avatar, banner, voice note) at 10 MB.
 const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
@@ -74,28 +32,37 @@ export default async function handler(req, res) {
       return res.status(413).json({ error: 'File too large' });
     }
 
-    const privateObjectDir = process.env.PRIVATE_OBJECT_DIR || '';
-    if (!privateObjectDir) {
-      return res.status(500).json({ error: 'Object storage not configured' });
+    if (!process.env.PRIVATE_OBJECT_DIR) {
+      console.error('Upload failed: PRIVATE_OBJECT_DIR is not set');
+      return res.status(503).json({
+        error:
+          'Image uploads are temporarily unavailable. Please try again later.',
+        code: 'storage_not_configured',
+      });
     }
 
     const objectId = randomUUID();
-    const ext = name.split('.').pop() || '';
+    const ext = (name.split('.').pop() || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     const folder = kind === 'voice-note' ? 'uploads/voice-notes' : 'uploads/avatars';
-    const objectName = `${folder}/${objectId}${ext ? '.' + ext : ''}`;
-    
-    const parts = privateObjectDir.split('/').filter(Boolean);
-    const bucketName = parts[0];
-    const fullObjectName = parts.slice(1).join('/') + '/' + objectName;
+    const subPath = `${folder}/${objectId}${ext ? '.' + ext : ''}`;
+
+    const resolved = resolvePrivateObjectPath(subPath);
+    if (!resolved) {
+      return res.status(503).json({
+        error:
+          'Image uploads are temporarily unavailable. Please try again later.',
+        code: 'storage_not_configured',
+      });
+    }
 
     const uploadURL = await signObjectURL({
-      bucketName,
-      objectName: fullObjectName,
+      bucketName: resolved.bucketName,
+      objectName: resolved.objectName,
       method: 'PUT',
       ttlSec: 900,
     });
 
-    const objectPath = `/objects/${objectName}`;
+    const objectPath = `/objects/${subPath}`;
 
     res.json({
       uploadURL,

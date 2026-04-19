@@ -36,16 +36,49 @@ export default function ProfileEditPanel({
   const frames = Array.isArray(profile?.frames) ? profile.frames : [];
   const favorites = Array.isArray(formData.favoriteTeams) ? formData.favoriteTeams : [];
 
-  const handleAvatarUpload = (e) => {
+  const handleAvatarUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      alert('Please choose an image file');
+      return;
+    }
     if (file.size > 2 * 1024 * 1024) {
       alert('Image must be less than 2MB');
       return;
     }
-    const reader = new FileReader();
-    reader.onloadend = () => setFormData({ ...formData, avatar: reader.result });
-    reader.readAsDataURL(file);
+    try {
+      const urlRes = await fetch('/api/uploads/request-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type, kind: 'avatar' }),
+      });
+      if (!urlRes.ok) {
+        const data = await urlRes.json().catch(() => ({}));
+        if (data?.code === 'storage_not_configured') {
+          alert('Image uploads are temporarily unavailable. Please try again later.');
+        } else if (urlRes.status === 413) {
+          alert('That image is too large.');
+        } else {
+          alert(data?.error || 'Could not upload avatar. Please try again.');
+        }
+        return;
+      }
+      const { uploadURL, objectPath } = await urlRes.json();
+      const up = await fetch(uploadURL, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type },
+      });
+      if (!up.ok) {
+        alert('Upload failed. Please try a different image.');
+        return;
+      }
+      setFormData({ ...formData, avatar: objectPath });
+    } catch (err) {
+      console.error('Avatar upload failed', err);
+      alert('Upload failed. Please try again.');
+    }
   };
 
   const handleBannerUpload = async (e) => {
@@ -64,29 +97,33 @@ export default function ProfileEditPanel({
       const urlRes = await fetch('/api/uploads/request-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type }),
+        body: JSON.stringify({ name: file.name, size: file.size, contentType: file.type, kind: 'banner' }),
       });
-      if (urlRes.ok) {
-        const { uploadURL, objectPath } = await urlRes.json();
-        const up = await fetch(uploadURL, {
-          method: 'PUT',
-          body: file,
-          headers: { 'Content-Type': file.type },
-        });
-        if (up.ok) {
-          setFormData({ ...formData, bannerUrl: objectPath });
-          return;
+      if (!urlRes.ok) {
+        const data = await urlRes.json().catch(() => ({}));
+        if (data?.code === 'storage_not_configured') {
+          alert('Image uploads are temporarily unavailable. Please try again later.');
+        } else if (urlRes.status === 413) {
+          alert('That image is too large.');
+        } else {
+          alert(data?.error || 'Could not upload banner. Please try again.');
         }
+        return;
       }
-      // Fallback to data URL
-      const reader = new FileReader();
-      reader.onloadend = () => setFormData({ ...formData, bannerUrl: reader.result });
-      reader.readAsDataURL(file);
+      const { uploadURL, objectPath } = await urlRes.json();
+      const up = await fetch(uploadURL, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type },
+      });
+      if (!up.ok) {
+        alert('Upload failed. Please try a different image.');
+        return;
+      }
+      setFormData({ ...formData, bannerUrl: objectPath });
     } catch (err) {
       console.error('Banner upload failed', err);
-      const reader = new FileReader();
-      reader.onloadend = () => setFormData({ ...formData, bannerUrl: reader.result });
-      reader.readAsDataURL(file);
+      alert('Upload failed. Please try again.');
     } finally {
       setBannerUploading(false);
     }

@@ -56,6 +56,14 @@ const nextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: '/objects/:path*',
+        destination: '/api/objects/:path*',
+      },
+    ];
+  },
   webpack: (config, { isServer }) => {
     config.watchOptions = {
       aggregateTimeout: 300,
