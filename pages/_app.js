@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Head from 'next/head';
 import '../styles/globals.css';
 import { SessionProvider } from 'next-auth/react';
 import { AuthProvider } from '../contexts/AuthContext';
@@ -316,9 +317,40 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
   const isAdminPage = router?.pathname?.startsWith('/admin');
   const isCheckoutPage = router?.pathname === '/checkout' || router?.pathname === '/checkout-design';
   
+  const battlePreview = pageProps?.battlePreview;
+  const battlePreviewMeta = battlePreview ? (() => {
+    const u1 = battlePreview.user1?.username || 'Player 1';
+    const u2 = battlePreview.user2?.username || 'Opponent';
+    const title = `${u1} vs ${u2} on Piks`;
+    const description = `${battlePreview.mode} battle · ${battlePreview.prize} prize pool · ${battlePreview.statusLabel}.`;
+    const origin = battlePreview.origin || '';
+    const image = `${origin}/api/og/battle/${encodeURIComponent(battlePreview.matchupId)}`;
+    const url = `${origin}/bet-history?battle=${encodeURIComponent(battlePreview.matchupId)}`;
+    return { title, description, image, url };
+  })() : null;
+
+  const battlePreviewHead = battlePreviewMeta ? (
+    <Head>
+      <title>{battlePreviewMeta.title}</title>
+      <meta name="description" content={battlePreviewMeta.description} />
+      <meta property="og:type" content="website" />
+      <meta property="og:title" content={battlePreviewMeta.title} />
+      <meta property="og:description" content={battlePreviewMeta.description} />
+      <meta property="og:image" content={battlePreviewMeta.image} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:url" content={battlePreviewMeta.url} />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={battlePreviewMeta.title} />
+      <meta name="twitter:description" content={battlePreviewMeta.description} />
+      <meta name="twitter:image" content={battlePreviewMeta.image} />
+    </Head>
+  ) : null;
+
   if (!betaAuthenticated && !isDebugPage && !isAdminPage && !isCheckoutPage) {
     return (
       <>
+        {battlePreviewHead}
         {/* Solid Black Background */}
         <div
           style={{
@@ -338,6 +370,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
 
   return (
     <SessionProvider session={session}>
+      {battlePreviewHead}
       <ThemeProvider>
         <AuthProvider>
           <BetSlipProvider>

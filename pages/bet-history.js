@@ -628,3 +628,34 @@ export default function BetHistory() {
     </div>
   );
 }
+
+export async function getServerSideProps(context) {
+  const { battle } = context.query || {};
+  const matchupId = Array.isArray(battle) ? battle[0] : battle;
+  if (!matchupId || typeof matchupId !== 'string') {
+    return { props: {} };
+  }
+
+  // Build a public origin so OG image URLs are absolute (required by crawlers)
+  const proto =
+    (context.req.headers['x-forwarded-proto'] || '').toString().split(',')[0] ||
+    (context.req.socket && context.req.socket.encrypted ? 'https' : 'http');
+  const host =
+    (context.req.headers['x-forwarded-host'] || context.req.headers.host || '')
+      .toString()
+      .split(',')[0] || '';
+  const origin = host ? `${proto}://${host}` : '';
+
+  try {
+    const { getBattlePreview } = await import('../lib/battle-preview');
+    const preview = await getBattlePreview(matchupId);
+    if (!preview) return { props: {} };
+    return {
+      props: {
+        battlePreview: { ...preview, origin },
+      },
+    };
+  } catch (err) {
+    return { props: {} };
+  }
+}
