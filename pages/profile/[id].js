@@ -1156,3 +1156,8 @@ export default function PublicProfile() {
     </div>
   );
 }
+
+export async function getServerSideProps(context) {
+  const { getProfilePreviewProps } = await import('../../lib/profile-preview');
+  return getProfilePreviewProps(context);
+}

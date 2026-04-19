@@ -391,6 +391,43 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
     return { title, description, image, url };
   })() : null;
 
+  const profilePreview = pageProps?.profilePreview;
+  const profilePreviewMeta = profilePreview ? (() => {
+    const username = profilePreview.username || 'Player';
+    const wins = profilePreview.wins ?? 0;
+    const losses = profilePreview.losses ?? 0;
+    const winRate = profilePreview.winRate ?? 0;
+    const earnings = profilePreview.totalWinningsFormatted || '0';
+    const defaultTitle = `@${username} on Piks`;
+    const descParts = [`${wins}W–${losses}L`];
+    if (winRate) descParts.push(`${winRate}% win rate`);
+    descParts.push(`${earnings} coins earned`);
+    const defaultDescription = `${descParts.join(' · ')}.`;
+    const origin = profilePreview.origin || '';
+    const sharePath = `/profile/${encodeURIComponent(profilePreview.profileId)}`;
+    const url = `${origin}${sharePath}`;
+    const image = `${origin}/api/og/profile/${encodeURIComponent(profilePreview.profileId)}`;
+    return { title: defaultTitle, description: defaultDescription, image, url };
+  })() : null;
+
+  const profilePreviewHead = profilePreviewMeta ? (
+    <Head>
+      <title>{profilePreviewMeta.title}</title>
+      <meta name="description" content={profilePreviewMeta.description} />
+      <meta property="og:type" content="profile" />
+      <meta property="og:title" content={profilePreviewMeta.title} />
+      <meta property="og:description" content={profilePreviewMeta.description} />
+      <meta property="og:image" content={profilePreviewMeta.image} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:url" content={profilePreviewMeta.url} />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content={profilePreviewMeta.title} />
+      <meta name="twitter:description" content={profilePreviewMeta.description} />
+      <meta name="twitter:image" content={profilePreviewMeta.image} />
+    </Head>
+  ) : null;
+
   const battlePreviewHead = battlePreviewMeta ? (
     <Head>
       <title>{battlePreviewMeta.title}</title>
@@ -454,6 +491,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
     return (
       <>
         {battlePreviewHead}
+        {profilePreviewHead}
         {/* Solid Black Background */}
         <div
           style={{
@@ -474,6 +512,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
   return (
     <SessionProvider session={session}>
       {battlePreviewHead}
+      {profilePreviewHead}
       <AuthProvider>
           <UserPreferencesProvider>
           <BetSlipProvider>
