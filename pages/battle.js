@@ -749,6 +749,8 @@ export default function BattlePage() {
         <MatchLobby
           matchup={showLobby}
           currentUser={session?.user}
+          opponent={matchupData?.opponent || globalMatchupData?.opponent}
+          myProfile={matchupData?.myProfile || globalMatchupData?.myProfile}
           onDismiss={() => setShowLobby(null)}
         />
       )}
@@ -1234,9 +1236,15 @@ export default function BattlePage() {
         isOpen={showQuickMatch}
         onClose={() => setShowQuickMatch(false)}
         userId={userId}
-        onMatchFound={(matchup) => {
+        onMatchFound={(matchup, opponent) => {
           setShowQuickMatch(false);
-          if (matchup) { setShowLobby(matchup); refreshGlobalMatchup(); }
+          if (matchup) {
+            if (opponent) {
+              setMatchupData(prev => ({ ...(prev || {}), opponent }));
+            }
+            setShowLobby(matchup);
+            refreshGlobalMatchup();
+          }
           setTimeout(() => router.push('/?battleStarted=true'), 2500);
         }}
       />

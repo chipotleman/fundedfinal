@@ -197,7 +197,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
 
   const handleContinue = () => {
     onClose();
-    if (onMatchFound && matchedMatchup) onMatchFound(matchedMatchup);
+    if (onMatchFound && matchedMatchup) onMatchFound(matchedMatchup, matchedOpponent);
     else router.push('/?battleStarted=true');
   };
 

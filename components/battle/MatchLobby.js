@@ -16,7 +16,7 @@ function getGameMode(matchup) {
   return 'original';
 }
 
-export default function MatchLobby({ matchup, currentUser, onDismiss }) {
+export default function MatchLobby({ matchup, currentUser, opponent, myProfile, onDismiss }) {
   const [countdown, setCountdown] = useState(5);
   const [showBattle, setShowBattle] = useState(false);
   const [entered, setEntered] = useState(false);
@@ -65,8 +65,20 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
   const potSize = matchup.potSize;
   const payout = parseFloat(matchup.winnerPayout ?? 0);
 
-  const player1 = matchup.player1 || { username: matchup.user1Info?.username || 'Player 1', avatar: matchup.user1Info?.avatar };
-  const player2 = matchup.player2 || { username: matchup.user2Info?.username || 'Player 2', avatar: matchup.user2Info?.avatar };
+  const meInfo = myProfile || {
+    username: currentUser?.username || currentUser?.name || 'You',
+    avatar: currentUser?.avatar || currentUser?.image,
+  };
+  const oppInfo = opponent || matchup.opponent || {};
+  const oppFallback = {
+    username: oppInfo.username || (isUser1 ? matchup.user2Info?.username : matchup.user1Info?.username) || 'Opponent',
+    avatar: oppInfo.avatar || (isUser1 ? matchup.user2Info?.avatar : matchup.user1Info?.avatar),
+  };
+
+  const leftPlayer = matchup.player1 || (isUser1 ? meInfo : oppFallback);
+  const rightPlayer = matchup.player2 || (isUser1 ? oppFallback : meInfo);
+  const player1 = leftPlayer;
+  const player2 = rightPlayer;
 
   const matchTypeLabel = {
     random: 'Quick Match',
@@ -224,12 +236,29 @@ export default function MatchLobby({ matchup, currentUser, onDismiss }) {
           </div>
 
           <div className="lobby-prize">
-            <div className={`inline-flex flex-col items-center rounded-xl px-6 py-3 mb-6 backdrop-blur-sm`} style={{ background: 'rgba(10,10,10,0.8)', border: `1px solid ${'#222'}`, boxShadow: 'none' }}>
-              <span className="text-[10px] uppercase tracking-widest text-gray-500 mb-0.5">Prize Pot</span>
-              <span className="text-2xl md:text-3xl font-black" style={{ color: theme.color, textShadow: `0 0 15px rgba(${theme.rgb},0.4)` }}>
+            <div
+              className="inline-flex flex-col items-center rounded-2xl px-10 py-5 mb-6 backdrop-blur-sm"
+              style={{
+                background: 'linear-gradient(180deg, rgba(245,158,11,0.18) 0%, rgba(180,83,9,0.10) 100%)',
+                border: '1px solid rgba(250,204,21,0.55)',
+                boxShadow: '0 0 40px rgba(250,204,21,0.25), inset 0 0 20px rgba(250,204,21,0.08)',
+              }}
+            >
+              <span className="text-[11px] uppercase tracking-[0.25em] mb-1" style={{ color: '#fde68a' }}>Prize Pot</span>
+              <span
+                className="text-5xl md:text-6xl font-black leading-none"
+                style={{
+                  background: 'linear-gradient(180deg, #fde68a 0%, #f59e0b 55%, #b45309 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  textShadow: '0 0 25px rgba(250,204,21,0.35)',
+                  filter: 'drop-shadow(0 2px 8px rgba(180,83,9,0.45))',
+                }}
+              >
                 ${payout > 0 ? formatMoney(payout, 0) : formatMoney(parseFloat(potSize || 0), 0)}
               </span>
-              <span className="text-[10px] text-gray-500 mt-0.5">🏆 Winner payout · 10% fee 🏆</span>
+              <span className="text-[10px] mt-2" style={{ color: '#fcd34d' }}>🏆 Winner takes all · 10% fee 🏆</span>
             </div>
           </div>
 
