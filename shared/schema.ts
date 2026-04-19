@@ -924,6 +924,7 @@ export const pushSubscriptions = pgTable("push_subscriptions", {
   userAgent: text("user_agent"),
   // Per-category opt-in toggles, default everything on.
   catInvites: boolean("cat_invites").default(true).notNull(),
+  catInviteOutcome: boolean("cat_invite_outcome").default(true).notNull(),
   catForfeits: boolean("cat_forfeits").default(true).notNull(),
   catResults: boolean("cat_results").default(true).notNull(),
   catFriendsLive: boolean("cat_friends_live").default(true).notNull(),

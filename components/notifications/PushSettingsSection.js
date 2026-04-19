@@ -3,6 +3,7 @@ import { usePushNotifications } from '../../contexts/PushNotificationsContext';
 
 const CATS = [
   { key: 'catInvites', label: 'Battle invites', help: 'When a friend challenges you to a battle' },
+  { key: 'catInviteOutcome', label: 'Invite declined or expired', help: 'When someone you invited declines or lets your invite expire' },
   { key: 'catForfeits', label: 'Opponent forfeits', help: 'When your opponent forfeits a battle you\'re in' },
   { key: 'catResults', label: 'Battle results', help: 'When a battle finishes (win, loss, or tie)' },
   { key: 'catFriendsLive', label: 'Friends going live', help: 'When a friend starts a new battle' },

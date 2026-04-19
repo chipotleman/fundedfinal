@@ -107,7 +107,7 @@ export default async function handler(req, res) {
           const receiverName = receiverProfile?.username || 'Your friend';
           const buyInLabel = battleInvite.buyIn ? ` $${parseFloat(battleInvite.buyIn)}` : '';
           sendPushToUsers(battleInvite.senderId, {
-            category: 'invite',
+            category: 'invite_outcome',
             title: 'Battle invite declined',
             body: `${receiverName} declined your${buyInLabel} battle invite`,
             url: '/battle',

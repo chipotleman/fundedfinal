@@ -44,7 +44,7 @@ export default async function handler(req, res) {
             const recvName = recvProfMap.get(row.receiverId)?.username || 'Your friend';
             const buyInLabel = row.buyIn ? ` $${parseFloat(row.buyIn)}` : '';
             sendPushToUsers(row.senderId, {
-              category: 'invite',
+              category: 'invite_outcome',
               title: 'Battle invite expired',
               body: `${recvName} didn't respond to your${buyInLabel} battle invite in time`,
               url: '/battle',
