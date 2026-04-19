@@ -4,6 +4,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import TopNavbar from '../../components/TopNavbar';
 import UserAvatar from '../../components/UserAvatar';
+import ActiveStatus from '../../components/ActiveStatus';
 import ProfileEditPanel from '../../components/ProfileEditPanel';
 import { useBetSlip } from '../../contexts/BetSlipContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -401,6 +402,15 @@ export default function PublicProfile() {
                   <h1 className={`text-2xl font-black mb-1 ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
                     {profile.username || 'Anonymous'}
                   </h1>
+                  {!profile.isFakeOpponent && (
+                    <div className="mb-2 flex justify-center md:justify-start">
+                      <ActiveStatus
+                        isOnline={profile.isOnline}
+                        lastSeenAt={profile.lastSeenAt}
+                        size="md"
+                      />
+                    </div>
+                  )}
                   <p className="text-gray-500 text-sm mb-3">{profile.bio || 'No bio yet'}</p>
                   {(() => {
                     const equipped = profile.equippedFrame ? getFrameById(profile.equippedFrame) : null;

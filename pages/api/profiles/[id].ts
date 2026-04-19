@@ -183,8 +183,18 @@ export default async function handler(
         };
       });
 
+      const ONLINE_THRESHOLD_MS = 5 * 60 * 1000;
+      const lastSeenDate = profile.lastSeenAt ? new Date(profile.lastSeenAt) : null;
+      const lastSeenValid = lastSeenDate && !Number.isNaN(lastSeenDate.getTime());
+      const lastSeenIso = lastSeenValid ? lastSeenDate!.toISOString() : null;
+      const isOnline = lastSeenValid
+        ? Date.now() - lastSeenDate!.getTime() <= ONLINE_THRESHOLD_MS
+        : false;
+
       return res.status(200).json({
         ...profile,
+        lastSeenAt: lastSeenIso,
+        isOnline,
         total_bets: totalBets,
         wins,
         losses,

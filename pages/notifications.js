@@ -5,6 +5,7 @@ import TopNavbar from '../components/TopNavbar';
 import { useNotifications } from '../contexts/NotificationsContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { formatSeenAgo } from '../utils/relativeTime';
+import ActiveStatus from '../components/ActiveStatus';
 
 function timeAgo(iso) {
   if (!iso) return '';
@@ -363,11 +364,18 @@ function ConversationThread({ friend, ctx, myId, isDarkMode }) {
           <div className="text-sm font-semibold truncate" style={{ color: textPrimary }}>
             {friend.username || 'Player'}
           </div>
-          {(friend.battleWins != null || friend.battleLosses != null) && (
-            <div className="text-[10px]" style={{ color: textSecondary }}>
-              {friend.battleWins || 0}W - {friend.battleLosses || 0}L
-            </div>
-          )}
+          <div className="flex items-center gap-2 mt-0.5">
+            <ActiveStatus
+              isOnline={friend.isOnline}
+              lastSeenAt={friend.lastSeenAt}
+              size="xs"
+            />
+            {(friend.battleWins != null || friend.battleLosses != null) && (
+              <span className="text-[10px]" style={{ color: textSecondary }}>
+                · {friend.battleWins || 0}W - {friend.battleLosses || 0}L
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
