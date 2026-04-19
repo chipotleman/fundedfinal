@@ -300,6 +300,7 @@ function ComposeNew({ friend, onSelectFriend, onCancel, onSent }) {
   const [content, setContent] = useState('');
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState(null);
+  const [addMode, setAddMode] = useState(false);
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -373,7 +374,7 @@ function ComposeNew({ friend, onSelectFriend, onCancel, onSent }) {
         </button>
       </div>
 
-      {!friend && (
+      {!friend && !addMode && (
         <div>
           <input
             type="text"
@@ -390,8 +391,20 @@ function ComposeNew({ friend, onSelectFriend, onCancel, onSent }) {
               <div className="text-red-400 text-xs text-center py-3">{loadError}</div>
             )}
             {!loading && !loadError && filtered.length === 0 && (
-              <div className="text-gray-500 text-xs text-center py-3">
-                {friends.length === 0 ? 'No friends yet.' : 'No matches.'}
+              <div className="text-center py-3">
+                <div className="text-gray-500 text-xs mb-2">
+                  {friends.length === 0 ? 'No friends yet.' : 'No matches.'}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAddMode(true)}
+                  className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add a friend
+                </button>
               </div>
             )}
             {!loading && !loadError && filtered.map(f => (
@@ -407,8 +420,21 @@ function ComposeNew({ friend, onSelectFriend, onCancel, onSent }) {
                 </span>
               </button>
             ))}
+            {!loading && !loadError && filtered.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setAddMode(true)}
+                className="w-full text-center text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 py-2 mt-1"
+              >
+                + Add a friend
+              </button>
+            )}
           </div>
         </div>
+      )}
+
+      {!friend && addMode && (
+        <AddFriend onBack={() => setAddMode(false)} />
       )}
 
       {friend && (
@@ -461,6 +487,147 @@ function Section({ title, children }) {
         {title}
       </div>
       <div>{children}</div>
+    </div>
+  );
+}
+
+function AddFriend({ onBack }) {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState(null);
+  const [sentIds, setSentIds] = useState(() => new Set());
+  const [pendingId, setPendingId] = useState(null);
+  const [errorById, setErrorById] = useState({});
+  const inputRef = useRef(null);
+
+  useEffect(() => { inputRef.current?.focus(); }, []);
+
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2) {
+      setResults([]);
+      setSearchError(null);
+      setSearching(false);
+      return;
+    }
+    let cancelled = false;
+    setSearching(true);
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/users/search?q=${encodeURIComponent(q)}`, {
+          credentials: 'include',
+        });
+        if (!res.ok) {
+          if (!cancelled) { setSearchError('Search failed.'); setResults([]); }
+          return;
+        }
+        const data = await res.json();
+        if (!cancelled) { setResults(data.users || []); setSearchError(null); }
+      } catch {
+        if (!cancelled) { setSearchError('Search failed.'); setResults([]); }
+      } finally {
+        if (!cancelled) setSearching(false);
+      }
+    }, 250);
+    return () => { cancelled = true; clearTimeout(t); };
+  }, [query]);
+
+  const sendRequest = async (user) => {
+    if (!user?.id || pendingId) return;
+    setPendingId(user.id);
+    setErrorById((m) => { const n = { ...m }; delete n[user.id]; return n; });
+    try {
+      const res = await fetch('/api/friends', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ friendId: user.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setErrorById((m) => ({ ...m, [user.id]: data?.error || 'Failed.' }));
+        return;
+      }
+      setSentIds((s) => { const n = new Set(s); n.add(user.id); return n; });
+    } catch {
+      setErrorById((m) => ({ ...m, [user.id]: 'Failed.' }));
+    } finally {
+      setPendingId(null);
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-[11px] text-gray-400 hover:text-white inline-flex items-center gap-1"
+        >
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back
+        </button>
+        <span className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+          Add a friend
+        </span>
+      </div>
+      <input
+        ref={inputRef}
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search by username…"
+        className="w-full px-3 py-1.5 bg-[#111] border border-[#1a1a1a] rounded-lg text-white text-xs focus:outline-none focus:border-emerald-500"
+      />
+      <div className="mt-2 max-h-48 overflow-y-auto">
+        {query.trim().length < 2 && (
+          <div className="text-gray-500 text-xs text-center py-3">
+            Type at least 2 characters.
+          </div>
+        )}
+        {query.trim().length >= 2 && searching && (
+          <div className="text-gray-500 text-xs text-center py-3">Searching…</div>
+        )}
+        {query.trim().length >= 2 && !searching && searchError && (
+          <div className="text-red-400 text-xs text-center py-3">{searchError}</div>
+        )}
+        {query.trim().length >= 2 && !searching && !searchError && results.length === 0 && (
+          <div className="text-gray-500 text-xs text-center py-3">No users found.</div>
+        )}
+        {!searching && !searchError && results.map((u) => {
+          const sent = sentIds.has(u.id);
+          const busy = pendingId === u.id;
+          const err = errorById[u.id];
+          return (
+            <div key={u.id} className="px-2 py-1.5 rounded-lg hover:bg-[#1a1a1a]">
+              <div className="flex items-center gap-2">
+                <Avatar sender={u} size={28} />
+                <span className="text-white text-xs font-medium truncate flex-1">
+                  {u.username || 'Player'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => sendRequest(u)}
+                  disabled={sent || busy}
+                  className={`px-2 py-1 text-[11px] font-bold rounded-md ${
+                    sent
+                      ? 'bg-gray-700 text-gray-300 cursor-default'
+                      : 'bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-50'
+                  }`}
+                >
+                  {sent ? 'Sent' : busy ? '…' : 'Add'}
+                </button>
+              </div>
+              {err && (
+                <div className="text-red-400 text-[11px] mt-1 ml-9">{err}</div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
