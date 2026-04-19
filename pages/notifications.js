@@ -5,7 +5,7 @@ import TopNavbar from '../components/TopNavbar';
 import { useNotifications } from '../contexts/NotificationsContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { formatSeenAgo } from '../utils/relativeTime';
-import ActiveStatus from '../components/ActiveStatus';
+import ActiveStatus, { isUserOnline } from '../components/ActiveStatus';
 
 function timeAgo(iso) {
   if (!iso) return '';
@@ -20,17 +20,41 @@ function timeAgo(iso) {
   return `${d}d`;
 }
 
-function Avatar({ user, size = 40 }) {
+function Avatar({ user, size = 40, isOnline = false, onlineDotBorderColor = '#0a0a0a' }) {
   const initial = (user?.username || user?.name || '?')[0]?.toUpperCase();
+  const dotSize = Math.max(8, Math.round(size * 0.26));
+  const dotBorder = Math.max(1, Math.round(size * 0.05));
   return (
     <div
-      className="rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0"
+      className="relative flex-shrink-0"
       style={{ width: size, height: size }}
     >
-      {user?.avatar ? (
-        <img src={user.avatar} className="w-full h-full object-cover" alt="" />
-      ) : (
-        <span className="text-sm font-bold text-white">{initial}</span>
+      <div
+        className="rounded-full bg-gray-700 flex items-center justify-center overflow-hidden w-full h-full"
+      >
+        {user?.avatar ? (
+          <img src={user.avatar} className="w-full h-full object-cover" alt="" />
+        ) : (
+          <span className="text-sm font-bold text-white">{initial}</span>
+        )}
+      </div>
+      {isOnline && (
+        <span
+          aria-label="Active now"
+          title="Active now"
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            right: 0,
+            width: dotSize,
+            height: dotSize,
+            borderRadius: '9999px',
+            background: '#22c55e',
+            border: `${dotBorder}px solid ${onlineDotBorderColor}`,
+            boxSizing: 'border-box',
+            boxShadow: '0 0 6px rgba(34,197,94,0.5)',
+          }}
+        />
       )}
     </div>
   );
@@ -564,7 +588,12 @@ function MessagesPanel({ selectedId, onSelect, ctx, myId, isDarkMode }) {
                 onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = rowHover; }}
                 onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent'; }}
               >
-                <Avatar user={f} size={36} />
+                <Avatar
+                  user={f}
+                  size={36}
+                  isOnline={f.isOnline ?? isUserOnline(f.lastSeenAt)}
+                  onlineDotBorderColor={isSelected ? rowSelected : cardBg}
+                />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <span

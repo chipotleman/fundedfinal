@@ -941,6 +941,8 @@ export default function BattlePage() {
                           frameId={oppFrameId}
                           size={64}
                           bgColor="#1a1a1a"
+                          isOnline={!!opp?.isOnline && opp?.isReal !== false}
+                          onlineDotBorderColor="#0d0d0d"
                         />
                       </div>
                       <div className="flex items-center justify-center gap-1 max-w-[100px] min-h-[16px]">

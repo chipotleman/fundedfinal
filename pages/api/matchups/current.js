@@ -236,6 +236,7 @@ export default async function handler(req, res) {
         .from(profiles)
         .where(eq(profiles.id, opponentId));
 
+      const oppLastSeen = profile?.lastSeenAt ? new Date(profile.lastSeenAt) : null;
       opponent = {
         id: opponentId,
         username: profile?.username || 'Opponent',
@@ -243,6 +244,8 @@ export default async function handler(req, res) {
         equippedFrame: profile?.equippedFrame,
         winRate: profile?.winRate,
         isReal: true,
+        lastSeenAt: oppLastSeen ? oppLastSeen.toISOString() : null,
+        isOnline: oppLastSeen ? (Date.now() - oppLastSeen.getTime()) <= 5 * 60 * 1000 : false,
       };
 
       // Get opponent's bets (user1's bets) - only from during this battle
@@ -321,6 +324,7 @@ export default async function handler(req, res) {
           .from(profiles)
           .where(eq(profiles.id, opponentId));
 
+        const oppLastSeen = profile?.lastSeenAt ? new Date(profile.lastSeenAt) : null;
         opponent = {
           id: opponentId,
           username: profile?.username || 'Opponent',
@@ -328,6 +332,8 @@ export default async function handler(req, res) {
           equippedFrame: profile?.equippedFrame,
           winRate: profile?.winRate,
           isReal: true,
+          lastSeenAt: oppLastSeen ? oppLastSeen.toISOString() : null,
+          isOnline: oppLastSeen ? (Date.now() - oppLastSeen.getTime()) <= 5 * 60 * 1000 : false,
         };
 
         const rawStart = matchup.startsAt || matchup.createdAt;

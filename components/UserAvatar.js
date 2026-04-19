@@ -26,6 +26,8 @@ export default function UserAvatar({
   bgColor = '#1a1a1a',
   textColor = '#fff',
   showFrameBadge = false,
+  isOnline = false,
+  onlineDotBorderColor = '#0a0a0a',
 }) {
   const frame = frameProp || getFrameById(frameId) || null;
   const initial = (username && String(username)[0]) || '?';
@@ -91,6 +93,24 @@ export default function UserAvatar({
           </span>
         )}
       </div>
+      {isOnline && (
+        <span
+          aria-label="Active now"
+          title="Active now"
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            right: 0,
+            width: `${Math.max(8, Math.round(size * 0.26))}px`,
+            height: `${Math.max(8, Math.round(size * 0.26))}px`,
+            borderRadius: '9999px',
+            background: '#22c55e',
+            border: `${Math.max(1, Math.round(size * 0.05))}px solid ${onlineDotBorderColor}`,
+            boxSizing: 'border-box',
+            boxShadow: '0 0 6px rgba(34,197,94,0.5)',
+          }}
+        />
+      )}
       {showFrameBadge && frame?.icon && (
         <span
           aria-hidden="true"

@@ -261,6 +261,8 @@ const Leaderboard = () => {
               size={56}
               bgColor="#0f172a"
               textColor="#ffffff"
+              isOnline={!!leader.isOnline}
+              onlineDotBorderColor="#0f172a"
             />
             <div className="min-w-0 flex-1">
               <div className="text-white font-bold text-base truncate">{leader.username}</div>

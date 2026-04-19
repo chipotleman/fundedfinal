@@ -383,6 +383,8 @@ export default function ActiveBattleCard({
                   frameId={opponent.equippedFrame}
                   size={72}
                   bgColor="#111"
+                  isOnline={!!opponent.isOnline && opponent.isReal !== false}
+                  onlineDotBorderColor="#0a0a0a"
                 />
               </div>
               <div className="flex items-center justify-center gap-1 mt-1 max-w-[80px] md:max-w-[100px]">

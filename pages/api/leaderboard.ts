@@ -76,6 +76,10 @@ export default async function handler(
         const totalStake = Number(s.totalStake) || 0;
         const winRate = totalBets > 0 ? (wins / totalBets) * 100 : 0;
         const roi = totalStake > 0 ? (profit / totalStake) * 100 : 0;
+        const lastSeenAt = p.lastSeenAt ? new Date(p.lastSeenAt) : null;
+        const isOnline = lastSeenAt
+          ? Date.now() - lastSeenAt.getTime() <= 5 * 60 * 1000
+          : false;
         return {
           id: p.id,
           username: p.username || "Anonymous",
@@ -88,6 +92,8 @@ export default async function handler(
           totalBets,
           winRate: Math.round(winRate * 10) / 10,
           tier: tierFor(winRate),
+          lastSeenAt: lastSeenAt ? lastSeenAt.toISOString() : null,
+          isOnline,
         };
       })
       .filter((l): l is NonNullable<typeof l> => l !== null);

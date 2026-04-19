@@ -388,6 +388,8 @@ export default function PublicProfile() {
                     size={96}
                     bgColor={isDarkMode ? '#1a1a1a' : '#f3f4f6'}
                     textColor={isDarkMode ? '#fff' : '#374151'}
+                    isOnline={!profile.isFakeOpponent && !!profile.isOnline}
+                    onlineDotBorderColor={isDarkMode ? '#0d0d0d' : '#ffffff'}
                   />
                 </div>
                 {winRate >= 60 && (
