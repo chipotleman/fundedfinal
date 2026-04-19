@@ -3,14 +3,44 @@ import { useSession } from 'next-auth/react';
 import { useMatchup } from '../../contexts/MatchupContext';
 import { getBattleStreamClient } from '../../lib/battleStreamClient';
 
-const ICE_SERVERS = [
+const FALLBACK_ICE_SERVERS = [
   { urls: 'stun:stun.l.google.com:19302' },
   { urls: 'stun:stun1.l.google.com:19302' },
-  // To enable production NAT traversal, plug a TURN server here, e.g.:
-  // { urls: 'turn:turn.example.com:3478', username: '...', credential: '...' }
 ];
 
 const INVITE_TIMEOUT_MS = 30000;
+const DEFAULT_ICE_CACHE_MS = 4 * 60 * 1000;
+
+const iceServersCache = new Map(); // matchupId -> { servers, expiresAt }
+
+async function fetchIceServers(matchupId) {
+  if (!matchupId) return FALLBACK_ICE_SERVERS;
+  const now = Date.now();
+  const cached = iceServersCache.get(matchupId);
+  if (cached && now < cached.expiresAt) {
+    return cached.servers;
+  }
+  try {
+    const resp = await fetch(
+      `/api/battles/voice/ice-servers?matchupId=${encodeURIComponent(matchupId)}`,
+      { credentials: 'include' },
+    );
+    if (resp.ok) {
+      const data = await resp.json();
+      if (Array.isArray(data?.iceServers) && data.iceServers.length) {
+        const ttlMs = Number.isFinite(data?.ttl) && data.ttl > 0
+          ? Math.min(data.ttl * 1000 * 0.9, 60 * 60 * 1000)
+          : DEFAULT_ICE_CACHE_MS;
+        iceServersCache.set(matchupId, {
+          servers: data.iceServers,
+          expiresAt: now + ttlMs,
+        });
+        return data.iceServers;
+      }
+    }
+  } catch (_e) {}
+  return FALLBACK_ICE_SERVERS;
+}
 
 async function postSignal(type, matchupId, payload) {
   try {
@@ -176,9 +206,10 @@ export default function BattleVoiceChat() {
     } catch (_e) {}
   }, [muted]);
 
-  const ensurePeer = useCallback(() => {
+  const ensurePeer = useCallback(async () => {
     if (pcRef.current) return pcRef.current;
-    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    const iceServers = await fetchIceServers(matchupIdRef.current);
+    const pc = new RTCPeerConnection({ iceServers });
     pc.onicecandidate = (e) => {
       if (e.candidate && matchupIdRef.current) {
         postSignal('voice:ice', matchupIdRef.current, { candidate: e.candidate });
@@ -252,7 +283,7 @@ export default function BattleVoiceChat() {
         if (inviteTimerRef.current) { clearTimeout(inviteTimerRef.current); inviteTimerRef.current = null; }
         setState('connecting');
         setStatusMessage('Connecting...');
-        const pc = ensurePeer();
+        const pc = await ensurePeer();
         const stream = await startLocalStream();
         stream.getTracks().forEach(track => pc.addTrack(track, stream));
         setupAudioMeters();
@@ -264,7 +295,7 @@ export default function BattleVoiceChat() {
       if (t === 'voice:offer') {
         // Callee receives offer. We should already be in 'connecting' (after accept).
         if (!ev.payload?.sdp || !matchupIdRef.current) return;
-        const pc = ensurePeer();
+        const pc = await ensurePeer();
         if (!localStreamRef.current) {
           const stream = await startLocalStream();
           stream.getTracks().forEach(track => pc.addTrack(track, stream));
@@ -314,6 +345,7 @@ export default function BattleVoiceChat() {
     if (!eligible || state !== 'idle') return;
     setState('requesting');
     setStatusMessage('Requesting microphone...');
+    fetchIceServers(matchupIdRef.current);
     try {
       await startLocalStream();
     } catch (err) {
