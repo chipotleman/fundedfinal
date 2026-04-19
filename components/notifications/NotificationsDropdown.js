@@ -184,7 +184,7 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
         {gameResults.length > 0 && (
           <Section title="Results">
             {gameResults.map((r) => {
-              const accent = r.outcome === 'won' ? '#34d399' : r.outcome === 'lost' ? '#f87171' : '#facc15';
+              const accent = r.outcome === 'won' ? '#3b82f6' : r.outcome === 'lost' ? '#f87171' : '#facc15';
               const label = r.outcome === 'won' ? 'Won' : r.outcome === 'lost' ? 'Lost' : 'Graded';
               const pnl = Number.isFinite(r.pnl) ? r.pnl : 0;
               const pnlText = `${pnl >= 0 ? '+' : '−'}$${formatMoney(Math.abs(pnl))}`;

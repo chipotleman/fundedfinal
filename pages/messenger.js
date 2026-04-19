@@ -132,7 +132,7 @@ export default function MessengerPage() {
       )}
       <div className="max-w-7xl w-full mx-auto px-2 sm:px-4 py-2 sm:py-4">
         <div className="flex items-center mb-2 sm:mb-3">
-          <h1 className="text-lg sm:text-2xl font-bold tracking-tight" style={{ color: '#34d399' }}>
+          <h1 className="text-lg sm:text-2xl font-bold tracking-tight" style={{ color: '#3b82f6' }}>
             Messenger
           </h1>
         </div>

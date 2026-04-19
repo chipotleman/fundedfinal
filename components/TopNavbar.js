@@ -46,6 +46,23 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
     router.prefetch('/leaderboard');
     router.prefetch('/battle');
   }, [router]);
+
+  // Defensive: close the notifications dropdown, messages dropdown, and the
+  // user-menu (which renders a fixed inset-0 backdrop) on route change so no
+  // overlay or document click listener can persist between pages and trap
+  // taps on the next route (regression seen on /messenger and /notifications).
+  // The mobile nav menu is owned by _app.js and handles its own cleanup.
+  useEffect(() => {
+    const closeAll = () => {
+      setShowNotifDropdown(false);
+      setShowMsgDropdown(false);
+      setShowUserMenu(false);
+    };
+    router.events.on('routeChangeStart', closeAll);
+    return () => {
+      router.events.off('routeChangeStart', closeAll);
+    };
+  }, [router]);
   
   // Measure and expose navbar height as CSS variable for sticky elements below
   useEffect(() => {
@@ -578,7 +595,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                   <button
                     ref={notifBellRef}
                     onClick={() => { setShowMsgDropdown(false); setShowNotifDropdown(v => !v); }}
-                    className="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-colors hover:bg-emerald-400/10"
+                    className="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-colors hover:bg-blue-400/10"
                     title={notifTotal > 0 ? `${notifTotal} new notification${notifTotal > 1 ? 's' : ''}` : 'Notifications'}
                     aria-label="Notifications"
                     aria-haspopup="true"
@@ -616,7 +633,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                   <button
                     ref={msgBtnRef}
                     onClick={() => { setShowNotifDropdown(false); setShowMsgDropdown(v => !v); }}
-                    className="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-colors hover:bg-emerald-400/10"
+                    className="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full transition-colors hover:bg-blue-400/10"
                     title={notifMessages > 0 ? `${notifMessages} unread message${notifMessages > 1 ? 's' : ''}` : 'Messages'}
                     aria-label="Messages"
                     aria-haspopup="true"

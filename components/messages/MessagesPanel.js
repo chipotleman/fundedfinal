@@ -449,10 +449,10 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, inviteCon
     }
   };
 
-  const cardBorder = 'rgba(16,185,129,0.18)';
+  const cardBorder = 'rgba(59,130,246,0.18)';
   const textPrimary = '#ffffff';
   const textSecondary = '#9ca3af';
-  const inputBg = '#0d1310';
+  const inputBg = '#0a1220';
 
   let lastOutgoingIdx = -1;
   for (let i = thread.length - 1; i >= 0; i--) {
@@ -521,7 +521,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, inviteCon
       {inviteConfirmation && inviteConfirmation.friendId === friend?.id && (
         <div
           className="mx-4 mt-3 px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-2 flex-shrink-0"
-          style={{ backgroundColor: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.3)', color: '#34d399' }}
+          style={{ backgroundColor: 'rgba(59,130,246,0.12)', border: '1px solid rgba(59,130,246,0.3)', color: '#3b82f6' }}
           role="status"
         >
           <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -554,13 +554,13 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, inviteCon
             <div
               className={`max-w-[80%] px-3 py-2 rounded-2xl text-sm leading-snug break-words ${
                 m.senderId === myId
-                  ? 'bg-emerald-500 text-white rounded-br-sm'
+                  ? 'bg-blue-500 text-white rounded-br-sm'
                   : 'text-white rounded-bl-sm'
               }`}
               style={
                 m.senderId === myId
-                  ? { boxShadow: '0 0 14px rgba(16,185,129,0.35)' }
-                  : { backgroundColor: '#161b18', border: '1px solid rgba(16,185,129,0.18)' }
+                  ? { boxShadow: '0 0 14px rgba(59,130,246,0.35)' }
+                  : { backgroundColor: '#0f1622', border: '1px solid rgba(59,130,246,0.18)' }
               }
             >
               {m.messageType === 'voice' && m.attachmentUrl ? (
@@ -586,11 +586,11 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, inviteCon
 
       <div className="h-5 px-4 flex-shrink-0" aria-live="polite">
         {isTyping && (
-          <div className="flex items-center gap-1.5 text-[11px] italic text-emerald-300">
+          <div className="flex items-center gap-1.5 text-[11px] italic text-blue-300">
             <span className="flex gap-0.5">
-              <span className="w-1 h-1 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-              <span className="w-1 h-1 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '120ms' }} />
-              <span className="w-1 h-1 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '240ms' }} />
+              <span className="w-1 h-1 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '0ms' }} />
+              <span className="w-1 h-1 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '120ms' }} />
+              <span className="w-1 h-1 rounded-full bg-blue-400 animate-bounce" style={{ animationDelay: '240ms' }} />
             </span>
             <span>{friend.username || 'Friend'} is typing…</span>
           </div>
@@ -627,8 +627,8 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, inviteCon
                 <button
                   type="button"
                   onClick={handleStopRecording}
-                  className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-500"
-                  style={{ boxShadow: '0 0 14px rgba(16,185,129,0.5)' }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-blue-500"
+                  style={{ boxShadow: '0 0 14px rgba(59,130,246,0.5)' }}
                 >
                   Send
                 </button>
@@ -643,12 +643,12 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, inviteCon
                 value={reply}
                 onChange={handleReplyChange}
                 placeholder="Write a message…"
-                className="flex-1 min-w-0 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-emerald-400"
+                className="flex-1 min-w-0 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-blue-400"
                 style={{
                   backgroundColor: inputBg,
                   border: `1px solid ${cardBorder}`,
                   color: textPrimary,
-                  boxShadow: 'inset 0 0 0 1px rgba(16,185,129,0.05)',
+                  boxShadow: 'inset 0 0 0 1px rgba(59,130,246,0.05)',
                 }}
                 maxLength={1000}
                 disabled={sending}
@@ -675,11 +675,11 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle, inviteCon
                 <button
                   type="submit"
                   disabled={!reply.trim() || sending}
-                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition-shadow"
+                  className="px-4 py-2 bg-blue-500 hover:bg-blue-400 disabled:opacity-50 text-white text-sm font-bold rounded-lg transition-shadow"
                   style={{
                     boxShadow: !reply.trim() || sending
                       ? 'none'
-                      : '0 0 14px rgba(16,185,129,0.5)',
+                      : '0 0 14px rgba(59,130,246,0.5)',
                   }}
                 >
                   {sending ? '…' : 'Send'}
@@ -762,11 +762,11 @@ function NotFriendsCard({ userId, onFriendAdded }) {
     }
   };
 
-  const cardBorder = 'rgba(16,185,129,0.18)';
+  const cardBorder = 'rgba(59,130,246,0.18)';
   const textPrimary = '#ffffff';
   const textSecondary = '#9ca3af';
   const cardBg = '#0a0a0a';
-  const innerBg = '#0d1310';
+  const innerBg = '#0a1220';
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -807,14 +807,14 @@ function NotFriendsCard({ userId, onFriendAdded }) {
               </div>
             )}
             {requestStatus === 'accepted' && (
-              <div className="text-xs mb-3 text-emerald-400">You're now friends!</div>
+              <div className="text-xs mb-3 text-blue-400">You're now friends!</div>
             )}
             {!requestStatus && (
               <button
                 type="button"
                 onClick={handleAdd}
                 disabled={sending}
-                className="bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-lg"
+                className="bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white text-xs font-bold px-4 py-2 rounded-lg"
               >
                 {sending ? 'Sending…' : 'Add friend'}
               </button>
@@ -974,13 +974,13 @@ export default function MessagesPanel({
   );
 
   const cardBg = '#0a0a0a';
-  const cardBorder = 'rgba(16,185,129,0.22)';
+  const cardBorder = 'rgba(59,130,246,0.22)';
   const textPrimary = '#ffffff';
   const textSecondary = '#9ca3af';
-  const inputBg = '#0d1310';
-  const rowHover = 'rgba(16,185,129,0.06)';
-  const rowSelected = 'rgba(16,185,129,0.12)';
-  const cardShadow = '0 0 0 1px rgba(16,185,129,0.08), 0 8px 32px -8px rgba(16,185,129,0.18)';
+  const inputBg = '#0a1220';
+  const rowHover = 'rgba(59,130,246,0.06)';
+  const rowSelected = 'rgba(59,130,246,0.12)';
+  const cardShadow = '0 0 0 1px rgba(59,130,246,0.08), 0 8px 32px -8px rgba(59,130,246,0.18)';
 
   const isFullpage = variant === 'fullpage';
   const containerStyle = isFullpage
@@ -1005,7 +1005,7 @@ export default function MessagesPanel({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search friends…"
-            className="w-full px-3 py-1.5 rounded-lg text-xs focus:outline-none focus:border-emerald-500"
+            className="w-full px-3 py-1.5 rounded-lg text-xs focus:outline-none focus:border-blue-500"
             style={{ backgroundColor: inputBg, border: `1px solid ${cardBorder}`, color: textPrimary }}
           />
         </div>
@@ -1039,7 +1039,7 @@ export default function MessagesPanel({
                 style={{
                   backgroundColor: isSelected ? rowSelected : 'transparent',
                   borderBottom: `1px solid ${cardBorder}`,
-                  borderLeft: isSelected ? '2px solid #34d399' : '2px solid transparent',
+                  borderLeft: isSelected ? '2px solid #3b82f6' : '2px solid transparent',
                 }}
                 onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = rowHover; }}
                 onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent'; }}
@@ -1065,15 +1065,15 @@ export default function MessagesPanel({
                     )}
                     {unread && (c.unreadCount > 0 ? (
                       <span
-                        className="min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full bg-emerald-500 text-white flex-shrink-0 flex items-center justify-center"
-                        style={{ boxShadow: '0 0 8px rgba(52,211,153,0.65)' }}
+                        className="min-w-[18px] h-[18px] px-1 text-[10px] font-bold rounded-full bg-blue-500 text-white flex-shrink-0 flex items-center justify-center"
+                        style={{ boxShadow: '0 0 8px rgba(59,130,246,0.65)' }}
                       >
                         {c.unreadCount > 9 ? '9+' : c.unreadCount}
                       </span>
                     ) : (
                       <span
-                        className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"
-                        style={{ boxShadow: '0 0 8px rgba(52,211,153,0.85)' }}
+                        className="w-2 h-2 rounded-full bg-blue-400 flex-shrink-0"
+                        style={{ boxShadow: '0 0 8px rgba(59,130,246,0.85)' }}
                       />
                     ))}
                   </div>
@@ -1082,7 +1082,7 @@ export default function MessagesPanel({
                     style={{ color: unread ? textPrimary : textSecondary }}
                   >
                     {isTyping ? (
-                      <span className="text-emerald-300 italic">typing…</span>
+                      <span className="text-blue-300 italic">typing…</span>
                     ) : (
                       previewText
                     )}
@@ -1100,7 +1100,7 @@ export default function MessagesPanel({
             <button
               type="button"
               onClick={() => onSelect(null)}
-              className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 inline-flex items-center gap-1"
+              className="text-xs font-semibold text-blue-400 hover:text-blue-300 inline-flex items-center gap-1"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
               Back to messages

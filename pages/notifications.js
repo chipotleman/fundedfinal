@@ -38,11 +38,11 @@ function NotificationsFeed({ ctx, router }) {
   const empty = totalNew === 0;
 
   const cardBg = '#0a0a0a';
-  const cardBorder = 'rgba(16,185,129,0.22)';
+  const cardBorder = 'rgba(59,130,246,0.22)';
   const textPrimary = '#ffffff';
   const textSecondary = '#9ca3af';
-  const accent = '#34d399';
-  const cardShadow = '0 0 0 1px rgba(16,185,129,0.08), 0 8px 32px -8px rgba(16,185,129,0.18)';
+  const accent = '#3b82f6';
+  const cardShadow = '0 0 0 1px rgba(59,130,246,0.08), 0 8px 32px -8px rgba(59,130,246,0.18)';
 
   return (
     <div
@@ -53,15 +53,15 @@ function NotificationsFeed({ ctx, router }) {
         className="px-4 py-3 flex items-center justify-between"
         style={{ borderBottom: `1px solid ${cardBorder}` }}
       >
-        <span className="text-sm font-bold tracking-wide" style={{ color: '#34d399' }}>
+        <span className="text-sm font-bold tracking-wide" style={{ color: '#3b82f6' }}>
           Notifications
         </span>
         <span
           className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
           style={{
             color: accent,
-            backgroundColor: 'rgba(16,185,129,0.10)',
-            border: `1px solid rgba(16,185,129,0.25)`,
+            backgroundColor: 'rgba(59,130,246,0.10)',
+            border: `1px solid rgba(59,130,246,0.25)`,
           }}
         >
           {totalNew} new
@@ -105,8 +105,8 @@ function NotificationsFeed({ ctx, router }) {
                         const data = await ctx.acceptInvite(inv.id);
                         if (data) router.push('/?battleStarted=true');
                       })}
-                      className="bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-50 transition-shadow"
-                      style={{ boxShadow: '0 0 12px rgba(16,185,129,0.45)' }}
+                      className="bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-50 transition-shadow"
+                      style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}
                     >Accept</button>
                     <button
                       disabled={busyId === inv.id}
@@ -133,7 +133,7 @@ function NotificationsFeed({ ctx, router }) {
             Results
           </div>
           {gameResults.map((r) => {
-            const accent = r.outcome === 'won' ? '#34d399' : r.outcome === 'lost' ? '#f87171' : '#facc15';
+            const accent = r.outcome === 'won' ? '#3b82f6' : r.outcome === 'lost' ? '#f87171' : '#facc15';
             const label = r.outcome === 'won' ? 'Won' : r.outcome === 'lost' ? 'Lost' : 'Graded';
             const pnl = Number.isFinite(r.pnl) ? r.pnl : 0;
             const pnlText = `${pnl >= 0 ? '+' : '−'}$${Math.abs(pnl).toFixed(2)}`;
@@ -163,8 +163,8 @@ function NotificationsFeed({ ctx, router }) {
                         await ctx.ackGameResult(r.matchupId);
                         router.push(`/battle?result=${encodeURIComponent(r.matchupId)}`);
                       })}
-                      className="bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-50"
-                      style={{ boxShadow: '0 0 12px rgba(16,185,129,0.45)' }}
+                      className="bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-50"
+                      style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}
                     >View</button>
                     <button
                       disabled={busyId === r.id}
@@ -205,8 +205,8 @@ function NotificationsFeed({ ctx, router }) {
                   <button
                     disabled={busyId === fr.id}
                     onClick={() => wrap(fr.id, () => ctx.acceptFriend(fr.id))}
-                    className="bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-50"
-                    style={{ boxShadow: '0 0 12px rgba(16,185,129,0.45)' }}
+                    className="bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-50"
+                    style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}
                   >Accept</button>
                   <button
                     disabled={busyId === fr.id}
@@ -274,7 +274,7 @@ export default function NotificationsPage() {
     <div style={{ backgroundColor: bg, minHeight: '100vh' }}>
       <TopNavbar />
       <div className="max-w-2xl mx-auto px-3 sm:px-6 py-4 sm:py-6">
-        <h1 className="text-xl sm:text-2xl font-bold mb-4 tracking-tight" style={{ color: '#34d399' }}>
+        <h1 className="text-xl sm:text-2xl font-bold mb-4 tracking-tight" style={{ color: '#3b82f6' }}>
           Notifications
         </h1>
         <NotificationsFeed ctx={ctx} router={router} />
