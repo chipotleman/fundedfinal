@@ -927,6 +927,7 @@ export const pushSubscriptions = pgTable("push_subscriptions", {
   catForfeits: boolean("cat_forfeits").default(true).notNull(),
   catResults: boolean("cat_results").default(true).notNull(),
   catFriendsLive: boolean("cat_friends_live").default(true).notNull(),
+  catRematch: boolean("cat_rematch").default(true).notNull(),
   enabled: boolean("enabled").default(true).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   lastSeen: timestamp("last_seen").defaultNow().notNull(),

@@ -6,6 +6,7 @@ const CATS = [
   { key: 'catForfeits', label: 'Opponent forfeits', help: 'When your opponent forfeits a battle you\'re in' },
   { key: 'catResults', label: 'Battle results', help: 'When a battle finishes (win, loss, or tie)' },
   { key: 'catFriendsLive', label: 'Friends going live', help: 'When a friend starts a new battle' },
+  { key: 'catRematch', label: 'Rematch requests', help: 'When your opponent wants a rematch after a finished battle' },
 ];
 
 function Toggle({ value, onChange, disabled }) {

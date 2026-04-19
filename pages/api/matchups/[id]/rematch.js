@@ -4,6 +4,7 @@ import { db } from '../../../../lib/db';
 import { matchups, profiles, users } from '../../../../shared/schema';
 import { eq, and, isNull } from 'drizzle-orm';
 import { publishBattleEvent } from '../../../../lib/battle-events';
+import { sendPushToUsers } from '../../../../lib/web-push';
 
 function buildState(m) {
   const myAt = (col) => (m[col] ? new Date(m[col]).toISOString() : null);
@@ -189,6 +190,22 @@ export default async function handler(req, res) {
             matchupId: updated.id,
             sender,
           });
+
+          // OS-level web push so the opponent sees the rematch request even
+          // when the app is closed/backgrounded. Tapping it deep-links into
+          // the result popup with the rematch CTA highlighted.
+          try {
+            sendPushToUsers(opponentId, {
+              category: 'rematch',
+              title: 'Opponent wants a rematch',
+              body: `${sender.username || 'Your opponent'} wants a rematch. Tap to accept.`,
+              url: `/battle?result=${updated.id}&rematch=1`,
+              tag: `rematch:${updated.id}`,
+              data: { matchupId: updated.id, type: 'rematch' },
+            }).catch(err => console.error('[rematch push]', err.message));
+          } catch (err) {
+            console.error('[rematch push outer]', err.message);
+          }
         } catch (e) {
           console.error('[rematch] opponent notify error:', e);
         }

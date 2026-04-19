@@ -4,7 +4,7 @@ import { db } from '../../../../lib/db';
 import { pushSubscriptions } from '../../../../shared/schema';
 import { eq, and } from 'drizzle-orm';
 
-const CATS = ['catInvites', 'catForfeits', 'catResults', 'catFriendsLive'];
+const CATS = ['catInvites', 'catForfeits', 'catResults', 'catFriendsLive', 'catRematch'];
 
 export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions);
@@ -23,6 +23,7 @@ export default async function handler(req, res) {
         catForfeits: r.catForfeits,
         catResults: r.catResults,
         catFriendsLive: r.catFriendsLive,
+        catRematch: r.catRematch,
         createdAt: r.createdAt,
         lastSeen: r.lastSeen,
       })),
