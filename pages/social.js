@@ -231,14 +231,25 @@ const ChatModal = ({ friend, messages, onClose, onSend, messageInput, setMessage
           ) : messages.length === 0 ? (
             <p className="text-gray-400 text-center py-8">No messages yet. Say hi!</p>
           ) : (
-            messages.map((msg) => (
-              <div key={msg.id} className={`flex ${msg.senderId === session?.user?.id ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] px-4 py-2 rounded-2xl ${msg.senderId === session?.user?.id ? 'bg-purple-600 rounded-br-md' : 'bg-gray-700 rounded-bl-md'}`}>
-                  <p className="text-sm">{msg.content}</p>
-                  <p className="text-[10px] opacity-50 mt-1">{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+            (() => {
+              const myId = session?.user?.id;
+              let lastOutgoingIdx = -1;
+              for (let i = messages.length - 1; i >= 0; i--) {
+                if (messages[i].senderId === myId) { lastOutgoingIdx = i; break; }
+              }
+              const showSeen = lastOutgoingIdx >= 0 && messages[lastOutgoingIdx].read;
+              return messages.map((msg, idx) => (
+                <div key={msg.id} className={`flex flex-col ${msg.senderId === myId ? 'items-end' : 'items-start'}`}>
+                  <div className={`max-w-[80%] px-4 py-2 rounded-2xl ${msg.senderId === myId ? 'bg-purple-600 rounded-br-md' : 'bg-gray-700 rounded-bl-md'}`}>
+                    <p className="text-sm">{msg.content}</p>
+                    <p className="text-[10px] opacity-50 mt-1">{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                  </div>
+                  {showSeen && idx === lastOutgoingIdx && (
+                    <p className="text-[10px] text-gray-500 mt-0.5 mr-1">Seen</p>
+                  )}
                 </div>
-              </div>
-            ))
+              ));
+            })()
           )}
           <div ref={messagesEndRef} />
         </div>

@@ -868,22 +868,33 @@ function MessageItem({ item, ctx, router, onClose, expanded, onToggle, onCollaps
             {!loading && !loadError && thread.length === 0 && (
               <div className="text-gray-500 text-xs text-center py-3">No messages yet. Say hi!</div>
             )}
-            {!loading && !loadError && thread.map((m) => (
-              <div
-                key={m.id}
-                className={`flex ${m.senderId === myId ? 'justify-end' : 'justify-start'}`}
-              >
+            {(() => {
+              if (loading || loadError) return null;
+              let lastOutgoingIdx = -1;
+              for (let i = thread.length - 1; i >= 0; i--) {
+                if (thread[i].senderId === myId) { lastOutgoingIdx = i; break; }
+              }
+              const showSeen = lastOutgoingIdx >= 0 && thread[lastOutgoingIdx].read;
+              return thread.map((m, idx) => (
                 <div
-                  className={`max-w-[80%] px-2.5 py-1.5 rounded-2xl text-xs leading-snug break-words ${
-                    m.senderId === myId
-                      ? 'bg-emerald-600 text-white rounded-br-sm'
-                      : 'bg-gray-700 text-white rounded-bl-sm'
-                  }`}
+                  key={m.id}
+                  className={`flex flex-col ${m.senderId === myId ? 'items-end' : 'items-start'}`}
                 >
-                  {m.content}
+                  <div
+                    className={`max-w-[80%] px-2.5 py-1.5 rounded-2xl text-xs leading-snug break-words ${
+                      m.senderId === myId
+                        ? 'bg-emerald-600 text-white rounded-br-sm'
+                        : 'bg-gray-700 text-white rounded-bl-sm'
+                    }`}
+                  >
+                    {m.content}
+                  </div>
+                  {showSeen && idx === lastOutgoingIdx && (
+                    <p className="text-[10px] text-gray-500 mt-0.5 mr-0.5">Seen</p>
+                  )}
                 </div>
-              </div>
-            ))}
+              ));
+            })()}
             <div ref={threadEndRef} />
           </div>
           {hasNew && !atBottom && (
