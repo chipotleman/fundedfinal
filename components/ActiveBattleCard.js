@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useSession } from 'next-auth/react';
 import { useTheme } from '../contexts/ThemeContext';
 import ForfeitModal from './battle/ForfeitModal';
@@ -96,8 +97,11 @@ export default function ActiveBattleCard({
   const [timeRemaining, setTimeRemaining] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [showForfeitModal, setShowForfeitModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { data: session } = useSession();
   const { isDarkMode } = useTheme();
+
+  useEffect(() => { setMounted(true); }, []);
 
   useEffect(() => {
     if (typeof document === 'undefined') return;
@@ -346,7 +350,7 @@ export default function ActiveBattleCard({
         </div>
       </div>
 
-      {showModal && (() => {
+      {mounted && showModal && createPortal((() => {
         const totalBalance = myBalanceNum + oppBalanceNum;
         const myDomPercent = totalBalance > 0 ? Math.round((myBalanceNum / totalBalance) * 100) : 50;
         const oppDomPercent = 100 - myDomPercent;
@@ -656,7 +660,7 @@ export default function ActiveBattleCard({
             </div>
           </div>
         );
-      })()}
+      })(), document.body)}
 
       <ForfeitModal
         isOpen={showForfeitModal}
