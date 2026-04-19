@@ -11,7 +11,7 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
     return `${Date.now().toString().slice(-10)}${Math.floor(Math.random() * 100).toString().padStart(2, '0')}`;
   }, [bet]);
 
-  useModalScrollLock(!!bet && isVisible);
+  useModalScrollLock(!!bet && isVisible, { restoreScroll: true });
 
   useEffect(() => {
     if (!bet) return;

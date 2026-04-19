@@ -6,7 +6,7 @@ import useModalScrollLock from '../../hooks/useModalScrollLock';
 export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
   const [isForfeiting, setIsForfeiting] = useState(false);
   const { isDarkMode } = useTheme();
-  useModalScrollLock(isOpen);
+  useModalScrollLock(isOpen, { restoreScroll: true });
 
   if (!isOpen) return null;
 

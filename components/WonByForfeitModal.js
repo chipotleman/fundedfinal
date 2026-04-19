@@ -7,7 +7,7 @@ export default function WonByForfeitModal({ isOpen, onClose, opponent, payout })
   const [celebrating, setCelebrating] = useState(false);
   const celebrationTimerRef = useRef(null);
 
-  useModalScrollLock(isOpen);
+  useModalScrollLock(isOpen, { restoreScroll: true });
 
   useEffect(() => {
     if (isOpen) {
