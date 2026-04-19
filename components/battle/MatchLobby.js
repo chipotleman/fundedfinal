@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { formatMoney } from '../../utils/formatMoney';
+import UserAvatar from '../UserAvatar';
 
 const MODE_THEMES = {
   rush: { color: '#fb923c', rgb: '251,146,60', label: 'RUSH', icon: '⚡' },
@@ -190,11 +191,10 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
                     animation: 'ringPulse 2s ease-in-out infinite',
                   }}
                 >
-                  {player1.avatar ? (
-                    <img src={player1.avatar} className="w-full h-full object-cover" alt="" />
-                  ) : (
-                    <span className={`text-4xl font-black ${'text-white/60'}`}>{player1.username?.[0]?.toUpperCase() || 'P'}</span>
-                  )}
+                  <UserAvatar
+                    user={{ id: player1.id, username: player1.username, avatar: player1.avatar }}
+                    size={96}
+                  />
                 </div>
               </div>
               <div className={`text-sm md:text-base font-bold ${'text-white'}`}>{player1.username || 'Player 1'}</div>
@@ -224,11 +224,10 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
                     background: '#1a0a00',
                   }}
                 >
-                  {player2.avatar ? (
-                    <img src={player2.avatar} className="w-full h-full object-cover" alt="" />
-                  ) : (
-                    <span className={`text-4xl font-black ${'text-white/60'}`}>{player2.username?.[0]?.toUpperCase() || 'P'}</span>
-                  )}
+                  <UserAvatar
+                    user={{ id: player2.id, username: player2.username, avatar: player2.avatar }}
+                    size={96}
+                  />
                 </div>
               </div>
               <div className={`text-sm md:text-base font-bold ${'text-white'}`}>{player2.username || 'Player 2'}</div>

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import UserAvatar from '../UserAvatar';
 
 export default function InviteToast({ invite, onAccept, onDecline, highlight = false }) {
   const [loading, setLoading] = useState(null);
@@ -41,12 +42,12 @@ export default function InviteToast({ invite, onAccept, onDecline, highlight = f
         }
       `}</style>
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
-          {sender.avatar ? (
-            <img src={sender.avatar} className="w-full h-full object-cover" alt="" />
-          ) : (
-            <span className="text-sm font-bold">{sender.username?.[0]?.toUpperCase() || '?'}</span>
-          )}
+        <div className="flex-shrink-0">
+          <UserAvatar
+            user={{ id: sender.id, username: sender.username, avatar: sender.avatar }}
+            frameId={sender.equippedFrame}
+            size={40}
+          />
         </div>
         <div className="flex-1 min-w-0">
           <div className="text-white text-sm font-bold truncate">

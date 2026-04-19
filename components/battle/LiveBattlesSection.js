@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import BattleChat from './BattleChat';
 import { formatMoney } from '../../utils/formatMoney';
+import UserAvatar from '../UserAvatar';
 
 function formatTimeRemaining(ms) {
   if (!ms || ms <= 0) return 'Ended';
@@ -191,11 +192,10 @@ function PlayerAvatar({ user, isWinning, size = 44, bgColor = '#1e40af', onClick
           border: isWinning ? '2px solid #10b981' : `2px solid ${'#333'}`,
         }}
       >
-        {user.avatar ? (
-          <img src={user.avatar} className="w-full h-full object-cover" alt="" style={{ borderRadius: '50%' }} />
-        ) : (
-          <span className="font-bold" style={{ fontSize: size * 0.35, color: '#fff' }}>{user.username?.[0]?.toUpperCase() || '?'}</span>
-        )}
+        <UserAvatar
+          user={{ id: user.id, username: user.username, avatar: user.avatar }}
+          size={size}
+        />
       </div>
     </div>
   );

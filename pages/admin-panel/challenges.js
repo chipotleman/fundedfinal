@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin-panel/AdminLayout';
+import UserAvatar from '../../components/UserAvatar';
 
 export default function AdminChallenges() {
   const [challenges, setChallenges] = useState([]);
@@ -143,9 +144,7 @@ export default function AdminChallenges() {
                   <tr key={challenge.id} className="hover:bg-white/5 transition-colors">
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white font-medium text-sm">
-                          {(challenge.userName || 'U')[0].toUpperCase()}
-                        </div>
+                        <UserAvatar user={{ id: challenge.userId, username: challenge.userName }} size={36} />
                         <div>
                           <p className="text-white font-medium">{challenge.userName || 'Unknown'}</p>
                           <p className="text-gray-500 text-sm">{challenge.userEmail}</p>

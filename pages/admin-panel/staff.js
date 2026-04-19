@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin-panel/AdminLayout';
+import UserAvatar from '../../components/UserAvatar';
 
 const ROLES = [
   { value: 'admin', label: 'Admin', description: 'Full access to all features' },
@@ -137,7 +138,7 @@ export default function AdminStaff() {
                   <tr key={member.id} className="hover:bg-white/5 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white font-medium">{(member.name || member.email)?.charAt(0).toUpperCase()}</div>
+                        <UserAvatar user={{ id: member.id, username: member.name || member.email, avatar: member.avatar }} size={40} />
                         <div><p className="text-white font-medium">{member.name || '-'}</p><p className="text-gray-400 text-sm">{member.email}</p></div>
                       </div>
                     </td>

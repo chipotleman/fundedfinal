@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useRouter } from 'next/router';
 import { useNotifications } from '../../contexts/NotificationsContext';
+import UserAvatar from '../UserAvatar';
 
 export default function GlobalToastContainer() {
   const ctx = useNotifications();
@@ -53,14 +54,13 @@ export default function GlobalToastContainer() {
 }
 
 function Avatar({ sender }) {
-  const initial = (sender?.username || '?')[0]?.toUpperCase();
   return (
-    <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
-      {sender?.avatar ? (
-        <img src={sender.avatar} className="w-full h-full object-cover" alt="" />
-      ) : (
-        <span className="text-sm font-bold text-white">{initial}</span>
-      )}
+    <div className="flex-shrink-0">
+      <UserAvatar
+        user={{ id: sender?.id, username: sender?.username, avatar: sender?.avatar }}
+        frameId={sender?.equippedFrame}
+        size={40}
+      />
     </div>
   );
 }

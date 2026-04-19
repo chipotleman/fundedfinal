@@ -1,5 +1,6 @@
 import { useState, useEffect, Fragment } from 'react';
 import AdminLayout from '../../components/admin-panel/AdminLayout';
+import UserAvatar from '../../components/UserAvatar';
 
 const CHALLENGES = [
   { type: 'starter', name: 'Starter Challenge', balance: '$5,000', price: '$149' },
@@ -295,9 +296,10 @@ export default function AdminUsers() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white text-sm font-medium">
-                            {user.email?.charAt(0).toUpperCase()}
-                          </div>
+                          <UserAvatar
+                            user={{ id: user.id, username: user.username || user.email, avatar: user.avatar }}
+                            size={32}
+                          />
                           <span className="text-white font-medium">{user.email}</span>
                           {expandedUser === user.id && (
                             <svg className="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

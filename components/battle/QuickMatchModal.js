@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
+import UserAvatar from '../UserAvatar';
 
 const GAME_MODE_OPTIONS = [
   {
@@ -523,11 +524,10 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                         animation: 'qm-user-glow 2s ease-in-out infinite',
                       }}
                     >
-                      {userAvatar ? (
-                        <img src={userAvatar} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <span className={`text-2xl md:text-3xl font-black ${th.fallbackText}`}>{userName[0]?.toUpperCase() || 'Y'}</span>
-                      )}
+                      <UserAvatar
+                        user={{ id: userProfile?.id, username: userName, avatar: userAvatar }}
+                        size={96}
+                      />
                     </div>
                   </div>
                   <p className={`${th.nameText} text-xs md:text-sm font-bold truncate max-w-[100px] text-center`}>{userName}</p>
@@ -710,11 +710,10 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                           boxShadow: '0 0 20px rgba(59,130,246,0.3)',
                         }}
                       >
-                        {userAvatar ? (
-                          <img src={userAvatar} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <span className={`text-2xl md:text-3xl font-black ${th.fallbackText}`}>{userName[0]?.toUpperCase() || 'Y'}</span>
-                        )}
+                        <UserAvatar
+                          user={{ id: userProfile?.id, username: userName, avatar: userAvatar }}
+                          size={96}
+                        />
                       </div>
                     </div>
                     <p className={`${th.nameText} text-xs md:text-sm font-bold truncate max-w-[100px] text-center`}>{userName}</p>
@@ -748,13 +747,14 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                           animation: 'qm-avatar-lock 0.6s ease-out forwards',
                         }}
                       >
-                        {matchedAvatar ? (
-                          <img src={matchedAvatar} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <span className={`text-2xl md:text-3xl font-black ${th.fallbackText}`}>
-                            {(matchedOpponent?.username || 'O')[0].toUpperCase()}
-                          </span>
-                        )}
+                        <UserAvatar
+                          user={{
+                            id: matchedOpponent?.id,
+                            username: matchedOpponent?.username || 'Opponent',
+                            avatar: matchedAvatar,
+                          }}
+                          size={96}
+                        />
                       </div>
                     </div>
                     <p className={`${th.nameText} text-xs md:text-sm font-bold truncate max-w-[100px] text-center`}>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import AdminLayout from '../../components/admin-panel/AdminLayout';
 import { formatMoney } from '../../utils/formatMoney';
+import UserAvatar from '../../components/UserAvatar';
 
 const DURATION_OPTIONS = [
   { value: '30_min', label: '30 Minutes' },
@@ -494,13 +495,10 @@ export default function AdminMatchups() {
               {fakeOpponents.map((opponent) => (
                 <div key={opponent.id} className="bg-gray-800 rounded-lg p-4">
                   <div className="flex items-center gap-3 mb-3">
-                    {opponent.avatar ? (
-                      <img src={opponent.avatar} alt="" className="w-12 h-12 rounded-full" />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-xl font-bold">
-                        {opponent.displayName?.charAt(0)?.toUpperCase() || 'O'}
-                      </div>
-                    )}
+                    <UserAvatar
+                      user={{ id: opponent.id, username: opponent.displayName || opponent.username, avatar: opponent.avatar }}
+                      size={48}
+                    />
                     <div>
                       <p className="font-semibold">{opponent.displayName}</p>
                       <p className="text-gray-400 text-sm">@{opponent.username}</p>

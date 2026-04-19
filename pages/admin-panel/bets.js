@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin-panel/AdminLayout';
 import { formatMoney } from '../../utils/formatMoney';
+import UserAvatar from '../../components/UserAvatar';
 
 export default function AdminBets() {
   const [bets, setBets] = useState([]);
@@ -115,7 +116,7 @@ export default function AdminBets() {
                     <tr key={bet.id} className="hover:bg-white/5 transition-colors">
                       <td className="px-4 py-4">
                         <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white text-xs font-medium">{bet.userEmail?.charAt(0).toUpperCase()}</div>
+                          <UserAvatar user={{ id: bet.userId, username: bet.userEmail }} size={28} />
                           <span className="text-white text-sm">{bet.userEmail}</span>
                         </div>
                       </td>

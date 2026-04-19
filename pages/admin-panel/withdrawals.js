@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin-panel/AdminLayout';
 import { formatMoney } from '../../utils/formatMoney';
+import UserAvatar from '../../components/UserAvatar';
 
 const statusConfig = {
   under_review: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', border: 'border-yellow-500/30', label: 'Under Review' },
@@ -160,7 +161,7 @@ export default function AdminWithdrawals() {
                     <tr key={withdrawal.id} className="hover:bg-white/5 transition-colors">
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-blue-500 flex items-center justify-center text-white text-sm font-medium">{withdrawal.userEmail?.charAt(0).toUpperCase()}</div>
+                          <UserAvatar user={{ id: withdrawal.userId, username: withdrawal.userEmail }} size={32} />
                           <div><p className="text-white font-medium">{withdrawal.userEmail}</p><p className="text-gray-500 text-xs">{withdrawal.userId?.slice(0, 8)}...</p></div>
                         </div>
                       </td>
