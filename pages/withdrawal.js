@@ -3,6 +3,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import TopNavbar from '../components/TopNavbar';
 import Head from 'next/head';
+import { formatMoney } from '../utils/formatMoney';
 
 const withdrawalMethods = [
   {
@@ -884,7 +885,7 @@ export default function WithdrawalPage() {
                         <div className="text-gray-400 text-sm">
                           {methodInfo?.name || w.methodType}
                           {w.fee && parseFloat(w.fee) > 0 && (
-                            <span className="text-gray-500"> (Fee: ${parseFloat(w.fee).toFixed(2)})</span>
+                            <span className="text-gray-500"> (Fee: ${formatMoney(w.fee)})</span>
                           )}
                         </div>
                       </div>
@@ -900,7 +901,7 @@ export default function WithdrawalPage() {
                               <div>
                                 <span className="text-gray-500 text-xs">Fee</span>
                                 <div className="text-white font-semibold">
-                                  {w.fee && parseFloat(w.fee) > 0 ? `$${parseFloat(w.fee).toFixed(2)}` : 'Free'}
+                                  {w.fee && parseFloat(w.fee) > 0 ? `$${formatMoney(w.fee)}` : 'Free'}
                                 </div>
                               </div>
                               <div>

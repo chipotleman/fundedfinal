@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import PiksPoolPopup from './PiksPoolPopup';
 import { triggerHaptic } from '../utils/haptics';
+import { formatMoney } from '../utils/formatMoney';
 
 function formatTimeRemaining(ms) {
   if (!ms || ms <= 0) return 'Ended';
@@ -268,7 +269,7 @@ export default function PoolContainer({ isDarkMode }) {
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] uppercase" style={{ color: 'rgba(255,255,255,0.7)' }}>Balance</span>
-              <span className="text-lg font-black" style={{ color: '#ffffff' }}>${myPoolData.userBalance?.toLocaleString()}</span>
+              <span className="text-lg font-black" style={{ color: '#ffffff' }}>${formatMoney(myPoolData.userBalance, 0)}</span>
             </div>
             <div className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded-lg">
               <span className="text-[10px]">⏱️</span>
@@ -325,14 +326,14 @@ export default function PoolContainer({ isDarkMode }) {
                   </span>
                 </div>
                 <span className={`text-sm font-bold ${player.isCurrentUser ? 'text-cyan-200' : 'text-white'}`}>
-                  ${player.balance?.toLocaleString()}
+                  ${formatMoney(player.balance, 0)}
                 </span>
               </div>
             ))}
           </div>
           
           <div className="flex items-center justify-between mt-2 pt-2 border-t border-white/20">
-            <span className="text-white/60 text-[10px]">🏆 Prize: ${myPoolData.pool?.prizePool?.toLocaleString()}</span>
+            <span className="text-white/60 text-[10px]">🏆 Prize: ${formatMoney(myPoolData.pool?.prizePool, 0)}</span>
             <span className="text-white/60 text-[10px]">{myPoolData.pool?.currentPlayers}/{myPoolData.pool?.maxPlayers} Players</span>
           </div>
         </div>
@@ -340,14 +341,14 @@ export default function PoolContainer({ isDarkMode }) {
         <div className="relative z-10 p-4 h-[140px] md:h-[180px] flex flex-col overflow-hidden">
           <div className="absolute top-3 right-3 bg-yellow-400 text-black px-3 py-1 rounded-md shadow-lg transform rotate-3" style={{ clipPath: 'polygon(0 0, 100% 0, 100% 100%, 0 100%, 5% 50%)' }}>
             <div className="flex items-center gap-1">
-              <span className="text-xs font-black">${availablePool ? parseFloat(availablePool.buyIn).toFixed(0) : '25'}</span>
+              <span className="text-xs font-black">${availablePool ? formatMoney(availablePool.buyIn, 0) : '25'}</span>
               <span className="text-[8px] font-bold uppercase">Entry</span>
             </div>
           </div>
           <div className="flex flex-col mb-1">
             <span className="text-[10px] uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.7)' }}>Prize Pool</span>
             <span className="text-lg md:text-4xl font-black drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]" style={{ color: '#ffffff' }}>
-              ${availablePool ? parseFloat(availablePool.maxPrizePool || availablePool.prizePool).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '562.50'}
+              ${availablePool ? formatMoney(availablePool.maxPrizePool || availablePool.prizePool) : '562.50'}
             </span>
           </div>
           <div className="flex items-center justify-center -mt-4 md:mt-[10px]">

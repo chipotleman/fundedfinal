@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import AdminLayout from '../../components/admin-panel/AdminLayout';
+import { formatMoney } from '../../utils/formatMoney';
 
 const DURATION_OPTIONS = [
   { value: '30_min', label: '30 Minutes' },
@@ -442,8 +443,8 @@ export default function AdminMatchups() {
                           <span className="ml-2 text-xs text-yellow-500">(BOT)</span>
                         )}
                       </td>
-                      <td className="p-3">${parseFloat(matchup.user1Balance || 0).toLocaleString()}</td>
-                      <td className="p-3">${parseFloat(matchup.user2Balance || 0).toLocaleString()}</td>
+                      <td className="p-3">${formatMoney(matchup.user1Balance || 0, 0)}</td>
+                      <td className="p-3">${formatMoney(matchup.user2Balance || 0, 0)}</td>
                       <td className="p-3 text-green-400">${parseFloat(matchup.winnerPayout || 0).toLocaleString()}</td>
                       <td className="p-3">{formatDate(matchup.endsAt)}</td>
                       <td className="p-3 space-x-2">
@@ -579,7 +580,7 @@ export default function AdminMatchups() {
                       </td>
                       <td className="p-3">{invite.sender?.username || 'Unknown'}</td>
                       <td className="p-3">{invite.receiver?.username || 'Unknown'}</td>
-                      <td className="p-3">${parseFloat(invite.buyIn || 0).toFixed(0)}</td>
+                      <td className="p-3">${formatMoney(invite.buyIn || 0, 0)}</td>
                       <td className="p-3">{invite.duration}h</td>
                       <td className="p-3">{formatDate(invite.createdAt)}</td>
                       <td className="p-3">
@@ -708,7 +709,7 @@ export default function AdminMatchups() {
                               {user.pool.name} | Status: {user.pool.status}
                             </span>
                             <span className="text-gray-500 ml-2 text-xs">
-                              Balance: ${parseFloat(user.poolParticipant?.balance || 0).toFixed(2)} | 
+                              Balance: ${formatMoney(user.poolParticipant?.balance || 0)} | 
                               Players: {user.pool.currentPlayers}/{user.pool.maxPlayers}
                             </span>
                           </div>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
+import { formatMoney } from '../../utils/formatMoney';
 
 export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
   const [isForfeiting, setIsForfeiting] = useState(false);
@@ -80,14 +81,14 @@ export default function ForfeitModal({ isOpen, onConfirm, onCancel, matchup }) {
             <div className="flex items-center gap-3 rounded-lg px-4 py-2.5" style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
               <span className="text-base">💸</span>
               <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                You will lose your buy-in{buyIn > 0 ? ` ($${buyIn.toFixed(0)})` : ''}
+                You will lose your buy-in{buyIn > 0 ? ` ($${formatMoney(buyIn, 0)})` : ''}
               </p>
             </div>
             {potSize > 0 && (
               <div className="flex items-center gap-3 rounded-lg px-4 py-2.5" style={{ backgroundColor: isDarkMode ? '#111' : '#f3f4f6', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
                 <span className="text-base">🏆</span>
                 <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  Pot size: <span className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${potSize.toFixed(0)}</span>
+                  Pot size: <span className={`font-semibold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${formatMoney(potSize, 0)}</span>
                 </p>
               </div>
             )}

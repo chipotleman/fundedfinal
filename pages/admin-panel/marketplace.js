@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin-panel/AdminLayout';
+import { formatMoney } from '../../utils/formatMoney';
 
 export default function AdminMarketplace() {
   const [cappers, setCappers] = useState([]);
@@ -199,7 +200,7 @@ export default function AdminMarketplace() {
                         <tr key={sub.id} className="hover:bg-white/5 transition-colors">
                           <td className="px-4 py-4 text-white">#{sub.buyerId.slice(-6)}</td>
                           <td className="px-4 py-4 text-gray-300">{sub.capperName || sub.capperId.slice(-6)}</td>
-                          <td className="px-4 py-4 text-green-400 font-medium">${parseFloat(sub.amountPaid).toFixed(0)}</td>
+                          <td className="px-4 py-4 text-green-400 font-medium">${formatMoney(sub.amountPaid, 0)}</td>
                           <td className="px-4 py-4">
                             <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
                               sub.status === 'active' ? 'bg-green-500/20 text-green-400' :

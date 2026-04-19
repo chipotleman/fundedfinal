@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
 import TapSurface from './TapSurface';
+import { formatMoney } from '../utils/formatMoney';
 
 export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, isOpponent = false, opponentName, opponentAvatar }) {
   const { isDarkMode } = useTheme();
@@ -42,10 +43,6 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
     } else {
       return (stake * (100 / Math.abs(odds))) + stake;
     }
-  };
-
-  const formatMoney = (amount) => {
-    return amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   };
 
   // Capitalize league identifiers like (w) -> (W), (m) -> (M)

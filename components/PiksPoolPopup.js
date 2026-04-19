@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { formatMoney } from '../utils/formatMoney';
 
 export default function PiksPoolPopup({ isOpen, onClose, pool, onJoinSuccess }) {
   const [isJoining, setIsJoining] = useState(false);
@@ -144,7 +145,7 @@ export default function PiksPoolPopup({ isOpen, onClose, pool, onJoinSuccess }) 
           <div className="flex justify-center gap-6 mb-6">
             <div className="text-center">
               <div className="bg-yellow-400 text-black px-4 py-2 rounded-xl shadow-lg mb-1">
-                <span className="text-xl font-black">${buyIn.toFixed(0)}</span>
+                <span className="text-xl font-black">${formatMoney(buyIn, 0)}</span>
               </div>
               <p className="text-xs uppercase" style={{ color: 'rgba(255,255,255,0.6)' }}>Entry Fee</p>
             </div>
@@ -160,7 +161,7 @@ export default function PiksPoolPopup({ isOpen, onClose, pool, onJoinSuccess }) 
             <div className="bg-red-500/20 rounded-2xl p-4 mb-6 text-center">
               <p className="text-white font-semibold mb-2">Insufficient Balance</p>
               <p className="text-white/70 text-sm mb-4">
-                You need ${neededAmount.toFixed(2)} more to join this pool.
+                You need ${formatMoney(neededAmount)} more to join this pool.
               </p>
               <button
                 onClick={handleDeposit}
@@ -200,7 +201,7 @@ export default function PiksPoolPopup({ isOpen, onClose, pool, onJoinSuccess }) 
                 className="w-full py-4 active:scale-95 font-bold text-lg rounded-xl shadow-lg transition-all text-center backdrop-blur-sm disabled:opacity-50"
                 style={{ backgroundColor: 'rgba(0,50,80,0.6)', color: '#ffffff' }}
               >
-                {isJoining ? 'Joining...' : `Join Pool - $${buyIn.toFixed(0)}`}
+                {isJoining ? 'Joining...' : `Join Pool - $${formatMoney(buyIn, 0)}`}
               </button>
             )}
             <button

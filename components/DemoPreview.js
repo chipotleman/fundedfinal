@@ -4,6 +4,7 @@ import Link from 'next/link';
 import BetReceipt from './BetReceipt';
 import LiveCommunityStats from './LiveCommunityStats';
 import { categorizeGames } from '../lib/gamesUtils';
+import { formatMoney } from '../utils/formatMoney';
 
 export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, showDemoBetSlip, setShowDemoBetSlip }) {
   const [selectedBets, setSelectedBets] = useState([]);
@@ -334,8 +335,8 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
                             <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-3 lg:p-4">
                               <div className="text-green-400 font-bold text-base lg:text-lg text-center">
                                 {betType === 'parlay'
-                                  ? `Parlay Payout: $${(selectedBets[0].stake * (calculateParlayOdds() > 0 ? calculateParlayOdds()/100 + 1 : 100/Math.abs(calculateParlayOdds()) + 1)).toFixed(0)}`
-                                  : `To Win: $${calculatePayout(bet.odds, bet.stake).toFixed(0)}`
+                                  ? `Parlay Payout: $${formatMoney(selectedBets[0].stake * (calculateParlayOdds() > 0 ? calculateParlayOdds()/100 + 1 : 100/Math.abs(calculateParlayOdds()) + 1), 0)}`
+                                  : `To Win: $${formatMoney(calculatePayout(bet.odds, bet.stake), 0)}`
                                 }
                               </div>
                             </div>

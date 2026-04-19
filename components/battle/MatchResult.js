@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTheme } from '../../contexts/ThemeContext';
 import CoinRain from '../CoinRain';
+import { formatMoney } from '../../utils/formatMoney';
 
 function useCountUp(target, duration = 1000, shouldStart = false) {
   const [value, setValue] = useState(0);
@@ -65,7 +66,7 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
   const animatedPrize = useCountUp(prizeWon, 1400, showStats);
 
   const handleShare = useCallback(() => {
-    const text = `I just won $${prizeWon.toFixed(2)} on Piks! 🏆🔥`;
+    const text = `I just won $${formatMoney(prizeWon)} on Piks! 🏆🔥`;
     navigator.clipboard.writeText(text).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -225,7 +226,7 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
                   </h2>
                   {prizeWon > 0 && (
                     <p className="text-emerald-400 text-lg font-bold mt-2">
-                      +${animatedPrize.toFixed(2)}
+                      +${formatMoney(animatedPrize)}
                     </p>
                   )}
                 </>
@@ -245,22 +246,22 @@ export default function MatchResult({ matchup, currentUserId, onRematch, onClose
             <div className="mr-stats-card rounded-xl p-5 mb-6 space-y-4" style={{ background: isDarkMode ? '#0d0d0d' : '#ffffff', border: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}`, boxShadow: isDarkMode ? 'none' : '0 4px 12px rgba(0,0,0,0.08)' }}>
               <div className="flex justify-between items-center">
                 <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Starting Balance</span>
-                <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${animatedStarting.toFixed(2)}</span>
+                <span className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${formatMoney(animatedStarting)}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Final Balance</span>
-                <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${animatedFinal.toFixed(2)}</span>
+                <span className={`font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>${formatMoney(animatedFinal)}</span>
               </div>
               <div className="pt-3 flex justify-between items-center" style={{ borderTop: `1px solid ${isDarkMode ? '#1a1a1a' : '#e5e7eb'}` }}>
                 <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>P&L</span>
                 <span className={`font-bold text-lg ${pnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {pnl >= 0 ? '+' : '-'}${animatedPnl.toFixed(2)}
+                  {pnl >= 0 ? '+' : '-'}${formatMoney(animatedPnl)}
                 </span>
               </div>
               {isWinner && prizeWon > 0 && (
                 <div className="flex justify-between items-center">
                   <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Prize Won</span>
-                  <span className="text-emerald-400 font-bold text-lg">${animatedPrize.toFixed(2)}</span>
+                  <span className="text-emerald-400 font-bold text-lg">${formatMoney(animatedPrize)}</span>
                 </div>
               )}
               {totalPendingCount > 0 && (

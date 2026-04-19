@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 import { signOut, useSession } from 'next-auth/react';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNotifications } from '../contexts/NotificationsContext';
+import { formatMoney } from '../utils/formatMoney';
 
 export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurrentUser, isLoggedIn: propIsLoggedIn }) {
   const [touchStart, setTouchStart] = useState(null);
@@ -181,7 +182,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                     <div className="text-center">
                       <p className="text-xs text-gray-400 mb-0.5">Balance</p>
                       <p className="text-white font-semibold text-xl">
-                        ${userBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        ${formatMoney(userBalance)}
                       </p>
                     </div>
                     <Link

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import BattleChat from './BattleChat';
 import { useTheme } from '../../contexts/ThemeContext';
+import { formatMoney } from '../../utils/formatMoney';
 
 function formatTimeRemaining(ms) {
   if (!ms || ms <= 0) return 'Ended';
@@ -275,7 +276,7 @@ function BattleCard({ battle, compact, focused }) {
             <span className="text-green-400 text-[10px] font-semibold uppercase tracking-wider">Live</span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-[10px] font-semibold text-gray-400">${potSize.toFixed(0)}</span>
+            <span className="text-[10px] font-semibold text-gray-400">${formatMoney(potSize, 0)}</span>
             <span className="text-gray-600 text-[10px]">{formatTimeRemaining(timeLeft)}</span>
           </div>
         </div>
@@ -356,7 +357,7 @@ function BattleCard({ battle, compact, focused }) {
             <span className="text-green-400 text-[10px] font-semibold uppercase tracking-wider">Live</span>
           </div>
           <div className="flex items-center gap-3">
-            <span className="text-[11px] font-semibold text-gray-400">${potSize.toFixed(0)} pot</span>
+            <span className="text-[11px] font-semibold text-gray-400">${formatMoney(potSize, 0)} pot</span>
             <span className="text-gray-600 text-[11px]">{formatTimeRemaining(timeLeft)}</span>
           </div>
         </div>

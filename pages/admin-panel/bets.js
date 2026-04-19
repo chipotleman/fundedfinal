@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin-panel/AdminLayout';
+import { formatMoney } from '../../utils/formatMoney';
 
 export default function AdminBets() {
   const [bets, setBets] = useState([]);
@@ -127,7 +128,7 @@ export default function AdminBets() {
                           <span className="text-green-400 font-medium">{bet.odds}</span>
                         )}
                       </td>
-                      <td className="px-4 py-4 text-white font-medium text-sm">${parseFloat(bet.stake || 0).toFixed(2)}</td>
+                      <td className="px-4 py-4 text-white font-medium text-sm">${formatMoney(bet.stake || 0)}</td>
                       <td className="px-4 py-4">
                         {editingBet === bet.id ? (
                           <select value={editForm.status} onChange={(e) => setEditForm({ ...editForm, status: e.target.value })} className="bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-white text-sm focus:outline-none focus:border-purple-500/50">

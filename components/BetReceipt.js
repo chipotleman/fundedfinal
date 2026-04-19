@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
+import { formatMoney } from '../utils/formatMoney';
 
 export default function BetReceipt({ bet, isDemo = false, onClose }) {
   console.log('[BetReceipt v2.0] Received bet:', { isLive: bet?.isLive, awayScore: bet?.awayScore, homeScore: bet?.homeScore });
@@ -313,19 +314,19 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
             <div className="border-t border-white/30 mt-2 pt-2">
               <div className="flex justify-between items-end">
                 <div>
-                  <div className="text-white font-bold text-lg">${bet.stake?.toFixed(2)}</div>
+                  <div className="text-white font-bold text-lg">${formatMoney(bet.stake)}</div>
                   <div className="text-gray-400 text-[10px] uppercase">Total Pikked</div>
                 </div>
                 <div className="text-right">
                   {isWon && (
                     <>
-                      <div className="text-green-400 font-bold text-lg">${payout.toFixed(2)}</div>
+                      <div className="text-green-400 font-bold text-lg">${formatMoney(payout)}</div>
                       <div className="text-green-400 text-[10px] uppercase">Won on Piks</div>
                     </>
                   )}
                   {isOpen && (
                     <>
-                      <div className={`font-bold text-lg ${colors.payout}`}>${payout.toFixed(2)}</div>
+                      <div className={`font-bold text-lg ${colors.payout}`}>${formatMoney(payout)}</div>
                       <div className="text-gray-400 text-[10px] uppercase">Potential Payout</div>
                     </>
                   )}
@@ -337,7 +338,7 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
                   )}
                   {isCashedOut && (
                     <>
-                      <div className="text-[#E9762B] font-bold text-lg">${(bet.profit || bet.stake * 0.8).toFixed(2)}</div>
+                      <div className="text-[#E9762B] font-bold text-lg">${formatMoney(bet.profit || bet.stake * 0.8)}</div>
                       <div className="text-gray-400 text-[10px] uppercase">Cashed Out</div>
                     </>
                   )}

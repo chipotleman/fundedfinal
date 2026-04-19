@@ -15,6 +15,7 @@ import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
 import { useMatchup } from '../contexts/MatchupContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useNotifications } from '../contexts/NotificationsContext';
+import { formatMoney } from '../utils/formatMoney';
 
 export default function BattlePage() {
   const router = useRouter();
@@ -324,7 +325,7 @@ export default function BattlePage() {
                 <div className="flex gap-5 mb-3">
                   <div>
                     <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Buy-In</p>
-                    <p className="font-semibold text-sm" style={{ color: isDarkMode ? '#fff' : '#111' }}>${parseFloat(activeMatchup.startingBalance || 0).toFixed(0)}</p>
+                    <p className="font-semibold text-sm" style={{ color: isDarkMode ? '#fff' : '#111' }}>${formatMoney(activeMatchup.startingBalance || 0, 0)}</p>
                   </div>
                   <div>
                     <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Duration</p>
@@ -338,7 +339,7 @@ export default function BattlePage() {
                   </div>
                   <div>
                     <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-0.5">Pot</p>
-                    <p className="font-semibold text-sm" style={{ color: isDarkMode ? '#fff' : '#111' }}>${parseFloat(activeMatchup.potSize || activeMatchup.startingBalance * 2 || 0).toFixed(0)}</p>
+                    <p className="font-semibold text-sm" style={{ color: isDarkMode ? '#fff' : '#111' }}>${formatMoney(activeMatchup.potSize || activeMatchup.startingBalance * 2 || 0, 0)}</p>
                   </div>
                 </div>
                 {activeMatchup.privateCode && (
@@ -457,17 +458,17 @@ export default function BattlePage() {
                       </div>
                       <p className="text-white font-semibold text-xs truncate max-w-[100px] min-h-[16px]">{myName || '\u00A0'}</p>
                       <p className={`text-sm font-bold mt-0.5 ${myPnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        ${myBal.toFixed(0)}
+                        ${formatMoney(myBal, 0)}
                       </p>
                       <p className={`text-[10px] font-medium ${myPnl >= 0 ? 'text-green-400/70' : 'text-red-400/70'}`}>
-                        {myPnl >= 0 ? '+' : ''}{myPnl.toFixed(0)}
+                        {myPnl >= 0 ? '+' : ''}{formatMoney(myPnl, 0)}
                       </p>
                     </div>
 
                     <div className="flex flex-col items-center px-3">
                       <span className="text-xl sm:text-2xl font-black text-blue-400 vs-glow">VS</span>
                       <div className="text-[9px] text-gray-500 font-medium mt-1 text-center">
-                        <span className="text-white font-bold">${pot.toFixed(0)}</span> pot
+                        <span className="text-white font-bold">${formatMoney(pot, 0)}</span> pot
                       </div>
                     </div>
 
@@ -481,10 +482,10 @@ export default function BattlePage() {
                       </div>
                       <p className="text-white font-semibold text-xs truncate max-w-[100px] min-h-[16px]">{oppName}</p>
                       <p className={`text-sm font-bold mt-0.5 ${oppPnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        ${oppBal.toFixed(0)}
+                        ${formatMoney(oppBal, 0)}
                       </p>
                       <p className={`text-[10px] font-medium ${oppPnl >= 0 ? 'text-green-400/70' : 'text-red-400/70'}`}>
-                        {oppPnl >= 0 ? '+' : ''}{oppPnl.toFixed(0)}
+                        {oppPnl >= 0 ? '+' : ''}{formatMoney(oppPnl, 0)}
                       </p>
                     </div>
                   </div>

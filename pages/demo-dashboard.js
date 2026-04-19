@@ -6,6 +6,7 @@ import TopNavbar from '../components/TopNavbar';
 import BetReceipt from '../components/BetReceipt';
 import CoinRain from '../components/CoinRain';
 import { categorizeGames, filterGamesBySport } from '../lib/gamesUtils';
+import { formatMoney } from '../utils/formatMoney';
 
 export default function DemoDashboard() {
   const router = useRouter();
@@ -532,7 +533,7 @@ export default function DemoDashboard() {
                                   </div>
                                   <div className="text-right min-w-[80px]">
                                     <div className="text-gray-500 text-[10px] uppercase">To Win</div>
-                                    <div className="text-green-400 font-bold text-lg">${calculatePayout(bet.stake || 0, bet.odds).toFixed(2)}</div>
+                                    <div className="text-green-400 font-bold text-lg">${formatMoney(calculatePayout(bet.stake || 0, bet.odds))}</div>
                                   </div>
                                 </div>
                               </div>
@@ -565,7 +566,7 @@ export default function DemoDashboard() {
                       <div className="text-right min-w-[100px]">
                         <div className="text-gray-500 text-[10px] uppercase">Parlay Win</div>
                         <div className="text-green-400 font-bold text-lg">
-                          ${calculatePayout(parseFloat(parlayStake) || 0, calculateParlayOdds() || -110).toFixed(2)}
+                          ${formatMoney(calculatePayout(parseFloat(parlayStake) || 0, calculateParlayOdds() || -110))}
                         </div>
                       </div>
                     </div>
@@ -576,7 +577,7 @@ export default function DemoDashboard() {
                   <div className="flex justify-between text-sm mb-2">
                     <span className="text-gray-400">Total Pikked</span>
                     <span className="text-white font-bold">
-                      ${betMode === 'parlay' ? (parseFloat(parlayStake) || 0).toFixed(2) : getTotalStake().toFixed(2)}
+                      ${betMode === 'parlay' ? formatMoney(parseFloat(parlayStake) || 0) : formatMoney(getTotalStake())}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm">

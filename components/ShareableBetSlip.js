@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import PiksBetCard from './PiksBetCard';
 import { useTheme } from '../contexts/ThemeContext';
+import { formatMoney } from '../utils/formatMoney';
 
 export default function ShareableBetSlip({ bet, isVisible, onClose }) {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -99,7 +100,7 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
 
   const shareLink = async () => {
     const payout = calculatePayout(bet.odds, bet.stake);
-    const text = `Just won $${payout.toFixed(2)} on Piks!`;
+    const text = `Just won $${formatMoney(payout)} on Piks!`;
     const url = 'https://fundedpiks.com';
 
     if (navigator.share) {
@@ -124,13 +125,13 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
 
   const shareToTwitter = () => {
     const payout = calculatePayout(bet.odds, bet.stake);
-    const text = `Just won $${payout.toFixed(2)} on Piks!`;
+    const text = `Just won $${formatMoney(payout)} on Piks!`;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://fundedpiks.com')}`, '_blank');
   };
 
   const copyText = () => {
     const payout = calculatePayout(bet.odds, bet.stake);
-    navigator.clipboard.writeText(`Just won $${payout.toFixed(2)} on Piks! https://fundedpiks.com`);
+    navigator.clipboard.writeText(`Just won $${formatMoney(payout)} on Piks! https://fundedpiks.com`);
     showMessage('Copied!');
   };
 

@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { useTheme } from '../contexts/ThemeContext';
+import { formatMoney } from '../utils/formatMoney';
 
 const MODE_THEMES = {
   rush: {
@@ -306,7 +307,7 @@ export default function BattleHistoryGroup({
               </div>
               <p className="text-white text-[11px] font-bold truncate max-w-[90px] text-center mt-1">{userName}</p>
               <p className={`text-[10px] font-bold leading-tight ${myPnL > 0 ? 'text-green-400' : myPnL < 0 ? 'text-red-400' : 'text-yellow-400'}`}>
-                ${myBalance.toLocaleString()}
+                ${formatMoney(myBalance, 0)}
               </p>
             </div>
 
@@ -328,7 +329,7 @@ export default function BattleHistoryGroup({
                   color: theme.prizeColor,
                   textShadow: `0 0 10px rgba(${theme.accentRgb},0.4)`,
                 }}>
-                  ${(battle.winnerPayout || battle.potSize || 0).toLocaleString()}
+                  ${formatMoney(battle.winnerPayout || battle.potSize || 0, 0)}
                 </p>
               </div>
               <div className="mt-1 flex items-center gap-1.5 text-[10px] leading-none">
@@ -361,7 +362,7 @@ export default function BattleHistoryGroup({
               </div>
               <p className="text-white text-[11px] font-bold truncate max-w-[90px] text-center mt-1">{opponent.username}</p>
               <p className="text-[10px] font-bold text-red-400 leading-tight">
-                ${oppBalance.toLocaleString()}
+                ${formatMoney(oppBalance, 0)}
               </p>
             </div>
           </div>

@@ -3,6 +3,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
+import { formatMoney } from '../../utils/formatMoney';
 
 export default function CapperProfile() {
   const router = useRouter();
@@ -252,7 +253,7 @@ export default function CapperProfile() {
                       >
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-bold">{product.name}</span>
-                          <span className="text-xl font-bold">${parseFloat(product.price).toFixed(0)}</span>
+                          <span className="text-xl font-bold">${formatMoney(product.price, 0)}</span>
                         </div>
                         <div className="text-gray-400 text-sm">{product.duration} access</div>
                         {product.features && product.features.length > 0 && (
@@ -277,7 +278,7 @@ export default function CapperProfile() {
                       disabled={purchasing}
                       className="w-full py-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 rounded-xl font-bold text-lg transition-all"
                     >
-                      {purchasing ? 'Processing...' : `Subscribe for $${parseFloat(selectedProduct.price).toFixed(0)}`}
+                      {purchasing ? 'Processing...' : `Subscribe for $${formatMoney(selectedProduct.price, 0)}`}
                     </button>
                   )}
 

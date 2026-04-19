@@ -8,6 +8,7 @@ import { useBetSlip } from '../contexts/BetSlipContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { useGames } from '../contexts/GamesContext';
+import { formatMoney } from '../utils/formatMoney';
 
 export default function BetHistory() {
   const { user } = useAuth();
@@ -217,7 +218,7 @@ export default function BetHistory() {
 
   const shareToSocial = (platform, bet) => {
     const payout = bet.stake + bet.profit;
-    const text = `Just won $${bet.profit.toFixed(2)} profit on ${bet.selection}! Total payout: $${payout.toFixed(2)} 💰 #Funded #BettingWin`;
+    const text = `Just won $${formatMoney(bet.profit)} profit on ${bet.selection}! Total payout: $${formatMoney(payout)} 💰 #Funded #BettingWin`;
     const url = 'https://fundmybet.com';
 
     switch (platform) {
@@ -284,14 +285,14 @@ export default function BetHistory() {
     ctx.fillStyle = '#ffffff';
     ctx.font = '16px Arial';
     ctx.textAlign = 'left';
-    ctx.fillText(`Stake: $${bet.stake.toFixed(2)}`, 50, 320);
+    ctx.fillText(`Stake: $${formatMoney(bet.stake)}`, 50, 320);
 
     ctx.fillStyle = bet.profit >= 0 ? '#10b981' : '#ef4444';
-    ctx.fillText(`Profit: ${bet.profit >= 0 ? '+' : ''}$${bet.profit.toFixed(2)}`, 50, 350);
+    ctx.fillText(`Profit: ${bet.profit >= 0 ? '+' : ''}$${formatMoney(bet.profit)}`, 50, 350);
 
     ctx.fillStyle = bet.status === 'won' ? '#10b981' : '#ef4444';
     ctx.font = 'bold 24px Arial';
-    ctx.fillText(`TOTAL PAYOUT: $${bet.profit >= 0 ? (bet.stake + bet.profit).toFixed(2) : '0.00'}`, 50, 400);
+    ctx.fillText(`TOTAL PAYOUT: $${bet.profit >= 0 ? formatMoney(bet.stake + bet.profit) : '0.00'}`, 50, 400);
 
     // Footer
     ctx.fillStyle = '#9ca3af';

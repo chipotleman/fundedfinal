@@ -3,6 +3,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
+import { formatMoney } from '../../utils/formatMoney';
 
 const durationOptions = [
   { value: 'daily', label: 'Daily', days: 1 },
@@ -182,11 +183,11 @@ export default function CapperDashboard() {
             </div>
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5">
               <div className="text-gray-400 text-sm mb-1">Monthly Revenue</div>
-              <div className="text-3xl font-bold text-green-400">${stats.monthlyRevenue.toFixed(0)}</div>
+              <div className="text-3xl font-bold text-green-400">${formatMoney(stats.monthlyRevenue, 0)}</div>
             </div>
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5">
               <div className="text-gray-400 text-sm mb-1">Total Revenue</div>
-              <div className="text-3xl font-bold text-white">${stats.totalRevenue.toFixed(0)}</div>
+              <div className="text-3xl font-bold text-white">${formatMoney(stats.totalRevenue, 0)}</div>
             </div>
             <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-5">
               <div className="text-gray-400 text-sm mb-1">Avg Rating</div>
@@ -242,7 +243,7 @@ export default function CapperDashboard() {
                           <div className="font-medium">New subscriber</div>
                           <div className="text-gray-400 text-sm">{new Date(sub.createdAt).toLocaleDateString()}</div>
                         </div>
-                        <div className="text-green-400 font-bold">+${parseFloat(sub.amountPaid).toFixed(0)}</div>
+                        <div className="text-green-400 font-bold">+${formatMoney(sub.amountPaid, 0)}</div>
                       </div>
                     ))}
                   </div>
@@ -262,7 +263,7 @@ export default function CapperDashboard() {
                       <h3 className="text-lg font-bold">{product.name}</h3>
                       <div className="text-gray-400 text-sm">{product.duration} access</div>
                     </div>
-                    <div className="text-2xl font-bold">${parseFloat(product.price).toFixed(0)}</div>
+                    <div className="text-2xl font-bold">${formatMoney(product.price, 0)}</div>
                   </div>
                   <p className="text-gray-400 text-sm mb-4">{product.description || 'No description'}</p>
                   
@@ -332,7 +333,7 @@ export default function CapperDashboard() {
                             sub.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
                           }`}>{sub.status}</span>
                         </td>
-                        <td className="px-4 py-4 text-green-400 font-medium">${parseFloat(sub.amountPaid).toFixed(0)}</td>
+                        <td className="px-4 py-4 text-green-400 font-medium">${formatMoney(sub.amountPaid, 0)}</td>
                         <td className="px-4 py-4 text-gray-400">{new Date(sub.expiresAt).toLocaleDateString()}</td>
                       </tr>
                     ))}

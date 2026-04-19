@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useTheme } from '../contexts/ThemeContext';
 import ForfeitModal from './battle/ForfeitModal';
+import { formatMoney } from '../utils/formatMoney';
 
 function formatTimer(ms) {
   if (!ms || ms <= 0) return '00:00';
@@ -613,7 +614,7 @@ export default function ActiveBattleCard({
                                   <span className="text-[10px] text-gray-500 ml-1.5">({bet.odds})</span>
                                 </div>
                                 <div className="flex items-center gap-2 flex-shrink-0">
-                                  <span className="text-[10px] text-gray-500">${parseFloat(bet.stake).toFixed(0)}</span>
+                                  <span className="text-[10px] text-gray-500">${formatMoney(bet.stake, 0)}</span>
                                   <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold ${
                                     bet.status === 'won' ? 'bg-green-500/15 text-green-400' :
                                     bet.status === 'lost' ? 'bg-red-500/15 text-red-400' :

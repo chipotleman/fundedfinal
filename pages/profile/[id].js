@@ -5,6 +5,7 @@ import Link from 'next/link';
 import TopNavbar from '../../components/TopNavbar';
 import { useBetSlip } from '../../contexts/BetSlipContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { formatMoney } from '../../utils/formatMoney';
 
 export default function PublicProfile() {
   const [profile, setProfile] = useState(null);
@@ -630,7 +631,7 @@ export default function PublicProfile() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-500">Winner Takes (90%)</span>
-                  <span className="text-green-500 font-bold">${(inviteBuyIn * 2 * 0.9).toFixed(0)}</span>
+                  <span className="text-green-500 font-bold">${formatMoney(inviteBuyIn * 2 * 0.9, 0)}</span>
                 </div>
               </div>
               

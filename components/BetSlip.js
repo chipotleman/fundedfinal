@@ -10,17 +10,12 @@ import ShareableBetSlip from './ShareableBetSlip';
 import PiksBetCard from './PiksBetCard';
 import CoinRain from './CoinRain';
 import haptic from '../utils/haptics';
+import { formatMoney } from '../utils/formatMoney';
 
 // Capitalize league identifiers like (w) -> (W), (m) -> (M)
 const capitalizeLeagueId = (text) => {
   if (!text) return text;
   return text.replace(/\(([wm])\)/gi, (match, letter) => `(${letter.toUpperCase()})`);
-};
-
-// Format a numeric dollar amount with thousands separators and two decimal places
-const formatMoney = (value) => {
-  const num = Number(value) || 0;
-  return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
 export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, onBetPlaced }) {
@@ -669,7 +664,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                     <div className="flex items-center gap-1.5 bg-green-500/20 border border-green-500/50 px-2 py-1 rounded-full" title="Your balance">
                       <span className="text-green-400/80 text-[10px] font-bold uppercase tracking-wider">You</span>
                       <span className="text-green-400 text-xs font-bold">
-                        ${parseFloat(stickyMatchup.myBalance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                        ${formatMoney(stickyMatchup.myBalance ?? 0, 0)}
                       </span>
                     </div>
                     <span className="text-gray-500 text-[10px] font-bold">VS</span>
@@ -678,13 +673,13 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                         {stickyMatchup.opponent?.username || stickyMatchup.opponent?.displayName || 'Opp'}
                       </span>
                       <span className="text-orange-400 text-xs font-bold">
-                        ${parseFloat(stickyMatchup.opponentBalance ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                        ${formatMoney(stickyMatchup.opponentBalance ?? 0, 0)}
                       </span>
                     </div>
                   </>
                 ) : (
                   <div className="flex items-center gap-1.5 bg-green-500/20 border border-green-500/50 px-2.5 py-1 rounded-full">
-                    <span className="text-green-400 text-xs font-bold">${typeof bankroll === 'number' ? bankroll.toLocaleString() : parseFloat(bankroll || 0).toLocaleString()}</span>
+                    <span className="text-green-400 text-xs font-bold">${formatMoney(bankroll, 0)}</span>
                   </div>
                 )}
                 <div className="flex items-center gap-1.5 bg-blue-500/20 border border-blue-500/50 px-2.5 py-1 rounded-full">

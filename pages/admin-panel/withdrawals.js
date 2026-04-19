@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin-panel/AdminLayout';
+import { formatMoney } from '../../utils/formatMoney';
 
 const statusConfig = {
   under_review: { bg: 'bg-yellow-500/20', text: 'text-yellow-400', border: 'border-yellow-500/30', label: 'Under Review' },
@@ -165,7 +166,7 @@ export default function AdminWithdrawals() {
                       </td>
                       <td className="py-4 px-4">
                         <p className="text-white font-bold">${parseFloat(withdrawal.amount).toLocaleString()}</p>
-                        {parseFloat(withdrawal.fee) > 0 && <p className="text-gray-500 text-xs">Fee: ${parseFloat(withdrawal.fee).toFixed(2)}</p>}
+                        {parseFloat(withdrawal.fee) > 0 && <p className="text-gray-500 text-xs">Fee: ${formatMoney(withdrawal.fee)}</p>}
                       </td>
                       <td className="py-4 px-4 text-gray-300">{methodLabels[withdrawal.methodType] || withdrawal.methodType}</td>
                       <td className="py-4 px-4"><span className={`px-2 py-1 rounded-lg text-xs font-medium ${status.bg} ${status.text} border ${status.border}`}>{status.label}</span></td>
@@ -232,7 +233,7 @@ export default function AdminWithdrawals() {
                 <div className="bg-white/5 rounded-xl p-4 border border-white/5"><p className="text-gray-500 text-xs uppercase">Net Amount</p><p className="text-xl font-bold text-white">${parseFloat(selectedWithdrawal.netAmount || selectedWithdrawal.amount).toLocaleString()}</p></div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white/5 rounded-xl p-4 border border-white/5"><p className="text-gray-500 text-xs uppercase">Fee</p><p className="text-white">${parseFloat(selectedWithdrawal.fee || 0).toFixed(2)}</p></div>
+                <div className="bg-white/5 rounded-xl p-4 border border-white/5"><p className="text-gray-500 text-xs uppercase">Fee</p><p className="text-white">${formatMoney(selectedWithdrawal.fee || 0)}</p></div>
                 <div className="bg-white/5 rounded-xl p-4 border border-white/5"><p className="text-gray-500 text-xs uppercase">Method</p><p className="text-white">{methodLabels[selectedWithdrawal.methodType] || selectedWithdrawal.methodType}</p></div>
               </div>
               <div className="bg-white/5 rounded-xl p-4 border border-white/5"><p className="text-gray-500 text-xs uppercase">User</p><p className="text-white">{selectedWithdrawal.userEmail}</p></div>

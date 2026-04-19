@@ -6,6 +6,7 @@ import TopNavbar from '../components/TopNavbar';
 import QuickMatchModal from '../components/battle/QuickMatchModal';
 import PlayFriendModal from '../components/battle/PlayFriendModal';
 import { useNotifications } from '../contexts/NotificationsContext';
+import { formatMoney } from '../utils/formatMoney';
 
 const SkeletonCard = () => (
   <div className="animate-pulse bg-[#111] rounded-xl p-4 border border-[#1a1a1a]">
@@ -432,7 +433,7 @@ const WatchBattleModal = ({ battle, onClose }) => {
                           </svg>
                         </button>
                       </div>
-                      <p className="text-gray-500 text-sm">Current: ${user1Balance.toFixed(2)}</p>
+                      <p className="text-gray-500 text-sm">Current: ${formatMoney(user1Balance)}</p>
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-xs text-gray-500">STAKE & WIN</p>
@@ -472,7 +473,7 @@ const WatchBattleModal = ({ battle, onClose }) => {
                           </svg>
                         </button>
                       </div>
-                      <p className="text-gray-500 text-sm">Current: ${user2Balance.toFixed(2)}</p>
+                      <p className="text-gray-500 text-sm">Current: ${formatMoney(user2Balance)}</p>
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-xs text-gray-500">STAKE & WIN</p>
@@ -638,7 +639,7 @@ const WatchBattleModal = ({ battle, onClose }) => {
                       </div>
                       <div className="flex-1">
                         <p className="font-medium">Winner Takes</p>
-                        <p className="text-sm text-gray-500">${(parseFloat(battle.potSize || 0) * 0.9).toFixed(2)} (90% of pot)</p>
+                        <p className="text-sm text-gray-500">${formatMoney(parseFloat(battle.potSize || 0) * 0.9)} (90% of pot)</p>
                       </div>
                       <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -1227,7 +1228,7 @@ export default function SocialPage() {
                               <p className="text-xs text-gray-400">${invite.buyIn} buy-in • {invite.duration}h battle</p>
                             </div>
                             <div className="text-right">
-                              <p className="text-sm font-bold text-green-400">Win ${(parseFloat(invite.buyIn) * 2 * 0.9).toFixed(0)}</p>
+                              <p className="text-sm font-bold text-green-400">Win ${formatMoney(parseFloat(invite.buyIn) * 2 * 0.9, 0)}</p>
                             </div>
                           </div>
                           <div className="flex gap-2">
