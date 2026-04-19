@@ -267,6 +267,25 @@ export const adminStaff = pgTable("admin_staff", {
   roleIdx: index("admin_staff_role_idx").on(table.role),
 }));
 
+// Audit log for sensitive admin actions (e.g. first-deposit match grants/revokes)
+export const adminAuditLog = pgTable("admin_audit_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  adminId: varchar("admin_id"),
+  adminEmail: varchar("admin_email", { length: 255 }),
+  adminType: varchar("admin_type", { length: 50 }),
+  action: varchar("action", { length: 100 }).notNull(),
+  targetUserId: varchar("target_user_id"),
+  details: jsonb("details"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => ({
+  targetUserIdx: index("admin_audit_log_target_user_id_idx").on(table.targetUserId),
+  actionIdx: index("admin_audit_log_action_idx").on(table.action),
+  createdAtIdx: index("admin_audit_log_created_at_idx").on(table.createdAt),
+}));
+
+export type AdminAuditLogEntry = typeof adminAuditLog.$inferSelect;
+export type InsertAdminAuditLogEntry = typeof adminAuditLog.$inferInsert;
+
 // User events tracking for analytics
 export const userEvents = pgTable("user_events", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

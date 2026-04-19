@@ -31,6 +31,11 @@ export default function AdminUsers() {
   const [activityTab, setActivityTab] = useState('timeline');
   const [selectedSplit, setSelectedSplit] = useState(90);
   const [activityError, setActivityError] = useState('');
+  const [showMatchModal, setShowMatchModal] = useState(false);
+  const [matchUser, setMatchUser] = useState(null);
+  const [matchAmount, setMatchAmount] = useState('100');
+  const [matchMessage, setMatchMessage] = useState('');
+  const [matchSubmitting, setMatchSubmitting] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -164,6 +169,79 @@ export default function AdminUsers() {
       a.href = url;
       a.download = `users-export-${new Date().toISOString().split('T')[0]}.csv`;
       a.click();
+    }
+  };
+
+  const openMatchModal = (user, e) => {
+    e.stopPropagation();
+    setMatchUser(user);
+    const existing = parseFloat(user.profile?.firstDepositMatchAmount || 0);
+    setMatchAmount(existing > 0 ? existing.toString() : '100');
+    setMatchMessage('');
+    setShowMatchModal(true);
+  };
+
+  const handleGrantMatch = async () => {
+    if (!matchUser) return;
+    const amt = parseFloat(matchAmount);
+    if (!Number.isFinite(amt) || amt <= 0) {
+      setMatchMessage('Enter an amount greater than $0');
+      return;
+    }
+    if (amt > 100) {
+      setMatchMessage('Amount cannot exceed $100');
+      return;
+    }
+    setMatchSubmitting(true);
+    setMatchMessage('');
+    try {
+      const token = localStorage.getItem('admin_token');
+      const res = await fetch('/api/admin-panel/users/first-deposit-match', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ userId: matchUser.id, amount: amt }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMatchMessage(data.message || 'First-deposit match granted');
+        await fetchUsers();
+        setTimeout(() => { setShowMatchModal(false); setMatchUser(null); }, 1500);
+      } else {
+        setMatchMessage(data.error || 'Failed to grant match');
+      }
+    } catch (error) {
+      setMatchMessage('An error occurred');
+    } finally {
+      setMatchSubmitting(false);
+    }
+  };
+
+  const handleRevokeMatch = async () => {
+    if (!matchUser) return;
+    if (!confirm('Revoke this user\'s first-deposit match? Their balance will be debited by the same amount.')) {
+      return;
+    }
+    setMatchSubmitting(true);
+    setMatchMessage('');
+    try {
+      const token = localStorage.getItem('admin_token');
+      const res = await fetch('/api/admin-panel/users/first-deposit-match', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ userId: matchUser.id }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setMatchMessage(data.message || 'First-deposit match revoked');
+        await fetchUsers();
+        setTimeout(() => { setShowMatchModal(false); setMatchUser(null); }, 1500);
+      } else {
+        setMatchMessage(data.error || 'Failed to revoke match');
+      }
+    } catch (error) {
+      setMatchMessage('An error occurred');
+    } finally {
+      setMatchSubmitting(false);
     }
   };
 
@@ -334,6 +412,17 @@ export default function AdminUsers() {
                             Grant
                           </button>
                           <button
+                            onClick={(e) => openMatchModal(user, e)}
+                            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+                              user.profile?.firstDepositMatchGrantedAt
+                                ? 'text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20'
+                                : 'text-purple-400 bg-purple-500/10 hover:bg-purple-500/20'
+                            }`}
+                            title="First-deposit match"
+                          >
+                            {user.profile?.firstDepositMatchGrantedAt ? 'Match ✓' : 'Match'}
+                          </button>
+                          <button
                             onClick={(e) => openResetModal(user.id, e)}
                             className="px-3 py-1.5 text-xs font-medium text-yellow-400 bg-yellow-500/10 hover:bg-yellow-500/20 rounded-lg transition-colors"
                           >
@@ -367,6 +456,31 @@ export default function AdminUsers() {
                               }`}>
                                 {user.profile?.status || 'inactive'}
                               </span>
+                            </div>
+                          </div>
+                          <div className="mt-4 bg-white/5 rounded-xl p-4 border border-white/5">
+                            <div className="flex items-start justify-between gap-4 flex-wrap">
+                              <div>
+                                <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">First-Deposit Match</p>
+                                {user.profile?.firstDepositMatchGrantedAt ? (
+                                  <div className="text-white">
+                                    <p className="text-lg font-bold text-emerald-400">
+                                      ${parseFloat(user.profile.firstDepositMatchAmount || 0).toFixed(2)} granted
+                                    </p>
+                                    <p className="text-xs text-gray-400 mt-1">
+                                      {formatDate(user.profile.firstDepositMatchGrantedAt)}
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <p className="text-sm text-gray-400">Not granted</p>
+                                )}
+                              </div>
+                              <button
+                                onClick={(e) => openMatchModal(user, e)}
+                                className="px-3 py-1.5 text-xs font-medium text-purple-400 bg-purple-500/10 hover:bg-purple-500/20 rounded-lg transition-colors"
+                              >
+                                {user.profile?.firstDepositMatchGrantedAt ? 'Manage' : 'Grant match'}
+                              </button>
                             </div>
                           </div>
                           {user.challenges?.length > 0 && (
@@ -501,6 +615,83 @@ export default function AdminUsers() {
               <button onClick={handleGrantChallenge} disabled={grantingChallenge} className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 text-white rounded-xl transition-all font-medium">
                 {grantingChallenge ? 'Granting...' : 'Grant Challenge'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showMatchModal && matchUser && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="glass-card p-6 w-full max-w-md">
+            <h2 className="text-xl font-bold text-white mb-2">First-Deposit Match</h2>
+            <p className="text-gray-400 text-sm mb-4">User: {matchUser.email}</p>
+
+            {matchUser.profile?.firstDepositMatchGrantedAt ? (
+              <div className="mb-4 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
+                <p className="text-xs text-emerald-300 uppercase tracking-wider mb-1">Currently granted</p>
+                <p className="text-lg font-bold text-emerald-400">
+                  ${parseFloat(matchUser.profile.firstDepositMatchAmount || 0).toFixed(2)}
+                </p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Granted {formatDate(matchUser.profile.firstDepositMatchGrantedAt)}
+                </p>
+                <p className="text-xs text-gray-400 mt-3">
+                  Revoking will debit the same amount from the user's most recent active challenge balance.
+                </p>
+              </div>
+            ) : (
+              <div className="mb-4">
+                <label className="block text-sm text-gray-400 mb-2">Match amount (max $100)</label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">$</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    step="0.01"
+                    value={matchAmount}
+                    onChange={(e) => setMatchAmount(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-7 pr-4 py-3 text-white focus:outline-none focus:border-purple-500/50 transition-all"
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Credits the user's most recent active challenge balance and marks the bonus as granted so it can't be auto-issued again.
+                </p>
+              </div>
+            )}
+
+            {matchMessage && (
+              <div className={`mb-4 p-3 rounded-xl text-sm ${
+                matchMessage.toLowerCase().includes('granted') || matchMessage.toLowerCase().includes('revoked')
+                  ? 'bg-green-500/10 text-green-400 border border-green-500/30'
+                  : 'bg-red-500/10 text-red-400 border border-red-500/30'
+              }`}>{matchMessage}</div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setShowMatchModal(false); setMatchUser(null); }}
+                className="flex-1 px-4 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl transition-colors border border-white/10"
+              >
+                Close
+              </button>
+              {matchUser.profile?.firstDepositMatchGrantedAt ? (
+                <button
+                  onClick={handleRevokeMatch}
+                  disabled={matchSubmitting}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 disabled:opacity-50 text-white rounded-xl transition-all font-medium"
+                >
+                  {matchSubmitting ? 'Revoking...' : 'Revoke match'}
+                </button>
+              ) : (
+                <button
+                  onClick={handleGrantMatch}
+                  disabled={matchSubmitting}
+                  className="flex-1 px-4 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 text-white rounded-xl transition-all font-medium"
+                >
+                  {matchSubmitting ? 'Granting...' : 'Grant match'}
+                </button>
+              )}
             </div>
           </div>
         </div>
