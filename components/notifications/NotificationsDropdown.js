@@ -294,8 +294,13 @@ function MessageItem({ item, ctx, router, onClose, expanded, onToggle, onCollaps
   const [reply, setReply] = useState('');
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState(null);
+  const [atBottom, setAtBottom] = useState(true);
+  const [hasNew, setHasNew] = useState(false);
   const threadEndRef = useRef(null);
+  const threadScrollRef = useRef(null);
   const inputRef = useRef(null);
+  const atBottomRef = useRef(true);
+  const lastMessageIdRef = useRef(null);
 
   // Suppress duplicate toast notifications for this conversation while open.
   useEffect(() => {
@@ -305,36 +310,110 @@ function MessageItem({ item, ctx, router, onClose, expanded, onToggle, onCollaps
     return () => ctx.setSuppress?.(key, false);
   }, [expanded, sender.id, ctx]);
 
-  // Load the recent thread when the user expands the row.
+  // Load + live-refresh the recent thread while expanded.
   useEffect(() => {
     if (!expanded || !sender.id) return;
     let cancelled = false;
-    (async () => {
-      setLoading(true);
-      setLoadError(null);
+    let timer = null;
+
+    const fetchThread = async ({ initial }) => {
+      if (initial) {
+        setLoading(true);
+        setLoadError(null);
+      }
       try {
         const res = await fetch(`/api/messages?friendId=${sender.id}`, { credentials: 'include' });
         if (!res.ok) {
-          if (!cancelled) setLoadError(res.status === 403 ? 'You can only message friends.' : 'Could not load messages.');
+          if (!cancelled && initial) {
+            setLoadError(res.status === 403 ? 'You can only message friends.' : 'Could not load messages.');
+          }
           return;
         }
         const data = await res.json();
-        if (!cancelled) setThread(data.messages || []);
+        if (cancelled) return;
+        const next = data.messages || [];
+        setThread((prev) => {
+          const prevLast = prev[prev.length - 1]?.id;
+          const nextLast = next[next.length - 1]?.id;
+          if (prev.length === next.length && prevLast === nextLast) return prev;
+          const prevIds = new Set(prev.map((m) => m.id));
+          const incomingFromFriend = next.some(
+            (m) => !prevIds.has(m.id) && m.senderId === sender.id
+          );
+          if (!initial && incomingFromFriend && !atBottomRef.current) {
+            setHasNew(true);
+          }
+          return next;
+        });
       } catch {
-        if (!cancelled) setLoadError('Could not load messages.');
+        if (!cancelled && initial) setLoadError('Could not load messages.');
       } finally {
-        if (!cancelled) setLoading(false);
+        if (!cancelled && initial) setLoading(false);
       }
-    })();
-    return () => { cancelled = true; };
+    };
+
+    fetchThread({ initial: true });
+    timer = setInterval(() => fetchThread({ initial: false }), 5000);
+
+    const onVisible = () => {
+      if (document.visibilityState === 'visible') fetchThread({ initial: false });
+    };
+    document.addEventListener('visibilitychange', onVisible);
+
+    return () => {
+      cancelled = true;
+      if (timer) clearInterval(timer);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, [expanded, sender.id]);
 
+  // Reset live-state when collapsed or sender changes.
   useEffect(() => {
-    if (expanded) {
+    if (!expanded) {
+      setHasNew(false);
+      setAtBottom(true);
+      atBottomRef.current = true;
+      lastMessageIdRef.current = null;
+    }
+  }, [expanded, sender.id]);
+
+  // Auto-scroll on first open and when the user is already at the bottom.
+  useEffect(() => {
+    if (!expanded) return;
+    const lastId = thread[thread.length - 1]?.id || null;
+    const isFirst = lastMessageIdRef.current === null;
+    const changed = lastId !== lastMessageIdRef.current;
+    lastMessageIdRef.current = lastId;
+    if (isFirst) {
       threadEndRef.current?.scrollIntoView({ block: 'nearest' });
       inputRef.current?.focus();
+      setHasNew(false);
+      return;
     }
-  }, [expanded, thread.length]);
+    if (changed && atBottomRef.current) {
+      threadEndRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      setHasNew(false);
+    }
+  }, [expanded, thread]);
+
+  const handleScroll = () => {
+    const el = threadScrollRef.current;
+    if (!el) return;
+    const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+    const near = distance < 24;
+    atBottomRef.current = near;
+    setAtBottom(near);
+    if (near && hasNew) setHasNew(false);
+  };
+
+  const jumpToLatest = () => {
+    const el = threadScrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+    threadEndRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    atBottomRef.current = true;
+    setAtBottom(true);
+    setHasNew(false);
+  };
 
   const handleSend = async (e) => {
     e?.preventDefault?.();
@@ -397,7 +476,12 @@ function MessageItem({ item, ctx, router, onClose, expanded, onToggle, onCollaps
 
       {expanded && (
         <div className="px-4 pb-3">
-          <div className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg p-2 max-h-48 overflow-y-auto space-y-1.5">
+          <div className="relative">
+          <div
+            ref={threadScrollRef}
+            onScroll={handleScroll}
+            className="bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg p-2 max-h-48 overflow-y-auto space-y-1.5"
+          >
             {loading && (
               <div className="text-gray-500 text-xs text-center py-3">Loading…</div>
             )}
@@ -424,6 +508,17 @@ function MessageItem({ item, ctx, router, onClose, expanded, onToggle, onCollaps
               </div>
             ))}
             <div ref={threadEndRef} />
+          </div>
+          {hasNew && !atBottom && (
+            <button
+              type="button"
+              onClick={jumpToLatest}
+              className="absolute left-1/2 -translate-x-1/2 bottom-2 flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-semibold px-2.5 py-1 rounded-full shadow-lg"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+              New messages
+            </button>
+          )}
           </div>
 
           {!loadError && (
