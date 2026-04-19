@@ -322,13 +322,9 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
     infoBorder: '#1a1a1a',
     infoLabel: 'text-gray-400',
     infoValue: 'text-white',
-    searchBg: 'linear-gradient(135deg, #020a18 0%, #0a1628 30%, #0d1a30 60%, #050d1a 100%)',
     avatarBg1: '#0c1a35',
     avatarBg2: '#1a0a00',
     nameText: 'text-white',
-    foundBg: '#0d0d0d',
-    cancelBg: '#111',
-    cancelBorder: '#222',
     cancelText: 'text-gray-300',
     closeBtn: 'text-gray-400 hover:text-white',
     fallbackText: 'text-white/60',
@@ -412,7 +408,23 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
         }
       `}</style>
       <div className={`fixed inset-0 ${th.overlay} backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto`} onClick={() => { if (step === 'found') return; if (step === 'searching') { cancelSearch(); } onClose(); }}>
-        <div className="rounded-2xl max-w-md w-full overflow-hidden my-auto" style={{ backgroundColor: th.cardBg, border: `1px solid ${th.cardBorder}`, boxShadow: 'none' }} onClick={e => e.stopPropagation()}>
+        <div
+          className="rounded-2xl max-w-md w-full overflow-hidden my-auto"
+          style={
+            step === 'found' || step === 'searching'
+              ? {
+                  background:
+                    'linear-gradient(135deg, rgba(15,23,42,0.95) 0%, rgba(30,27,75,0.95) 45%, rgba(6,78,59,0.95) 100%)',
+                  border: '1px solid rgba(16,185,129,0.5)',
+                  boxShadow:
+                    '0 0 0 1px rgba(16,185,129,0.15) inset, 0 10px 40px rgba(16,185,129,0.25), 0 0 80px rgba(59,130,246,0.18)',
+                  backdropFilter: 'blur(14px)',
+                  WebkitBackdropFilter: 'blur(14px)',
+                }
+              : { backgroundColor: th.cardBg, border: `1px solid ${th.cardBorder}`, boxShadow: 'none' }
+          }
+          onClick={e => e.stopPropagation()}
+        >
           {step === 'config' && (
             <>
               <div className="p-5" style={{ borderBottom: `1px solid ${th.cardBorder}` }}>
@@ -504,11 +516,17 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
 
           {step === 'searching' && (
             <div className="relative overflow-hidden" style={{
-              background: th.searchBg,
+              background: 'transparent',
             }}>
-              <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ opacity: 0.06 }}>
+              <div
+                className="absolute inset-0 pointer-events-none"
+                style={{
+                  background: 'radial-gradient(ellipse at center bottom, rgba(16,185,129,0.15) 0%, transparent 65%), radial-gradient(ellipse at top left, rgba(59,130,246,0.15) 0%, transparent 55%)',
+                }}
+              />
+              <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ opacity: 0.08 }}>
                 <div className="absolute inset-0" style={{
-                  background: 'linear-gradient(90deg, transparent, rgba(59,130,246,0.4), transparent)',
+                  background: 'linear-gradient(90deg, transparent, rgba(59,130,246,0.5), transparent)',
                   animation: 'qm-scan-sweep 3s ease-in-out infinite',
                 }} />
               </div>
@@ -663,7 +681,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                 <button
                   onClick={cancelSearch}
                   className={`px-5 py-2 ${th.cancelText} rounded-xl transition-colors text-xs font-medium`}
-                  style={{ backgroundColor: th.cancelBg, border: `1px solid ${th.cancelBorder}` }}
+                  style={{ backgroundColor: 'rgba(0,0,0,0.4)', border: '1px solid rgba(255,255,255,0.12)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}
                 >
                   Cancel
                 </button>
@@ -673,12 +691,12 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
 
           {step === 'found' && (
             <div className="relative overflow-hidden" style={{
-              background: th.foundBg,
+              background: 'transparent',
             }}>
               <div
                 className="absolute inset-0 pointer-events-none"
-                style={{ 
-                  background: 'radial-gradient(ellipse at center bottom, rgba(16,185,129,0.08) 0%, transparent 60%)',
+                style={{
+                  background: 'radial-gradient(ellipse at center bottom, rgba(16,185,129,0.18) 0%, transparent 65%), radial-gradient(ellipse at top left, rgba(59,130,246,0.12) 0%, transparent 55%)',
                 }}
               />
 
@@ -764,7 +782,7 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound 
                   </div>
                 </div>
 
-                <div className="mx-4 mb-4 rounded-xl p-3 flex items-center justify-between" style={{ background: th.infoBg, border: `1px solid ${th.infoBorder}` }}>
+                <div className="mx-4 mb-4 rounded-xl p-3 flex items-center justify-between" style={{ background: 'rgba(0,0,0,0.35)', border: '1px solid rgba(16,185,129,0.25)', backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)' }}>
                   <div>
                     <div className={`${th.infoLabel} text-[10px] uppercase tracking-wider`}>Mode</div>
                     <div className={`${th.infoValue} font-bold text-sm flex items-center gap-1`}>
