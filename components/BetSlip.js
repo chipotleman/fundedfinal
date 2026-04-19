@@ -563,16 +563,19 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
       // Trigger haptic feedback on successful bet placement
       haptic.success();
 
-      if (onBetPlaced && data.newBankroll !== undefined) {
+      if (data.newBankroll !== undefined) {
         const bankrollValue = Number(data.newBankroll);
-        if (!isNaN(bankrollValue)) {
+        if (!isNaN(bankrollValue) && onBetPlaced) {
           onBetPlaced(bankrollValue);
-          // Emit global event so TopNavbar can update
-          window.dispatchEvent(new CustomEvent('bankrollUpdated', { detail: { bankroll: bankrollValue } }));
         }
       }
 
-      // Refresh matchup data to unlock opponent bets view
+      // Refresh matchup data so the points/matchup balance pill updates
+      // with the new battle-coins balance and the opponent bets view
+      // unlocks. The new balance returned by the place-bet API is the
+      // matchup balance, NOT real cash, so it must flow through this
+      // channel — not the `bankrollUpdated` event the cash pill listens
+      // to.
       if (refreshMatchup) {
         refreshMatchup();
       }
@@ -1455,9 +1458,13 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                   });
                   if (response.ok) {
                     const data = await response.json();
-                    if (data.newBankroll && onBetPlaced) {
-                      onBetPlaced(data.newBankroll);
-                      window.dispatchEvent(new CustomEvent('bankrollUpdated', { detail: { bankroll: data.newBankroll } }));
+                    if (data.newBankroll !== undefined) {
+                      if (onBetPlaced) onBetPlaced(data.newBankroll);
+                      // Cashout returns the matchup (battle coins) balance,
+                      // not real cash. Refresh the matchup context so the
+                      // points pill updates without overwriting the real
+                      // cash pill in the header.
+                      if (refreshMatchup) refreshMatchup();
                     }
                     // Update the receipt to show cashed out status instead of closing
                     setCurrentReceipt(prev => ({
