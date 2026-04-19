@@ -733,16 +733,16 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                     <button
                       onClick={() => setShowUserMenu(!showUserMenu)}
                       aria-label="Open user menu"
-                      className="flex items-center justify-center w-10 h-10 hover:bg-[#1a1a1a] rounded-full transition-all duration-300"
+                      className="flex items-center justify-center w-10 h-10 hover:bg-[#1a1a1a] rounded-full transition-all duration-300 overflow-hidden"
                     >
                       <UserAvatar
                         user={{
                           id: userProfile?.id || currentUser?.id || session?.user?.id,
                           username: userProfile?.username || currentUser?.username || currentUser?.name || session?.user?.username || session?.user?.name,
-                          avatar: userProfile?.avatar ?? currentUser?.avatar ?? session?.user?.avatar ?? null,
+                          avatar: userProfile?.avatar ?? currentUser?.avatar ?? currentUser?.image ?? session?.user?.avatar ?? session?.user?.image ?? null,
                           frameId: userProfile?.equippedFrame ?? userProfile?.frameId ?? currentUser?.equippedFrame ?? null,
                         }}
-                        size={32}
+                        size={40}
                       />
                     </button>
 
