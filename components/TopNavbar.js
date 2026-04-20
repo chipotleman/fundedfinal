@@ -858,7 +858,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                 <button
                   onClick={toggleMobileMenu}
                   className="lg:hidden absolute no-hover-effect hamburger-btn"
-                  style={{ WebkitTapHighlightColor: 'transparent', right: '4px', top: '50%', marginTop: '-12px', WebkitUserSelect: 'none', userSelect: 'none', zIndex: 60 }}
+                  style={{ WebkitTapHighlightColor: 'transparent', right: '4px', top: '50%', marginTop: '-19px', WebkitUserSelect: 'none', userSelect: 'none', zIndex: 60 }}
                   aria-label={isLoggedIn && (notifAlerts + notifMessages) > 0 ? 'Open menu (you have unread notifications)' : 'Open menu'}
                 >
                   <svg className="w-7 h-7 text-gray-300 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
