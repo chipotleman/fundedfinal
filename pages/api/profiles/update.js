@@ -79,7 +79,7 @@ function getImageDimensionsFromDataUrl(dataUrl) {
 export const config = {
   api: {
     bodyParser: {
-      sizeLimit: '5mb',
+      sizeLimit: '25mb',
     },
   },
 };
@@ -117,8 +117,8 @@ export default async function handler(req, res) {
         if (!isValidMime) {
           return res.status(400).json({ error: 'Invalid image type. Allowed: JPEG, PNG, GIF, WebP' });
         }
-        if (avatar.length > 2 * 1024 * 1024) {
-          return res.status(400).json({ error: 'Avatar image too large. Max 2MB.' });
+        if (avatar.length > 14 * 1024 * 1024) {
+          return res.status(400).json({ error: 'Avatar image too large. Max 10MB.' });
         }
       } else if (avatar.length > 500) {
         return res.status(400).json({ error: 'Invalid avatar path.' });
@@ -142,8 +142,8 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Banner must be from the library or an upload.' });
       }
       if (bannerUrl.startsWith('data:image/')) {
-        if (bannerUrl.length > 4 * 1024 * 1024) {
-          return res.status(400).json({ error: 'Banner image too large. Max 4MB.' });
+        if (bannerUrl.length > 21 * 1024 * 1024) {
+          return res.status(400).json({ error: 'Banner image too large. Max 15MB.' });
         }
         const dims = getImageDimensionsFromDataUrl(bannerUrl);
         if (!dims) {

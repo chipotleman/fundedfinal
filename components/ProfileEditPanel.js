@@ -43,8 +43,8 @@ export default function ProfileEditPanel({
       alert('Please choose an image file');
       return;
     }
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Image must be less than 2MB');
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Image must be less than 10MB');
       return;
     }
     try {
@@ -88,8 +88,8 @@ export default function ProfileEditPanel({
       alert('Please select an image file');
       return;
     }
-    if (file.size > 4 * 1024 * 1024) {
-      alert('Banner must be less than 4MB');
+    if (file.size > 15 * 1024 * 1024) {
+      alert('Banner must be less than 15MB');
       return;
     }
     setBannerUploading(true);

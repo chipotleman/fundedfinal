@@ -3,9 +3,18 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../../../lib/auth';
 import { signObjectURL, resolvePrivateObjectPath } from '../../../lib/objectStorage';
 
-// Cap any single uploaded asset (avatar, banner, voice note) at 10 MB.
-const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
-const ALLOWED_KINDS = new Set(['avatar', 'banner', 'voice-note']);
+// Per-kind upload size ceilings. Each kind is enforced independently so a
+// larger banner allowance doesn't loosen avatar or voice-note limits.
+const MAX_BYTES_BY_KIND = {
+  avatar: 10 * 1024 * 1024,
+  banner: 15 * 1024 * 1024,
+  'voice-note': 10 * 1024 * 1024,
+};
+// Fallback ceiling when no kind is supplied. Uses the smallest per-kind
+// cap so an omitted kind cannot be used to slip larger files past the
+// stricter avatar/voice-note limits.
+const DEFAULT_MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
+const ALLOWED_KINDS = new Set(Object.keys(MAX_BYTES_BY_KIND));
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -28,7 +37,8 @@ export default async function handler(req, res) {
     if (kind && !ALLOWED_KINDS.has(kind)) {
       return res.status(400).json({ error: 'Invalid kind' });
     }
-    if (typeof size === 'number' && size > MAX_UPLOAD_BYTES) {
+    const maxBytes = kind ? MAX_BYTES_BY_KIND[kind] : DEFAULT_MAX_UPLOAD_BYTES;
+    if (typeof size === 'number' && size > maxBytes) {
       return res.status(413).json({ error: 'File too large' });
     }
 
