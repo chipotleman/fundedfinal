@@ -564,7 +564,181 @@ function BattleCard({ battle, compact, focused }) {
   );
 }
 
-export default function LiveBattlesSection({ compact = false, focusBattleId = null, currentUserId = null }) {
+function YouVsCard({ youVsState, onClick }) {
+  const router = useRouter();
+  const status = youVsState?.status || 'idle';
+  const myProfile = youVsState?.myProfile || null;
+  const opponent = youVsState?.opponent || null;
+
+  const isActive = status === 'active';
+  const isWaiting = status === 'waiting';
+  const isQueued = status === 'queued';
+  const showOpponent = !!opponent && (isActive || isWaiting || isQueued);
+
+  let topLabel = '1v1 Battle';
+  let topDotColor = '#3b82f6';
+  let ctaText = 'Tap to Start';
+  let metaRight = 'Find a match';
+
+  if (isActive) {
+    topLabel = 'In Battle';
+    topDotColor = '#10b981';
+    ctaText = 'View Battle';
+    metaRight = 'Live now';
+  } else if (isWaiting) {
+    topLabel = 'Waiting';
+    topDotColor = '#f59e0b';
+    ctaText = 'Open Lobby';
+    metaRight = 'Awaiting opponent';
+  } else if (isQueued) {
+    topLabel = 'Searching';
+    topDotColor = '#06b6d4';
+    ctaText = 'View Queue';
+    metaRight = 'Matchmaking…';
+  }
+
+  const youUser = myProfile
+    ? { id: myProfile.id, username: myProfile.username || 'You', avatar: myProfile.avatar }
+    : { id: null, username: 'You', avatar: null };
+
+  const handleClick = () => {
+    if (onClick) onClick();
+    else router.push('/battle');
+  };
+
+  return (
+    <div
+      className="rounded-xl overflow-hidden cursor-pointer"
+      onClick={handleClick}
+      style={{
+        backgroundColor: '#0d0d0d',
+        border: '1px solid rgba(59, 130, 246, 0.35)',
+        boxShadow: '0 0 0 1px rgba(59,130,246,0.05) inset',
+      }}
+    >
+      <div className="p-3.5">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-1.5">
+            <div
+              className="w-1.5 h-1.5 rounded-full animate-pulse"
+              style={{ background: topDotColor }}
+            ></div>
+            <span
+              className="text-[10px] font-semibold uppercase tracking-wider"
+              style={{ color: topDotColor }}
+            >
+              {topLabel}
+            </span>
+            <span className="ml-1 text-[9px] font-bold uppercase tracking-widest text-blue-400/80 px-1.5 py-0.5 rounded" style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)' }}>
+              Pinned
+            </span>
+          </div>
+          <span className="text-gray-500 text-[11px] font-medium">{metaRight}</span>
+        </div>
+
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            <PlayerAvatar user={youUser} isWinning={false} size={40} bgColor="#1e40af" />
+            <div className="min-w-0">
+              <p className="text-sm font-medium truncate" style={{ color: '#fff' }}>
+                {youUser.username}
+              </p>
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">You</span>
+            </div>
+          </div>
+
+          <div className="px-3 flex flex-col items-center">
+            <span
+              className="text-xl font-black text-transparent bg-clip-text"
+              style={{ backgroundImage: 'linear-gradient(135deg, #3b82f6, #06b6d4)' }}
+            >
+              VS
+            </span>
+            <span className="text-gray-600 text-[9px] mt-0.5 uppercase tracking-widest">1v1</span>
+          </div>
+
+          <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
+            <div className="min-w-0 text-right">
+              {showOpponent ? (
+                <>
+                  <p className="text-sm font-medium truncate" style={{ color: '#fff' }}>
+                    {opponent.username || 'Opponent'}
+                  </p>
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                    Opponent
+                  </span>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-medium truncate text-gray-300">???</p>
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                    {isQueued ? 'Searching' : 'Open Spot'}
+                  </span>
+                </>
+              )}
+            </div>
+            {showOpponent ? (
+              <PlayerAvatar
+                user={{ id: opponent.id, username: opponent.username, avatar: opponent.avatar }}
+                isWinning={false}
+                size={40}
+                bgColor="#065f46"
+              />
+            ) : (
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  flexShrink: 0,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'linear-gradient(135deg, rgba(16,185,129,0.12), rgba(6,182,212,0.12))',
+                  border: '2px dashed rgba(16,185,129,0.45)',
+                  color: '#10b981',
+                  fontWeight: 800,
+                  fontSize: 16,
+                }}
+              >
+                ?
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="h-1 rounded-full overflow-hidden mb-2" style={{ background: '#1a1a1a' }}>
+          <div
+            className="h-full rounded-full"
+            style={{
+              width: isActive ? '100%' : isWaiting ? '60%' : isQueued ? '30%' : '15%',
+              background: 'linear-gradient(90deg, #3b82f6, #06b6d4)',
+            }}
+          ></div>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-gray-600 text-[10px]">
+            {isActive
+              ? 'Battle in progress'
+              : isWaiting
+                ? 'Lobby ready'
+                : isQueued
+                  ? 'Looking for opponent'
+                  : 'Personalized 1v1'}
+          </span>
+          <span className="text-[11px] font-medium text-blue-400 flex items-center gap-1">
+            {ctaText}
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+            </svg>
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function LiveBattlesSection({ compact = false, focusBattleId = null, currentUserId = null, youVsState = null, onYouVsClick = null }) {
   const [battles, setBattles] = useState(() => getSimulatedBattles([]));
   const [avatars, setAvatars] = useState([]);
   const router = useRouter();
@@ -634,51 +808,16 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
             See All
           </button>
         </div>
-        {sortedBattles.length === 0 ? (
-          <div
-            className="battle-cta-card rounded-xl cursor-pointer group transition-all duration-300 overflow-hidden relative"
-            onClick={() => router.push('/battle')}
-            style={{ background: 'linear-gradient(135deg, #0a1628 0%, #0d1117 50%, #0a1628 100%)', border: '1px solid rgba(59,130,246,0.25)' }}
-          >
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
-              <div className="battle-cta-particle" style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(59,130,246,0.4)', position: 'absolute', top: '20%', left: '15%' }}></div>
-              <div className="battle-cta-particle" style={{ width: 2, height: 2, borderRadius: '50%', background: 'rgba(6,182,212,0.4)', position: 'absolute', top: '60%', left: '80%', animationDelay: '1s' }}></div>
-              <div className="battle-cta-particle" style={{ width: 2, height: 2, borderRadius: '50%', background: 'rgba(59,130,246,0.3)', position: 'absolute', top: '40%', left: '50%', animationDelay: '2s' }}></div>
-              <div className="battle-cta-particle" style={{ width: 3, height: 3, borderRadius: '50%', background: 'rgba(16,185,129,0.3)', position: 'absolute', top: '75%', left: '30%', animationDelay: '0.5s' }}></div>
-            </div>
-
-            <div className="relative flex items-center justify-between px-4 py-4">
-              <div className="flex flex-col items-center gap-1.5">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(59,130,246,0.15), rgba(6,182,212,0.15))', border: '2px solid rgba(59,130,246,0.4)' }}>
-                  <svg className="w-6 h-6 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-                </div>
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">You</span>
-              </div>
-
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-2xl font-black text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(135deg, #3b82f6, #06b6d4)' }}>VS</span>
-                <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">1v1 Battle</span>
-                <div className="flex items-center gap-1 mt-1 group-hover:gap-2 transition-all">
-                  <span className="text-[11px] font-semibold text-blue-400">Tap to Start</span>
-                  <svg className="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
-                </div>
-              </div>
-
-              <div className="flex flex-col items-center gap-1.5">
-                <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(6,182,212,0.15))', border: '2px solid rgba(16,185,129,0.4)' }}>
-                  <svg className="w-6 h-6 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                </div>
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Opponent</span>
-              </div>
-            </div>
+        <div className="flex gap-3 items-start overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="flex-shrink-0 w-[360px]">
+            <YouVsCard youVsState={youVsState} onClick={onYouVsClick} />
           </div>
-        ) : (
-          <div className="flex gap-3 items-stretch overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            {sortedBattles.map(battle => (
-              <BattleCard key={battle.id} battle={battle} compact />
-            ))}
-          </div>
-        )}
+          {sortedBattles.map(battle => (
+            <div key={battle.id} className="flex-shrink-0 w-[380px]">
+              <BattleCard battle={battle} />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

@@ -7,9 +7,7 @@ import LiveGameTimer from '../components/LiveGameTimer';
 import ActiveBattleCard from '../components/ActiveBattleCard';
 import WaitingBattleCard from '../components/WaitingBattleCard';
 import PoolContainer from '../components/PoolContainer';
-import FireBattleContainer from '../components/FireBattleContainer';
 import DepositMatchContainer from '../components/DepositMatchContainer';
-import CasinoDepositMatchContainer from '../components/CasinoDepositMatchContainer';
 import DepositMatchAppliedBanner from '../components/DepositMatchAppliedBanner';
 import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
 import LiveBattlesSection from '../components/battle/LiveBattlesSection';
@@ -585,11 +583,9 @@ export default function Dashboard() {
               ) : isQueued && queueEntry ? (
                 <WaitingBattleCard queueEntry={queueEntry} myProfile={myProfile} />
               ) : (
-                <FireBattleContainer />
+                <DepositMatchContainer />
               )}
               <PoolContainer />
-              <CasinoDepositMatchContainer />
-              <DepositMatchContainer />
               <DepositMatchAppliedBanner />
             </div>
           </div>
@@ -670,7 +666,22 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <LiveBattlesSection compact currentUserId={user?.id} />
+        <LiveBattlesSection
+          compact
+          currentUserId={user?.id}
+          youVsState={{
+            status: hasActiveMatchup
+              ? 'active'
+              : isWaiting
+                ? 'waiting'
+                : isQueued
+                  ? 'queued'
+                  : 'idle',
+            myProfile: myProfile || (user ? { id: user.id, username: user.username || user.name, avatar: user.avatar } : null),
+            opponent: opponent || null,
+          }}
+          onYouVsClick={() => router.push('/battle')}
+        />
 
         <div className="mb-6">
           <div className="flex items-center justify-between px-1 mb-3">
