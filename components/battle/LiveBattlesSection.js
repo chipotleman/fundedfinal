@@ -4,6 +4,7 @@ import BattleChat from './BattleChat';
 import { formatMoney } from '../../utils/formatMoney';
 import UserAvatar from '../UserAvatar';
 import { useProfileCacheOptional } from '../../contexts/ProfileCacheContext';
+import { useMatchup } from '../../contexts/MatchupContext';
 
 function formatTimeRemaining(ms) {
   if (!ms || ms <= 0) return 'Ended';
@@ -576,6 +577,8 @@ function formatElapsed(ms) {
 
 function YouVsCard({ youVsState, onClick }) {
   const router = useRouter();
+  const { refresh: refreshMatchup } = useMatchup();
+  const [cancelling, setCancelling] = useState(false);
   const status = youVsState?.status || 'idle';
   const myProfile = youVsState?.myProfile || null;
   const opponent = youVsState?.opponent || null;
@@ -706,6 +709,37 @@ function YouVsCard({ youVsState, onClick }) {
     else router.push('/battle');
   };
 
+  const canCancel = (isWaiting || isQueued) && !cancelling;
+
+  const handleCancel = async (e) => {
+    e.stopPropagation();
+    if (!canCancel) return;
+    if (typeof window !== 'undefined' && !window.confirm(isQueued ? 'Leave the queue?' : 'Cancel this lobby?')) {
+      return;
+    }
+    setCancelling(true);
+    try {
+      if (isQueued) {
+        await fetch('/api/battles/cancel-queue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(queueEntry?.id ? { queueId: queueEntry.id } : {}),
+        });
+      } else {
+        await fetch('/api/battles/private', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'cancel' }),
+        });
+      }
+      try { await refreshMatchup(); } catch {}
+    } catch {
+      // swallow; UI will recover on next refresh
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   return (
     <div
       className="rounded-xl overflow-hidden cursor-pointer"
@@ -820,12 +854,24 @@ function YouVsCard({ youVsState, onClick }) {
           <span className="text-gray-600 text-[10px]">
             {progressLabel}
           </span>
-          <span className="text-[11px] font-medium text-blue-400 flex items-center gap-1">
-            {ctaText}
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-            </svg>
-          </span>
+          <div className="flex items-center gap-3">
+            {(isWaiting || isQueued) && (
+              <button
+                type="button"
+                onClick={handleCancel}
+                disabled={!canCancel}
+                className="text-[11px] font-medium text-gray-500 hover:text-red-400 transition-colors disabled:opacity-50"
+              >
+                {cancelling ? 'Cancelling…' : (isQueued ? 'Leave Queue' : 'Cancel')}
+              </button>
+            )}
+            <span className="text-[11px] font-medium text-blue-400 flex items-center gap-1">
+              {ctaText}
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+              </svg>
+            </span>
+          </div>
         </div>
       </div>
     </div>
