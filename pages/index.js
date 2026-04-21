@@ -679,6 +679,9 @@ export default function Dashboard() {
                   : 'idle',
             myProfile: myProfile || (user ? { id: user.id, username: user.username || user.name, avatar: user.avatar } : null),
             opponent: opponent || null,
+            matchup: matchup || null,
+            queueEntry: queueEntry || null,
+            timeRemaining: timeRemaining,
           }}
           onYouVsClick={() => router.push('/battle')}
         />

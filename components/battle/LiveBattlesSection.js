@@ -564,37 +564,137 @@ function BattleCard({ battle, compact, focused }) {
   );
 }
 
+function formatElapsed(ms) {
+  if (!ms || ms < 0) ms = 0;
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  if (hours > 0) return `${hours}h ${minutes % 60}m`;
+  if (minutes > 0) return `${minutes}m ${seconds % 60}s`;
+  return `${seconds}s`;
+}
+
 function YouVsCard({ youVsState, onClick }) {
   const router = useRouter();
   const status = youVsState?.status || 'idle';
   const myProfile = youVsState?.myProfile || null;
   const opponent = youVsState?.opponent || null;
+  const matchup = youVsState?.matchup || null;
+  const queueEntry = youVsState?.queueEntry || null;
+  const initialTimeRemaining = youVsState?.timeRemaining ?? null;
 
   const isActive = status === 'active';
   const isWaiting = status === 'waiting';
   const isQueued = status === 'queued';
   const showOpponent = !!opponent && (isActive || isWaiting || isQueued);
 
+  const endsAt = matchup?.endsAt || null;
+  const startsAt = matchup?.startsAt || matchup?.createdAt || null;
+  const queuedAt = queueEntry?.queuedAt || queueEntry?.createdAt || null;
+
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!isActive && !isWaiting && !isQueued) return;
+    const interval = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, [isActive, isWaiting, isQueued]);
+
+  let timeLeftMs = 0;
+  if (isActive && endsAt) {
+    timeLeftMs = Math.max(0, new Date(endsAt).getTime() - now);
+  } else if (initialTimeRemaining != null && isActive) {
+    timeLeftMs = Math.max(0, initialTimeRemaining);
+  }
+
+  const QUEUE_MAX_MS = 10 * 60 * 1000;
+  const LOBBY_MAX_MS = 10 * 60 * 1000;
+
+  let progressPercent = 0;
+  if (isActive && startsAt && endsAt) {
+    const startMs = new Date(startsAt).getTime();
+    const endMs = new Date(endsAt).getTime();
+    const total = endMs - startMs;
+    if (total > 0) {
+      progressPercent = Math.max(0, Math.min(100, ((now - startMs) / total) * 100));
+    }
+  } else if (isWaiting) {
+    if (startsAt) {
+      const age = Math.max(0, now - new Date(startsAt).getTime());
+      progressPercent = Math.max(5, Math.min(100, (age / LOBBY_MAX_MS) * 100));
+    } else {
+      progressPercent = 10;
+    }
+  } else if (isQueued) {
+    if (queuedAt) {
+      const age = Math.max(0, now - new Date(queuedAt).getTime());
+      progressPercent = Math.max(5, Math.min(100, (age / QUEUE_MAX_MS) * 100));
+    } else {
+      progressPercent = 10;
+    }
+  } else {
+    progressPercent = 15;
+  }
+
+  let pot = null;
+  if (matchup) {
+    const ps = parseFloat(matchup.potSize);
+    if (Number.isFinite(ps) && ps > 0) {
+      pot = ps;
+    } else {
+      const sb = parseFloat(matchup.startingBalance);
+      if (Number.isFinite(sb) && sb > 0) pot = sb * 2;
+    }
+  } else if (queueEntry) {
+    const bi = parseFloat(queueEntry.buyIn);
+    if (Number.isFinite(bi) && bi > 0) pot = bi * 2;
+  }
+
   let topLabel = '1v1 Battle';
   let topDotColor = '#3b82f6';
   let ctaText = 'Tap to Start';
   let metaRight = 'Find a match';
+  let progressLabel = 'Personalized 1v1';
 
   if (isActive) {
     topLabel = 'In Battle';
     topDotColor = '#10b981';
     ctaText = 'View Battle';
-    metaRight = 'Live now';
+    if (pot != null && timeLeftMs > 0) {
+      metaRight = `$${formatMoney(pot, 0)} · ${formatTimeRemaining(timeLeftMs)}`;
+    } else if (pot != null) {
+      metaRight = `$${formatMoney(pot, 0)} pot`;
+    } else if (timeLeftMs > 0) {
+      metaRight = formatTimeRemaining(timeLeftMs);
+    } else {
+      metaRight = 'Live now';
+    }
+    progressLabel = `${progressPercent.toFixed(0)}% complete`;
   } else if (isWaiting) {
     topLabel = 'Waiting';
     topDotColor = '#f59e0b';
     ctaText = 'Open Lobby';
-    metaRight = 'Awaiting opponent';
+    const lobbyAge = startsAt ? Math.max(0, now - new Date(startsAt).getTime()) : 0;
+    if (pot != null && lobbyAge > 0) {
+      metaRight = `$${formatMoney(pot, 0)} · ${formatElapsed(lobbyAge)}`;
+    } else if (pot != null) {
+      metaRight = `$${formatMoney(pot, 0)} pot`;
+    } else {
+      metaRight = 'Awaiting opponent';
+    }
+    progressLabel = lobbyAge > 0 ? `Lobby open ${formatElapsed(lobbyAge)}` : 'Lobby ready';
   } else if (isQueued) {
     topLabel = 'Searching';
     topDotColor = '#06b6d4';
     ctaText = 'View Queue';
-    metaRight = 'Matchmaking…';
+    const queueAge = queuedAt ? Math.max(0, now - new Date(queuedAt).getTime()) : 0;
+    if (pot != null && queueAge > 0) {
+      metaRight = `$${formatMoney(pot, 0)} · ${formatElapsed(queueAge)}`;
+    } else if (queueAge > 0) {
+      metaRight = `Searching ${formatElapsed(queueAge)}`;
+    } else {
+      metaRight = 'Matchmaking…';
+    }
+    progressLabel = queueAge > 0 ? `In queue ${formatElapsed(queueAge)}` : 'Looking for opponent';
   }
 
   const youUser = myProfile
@@ -709,22 +809,16 @@ function YouVsCard({ youVsState, onClick }) {
 
         <div className="h-1 rounded-full overflow-hidden mb-2" style={{ background: '#1a1a1a' }}>
           <div
-            className="h-full rounded-full"
+            className="h-full rounded-full transition-all duration-1000"
             style={{
-              width: isActive ? '100%' : isWaiting ? '60%' : isQueued ? '30%' : '15%',
+              width: `${progressPercent}%`,
               background: 'linear-gradient(90deg, #3b82f6, #06b6d4)',
             }}
           ></div>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-gray-600 text-[10px]">
-            {isActive
-              ? 'Battle in progress'
-              : isWaiting
-                ? 'Lobby ready'
-                : isQueued
-                  ? 'Looking for opponent'
-                  : 'Personalized 1v1'}
+            {progressLabel}
           </span>
           <span className="text-[11px] font-medium text-blue-400 flex items-center gap-1">
             {ctaText}
