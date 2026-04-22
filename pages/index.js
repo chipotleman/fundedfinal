@@ -7,6 +7,7 @@ import LiveGameTimer from '../components/LiveGameTimer';
 import ActiveBattleCard from '../components/ActiveBattleCard';
 import WaitingBattleCard from '../components/WaitingBattleCard';
 import DepositMatchContainer from '../components/DepositMatchContainer';
+import FindOpponentContainer from '../components/FindOpponentContainer';
 import DepositMatchAppliedBanner from '../components/DepositMatchAppliedBanner';
 import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
 import LiveBattlesSection from '../components/battle/LiveBattlesSection';
@@ -582,8 +583,9 @@ export default function Dashboard() {
               ) : isQueued && queueEntry ? (
                 <WaitingBattleCard queueEntry={queueEntry} myProfile={myProfile} />
               ) : (
-                <DepositMatchContainer />
+                <FindOpponentContainer />
               )}
+              <DepositMatchContainer />
               <DepositMatchAppliedBanner />
             </div>
           </div>

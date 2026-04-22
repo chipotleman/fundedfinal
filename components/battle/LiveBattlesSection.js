@@ -570,6 +570,13 @@ function BattleCard({ battle, compact, focused }) {
         .battle-cta-particle {
           animation: battleCtaFloat 3s ease-in-out infinite;
         }
+        @keyframes youvsCycleFade {
+          0% { opacity: 0; transform: translateY(4px) scale(0.92); }
+          100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .youvs-cycle-fade {
+          animation: youvsCycleFade 360ms ease-out both;
+        }
         @media (hover: hover) {
           .battle-cta-card:hover {
             border-color: rgba(59,130,246,0.45) !important;
@@ -611,6 +618,44 @@ function YouVsCard({ youVsState, onClick }) {
   const isWaiting = status === 'waiting';
   const isQueued = status === 'queued';
   const showOpponent = !!opponent && (isActive || isWaiting || isQueued);
+
+  const [opponentPool, setOpponentPool] = useState([]);
+  const [opponentTick, setOpponentTick] = useState(0);
+
+  useEffect(() => {
+    if (showOpponent) return;
+    let cancelled = false;
+    fetch('/api/battles/recent?limit=10')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data?.battles?.length) return;
+        const seen = new Set();
+        const players = [];
+        for (const b of data.battles) {
+          for (const p of [b.winner, b.loser]) {
+            if (p && p.id && !seen.has(p.id)) {
+              seen.add(p.id);
+              players.push({ id: p.id, username: p.username, avatar: p.avatar });
+            }
+          }
+        }
+        if (players.length >= 2) setOpponentPool(players);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [showOpponent]);
+
+  useEffect(() => {
+    if (showOpponent || opponentPool.length === 0) return;
+    const id = setInterval(() => setOpponentTick((t) => t + 1), 1400);
+    return () => clearInterval(id);
+  }, [showOpponent, opponentPool.length]);
+
+  const cyclingOpponent = !showOpponent && opponentPool.length > 0
+    ? opponentPool[opponentTick % opponentPool.length]
+    : null;
 
   const endsAt = matchup?.endsAt || null;
   const startsAt = matchup?.startsAt || matchup?.createdAt || null;
@@ -823,6 +868,18 @@ function YouVsCard({ youVsState, onClick }) {
                     Opponent
                   </span>
                 </>
+              ) : cyclingOpponent ? (
+                <>
+                  <p
+                    key={`name-${cyclingOpponent.id}-${opponentTick}`}
+                    className="text-sm font-medium truncate text-gray-200 youvs-cycle-fade"
+                  >
+                    {cyclingOpponent.username || 'Opponent'}
+                  </p>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                    {isQueued ? 'Searching' : 'Possible Match'}
+                  </span>
+                </>
               ) : (
                 <>
                   <p className="text-sm font-medium truncate text-gray-300">???</p>
@@ -839,6 +896,29 @@ function YouVsCard({ youVsState, onClick }) {
                 size={40}
                 bgColor="#065f46"
               />
+            ) : cyclingOpponent ? (
+              <div
+                key={`avatar-${cyclingOpponent.id}-${opponentTick}`}
+                className="youvs-cycle-fade"
+                style={{
+                  width: 44,
+                  height: 44,
+                  flexShrink: 0,
+                  borderRadius: '50%',
+                  padding: 2,
+                  background: 'linear-gradient(135deg, rgba(16,185,129,0.55), rgba(6,182,212,0.55))',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <PlayerAvatar
+                  user={cyclingOpponent}
+                  isWinning={false}
+                  size={40}
+                  bgColor="#065f46"
+                />
+              </div>
             ) : (
               <div
                 style={{
