@@ -25,13 +25,25 @@ export default function DepositMatchContainer() {
   }, [status, session?.user?.id]);
 
   if (status !== 'authenticated') return null;
-  if (hasDeposited !== false) return null;
+  if (hasDeposited === null) return null;
+
+  const isReturning = hasDeposited === true;
 
   const handleClick = () => {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('openChallengePopup'));
     }
   };
+
+  const badgeLabel = isReturning ? '🔥 Reload Bonus' : '⭐ New Player';
+  const eyebrow = isReturning ? 'Reload Match' : 'First Deposit Match';
+  const headlinePercent = isReturning ? '50% MATCH' : '100% MATCH';
+  const subline = isReturning ? (
+    <>Up to <span className="text-yellow-300">$50 Free</span> on your next deposit</>
+  ) : (
+    <>Up to <span className="text-yellow-300">$100 Free</span> on your first deposit</>
+  );
+  const ctaLabel = isReturning ? 'Claim Bonus →' : 'Claim Match →';
 
   return (
     <>
@@ -151,7 +163,7 @@ export default function DepositMatchContainer() {
           }}
         >
           <span className="text-[9px] md:text-[11px] font-black uppercase tracking-wider text-amber-950">
-            ⭐ New Player
+            {badgeLabel}
           </span>
         </div>
 
@@ -163,7 +175,7 @@ export default function DepositMatchContainer() {
               textShadow: '0 1px 2px rgba(0,0,0,0.6)',
             }}
           >
-            First Deposit Match
+            {eyebrow}
           </div>
 
           <div
@@ -178,7 +190,7 @@ export default function DepositMatchContainer() {
               letterSpacing: '0.02em',
             }}
           >
-            100% MATCH
+            {headlinePercent}
           </div>
 
           <div
@@ -188,7 +200,7 @@ export default function DepositMatchContainer() {
               textShadow: '0 1px 3px rgba(0,0,0,0.6)',
             }}
           >
-            Up to <span className="text-yellow-300">$100 Free</span> on your first deposit
+            {subline}
           </div>
 
           <button
@@ -207,7 +219,7 @@ export default function DepositMatchContainer() {
               textShadow: '0 1px 0 rgba(255,255,255,0.4)',
             }}
           >
-            <span className="relative z-10">Claim Match →</span>
+            <span className="relative z-10">{ctaLabel}</span>
           </button>
         </div>
       </div>

@@ -280,11 +280,11 @@ function BattleCard({ battle, compact, focused }) {
     return (
       <div
         ref={cardRef}
-        className={`flex-shrink-0 w-[360px] rounded-xl p-3 cursor-pointer flex flex-col ${focused ? 'live-battle-highlight' : ''}`}
+        className={`w-full h-full rounded-xl p-3.5 cursor-pointer flex flex-col ${focused ? 'live-battle-highlight' : ''}`}
         onClick={() => router.push(`/battle?battle=${battle.id}`)}
         style={{
           backgroundColor: '#0d0d0d',
-          border: focused ? '1px solid rgba(6, 182, 212, 0.5)' : `1px solid ${'#1a1a1a'}`,
+          border: focused ? '1px solid rgba(6, 182, 212, 0.5)' : '1px solid rgba(59, 130, 246, 0.18)',
           boxShadow: 'none',
         }}
       >
@@ -298,33 +298,44 @@ function BattleCard({ battle, compact, focused }) {
             <span className="text-gray-600 text-[10px]">{formatTimeRemaining(timeLeft)}</span>
           </div>
         </div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
-            <PlayerAvatar user={user1} isWinning={user1Winning} size={30} bgColor="#1e40af" />
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            <PlayerAvatar user={user1} isWinning={user1Winning} size={40} bgColor="#1e40af" />
             <div className="min-w-0">
-              <p className="text-[11px] font-medium truncate max-w-[120px] flex items-center gap-0.5" style={{ color: '#fff' }}>
+              <p className="text-sm font-medium truncate flex items-center gap-1" style={{ color: '#fff' }}>
                 {user1.username || 'Player 1'}
                 {user1OnFire && <MomentumIcon />}
               </p>
-              <PnlBadge pnlPercent={user1.pnlPercent} size="small" />
+              <div className="flex items-center gap-2 mt-0.5">
+                <PnlBadge pnlPercent={user1.pnlPercent} size="small" />
+              </div>
             </div>
           </div>
-          <div className="flex flex-col items-center px-1">
-            <span className="text-[10px] font-bold text-gray-600">VS</span>
+          <div className="px-2 flex flex-col items-center">
+            <span
+              className="text-xl font-black text-transparent bg-clip-text"
+              style={{ backgroundImage: 'linear-gradient(135deg, #3b82f6, #06b6d4)' }}
+            >
+              VS
+            </span>
+            <span className="text-gray-600 text-[9px] mt-0.5 uppercase tracking-widest">1v1</span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
             <div className="min-w-0 text-right">
-              <p className="text-[11px] font-medium truncate max-w-[120px] flex items-center justify-end gap-0.5" style={{ color: '#fff' }}>
+              <p className="text-sm font-medium truncate flex items-center justify-end gap-1" style={{ color: '#fff' }}>
                 {user2OnFire && <MomentumIcon />}
                 {user2.username || 'Player 2'}
               </p>
-              <PnlBadge pnlPercent={user2.pnlPercent} size="small" />
+              <div className="flex items-center gap-2 justify-end mt-0.5">
+                <PnlBadge pnlPercent={user2.pnlPercent} size="small" />
+              </div>
             </div>
-            <PlayerAvatar user={user2} isWinning={user2Winning} size={30} bgColor="#065f46" />
+            <PlayerAvatar user={user2} isWinning={user2Winning} size={40} bgColor="#065f46" />
           </div>
         </div>
+
         {picks ? (
-          <div className="mt-2 flex gap-1" style={{ minHeight: '36px' }}>
+          <div className="flex gap-1 mb-2" style={{ minHeight: '32px' }}>
             <div className="flex-1 min-w-0">
               {picks.user1.slice(0, 1).map((p, i) => <PickPill key={i} pick={p} compact />)}
             </div>
@@ -334,27 +345,37 @@ function BattleCard({ battle, compact, focused }) {
             </div>
           </div>
         ) : picksLocked ? (
-          <div className="mt-2 rounded-md" style={{ background: '#111', border: `1px solid ${'#1a1a1a'}`, minHeight: '36px' }}>
-            <div className="flex items-center gap-1.5 px-2 pt-1.5 pb-1">
-              <svg className="w-3 h-3 text-gray-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>
-              <span className="text-[9px] text-gray-500">Reveals when both lock in</span>
-            </div>
-            <div className="flex gap-1.5 px-2 pb-1.5">
-              <div className={`flex-1 flex items-center gap-1 py-1 px-1.5 rounded text-[9px] font-medium truncate ${onlyUser1 ? 'text-green-400' : 'text-gray-600'}`} style={{ background: onlyUser1 ? 'rgba(16,185,129,0.08)' : 'transparent' }}>
-                {onlyUser1 ? '✓' : '○'} {user1.username || 'Player 1'}
-              </div>
-              <div className={`flex-1 flex items-center justify-end gap-1 py-1 px-1.5 rounded text-[9px] font-medium truncate ${onlyUser2 ? 'text-green-400' : 'text-gray-600'}`} style={{ background: onlyUser2 ? 'rgba(16,185,129,0.08)' : 'transparent' }}>
-                {user2.username || 'Player 2'} {onlyUser2 ? '✓' : '○'}
-              </div>
-            </div>
+          <div className="mb-2 flex items-center gap-1.5 px-2 py-2 rounded-md" style={{ background: '#111', border: `1px solid ${'#1a1a1a'}`, minHeight: '32px' }}>
+            <svg className="w-3 h-3 text-gray-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>
+            <span className="text-[9px] text-gray-500 truncate">{onlyUser1 ? `${user1.username || 'P1'} locked` : `${user2.username || 'P2'} locked`} · awaiting other</span>
           </div>
         ) : (
-          <div className="mt-2 flex items-center gap-1.5 px-2 py-2 rounded-md" style={{ background: '#111', border: `1px solid ${'#1a1a1a'}`, minHeight: '44px' }}>
+          <div className="mb-2 flex items-center gap-1.5 px-2 py-2 rounded-md" style={{ background: '#111', border: `1px solid ${'#1a1a1a'}`, minHeight: '32px' }}>
             <div className="w-1.5 h-1.5 rounded-full bg-yellow-500/50 pick-pending-dot"></div>
             <span className="text-[9px] text-gray-500">Awaiting picks...</span>
           </div>
         )}
-        <BattleChat battleId={battle.id} compact />
+
+        <div className="mt-auto">
+          <div className="h-1 rounded-full overflow-hidden mb-2" style={{ background: '#1a1a1a' }}>
+            <div
+              className="h-full rounded-full transition-all duration-1000"
+              style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #3b82f6, #06b6d4)' }}
+            ></div>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-gray-600 text-[10px]">{progress.toFixed(0)}% complete</span>
+            <span
+              onClick={(e) => { e.stopPropagation(); router.push(`/battle?battle=${battle.id}`); }}
+              className="text-[11px] font-medium text-blue-400 flex items-center gap-1 cursor-pointer"
+            >
+              Watch
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+              </svg>
+            </span>
+          </div>
+        </div>
       </div>
     );
   }
@@ -742,7 +763,7 @@ function YouVsCard({ youVsState, onClick }) {
 
   return (
     <div
-      className="rounded-xl overflow-hidden cursor-pointer"
+      className="rounded-xl overflow-hidden cursor-pointer w-full h-full flex flex-col"
       onClick={handleClick}
       style={{
         backgroundColor: '#0d0d0d',
@@ -750,7 +771,7 @@ function YouVsCard({ youVsState, onClick }) {
         boxShadow: '0 0 0 1px rgba(59,130,246,0.05) inset',
       }}
     >
-      <div className="p-3.5">
+      <div className="p-3.5 flex flex-col flex-1">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-1.5">
             <div
@@ -948,13 +969,13 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
             See All
           </button>
         </div>
-        <div className="flex gap-3 items-start overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-          <div className="flex-shrink-0 w-[360px]">
+        <div className="flex gap-3 items-stretch overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="flex-shrink-0 w-[380px] flex">
             <YouVsCard youVsState={youVsState} onClick={onYouVsClick} />
           </div>
           {sortedBattles.map(battle => (
-            <div key={battle.id} className="flex-shrink-0 w-[380px]">
-              <BattleCard battle={battle} />
+            <div key={battle.id} className="flex-shrink-0 w-[380px] flex">
+              <BattleCard battle={battle} compact />
             </div>
           ))}
         </div>
