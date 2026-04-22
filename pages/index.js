@@ -6,8 +6,8 @@ import TapSurface from '../components/TapSurface';
 import LiveGameTimer from '../components/LiveGameTimer';
 import ActiveBattleCard from '../components/ActiveBattleCard';
 import WaitingBattleCard from '../components/WaitingBattleCard';
-import PoolContainer from '../components/PoolContainer';
 import DepositMatchContainer from '../components/DepositMatchContainer';
+import FindOpponentContainer from '../components/FindOpponentContainer';
 import DepositMatchAppliedBanner from '../components/DepositMatchAppliedBanner';
 import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
 import LiveBattlesSection from '../components/battle/LiveBattlesSection';
@@ -544,6 +544,7 @@ export default function Dashboard() {
         <div className="mb-4">
           <div className="overflow-x-auto overflow-y-visible scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <div className="flex gap-3 py-1" style={{ minWidth: 'max-content' }}>
+              <DepositMatchContainer />
               {hasActiveMatchup && matchup ? (
                 <ActiveBattleCard
                   matchup={matchup}
@@ -583,9 +584,8 @@ export default function Dashboard() {
               ) : isQueued && queueEntry ? (
                 <WaitingBattleCard queueEntry={queueEntry} myProfile={myProfile} />
               ) : (
-                <DepositMatchContainer />
+                <FindOpponentContainer />
               )}
-              <PoolContainer />
               <DepositMatchAppliedBanner />
             </div>
           </div>
