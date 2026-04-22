@@ -209,11 +209,11 @@ export default function DepositMatchContainer() {
             className="mt-1.5 md:mt-3 px-5 md:px-8 py-1.5 md:py-2.5 rounded-xl font-black text-xs md:text-base uppercase tracking-wider relative overflow-hidden"
             style={{
               background:
-                'linear-gradient(135deg, #fde047 0%, #facc15 40%, #f59e0b 100%)',
-              color: '#3f1d00',
-              border: '1.5px solid rgba(255, 247, 214, 0.7)',
+                'linear-gradient(135deg, #b45309 0%, #92400e 50%, #78350f 100%)',
+              color: '#fff7d6',
+              border: '1.5px solid rgba(255, 247, 214, 0.85)',
               animation: 'deposit-cta-pulse 1.6s ease-in-out infinite',
-              textShadow: '0 1px 0 rgba(255,255,255,0.4)',
+              textShadow: '0 1px 2px rgba(0,0,0,0.6)',
             }}
           >
             <span className="relative z-10">{ctaLabel}</span>
