@@ -24,10 +24,7 @@ export default function DepositMatchContainer() {
     };
   }, [status, session?.user?.id]);
 
-  if (status !== 'authenticated') return null;
-  if (hasDeposited === null) return null;
-
-  const isReturning = hasDeposited === true;
+  const isReturning = status === 'authenticated' && hasDeposited === true;
 
   const handleClick = () => {
     if (typeof window !== 'undefined') {
