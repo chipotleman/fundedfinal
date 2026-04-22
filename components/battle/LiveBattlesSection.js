@@ -99,6 +99,10 @@ function PickPill({ pick, compact = false }) {
   const neutralBorder = '#1a1a1a';
   const neutralBg = '#111';
 
+  const statusColor = isWon ? '#10b981' : isLost ? '#ef4444' : '#64748b';
+  const statusGlow = isWon ? 'rgba(16,185,129,0.35)' : isLost ? 'rgba(239,68,68,0.35)' : 'rgba(100,116,139,0.25)';
+  const oddsColor = isWon ? '#34d399' : isLost ? '#f87171' : (typeof pick.odds === 'string' && pick.odds.startsWith('+') ? '#34d399' : '#e5e7eb');
+
   return (
     <div
       className="pick-chip-card"
@@ -106,56 +110,81 @@ function PickPill({ pick, compact = false }) {
         position: 'relative',
         display: 'flex',
         alignItems: 'center',
-        gap: compact ? '5px' : '8px',
-        padding: compact ? '5px 7px' : '8px 10px',
-        borderRadius: compact ? '6px' : '8px',
-        border: `1px solid ${isWon ? 'rgba(16, 185, 129, 0.3)' : isLost ? 'rgba(239, 68, 68, 0.3)' : neutralBorder}`,
-        background: isWon ? 'rgba(16, 185, 129, 0.06)' : isLost ? 'rgba(239, 68, 68, 0.06)' : neutralBg,
+        gap: compact ? '8px' : '11px',
+        padding: compact ? '6px 10px 6px 9px' : '9px 14px 9px 12px',
+        borderRadius: compact ? '999px' : '999px',
+        background: isWon
+          ? 'linear-gradient(90deg, rgba(16,185,129,0.10) 0%, rgba(16,185,129,0.02) 100%)'
+          : isLost
+          ? 'linear-gradient(90deg, rgba(239,68,68,0.10) 0%, rgba(239,68,68,0.02) 100%)'
+          : 'linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
+        boxShadow: `inset 3px 0 0 0 ${statusColor}, 0 1px 0 0 rgba(255,255,255,0.03)`,
       }}
     >
       <div
         style={{
-          width: compact ? '18px' : '22px',
-          height: compact ? '18px' : '22px',
+          width: compact ? '16px' : '20px',
+          height: compact ? '16px' : '20px',
           borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           flexShrink: 0,
-          background: isWon ? 'rgba(16, 185, 129, 0.2)' : isLost ? 'rgba(239, 68, 68, 0.2)' : 'rgba(107, 114, 128, 0.2)',
-          border: `1.5px solid ${isWon ? '#10b981' : isLost ? '#ef4444' : '#4b5563'}`,
+          background: `radial-gradient(circle at 30% 30%, ${statusColor}55 0%, ${statusColor}22 60%, transparent 100%)`,
+          boxShadow: `0 0 8px ${statusGlow}`,
         }}
       >
-        {isWon && <svg width={compact ? "10" : "12"} height={compact ? "10" : "12"} viewBox="0 0 12 12" fill="none"><path d="M2.5 6L5 8.5L9.5 3.5" stroke="#10b981" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-        {isLost && <svg width={compact ? "10" : "12"} height={compact ? "10" : "12"} viewBox="0 0 12 12" fill="none"><path d="M3 3L9 9M9 3L3 9" stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-        {isPending && <div className="pick-pending-dot" style={{ width: compact ? '5px' : '6px', height: compact ? '5px' : '6px', borderRadius: '50%', background: '#6b7280' }}></div>}
+        {isWon && <svg width={compact ? "9" : "11"} height={compact ? "9" : "11"} viewBox="0 0 12 12" fill="none"><path d="M2.5 6L5 8.5L9.5 3.5" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+        {isLost && <svg width={compact ? "9" : "11"} height={compact ? "9" : "11"} viewBox="0 0 12 12" fill="none"><path d="M3 3L9 9M9 3L3 9" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+        {isPending && <div className="pick-pending-dot" style={{ width: compact ? '4px' : '5px', height: compact ? '4px' : '5px', borderRadius: '50%', background: statusColor, boxShadow: `0 0 6px ${statusColor}` }}></div>}
       </div>
 
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: compact ? '4px' : '6px', marginBottom: compact ? '0px' : '2px' }}>
-          <span style={{ color: '#ffffff', fontSize: compact ? '10px' : '12px', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 1, minWidth: 0 }}>{pick.team}</span>
-          <span
-            style={{
-              fontSize: compact ? '8px' : '9px',
-              fontWeight: 600,
-              textTransform: 'uppercase',
-              letterSpacing: '0.3px',
-              padding: compact ? '0px 3px' : '1px 5px',
-              borderRadius: '3px',
-              background: 'rgba(59, 130, 246, 0.15)',
-              color: '#60a5fa',
-              border: '1px solid rgba(59, 130, 246, 0.2)',
-              whiteSpace: 'nowrap',
-              flexShrink: 0,
-            }}
-          >
-            {pick.type}
-          </span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: compact ? '4px' : '8px' }}>
-          <span style={{ color: '#3b82f6', fontSize: compact ? '11px' : '13px', fontWeight: 800 }}>{pick.odds}</span>
-          <span style={{ color: '#6b7280', fontSize: compact ? '9px' : '10px', fontWeight: 500 }}>${pick.amount}</span>
-        </div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: compact ? '6px' : '8px', flex: 1, minWidth: 0, overflow: 'hidden' }}>
+        <span
+          style={{
+            color: '#fff',
+            fontSize: compact ? '11px' : '13px',
+            fontWeight: 800,
+            letterSpacing: '0.01em',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            minWidth: 0,
+          }}
+        >
+          {pick.team}
+        </span>
+        <span
+          style={{
+            fontSize: compact ? '8px' : '9px',
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.12em',
+            color: 'rgba(148, 163, 184, 0.9)',
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+          }}
+        >
+          {pick.type}
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: compact ? '5px' : '7px', flexShrink: 0 }}>
+        <span
+          style={{
+            color: oddsColor,
+            fontSize: compact ? '12px' : '14px',
+            fontWeight: 900,
+            fontVariantNumeric: 'tabular-nums',
+            letterSpacing: '-0.01em',
+            textShadow: isWon || isLost ? `0 0 8px ${statusGlow}` : 'none',
+          }}
+        >
+          {pick.odds}
+        </span>
+        <span style={{ color: 'rgba(148,163,184,0.7)', fontSize: compact ? '9px' : '10px', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}>
+          ${pick.amount}
+        </span>
       </div>
     </div>
   );

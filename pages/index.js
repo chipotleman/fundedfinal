@@ -7,6 +7,7 @@ import LiveGameTimer from '../components/LiveGameTimer';
 import ActiveBattleCard from '../components/ActiveBattleCard';
 import WaitingBattleCard from '../components/WaitingBattleCard';
 import DepositMatchContainer from '../components/DepositMatchContainer';
+import TrendingBetContainer from '../components/TrendingBetContainer';
 import DepositMatchAppliedBanner from '../components/DepositMatchAppliedBanner';
 import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
 import LiveBattlesSection from '../components/battle/LiveBattlesSection';
@@ -584,7 +585,7 @@ export default function Dashboard() {
               ) : (
                 <DepositMatchContainer />
               )}
-              <DepositMatchContainer />
+              <TrendingBetContainer />
               <DepositMatchAppliedBanner />
             </div>
           </div>
