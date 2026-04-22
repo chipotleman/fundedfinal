@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/router';
 
 export default function DepositMatchContainer() {
+  const router = useRouter();
   const { data: session, status } = useSession();
   const [hasDeposited, setHasDeposited] = useState(null);
 
@@ -27,9 +29,7 @@ export default function DepositMatchContainer() {
   const isReturning = status === 'authenticated' && hasDeposited === true;
 
   const handleClick = () => {
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('openChallengePopup'));
-    }
+    router.push('/withdrawal');
   };
 
   const badgeLabel = isReturning ? '🔥 Reload Bonus' : '⭐ New Player';
@@ -134,20 +134,6 @@ export default function DepositMatchContainer() {
               }}
             />
           ))}
-        </div>
-
-        <div
-          className="absolute inset-0 overflow-hidden pointer-events-none z-0"
-          style={{ mixBlendMode: 'overlay' }}
-        >
-          <div
-            className="absolute top-0 left-0 h-full w-1/3"
-            style={{
-              background:
-                'linear-gradient(110deg, transparent 0%, rgba(255,255,255,0.55) 50%, transparent 100%)',
-              animation: 'deposit-shimmer 3.5s ease-in-out infinite',
-            }}
-          />
         </div>
 
         <div
