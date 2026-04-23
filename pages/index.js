@@ -4,8 +4,6 @@ import TopNavbar from '../components/TopNavbar';
 import BetSlip from '../components/BetSlip';
 import TapSurface from '../components/TapSurface';
 import LiveGameTimer from '../components/LiveGameTimer';
-import ActiveBattleCard from '../components/ActiveBattleCard';
-import WaitingBattleCard from '../components/WaitingBattleCard';
 import DepositMatchContainer from '../components/DepositMatchContainer';
 import TrendingBetContainer from '../components/TrendingBetContainer';
 import DepositMatchAppliedBanner from '../components/DepositMatchAppliedBanner';
@@ -27,7 +25,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { betSlip, setBetSlip, showBetSlip, setShowBetSlip, addToBetSlip, isBetInSlip } = useBetSlip();
   const { apiGames: contextApiGames, inplayEvents: contextInplayEvents, loading: gamesLoading, error: gamesError, lastUpdated, isDemoMode } = useGames();
-  const { matchup, opponent, myProfile, myBalance: matchupBalance, opponentBalance, myLiveBalance, opponentLiveBalance, myUnrealizedPnl, opponentUnrealizedPnl, myPendingAtRiskCount, myBets, opponentBets, canSeeOpponentBets, hasActiveMatchup, isWaiting, isQueued, queueEntry, hasAnyMatchup, timeRemaining, refresh: refreshMatchup } = useMatchup();
+  const { matchup, opponent, myProfile, hasActiveMatchup, isWaiting, isQueued, queueEntry, timeRemaining, refresh: refreshMatchup } = useMatchup();
   const [selectedSport, setSelectedSport] = useState('Live');
   const [showBattleWalkthrough, setShowBattleWalkthrough] = useState(false);
   const [walkthroughStep, setWalkthroughStep] = useState(0);
@@ -544,47 +542,7 @@ export default function Dashboard() {
         <div className="mb-4">
           <div className="overflow-x-auto overflow-y-visible scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <div className="flex gap-3 py-1" style={{ minWidth: 'max-content' }}>
-              {hasActiveMatchup && matchup ? (
-                <ActiveBattleCard
-                  matchup={matchup}
-                  opponent={opponent || { username: 'Opponent', avatar: null }}
-                  myBalance={matchupBalance}
-                  opponentBalance={opponentBalance}
-                  myLiveBalance={myLiveBalance}
-                  opponentLiveBalance={opponentLiveBalance}
-                  myUnrealizedPnl={myUnrealizedPnl}
-                  opponentUnrealizedPnl={opponentUnrealizedPnl}
-                  opponentBets={opponentBets}
-                  canSeeBets={canSeeOpponentBets}
-                  myBetsCount={myBets?.length || 0}
-                  myPendingAtRiskCount={myPendingAtRiskCount}
-                  myProfile={myProfile}
-                  onForfeit={() => {
-                    const opponentSnapshot = opponent
-                      ? { username: opponent.username, avatar: opponent.avatar }
-                      : { username: 'Opponent', avatar: null };
-                    fetch('/api/battles/forfeit', { method: 'POST' })
-                      .then(r => r.json())
-                      .then(data => {
-                        if (data.success) {
-                          setForfeitConfirmation({
-                            opponent: opponentSnapshot,
-                            payout: data.matchup?.winnerPayout,
-                            totalPot: data.matchup?.totalPot,
-                          });
-                          refreshMatchup();
-                        }
-                      })
-                      .catch(() => {});
-                  }}
-                />
-              ) : isWaiting && matchup ? (
-                <WaitingBattleCard matchup={matchup} myProfile={myProfile} opponent={opponent} />
-              ) : isQueued && queueEntry ? (
-                <WaitingBattleCard queueEntry={queueEntry} myProfile={myProfile} />
-              ) : (
-                <DepositMatchContainer />
-              )}
+              <DepositMatchContainer />
               <TrendingBetContainer />
               <DepositMatchAppliedBanner />
             </div>
