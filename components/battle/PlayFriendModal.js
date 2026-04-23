@@ -545,7 +545,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
               <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3 text-red-400 text-sm mb-4 pfm-fade-in">{error}</div>
             )}
 
-            {activeTab === 'friends' && !lockedFriend && (
+            {activeTab === 'friends' && !lockedFriend && !selectedFriend && (
               <div className="space-y-3 pfm-fade-in">
                 {friends.length > 3 && (
                   <div className="relative">
@@ -853,14 +853,22 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
             )}
 
             {selectedFriend && activeTab === 'friends' && (
-              <div className="mt-4 pt-4 space-y-4 pfm-fade-in" style={{ borderTop: `1px solid ${cardBorder}` }}>
+              <div className="space-y-4 pfm-fade-in">
                 <div className="flex items-center gap-3 p-3 rounded-xl" style={{ backgroundColor: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.15)' }}>
                   <UserAvatar user={selectedFriend} size={32} />
                   <div className="flex-1 min-w-0">
                     <span className="text-sm font-semibold" style={{ color: textPrimary }}>Challenging {selectedFriend.username}</span>
                   </div>
                   {!lockedFriend && (
-                    <button onClick={() => setSelectedFriend(null)} className="text-xs" style={{ color: textMuted }}>Change</button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedFriend(null)}
+                      aria-label="Pick a different friend"
+                      className="text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors"
+                      style={{ backgroundColor: elevatedBg, color: textSecondary, border: `1px solid ${cardBorder}` }}
+                    >
+                      Change
+                    </button>
                   )}
                 </div>
 
@@ -885,10 +893,10 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-semibold uppercase tracking-wider mb-1 block" style={{ color: textMuted }}>Game Mode</label>
-                  <p className="text-[10px] mb-2 leading-snug" style={{ color: textMuted }}>
-                    The ${buyIn} above is each player's wager. The coins below are the in-battle starting bankroll each player gets to bet with.
-                  </p>
+                  <div className="flex items-baseline justify-between mb-2">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: textMuted }}>Game Mode</label>
+                    <span className="text-[10px]" style={{ color: textMuted }}>Coins = starting bankroll</span>
+                  </div>
                   <div className="grid grid-cols-3 gap-1.5">
                     {GAME_MODE_OPTIONS.map(mode => {
                       const selected = gameMode === mode.id;
@@ -916,24 +924,36 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                   </div>
                 </div>
 
-                {hasActiveMatchup && (
-                  <div
-                    className="rounded-xl px-3 py-2.5 text-xs leading-snug"
-                    style={{ backgroundColor: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', color: '#fca5a5' }}
-                  >
-                    {ACTIVE_BATTLE_BLOCK_MESSAGE}
-                  </div>
-                )}
-                <button
-                  onClick={sendInvite}
-                  disabled={sending || hasActiveMatchup}
-                  title={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : undefined}
-                  className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden pfm-cta-btn"
-                >
-                  <span className="relative z-10">{sending ? 'Sending...' : hasActiveMatchup ? 'In a battle' : `Challenge ${selectedFriend.username}`}</span>
-                </button>
               </div>
             )}
+          </div>
+        )}
+
+        {!sent && selectedFriend && activeTab === 'friends' && (
+          <div
+            className="flex-shrink-0 px-5 pt-3 pb-4 space-y-2"
+            style={{
+              backgroundColor: cardBg,
+              borderTop: `1px solid ${cardBorder}`,
+              paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)',
+            }}
+          >
+            {hasActiveMatchup && (
+              <div
+                className="rounded-xl px-3 py-2 text-xs leading-snug"
+                style={{ backgroundColor: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', color: '#fca5a5' }}
+              >
+                {ACTIVE_BATTLE_BLOCK_MESSAGE}
+              </div>
+            )}
+            <button
+              onClick={sendInvite}
+              disabled={sending || hasActiveMatchup}
+              title={hasActiveMatchup ? ACTIVE_BATTLE_BLOCK_MESSAGE : undefined}
+              className="w-full bg-blue-600 text-white font-bold py-3.5 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden pfm-cta-btn"
+            >
+              <span className="relative z-10">{sending ? 'Sending...' : hasActiveMatchup ? 'In a battle' : `Challenge ${selectedFriend.username}`}</span>
+            </button>
           </div>
         )}
       </div>
