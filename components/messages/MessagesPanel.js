@@ -697,12 +697,14 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
                 value={reply}
                 onChange={handleReplyChange}
                 placeholder="Write a message…"
-                className="flex-1 min-w-0 px-3 py-2 rounded-lg text-sm focus:outline-none focus:border-blue-400"
+                className="flex-1 min-w-0 px-3 py-2 rounded-lg focus:outline-none focus:border-blue-400"
                 style={{
                   backgroundColor: inputBg,
                   border: `1px solid ${cardBorder}`,
                   color: textPrimary,
                   boxShadow: 'inset 0 0 0 1px rgba(59,130,246,0.05)',
+                  fontSize: 16,
+                  lineHeight: '20px',
                 }}
                 maxLength={1000}
                 disabled={sending}
