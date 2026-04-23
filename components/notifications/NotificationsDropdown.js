@@ -4,6 +4,7 @@ import { useNotifications } from '../../contexts/NotificationsContext';
 import UserAvatar from '../UserAvatar';
 import { formatMoney } from '../../utils/formatMoney';
 import { cacheBattleResult } from '../../utils/battleResultCache';
+import { NOTIF_TYPES, NotifIcon, getResultStyle } from './notificationTypeStyles';
 
 function Avatar({ sender, size = 36 }) {
   return (
@@ -116,11 +117,11 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
         )}
 
         {battleInvites.length > 0 && (
-          <Section title="Battle Invites">
+          <Section type="invite" title="Battle Invites">
             {battleInvites.map((inv) => {
               const buyIn = parseFloat(inv.buyIn) || 0;
               return (
-                <Row key={inv.id} sender={inv.sender} time={inv.createdAt}>
+                <Row key={inv.id} type="invite" sender={inv.sender} time={inv.createdAt}>
                   <div className="text-white text-sm font-semibold truncate">
                     {inv.sender?.username || 'Someone'} challenged you
                   </div>
@@ -151,9 +152,9 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
         )}
 
         {pendingRematches.length > 0 && (
-          <Section title="Rematch Requests">
+          <Section type="rematch" title="Rematch Requests">
             {pendingRematches.map((rm) => (
-              <Row key={rm.id} sender={rm.opponent} time={rm.requestedAt}>
+              <Row key={rm.id} type="rematch" sender={rm.opponent} time={rm.requestedAt}>
                 <div className="text-white text-sm font-semibold truncate">
                   {rm.opponent?.username || 'Opponent'} wants a rematch
                 </div>
@@ -167,8 +168,8 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                       onClose?.();
                       router.push(`/battle?result=${encodeURIComponent(rm.matchupId)}&rematch=1`);
                     })}
-                    className="flex-1 bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
-                    style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}
+                    className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
+                    style={{ boxShadow: '0 0 12px rgba(16,185,129,0.45)' }}
                   >View</button>
                   <button
                     disabled={busyId === rm.id}
@@ -182,9 +183,14 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
         )}
 
         {gameResults.length > 0 && (
-          <Section title="Results">
+          <Section type="result_won" title="Results">
             {gameResults.map((r) => {
-              const accent = r.outcome === 'won' ? '#3b82f6' : r.outcome === 'lost' ? '#f87171' : '#facc15';
+              const resultStyle = getResultStyle(r.outcome);
+              const resultType = r.outcome === 'won'
+                ? 'result_won'
+                : r.outcome === 'lost'
+                ? 'result_lost'
+                : 'result_push';
               const pnl = Number.isFinite(r.pnl) ? r.pnl : 0;
               const amount = Math.abs(pnl);
               let label;
@@ -196,9 +202,14 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                 label = 'Push';
               }
               return (
-                <Row key={`result:${r.id}`} sender={r.opponent} time={r.endedAt}>
+                <Row
+                  key={`result:${r.id}`}
+                  type={resultType}
+                  sender={r.opponent}
+                  time={r.endedAt}
+                >
                   <div className="text-white text-sm font-semibold truncate">
-                    <span style={{ color: accent }}>{label}</span>
+                    <span style={{ color: resultStyle.accent }}>{label}</span>
                     {' vs '}
                     {r.opponent?.username || 'Opponent'}
                   </div>
@@ -230,9 +241,9 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
         )}
 
         {friendRequests.length > 0 && (
-          <Section title="Friend Requests">
+          <Section type="friend_request" title="Friend Requests">
             {friendRequests.map((fr) => (
-              <Row key={fr.id} sender={fr.sender} time={fr.createdAt}>
+              <Row key={fr.id} type="friend_request" sender={fr.sender} time={fr.createdAt}>
                 <div className="text-white text-sm font-semibold truncate">
                   {fr.sender?.username || 'Someone'} wants to be friends
                 </div>
@@ -240,8 +251,8 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
                   <button
                     disabled={busyId === fr.id}
                     onClick={() => wrap(fr.id, async () => { await ctx.acceptFriend(fr.id); })}
-                    className="flex-1 bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
-                    style={{ boxShadow: '0 0 12px rgba(59,130,246,0.45)' }}
+                    className="flex-1 bg-purple-500 hover:bg-purple-400 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
+                    style={{ boxShadow: '0 0 12px rgba(168,85,247,0.45)' }}
                   >Accept</button>
                   <button
                     disabled={busyId === fr.id}
@@ -267,10 +278,19 @@ export default function NotificationsDropdown({ open, onClose, anchorRef }) {
   );
 }
 
-function Section({ title, children }) {
+function Section({ type, title, children }) {
+  const style = NOTIF_TYPES[type];
+  const accent = style?.accent || '#9ca3af';
   return (
     <div>
-      <div className="px-4 pt-3 pb-1 text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+      <div
+        className="px-4 pt-3 pb-1 flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-semibold"
+        style={{ color: accent }}
+      >
+        <span
+          className="inline-block h-1.5 w-1.5 rounded-full"
+          style={{ backgroundColor: accent, boxShadow: `0 0 6px ${accent}` }}
+        />
         {title}
       </div>
       <div>{children}</div>
@@ -278,11 +298,46 @@ function Section({ title, children }) {
   );
 }
 
-function Row({ sender, time, children }) {
+function Row({ type, sender, time, children }) {
+  const style = NOTIF_TYPES[type];
+  const accent = style?.accent || '#3b82f6';
   return (
-    <div className="px-4 py-2.5 hover:bg-[#111111] flex items-start gap-3">
-      <Avatar sender={sender} />
-      <div className="flex-1 min-w-0">{children}</div>
+    <div
+      className="px-4 py-2.5 hover:bg-[#111111] flex items-start gap-3 relative"
+      style={{
+        borderLeft: `3px solid ${accent}`,
+        backgroundColor: `${accent}0A`,
+      }}
+    >
+      <div className="relative flex-shrink-0">
+        <Avatar sender={sender} />
+        {style && (
+          <span
+            className="absolute -bottom-1 -right-1 inline-flex items-center justify-center rounded-full"
+            style={{
+              width: 16,
+              height: 16,
+              backgroundColor: '#0a0a0a',
+              border: `1px solid ${accent}`,
+              color: accent,
+            }}
+            title={style.label}
+          >
+            <NotifIcon name={style.icon} size={9} color={accent} strokeWidth={2.5} />
+          </span>
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        {style && (
+          <div
+            className="text-[9px] uppercase tracking-wider font-bold mb-0.5"
+            style={{ color: accent }}
+          >
+            {style.label}
+          </div>
+        )}
+        {children}
+      </div>
       {time && (
         <span className="text-[10px] text-gray-500 mt-1 flex-shrink-0">{timeAgo(time)}</span>
       )}
