@@ -13,6 +13,7 @@ import { VoiceChatProvider } from '../contexts/VoiceChatContext';
 import { NotificationsProvider } from '../contexts/NotificationsContext';
 import { PushNotificationsProvider } from '../contexts/PushNotificationsContext';
 import GlobalToastContainer from '../components/notifications/GlobalToastContainer';
+import IncomingInviteModal from '../components/battle/IncomingInviteModal';
 import BonusClaimedCelebration from '../components/BonusClaimedCelebration';
 import PushOptInPrompt from '../components/notifications/PushOptInPrompt';
 import WonByForfeitModal from '../components/WonByForfeitModal';
@@ -528,6 +529,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
                 <PresenceHeartbeat isLoggedIn={isLoggedIn} />
                 <AutoGrader />
                 <GlobalToastContainer />
+                <IncomingInviteModal />
                 <PushOptInPrompt />
                 <BonusClaimedCelebration />
                 {/* Solid Black Background */}

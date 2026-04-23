@@ -243,17 +243,48 @@ export default async function handler(req, res) {
         })
         .returning();
 
+      // Fetch sender profile up-front so we can ship a complete invite
+      // payload in the SSE push (lets the recipient render the full invite
+      // modal instantly without a follow-up /api/notifications round-trip).
+      let senderProfile = null;
       try {
-        publishBattleEvent(receiverId, { type: 'notification:invite' });
+        const rows = await db
+          .select({
+            id: profiles.id,
+            username: profiles.username,
+            avatar: profiles.avatar,
+            equippedFrame: profiles.equippedFrame,
+          })
+          .from(profiles)
+          .where(eq(profiles.id, userId))
+          .limit(1);
+        senderProfile = rows[0] || null;
+      } catch (_e) {}
+
+      try {
+        publishBattleEvent(receiverId, {
+          type: 'notification:invite',
+          invite: {
+            id: newInvite.id,
+            senderId: userId,
+            receiverId,
+            buyIn: newInvite.buyIn,
+            duration: newInvite.duration,
+            gameMode: newInvite.gameMode,
+            status: 'pending',
+            expiresAt: newInvite.expiresAt,
+            sender: senderProfile ? {
+              id: senderProfile.id,
+              username: senderProfile.username,
+              avatar: senderProfile.avatar,
+              equippedFrame: senderProfile.equippedFrame,
+            } : { id: userId },
+          },
+        });
       } catch (_e) {}
 
       // Fire push notification to the receiver in the background.
       try {
-        const [senderProfile] = await db
-          .select({ username: profiles.username })
-          .from(profiles)
-          .where(eq(profiles.id, userId))
-          .limit(1);
         const senderName = senderProfile?.username || 'A friend';
         sendPushToUsers(receiverId, {
           category: 'invite',

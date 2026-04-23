@@ -35,6 +35,13 @@ export function NotificationsProvider({ children }) {
   const { data: session, status } = useSession();
   const [data, setData] = useState(EMPTY);
   const [toasts, setToasts] = useState([]);
+  // Queue of incoming 1v1 battle invites to surface as a full-screen modal
+  // (replacing the small corner invite toast). FIFO — only the head is shown.
+  const [incomingInvites, setIncomingInvites] = useState([]);
+  // In-memory set of invite ids that have already been surfaced (or
+  // dismissed) in this session, so we don't pop the modal twice for the
+  // same invite (e.g. SSE event followed by a refresh catch-up).
+  const incomingInviteSeenRef = useRef(new Set());
   const [typingSenderIds, setTypingSenderIds] = useState(() => new Set());
   const [conversations, setConversations] = useState([]);
   const [conversationsLoaded, setConversationsLoaded] = useState(false);
@@ -113,6 +120,24 @@ export function NotificationsProvider({ children }) {
 
   const dismissToast = useCallback((id) => {
     setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
+
+  const addIncomingInvite = useCallback((invite) => {
+    if (!invite?.id) return;
+    if (incomingInviteSeenRef.current.has(invite.id)) return;
+    incomingInviteSeenRef.current.add(invite.id);
+    setIncomingInvites((prev) => {
+      if (prev.some((i) => i.id === invite.id)) return prev;
+      return [...prev, invite];
+    });
+  }, []);
+
+  const dismissIncomingInvite = useCallback((id) => {
+    if (!id) return;
+    // Mark seen so a subsequent refresh doesn't immediately re-surface it;
+    // the user can still respond from the bell.
+    incomingInviteSeenRef.current.add(id);
+    setIncomingInvites((prev) => prev.filter((i) => i.id !== id));
   }, []);
 
   const enqueueToast = useCallback((toast) => {
@@ -233,21 +258,30 @@ export function NotificationsProvider({ children }) {
       }
       outgoingInvitesRef.current = currentOutgoingMap;
 
+      // Auto-close any open incoming-invite modal whose invite is no longer
+      // pending on the server (cancelled, declined elsewhere, or expired).
+      const pendingInviteIds = new Set(battleInvites.map((it) => it.id));
+      setIncomingInvites((prev) => prev.filter((inv) => pendingInviteIds.has(inv.id)));
+
       if (isInitial) {
-        for (const it of battleInvites) seenRef.current.add(`invite:${it.id}`);
+        // Mark current pending items as seen so we don't pop modals/toasts
+        // for invites that already existed before the page loaded.
+        for (const it of battleInvites) {
+          seenRef.current.add(`invite:${it.id}`);
+          incomingInviteSeenRef.current.add(it.id);
+        }
         for (const it of friendRequests) seenRef.current.add(`friend:${it.id}`);
         for (const it of unreadMessages) seenRef.current.add(`message:${it.id}`);
         for (const it of pendingRematches) seenRef.current.add(`rematch:${it.matchupId}`);
         writeSeen(seenRef.current);
       } else {
+        // Catch-up path for the full-screen invite modal: if a pending
+        // invite arrived that we haven't surfaced yet (e.g. SSE was briefly
+        // disconnected), push it into the modal queue now. The corner
+        // invite toast is no longer used — the modal replaces it.
         for (const it of battleInvites) {
-          enqueueToast({
-            id: `invite:${it.id}`,
-            type: 'invite',
-            sender: it.sender,
-            payload: it,
-            suppressKey: 'battle_invites',
-          });
+          seenRef.current.add(`invite:${it.id}`);
+          addIncomingInvite(it);
         }
         for (const it of friendRequests) {
           enqueueToast({
@@ -277,7 +311,7 @@ export function NotificationsProvider({ children }) {
         }
       }
     } catch {}
-  }, [isAuthed, enqueueToast]);
+  }, [isAuthed, enqueueToast, addIncomingInvite]);
 
   useEffect(() => {
     if (!isAuthed) {
@@ -292,6 +326,8 @@ export function NotificationsProvider({ children }) {
       setConversationsError(null);
       conversationsInflightRef.current = null;
       outgoingInvitesRef.current = new Map();
+      setIncomingInvites([]);
+      incomingInviteSeenRef.current = new Set();
       return;
     }
     refresh();
@@ -369,6 +405,16 @@ export function NotificationsProvider({ children }) {
         // (no-op for outgoing messages from the sender's own session).
         refresh();
         refreshConversations();
+      } else if (ev.type === 'notification:invite') {
+        // Rich invite payload — surface the full-screen modal instantly
+        // without waiting on a /api/notifications round-trip.
+        if (ev.invite?.id) {
+          addIncomingInvite(ev.invite);
+        }
+        // Still refresh so the bell count and battleInvites list stay
+        // accurate (and so we can catch up if the SSE payload was
+        // stripped down for any reason).
+        refresh();
       } else if (ev.type === 'notification:refresh' || ev.type.startsWith('notification:')) {
         refresh();
       } else if (ev.type === 'achievement:earned' && ev.achievement?.id) {
@@ -412,7 +458,7 @@ export function NotificationsProvider({ children }) {
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('piks:invite:ended', handleInviteEndedFromModal);
     };
-  }, [isAuthed, refresh, markTyping, enqueueToast, session?.user?.id]);
+  }, [isAuthed, refresh, markTyping, enqueueToast, addIncomingInvite, session?.user?.id]);
 
   // Auto-dismiss toasts after their duration
   useEffect(() => {
@@ -601,6 +647,9 @@ export function NotificationsProvider({ children }) {
     ...data,
     toasts,
     dismissToast,
+    incomingInvites,
+    currentIncomingInvite: incomingInvites[0] || null,
+    dismissIncomingInvite,
     refresh,
     setSuppress,
     acceptInvite,
@@ -632,6 +681,9 @@ export function useNotifications() {
       ...EMPTY,
       toasts: [],
       dismissToast: () => {},
+      incomingInvites: [],
+      currentIncomingInvite: null,
+      dismissIncomingInvite: () => {},
       refresh: () => {},
       setSuppress: () => {},
       acceptInvite: async () => {},

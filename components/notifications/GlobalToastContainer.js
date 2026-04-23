@@ -89,50 +89,11 @@ function Toast({ toast, ctx, router }) {
     try { await fn(); } finally { setBusy(null); }
   };
 
-  if (toast.type === 'invite') {
-    const buyIn = parseFloat(toast.payload?.buyIn) || 0;
-    const duration = toast.payload?.duration;
-    return (
-      <div
-        className="bg-gradient-to-r from-blue-900/95 to-blue-800/95 border border-blue-500/50 rounded-xl p-3"
-        style={baseStyle}
-      >
-        <div className="flex items-center gap-3">
-          <Avatar sender={sender} />
-          <div className="flex-1 min-w-0">
-            <div className="text-white text-sm font-bold truncate">
-              {sender.username || 'Someone'} challenges you!
-            </div>
-            <div className="text-gray-300 text-xs">
-              ${buyIn} buy-in · ${buyIn * 2} pot{duration ? ` · ${duration}h` : ''}
-            </div>
-          </div>
-          <CloseBtn onClick={() => ctx.dismissToast(toast.id)} />
-        </div>
-        <div className="flex gap-2 mt-2">
-          <button
-            disabled={!!busy}
-            onClick={() => wrap('accept', async () => {
-              const data = await ctx.acceptInvite(toast.payload.id);
-              ctx.dismissToast(toast.id);
-              if (data) {
-                router.push('/?battleStarted=true');
-              }
-            })}
-            className="flex-1 bg-green-600 hover:bg-green-500 text-white text-xs font-bold py-1.5 rounded-lg disabled:opacity-50"
-          >{busy === 'accept' ? '...' : 'Accept'}</button>
-          <button
-            disabled={!!busy}
-            onClick={() => wrap('decline', async () => {
-              await ctx.declineInvite(toast.payload.id);
-              ctx.dismissToast(toast.id);
-            })}
-            className="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-200 text-xs font-medium py-1.5 rounded-lg disabled:opacity-50"
-          >{busy === 'decline' ? '...' : 'Decline'}</button>
-        </div>
-      </div>
-    );
-  }
+  // Incoming 1v1 battle invites are now surfaced via the full-screen
+  // IncomingInviteModal mounted globally in _app.js — see task #264.
+  // Explicitly bail out so any legacy invite toast that slips through
+  // is silently swallowed instead of rendering an empty wrapper.
+  if (toast.type === 'invite') return null;
 
   if (toast.type === 'friend_request') {
     return (
