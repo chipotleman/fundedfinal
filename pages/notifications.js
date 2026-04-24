@@ -70,17 +70,107 @@ function TypedRow({ type, time, avatar, children, accentOverride }) {
   );
 }
 
-function NotificationsFeed({ ctx, router }) {
-  const battleInvites = ctx.battleInvites || [];
-  const friendRequests = ctx.friendRequests || [];
-  const gameResults = ctx.gameResults || [];
-  const pendingRematches = ctx.pendingRematches || [];
+const FILTER_STORAGE_KEY = 'piks:notificationsFilter';
+
+const FILTERS = [
+  { key: 'all', label: 'All', accent: '#3b82f6' },
+  { key: 'invite', label: 'Invites', accent: NOTIF_TYPES.invite.accent },
+  { key: 'rematch', label: 'Rematches', accent: NOTIF_TYPES.rematch.accent },
+  { key: 'result', label: 'Results', accent: NOTIF_TYPES.result_won.accent },
+  { key: 'friend', label: 'Friends', accent: NOTIF_TYPES.friend_request.accent },
+];
+
+function hexToRgb(hex) {
+  const h = hex.replace('#', '');
+  const full = h.length === 3 ? h.split('').map((c) => c + c).join('') : h;
+  const num = parseInt(full, 16);
+  return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+}
+
+function FilterPills({ active, onChange, counts }) {
+  return (
+    <div
+      className="-mx-3 sm:mx-0 mb-3 px-3 sm:px-0 overflow-x-auto"
+      style={{ WebkitOverflowScrolling: 'touch' }}
+    >
+      <div className="flex items-center gap-2 min-w-max">
+        {FILTERS.map((f) => {
+          const isActive = active === f.key;
+          const count = counts[f.key] ?? 0;
+          const { r, g, b } = hexToRgb(f.accent);
+          const bg = isActive
+            ? `rgba(${r},${g},${b},0.16)`
+            : 'rgba(255,255,255,0.03)';
+          const border = isActive
+            ? `rgba(${r},${g},${b},0.55)`
+            : 'rgba(255,255,255,0.08)';
+          const color = isActive ? f.accent : '#9ca3af';
+          const shadow = isActive
+            ? `0 0 12px rgba(${r},${g},${b},0.28)`
+            : 'none';
+          return (
+            <button
+              key={f.key}
+              type="button"
+              onClick={() => onChange(f.key)}
+              aria-pressed={isActive}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full whitespace-nowrap transition-colors"
+              style={{
+                color,
+                backgroundColor: bg,
+                border: `1px solid ${border}`,
+                boxShadow: shadow,
+              }}
+            >
+              <span>{f.label}</span>
+              {count > 0 && (
+                <span
+                  className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                  style={{
+                    color: isActive ? '#000' : color,
+                    backgroundColor: isActive
+                      ? f.accent
+                      : `rgba(${r},${g},${b},0.12)`,
+                    border: isActive
+                      ? `1px solid ${f.accent}`
+                      : `1px solid rgba(${r},${g},${b},0.35)`,
+                    minWidth: 18,
+                    lineHeight: 1,
+                    textAlign: 'center',
+                  }}
+                >
+                  {count}
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function NotificationsFeed({ ctx, router, filter }) {
+  const allBattleInvites = ctx.battleInvites || [];
+  const allFriendRequests = ctx.friendRequests || [];
+  const allGameResults = ctx.gameResults || [];
+  const allPendingRematches = ctx.pendingRematches || [];
   const [busyId, setBusyId] = useState(null);
 
   const wrap = async (id, fn) => {
     setBusyId(id);
     try { await fn(); } finally { setBusyId(null); }
   };
+
+  const showInvite = filter === 'all' || filter === 'invite';
+  const showRematch = filter === 'all' || filter === 'rematch';
+  const showResult = filter === 'all' || filter === 'result';
+  const showFriend = filter === 'all' || filter === 'friend';
+
+  const battleInvites = showInvite ? allBattleInvites : [];
+  const pendingRematches = showRematch ? allPendingRematches : [];
+  const gameResults = showResult ? allGameResults : [];
+  const friendRequests = showFriend ? allFriendRequests : [];
 
   const totalNew =
     battleInvites.length +
@@ -119,7 +209,9 @@ function NotificationsFeed({ ctx, router }) {
 
       {empty && (
         <div className="px-4 py-12 text-center text-sm" style={{ color: textSecondary }}>
-          You're all caught up.
+          {filter === 'all'
+            ? "You're all caught up."
+            : 'Nothing here for this filter.'}
         </div>
       )}
 
@@ -316,8 +408,40 @@ export default function NotificationsPage() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const ctx = useNotifications();
+  const [filter, setFilterState] = useState('all');
 
   const isAuthed = status === 'authenticated';
+
+  // Restore the user's last-selected filter from sessionStorage so it sticks
+  // while they navigate away and come back within the same session.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const saved = window.sessionStorage.getItem(FILTER_STORAGE_KEY);
+      if (saved && FILTERS.some((f) => f.key === saved)) {
+        setFilterState(saved);
+      }
+    } catch {}
+  }, []);
+
+  const setFilter = (next) => {
+    setFilterState(next);
+    if (typeof window !== 'undefined') {
+      try { window.sessionStorage.setItem(FILTER_STORAGE_KEY, next); } catch {}
+    }
+  };
+
+  const counts = {
+    all:
+      (ctx.battleInvites?.length || 0) +
+      (ctx.pendingRematches?.length || 0) +
+      (ctx.gameResults?.length || 0) +
+      (ctx.friendRequests?.length || 0),
+    invite: ctx.battleInvites?.length || 0,
+    rematch: ctx.pendingRematches?.length || 0,
+    result: ctx.gameResults?.length || 0,
+    friend: ctx.friendRequests?.length || 0,
+  };
 
   // Defensive: mirror the messenger page — proactively release any leftover
   // body / html scroll-lock styles a previous modal may have left behind.
@@ -381,7 +505,8 @@ export default function NotificationsPage() {
         <h1 className="text-xl sm:text-2xl font-bold mb-4 tracking-tight" style={{ color: '#3b82f6' }}>
           Notifications
         </h1>
-        <NotificationsFeed ctx={ctx} router={router} />
+        <FilterPills active={filter} onChange={setFilter} counts={counts} />
+        <NotificationsFeed ctx={ctx} router={router} filter={filter} />
       </div>
     </div>
   );
