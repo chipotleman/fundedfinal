@@ -660,7 +660,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                           </div>
                         </div>
                         {parlayLegs.hasRealData && leg.odds && (
-                          <div className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+                          <div className="font-bold text-lg" style={{ color: '#ffffff' }}>
                             {formatOdds(leg.odds)}
                           </div>
                         )}
