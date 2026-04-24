@@ -173,15 +173,26 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
         <div className="flex-1 overflow-hidden px-6 py-4 mt-16">
           {isLoggedIn ? (
             <div className="space-y-4">
-              {hasActiveChallenge && userBalance !== null && (
+              {userBalance !== null && (
                 <div className="mb-4 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
                   <div className="flex flex-col gap-3">
-                    <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose?.();
+                        window.dispatchEvent(
+                          new CustomEvent('openBalanceExplainer', { detail: { type: 'cash' } })
+                        );
+                      }}
+                      className="text-center w-full focus:outline-none"
+                      style={{ WebkitTapHighlightColor: 'transparent' }}
+                      aria-label="Cash balance details"
+                    >
                       <p className="text-xs text-gray-400 mb-0.5">Balance</p>
                       <p className="text-white font-semibold text-xl">
                         ${formatMoney(userBalance)}
                       </p>
-                    </div>
+                    </button>
                     <Link
                       href="/withdrawal"
                       onClick={onClose}
