@@ -837,32 +837,63 @@ function YouVsCard({ youVsState, onClick }) {
 
   return (
     <div
-      className="rounded-xl overflow-hidden cursor-pointer w-full h-full flex flex-col"
+      className="rounded-xl overflow-hidden cursor-pointer w-full h-full flex flex-col relative"
       onClick={handleClick}
       style={{
-        backgroundColor: '#0d0d0d',
-        border: '1px solid rgba(59, 130, 246, 0.35)',
-        boxShadow: '0 0 0 1px rgba(59,130,246,0.05) inset',
+        background:
+          'linear-gradient(180deg, rgba(139,92,246,0.14) 0%, rgba(6,182,212,0.08) 45%, rgba(13,13,13,0.95) 100%), #0d0d0d',
+        border: '1.5px solid rgba(139, 92, 246, 0.65)',
+        boxShadow:
+          '0 0 0 1px rgba(139,92,246,0.15) inset, 0 0 18px rgba(139,92,246,0.28), 0 0 32px rgba(6,182,212,0.12)',
       }}
     >
+      <style jsx>{`
+        @keyframes youvsAccentSlide {
+          0% { background-position: 0% 50%; }
+          100% { background-position: 200% 50%; }
+        }
+      `}</style>
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 3,
+          background: 'linear-gradient(90deg, #8b5cf6, #06b6d4, #8b5cf6)',
+          backgroundSize: '200% 100%',
+          animation: 'youvsAccentSlide 3.5s linear infinite',
+        }}
+      />
       <div className="p-3.5 flex flex-col flex-1">
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span
+              className="text-[9px] font-extrabold uppercase tracking-[0.18em] px-2 py-0.5 rounded-md flex items-center gap-1 flex-shrink-0"
+              style={{
+                background: 'linear-gradient(135deg, #8b5cf6, #06b6d4)',
+                color: '#fff',
+                boxShadow: '0 0 10px rgba(139,92,246,0.45)',
+              }}
+            >
+              <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                <path d="M10 2l2.39 4.84L17.8 7.6l-3.9 3.8.92 5.36L10 14.27 5.18 16.76l.92-5.36-3.9-3.8 5.41-.76L10 2z" />
+              </svg>
+              Your Battle
+            </span>
             <div
-              className="w-1.5 h-1.5 rounded-full animate-pulse"
+              className="w-1.5 h-1.5 rounded-full animate-pulse flex-shrink-0"
               style={{ background: topDotColor }}
             ></div>
             <span
-              className="text-[10px] font-semibold uppercase tracking-wider"
+              className="text-[10px] font-semibold uppercase tracking-wider truncate"
               style={{ color: topDotColor }}
             >
               {topLabel}
             </span>
-            <span className="ml-1 text-[9px] font-bold uppercase tracking-widest text-blue-400/80 px-1.5 py-0.5 rounded" style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.2)' }}>
-              Pinned
-            </span>
           </div>
-          <span className="text-gray-500 text-[11px] font-medium">{metaRight}</span>
+          <span className="text-gray-400 text-[11px] font-medium flex-shrink-0 ml-2">{metaRight}</span>
         </div>
 
         <div className="flex items-center justify-between mb-3">
@@ -879,7 +910,7 @@ function YouVsCard({ youVsState, onClick }) {
           <div className="px-3 flex flex-col items-center">
             <span
               className="text-xl font-black text-transparent bg-clip-text"
-              style={{ backgroundImage: 'linear-gradient(135deg, #3b82f6, #06b6d4)' }}
+              style={{ backgroundImage: 'linear-gradient(135deg, #8b5cf6, #06b6d4)' }}
             >
               VS
             </span>
@@ -976,7 +1007,7 @@ function YouVsCard({ youVsState, onClick }) {
             className="h-full rounded-full transition-all duration-1000"
             style={{
               width: `${progressPercent}%`,
-              background: 'linear-gradient(90deg, #3b82f6, #06b6d4)',
+              background: 'linear-gradient(90deg, #8b5cf6, #06b6d4)',
             }}
           ></div>
         </div>
@@ -995,7 +1026,7 @@ function YouVsCard({ youVsState, onClick }) {
                 {cancelling ? 'Cancelling…' : (isQueued ? 'Leave Queue' : 'Cancel')}
               </button>
             )}
-            <span className="text-[11px] font-medium text-blue-400 flex items-center gap-1">
+            <span className="text-[11px] font-semibold flex items-center gap-1" style={{ color: '#a78bfa' }}>
               {ctaText}
               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
@@ -1065,13 +1096,23 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
     : battles;
 
   if (compact) {
+    const ownMatchupId = youVsState?.matchup?.id || null;
+    const compactBattles = sortedBattles.filter(b => {
+      if (ownMatchupId && b.id === ownMatchupId) return false;
+      if (currentUserId) {
+        if (b.user1?.id && b.user1.id === currentUserId) return false;
+        if (b.user2?.id && b.user2.id === currentUserId) return false;
+      }
+      return true;
+    });
+    const featuredCount = compactBattles.length + (youVsState && youVsState.status !== 'idle' ? 1 : 0);
     return (
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2 px-1">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold uppercase tracking-wider text-gray-500">Featured Battles</span>
-            {sortedBattles.length > 0 && (
-              <span className="text-green-400 text-[10px] font-semibold">{sortedBattles.length}</span>
+            {featuredCount > 0 && (
+              <span className="text-green-400 text-[10px] font-semibold">{featuredCount}</span>
             )}
           </div>
           <button onClick={() => router.push('/battle')} className="text-blue-400 text-xs">
@@ -1082,7 +1123,7 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
           <div className="flex-shrink-0 w-[380px] flex">
             <YouVsCard youVsState={youVsState} onClick={onYouVsClick} />
           </div>
-          {sortedBattles.map(battle => (
+          {compactBattles.map(battle => (
             <div key={battle.id} className="flex-shrink-0 w-[380px] flex">
               <BattleCard battle={battle} compact />
             </div>
