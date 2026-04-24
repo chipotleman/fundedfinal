@@ -8,7 +8,9 @@ module.exports = defineConfig({
   timeout: 60_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,
-  reporter: [['list']],
+  reporter: process.env.CI
+    ? [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]]
+    : [['list']],
   use: {
     baseURL: BASE_URL,
     trace: 'retain-on-failure',
