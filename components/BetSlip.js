@@ -1157,7 +1157,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                                     </button>
                                     {betsReadOnly ? (
                                       <div
-                                        className="w-full pl-9 pr-3 py-3 rounded-lg text-base"
+                                        className="w-full pl-11 pr-3 py-3 rounded-lg text-base"
                                         style={{
                                           backgroundColor: 'rgba(30, 41, 59, 0.4)',
                                           borderWidth: 1,
@@ -1173,7 +1173,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                                         inputMode="decimal"
                                         value={getStakeDisplayValue(bet)}
                                         onChange={(e) => handleStakeInputChange(bet.id, e)}
-                                        className="w-full pl-9 pr-3 py-3 rounded-lg text-base focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                        className="w-full pl-11 pr-3 py-3 rounded-lg text-base focus:outline-none focus:ring-1 focus:ring-blue-500"
                                         style={{ 
                                           backgroundColor: 'rgba(30, 41, 59, 0.8)',
                                           borderWidth: 1,
@@ -1239,15 +1239,16 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
                           inputMode="decimal"
                           value={getParlayStakeDisplayValue()}
                           onChange={handleParlayStakeInputChange}
-                          className="w-full pl-9 pr-3 py-3 rounded-lg text-base focus:outline-none focus:border-blue-500"
+                          className="w-full pl-11 pr-3 py-3 rounded-lg text-base focus:outline-none focus:border-blue-500"
                           style={{ backgroundColor: '#1a1a1a', borderWidth: 1, borderColor: '#374151', color: '#ffffff' }}
                           placeholder={`Min ${minBetAmount}`}
                         />
                       </div>
                       <div className="text-right min-w-[100px]">
                         <div className="text-gray-500 text-[10px] uppercase">Parlay Win</div>
-                        <div className="text-green-400 font-bold text-lg">
-                          ${parlayStake ? formatMoney(totalPayout - parlayStake) : '0.00'}
+                        <div className="font-bold text-lg inline-flex items-center justify-end gap-1">
+                          <span className="leading-none" style={{ color: '#fb923c' }}>⚔</span>
+                          <span className="text-green-400">{parlayStake ? formatMoney(totalPayout - parlayStake, 0) : '0'}</span>
                         </div>
                       </div>
                     </div>
