@@ -8,7 +8,7 @@
     "start": "next start",
     "db:push": "drizzle-kit push",
     "test:e2e": "playwright test",
-    "test:e2e:install": "playwright install --with-deps webkit"
+    "test:e2e:install": "playwright install --with-deps webkit chromium firefox"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.11.1",
