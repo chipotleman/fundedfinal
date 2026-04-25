@@ -201,6 +201,8 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     const v = e.target.value;
     const prev = reply;
     setReply(v);
+    if (sendError) setSendError(null);
+    if (voiceError) setVoiceError(null);
     if (!friend?.id) return;
     // Clearing the input after typing — proactively tell the friend we
     // stopped so their indicator clears immediately rather than after TTL.
@@ -276,6 +278,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   const handleStartRecording = async () => {
     if (recording || sending) return;
     setVoiceError(null);
+    setSendError(null);
     if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
       setVoiceError('Recording not supported on this device.');
       return;
@@ -284,8 +287,9 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       setVoiceError('Recording not supported on this device.');
       return;
     }
+    let stream = null;
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       let mimeType = 'audio/webm';
       try {
         if (!window.MediaRecorder.isTypeSupported('audio/webm')) {
@@ -303,19 +307,26 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
         if (ev.data && ev.data.size > 0) recordChunksRef.current.push(ev.data);
       };
       recorder.onstop = async () => {
-        stopRecordingTimer();
+        try { stopRecordingTimer(); } catch {}
         const elapsed = Date.now() - recordStartRef.current;
         const chunks = recordChunksRef.current;
         recordChunksRef.current = [];
-        cleanupRecorderStream();
+        try { cleanupRecorderStream(); } catch {}
         setRecording(false);
         setRecordElapsed(0);
-        if (recordCancelledRef.current) return;
-        if (!chunks.length) return;
+        if (recordCancelledRef.current) {
+          recordCancelledRef.current = false;
+          return;
+        }
+        if (!chunks.length) {
+          setVoiceError('Recording was empty. Try again.');
+          return;
+        }
         const blob = new Blob(chunks, { type: recordMimeRef.current || 'audio/webm' });
         if (!friend?.id) return;
         setSending(true);
         setSendError(null);
+        setVoiceError(null);
         try {
           const { attachmentUrl, attachmentDurationMs } = await uploadVoiceBlob(blob, elapsed);
           const res = await sendMessagePayload({
@@ -373,7 +384,23 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
         }
       }, 100);
     } catch (err) {
-      setVoiceError('Microphone access denied.');
+      try { stopRecordingTimer(); } catch {}
+      if (stream) {
+        try { stream.getTracks().forEach((t) => t.stop()); } catch {}
+      }
+      recorderRef.current = null;
+      recordChunksRef.current = [];
+      recordCancelledRef.current = false;
+      setRecording(false);
+      setRecordElapsed(0);
+      const name = err?.name || '';
+      if (name === 'NotAllowedError' || name === 'SecurityError') {
+        setVoiceError('Microphone access denied.');
+      } else if (name === 'NotFoundError' || name === 'OverconstrainedError') {
+        setVoiceError('No microphone available.');
+      } else {
+        setVoiceError('Could not start recording. Try again.');
+      }
     }
   };
 
@@ -743,11 +770,8 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
               )}
             </div>
           )}
-          {sendError && (
-            <div className="text-red-400 text-[11px] mt-1">{sendError}</div>
-          )}
-          {voiceError && (
-            <div className="text-red-400 text-[11px] mt-1">{voiceError}</div>
+          {(voiceError || sendError) && (
+            <div role="alert" className="text-red-400 text-[11px] mt-1">{voiceError || sendError}</div>
           )}
         </form>
       )}

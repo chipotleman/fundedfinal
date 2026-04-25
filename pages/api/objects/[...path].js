@@ -2,6 +2,7 @@ import {
   getStorageClient,
   resolvePrivateObjectPath,
   contentTypeFromName,
+  describeObjectStorageMisconfig,
 } from '../../../lib/objectStorage';
 
 export const config = {
@@ -22,6 +23,19 @@ export default async function handler(req, res) {
 
   const resolved = resolvePrivateObjectPath(subPath);
   if (!resolved) {
+    const misconfig = describeObjectStorageMisconfig();
+    console.error(
+      '[objects/serve] storage_not_configured — ' +
+        (misconfig.blocking.length > 0
+          ? misconfig.blocking.join('; ')
+          : `resolvePrivateObjectPath returned null for subPath="${subPath}"`)
+    );
+    if (misconfig.warnings.length > 0) {
+      console.warn(
+        '[objects/serve] object storage env warnings: ' +
+          misconfig.warnings.join('; ')
+      );
+    }
     return res.status(500).json({ error: 'Object storage not configured' });
   }
 

@@ -14,6 +14,7 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
   const [hasActiveChallenge, setHasActiveChallenge] = useState(false);
   const [userBalance, setUserBalance] = useState(null);
   const [challengeTier, setChallengeTier] = useState(null);
+  const [cashRevealed, setCashRevealed] = useState(false);
   const router = useRouter();
   const { data: session, status } = useSession();
   const { counts: notifCounts } = useNotifications();
@@ -41,6 +42,39 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
     setMounted(true);
     return () => setMounted(false);
   }, []);
+
+  // Load cash balance visibility preference from localStorage (per-device).
+  // Default is hidden so the dollar amount isn't visible to anyone glancing at the screen.
+  // Also re-evaluates when auth status changes so a sign-out elsewhere (session
+  // expiry, sign-out in another tab, etc.) re-masks the value AND clears the
+  // persisted preference so a future sign-in starts hidden again.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (status !== 'authenticated') {
+      setCashRevealed(false);
+      try {
+        localStorage.removeItem('hide_cash_balance');
+      } catch {}
+      return;
+    }
+    try {
+      setCashRevealed(localStorage.getItem('hide_cash_balance') === 'false');
+    } catch {
+      setCashRevealed(false);
+    }
+  }, [status]);
+
+  const toggleCashRevealed = () => {
+    setCashRevealed((prev) => {
+      const next = !prev;
+      try {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('hide_cash_balance', next ? 'false' : 'true');
+        }
+      } catch {}
+      return next;
+    });
+  };
 
   useEffect(() => {
     const checkChallenge = async () => {
@@ -101,6 +135,12 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
   const handleSignOut = async () => {
     await signOut({ redirect: false });
     localStorage.removeItem('current_user');
+    // Auto-hide the cash balance again on sign-out so the next signed-in
+    // session starts masked instead of inheriting the previous user's choice.
+    try {
+      localStorage.removeItem('hide_cash_balance');
+    } catch {}
+    setCashRevealed(false);
     onClose();
     router.push('/');
   };
@@ -173,15 +213,50 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
         <div className="flex-1 overflow-hidden px-6 py-4 mt-16">
           {isLoggedIn ? (
             <div className="space-y-4">
-              {hasActiveChallenge && userBalance !== null && (
-                <div className="mb-4 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
+              {userBalance !== null && (
+                <div className="mb-4 p-4 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm relative">
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleCashRevealed();
+                    }}
+                    className="absolute top-2 right-2 p-1.5 text-gray-300 lg:hover:text-white focus:outline-none"
+                    style={{ WebkitTapHighlightColor: 'transparent' }}
+                    aria-label={cashRevealed ? 'Hide cash balance' : 'Show cash balance'}
+                    aria-pressed={cashRevealed}
+                  >
+                    {cashRevealed ? (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M3 3l18 18" />
+                        <path d="M10.58 10.58a2 2 0 002.83 2.83" />
+                        <path d="M16.68 16.68A9.77 9.77 0 0112 18c-5 0-9-4-10-6 .56-1.12 1.86-3.06 3.86-4.74M9.88 5.18A10.94 10.94 0 0112 5c5 0 9 4 10 6a16.77 16.77 0 01-3.06 3.94" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
+                  </button>
                   <div className="flex flex-col gap-3">
-                    <div className="text-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onClose?.();
+                        window.dispatchEvent(
+                          new CustomEvent('openBalanceExplainer', { detail: { type: 'cash' } })
+                        );
+                      }}
+                      className="text-center w-full focus:outline-none"
+                      style={{ WebkitTapHighlightColor: 'transparent' }}
+                      aria-label="Cash balance details"
+                    >
                       <p className="text-xs text-gray-400 mb-0.5">Balance</p>
                       <p className="text-white font-semibold text-xl">
-                        ${formatMoney(userBalance)}
+                        {cashRevealed ? `$${formatMoney(userBalance)}` : '$••••'}
                       </p>
-                    </div>
+                    </button>
                     <Link
                       href="/withdrawal"
                       onClick={onClose}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import TapSurface from './TapSurface';
 import { formatMoney } from '../utils/formatMoney';
+import { calculatePayout } from '../utils/odds';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 
 export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, isOpponent = false, opponentName, opponentAvatar, compactHeader = false, isBattleEnded = false }) {
@@ -44,13 +45,6 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
 
   const { formatOdds } = useUserPreferences();
 
-  const calculatePayout = (odds, stake) => {
-    if (odds > 0) {
-      return (stake * odds / 100) + stake;
-    } else {
-      return (stake * (100 / Math.abs(odds))) + stake;
-    }
-  };
 
   // Capitalize league identifiers like (w) -> (W), (m) -> (M)
   const capitalizeLeagueId = (text) => {
@@ -660,7 +654,7 @@ export default function PiksBetCard({ bet, onCashOut, onShare, liveScores = {}, 
                           </div>
                         </div>
                         {parlayLegs.hasRealData && leg.odds && (
-                          <div className="font-bold text-lg" style={{ color: isDarkMode ? '#ffffff' : '#111827' }}>
+                          <div className="font-bold text-lg" style={{ color: '#ffffff' }}>
                             {formatOdds(leg.odds)}
                           </div>
                         )}

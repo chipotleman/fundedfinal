@@ -25,10 +25,29 @@ function sanitizeCustomText(raw) {
   return s;
 }
 
-const recentByUser = global.__piks_reaction_rl__ || (global.__piks_reaction_rl__ = new Map());
+// Token bucket per (user, matchup) for canned reactions. Allows a small
+// burst so a normal "tap-tap-tap five hearts" feels instant, then throttles
+// to a sustainable rate to prevent abuse. Customs additionally have their
+// own longer cooldown below.
+const buckets = global.__piks_reaction_buckets__ || (global.__piks_reaction_buckets__ = new Map());
+const BUCKET_CAPACITY = 6;
+const BUCKET_REFILL_MS = 350;
 const recentCustomByUser = global.__piks_reaction_custom_rl__ || (global.__piks_reaction_custom_rl__ = new Map());
-const COOLDOWN_MS = 400;
 const CUSTOM_COOLDOWN_MS = 2500;
+
+function consumeBucketToken(key, now) {
+  const b = buckets.get(key) || { tokens: BUCKET_CAPACITY, last: now };
+  const elapsed = Math.max(0, now - b.last);
+  b.tokens = Math.min(BUCKET_CAPACITY, b.tokens + elapsed / BUCKET_REFILL_MS);
+  b.last = now;
+  if (b.tokens >= 1) {
+    b.tokens -= 1;
+    buckets.set(key, b);
+    return true;
+  }
+  buckets.set(key, b);
+  return false;
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -44,6 +63,13 @@ export default async function handler(req, res) {
   const emoji = typeof req.body?.emoji === 'string' ? req.body.emoji : null;
   const text = typeof req.body?.text === 'string' ? req.body.text : null;
   const customTextRaw = typeof req.body?.customText === 'string' ? req.body.customText : null;
+  // Idempotency / dedupe key supplied by the client. When present we use it
+  // as the SSE event id so the sender's optimistic local render can be
+  // de-duplicated against the live-stream echo (matching ids collapse to
+  // a single floating reaction). Strict format guard to avoid accidental
+  // payload abuse — short, alnum/-/_ only.
+  const clientIdRaw = typeof req.body?.clientId === 'string' ? req.body.clientId : null;
+  const clientId = clientIdRaw && /^[a-zA-Z0-9_-]{1,64}$/.test(clientIdRaw) ? clientIdRaw : null;
 
   if (!emoji && !text && !customTextRaw) {
     return res.status(400).json({ error: 'emoji, text or customText required' });
@@ -68,8 +94,7 @@ export default async function handler(req, res) {
 
   const now = Date.now();
   const rlKey = `${userId}:${id}`;
-  const last = recentByUser.get(rlKey) || 0;
-  if (now - last < COOLDOWN_MS) {
+  if (!consumeBucketToken(rlKey, now)) {
     return res.status(429).json({ error: 'Too fast' });
   }
   if (customText) {
@@ -84,10 +109,9 @@ export default async function handler(req, res) {
       }
     }
   }
-  recentByUser.set(rlKey, now);
-  if (recentByUser.size > 5000) {
-    for (const [k, t] of recentByUser) {
-      if (now - t > 60000) recentByUser.delete(k);
+  if (buckets.size > 5000) {
+    for (const [k, b] of buckets) {
+      if (now - b.last > 60000) buckets.delete(k);
     }
   }
 
@@ -117,7 +141,7 @@ export default async function handler(req, res) {
       emoji: emoji || null,
       text: outText,
       custom: !!customText,
-      id: `${now}-${Math.random().toString(36).slice(2, 8)}`,
+      id: clientId || `${now}-${Math.random().toString(36).slice(2, 8)}`,
     };
     publishBattleEvent(recipients, payload);
 

@@ -11,8 +11,6 @@ import MatchHistoryModal from '../components/battle/MatchHistoryModal';
 import MatchLobby from '../components/battle/MatchLobby';
 import MatchResult from '../components/battle/MatchResult';
 import LiveBattlesSection from '../components/battle/LiveBattlesSection';
-import BattleVoiceChat from '../components/battle/BattleVoiceChat';
-import { useVoiceChat } from '../contexts/VoiceChatContext';
 import ForfeitModal from '../components/battle/ForfeitModal';
 import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
 import ConnectionBadge from '../components/battle/ConnectionBadge';
@@ -23,6 +21,7 @@ import { useProfileCache } from '../contexts/ProfileCacheContext';
 import { formatMoney } from '../utils/formatMoney';
 import { formatLastSeen } from '../utils/relativeTime';
 import { readBattleResult, clearBattleResult } from '../utils/battleResultCache';
+import { readLastBuyIn, writeLastBuyIn } from '../utils/lastBattleBuyIn';
 import { getBattleStreamClient } from '../lib/battleStreamClient';
 
 function UserAvatar({ user, size = 'md' }) {
@@ -86,6 +85,9 @@ export default function BattlePage() {
   const [highlightResult, setHighlightResult] = useState(false);
   const [highlightRematch, setHighlightRematch] = useState(false);
   const inviteRowRef = useRef(null);
+  const [quickInviteFor, setQuickInviteFor] = useState(null);
+  const [quickToast, setQuickToast] = useState(null);
+  const quickToastTimerRef = useRef(null);
 
   const [socialTab, setSocialTab] = useState('friends');
   const [searchQuery, setSearchQuery] = useState('');
@@ -100,7 +102,6 @@ export default function BattlePage() {
     setMessageFriend(friend);
   }, []);
   const closeMessagePopup = useCallback(() => setMessageFriend(null), []);
-  const { oppSpeaking } = useVoiceChat();
   const isGuest = status !== 'authenticated';
   const userId = session?.user?.id;
   const debounceRef = useRef(null);
@@ -422,10 +423,24 @@ export default function BattlePage() {
     setShowResult(null);
     setResultData(null);
     setRematchState(null);
-    setIncomingReaction(null);
+    setReactionQueue([]);
   }, [showResult]);
 
-  const [incomingReaction, setIncomingReaction] = useState(null);
+  // Append-only queue of received reactions. We can't use a single state slot
+  // because two reactions arriving in the same React batch (e.g., two rapid
+  // taps from the opponent over SSE) would have the second `set` call
+  // overwrite the first before the popup's effect ran, silently dropping
+  // earlier reactions. The popup processes new entries by id and renders
+  // each one independently. Capped to keep memory bounded; in practice
+  // reactions auto-expire from the popup in <2s anyway.
+  const [reactionQueue, setReactionQueue] = useState([]);
+
+  // Drain the queue when the visible matchup changes (closed popup, rematch
+  // transition, etc.) so a new battle's popup never replays the previous
+  // battle's reactions.
+  useEffect(() => {
+    setReactionQueue([]);
+  }, [showResult?.id]);
 
   const handleSendReaction = useCallback(async (payload) => {
     if (!showResult?.id) return null;
@@ -437,7 +452,7 @@ export default function BattlePage() {
         body: JSON.stringify(payload),
       });
       const data = await res.json().catch(() => null);
-      if (!res.ok) return { error: data?.error || 'Failed' };
+      if (!res.ok) return { error: data?.error || 'Failed', status: res.status };
       return data;
     } catch {
       return { error: 'Network error' };
@@ -460,11 +475,19 @@ export default function BattlePage() {
           rematchMatchupId: ev.rematchMatchupId || null,
         });
       } else if (ev.type === 'matchup:reaction') {
-        setIncomingReaction({
-          id: ev.id,
-          fromUserId: ev.fromUserId,
-          emoji: ev.emoji || null,
-          text: ev.text || null,
+        if (!ev.id) return;
+        setReactionQueue((prev) => {
+          if (prev.some((r) => r.id === ev.id)) return prev;
+          const next = prev.concat({
+            id: ev.id,
+            fromUserId: ev.fromUserId,
+            emoji: ev.emoji || null,
+            text: ev.text || null,
+          });
+          // Keep memory bounded — reactions are short-lived, the popup
+          // expires each entry independently, and we only need recent
+          // history so the consumer can dedupe its echo.
+          return next.length > 100 ? next.slice(-100) : next;
         });
       }
     });
@@ -648,6 +671,65 @@ export default function BattlePage() {
     } catch {}
   };
 
+  const showQuickToast = useCallback((message, type = 'success') => {
+    if (quickToastTimerRef.current) clearTimeout(quickToastTimerRef.current);
+    setQuickToast({ id: Date.now(), message, type });
+    quickToastTimerRef.current = setTimeout(() => setQuickToast(null), 3200);
+  }, []);
+
+  useEffect(() => () => {
+    if (quickToastTimerRef.current) clearTimeout(quickToastTimerRef.current);
+  }, []);
+
+  // One-tap "send last buy-in" invite triggered from the friend row's
+  // lightning shortcut. Falls back to opening the full Play Friend modal
+  // when the user has no remembered buy-in yet.
+  const handleQuickInvite = useCallback(async (friend) => {
+    if (!friend?.id) return;
+    if (isGuest) {
+      requireAuth(() => {});
+      return;
+    }
+    if (globalHasActive) {
+      showQuickToast("You're already in a battle — finish it first.", 'error');
+      return;
+    }
+    const last = readLastBuyIn(userId);
+    if (!last) {
+      // No remembered buy-in — open the modal so the user can pick one.
+      setPlayFriendInitial(friend);
+      setShowPlayFriend(true);
+      return;
+    }
+    if (quickInviteFor) return;
+    setQuickInviteFor(friend.id);
+    try {
+      const res = await fetch('/api/battles/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ receiverId: friend.id, buyIn: last.buyIn, gameMode: last.gameMode }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        // Stale buy-in or any rejection — fall back to the modal so the
+        // user can adjust and retry without losing their tap.
+        setPlayFriendInitial(friend);
+        setShowPlayFriend(true);
+        if (data?.error) showQuickToast(data.error, 'error');
+        return;
+      }
+      // Refresh the remembered values (mode may have been normalised server-side).
+      writeLastBuyIn(userId, { buyIn: last.buyIn, gameMode: last.gameMode });
+      showQuickToast(`Invite sent to ${friend.username || 'friend'} · $${last.buyIn} buy-in`);
+      fetchData();
+    } catch {
+      showQuickToast('Could not send invite. Try again.', 'error');
+    } finally {
+      setQuickInviteFor(null);
+    }
+  }, [isGuest, globalHasActive, userId, quickInviteFor, fetchData, showQuickToast]);
+
   const handleCancelInvite = async (inviteId) => {
     try {
       await fetch(`/api/battles/invite/${inviteId}`, {
@@ -697,6 +779,23 @@ export default function BattlePage() {
   const requestCount = friendRequests.length;
   const inviteCount = invites.received?.length || 0;
   const onlineFriendCount = friends.filter(f => f.isOnline).length;
+
+  // Map of friendId -> pending outgoing invite. Lets each friend row show a
+  // "pending" indicator and disable the quick-invite shortcut so the user
+  // can't fire duplicate invites that the server would reject.
+  const pendingInviteByFriendId = new Map();
+  (invites.sent || []).forEach(inv => {
+    const rid = inv.receiverId || inv.receiver?.id;
+    if (rid && !pendingInviteByFriendId.has(rid)) pendingInviteByFriendId.set(rid, inv);
+  });
+
+  const openPendingInvite = useCallback((inviteId) => {
+    if (!inviteId) return;
+    setSocialTab('invites');
+    setSocialExpanded(true);
+    setHighlightInviteId(inviteId);
+    setTimeout(() => setHighlightInviteId(prev => (prev === inviteId ? null : prev)), 3500);
+  }, []);
 
   const cardBg = '#0d0d0d';
   const cardBorder = '#1a1a1a';
@@ -769,6 +868,8 @@ export default function BattlePage() {
             <div className="divide-y" style={{ borderColor: cardBorder }}>
               {friends.map(friend => {
                 const lastSeenLabel = !friend.isOnline && friend.lastSeenAt != null ? formatLastSeen(friend.lastSeenAt) : '';
+                const pendingInvite = pendingInviteByFriendId.get(friend.id);
+                const hasPendingInvite = !!pendingInvite;
                 return (
                 <div key={friend.id} className="flex items-center gap-3 px-3 py-3 group transition-colors hover:bg-white/[0.02]">
                   <div className="flex-shrink-0 cursor-pointer" onClick={() => goToProfile(friend)}>
@@ -788,7 +889,17 @@ export default function BattlePage() {
                         <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.39 4.84L20 8l-4 3.9.94 5.49L12 14.77 7.06 17.39 8 11.9 4 8l5.61-1.16L12 2z" /></svg>
                         {friend.battleWins || 0}W · {friend.battleLosses || 0}L
                       </span>
-                      {friend.isOnline ? (
+                      {hasPendingInvite ? (
+                        <button
+                          type="button"
+                          onClick={() => openPendingInvite(pendingInvite.id)}
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-orange-500/15 text-orange-300 border border-orange-500/30 hover:bg-orange-500/25 transition-colors"
+                          title="View pending invite"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
+                          Invite pending
+                        </button>
+                      ) : friend.isOnline ? (
                         <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-green-500/15 text-green-300 border border-green-500/30">
                           <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                           Online
@@ -815,15 +926,46 @@ export default function BattlePage() {
                     >
                       Message
                     </button>
-                    {/* Play: gamified gradient button */}
+                    {/* Quick invite: re-send last buy-in with one tap.
+                        When an invite to this friend is already pending, we
+                        disable it so the user doesn't fire a duplicate the
+                        server would reject. */}
                     <button
-                      onClick={() => { setPlayFriendInitial(friend); setShowPlayFriend(true); }}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:scale-[1.03] active:scale-[0.97]"
-                      style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 2px 8px rgba(124,58,237,0.35)' }}
+                      onClick={() => handleQuickInvite(friend)}
+                      disabled={quickInviteFor === friend.id || hasPendingInvite}
+                      className="p-2 rounded-lg transition-all bg-yellow-500/10 hover:bg-yellow-500/20 active:bg-yellow-500/30 text-yellow-300 border border-yellow-500/20 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-yellow-500/10"
+                      title={hasPendingInvite ? 'Invite already pending' : 'Quick invite — re-send last buy-in'}
+                      aria-label={hasPendingInvite ? `Invite to ${friend.username || 'friend'} already pending` : `Quick invite ${friend.username || 'friend'} with last buy-in`}
                     >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                      Play
+                      {quickInviteFor === friend.id ? (
+                        <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12a8 8 0 018-8" /></svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                      )}
                     </button>
+                    {/* Play button. When an invite is already pending, we
+                        repurpose this CTA to jump to the Invites tab so the
+                        user can review or cancel it instead of triggering a
+                        duplicate that the server would reject. */}
+                    {hasPendingInvite ? (
+                      <button
+                        onClick={() => openPendingInvite(pendingInvite.id)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all hover:scale-[1.03] active:scale-[0.97] bg-orange-500/15 text-orange-300 border border-orange-500/30"
+                        title="View pending invite"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
+                        Pending
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => { setPlayFriendInitial(friend); setShowPlayFriend(true); }}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:scale-[1.03] active:scale-[0.97]"
+                        style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 2px 8px rgba(124,58,237,0.35)' }}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        Play
+                      </button>
+                    )}
                   </div>
                 </div>
                 );
@@ -1022,7 +1164,7 @@ export default function BattlePage() {
           currentUserId={userId}
           resultData={resultData}
           rematchState={rematchState}
-          incomingReaction={incomingReaction}
+          reactionQueue={reactionQueue}
           onSendReaction={handleSendReaction}
           opponent={resultData?.opponent}
           highlight={highlightResult}
@@ -1171,8 +1313,6 @@ export default function BattlePage() {
             </div>
           )}
 
-          {activeMatchup && (activeMatchup.status === 'active' || activeMatchup.status === 'matched') && <BattleVoiceChat />}
-
           {activeMatchup && (activeMatchup.status === 'active' || activeMatchup.status === 'matched') && (() => {
             const startBal = parseFloat(activeMatchup.startingBalance || 0);
             const myBal = matchupData?.myBalance ?? startBal;
@@ -1253,15 +1393,7 @@ export default function BattlePage() {
                     </div>
 
                     <div className="flex-1 flex flex-col items-center text-center">
-                      <div
-                        className="mb-1.5 rounded-full inline-flex items-center justify-center"
-                        style={{
-                          padding: 2,
-                          border: `2px solid ${oppSpeaking ? '#22c55e' : 'transparent'}`,
-                          boxShadow: oppSpeaking ? '0 0 14px rgba(34,197,94,0.55)' : 'none',
-                          transition: 'border-color 150ms ease, box-shadow 150ms ease',
-                        }}
-                      >
+                      <div className="mb-1.5 rounded-full inline-flex items-center justify-center">
                         <FramedAvatar
                           avatar={oppAvatar}
                           username={oppName}
@@ -1272,27 +1404,8 @@ export default function BattlePage() {
                           onlineDotBorderColor="#0d0d0d"
                         />
                       </div>
-                      <div className="flex items-center justify-center gap-1 max-w-[100px] min-h-[16px]">
+                      <div className="flex items-center justify-center max-w-[100px] min-h-[16px]">
                         <p className="text-white font-semibold text-xs truncate">{oppName}</p>
-                        {oppSpeaking && (
-                          <span
-                            className="inline-flex items-center justify-center rounded-full flex-shrink-0"
-                            title="Speaking"
-                            aria-label="Speaking"
-                            style={{
-                              width: 14,
-                              height: 14,
-                              background: 'rgba(34,197,94,0.18)',
-                              border: '1px solid rgba(34,197,94,0.7)',
-                              animation: 'battlePulse 1.2s ease-in-out infinite',
-                            }}
-                          >
-                            <svg viewBox="0 0 24 24" width={8} height={8} fill="#22c55e" aria-hidden="true">
-                              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
-                              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
-                            </svg>
-                          </span>
-                        )}
                       </div>
                       <p className={`text-sm font-bold mt-0.5 ${oppPnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>${formatMoney(oppBal, 0)}</p>
                       <p className={`text-[10px] font-medium ${oppPnl >= 0 ? 'text-green-400/70' : 'text-red-400/70'}`}>{oppPnl >= 0 ? '+' : ''}{formatMoney(oppPnl, 0)}</p>
@@ -1639,6 +1752,36 @@ export default function BattlePage() {
           fetchData();
         }}
       />
+
+      {quickToast && (
+        <div
+          key={quickToast.id}
+          role="status"
+          aria-live="polite"
+          className="fixed left-1/2 z-[90] px-4 py-2.5 rounded-xl text-sm font-semibold shadow-lg pointer-events-none quick-invite-toast"
+          style={{
+            bottom: 'calc(env(safe-area-inset-bottom, 0px) + 88px)',
+            backgroundColor: quickToast.type === 'error' ? 'rgba(127, 29, 29, 0.95)' : 'rgba(15, 23, 42, 0.95)',
+            color: quickToast.type === 'error' ? '#fecaca' : '#e2e8f0',
+            border: `1px solid ${quickToast.type === 'error' ? 'rgba(248,113,113,0.4)' : 'rgba(250,204,21,0.4)'}`,
+            boxShadow: '0 10px 30px rgba(0,0,0,0.45)',
+            maxWidth: 'calc(100vw - 32px)',
+          }}
+        >
+          {quickToast.type !== 'error' && <span className="mr-2">⚡</span>}
+          {quickToast.message}
+        </div>
+      )}
+      <style jsx global>{`
+        @keyframes quickInviteToastIn {
+          from { transform: translate(-50%, 12px); opacity: 0; }
+          to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        .quick-invite-toast {
+          transform: translateX(-50%);
+          animation: quickInviteToastIn 0.22s ease-out;
+        }
+      `}</style>
 
     </div>
   );

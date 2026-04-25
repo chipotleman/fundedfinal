@@ -96,6 +96,57 @@ async function expectBodyUnlocked(page) {
   });
 }
 
+/**
+ * Asserts that no leftover full-screen overlay (fixed-position element
+ * covering ~the entire viewport) is hit-testable in the DOM. This catches
+ * the regression where a dropdown's invisible backdrop / portal node is
+ * left behind after dismissal and silently swallows the next tap.
+ */
+async function expectNoFullscreenOverlay(page) {
+  const offenders = await page.evaluate(() => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    return Array.from(document.querySelectorAll('body *'))
+      .filter((el) => {
+        const cs = window.getComputedStyle(el);
+        if (cs.position !== 'fixed') return false;
+        if (cs.display === 'none' || cs.visibility === 'hidden') return false;
+        if (cs.pointerEvents === 'none') return false;
+        const r = el.getBoundingClientRect();
+        // Covers >=90% of the viewport in both dimensions => full-screen overlay
+        return r.width >= vw * 0.9 && r.height >= vh * 0.9;
+      })
+      .map((el) => ({
+        tag: el.tagName,
+        class: typeof el.className === 'string' ? el.className : '',
+        role: el.getAttribute('role') || '',
+      }));
+  });
+  expect(
+    offenders,
+    'no full-screen fixed overlay should remain hit-testable after dismissing dropdowns / menus',
+  ).toEqual([]);
+}
+
+/**
+ * Adds enough vertical content to the page to make it scrollable and then
+ * scrolls down a chunk, so subsequent dropdown open/dismiss checks run in
+ * a scrolled state (the bug often only surfaces once the page has
+ * actually scrolled).
+ */
+async function scrollPage(page, distance = 600) {
+  await page.evaluate((d) => {
+    if (document.body.scrollHeight <= window.innerHeight + d) {
+      const spacer = document.createElement('div');
+      spacer.setAttribute('data-e2e-spacer', '1');
+      spacer.style.height = `${window.innerHeight + d + 200}px`;
+      spacer.style.width = '1px';
+      document.body.appendChild(spacer);
+    }
+    window.scrollTo(0, d);
+  }, distance);
+}
+
 const TARGET_PAGES = ['/messenger', '/notifications'];
 
 module.exports = {
@@ -104,5 +155,7 @@ module.exports = {
   setupStubs,
   getBodyLockStyles,
   expectBodyUnlocked,
+  expectNoFullscreenOverlay,
+  scrollPage,
   TARGET_PAGES,
 };
