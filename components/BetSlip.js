@@ -11,6 +11,7 @@ import BalanceExplainerModal from './BalanceExplainerModal';
 import CoinRain from './CoinRain';
 import haptic from '../utils/haptics';
 import { formatMoney } from '../utils/formatMoney';
+import { calculatePayout } from '../utils/odds';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 
 // Capitalize league identifiers like (w) -> (W), (m) -> (M)
@@ -478,15 +479,6 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
       return formatStakeDisplay(parlayStakeDraft);
     }
     return stakeNum ? formatStakeDisplay(String(stakeNum)) : '';
-  };
-
-  const calculatePayout = (odds, stake) => {
-    const oddsValue = typeof odds === 'object' ? odds.odds || odds.value || 0 : odds;
-    if (oddsValue > 0) {
-      return (stake * oddsValue / 100) + stake;
-    } else {
-      return (stake * (100 / Math.abs(oddsValue))) + stake;
-    }
   };
 
   const totalStake = betType === 'parlay' ? parlayStake : bets.reduce((sum, bet) => sum + (bet.stake || 0), 0);
