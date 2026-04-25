@@ -150,12 +150,24 @@ function FilterPills({ active, onChange, counts }) {
   );
 }
 
+// Per-filter copy for the bulk-clear action. `destructive` types (decline)
+// require a confirmation step; safe types (dismiss-only) execute immediately.
+const BULK_ACTIONS = {
+  all: { label: 'Clear all', confirmTitle: 'Clear all notifications?', destructive: true },
+  invite: { label: 'Decline all', confirmTitle: 'Decline every battle invite?', destructive: true },
+  rematch: { label: 'Decline all', confirmTitle: 'Decline every rematch request?', destructive: true },
+  result: { label: 'Dismiss all', confirmTitle: null, destructive: false },
+  friend: { label: 'Decline all', confirmTitle: 'Decline every friend request?', destructive: true },
+};
+
 function NotificationsFeed({ ctx, router, filter }) {
   const allBattleInvites = ctx.battleInvites || [];
   const allFriendRequests = ctx.friendRequests || [];
   const allGameResults = ctx.gameResults || [];
   const allPendingRematches = ctx.pendingRematches || [];
   const [busyId, setBusyId] = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const wrap = async (id, fn) => {
     setBusyId(id);
@@ -179,6 +191,43 @@ function NotificationsFeed({ ctx, router, filter }) {
     pendingRematches.length;
   const empty = totalNew === 0;
 
+  // Hide the confirmation strip if the user changes filter or the visible
+  // set empties out from underneath it.
+  useEffect(() => {
+    if (empty && confirmOpen) setConfirmOpen(false);
+  }, [empty, confirmOpen]);
+  useEffect(() => {
+    setConfirmOpen(false);
+  }, [filter]);
+
+  const runBulkClear = async () => {
+    setBulkBusy(true);
+    try {
+      const tasks = [];
+      // Use the existing per-item helpers so optimistic state updates and
+      // server semantics stay identical to single-item actions.
+      for (const inv of battleInvites) tasks.push(ctx.declineInvite(inv.id));
+      for (const fr of friendRequests) tasks.push(ctx.declineFriend(fr.id));
+      for (const rm of pendingRematches) tasks.push(ctx.declineRematch(rm.matchupId));
+      for (const r of gameResults) tasks.push(ctx.ackGameResult(r.matchupId));
+      await Promise.allSettled(tasks);
+    } finally {
+      setBulkBusy(false);
+      setConfirmOpen(false);
+    }
+  };
+
+  const bulkAction = BULK_ACTIONS[filter] || BULK_ACTIONS.all;
+  const showBulkButton = !empty && !confirmOpen;
+
+  const handleBulkClick = () => {
+    if (bulkAction.destructive) {
+      setConfirmOpen(true);
+    } else {
+      runBulkClear();
+    }
+  };
+
   const accent = '#3b82f6';
   const cardShadow =
     '0 0 0 1px rgba(59,130,246,0.08), 0 8px 32px -8px rgba(59,130,246,0.18)';
@@ -189,23 +238,84 @@ function NotificationsFeed({ ctx, router, filter }) {
       style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, boxShadow: cardShadow }}
     >
       <div
-        className="px-4 py-3 flex items-center justify-between"
+        className="px-4 py-3 flex items-center justify-between gap-2"
         style={{ borderBottom: `1px solid ${cardBorder}` }}
       >
         <span className="text-sm font-bold tracking-wide" style={{ color: '#3b82f6' }}>
           Notifications
         </span>
-        <span
-          className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-          style={{
-            color: accent,
-            backgroundColor: 'rgba(59,130,246,0.10)',
-            border: `1px solid rgba(59,130,246,0.25)`,
-          }}
-        >
-          {totalNew} new
-        </span>
+        <div className="flex items-center gap-2">
+          {showBulkButton && (
+            <button
+              type="button"
+              onClick={handleBulkClick}
+              disabled={bulkBusy}
+              aria-label={`${bulkAction.label} (${totalNew})`}
+              className="text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap disabled:opacity-50 transition-colors"
+              style={{
+                color: '#e5e7eb',
+                backgroundColor: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.10)',
+              }}
+            >
+              {bulkBusy ? 'Working…' : bulkAction.label}
+            </button>
+          )}
+          <span
+            className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+            style={{
+              color: accent,
+              backgroundColor: 'rgba(59,130,246,0.10)',
+              border: `1px solid rgba(59,130,246,0.25)`,
+            }}
+          >
+            {totalNew} new
+          </span>
+        </div>
       </div>
+
+      {confirmOpen && (
+        <div
+          className="px-4 py-3 flex items-start gap-3 flex-wrap"
+          style={{
+            backgroundColor: 'rgba(239,68,68,0.06)',
+            borderBottom: `1px solid ${cardBorder}`,
+          }}
+          role="alertdialog"
+          aria-label={bulkAction.confirmTitle || 'Confirm'}
+        >
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold" style={{ color: textPrimary }}>
+              {bulkAction.confirmTitle}
+            </div>
+            <div className="text-xs mt-0.5" style={{ color: textSecondary }}>
+              This will clear {totalNew} {totalNew === 1 ? 'item' : 'items'} and can&apos;t be undone.
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setConfirmOpen(false)}
+              disabled={bulkBusy}
+              className="text-xs font-medium px-3 py-1.5 rounded-lg disabled:opacity-50 bg-white/5 hover:bg-white/10 text-gray-200 border border-white/10"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={runBulkClear}
+              disabled={bulkBusy}
+              className="text-xs font-bold px-3 py-1.5 rounded-lg disabled:opacity-50 text-white"
+              style={{
+                backgroundColor: '#ef4444',
+                boxShadow: '0 0 12px rgba(239,68,68,0.45)',
+              }}
+            >
+              {bulkBusy ? 'Clearing…' : `Yes, ${bulkAction.label.toLowerCase()}`}
+            </button>
+          </div>
+        </div>
+      )}
 
       {empty && (
         <div className="px-4 py-12 text-center text-sm" style={{ color: textSecondary }}>
