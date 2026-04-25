@@ -49,8 +49,10 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
   const [loadingRequests, setLoadingRequests] = useState(false);
   const [addingFriend, setAddingFriend] = useState({});
   const [respondingTo, setRespondingTo] = useState({});
+  const [showGameModeInfo, setShowGameModeInfo] = useState(false);
   const countdownRef = useRef(null);
   const searchTimeoutRef = useRef(null);
+  const gameModeInfoRef = useRef(null);
 
   const cardBg = '#0d0d0d';
   const cardBorder = '#1a1a1a';
@@ -72,6 +74,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
       setError('');
       setInviteCountdown(0);
       setActiveTab('friends');
+      setShowGameModeInfo(false);
       if (countdownRef.current) clearInterval(countdownRef.current);
     } else if (lockedFriend) {
       setSelectedFriend(lockedFriend);
@@ -94,6 +97,32 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
       fetchFriendRequests();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!selectedFriend && showGameModeInfo) {
+      setShowGameModeInfo(false);
+    }
+  }, [selectedFriend, showGameModeInfo]);
+
+  useEffect(() => {
+    if (!showGameModeInfo) return undefined;
+    function handleOutside(e) {
+      if (gameModeInfoRef.current && !gameModeInfoRef.current.contains(e.target)) {
+        setShowGameModeInfo(false);
+      }
+    }
+    function handleKey(e) {
+      if (e.key === 'Escape') setShowGameModeInfo(false);
+    }
+    document.addEventListener('mousedown', handleOutside);
+    document.addEventListener('touchstart', handleOutside);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleOutside);
+      document.removeEventListener('touchstart', handleOutside);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [showGameModeInfo]);
 
   useEffect(() => {
     if (isOpen && activeTab === 'requests') {
@@ -897,8 +926,38 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                 </div>
 
                 <div>
-                  <div className="flex items-baseline justify-between mb-2">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: textMuted }}>Game Mode</label>
+                  <div className="flex items-baseline justify-between mb-2 gap-2">
+                    <div className="relative flex items-center gap-1.5" ref={gameModeInfoRef}>
+                      <label className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: textMuted }}>Game Mode</label>
+                      <button
+                        type="button"
+                        onClick={() => setShowGameModeInfo(v => !v)}
+                        aria-label="What's the difference between buy-in and coins?"
+                        aria-expanded={showGameModeInfo}
+                        className="w-4 h-4 inline-flex items-center justify-center rounded-full text-[9px] font-bold leading-none transition-colors"
+                        style={{
+                          backgroundColor: showGameModeInfo ? '#3b82f6' : elevatedBg,
+                          color: showGameModeInfo ? '#fff' : textSecondary,
+                          border: `1px solid ${showGameModeInfo ? '#3b82f6' : cardBorder}`,
+                        }}
+                      >
+                        ?
+                      </button>
+                      {showGameModeInfo && (
+                        <div
+                          role="tooltip"
+                          className="absolute left-0 top-full mt-2 z-30 w-64 max-w-[calc(100vw-2rem)] p-3 rounded-xl text-[11px] leading-snug"
+                          style={{
+                            backgroundColor: cardBg,
+                            color: textSecondary,
+                            border: `1px solid ${cardBorder}`,
+                            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+                          }}
+                        >
+                          The <span style={{ color: textPrimary, fontWeight: 600 }}>${buyIn}</span> above is each player&apos;s wager. The coins below are the in-battle starting bankroll each player gets to bet with.
+                        </div>
+                      )}
+                    </div>
                     <span className="text-[10px]" style={{ color: textMuted }}>Coins = starting bankroll</span>
                   </div>
                   <div className="grid grid-cols-3 gap-1.5">
@@ -907,7 +966,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                       return (
                         <button
                           key={mode.id}
-                          onClick={() => setGameMode(mode.id)}
+                          onClick={() => { setGameMode(mode.id); setShowGameModeInfo(false); }}
                           className="flex flex-col items-center text-center px-1.5 py-2 rounded-xl transition-all relative"
                           style={{
                             backgroundColor: selected ? `${mode.color}12` : elevatedBg,
