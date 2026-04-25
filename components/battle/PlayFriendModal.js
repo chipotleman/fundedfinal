@@ -4,6 +4,7 @@ import useModalScrollLock from '../../hooks/useModalScrollLock';
 import SharedUserAvatar from '../UserAvatar';
 import { useProfileCacheOptional } from '../../contexts/ProfileCacheContext';
 import { useMatchup } from '../../contexts/MatchupContext';
+import { writeLastBuyIn } from '../../utils/lastBattleBuyIn';
 
 const ACTIVE_BATTLE_BLOCK_MESSAGE = "You're already in a battle — finish it before inviting someone else.";
 
@@ -158,6 +159,9 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
       }
       setSent(true);
       setSentInviteId(data?.invite?.id || null);
+      // Remember the buy-in + mode so the friend row can offer a one-tap
+      // "send last buy-in" shortcut next time.
+      writeLastBuyIn(currentUser?.id, { buyIn, gameMode });
       const expirySeconds = INVITE_EXPIRY_HOURS * 3600;
       setInviteCountdown(expirySeconds);
       countdownRef.current = setInterval(() => {

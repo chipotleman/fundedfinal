@@ -23,6 +23,7 @@ import { useProfileCache } from '../contexts/ProfileCacheContext';
 import { formatMoney } from '../utils/formatMoney';
 import { formatLastSeen } from '../utils/relativeTime';
 import { readBattleResult, clearBattleResult } from '../utils/battleResultCache';
+import { readLastBuyIn, writeLastBuyIn } from '../utils/lastBattleBuyIn';
 import { getBattleStreamClient } from '../lib/battleStreamClient';
 
 function UserAvatar({ user, size = 'md' }) {
@@ -86,6 +87,9 @@ export default function BattlePage() {
   const [highlightResult, setHighlightResult] = useState(false);
   const [highlightRematch, setHighlightRematch] = useState(false);
   const inviteRowRef = useRef(null);
+  const [quickInviteFor, setQuickInviteFor] = useState(null);
+  const [quickToast, setQuickToast] = useState(null);
+  const quickToastTimerRef = useRef(null);
 
   const [socialTab, setSocialTab] = useState('friends');
   const [searchQuery, setSearchQuery] = useState('');
@@ -670,6 +674,65 @@ export default function BattlePage() {
     } catch {}
   };
 
+  const showQuickToast = useCallback((message, type = 'success') => {
+    if (quickToastTimerRef.current) clearTimeout(quickToastTimerRef.current);
+    setQuickToast({ id: Date.now(), message, type });
+    quickToastTimerRef.current = setTimeout(() => setQuickToast(null), 3200);
+  }, []);
+
+  useEffect(() => () => {
+    if (quickToastTimerRef.current) clearTimeout(quickToastTimerRef.current);
+  }, []);
+
+  // One-tap "send last buy-in" invite triggered from the friend row's
+  // lightning shortcut. Falls back to opening the full Play Friend modal
+  // when the user has no remembered buy-in yet.
+  const handleQuickInvite = useCallback(async (friend) => {
+    if (!friend?.id) return;
+    if (isGuest) {
+      requireAuth(() => {});
+      return;
+    }
+    if (globalHasActive) {
+      showQuickToast("You're already in a battle — finish it first.", 'error');
+      return;
+    }
+    const last = readLastBuyIn(userId);
+    if (!last) {
+      // No remembered buy-in — open the modal so the user can pick one.
+      setPlayFriendInitial(friend);
+      setShowPlayFriend(true);
+      return;
+    }
+    if (quickInviteFor) return;
+    setQuickInviteFor(friend.id);
+    try {
+      const res = await fetch('/api/battles/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ receiverId: friend.id, buyIn: last.buyIn, gameMode: last.gameMode }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        // Stale buy-in or any rejection — fall back to the modal so the
+        // user can adjust and retry without losing their tap.
+        setPlayFriendInitial(friend);
+        setShowPlayFriend(true);
+        if (data?.error) showQuickToast(data.error, 'error');
+        return;
+      }
+      // Refresh the remembered values (mode may have been normalised server-side).
+      writeLastBuyIn(userId, { buyIn: last.buyIn, gameMode: last.gameMode });
+      showQuickToast(`Invite sent to ${friend.username || 'friend'} · $${last.buyIn} buy-in`);
+      fetchData();
+    } catch {
+      showQuickToast('Could not send invite. Try again.', 'error');
+    } finally {
+      setQuickInviteFor(null);
+    }
+  }, [isGuest, globalHasActive, userId, quickInviteFor, fetchData, showQuickToast]);
+
   const handleCancelInvite = async (inviteId) => {
     try {
       await fetch(`/api/battles/invite/${inviteId}`, {
@@ -836,6 +899,20 @@ export default function BattlePage() {
                       className="hidden sm:inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors bg-blue-500/10 hover:bg-blue-500/20 active:bg-blue-500/30 text-blue-300 border border-blue-500/20"
                     >
                       Message
+                    </button>
+                    {/* Quick invite: re-send last buy-in with one tap. */}
+                    <button
+                      onClick={() => handleQuickInvite(friend)}
+                      disabled={quickInviteFor === friend.id}
+                      className="p-2 rounded-lg transition-all bg-yellow-500/10 hover:bg-yellow-500/20 active:bg-yellow-500/30 text-yellow-300 border border-yellow-500/20 disabled:opacity-60 disabled:cursor-wait"
+                      title="Quick invite — re-send last buy-in"
+                      aria-label={`Quick invite ${friend.username || 'friend'} with last buy-in`}
+                    >
+                      {quickInviteFor === friend.id ? (
+                        <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12a8 8 0 018-8" /></svg>
+                      ) : (
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                      )}
                     </button>
                     {/* Play: gamified gradient button */}
                     <button
@@ -1661,6 +1738,36 @@ export default function BattlePage() {
           fetchData();
         }}
       />
+
+      {quickToast && (
+        <div
+          key={quickToast.id}
+          role="status"
+          aria-live="polite"
+          className="fixed left-1/2 z-[90] px-4 py-2.5 rounded-xl text-sm font-semibold shadow-lg pointer-events-none quick-invite-toast"
+          style={{
+            bottom: 'calc(env(safe-area-inset-bottom, 0px) + 88px)',
+            backgroundColor: quickToast.type === 'error' ? 'rgba(127, 29, 29, 0.95)' : 'rgba(15, 23, 42, 0.95)',
+            color: quickToast.type === 'error' ? '#fecaca' : '#e2e8f0',
+            border: `1px solid ${quickToast.type === 'error' ? 'rgba(248,113,113,0.4)' : 'rgba(250,204,21,0.4)'}`,
+            boxShadow: '0 10px 30px rgba(0,0,0,0.45)',
+            maxWidth: 'calc(100vw - 32px)',
+          }}
+        >
+          {quickToast.type !== 'error' && <span className="mr-2">⚡</span>}
+          {quickToast.message}
+        </div>
+      )}
+      <style jsx global>{`
+        @keyframes quickInviteToastIn {
+          from { transform: translate(-50%, 12px); opacity: 0; }
+          to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        .quick-invite-toast {
+          transform: translateX(-50%);
+          animation: quickInviteToastIn 0.22s ease-out;
+        }
+      `}</style>
 
     </div>
   );
