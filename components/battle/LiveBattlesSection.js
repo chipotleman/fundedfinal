@@ -804,6 +804,14 @@ function YouVsCard({ youVsState, onClick }) {
     else router.push('/battle');
   };
 
+  const handleKeyDown = (e) => {
+    if (e.target !== e.currentTarget) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleClick();
+    }
+  };
+
   const canCancel = (isWaiting || isQueued) && !cancelling;
 
   const handleCancel = async (e) => {
@@ -837,20 +845,70 @@ function YouVsCard({ youVsState, onClick }) {
 
   return (
     <div
-      className="rounded-xl overflow-hidden cursor-pointer w-full h-full flex flex-col relative"
+      className="youvs-card rounded-xl overflow-hidden cursor-pointer w-full h-full flex flex-col relative"
       onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-label={`Your battle — ${topLabel}. ${ctaText}.`}
       style={{
         background:
           'linear-gradient(180deg, rgba(139,92,246,0.14) 0%, rgba(6,182,212,0.08) 45%, rgba(13,13,13,0.95) 100%), #0d0d0d',
         border: '1.5px solid rgba(139, 92, 246, 0.65)',
         boxShadow:
           '0 0 0 1px rgba(139,92,246,0.15) inset, 0 0 18px rgba(139,92,246,0.28), 0 0 32px rgba(6,182,212,0.12)',
+        transition: 'transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 180ms ease-out, border-color 180ms ease-out',
+        outline: 'none',
+        willChange: 'transform',
       }}
     >
       <style jsx>{`
         @keyframes youvsAccentSlide {
           0% { background-position: 0% 50%; }
           100% { background-position: 200% 50%; }
+        }
+        .youvs-card:focus-visible {
+          border-color: rgba(167, 139, 250, 0.95) !important;
+          box-shadow:
+            0 0 0 3px rgba(139, 92, 246, 0.55),
+            0 0 0 5px rgba(6, 182, 212, 0.45),
+            0 0 24px rgba(139, 92, 246, 0.45),
+            0 0 40px rgba(6, 182, 212, 0.28) !important;
+        }
+        @media (hover: hover) {
+          .youvs-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(167, 139, 250, 0.95) !important;
+            box-shadow:
+              0 0 0 1px rgba(139, 92, 246, 0.3) inset,
+              0 0 28px rgba(139, 92, 246, 0.55),
+              0 0 48px rgba(6, 182, 212, 0.32),
+              0 10px 28px rgba(0, 0, 0, 0.45) !important;
+          }
+          .youvs-card:hover:active {
+            transform: translateY(-1px) scale(0.99);
+            transition-duration: 80ms;
+          }
+        }
+        @media (hover: none) {
+          .youvs-card:active {
+            transform: scale(0.97);
+            border-color: rgba(167, 139, 250, 0.95) !important;
+            box-shadow:
+              0 0 0 1px rgba(139, 92, 246, 0.3) inset,
+              0 0 24px rgba(139, 92, 246, 0.5),
+              0 0 40px rgba(6, 182, 212, 0.28) !important;
+            transition-duration: 80ms;
+          }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .youvs-card,
+          .youvs-card:hover,
+          .youvs-card:active,
+          .youvs-card:hover:active {
+            transform: none !important;
+            transition: box-shadow 180ms ease-out, border-color 180ms ease-out !important;
+          }
         }
       `}</style>
       <div
