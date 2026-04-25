@@ -569,17 +569,39 @@ export default function NotificationsPage() {
   // manifests as top-nav taps no longer navigating until a hard refresh.
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    const b = document.body.style;
-    b.overflow = '';
-    b.position = '';
-    b.top = '';
-    b.left = '';
-    b.right = '';
-    b.width = '';
-    b.height = '';
-    b.overscrollBehavior = '';
-    document.documentElement.style.overflow = '';
-    document.documentElement.style.overscrollBehavior = '';
+    const releaseLocks = (reason) => {
+      const b = document.body.style;
+      b.overflow = '';
+      b.position = '';
+      b.top = '';
+      b.left = '';
+      b.right = '';
+      b.width = '';
+      b.height = '';
+      b.overscrollBehavior = '';
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.overscrollBehavior = '';
+      if (reason) {
+        try { console.warn('[notifications] released stale body scroll lock:', reason); } catch {}
+      }
+    };
+    releaseLocks(null);
+
+    // Periodic watchdog: if body has been left scroll-locked but no real
+    // modal is open, clear the lock so top-bar taps register on first try.
+    const interval = setInterval(() => {
+      if (typeof document === 'undefined') return;
+      const b = document.body.style;
+      const isLocked = b.position === 'fixed' || b.overflow === 'hidden';
+      if (!isLocked) return;
+      const hasOpenModal = !!document.querySelector(
+        '[role="dialog"][aria-modal="true"], [data-scroll-lock-owner="true"]'
+      );
+      if (!hasOpenModal) {
+        releaseLocks('no open modal but body lock present');
+      }
+    }, 1500);
+    return () => clearInterval(interval);
   }, []);
 
   // ?chat=<id> deep link → forward to /messenger.

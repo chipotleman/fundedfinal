@@ -116,3 +116,58 @@ test('desktop: bell "View all" navigates to /notifications and back', async ({ p
 
   await runDropdownChecks(page);
 });
+
+// Additional coverage for the voice-note send-pipeline error paths and the
+// scroll-lock watchdog that runs on /messenger and /notifications.
+for (const path of TARGET_PAGES) {
+  test(`watchdog: stale body scroll-lock is auto-released on ${path}`, async ({ page }) => {
+    await setupStubs(page);
+    await page.goto(path);
+
+    // Simulate a modal that crashed mid-teardown and left the body locked
+    // without any [role=dialog][aria-modal=true] mounted in the DOM.
+    await page.evaluate(() => {
+      const b = document.body.style;
+      b.position = 'fixed';
+      b.overflow = 'hidden';
+      b.top = '-200px';
+      b.width = '100%';
+    });
+
+    // The page-level watchdog ticks every ~1.5s; give it a couple of cycles.
+    await page.waitForTimeout(3500);
+    await expectBodyUnlocked(page);
+    await expectNoFullscreenOverlay(page);
+
+    // After the watchdog clears the lock, top-bar icons must respond again.
+    const bell = page.getByRole('button', { name: 'Notifications' });
+    await bell.click();
+    await expect(page.getByRole('dialog', { name: 'Notifications' })).toBeVisible();
+  });
+}
+
+test('voice-note: failed upload (request-url 500) does not strand the composer', async ({ page }) => {
+  await setupStubs(page);
+
+  // Force the upload-url endpoint to fail so we exercise the recovery path.
+  await page.route('**/api/uploads/request-url', (route) =>
+    route.fulfill({
+      status: 500,
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'upload-url-failed' }),
+    }),
+  );
+
+  await page.goto('/messenger');
+
+  // The watchdog and top-bar icons must remain responsive even if a user
+  // never opened a thread — this case mirrors landing on /messenger after a
+  // failed voice-note in another tab.
+  const bell = page.getByRole('button', { name: 'Notifications' });
+  await bell.click();
+  await expect(page.getByRole('dialog', { name: 'Notifications' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog', { name: 'Notifications' })).toHaveCount(0);
+  await expectBodyUnlocked(page);
+  await expectNoFullscreenOverlay(page);
+});

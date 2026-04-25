@@ -9,7 +9,6 @@ import { ProfileCacheProvider } from '../contexts/ProfileCacheContext';
 import { UserPreferencesProvider } from '../contexts/UserPreferencesContext';
 import { GamesProvider } from '../contexts/GamesContext';
 import { MatchupProvider, useMatchup } from '../contexts/MatchupContext';
-import { VoiceChatProvider } from '../contexts/VoiceChatContext';
 import { NotificationsProvider } from '../contexts/NotificationsContext';
 import { PushNotificationsProvider } from '../contexts/PushNotificationsContext';
 import GlobalToastContainer from '../components/notifications/GlobalToastContainer';
@@ -521,7 +520,6 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
               <ProfileCacheProvider>
               <GamesProvider initialInplayEvents={pageProps.initialInplayEvents} initialApiGames={pageProps.initialApiGames}>
                 <MatchupProvider>
-                <VoiceChatProvider>
                 <NotificationsProvider>
                 <PushNotificationsProvider>
                 <ForfeitNoticeOverlay />
@@ -631,7 +629,6 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
                 />
                 </PushNotificationsProvider>
                 </NotificationsProvider>
-                </VoiceChatProvider>
                 </MatchupProvider>
               </GamesProvider>
               </ProfileCacheProvider>

@@ -37,7 +37,3 @@ The authentication flow progresses from beta access through NextAuth.js, JWT ses
     - **Zero-Delay SSR Architecture**: Ensures instant rendering of live and scheduled games via server-side rendering and continuous cache warming.
     - **Real-Time Possession Polling**: A dedicated service polls for possession changes and broadcasts them via SSE.
 - **Simulated Games Fallback**: `lib/simulated-games.js` generates realistic demo games when the Goalserve API is unavailable or returns no data.
-- **WebRTC Voice (TURN)**: 1v1 battle voice chat in `components/battle/BattleVoiceChat.js` fetches ICE servers from `GET /api/battles/voice/ice-servers`. Configure either:
-    - **Self-hosted / static TURN**: `TURN_URLS` (comma-separated, e.g. `turn:turn.example.com:3478,turns:turn.example.com:5349`), `TURN_USERNAME`, `TURN_CREDENTIAL`. (`TURN_URL` is also accepted as a single-URL alias.)
-    - **Twilio managed TURN (preferred for short-lived credentials)**: `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`. The endpoint mints a fresh Network Traversal Service token per request and returns its `ice_servers`.
-  - If neither is set, calls fall back to public Google STUN only (will fail on symmetric NATs / strict firewalls).

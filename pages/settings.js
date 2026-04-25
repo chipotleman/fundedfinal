@@ -5,7 +5,6 @@ import TopNavbar from '../components/TopNavbar';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import PushSettingsSection from '../components/notifications/PushSettingsSection';
-import VoiceChatTest from '../components/settings/VoiceChatTest';
 import { BANNER_LIBRARY } from '../lib/teamCatalog';
 
 const NOTIF_LABELS = {
@@ -489,9 +488,6 @@ export default function Settings() {
 
           {/* Push notifications (existing) */}
           <PushSettingsSection />
-
-          {/* Voice chat self-test (existing) */}
-          <VoiceChatTest />
 
           {/* Notifications */}
           <section className={sectionClass}>

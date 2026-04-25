@@ -22,9 +22,10 @@ npm run test:e2e           # runs the click-trap suite
 The suite lives in `tests/e2e/`:
 - `messenger-click-trap.spec.js` — desktop Safari (>= 1024px wide), exercises
   the bell + messages dropdowns, the bell "View all" navigation to
-  `/notifications`, browser back to `/messenger`, and a scrolled-state
+  `/notifications`, browser back to `/messenger`, a scrolled-state
   pass that asserts no leftover full-screen overlay sits on top of the
-  page.
+  page, the page-level scroll-lock watchdog, and a stubbed voice-note
+  upload-url failure.
 - `messenger-click-trap.mobile.spec.js` — iPhone 14 Pro viewport, exercises
   the hamburger drawer + body scroll-lock, drawer-link navigation between
   `/messenger` and `/notifications` (both directions), and a scrolled-state
@@ -56,6 +57,7 @@ this checklist any time you touch:
 - `components/TopNavbar.js`
 - `components/MobileNavMenu.js`
 - `hooks/useModalScrollLock.js`
+- `components/messages/MessagesPanel.js` (voice-note recorder & error UI)
 
 Run it on **all three** environments below. Every tap must register on the
 **first** try. If you have to tap twice, or if a tap is swallowed by an
@@ -104,10 +106,27 @@ For each environment, sign in as a normal user, then:
     overlay is left behind (you can verify in Safari Web Inspector by
     toggling "Show Compositing Borders" or by inspecting the DOM for
     any leftover fixed-position backdrop nodes).
+11. **[manual only] Bell → message notification → top-bar tap.** Send
+    yourself a direct message from a second account. On the test device,
+    open the bell dropdown and tap the message-notification row. After
+    you land in the thread, immediately tap the bell or the messages
+    icon in the top bar — it must respond on the first tap.
+12. **[manual only] Voice-note: start, then cancel.** Open a thread,
+    hold the mic button to start a voice recording, then tap the cancel
+    (X) button. The composer must return to the idle text input.
+    Immediately tap a top-bar icon — it must respond on the first tap
+    and the body must have no leftover scroll-lock styles.
+13. **[automated for /messenger landing] Voice-note: simulated upload
+    failure.** In Safari Web Inspector, block requests to
+    `/api/uploads/request-url` (Network tab → right click → Block URL).
+    Record and release a voice note — it should fail with a single,
+    clear error line ("Could not send voice note.") and the composer
+    should return to idle. Tap a top-bar icon to confirm it still
+    responds on the first tap.
 
 ## Pass criteria
 
-- Every tap in steps 2–10 registers on the first attempt.
+- Every tap in steps 2–13 registers on the first attempt.
 - After every dropdown / menu dismissal, the page scrolls normally and
   no full-screen overlay is visible or hit-testable in the DOM.
 - `document.body` has no leftover `overflow: hidden`, `position: fixed`,
