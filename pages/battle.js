@@ -422,10 +422,24 @@ export default function BattlePage() {
     setShowResult(null);
     setResultData(null);
     setRematchState(null);
-    setIncomingReaction(null);
+    setReactionQueue([]);
   }, [showResult]);
 
-  const [incomingReaction, setIncomingReaction] = useState(null);
+  // Append-only queue of received reactions. We can't use a single state slot
+  // because two reactions arriving in the same React batch (e.g., two rapid
+  // taps from the opponent over SSE) would have the second `set` call
+  // overwrite the first before the popup's effect ran, silently dropping
+  // earlier reactions. The popup processes new entries by id and renders
+  // each one independently. Capped to keep memory bounded; in practice
+  // reactions auto-expire from the popup in <2s anyway.
+  const [reactionQueue, setReactionQueue] = useState([]);
+
+  // Drain the queue when the visible matchup changes (closed popup, rematch
+  // transition, etc.) so a new battle's popup never replays the previous
+  // battle's reactions.
+  useEffect(() => {
+    setReactionQueue([]);
+  }, [showResult?.id]);
 
   const handleSendReaction = useCallback(async (payload) => {
     if (!showResult?.id) return null;
@@ -437,7 +451,7 @@ export default function BattlePage() {
         body: JSON.stringify(payload),
       });
       const data = await res.json().catch(() => null);
-      if (!res.ok) return { error: data?.error || 'Failed' };
+      if (!res.ok) return { error: data?.error || 'Failed', status: res.status };
       return data;
     } catch {
       return { error: 'Network error' };
@@ -460,11 +474,19 @@ export default function BattlePage() {
           rematchMatchupId: ev.rematchMatchupId || null,
         });
       } else if (ev.type === 'matchup:reaction') {
-        setIncomingReaction({
-          id: ev.id,
-          fromUserId: ev.fromUserId,
-          emoji: ev.emoji || null,
-          text: ev.text || null,
+        if (!ev.id) return;
+        setReactionQueue((prev) => {
+          if (prev.some((r) => r.id === ev.id)) return prev;
+          const next = prev.concat({
+            id: ev.id,
+            fromUserId: ev.fromUserId,
+            emoji: ev.emoji || null,
+            text: ev.text || null,
+          });
+          // Keep memory bounded — reactions are short-lived, the popup
+          // expires each entry independently, and we only need recent
+          // history so the consumer can dedupe its echo.
+          return next.length > 100 ? next.slice(-100) : next;
         });
       }
     });
@@ -1022,7 +1044,7 @@ export default function BattlePage() {
           currentUserId={userId}
           resultData={resultData}
           rematchState={rematchState}
-          incomingReaction={incomingReaction}
+          reactionQueue={reactionQueue}
           onSendReaction={handleSendReaction}
           opponent={resultData?.opponent}
           highlight={highlightResult}
