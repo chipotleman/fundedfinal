@@ -261,10 +261,12 @@ function PnlBadge({ pnlPercent, size = 'normal' }) {
   );
 }
 
-function BattleCard({ battle, compact, focused }) {
+function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = null }) {
   const router = useRouter();
   const [timeLeft, setTimeLeft] = useState(battle.remainingMs || 0);
-  const [expanded, setExpanded] = useState(false);
+  const [internalExpanded, setInternalExpanded] = useState(false);
+  const expanded = compact ? isExpanded : internalExpanded;
+  const setExpanded = compact ? () => onToggle?.() : setInternalExpanded;
   const cardRef = useRef(null);
 
   useEffect(() => {
@@ -306,103 +308,213 @@ function BattleCard({ battle, compact, focused }) {
   const user2OnFire = parseFloat(user2.pnlPercent) > 10;
 
   if (compact) {
+    let statusText = 'Awaiting picks from both players...';
+    let statusDotColor = '#facc15';
+    if (picks) {
+      statusText = 'Live · both players locked in';
+      statusDotColor = '#10b981';
+    } else if (picksLocked) {
+      statusText = onlyUser1
+        ? `${user1.username || 'Player 1'} locked · awaiting ${user2.username || 'Player 2'}`
+        : `${user2.username || 'Player 2'} locked · awaiting ${user1.username || 'Player 1'}`;
+      statusDotColor = '#06b6d4';
+    }
+
     return (
       <div
         ref={cardRef}
-        className={`w-full h-full rounded-xl p-3.5 cursor-pointer flex flex-col ${focused ? 'live-battle-highlight' : ''}`}
-        onClick={() => router.push(`/battle?battle=${battle.id}`)}
+        className={`w-full rounded-xl cursor-pointer flex flex-col ${focused ? 'live-battle-highlight' : ''}`}
+        onClick={() => setExpanded(!expanded)}
         style={{
           backgroundColor: '#0d0d0d',
-          border: focused ? '1px solid rgba(6, 182, 212, 0.5)' : '1px solid rgba(59, 130, 246, 0.18)',
+          border: focused
+            ? '1px solid rgba(6, 182, 212, 0.5)'
+            : (expanded ? '1px solid rgba(59, 130, 246, 0.45)' : '1px solid rgba(59, 130, 246, 0.18)'),
           boxShadow: 'none',
+          overflow: 'hidden',
+          transition: 'border-color 200ms ease',
         }}
       >
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-green-400 text-[10px] font-semibold uppercase tracking-wider">Live</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-semibold text-gray-400">${formatMoney(potSize, 0)}</span>
-            <span className="text-gray-600 text-[10px]">{formatTimeRemaining(timeLeft)}</span>
-          </div>
-        </div>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2.5 flex-1 min-w-0">
-            <PlayerAvatar user={user1} isWinning={user1Winning} size={40} bgColor="#1e40af" />
-            <div className="min-w-0">
-              <p className="text-sm font-medium truncate flex items-center gap-1" style={{ color: '#fff' }}>
-                {user1.username || 'Player 1'}
-                {user1OnFire && <MomentumIcon />}
-              </p>
-              <div className="flex items-center gap-2 mt-0.5">
-                <PnlBadge pnlPercent={user1.pnlPercent} size="small" />
-              </div>
+        <div className="p-3.5 flex flex-col">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-green-400 text-[10px] font-semibold uppercase tracking-wider">Live</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-semibold text-gray-400">${formatMoney(potSize, 0)}</span>
+              <span className="text-gray-600 text-[10px]">{formatTimeRemaining(timeLeft)}</span>
             </div>
           </div>
-          <div className="px-2 flex flex-col items-center">
-            <span
-              className="text-xl font-black text-transparent bg-clip-text"
-              style={{ backgroundImage: 'linear-gradient(135deg, #3b82f6, #06b6d4)' }}
-            >
-              VS
-            </span>
-            <span className="text-gray-600 text-[9px] mt-0.5 uppercase tracking-widest">1v1</span>
-          </div>
-          <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
-            <div className="min-w-0 text-right">
-              <p className="text-sm font-medium truncate flex items-center justify-end gap-1" style={{ color: '#fff' }}>
-                {user2OnFire && <MomentumIcon />}
-                {user2.username || 'Player 2'}
-              </p>
-              <div className="flex items-center gap-2 justify-end mt-0.5">
-                <PnlBadge pnlPercent={user2.pnlPercent} size="small" />
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2.5 flex-1 min-w-0">
+              <PlayerAvatar user={user1} isWinning={user1Winning} size={40} bgColor="#1e40af" />
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate flex items-center gap-1" style={{ color: '#fff' }}>
+                  {user1.username || 'Player 1'}
+                  {user1OnFire && <MomentumIcon />}
+                </p>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <PnlBadge pnlPercent={user1.pnlPercent} size="small" />
+                </div>
               </div>
             </div>
-            <PlayerAvatar user={user2} isWinning={user2Winning} size={40} bgColor="#065f46" />
+            <div className="px-2 flex flex-col items-center">
+              <span
+                className="text-xl font-black text-transparent bg-clip-text"
+                style={{ backgroundImage: 'linear-gradient(135deg, #3b82f6, #06b6d4)' }}
+              >
+                VS
+              </span>
+              <span className="text-gray-600 text-[9px] mt-0.5 uppercase tracking-widest">1v1</span>
+            </div>
+            <div className="flex items-center gap-2.5 flex-1 min-w-0 justify-end">
+              <div className="min-w-0 text-right">
+                <p className="text-sm font-medium truncate flex items-center justify-end gap-1" style={{ color: '#fff' }}>
+                  {user2OnFire && <MomentumIcon />}
+                  {user2.username || 'Player 2'}
+                </p>
+                <div className="flex items-center gap-2 justify-end mt-0.5">
+                  <PnlBadge pnlPercent={user2.pnlPercent} size="small" />
+                </div>
+              </div>
+              <PlayerAvatar user={user2} isWinning={user2Winning} size={40} bgColor="#065f46" />
+            </div>
+          </div>
+
+          {picks ? (
+            <div className="flex gap-1 mb-2" style={{ minHeight: '32px' }}>
+              <div className="flex-1 min-w-0">
+                {picks.user1.slice(0, 1).map((p, i) => <PickPill key={i} pick={p} compact />)}
+              </div>
+              <span className="text-gray-600 text-[9px] self-center px-0.5">vs</span>
+              <div className="flex-1 min-w-0">
+                {picks.user2.slice(0, 1).map((p, i) => <PickPill key={i} pick={p} compact />)}
+              </div>
+            </div>
+          ) : picksLocked ? (
+            <div className="mb-2 flex items-center gap-1.5 px-2 py-2 rounded-md" style={{ background: '#111', border: `1px solid ${'#1a1a1a'}`, minHeight: '32px' }}>
+              <svg className="w-3 h-3 text-gray-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>
+              <span className="text-[9px] text-gray-500 truncate">{onlyUser1 ? `${user1.username || 'P1'} locked` : `${user2.username || 'P2'} locked`} · awaiting other</span>
+            </div>
+          ) : (
+            <div className="mb-2 flex items-center gap-1.5 px-2 py-2 rounded-md" style={{ background: '#111', border: `1px solid ${'#1a1a1a'}`, minHeight: '32px' }}>
+              <div className="w-1.5 h-1.5 rounded-full bg-yellow-500/50 pick-pending-dot"></div>
+              <span className="text-[9px] text-gray-500">Awaiting picks...</span>
+            </div>
+          )}
+
+          <div className="mt-auto">
+            <div className="h-1 rounded-full overflow-hidden mb-2" style={{ background: '#1a1a1a' }}>
+              <div
+                className="h-full rounded-full transition-all duration-1000"
+                style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #3b82f6, #06b6d4)' }}
+              ></div>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-gray-600 text-[10px]">{progress.toFixed(0)}% complete</span>
+              <span className="text-[11px] font-medium text-blue-400 flex items-center gap-1">
+                {expanded ? 'Hide' : 'Preview'}
+                <svg
+                  className="w-3 h-3"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  style={{
+                    transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 220ms ease',
+                  }}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                </svg>
+              </span>
+            </div>
           </div>
         </div>
 
-        {picks ? (
-          <div className="flex gap-1 mb-2" style={{ minHeight: '32px' }}>
-            <div className="flex-1 min-w-0">
-              {picks.user1.slice(0, 1).map((p, i) => <PickPill key={i} pick={p} compact />)}
-            </div>
-            <span className="text-gray-600 text-[9px] self-center px-0.5">vs</span>
-            <div className="flex-1 min-w-0">
-              {picks.user2.slice(0, 1).map((p, i) => <PickPill key={i} pick={p} compact />)}
-            </div>
-          </div>
-        ) : picksLocked ? (
-          <div className="mb-2 flex items-center gap-1.5 px-2 py-2 rounded-md" style={{ background: '#111', border: `1px solid ${'#1a1a1a'}`, minHeight: '32px' }}>
-            <svg className="w-3 h-3 text-gray-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/></svg>
-            <span className="text-[9px] text-gray-500 truncate">{onlyUser1 ? `${user1.username || 'P1'} locked` : `${user2.username || 'P2'} locked`} · awaiting other</span>
-          </div>
-        ) : (
-          <div className="mb-2 flex items-center gap-1.5 px-2 py-2 rounded-md" style={{ background: '#111', border: `1px solid ${'#1a1a1a'}`, minHeight: '32px' }}>
-            <div className="w-1.5 h-1.5 rounded-full bg-yellow-500/50 pick-pending-dot"></div>
-            <span className="text-[9px] text-gray-500">Awaiting picks...</span>
-          </div>
-        )}
-
-        <div className="mt-auto">
-          <div className="h-1 rounded-full overflow-hidden mb-2" style={{ background: '#1a1a1a' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateRows: expanded ? '1fr' : '0fr',
+            transition: 'grid-template-rows 280ms ease',
+          }}
+        >
+          <div style={{ overflow: 'hidden' }}>
             <div
-              className="h-full rounded-full transition-all duration-1000"
-              style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #3b82f6, #06b6d4)' }}
-            ></div>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-gray-600 text-[10px]">{progress.toFixed(0)}% complete</span>
-            <span
-              onClick={(e) => { e.stopPropagation(); router.push(`/battle?battle=${battle.id}`); }}
-              className="text-[11px] font-medium text-blue-400 flex items-center gap-1 cursor-pointer"
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                borderTop: '1px solid #1a1a1a',
+                opacity: expanded ? 1 : 0,
+                transition: 'opacity 220ms ease',
+                transitionDelay: expanded ? '120ms' : '0ms',
+                cursor: 'default',
+              }}
             >
-              Watch
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-              </svg>
-            </span>
+              <div className="px-3.5 pt-3 pb-2 flex items-center gap-1.5">
+                <div
+                  className={statusDotColor === '#facc15' ? 'pick-pending-dot' : ''}
+                  style={{ width: 6, height: 6, borderRadius: '50%', background: statusDotColor, boxShadow: `0 0 6px ${statusDotColor}` }}
+                ></div>
+                <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: statusDotColor }}>
+                  {statusText}
+                </span>
+              </div>
+
+              {picks ? (
+                <div className="grid grid-cols-2 gap-2 px-3.5 pb-3">
+                  <div>
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5 truncate">
+                      {user1.username || 'Player 1'}'s picks
+                    </div>
+                    <div className="space-y-1.5">
+                      {picks.user1.length === 0 ? (
+                        <div className="text-[10px] text-gray-600">No picks yet</div>
+                      ) : (
+                        picks.user1.map((pick, i) => <PickPill key={i} pick={pick} compact />)
+                      )}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5 truncate text-right">
+                      {user2.username || 'Player 2'}'s picks
+                    </div>
+                    <div className="space-y-1.5">
+                      {picks.user2.length === 0 ? (
+                        <div className="text-[10px] text-gray-600 text-right">No picks yet</div>
+                      ) : (
+                        picks.user2.map((pick, i) => <PickPill key={i} pick={pick} compact />)
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="px-3.5 pb-3">
+                  <div
+                    className="rounded-md px-3 py-2 text-[11px] text-gray-400"
+                    style={{ background: '#111', border: '1px solid #1a1a1a' }}
+                  >
+                    Picks reveal once both players lock in their plays.
+                  </div>
+                </div>
+              )}
+
+              <div className="px-3.5 pb-3.5">
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); router.push(`/battle?battle=${battle.id}`); }}
+                  className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-semibold text-white"
+                  style={{
+                    background: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
+                    boxShadow: '0 4px 12px rgba(59,130,246,0.25)',
+                  }}
+                >
+                  See More
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -632,7 +744,7 @@ function formatElapsed(ms) {
   return `${seconds}s`;
 }
 
-function YouVsCard({ youVsState, onClick }) {
+function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null }) {
   const router = useRouter();
   const { refresh: refreshMatchup } = useMatchup();
   const [cancelling, setCancelling] = useState(false);
@@ -799,16 +911,21 @@ function YouVsCard({ youVsState, onClick }) {
     ? { id: myProfile.id, username: myProfile.username || 'You', avatar: myProfile.avatar }
     : { id: null, username: 'You', avatar: null };
 
-  const handleClick = () => {
+  const handleNavigate = () => {
     if (onClick) onClick();
     else router.push('/battle');
+  };
+
+  const handleCardTap = () => {
+    if (onToggle) onToggle();
+    else handleNavigate();
   };
 
   const handleKeyDown = (e) => {
     if (e.target !== e.currentTarget) return;
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      handleClick();
+      handleCardTap();
     }
   };
 
@@ -843,18 +960,36 @@ function YouVsCard({ youVsState, onClick }) {
     }
   };
 
+  let expandedHeadline = 'Ready for a 1v1 battle?';
+  let expandedBody = 'Start a private match or join the queue to find a real opponent in seconds.';
+  if (isActive) {
+    expandedHeadline = 'You\'re live in a battle';
+    expandedBody = opponent?.username
+      ? `Battling ${opponent.username}. Open the battle for picks, chat, and the live scoreboard.`
+      : 'Open the battle for picks, chat, and the live scoreboard.';
+  } else if (isWaiting) {
+    expandedHeadline = 'Lobby is open · waiting for opponent';
+    expandedBody = 'Share your lobby link or wait for someone to join. You can cancel anytime.';
+  } else if (isQueued) {
+    expandedHeadline = 'Searching the queue';
+    expandedBody = 'Matchmaking is finding a player at your buy-in. You can leave the queue anytime.';
+  }
+
   return (
     <div
-      className="youvs-card rounded-xl overflow-hidden cursor-pointer w-full h-full flex flex-col relative"
-      onClick={handleClick}
+      className="youvs-card rounded-xl overflow-hidden cursor-pointer w-full flex flex-col relative"
+      onClick={handleCardTap}
       onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
-      aria-label={`Your battle — ${topLabel}. ${ctaText}.`}
+      aria-label={`Your battle — ${topLabel}. Tap to ${isExpanded ? 'hide' : 'show'} preview.`}
+      aria-expanded={isExpanded}
       style={{
         background:
           'linear-gradient(180deg, rgba(139,92,246,0.14) 0%, rgba(6,182,212,0.08) 45%, rgba(13,13,13,0.95) 100%), #0d0d0d',
-        border: '1.5px solid rgba(139, 92, 246, 0.65)',
+        border: isExpanded
+          ? '1.5px solid rgba(167, 139, 250, 0.85)'
+          : '1.5px solid rgba(139, 92, 246, 0.65)',
         boxShadow:
           '0 0 0 1px rgba(139,92,246,0.15) inset, 0 0 18px rgba(139,92,246,0.28), 0 0 32px rgba(6,182,212,0.12)',
         transition: 'transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 180ms ease-out, border-color 180ms ease-out',
@@ -1085,11 +1220,77 @@ function YouVsCard({ youVsState, onClick }) {
               </button>
             )}
             <span className="text-[11px] font-semibold flex items-center gap-1" style={{ color: '#a78bfa' }}>
-              {ctaText}
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+              {isExpanded ? 'Hide' : 'Preview'}
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                style={{
+                  transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 220ms ease',
+                }}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
               </svg>
             </span>
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateRows: isExpanded ? '1fr' : '0fr',
+          transition: 'grid-template-rows 280ms ease',
+        }}
+      >
+        <div style={{ overflow: 'hidden' }}>
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              borderTop: '1px solid rgba(59,130,246,0.18)',
+              opacity: isExpanded ? 1 : 0,
+              transition: 'opacity 220ms ease',
+              transitionDelay: isExpanded ? '120ms' : '0ms',
+              cursor: 'default',
+            }}
+          >
+            <div className="px-3.5 pt-3 pb-2 flex items-center gap-1.5">
+              <div
+                className={topDotColor === '#f59e0b' || topDotColor === '#06b6d4' ? 'pick-pending-dot' : ''}
+                style={{ width: 6, height: 6, borderRadius: '50%', background: topDotColor, boxShadow: `0 0 6px ${topDotColor}` }}
+              ></div>
+              <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: topDotColor }}>
+                {expandedHeadline}
+              </span>
+            </div>
+
+            <div className="px-3.5 pb-3">
+              <div
+                className="rounded-md px-3 py-2 text-[11px] text-gray-400 leading-snug"
+                style={{ background: '#111', border: '1px solid #1a1a1a' }}
+              >
+                {expandedBody}
+              </div>
+            </div>
+
+            <div className="px-3.5 pb-3.5">
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); handleNavigate(); }}
+                className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-[12px] font-semibold text-white"
+                style={{
+                  background: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
+                  boxShadow: '0 4px 12px rgba(59,130,246,0.25)',
+                }}
+              >
+                {ctaText}
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -1100,7 +1301,12 @@ function YouVsCard({ youVsState, onClick }) {
 export default function LiveBattlesSection({ compact = false, focusBattleId = null, currentUserId = null, youVsState = null, onYouVsClick = null }) {
   const [battles, setBattles] = useState(() => getSimulatedBattles([]));
   const [avatars, setAvatars] = useState([]);
+  const [expandedKey, setExpandedKey] = useState(null);
   const router = useRouter();
+
+  const toggleExpandedKey = useCallback((key) => {
+    setExpandedKey((prev) => (prev === key ? null : key));
+  }, []);
 
   useEffect(() => {
     fetch('/api/admin/battle-avatars')
@@ -1177,13 +1383,23 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
             See All
           </button>
         </div>
-        <div className="flex gap-3 items-stretch overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="flex gap-3 items-start overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <div className="flex-shrink-0 w-[380px] flex">
-            <YouVsCard youVsState={youVsState} onClick={onYouVsClick} />
+            <YouVsCard
+              youVsState={youVsState}
+              onClick={onYouVsClick}
+              isExpanded={expandedKey === 'youvs'}
+              onToggle={() => toggleExpandedKey('youvs')}
+            />
           </div>
           {compactBattles.map(battle => (
             <div key={battle.id} className="flex-shrink-0 w-[380px] flex">
-              <BattleCard battle={battle} compact />
+              <BattleCard
+                battle={battle}
+                compact
+                isExpanded={expandedKey === battle.id}
+                onToggle={() => toggleExpandedKey(battle.id)}
+              />
             </div>
           ))}
         </div>
