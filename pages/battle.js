@@ -783,6 +783,23 @@ export default function BattlePage() {
   const inviteCount = invites.received?.length || 0;
   const onlineFriendCount = friends.filter(f => f.isOnline).length;
 
+  // Map of friendId -> pending outgoing invite. Lets each friend row show a
+  // "pending" indicator and disable the quick-invite shortcut so the user
+  // can't fire duplicate invites that the server would reject.
+  const pendingInviteByFriendId = new Map();
+  (invites.sent || []).forEach(inv => {
+    const rid = inv.receiverId || inv.receiver?.id;
+    if (rid && !pendingInviteByFriendId.has(rid)) pendingInviteByFriendId.set(rid, inv);
+  });
+
+  const openPendingInvite = useCallback((inviteId) => {
+    if (!inviteId) return;
+    setSocialTab('invites');
+    setSocialExpanded(true);
+    setHighlightInviteId(inviteId);
+    setTimeout(() => setHighlightInviteId(prev => (prev === inviteId ? null : prev)), 3500);
+  }, []);
+
   const cardBg = '#0d0d0d';
   const cardBorder = '#1a1a1a';
   const cardShadow = 'none';
@@ -854,6 +871,8 @@ export default function BattlePage() {
             <div className="divide-y" style={{ borderColor: cardBorder }}>
               {friends.map(friend => {
                 const lastSeenLabel = !friend.isOnline && friend.lastSeenAt != null ? formatLastSeen(friend.lastSeenAt) : '';
+                const pendingInvite = pendingInviteByFriendId.get(friend.id);
+                const hasPendingInvite = !!pendingInvite;
                 return (
                 <div key={friend.id} className="flex items-center gap-3 px-3 py-3 group transition-colors hover:bg-white/[0.02]">
                   <div className="flex-shrink-0 cursor-pointer" onClick={() => goToProfile(friend)}>
@@ -873,7 +892,17 @@ export default function BattlePage() {
                         <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l2.39 4.84L20 8l-4 3.9.94 5.49L12 14.77 7.06 17.39 8 11.9 4 8l5.61-1.16L12 2z" /></svg>
                         {friend.battleWins || 0}W · {friend.battleLosses || 0}L
                       </span>
-                      {friend.isOnline ? (
+                      {hasPendingInvite ? (
+                        <button
+                          type="button"
+                          onClick={() => openPendingInvite(pendingInvite.id)}
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-orange-500/15 text-orange-300 border border-orange-500/30 hover:bg-orange-500/25 transition-colors"
+                          title="View pending invite"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
+                          Invite pending
+                        </button>
+                      ) : friend.isOnline ? (
                         <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-green-500/15 text-green-300 border border-green-500/30">
                           <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                           Online
@@ -900,13 +929,16 @@ export default function BattlePage() {
                     >
                       Message
                     </button>
-                    {/* Quick invite: re-send last buy-in with one tap. */}
+                    {/* Quick invite: re-send last buy-in with one tap.
+                        When an invite to this friend is already pending, we
+                        disable it so the user doesn't fire a duplicate the
+                        server would reject. */}
                     <button
                       onClick={() => handleQuickInvite(friend)}
-                      disabled={quickInviteFor === friend.id}
-                      className="p-2 rounded-lg transition-all bg-yellow-500/10 hover:bg-yellow-500/20 active:bg-yellow-500/30 text-yellow-300 border border-yellow-500/20 disabled:opacity-60 disabled:cursor-wait"
-                      title="Quick invite — re-send last buy-in"
-                      aria-label={`Quick invite ${friend.username || 'friend'} with last buy-in`}
+                      disabled={quickInviteFor === friend.id || hasPendingInvite}
+                      className="p-2 rounded-lg transition-all bg-yellow-500/10 hover:bg-yellow-500/20 active:bg-yellow-500/30 text-yellow-300 border border-yellow-500/20 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-yellow-500/10"
+                      title={hasPendingInvite ? 'Invite already pending' : 'Quick invite — re-send last buy-in'}
+                      aria-label={hasPendingInvite ? `Invite to ${friend.username || 'friend'} already pending` : `Quick invite ${friend.username || 'friend'} with last buy-in`}
                     >
                       {quickInviteFor === friend.id ? (
                         <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12a8 8 0 018-8" /></svg>
@@ -914,15 +946,29 @@ export default function BattlePage() {
                         <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                       )}
                     </button>
-                    {/* Play: gamified gradient button */}
-                    <button
-                      onClick={() => { setPlayFriendInitial(friend); setShowPlayFriend(true); }}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:scale-[1.03] active:scale-[0.97]"
-                      style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 2px 8px rgba(124,58,237,0.35)' }}
-                    >
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                      Play
-                    </button>
+                    {/* Play button. When an invite is already pending, we
+                        repurpose this CTA to jump to the Invites tab so the
+                        user can review or cancel it instead of triggering a
+                        duplicate that the server would reject. */}
+                    {hasPendingInvite ? (
+                      <button
+                        onClick={() => openPendingInvite(pendingInvite.id)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all hover:scale-[1.03] active:scale-[0.97] bg-orange-500/15 text-orange-300 border border-orange-500/30"
+                        title="View pending invite"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
+                        Pending
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => { setPlayFriendInitial(friend); setShowPlayFriend(true); }}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-all hover:scale-[1.03] active:scale-[0.97]"
+                        style={{ background: 'linear-gradient(135deg, #7c3aed, #2563eb)', boxShadow: '0 2px 8px rgba(124,58,237,0.35)' }}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        Play
+                      </button>
+                    )}
                   </div>
                 </div>
                 );
