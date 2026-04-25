@@ -522,12 +522,18 @@ export default function NotificationsPage() {
 
   const isAuthed = status === 'authenticated';
 
-  // Restore the user's last-selected filter from sessionStorage so it sticks
-  // while they navigate away and come back within the same session.
+  // Restore the user's last-selected filter from localStorage so it sticks
+  // across browser sessions (closing the tab/browser still preserves it).
+  // We also fall back to any value previously stored in sessionStorage so
+  // users mid-session don't lose their selection on the upgrade.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
-      const saved = window.sessionStorage.getItem(FILTER_STORAGE_KEY);
+      let saved = null;
+      try { saved = window.localStorage.getItem(FILTER_STORAGE_KEY); } catch {}
+      if (!saved) {
+        try { saved = window.sessionStorage.getItem(FILTER_STORAGE_KEY); } catch {}
+      }
       if (saved && FILTERS.some((f) => f.key === saved)) {
         setFilterState(saved);
       }
@@ -537,6 +543,9 @@ export default function NotificationsPage() {
   const setFilter = (next) => {
     setFilterState(next);
     if (typeof window !== 'undefined') {
+      try { window.localStorage.setItem(FILTER_STORAGE_KEY, next); } catch {}
+      // Keep sessionStorage in sync (and clear stale values) so the two
+      // stores don't disagree if some other code path still reads it.
       try { window.sessionStorage.setItem(FILTER_STORAGE_KEY, next); } catch {}
     }
   };
