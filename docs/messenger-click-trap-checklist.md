@@ -2,7 +2,17 @@
 
 ## First line of defense: the automated smoke test
 
-Before going through the manual steps below, run the WebKit smoke test:
+The WebKit smoke test runs automatically in CI on every pull request via
+the **Messenger click-trap E2E** GitHub Actions workflow
+(`.github/workflows/messenger-click-trap.yml`). Reviewers should check
+that the workflow is green on the PR before approving — if it's red, the
+regression is back and the PR is blocked from merging until it's fixed.
+Failed runs upload the Playwright HTML report and traces as workflow
+artifacts so you can download and inspect them directly from the PR's
+Checks tab.
+
+If you want to reproduce a CI failure locally (or run the suite before
+pushing), the same commands CI uses are:
 
 ```bash
 npm run test:e2e:install   # one-time: installs the WebKit browser binary
