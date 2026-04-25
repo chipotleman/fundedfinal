@@ -985,6 +985,26 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
                       );
                     })}
                   </div>
+                  {(() => {
+                    const selectedMode = GAME_MODE_OPTIONS.find(m => m.id === gameMode);
+                    if (!selectedMode) return null;
+                    return (
+                      <div
+                        aria-live="polite"
+                        className="mt-2 flex items-start gap-2 rounded-lg px-2.5 py-2"
+                        style={{
+                          backgroundColor: `${selectedMode.color}0d`,
+                          border: `1px solid ${selectedMode.color}26`,
+                        }}
+                      >
+                        <span className="text-xs leading-none mt-0.5" aria-hidden="true">{selectedMode.icon}</span>
+                        <p className="text-[11px] leading-snug" style={{ color: textSecondary }}>
+                          <span className="font-semibold" style={{ color: textPrimary }}>{selectedMode.label}:</span>{' '}
+                          {selectedMode.description}
+                        </p>
+                      </div>
+                    );
+                  })()}
                 </div>
 
               </div>
