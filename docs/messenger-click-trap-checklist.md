@@ -11,16 +11,25 @@ npm run test:e2e           # runs the click-trap suite
 
 The suite lives in `tests/e2e/`:
 - `messenger-click-trap.spec.js` — desktop Safari (>= 1024px wide), exercises
-  the bell + messages dropdowns.
+  the bell + messages dropdowns, the bell "View all" navigation to
+  `/notifications`, browser back to `/messenger`, and a scrolled-state
+  pass that asserts no leftover full-screen overlay sits on top of the
+  page.
 - `messenger-click-trap.mobile.spec.js` — iPhone 14 Pro viewport, exercises
-  the hamburger drawer + body scroll-lock.
-- `helpers/clickTrap.js` — shared API stubs and `<body>` style assertions.
+  the hamburger drawer + body scroll-lock, drawer-link navigation between
+  `/messenger` and `/notifications` (both directions), and a scrolled-state
+  pass with the same overlay check.
+- `helpers/clickTrap.js` — shared API stubs, `<body>` style assertions,
+  the full-screen overlay check, and a `scrollPage()` helper that pads
+  the page with a spacer and scrolls down so the dropdown checks run in
+  a scrolled state.
 
 Both specs open `/messenger` and `/notifications` in WebKit, open and
 dismiss each top-bar dropdown / the mobile nav drawer, then assert that
-the next icon tap registers and that `document.body` has no leftover
-scroll-lock styles. If any spec fails, the regression is back — fix it
-before shipping and before bothering with the manual checklist.
+the next icon tap registers, that `document.body` has no leftover
+scroll-lock styles, and that no fixed-position element covering the
+viewport is left in the DOM. If any spec fails, the regression is back
+— fix it before shipping and before bothering with the manual checklist.
 
 The automated test is configured to start `npm run dev` on port 3100 via
 Playwright's `webServer`. To run against an already-running server, set
@@ -52,30 +61,39 @@ invisible overlay, the bug is back.
 
 ## Steps (run on each environment)
 
+Steps marked **[automated]** are now covered by the WebKit smoke test
+above and only need to be re-checked manually on real iOS Safari.
+Steps marked **[manual only]** still need to be exercised by a human
+on every environment.
+
 For each environment, sign in as a normal user, then:
 
 1. Navigate to `/messenger`.
-2. Tap every icon in the top bar in order (logo, search, bell, messages,
-   profile/avatar, hamburger if present). Each tap must register on the
-   first try.
-3. Open the bell (notifications) dropdown. Dismiss it by tapping outside
-   the dropdown. Confirm the next tap on any top-bar icon works on the
-   first try.
-4. Open the bell dropdown again. Dismiss it by tapping the bell icon
-   itself. Confirm the next tap works on the first try.
-5. Repeat steps 3 and 4 with the messages dropdown.
-6. Open the mobile nav menu (hamburger). Dismiss it by tapping outside,
-   then by tapping the hamburger again. Confirm the next tap works on
-   the first try.
-7. Navigate from `/messenger` to `/notifications` via the bell icon.
-8. Repeat steps 2–6 on `/notifications`.
-9. Navigate back to `/messenger`. Repeat steps 2–6 once more — the bug
-   often only surfaces after a back-and-forth navigation.
-10. Scroll the page, then re-open and dismiss each dropdown. Confirm the
-    page is still scrollable and that no invisible overlay is left behind
-    (you can verify in Safari Web Inspector by toggling "Show Compositing
-    Borders" or by inspecting the DOM for any leftover fixed-position
-    backdrop nodes).
+2. **[manual only]** Tap every icon in the top bar in order (logo, search,
+   bell, messages, profile/avatar, hamburger if present). Each tap must
+   register on the first try.
+3. **[automated]** Open the bell (notifications) dropdown. Dismiss it by
+   tapping outside the dropdown. Confirm the next tap on any top-bar
+   icon works on the first try.
+4. **[automated]** Open the bell dropdown again. Dismiss it by tapping
+   the bell icon itself. Confirm the next tap works on the first try.
+5. **[automated]** Repeat steps 3 and 4 with the messages dropdown.
+6. **[automated]** Open the mobile nav menu (hamburger). Dismiss it by
+   tapping outside, then by tapping the hamburger again. Confirm the
+   next tap works on the first try.
+7. **[automated]** Navigate from `/messenger` to `/notifications` via
+   the bell icon (desktop: open the bell dropdown and tap "View all";
+   mobile: open the hamburger drawer and tap the Notifications link).
+8. **[automated]** Repeat steps 3–6 on `/notifications`.
+9. **[automated]** Navigate back to `/messenger` (desktop: browser back;
+   mobile: open the drawer and tap the Messages link). Repeat steps 3–6
+   once more — the bug often only surfaces after a back-and-forth
+   navigation.
+10. **[automated]** Scroll the page, then re-open and dismiss each
+    dropdown. Confirm the page is still scrollable and that no invisible
+    overlay is left behind (you can verify in Safari Web Inspector by
+    toggling "Show Compositing Borders" or by inspecting the DOM for
+    any leftover fixed-position backdrop nodes).
 
 ## Pass criteria
 
