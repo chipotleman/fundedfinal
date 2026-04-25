@@ -38,41 +38,17 @@ export default function MessengerPage() {
   // navbar height in case TopNavbar's resize observer hadn't fired yet.
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    const releaseLocks = (reason) => {
-      const b = document.body.style;
-      b.overflow = '';
-      b.position = '';
-      b.top = '';
-      b.left = '';
-      b.right = '';
-      b.width = '';
-      b.height = '';
-      b.overscrollBehavior = '';
-      document.documentElement.style.overflow = '';
-      document.documentElement.style.overscrollBehavior = '';
-      if (reason) {
-        try { console.warn('[messenger] released stale body scroll lock:', reason); } catch {}
-      }
-    };
-    releaseLocks(null);
-
-    // Periodic watchdog: if the body has been left in a scroll-locked state
-    // (position:fixed or overflow:hidden) but no real modal is currently
-    // mounted, clear the lock so the page is interactive again. Detects the
-    // top-bar click trap that previously stranded users on /messenger.
-    const interval = setInterval(() => {
-      if (typeof document === 'undefined') return;
-      const b = document.body.style;
-      const isLocked = b.position === 'fixed' || b.overflow === 'hidden';
-      if (!isLocked) return;
-      const hasOpenModal = !!document.querySelector(
-        '[role="dialog"][aria-modal="true"], [data-scroll-lock-owner="true"]'
-      );
-      if (!hasOpenModal) {
-        releaseLocks('no open modal but body lock present');
-      }
-    }, 1500);
-    return () => clearInterval(interval);
+    const b = document.body.style;
+    b.overflow = '';
+    b.position = '';
+    b.top = '';
+    b.left = '';
+    b.right = '';
+    b.width = '';
+    b.height = '';
+    b.overscrollBehavior = '';
+    document.documentElement.style.overflow = '';
+    document.documentElement.style.overscrollBehavior = '';
   }, []);
 
   // Pre-select a conversation from ?chat=<id>.

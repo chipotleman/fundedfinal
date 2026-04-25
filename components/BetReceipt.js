@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
 import { formatMoney } from '../utils/formatMoney';
-import { calculatePayout } from '../utils/odds';
 import useModalScrollLock from '../hooks/useModalScrollLock';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 
@@ -50,6 +49,14 @@ export default function BetReceipt({ bet, isDemo = false, onClose }) {
       minute: '2-digit',
       hour12: true
     });
+  };
+
+  const calculatePayout = (odds, stake) => {
+    if (odds > 0) {
+      return (stake * odds / 100) + stake;
+    } else {
+      return (stake * (100 / Math.abs(odds))) + stake;
+    }
   };
 
   if (!bet) return null;

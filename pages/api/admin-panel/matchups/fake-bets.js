@@ -2,7 +2,6 @@ import { db } from '../../../../lib/db';
 import { fakeOpponentBets, matchups, fakeOpponents } from '../../../../shared/schema';
 import { eq, and } from 'drizzle-orm';
 import { requireAdmin } from '../../../../lib/adminAuth';
-import { calculatePayout } from '../../../../utils/odds';
 
 async function handler(req, res) {
   if (req.method === 'GET') {
@@ -49,8 +48,15 @@ async function handler(req, res) {
         return res.status(400).json({ error: 'This matchup does not have a fake opponent' });
       }
 
+      const oddsNum = parseInt(odds);
       const stakeNum = parseFloat(stake);
-      const potentialPayout = calculatePayout(odds, stake);
+      let potentialPayout = stakeNum;
+      
+      if (oddsNum > 0) {
+        potentialPayout = stakeNum + (stakeNum * oddsNum / 100);
+      } else {
+        potentialPayout = stakeNum + (stakeNum * 100 / Math.abs(oddsNum));
+      }
 
       const [newBet] = await db.insert(fakeOpponentBets).values({
         matchupId,

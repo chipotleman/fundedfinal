@@ -5,7 +5,6 @@ import BetReceipt from './BetReceipt';
 import LiveCommunityStats from './LiveCommunityStats';
 import { categorizeGames } from '../lib/gamesUtils';
 import { formatMoney } from '../utils/formatMoney';
-import { calculatePayout } from '../utils/odds';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 
 export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, showDemoBetSlip, setShowDemoBetSlip }) {
@@ -181,6 +180,14 @@ export default function DemoPreview({ demoBetSlipCount, setDemoBetSlipCount, sho
   const totalStake = betType === 'parlay'
     ? (selectedBets.length > 0 ? (selectedBets[0].stake || 0) : 0)
     : selectedBets.reduce((sum, bet) => sum + (bet.stake || 0), 0);
+
+  const calculatePayout = (odds, stake) => {
+    if (odds > 0) {
+      return (stake * odds / 100) + stake;
+    } else {
+      return (stake * (100 / Math.abs(odds))) + stake;
+    }
+  };
 
   const calculateParlayOdds = () => {
     if (selectedBets.length < 2) return 0;

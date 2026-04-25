@@ -75,25 +75,6 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
     setFetchedOpponent(null);
   }, [matchup?.id]);
 
-  // "Best-so-far" sticky caches for the opponent and viewer display fields,
-  // keyed by matchup id. Once we've resolved a real value for any field we
-  // keep it for the lifetime of this lobby — subsequent polls, hydration
-  // responses, or session-readiness changes can only ever upgrade or preserve
-  // it, never blank it. This is the fix for the avatar vanishing ~0.5s after
-  // mount when a fresh poll arrives with a different-shaped opponent payload.
-  const EMPTY_STICKY = { matchupId: null, id: null, username: null, avatar: null, equippedFrame: null };
-  const [stickyOpp, setStickyOpp] = useState(EMPTY_STICKY);
-  const [stickyMe, setStickyMe] = useState(EMPTY_STICKY);
-  // Pin which side the viewer is on for this matchup so a momentary
-  // currentUser/session flicker can't flip the slots and blank the opponent.
-  const [pinnedIsUser1, setPinnedIsUser1] = useState(null);
-
-  useEffect(() => {
-    setStickyOpp({ ...EMPTY_STICKY, matchupId: matchup?.id || null });
-    setStickyMe({ ...EMPTY_STICKY, matchupId: matchup?.id || null });
-    setPinnedIsUser1(null);
-  }, [matchup?.id]);
-
   // Resolve the opponent's id without requiring currentUser to be ready yet.
   // The explicit `opponent` prop and `matchup.opponent` are already viewer-
   // perspective from the server, so they're the most reliable source. We fall
@@ -118,14 +99,11 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
     if (matchup.user1Id && matchup.user1Id === explicitOpponentId) derivedIsUser1 = false;
     else if (matchup.user2Id && matchup.user2Id === explicitOpponentId) derivedIsUser1 = true;
   }
-  // Effective perspective: once pinned, never let derived perspective flip.
-  const effectiveIsUser1 =
-    pinnedIsUser1 !== null ? pinnedIsUser1 : derivedIsUser1;
-  const isUser1 = effectiveIsUser1 === true;
+  const isUser1 = derivedIsUser1 === true;
 
   const derivedOpponentId =
-    effectiveIsUser1 === true ? matchup?.user2Id :
-    effectiveIsUser1 === false ? matchup?.user1Id :
+    derivedIsUser1 === true ? matchup?.user2Id :
+    derivedIsUser1 === false ? matchup?.user1Id :
     null;
 
   const opponentId = explicitOpponentId || derivedOpponentId || null;
@@ -133,76 +111,15 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
   const oppSources = [
     opponent,
     matchup?.opponent,
-    effectiveIsUser1 === true ? matchup?.user2Info : matchup?.user1Info,
-    effectiveIsUser1 === true ? matchup?.player2 : matchup?.player1,
+    derivedIsUser1 === true ? matchup?.user2Info : matchup?.user1Info,
+    derivedIsUser1 === true ? matchup?.player2 : matchup?.player1,
     fetchedOpponent,
   ];
 
-  const liveOppUsername = pickFirst(oppSources, 'username') || pickFirst(oppSources, 'name');
-  const liveOppAvatar = pickFirst(oppSources, 'avatar');
-  const liveOppFrame = pickFirst(oppSources, 'equippedFrame') ?? pickFirst(oppSources, 'frameId');
-  const liveOppResolvedId = pickFirst(oppSources, 'id') || opponentId || null;
-
-  // Live "me" fields, derived each render from current props. The sticky
-  // cache below remembers the best-so-far values so a transient null in
-  // myProfile / currentUser can never blank the viewer's avatar either.
-  const liveMeId = myProfile?.id || currentUser?.id || null;
-  const liveMeUsername =
-    myProfile?.username || currentUser?.username || currentUser?.name || null;
-  const liveMeAvatar =
-    myProfile?.avatar || currentUser?.avatar || currentUser?.image || null;
-  const liveMeFrame = myProfile?.equippedFrame ?? null;
-
-  // A field is considered a real upgrade if it's not nullish and not an
-  // empty string (mirrors the same emptiness rule used by pickFirst above).
-  // Using nullish checks rather than truthiness avoids dropping legitimate
-  // zero-valued ids or frame ids in the unlikely event they appear.
-  const isMeaningful = (v) => v !== undefined && v !== null && v !== '';
-
-  useEffect(() => {
-    if (!matchup?.id) return;
-    setStickyOpp(prev => {
-      if (prev.matchupId !== matchup.id) return prev;
-      let changed = false;
-      const next = { ...prev };
-      if (isMeaningful(liveOppResolvedId) && next.id !== liveOppResolvedId) { next.id = liveOppResolvedId; changed = true; }
-      if (isMeaningful(liveOppUsername) && next.username !== liveOppUsername) { next.username = liveOppUsername; changed = true; }
-      if (isMeaningful(liveOppAvatar) && next.avatar !== liveOppAvatar) { next.avatar = liveOppAvatar; changed = true; }
-      if (isMeaningful(liveOppFrame) && next.equippedFrame !== liveOppFrame) { next.equippedFrame = liveOppFrame; changed = true; }
-      return changed ? next : prev;
-    });
-  }, [matchup?.id, liveOppResolvedId, liveOppUsername, liveOppAvatar, liveOppFrame]);
-
-  useEffect(() => {
-    if (!matchup?.id) return;
-    setStickyMe(prev => {
-      if (prev.matchupId !== matchup.id) return prev;
-      let changed = false;
-      const next = { ...prev };
-      if (isMeaningful(liveMeId) && next.id !== liveMeId) { next.id = liveMeId; changed = true; }
-      if (isMeaningful(liveMeUsername) && next.username !== liveMeUsername) { next.username = liveMeUsername; changed = true; }
-      if (isMeaningful(liveMeAvatar) && next.avatar !== liveMeAvatar) { next.avatar = liveMeAvatar; changed = true; }
-      if (isMeaningful(liveMeFrame) && next.equippedFrame !== liveMeFrame) { next.equippedFrame = liveMeFrame; changed = true; }
-      return changed ? next : prev;
-    });
-  }, [matchup?.id, liveMeId, liveMeUsername, liveMeAvatar, liveMeFrame]);
-
-  useEffect(() => {
-    if (derivedIsUser1 === null) return;
-    setPinnedIsUser1(prev => (prev === null ? derivedIsUser1 : prev));
-  }, [derivedIsUser1]);
-
-  // Effective values: prefer the sticky (best-so-far) value, but allow the
-  // live value through when the cache hasn't filled the field yet (e.g. on
-  // the very first render before the upgrade effect has run).
-  const oppResolvedId = stickyOpp.id || liveOppResolvedId;
-  const oppUsername = stickyOpp.username || liveOppUsername;
-  const oppAvatar = stickyOpp.avatar || liveOppAvatar;
-  const oppFrame = stickyOpp.equippedFrame || liveOppFrame;
-  const meResolvedId = stickyMe.id || liveMeId;
-  const meUsername = stickyMe.username || liveMeUsername;
-  const meAvatar = stickyMe.avatar || liveMeAvatar;
-  const meFrame = stickyMe.equippedFrame || liveMeFrame;
+  const oppUsername = pickFirst(oppSources, 'username') || pickFirst(oppSources, 'name');
+  const oppAvatar = pickFirst(oppSources, 'avatar');
+  const oppFrame = pickFirst(oppSources, 'equippedFrame') ?? pickFirst(oppSources, 'frameId');
+  const oppResolvedId = pickFirst(oppSources, 'id') || opponentId || null;
 
   // Hydrate from /api/profiles whenever we know an opponent id but are still
   // missing either the username or a non-empty avatar. This is independent of
@@ -242,10 +159,10 @@ export default function MatchLobby({ matchup, currentUser, opponent, myProfile, 
   const payout = parseFloat(matchup.winnerPayout ?? 0);
 
   const meInfo = {
-    id: meResolvedId,
-    username: meUsername || 'You',
-    avatar: meAvatar,
-    equippedFrame: meFrame,
+    id: myProfile?.id || currentUser?.id || null,
+    username: myProfile?.username || currentUser?.username || currentUser?.name || 'You',
+    avatar: myProfile?.avatar || currentUser?.avatar || currentUser?.image || null,
+    equippedFrame: myProfile?.equippedFrame ?? null,
   };
   const oppInfo = {
     id: oppResolvedId,

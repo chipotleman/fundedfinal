@@ -167,7 +167,7 @@ export default function MatchResult({
   currentUserId,
   resultData,
   rematchState,
-  reactionQueue,
+  incomingReaction,
   onSendReaction,
   opponent: opponentOverride,
   onRematchAccept,
@@ -191,17 +191,7 @@ export default function MatchResult({
   const [customText, setCustomText] = useState('');
   const [customSending, setCustomSending] = useState(false);
   const [customError, setCustomError] = useState('');
-  // Brief, non-blocking hint shown near the reaction strip when a canned tap
-  // can't be sent (e.g., 429 burst limit, network/server error). Auto-clears.
-  const [reactionHint, setReactionHint] = useState('');
-  const reactionHintTimerRef = useRef(null);
-  // Client-side token bucket so a normal "tap-tap-tap" feels instant. Mirrors
-  // the server's bucket — generous burst, modest sustained rate. We still
-  // try the network call and surface 429s when the server's bucket is the
-  // tighter constraint (e.g., a second device tapping at the same time).
-  const tokenBucketRef = useRef({ tokens: 6, last: 0 });
-  const TOKEN_CAPACITY = 6;
-  const TOKEN_REFILL_MS = 350;
+  const lastSendRef = useRef(0);
   const lastCustomSendRef = useRef(0);
   const declineFiredRef = useRef(false);
 
@@ -297,135 +287,41 @@ export default function MatchResult({
     }).catch(() => {});
   }, [prizeWon]);
 
-  // Per-reaction expiry timers. Each reaction owns its own timer so rapid-fire
-  // reactions all expire independently and don't get cancelled when a newer
-  // one arrives. Keyed by reaction id.
+  // Consume incoming reactions: route to my-side or opponent-side and auto-expire.
+  // Each reaction owns its own timer so rapid-fire reactions all expire
+  // independently — the effect cleanup must NOT cancel the previous reaction's
+  // removal timer when a new reaction arrives.
   const reactionTimersRef = useRef(new Map());
-  // Tracks every reaction id we've already shown (whether via optimistic
-  // local render or via the live-stream queue). The sender adds the id
-  // optimistically the moment they tap; when the live-stream echo arrives
-  // moments later carrying the same id, this set causes us to skip it so
-  // the same emoji never double-renders.
-  const processedIdsRef = useRef(new Set());
-
-  const scheduleReactionExpiry = useCallback((id, fromMe) => {
-    if (reactionTimersRef.current.has(id)) return;
+  useEffect(() => {
+    if (!incomingReaction || !incomingReaction.id) return;
+    const fromMe = incomingReaction.fromUserId === currentUserId;
+    const item = {
+      id: incomingReaction.id,
+      emoji: incomingReaction.emoji || null,
+      text: incomingReaction.text || null,
+    };
     const setter = fromMe ? setMyReactions : setOppReactions;
-    const t = setTimeout(() => {
-      setter((prev) => prev.filter((r) => r.id !== id));
-      reactionTimersRef.current.delete(id);
-    }, REACTION_TTL_MS);
-    reactionTimersRef.current.set(id, t);
-  }, []);
-
-  // Reset reaction state whenever the popup switches to a different matchup
-  // so previous-battle reactions never leak into the next result popup.
-  // The client-side token bucket is also reset so a fresh battle gets a
-  // full burst budget — mirrors the server's per-matchup bucket scope.
-  useEffect(() => {
-    processedIdsRef.current = new Set();
-    setMyReactions([]);
-    setOppReactions([]);
-    for (const t of reactionTimersRef.current.values()) clearTimeout(t);
-    reactionTimersRef.current.clear();
-    if (reactionHintTimerRef.current) {
-      clearTimeout(reactionHintTimerRef.current);
-      reactionHintTimerRef.current = null;
+    setter((prev) => (prev.some((r) => r.id === item.id) ? prev : [...prev, item]));
+    if (!reactionTimersRef.current.has(item.id)) {
+      const t = setTimeout(() => {
+        setter((prev) => prev.filter((r) => r.id !== item.id));
+        reactionTimersRef.current.delete(item.id);
+      }, REACTION_TTL_MS);
+      reactionTimersRef.current.set(item.id, t);
     }
-    setReactionHint('');
-    tokenBucketRef.current = { tokens: TOKEN_CAPACITY, last: 0 };
-  }, [matchup?.id]);
-
-  // Drain the live-stream reaction queue. Each new id is routed to the
-  // sender's or the opponent's avatar exactly once; ids we've already
-  // rendered (via optimistic local taps) are skipped so the echo doesn't
-  // double-show. Note: any reaction that arrived during a live-stream
-  // disconnect is NOT replayed by the stream client today — see the file
-  // header in `lib/battleStreamClient.js`. For the sender that gap is
-  // covered by the optimistic-render path below; for the opponent, taps
-  // sent while the stream is unhealthy may not be visible. This is
-  // documented and acceptable per task #271 step 6.
-  useEffect(() => {
-    if (!Array.isArray(reactionQueue) || reactionQueue.length === 0) return;
-    for (const r of reactionQueue) {
-      if (!r || !r.id) continue;
-      if (processedIdsRef.current.has(r.id)) continue;
-      processedIdsRef.current.add(r.id);
-      const fromMe = r.fromUserId === currentUserId;
-      const item = { id: r.id, emoji: r.emoji || null, text: r.text || null };
-      const setter = fromMe ? setMyReactions : setOppReactions;
-      setter((prev) => (prev.some((x) => x.id === item.id) ? prev : [...prev, item]));
-      scheduleReactionExpiry(item.id, fromMe);
-    }
-  }, [reactionQueue, currentUserId, scheduleReactionExpiry]);
+  }, [incomingReaction, currentUserId]);
 
   useEffect(() => () => {
     for (const t of reactionTimersRef.current.values()) clearTimeout(t);
     reactionTimersRef.current.clear();
-    if (reactionHintTimerRef.current) clearTimeout(reactionHintTimerRef.current);
   }, []);
 
-  const showReactionHint = useCallback((message) => {
-    setReactionHint(message);
-    if (reactionHintTimerRef.current) clearTimeout(reactionHintTimerRef.current);
-    reactionHintTimerRef.current = setTimeout(() => {
-      setReactionHint('');
-      reactionHintTimerRef.current = null;
-    }, 1500);
-  }, []);
-
-  const sendReaction = useCallback(async (payload) => {
-    // Refill the local token bucket and consume one. The bucket allows a
-    // generous burst (TOKEN_CAPACITY) before throttling, so normal "spam
-    // five hearts" behaviour just works without any silently-dropped taps.
+  const sendReaction = useCallback((payload) => {
     const now = Date.now();
-    const bucket = tokenBucketRef.current;
-    if (bucket.last === 0) bucket.last = now;
-    const elapsed = Math.max(0, now - bucket.last);
-    bucket.tokens = Math.min(TOKEN_CAPACITY, bucket.tokens + elapsed / TOKEN_REFILL_MS);
-    bucket.last = now;
-    if (bucket.tokens < 1) {
-      showReactionHint('Slow down');
-      return;
-    }
-    bucket.tokens -= 1;
-
-    // Optimistically render the sender's reaction immediately rather than
-    // waiting for the SSE echo. We generate a stable client id, mark it
-    // processed, then send it to the server which will use the same id in
-    // its echo so the queue-driven path will dedupe.
-    const clientId = `c-${now.toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-    const item = {
-      id: clientId,
-      emoji: payload?.emoji || null,
-      text: payload?.text || null,
-    };
-    processedIdsRef.current.add(clientId);
-    setMyReactions((prev) => [...prev, item]);
-    scheduleReactionExpiry(clientId, true);
-
-    let result = null;
-    try {
-      result = await onSendReaction?.({ ...payload, clientId });
-    } catch {
-      result = { error: 'Network error' };
-    }
-    if (result && result.error) {
-      // Roll back the optimistic render and surface a brief hint.
-      const t = reactionTimersRef.current.get(clientId);
-      if (t) {
-        clearTimeout(t);
-        reactionTimersRef.current.delete(clientId);
-      }
-      processedIdsRef.current.delete(clientId);
-      setMyReactions((prev) => prev.filter((x) => x.id !== clientId));
-      const errStr = typeof result.error === 'string' ? result.error : '';
-      let hint = "Couldn't send";
-      if (result.status === 429 || /too fast|slow/i.test(errStr)) hint = 'Slow down';
-      else if (/network/i.test(errStr)) hint = 'Offline?';
-      showReactionHint(hint);
-    }
-  }, [onSendReaction, scheduleReactionExpiry, showReactionHint]);
+    if (now - lastSendRef.current < 450) return;
+    lastSendRef.current = now;
+    try { onSendReaction?.(payload); } catch {}
+  }, [onSendReaction]);
 
   const sendCustomMessage = useCallback(async () => {
     const trimmed = customText.replace(/\s+/g, ' ').trim();
@@ -922,15 +818,6 @@ export default function MatchResult({
                   </button>
                 ))}
               </div>
-              {reactionHint && (
-                <div
-                  className="mt-1 text-[11px] text-amber-300/90 text-center select-none"
-                  role="status"
-                  aria-live="polite"
-                >
-                  {reactionHint}
-                </div>
-              )}
               <form
                 className="mt-2 flex items-center gap-2"
                 onSubmit={(e) => { e.preventDefault(); sendCustomMessage(); }}

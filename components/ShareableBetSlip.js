@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import PiksBetCard from './PiksBetCard';
 import { formatMoney } from '../utils/formatMoney';
-import { calculatePayout } from '../utils/odds';
 
 export default function ShareableBetSlip({ bet, isVisible, onClose }) {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -46,6 +45,15 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
       window.scrollTo(0, scrollPositionRef.current);
     };
   }, [isVisible]);
+
+  const calculatePayout = (odds, stake) => {
+    const oddsValue = typeof odds === 'object' ? odds.odds || odds.value || 0 : odds;
+    if (oddsValue > 0) {
+      return (stake * oddsValue / 100) + stake;
+    } else {
+      return (stake * (100 / Math.abs(oddsValue))) + stake;
+    }
+  };
 
   const showMessage = (text) => {
     setMessage(text);

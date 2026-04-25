@@ -257,19 +257,10 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
       setShowMobileMenu(false);
     };
 
-    // Allow other components (e.g. the mobile drawer) to open the
-    // cash/coins balance explainer popup that lives here.
-    const handleOpenExplainer = (e) => {
-      const type = e?.detail?.type === 'coins' ? 'coins' : 'cash';
-      setExplainerType(type);
-    };
-
     window.addEventListener('mobileMenuClosed', handleMenuClosed);
-    window.addEventListener('openBalanceExplainer', handleOpenExplainer);
 
     return () => {
       window.removeEventListener('mobileMenuClosed', handleMenuClosed);
-      window.removeEventListener('openBalanceExplainer', handleOpenExplainer);
     };
   }, []);
 
@@ -675,28 +666,48 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                 </div>
               )}
 
-              {/* Mobile Balances - sword/battle-coins pill only (cash lives in drawer) */}
-              {isLoggedIn && hasActiveMatchup && matchupBalance != null && (
-                <div
-                  className="sm:hidden flex items-center gap-1"
-                  style={{ marginRight: effectiveBetSlipCount > 0 ? 0 : 60 }}
-                >
-                  <button
-                    onClick={() => setExplainerType('coins')}
-                    className="flex items-center gap-1 rounded-md px-2 py-1.5"
-                    style={{
-                      background: 'linear-gradient(180deg, rgba(251,146,60,0.15) 0%, rgba(194,65,12,0.08) 100%)',
-                      border: '1px solid rgba(251,146,60,0.45)',
-                    }}
-                    aria-label="Battle coins details"
+              {/* Mobile Balances - compact pills */}
+              {isLoggedIn && userProfile?.bankroll != null && (() => {
+                const cashNum = parseFloat(userProfile.bankroll);
+                const showCoins = hasActiveMatchup && matchupBalance != null;
+                return (
+                  <div
+                    className="sm:hidden flex items-center gap-1"
+                    style={{ marginRight: effectiveBetSlipCount > 0 ? 0 : 60 }}
                   >
-                    <span className="text-xs leading-none" style={{ color: '#fb923c' }}>⚔</span>
-                    <span className="font-bold text-xs whitespace-nowrap" style={{ color: '#fed7aa' }}>
-                      {formatMoney(parseFloat(matchupBalance), 0)}
-                    </span>
-                  </button>
-                </div>
-              )}
+                    <button
+                      onClick={() => setExplainerType('cash')}
+                      className="flex items-center gap-1 rounded-md px-2 py-1.5"
+                      style={{
+                        background: 'linear-gradient(180deg, rgba(34,197,94,0.15) 0%, rgba(21,128,61,0.08) 100%)',
+                        border: '1px solid rgba(34,197,94,0.45)',
+                      }}
+                      aria-label="Cash balance details"
+                    >
+                      <span className="text-xs leading-none">💵</span>
+                      <span className="font-bold text-xs whitespace-nowrap" style={{ color: '#86efac' }}>
+                        ${formatMoney(cashNum, 0)}
+                      </span>
+                    </button>
+                    {showCoins && (
+                      <button
+                        onClick={() => setExplainerType('coins')}
+                        className="flex items-center gap-1 rounded-md px-2 py-1.5"
+                        style={{
+                          background: 'linear-gradient(180deg, rgba(251,146,60,0.15) 0%, rgba(194,65,12,0.08) 100%)',
+                          border: '1px solid rgba(251,146,60,0.45)',
+                        }}
+                        aria-label="Battle coins details"
+                      >
+                        <span className="text-xs leading-none" style={{ color: '#fb923c' }}>⚔</span>
+                        <span className="font-bold text-xs whitespace-nowrap" style={{ color: '#fed7aa' }}>
+                          {formatMoney(parseFloat(matchupBalance), 0)}
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Bet Slip Button - Only show when there are bets */}
               {effectiveBetSlipCount > 0 && (

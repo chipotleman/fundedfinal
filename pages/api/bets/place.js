@@ -3,7 +3,6 @@ import { userBets, profiles, fakeOpponents, fakeOpponentBets, matchups, poolPart
 import { eq, and, or, inArray } from 'drizzle-orm';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
-import { calculatePayout } from '../../../utils/odds';
 const { publishBattleEvent, publishMatchupPnlUpdate } = require('../../../lib/battle-events');
 
 export default async function handler(req, res) {
@@ -125,6 +124,15 @@ export default async function handler(req, res) {
     if (totalStake > currentBankroll) {
       return res.status(400).json({ error: 'Insufficient balance' });
     }
+
+    const calculatePayout = (odds, stake) => {
+      const oddsValue = typeof odds === 'object' ? odds.odds || odds.value || 0 : parseInt(odds);
+      if (oddsValue > 0) {
+        return (stake * oddsValue / 100) + stake;
+      } else {
+        return (stake * (100 / Math.abs(oddsValue))) + stake;
+      }
+    };
 
     const insertedBets = [];
 
