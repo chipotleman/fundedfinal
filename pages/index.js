@@ -417,6 +417,34 @@ export default function Dashboard() {
     recentlyCompletedGames: []
   }), [liveGamesFromInplay, upcomingGamesFromApi, isDemoMode, simulatedLiveGames]);
 
+  const closeGames = useMemo(() => {
+    const closeThresholds = {
+      soccer: 1,
+      hockey: 1,
+      baseball: 2,
+      esports: 1,
+      basketball: 6,
+      amfootball: 7,
+    };
+    const defaultThreshold = 3;
+
+    return categorizedGames.liveGames
+      .map(game => {
+        const isLive = game.isLive || game.status === 'IN_PROGRESS';
+        if (!isLive) return null;
+        const homeScore = game.scores?.home?.total;
+        const awayScore = game.scores?.away?.total;
+        if (typeof homeScore !== 'number' || typeof awayScore !== 'number') return null;
+        const diff = Math.abs(homeScore - awayScore);
+        const threshold = closeThresholds[game.sport] ?? defaultThreshold;
+        if (diff > threshold) return null;
+        return { game, diff };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.diff - b.diff)
+      .map(({ game }) => game);
+  }, [categorizedGames.liveGames]);
+
   // Sport filter mappings
   const sportMappings = useMemo(() => ({
     'NBA': ['NBA', 'BASKETBALL', "WOMEN'S BASKETBALL"],
@@ -644,12 +672,13 @@ export default function Dashboard() {
           onYouVsClick={() => router.push('/battle')}
         />
 
+        {closeGames.length > 0 && (
         <div className="mb-6">
           <div className="flex items-center justify-between px-1 mb-3">
-            <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Featured</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Close Games</h2>
           </div>
           <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
-            {categorizedGames.liveGames.filter(g => g.lines && g.lines.moneyline).slice(0, 3).map((game) => {
+            {closeGames.map((game) => {
               const isLive = game.isLive || game.status === 'IN_PROGRESS';
               return (
                 <div 
@@ -726,6 +755,7 @@ export default function Dashboard() {
             })}
           </div>
         </div>
+        )}
 
         <div>
           <div className="flex items-center justify-between mb-3 px-1">
