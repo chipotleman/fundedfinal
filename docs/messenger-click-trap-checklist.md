@@ -20,6 +20,14 @@ output in the logs, the cache hit just saved you ~30–60s. The cache is
 automatically invalidated whenever `@playwright/test` is bumped in
 `package.json` / `package-lock.json`.
 
+On top of that, the workflow also caches the resolved `node_modules`
+directory keyed on `${{ runner.os }}-node-modules-<hash of
+package-lock.json>`. On a cache hit the "Install dependencies" step is
+skipped entirely (no `npm ci` link/write pass), shaving another chunk of
+time off the smoke test. The cache is automatically invalidated whenever
+`package-lock.json` changes, so any dependency bump produces a fresh
+install on the next run.
+
 If you want to reproduce a CI failure locally (or run the suite before
 pushing), the same commands CI uses are:
 
