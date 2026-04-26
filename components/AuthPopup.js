@@ -132,7 +132,7 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
       } else {
         await login(email.trim(), password, rememberMe);
         onClose();
-        const ALLOWED_RESUME_ACTIONS = ['resumeBattleOptions'];
+        const ALLOWED_RESUME_ACTIONS = ['resumeBattleOptions', 'resumePlayFriend', 'resumePrivateMatch'];
         const pendingAction = typeof window !== 'undefined' ? window.__pendingAuthAction : null;
         if (typeof window !== 'undefined') window.__pendingAuthAction = null;
         const pendingBattleOpen = typeof window !== 'undefined' ? window.__pendingBattleOpen : null;

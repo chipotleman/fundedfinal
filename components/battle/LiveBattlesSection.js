@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import BattleChat from './BattleChat';
 import QuickMatchModal from './QuickMatchModal';
+import BattleModeChooser from './BattleModeChooser';
 import { formatMoney } from '../../utils/formatMoney';
 import UserAvatar from '../UserAvatar';
 import MutualFriendsLine from '../social/MutualFriendsLine';
@@ -1104,6 +1105,11 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
   // to localStorage only when the user actually confirms — backing out
   // shouldn't quietly opt them out of future warnings.
   const [confirmDontAsk, setConfirmDontAsk] = useState(false);
+  // Inline "Choose Battle Mode" chooser. Mirrors the chooser opened
+  // by the Start a Battle button on /battle so the home card surfaces
+  // the same Quick Match / Challenge Friend / Private Match options
+  // instead of jumping straight into a Quick Match search.
+  const [showChooser, setShowChooser] = useState(false);
   const matchmakingCancelledRef = useRef(false);
   const cancelNoticeTimerRef = useRef(null);
   const searchTimerIntervalRef = useRef(null);
@@ -1560,21 +1566,18 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
         cancelNoticeTimerRef.current = null;
       }
       setSearchError('');
-      // Authenticated users get the new in-card matchmaking flow.
-      // Signed-out users (no profile yet) fall back to navigating to
-      // /battle so they can sign in / pick a mode there.
+      // Authenticated users get the inline Choose Battle Mode chooser
+      // — Quick Match continues to run the in-card matchmaking flow
+      // (with its first-time confirm-spend gate), while Challenge
+      // Friend and Private Match hand off to /battle so they can
+      // reuse the page's friends list, modals, and lobby/active-battle
+      // destination. Signed-out users get the existing auth gate by
+      // routing to /battle?openChooser=1, where the page's requireAuth
+      // wrapper triggers the sign-in popup before the chooser opens.
       if (myProfile?.id && onMatchFound) {
-        // First-time confirmation gate. Repeat players who opted out
-        // skip straight to matchmaking; everyone else sees the
-        // lightweight "tap again to confirm" step first so a stray
-        // tap can't quietly deduct money.
-        if (shouldSkipConfirm()) {
-          startInCardSearch();
-        } else {
-          enterConfirmStep();
-        }
+        setShowChooser(true);
       } else {
-        handleNavigate();
+        router.push('/battle?openChooser=1');
       }
       return;
     }
@@ -1636,7 +1639,36 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
     expandedBody = 'Matchmaking is finding a player at your buy-in. You can leave the queue anytime.';
   }
 
+  // Quick Match pick from the inline chooser. Closes the chooser
+  // and resumes the existing in-card matchmaking flow — first-time
+  // players see the confirm-spend gate, returning players who opted
+  // out of the prompt skip straight into the radar/Finding-your-battle
+  // animation. Visually identical to the pre-chooser behavior.
+  const handleChooserQuickMatch = () => {
+    setShowChooser(false);
+    if (shouldSkipConfirm()) {
+      startInCardSearch();
+    } else {
+      enterConfirmStep();
+    }
+  };
+
+  // Challenge Friend / Private Match picks hand off to /battle so the
+  // user lands in the same Play Friend / Private Match modal — and the
+  // same lobby/active-battle destination — they would have reached by
+  // tapping Start a Battle on the Battle page itself.
+  const handleChooserChallengeFriend = () => {
+    setShowChooser(false);
+    router.push('/battle?openPlayFriend=1');
+  };
+
+  const handleChooserPrivateMatch = () => {
+    setShowChooser(false);
+    router.push('/battle?openPrivateMatch=1');
+  };
+
   return (
+    <>
     <div
       className="youvs-card rounded-xl overflow-hidden cursor-pointer w-full flex flex-col relative"
       onClick={handleCardTap}
@@ -2449,6 +2481,14 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
         </div>
       </div>
     </div>
+    <BattleModeChooser
+      isOpen={showChooser}
+      onClose={() => setShowChooser(false)}
+      onPickQuickMatch={handleChooserQuickMatch}
+      onPickChallengeFriend={handleChooserChallengeFriend}
+      onPickPrivateMatch={handleChooserPrivateMatch}
+    />
+    </>
   );
 }
 

@@ -98,7 +98,7 @@ export default function OnboardingPopup({ isOpen, onClose }) {
       }
 
       onClose();
-      const ALLOWED_RESUME_ACTIONS = ['resumeBattleOptions'];
+      const ALLOWED_RESUME_ACTIONS = ['resumeBattleOptions', 'resumePlayFriend', 'resumePrivateMatch'];
       const pendingAction = typeof window !== 'undefined' ? window.__pendingAuthAction : null;
       if (typeof window !== 'undefined') window.__pendingAuthAction = null;
       if (pendingAction && ALLOWED_RESUME_ACTIONS.includes(pendingAction)) {

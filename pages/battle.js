@@ -6,6 +6,7 @@ import FramedAvatar from '../components/UserAvatar';
 import QuickMatchModal from '../components/battle/QuickMatchModal';
 import PlayFriendModal from '../components/battle/PlayFriendModal';
 import PrivateMatchModal from '../components/battle/PrivateMatchModal';
+import BattleModeChooser from '../components/battle/BattleModeChooser';
 import InviteToast from '../components/battle/InviteToast';
 import MatchHistoryModal from '../components/battle/MatchHistoryModal';
 import MatchLobby from '../components/battle/MatchLobby';
@@ -453,6 +454,41 @@ export default function BattlePage() {
     delete cleaned.play;
     router.replace({ pathname: '/battle', query: cleaned }, undefined, { shallow: true });
   }, [router.isReady, router.query.play, friends]);
+
+  // ?openChooser=1 / ?openPlayFriend=1 / ?openPrivateMatch=1 are entry points
+  // from the home page "Your Battle" featured card. The home card opens the
+  // mode chooser inline for signed-in users, but routes signed-out users (and
+  // the Challenge Friend / Private Match picks) here so we can reuse the
+  // page's auth gate, friends list, and lobby/active-battle hand-off.
+  // Auth handling is inlined (instead of calling `requireAuth`) so the
+  // effect's deps are explicit — no stale-closure risk on first render.
+  useEffect(() => {
+    if (!router.isReady) return;
+    const openChooser = router.query.openChooser;
+    const openPlayFriend = router.query.openPlayFriend;
+    const openPrivateMatch = router.query.openPrivateMatch;
+    if (!openChooser && !openPlayFriend && !openPrivateMatch) return;
+    const gate = (openSetter, pendingAction) => {
+      if (isGuest) {
+        if (typeof window !== 'undefined') window.__pendingAuthAction = pendingAction;
+        window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signin', pendingAction } }));
+        return;
+      }
+      openSetter(true);
+    };
+    if (openChooser) {
+      gate(setShowBattleOptions, 'resumeBattleOptions');
+    } else if (openPlayFriend) {
+      gate(setShowPlayFriend, 'resumePlayFriend');
+    } else if (openPrivateMatch) {
+      gate(setShowPrivateMatch, 'resumePrivateMatch');
+    }
+    const cleaned = { ...router.query };
+    delete cleaned.openChooser;
+    delete cleaned.openPlayFriend;
+    delete cleaned.openPrivateMatch;
+    router.replace({ pathname: '/battle', query: cleaned }, undefined, { shallow: true });
+  }, [router.isReady, router.query.openChooser, router.query.openPlayFriend, router.query.openPrivateMatch, isGuest, router]);
 
   // ?chat=<id> on /battle is a legacy entry point — forward it to /notifications.
   useEffect(() => {
@@ -1100,19 +1136,31 @@ export default function BattlePage() {
     } catch {}
   };
 
-  const requireAuth = (callback) => {
+  // Optional `pendingAction` lets a caller resume into a specific
+  // post-auth destination (e.g. the deep links from the home page
+  // "Your Battle" card). Defaults to the chooser so existing call
+  // sites keep their current behavior.
+  const requireAuth = (callback, pendingAction = 'resumeBattleOptions') => {
     if (isGuest) {
-      if (typeof window !== 'undefined') window.__pendingAuthAction = 'resumeBattleOptions';
-      window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signin', pendingAction: 'resumeBattleOptions' } }));
+      if (typeof window !== 'undefined') window.__pendingAuthAction = pendingAction;
+      window.dispatchEvent(new CustomEvent('openAuthPopup', { detail: { mode: 'signin', pendingAction } }));
       return;
     }
     callback();
   };
 
   useEffect(() => {
-    const handleResume = () => setShowBattleOptions(true);
-    window.addEventListener('resumeBattleOptions', handleResume);
-    return () => window.removeEventListener('resumeBattleOptions', handleResume);
+    const handleResumeOptions = () => setShowBattleOptions(true);
+    const handleResumePlayFriend = () => setShowPlayFriend(true);
+    const handleResumePrivateMatch = () => setShowPrivateMatch(true);
+    window.addEventListener('resumeBattleOptions', handleResumeOptions);
+    window.addEventListener('resumePlayFriend', handleResumePlayFriend);
+    window.addEventListener('resumePrivateMatch', handleResumePrivateMatch);
+    return () => {
+      window.removeEventListener('resumeBattleOptions', handleResumeOptions);
+      window.removeEventListener('resumePlayFriend', handleResumePlayFriend);
+      window.removeEventListener('resumePrivateMatch', handleResumePrivateMatch);
+    };
   }, []);
 
   // Scroll the highlighted invite row into view once it renders.
@@ -2258,26 +2306,13 @@ export default function BattlePage() {
         </div>
       </div>
 
-      {showBattleOptions && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4" onClick={() => setShowBattleOptions(false)}>
-          <div className="rounded-2xl p-6 w-full max-w-sm space-y-3" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}` }} onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-bold text-center mb-4" style={{ color: textPrimary }}>Choose Battle Mode</h3>
-            <button onClick={() => handleBattleOptionClick(setShowQuickMatch)} className="w-full flex items-center gap-4 p-4 rounded-xl text-left transition-all hover:scale-[1.01]" style={{ backgroundColor: '#111', border: `1px solid ${cardBorder}` }}>
-              <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center flex-shrink-0"><svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg></div>
-              <div><p className="font-semibold text-sm" style={{ color: textPrimary }}>Quick Match</p><p className="text-xs" style={{ color: textSecondary }}>Find a random opponent</p></div>
-            </button>
-            <button onClick={() => handleBattleOptionClick(setShowPlayFriend)} className="w-full flex items-center gap-4 p-4 rounded-xl text-left transition-all hover:scale-[1.01]" style={{ backgroundColor: '#111', border: `1px solid ${cardBorder}` }}>
-              <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center flex-shrink-0"><svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" /></svg></div>
-              <div><p className="font-semibold text-sm" style={{ color: textPrimary }}>Challenge Friend</p><p className="text-xs" style={{ color: textSecondary }}>Invite a friend to battle</p></div>
-            </button>
-            <button onClick={() => handleBattleOptionClick(setShowPrivateMatch)} className="w-full flex items-center gap-4 p-4 rounded-xl text-left transition-all hover:scale-[1.01]" style={{ backgroundColor: '#111', border: `1px solid ${cardBorder}` }}>
-              <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center flex-shrink-0"><svg className="w-5 h-5 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg></div>
-              <div><p className="font-semibold text-sm" style={{ color: textPrimary }}>Private Match</p><p className="text-xs" style={{ color: textSecondary }}>Create a room with a code</p></div>
-            </button>
-            <button onClick={() => setShowBattleOptions(false)} className="w-full py-2.5 text-sm font-medium" style={{ color: textSecondary }}>Cancel</button>
-          </div>
-        </div>
-      )}
+      <BattleModeChooser
+        isOpen={showBattleOptions}
+        onClose={() => setShowBattleOptions(false)}
+        onPickQuickMatch={() => handleBattleOptionClick(setShowQuickMatch)}
+        onPickChallengeFriend={() => handleBattleOptionClick(setShowPlayFriend)}
+        onPickPrivateMatch={() => handleBattleOptionClick(setShowPrivateMatch)}
+      />
 
       <QuickMatchModal
         isOpen={showQuickMatch}
