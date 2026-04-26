@@ -125,9 +125,13 @@ function Celebration({ achievement, onDismiss }) {
     // Prefer the user's full public profile (where the achievements grid
     // lives) when we know the viewer's id, otherwise fall back to the
     // generic /profile page so the CTA never becomes dismiss-only.
+    // Pass the unlocked achievement id as ?highlight=... so the profile
+    // can scroll to the achievements grid and briefly pulse the matching
+    // badge — completing the celebration loop visually (task #422).
+    const highlightParam = `highlight=${encodeURIComponent(achievement.id)}`;
     const target = viewerId
-      ? `/profile/${encodeURIComponent(viewerId)}`
-      : '/profile';
+      ? `/profile/${encodeURIComponent(viewerId)}?${highlightParam}`
+      : `/profile?${highlightParam}`;
     router.push(target);
   };
 

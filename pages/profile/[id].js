@@ -35,7 +35,7 @@ const EMPTY_PROFILE = {
 export default function PublicProfile() {
   const cache = useProfileCache();
   const router = useRouter();
-  const { id, badge: badgeQuery } = router.query;
+  const { id, badge: badgeQuery, highlight: highlightQuery } = router.query;
   const notificationsCtx = useNotifications();
   const { unviewedAchievementCount, markAchievementsViewed } = notificationsCtx;
   const [messageOpen, setMessageOpen] = useState(false);
@@ -45,6 +45,17 @@ export default function PublicProfile() {
   // triggers the auto-open the next time around).
   const autoOpenedBadgeRef = useRef(null);
   const achievementsSectionRef = useRef(null);
+  // Track which badge tile to briefly emphasise after arriving from the
+  // unlock celebration (?highlight=<achievementId>). Cleared after the
+  // pulse animation completes so subsequent renders behave normally.
+  const [highlightedBadgeId, setHighlightedBadgeId] = useState(null);
+  // Ref to the matching badge tile button so we can smooth-scroll it into
+  // view once the achievements grid is rendered.
+  const highlightedBadgeRef = useRef(null);
+  // Guard so the highlight scroll/pulse only runs once per (profile,
+  // achievement) pair — prevents the effect from re-firing after we strip
+  // the query param or re-render.
+  const triggeredHighlightRef = useRef(null);
 
   const cachedProfileEntry = id ? cache.getProfile(id) : null;
   const cachedHistoryEntry = id ? cache.getHistory(id) : null;
@@ -201,6 +212,83 @@ export default function PublicProfile() {
       setSelectedAchievement(detail);
     }
   }, [id, badgeQuery, profile?.frames, profile?.allAchievements]);
+
+  // Reset the highlight guard when the visited profile or highlight target
+  // changes so re-arriving from another celebration still triggers the
+  // scroll + pulse for the new badge.
+  useEffect(() => {
+    triggeredHighlightRef.current = null;
+  }, [id, highlightQuery]);
+
+  // When arriving from the unlock celebration with ?highlight=<achievementId>,
+  // scroll the achievements grid into view, briefly pulse the matching badge
+  // tile, then strip the param so back/forward and refresh don't re-trigger
+  // the effect (task #422). We wait for the profile's frames to load so the
+  // tile actually exists in the DOM before we try to scroll to it.
+  useEffect(() => {
+    if (!id || !router.isReady || !highlightQuery) return;
+    const targetId = Array.isArray(highlightQuery) ? highlightQuery[0] : highlightQuery;
+    if (!targetId) return;
+    const guardKey = `${id}|${targetId}`;
+    if (triggeredHighlightRef.current === guardKey) return;
+    if (!Array.isArray(profile?.frames) || profile.frames.length === 0) return;
+    // Only highlight badges that actually exist in this profile's grid —
+    // otherwise the scroll would land somewhere arbitrary and the pulse
+    // would never appear.
+    const matchingFrame = profile.frames.find((f) => f && f.achievementId === targetId);
+    if (!matchingFrame) return;
+
+    triggeredHighlightRef.current = guardKey;
+    setHighlightedBadgeId(targetId);
+
+    const reduceMotion =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Defer the scroll to the next frame so the tile (and its ref) is
+    // mounted before we try to bring it on-screen.
+    const rafId = typeof window !== 'undefined' && window.requestAnimationFrame
+      ? window.requestAnimationFrame(() => {
+          const node = highlightedBadgeRef.current;
+          if (node && typeof node.scrollIntoView === 'function') {
+            try {
+              node.scrollIntoView({
+                behavior: reduceMotion ? 'auto' : 'smooth',
+                block: 'center',
+              });
+            } catch {
+              node.scrollIntoView();
+            }
+          }
+        })
+      : null;
+
+    // Clear the highlight after the pulse animation finishes so the tile
+    // returns to its resting state. ~3s is long enough for two pulse loops
+    // without overstaying its welcome.
+    const clearTimer = setTimeout(() => {
+      setHighlightedBadgeId((current) => (current === targetId ? null : current));
+    }, 3000);
+
+    // Strip the query param from the URL so back/forward navigation doesn't
+    // re-trigger the highlight. shallow + scroll:false avoids fighting the
+    // scrollIntoView we just kicked off.
+    const cleanedQuery = { ...router.query };
+    delete cleanedQuery.highlight;
+    router.replace(
+      { pathname: router.pathname, query: cleanedQuery },
+      undefined,
+      { shallow: true, scroll: false },
+    );
+
+    return () => {
+      if (rafId != null && typeof window !== 'undefined' && window.cancelAnimationFrame) {
+        window.cancelAnimationFrame(rafId);
+      }
+      clearTimeout(clearTimer);
+    };
+  }, [id, router.isReady, highlightQuery, profile?.frames]);
 
   // Determine "isOwnProfile" from session — does not block render.
   useEffect(() => {
@@ -1122,6 +1210,41 @@ export default function PublicProfile() {
               boxShadow: 'none',
             }}
           >
+            {/* Pulse + glow used to emphasise the just-unlocked badge when
+                arriving from the celebration's "View achievements" CTA
+                (task #422). Honours prefers-reduced-motion by snapping to a
+                static gold ring instead of looping the pulse. */}
+            <style jsx>{`
+              :global(.achv-highlight-pulse) {
+                animation: achv-highlight-pulse 1.4s ease-out 2;
+                box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.7),
+                  0 0 22px rgba(250, 204, 21, 0.55);
+              }
+              @keyframes achv-highlight-pulse {
+                0% {
+                  box-shadow: 0 0 0 0 rgba(250, 204, 21, 0.0),
+                    0 0 0 rgba(250, 204, 21, 0.0);
+                  transform: scale(1);
+                }
+                30% {
+                  box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.85),
+                    0 0 32px rgba(250, 204, 21, 0.7);
+                  transform: scale(1.03);
+                }
+                100% {
+                  box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.5),
+                    0 0 18px rgba(250, 204, 21, 0.4);
+                  transform: scale(1);
+                }
+              }
+              @media (prefers-reduced-motion: reduce) {
+                :global(.achv-highlight-pulse) {
+                  animation: none;
+                  transform: none;
+                  box-shadow: 0 0 0 2px rgba(250, 204, 21, 0.85);
+                }
+              }
+            `}</style>
             <div className="flex items-baseline justify-between mb-4">
               <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-2">
                 <span>Achievements</span>
@@ -1159,16 +1282,27 @@ export default function PublicProfile() {
                       ? 100
                       : 0,
                 };
+                const isHighlighted = highlightedBadgeId === f.achievementId;
                 return (
                   <button
                     key={f.id}
+                    ref={isHighlighted ? highlightedBadgeRef : null}
                     type="button"
                     onClick={() => setSelectedAchievement(detail)}
                     aria-label={`View details for ${f.name} ${f.unlocked ? '(unlocked)' : '(locked)'}`}
-                    className="rounded-xl p-3 flex flex-col items-center text-center gap-2 text-left transition-colors hover:bg-[#161616] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                    data-highlighted={isHighlighted ? 'true' : undefined}
+                    className={`rounded-xl p-3 flex flex-col items-center text-center gap-2 text-left transition-colors hover:bg-[#161616] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+                      isHighlighted ? 'achv-highlight-pulse' : ''
+                    }`}
                     style={{
                       backgroundColor: '#111',
-                      border: `1px solid ${isEquipped ? '#3b82f6' : '#1a1a1a'}`,
+                      border: `1px solid ${
+                        isHighlighted
+                          ? '#facc15'
+                          : isEquipped
+                            ? '#3b82f6'
+                            : '#1a1a1a'
+                      }`,
                     }}
                   >
                     <AchievementBadge
