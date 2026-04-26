@@ -1331,7 +1331,19 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
   const [battles, setBattles] = useState(() => getSimulatedBattles([]));
   const [avatars, setAvatars] = useState([]);
   const [expandedKey, setExpandedKey] = useState(null);
+  // Soft-retry state for the live battles fetch. Mirrors the inline
+  // `RetryHint` pattern used on /battle for friends/requests/invites/matchup
+  // /history: we surface a small "tap to retry" hint when the fetch fails or
+  // times out, without forcing a full page reload.
+  const [loadStatus, setLoadStatus] = useState('idle');
+  const loadRef = useRef(null);
   const router = useRouter();
+
+  const retryLiveBattles = useCallback(() => {
+    const load = loadRef.current;
+    if (!load) return;
+    load({ isRetry: true });
+  }, []);
 
   const toggleExpandedKey = useCallback((key) => {
     setExpandedKey((prev) => (prev === key ? null : key));
@@ -1388,12 +1400,23 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
     let fallback = null;
     let fallbackGrace = null;
 
-    const load = async () => {
+    // `isInitial` flips status to 'loading' on the very first mount fetch so
+    // the hint stays hidden while we wait. `isRetry` flips to 'retrying' for
+    // the manual tap-to-retry path. Background loads (SSE pushes, fallback
+    // polls, reconnect catch-up) don't touch status until they resolve, so
+    // a healthy stream never flickers the hint on or off.
+    const load = async ({ isInitial = false, isRetry = false } = {}) => {
+      if (cancelled) return;
+      if (isRetry) setLoadStatus('retrying');
+      else if (isInitial) setLoadStatus('loading');
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5000);
       try {
         const res = await fetch('/api/battles/live', { signal: controller.signal });
-        if (!res.ok) return;
+        if (!res.ok) {
+          if (!cancelled) setLoadStatus('failed');
+          return;
+        }
         const data = await res.json();
         if (cancelled) return;
         const liveBattles = (data.battles || []).filter(b => {
@@ -1409,14 +1432,18 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
         } else {
           setBattles(simulated);
         }
+        setLoadStatus('success');
       } catch (err) {
         if (err.name !== 'AbortError') {
           console.error('Error fetching live battles:', err);
         }
+        if (!cancelled) setLoadStatus('failed');
       } finally {
         clearTimeout(timeout);
       }
     };
+
+    loadRef.current = load;
 
     // Coalesce bursts (e.g. matchup:end immediately followed by another
     // start when both sides accept a rematch handshake within a tick).
@@ -1447,7 +1474,7 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
     };
 
     // Initial fetch — render the list ASAP regardless of SSE health.
-    load();
+    load({ isInitial: true });
 
     const client = getBattleStreamClient();
     let unsubscribe = null;
@@ -1495,12 +1522,53 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
 
     return () => {
       cancelled = true;
+      loadRef.current = null;
       if (debounce) clearTimeout(debounce);
       if (watchdog) clearTimeout(watchdog);
       stopFallback();
       if (unsubscribe) unsubscribe();
     };
   }, []);
+
+  // Inline soft-retry hint shown when the live-battles fetch fails or times
+  // out. Visually mirrors the `RetryHint` on /battle so the affordance feels
+  // native to the page. Tapping it re-runs only this fetch via the latest
+  // `loadRef`, so there's no full page reload and no other section is
+  // touched. Hidden in idle/loading/success states per the task contract,
+  // and additionally suppressed once we have any real (non-simulated)
+  // battles in hand so a transient background poll/SSE blip doesn't pop the
+  // hint while users are still looking at usable live data.
+  const hasRealBattles = battles.some((b) => !b.simulated);
+  const showRetryHint =
+    (loadStatus === 'failed' || loadStatus === 'retrying') && !hasRealBattles;
+  const retryHint = showRetryHint ? (
+    <div className="text-center pb-2">
+      <button
+        type="button"
+        onClick={retryLiveBattles}
+        disabled={loadStatus === 'retrying'}
+        className="inline-flex items-center gap-1.5 text-xs font-medium transition-colors disabled:opacity-60"
+        style={{ color: '#9ca3af' }}
+        aria-label="Retry loading live battles"
+      >
+        {loadStatus === 'retrying' ? (
+          <>
+            <svg className="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12a8 8 0 018-8" />
+            </svg>
+            Retrying…
+          </>
+        ) : (
+          <>
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Couldn&apos;t load this — tap to retry
+          </>
+        )}
+      </button>
+    </div>
+  ) : null;
 
   const sortedBattles = focusBattleId
     ? [...battles].sort((a, b) => (a.id === focusBattleId ? -1 : b.id === focusBattleId ? 1 : 0))
@@ -1530,6 +1598,7 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
             See All
           </button>
         </div>
+        {retryHint}
         <div className="flex gap-3 items-stretch overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <div className="flex-shrink-0 w-[380px] flex">
             <YouVsCard
@@ -1564,6 +1633,8 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
           )}
         </div>
       </div>
+
+      {retryHint}
 
       {sortedBattles.length === 0 ? (
         <div
