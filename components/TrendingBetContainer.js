@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 
 const SPORT_THEME = {
@@ -41,7 +41,6 @@ function deriveSide(g) {
 export default function TrendingBetContainer() {
   const router = useRouter();
   const [items, setItems] = useState(FALLBACK);
-  const [tick, setTick] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -83,13 +82,7 @@ export default function TrendingBetContainer() {
     return () => { cancelled = true; };
   }, []);
 
-  useEffect(() => {
-    if (items.length <= 1) return;
-    const id = setInterval(() => setTick((t) => t + 1), 3200);
-    return () => clearInterval(id);
-  }, [items.length]);
-
-  const current = useMemo(() => items[tick % items.length] || items[0], [items, tick]);
+  const current = items[0];
   const theme = SPORT_THEME[current?.sport] || { label: 'TRENDING', accent: '#3b82f6' };
   const handleClick = () => router.push('/battle');
 
@@ -103,10 +96,6 @@ export default function TrendingBetContainer() {
         @keyframes trend-flame {
           0%, 100% { transform: scale(1) rotate(-3deg); opacity: 0.95; }
           50% { transform: scale(1.12) rotate(3deg); opacity: 1; }
-        }
-        @keyframes trend-fade-in {
-          0% { opacity: 0; transform: translateY(6px); }
-          100% { opacity: 1; transform: translateY(0); }
         }
         @keyframes trend-bar-fill {
           0% { width: 0%; }
@@ -167,11 +156,7 @@ export default function TrendingBetContainer() {
           </span>
         </div>
 
-        <div
-          key={`trend-${current?.id}-${tick}`}
-          className="relative z-10 h-full flex flex-col items-center justify-center px-4 md:px-6"
-          style={{ animation: 'trend-fade-in 360ms ease-out both' }}
-        >
+        <div className="relative z-10 h-full flex flex-col items-center justify-center px-4 md:px-6">
           <div className="flex items-baseline gap-1.5 md:gap-2 mb-1 md:mb-1.5">
             <span
               className="text-2xl md:text-4xl font-black leading-none"
@@ -207,7 +192,6 @@ export default function TrendingBetContainer() {
             </div>
             <div className="h-1.5 md:h-2 rounded-full overflow-hidden" style={{ background: 'rgba(255,255,255,0.08)' }}>
               <div
-                key={`bar-${current?.id}-${tick}`}
                 className="h-full rounded-full"
                 style={{
                   background: 'linear-gradient(90deg, #06b6d4 0%, #3b82f6 50%, #f97316 100%)',
@@ -220,22 +204,6 @@ export default function TrendingBetContainer() {
             </div>
           </div>
         </div>
-
-        {items.length > 1 && (
-          <div className="absolute bottom-1.5 md:bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-20">
-            {items.slice(0, Math.min(items.length, 6)).map((_, i) => (
-              <span
-                key={i}
-                className="block rounded-full transition-all"
-                style={{
-                  width: i === tick % items.length ? 14 : 4,
-                  height: 4,
-                  background: i === tick % items.length ? '#3b82f6' : 'rgba(255,255,255,0.2)',
-                }}
-              />
-            ))}
-          </div>
-        )}
       </div>
     </>
   );

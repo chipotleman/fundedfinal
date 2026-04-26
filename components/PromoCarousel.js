@@ -1,8 +1,9 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 import { trackPromoEvent } from '../lib/promoTracking';
 
-const AUTO_ADVANCE_MS = 5000;
+const SCROLL_SPEED_PX_PER_SEC = 30;
 const RESUME_DELAY_MS = 600;
+const DOT_RESUME_DELAY_MS = 1200;
 
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
@@ -66,7 +67,7 @@ function SlideHost({
   return (
     <div
       ref={setRef}
-      className={isEmpty ? '' : 'snap-start snap-always flex-shrink-0'}
+      className={isEmpty ? '' : 'flex-shrink-0'}
       style={isEmpty ? { display: 'none' } : undefined}
       role={isEmpty ? undefined : 'group'}
       aria-roledescription={isEmpty ? undefined : 'slide'}
@@ -82,6 +83,10 @@ function SlideHost({
 export default function PromoCarousel({ slides }) {
   const containerRef = useRef(null);
   const slideRefs = useRef(new Map());
+  const set1FirstRef = useRef(null);
+  const setWidthRef = useRef(0);
+  const rafRef = useRef(null);
+  const lastTimeRef = useRef(0);
   const programmaticRef = useRef(false);
   const programmaticTimeoutRef = useRef(null);
   const resumeTimeoutRef = useRef(null);
@@ -110,6 +115,7 @@ export default function PromoCarousel({ slides }) {
 
   const visible = candidates.filter((s) => !emptyKeys[s.key]);
   const count = visible.length;
+  const showLoop = count > 1 && !reducedMotion;
 
   const reportContent = useCallback((key, isEmpty) => {
     setEmptyKeys((prev) => {
@@ -138,7 +144,7 @@ export default function PromoCarousel({ slides }) {
 
   // Fire an impression event whenever a new slide becomes the active one.
   // Dedup per (slotIndex, containerType) for the lifetime of this mount so
-  // auto-advancing past the same slide repeatedly doesn't inflate counts.
+  // continuous scrolling past the same slide repeatedly doesn't inflate counts.
   useEffect(() => {
     if (count === 0) return;
     const slide = visible[activeIndex];
@@ -152,49 +158,63 @@ export default function PromoCarousel({ slides }) {
     });
   }, [activeIndex, count, visible]);
 
-  const scrollToIndex = useCallback(
-    (idx, smooth = true) => {
-      const container = containerRef.current;
-      const slideKey = visible[idx]?.key;
-      const slide = slideKey != null ? slideRefs.current.get(slideKey) : null;
-      if (!container || !slide) return;
-      programmaticRef.current = true;
-      if (programmaticTimeoutRef.current) {
-        clearTimeout(programmaticTimeoutRef.current);
-      }
-      container.scrollTo({
-        left: slide.offsetLeft,
-        behavior: smooth ? 'smooth' : 'auto',
-      });
-      programmaticTimeoutRef.current = setTimeout(
-        () => {
-          programmaticRef.current = false;
-        },
-        smooth ? 700 : 100,
-      );
-    },
-    [visible],
-  );
+  // Measure the width of one full set of slides (distance from first slide of
+  // set 0 to first slide of set 1). This is the wrap distance for seamless
+  // looping.
+  const measureSetWidth = useCallback(() => {
+    const el = set1FirstRef.current;
+    if (el && el.offsetLeft > 0) {
+      setWidthRef.current = el.offsetLeft;
+    }
+  }, []);
 
-  // Auto-advance timer
+  useLayoutEffect(() => {
+    measureSetWidth();
+  }, [measureSetWidth, count, showLoop, emptyKeys]);
+
+  useLayoutEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onResize = () => measureSetWidth();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [measureSetWidth]);
+
+  // Continuous slow horizontal scroll using rAF, with seamless wraparound.
   useEffect(() => {
-    if (paused || reducedMotion || count <= 1) return;
-    const id = setInterval(() => {
-      setActiveIndex((i) => {
-        const next = (i + 1) % count;
-        scrollToIndex(next, true);
-        return next;
-      });
-    }, AUTO_ADVANCE_MS);
-    return () => clearInterval(id);
-  }, [paused, reducedMotion, count, scrollToIndex]);
+    if (paused || reducedMotion || !showLoop) return;
+    let raf;
+    const tick = (time) => {
+      if (lastTimeRef.current === 0) lastTimeRef.current = time;
+      const dt = Math.min((time - lastTimeRef.current) / 1000, 0.1);
+      lastTimeRef.current = time;
+      const container = containerRef.current;
+      const setWidth = setWidthRef.current;
+      if (container && setWidth > 0) {
+        let next = container.scrollLeft + SCROLL_SPEED_PX_PER_SEC * dt;
+        if (next >= setWidth) next -= setWidth;
+        container.scrollLeft = next;
+      }
+      raf = requestAnimationFrame(tick);
+      rafRef.current = raf;
+    };
+    raf = requestAnimationFrame(tick);
+    rafRef.current = raf;
+    return () => {
+      if (raf) cancelAnimationFrame(raf);
+      lastTimeRef.current = 0;
+    };
+  }, [paused, reducedMotion, showLoop]);
 
-  // Track manual scroll → update active index
+  // Track scroll → update active index based on which slide is most centered
+  // (after normalizing position into the first set's coordinate space).
   const handleScroll = useCallback(() => {
     if (programmaticRef.current) return;
     const container = containerRef.current;
     if (!container) return;
-    const center = container.scrollLeft + container.clientWidth / 2;
+    const setWidth = setWidthRef.current;
+    let scrollLeft = container.scrollLeft;
+    if (setWidth > 0 && scrollLeft >= setWidth) scrollLeft -= setWidth;
+    const center = scrollLeft + container.clientWidth / 2;
     let bestIdx = 0;
     let bestDist = Infinity;
     for (let i = 0; i < visible.length; i++) {
@@ -210,14 +230,6 @@ export default function PromoCarousel({ slides }) {
     setActiveIndex((curr) => (curr === bestIdx ? curr : bestIdx));
   }, [visible]);
 
-  // Re-snap to active slide after a viewport resize so the layout stays correct
-  useLayoutEffect(() => {
-    if (typeof window === 'undefined') return;
-    const onResize = () => scrollToIndex(activeIndex, false);
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, [activeIndex, scrollToIndex]);
-
   // Pause helpers
   const pauseNow = useCallback(() => {
     if (resumeTimeoutRef.current) {
@@ -227,30 +239,47 @@ export default function PromoCarousel({ slides }) {
     setPaused(true);
   }, []);
 
-  const resumeSoon = useCallback(() => {
+  const resumeAfter = useCallback((delay) => {
     if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
     resumeTimeoutRef.current = setTimeout(() => {
       setPaused(false);
       resumeTimeoutRef.current = null;
-    }, RESUME_DELAY_MS);
+    }, delay);
   }, []);
+
+  const resumeSoon = useCallback(() => resumeAfter(RESUME_DELAY_MS), [resumeAfter]);
 
   useEffect(() => {
     return () => {
-      if (programmaticTimeoutRef.current) {
-        clearTimeout(programmaticTimeoutRef.current);
-      }
-      if (resumeTimeoutRef.current) {
-        clearTimeout(resumeTimeoutRef.current);
-      }
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      if (programmaticTimeoutRef.current) clearTimeout(programmaticTimeoutRef.current);
+      if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
     };
   }, []);
 
   if (candidates.length === 0) return null;
 
   const handleDotClick = (idx) => {
+    const container = containerRef.current;
+    const slideKey = visible[idx]?.key;
+    const target = slideKey != null ? slideRefs.current.get(slideKey) : null;
+    if (!container || !target) {
+      setActiveIndex(idx);
+      return;
+    }
+    pauseNow();
+    const setWidth = setWidthRef.current;
+    if (setWidth > 0 && container.scrollLeft >= setWidth) {
+      container.scrollLeft = container.scrollLeft - setWidth;
+    }
+    programmaticRef.current = true;
+    if (programmaticTimeoutRef.current) clearTimeout(programmaticTimeoutRef.current);
+    container.scrollTo({ left: target.offsetLeft, behavior: 'smooth' });
+    programmaticTimeoutRef.current = setTimeout(() => {
+      programmaticRef.current = false;
+    }, 700);
     setActiveIndex(idx);
-    scrollToIndex(idx, true);
+    resumeAfter(DOT_RESUME_DELAY_MS);
   };
 
   const handleSlideClick = (slide) => {
@@ -273,7 +302,19 @@ export default function PromoCarousel({ slides }) {
         onTouchStart={pauseNow}
         onTouchEnd={resumeSoon}
         onTouchCancel={resumeSoon}
-        className="overflow-x-auto overflow-y-visible scrollbar-hide flex gap-3 py-1 snap-x snap-mandatory"
+        onPointerDown={(e) => {
+          if (e.pointerType === 'mouse') return;
+          pauseNow();
+        }}
+        onPointerUp={(e) => {
+          if (e.pointerType === 'mouse') return;
+          resumeSoon();
+        }}
+        onPointerCancel={(e) => {
+          if (e.pointerType === 'mouse') return;
+          resumeSoon();
+        }}
+        className="overflow-x-auto overflow-y-visible scrollbar-hide flex gap-3 py-1"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         role="region"
         aria-roledescription="carousel"
@@ -301,6 +342,19 @@ export default function PromoCarousel({ slides }) {
             </SlideHost>
           );
         })}
+
+        {showLoop &&
+          visible.map((slide, i) => (
+            <div
+              key={`loop-${slide.key}`}
+              ref={i === 0 ? set1FirstRef : null}
+              className="flex-shrink-0"
+              aria-hidden="true"
+              onClickCapture={() => handleSlideClick(slide)}
+            >
+              {slide.node}
+            </div>
+          ))}
       </div>
 
       {count > 1 && (
