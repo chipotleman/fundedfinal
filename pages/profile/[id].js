@@ -5,6 +5,7 @@ import Link from 'next/link';
 import TopNavbar from '../../components/TopNavbar';
 import BetSlip from '../../components/BetSlip';
 import UserAvatar from '../../components/UserAvatar';
+import AchievementBadge from '../../components/AchievementBadge';
 import ActiveStatus from '../../components/ActiveStatus';
 import ProfileEditPanel from '../../components/ProfileEditPanel';
 import MessagePopup from '../../components/messages/MessagePopup';
@@ -992,27 +993,22 @@ export default function PublicProfile() {
                 return (
                   <div
                     key={f.id}
-                    className="rounded-xl p-3 flex items-center gap-3"
+                    className="rounded-xl p-3 flex flex-col items-center text-center gap-2"
                     style={{
                       backgroundColor: '#111',
                       border: `1px solid ${isEquipped ? '#3b82f6' : '#1a1a1a'}`,
-                      opacity: f.unlocked ? 1 : 0.55,
                     }}
                   >
-                    <UserAvatar
-                      avatar={profile.avatar}
-                      username={profile.username}
-                      frame={f.unlocked ? f : null}
-                      size={40}
-                      bgColor={'#1a1a1a'}
-                      textColor={'#fff'}
+                    <AchievementBadge
+                      achievementId={f.achievementId}
+                      earned={f.unlocked}
+                      size={72}
                     />
-                    <div className="min-w-0">
-                      <div className={`text-xs font-bold truncate ${'text-white'}`}>
-                        <span className="mr-1">{f.icon}</span>
+                    <div className="min-w-0 w-full">
+                      <div className={`text-xs font-bold truncate ${f.unlocked ? 'text-white' : 'text-gray-400'}`}>
                         {f.name}
                       </div>
-                      <div className="text-[10px] text-gray-500 leading-snug">
+                      <div className="text-[10px] text-gray-500 leading-snug line-clamp-2">
                         {f.unlocked ? f.description : `Locked · ${f.description}`}
                       </div>
                       {isEquipped && (

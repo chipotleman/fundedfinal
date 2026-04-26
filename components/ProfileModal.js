@@ -3,6 +3,7 @@ import { Fragment, useEffect } from 'react';
 import useModalScrollLock from '../hooks/useModalScrollLock';
 import { formatMoney } from '../utils/formatMoney';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
+import AchievementBadge from './AchievementBadge';
 
 export default function ProfileModal({ profile, isOpen, onClose }) {
   useModalScrollLock(isOpen);
@@ -127,17 +128,16 @@ export default function ProfileModal({ profile, isOpen, onClose }) {
                             }}
                           >
                             <div className="flex items-center space-x-3">
-                              <span
-                                className="text-2xl relative inline-flex items-center justify-center"
-                                style={{ filter: isEarned ? 'none' : 'grayscale(1)', opacity: isEarned ? 1 : 0.6 }}
-                                aria-label={isEarned ? 'Unlocked' : 'Locked'}
+                              <div
+                                className="flex-shrink-0"
                                 title={isEarned ? 'Unlocked' : 'Locked'}
                               >
-                                {achievement.icon || '🏅'}
-                                {!isEarned && (
-                                  <span className="absolute -bottom-1 -right-1 text-[10px]" aria-hidden="true">🔒</span>
-                                )}
-                              </span>
+                                <AchievementBadge
+                                  achievementId={achievement.id}
+                                  earned={isEarned}
+                                  size={48}
+                                />
+                              </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-2">
                                   <div className={`font-medium text-sm truncate ${isEarned ? 'text-white' : 'text-gray-400'}`}>

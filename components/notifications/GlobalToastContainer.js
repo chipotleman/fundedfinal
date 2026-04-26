@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { useRouter } from 'next/router';
 import { useNotifications } from '../../contexts/NotificationsContext';
 import UserAvatar from '../UserAvatar';
+import AchievementBadge from '../AchievementBadge';
 import FriendRequestCard from './FriendRequestCard';
 
 export default function GlobalToastContainer() {
@@ -127,8 +128,8 @@ function Toast({ toast, ctx, router }) {
         style={baseStyle}
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-yellow-500/20 border border-yellow-400/50 flex items-center justify-center flex-shrink-0 text-2xl">
-            {ach.icon || '🏆'}
+          <div className="flex-shrink-0">
+            <AchievementBadge achievementId={ach.id} earned size={48} />
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-yellow-200 text-[10px] uppercase tracking-wider font-bold">
