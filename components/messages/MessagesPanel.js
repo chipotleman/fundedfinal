@@ -586,7 +586,12 @@ function VoiceWaveform({
         aria-valuemax={Math.max(1, Math.round(totalMs))}
         aria-valuenow={Math.round(currentMs)}
         tabIndex={0}
-        className={`flex items-center gap-[2px] h-8 cursor-pointer outline-none ${isPreview ? 'relative min-w-0 flex-1' : 'overflow-hidden w-[150px] max-w-full'}`}
+        // `relative` is required so both the trim handles (preview only)
+        // and the playhead line can be absolutely positioned over the bars.
+        // `overflow-hidden` is intentionally skipped in preview mode so the
+        // trim handles' slight vertical overflow (top/bottom: -2) isn't
+        // clipped; outgoing/incoming bubbles still clip to a fixed width.
+        className={`relative flex items-center gap-[2px] h-8 cursor-pointer outline-none ${isPreview ? 'min-w-0 flex-1' : 'overflow-hidden w-[150px] max-w-full'}`}
         // touch-action: none keeps the browser from stealing horizontal drags
         // for page scroll/back-swipe while the user is scrubbing.
         style={{ touchAction: 'none' }}
@@ -717,6 +722,31 @@ function VoiceWaveform({
               />
             </button>
           </>
+        )}
+        {/* Vertical playhead line: easier to follow than recoloring alone,
+            especially across short/quiet bars. Hidden in the idle state so
+            the waveform still looks clean before the user has hit play.
+            Rendered after the trim handles so it sits visually on top. */}
+        {(playing || currentMs > 0) && (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute top-1/2"
+            style={{
+              left: `${progress * 100}%`,
+              width: 2,
+              height: 28,
+              marginLeft: -1,
+              transform: 'translateY(-50%)',
+              backgroundColor: palette.played,
+              borderRadius: 1,
+              // Smooth out the gaps between `timeupdate` ticks while playing,
+              // but skip the transition while the user is actively scrubbing
+              // so the line tracks their finger/cursor 1:1.
+              transition: playing && !draggingRef.current
+                ? 'left 90ms linear'
+                : 'none',
+            }}
+          />
         )}
       </div>
       <span
