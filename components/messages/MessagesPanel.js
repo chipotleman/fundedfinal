@@ -268,6 +268,11 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   const [sendError, setSendError] = useState(null);
   const [recording, setRecording] = useState(false);
   const [paused, setPaused] = useState(false);
+  // True only when the most recent pause came from the auto-pause-on-hidden
+  // effect, so we can show a one-line "we paused for you" hint without the
+  // user wondering whether something broke. Manual Pause taps leave this
+  // false so the hint stays out of the way.
+  const [autoPaused, setAutoPaused] = useState(false);
   const [pauseSupported, setPauseSupported] = useState(true);
   const [recordElapsed, setRecordElapsed] = useState(0);
   const [voiceError, setVoiceError] = useState(null);
@@ -642,6 +647,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       recordAccumRef.current = 0;
       recordPausedRef.current = false;
       setPaused(false);
+      setAutoPaused(false);
       setPauseSupported(
         typeof recorder.pause === 'function' && typeof recorder.resume === 'function'
       );
@@ -659,6 +665,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
         try { cleanupRecorderStream(); } catch {}
         setRecording(false);
         setPaused(false);
+        setAutoPaused(false);
         setRecordElapsed(0);
         setAudioLevels(new Array(LEVEL_BAR_COUNT).fill(0));
         if (recordCancelledRef.current) {
@@ -706,6 +713,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       recordPausedRef.current = false;
       setRecording(false);
       setPaused(false);
+      setAutoPaused(false);
       setRecordElapsed(0);
       setAudioLevels(new Array(LEVEL_BAR_COUNT).fill(0));
       const name = err?.name || '';
@@ -751,6 +759,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     recordStartRef.current = Date.now();
     recordPausedRef.current = false;
     setPaused(false);
+    setAutoPaused(false);
   };
 
   const handleCancelRecording = () => {
@@ -824,11 +833,21 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   useEffect(() => {
     if (!recording || paused) return undefined;
     if (typeof document === 'undefined') return undefined;
+    // Mirrors handlePauseRecording's own guards so we only mark a pause as
+    // "auto" when it actually took effect (rec was live and pause is
+    // supported). Otherwise the hint could appear without an actual pause.
+    const pauseFromAuto = () => {
+      const rec = recorderRef.current;
+      if (!rec || rec.state !== 'recording' || recordPausedRef.current) return;
+      handlePauseRecording();
+      if (recordPausedRef.current) setAutoPaused(true);
+    };
     const onVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') handlePauseRecording();
+      if (document.visibilityState !== 'hidden') return;
+      pauseFromAuto();
     };
     const onWindowBlur = () => {
-      handlePauseRecording();
+      pauseFromAuto();
     };
     document.addEventListener('visibilitychange', onVisibilityChange);
     if (typeof window !== 'undefined') {
@@ -1148,6 +1167,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
               </div>
             </div>
           ) : recording ? (
+            <>
             <div
               className="flex items-center gap-2 px-3 py-2 rounded-lg"
               style={{
@@ -1244,6 +1264,17 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
               </div>
               <style>{`@keyframes piksRecPulse{0%,100%{opacity:1}50%{opacity:0.35}}`}</style>
             </div>
+            {paused && autoPaused && (
+              <p
+                className="mt-1 text-[11px] flex items-start gap-1.5"
+                style={{ color: textSecondary }}
+                aria-live="polite"
+              >
+                <span aria-hidden="true">⏸</span>
+                <span>Paused because you switched tabs — tap Resume to continue.</span>
+              </p>
+            )}
+            </>
           ) : (
             <div className="flex gap-2">
               <input
