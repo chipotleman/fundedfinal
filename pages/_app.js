@@ -28,16 +28,16 @@ import MobileNavMenu from '../components/MobileNavMenu';
 import BetaLanding from '../components/BetaLanding';
 import PublicBattlePreview from '../components/PublicBattlePreview';
 import { useEventTracking } from '../hooks/useEventTracking';
-import useGlobalScrollLockRecovery, { releaseBodyScrollLock } from '../hooks/useGlobalScrollLockRecovery';
+import { releaseBodyScrollLock } from '../hooks/useGlobalScrollLockRecovery';
 import { useRouter } from 'next/router';
 
 function AnalyticsTracker() {
-  const { trackPageView, trackEvent } = useEventTracking();
+  const { trackPageView } = useEventTracking();
   const router = useRouter();
 
   useEffect(() => {
     trackPageView(router.pathname, document.title);
-    
+
     const handleRouteChange = (url) => {
       trackPageView(url, document.title);
     };
@@ -47,20 +47,6 @@ function AnalyticsTracker() {
       router.events.off('routeChangeComplete', handleRouteChange);
     };
   }, [router, trackPageView]);
-
-  useEffect(() => {
-    const handleClick = (e) => {
-      const target = e.target.closest('button, a, [role="button"]');
-      if (target) {
-        const text = target.textContent?.slice(0, 50) || '';
-        const tag = target.tagName.toLowerCase();
-        trackEvent('click', { element: tag, text, path: router.pathname });
-      }
-    };
-
-    document.addEventListener('click', handleClick);
-    return () => document.removeEventListener('click', handleClick);
-  }, [trackEvent, router.pathname]);
 
   return null;
 }
@@ -162,11 +148,6 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
       router.events.off('routeChangeError', release);
     };
   }, [router]);
-
-  // Mount-time release + watchdog so any page automatically recovers from
-  // a click trap left behind by a torn-down modal — the same safety net
-  // /messenger has had since task #158 / #237, now applied globally.
-  useGlobalScrollLockRecovery();
 
   const [showChallengePopup, setShowChallengePopup] = useState(false);
   const [selectedChallengeIndex, setSelectedChallengeIndex] = useState(1);

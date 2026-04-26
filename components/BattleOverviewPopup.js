@@ -278,7 +278,7 @@ export default function BattleOverviewPopup({
     if (momentSide === 'theirs' && momentOppIndex >= 0) setTheirsIndex(momentOppIndex);
   }, [momentSide, momentMyIndex, momentOppIndex]);
 
-  useModalScrollLock(true, { restoreScroll: true, allowScrollRef: scrollContainerRef });
+  useModalScrollLock(true, { restoreScroll: true });
 
   useEffect(() => () => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);

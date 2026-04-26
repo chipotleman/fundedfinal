@@ -23,7 +23,6 @@ import { formatLastSeen } from '../utils/relativeTime';
 import { readBattleResult, clearBattleResult } from '../utils/battleResultCache';
 import { readLastBuyIn, fetchLastBuyIn, saveLastBuyIn } from '../utils/lastBattleBuyIn';
 import { getBattleStreamClient } from '../lib/battleStreamClient';
-import useTopNavOrphanOverlayWatchdog from '../hooks/useTopNavOrphanOverlayWatchdog';
 
 function UserAvatar({ user, size = 'md' }) {
   const sizeMap = { sm: 'w-8 h-8 text-xs', md: 'w-10 h-10 text-sm', lg: 'w-12 h-12 text-base' };
@@ -134,21 +133,6 @@ export default function BattlePage() {
       setSuppress('friend_requests', false);
     };
   }, [setSuppress]);
-
-  // Click-trap recovery: /battle has historically suffered the same iOS
-  // Safari trap as /messenger (task #322 — top-nav buttons go dead after
-  // returning from a match until a hard refresh). The shared watchdog
-  // (task #324, ported here in task #345) probes the top-nav strip and
-  // forces `pointer-events: none` on any orphan fixed/sticky overlay
-  // covering it that isn't on the allow-list. The page's own full-screen
-  // modal roots (QuickMatchModal, MatchLobby, MatchResult,
-  // PlayFriendModal, PrivateMatchModal, MatchHistoryModal, ForfeitModal,
-  // MessagePopup, IncomingInviteModal) all (a) `return null` when closed
-  // so they fully unmount, and (b) carry `data-allow-fixed-overlay="true"`
-  // on their outer overlay so the watchdog never misclassifies them as
-  // orphans while open. ForfeitConfirmedModal already opts out via
-  // `pointer-events:none` on its outer.
-  useTopNavOrphanOverlayWatchdog({ logPrefix: 'battle' });
 
   // Bound each initial fetch with a sane timeout so a slow or hung
   // endpoint can never strand the user on a non-interactive shell. The

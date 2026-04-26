@@ -62,11 +62,17 @@ export default function TopNavbar({
   const msgBtnRef = useRef(null);
   const [messageFriend, setMessageFriend] = useState(null);
   
-  // Prefetch dashboard for instant navigation
+  // Prefetch all top-nav destinations so the next-page bundle is cached
+  // before the user taps. Non-navigation CTAs (Bet Slip / balance pill /
+  // bell / chat / avatar) only do synchronous setState in their handlers.
   useEffect(() => {
     router.prefetch('/');
+    router.prefetch('/dashboard');
     router.prefetch('/leaderboard');
     router.prefetch('/battle');
+    router.prefetch('/messenger');
+    router.prefetch('/notifications');
+    router.prefetch('/withdrawal');
   }, [router]);
 
   // Defensive: close the notifications dropdown, messages dropdown, and the

@@ -7,8 +7,6 @@ import { useBetSlip } from '../contexts/BetSlipContext';
 import { useNotifications } from '../contexts/NotificationsContext';
 import MessagesPanel from '../components/messages/MessagesPanel';
 import PlayFriendModal from '../components/battle/PlayFriendModal';
-import useGlobalScrollLockRecovery from '../hooks/useGlobalScrollLockRecovery';
-import useTopNavOrphanOverlayWatchdog from '../hooks/useTopNavOrphanOverlayWatchdog';
 
 export default function MessengerPage() {
   const router = useRouter();
@@ -30,25 +28,6 @@ export default function MessengerPage() {
   const handleCloseBattle = useCallback(() => {
     setBattleFriend(null);
   }, []);
-
-  // Click-trap recovery: messenger and notifications have historically
-  // suffered an iOS Safari issue where leftover body locks left over from
-  // a torn-down modal would swallow every subsequent tap on the top nav.
-  // The shared hook is also wired into _app so it runs everywhere now,
-  // but we keep it on this page as a deliberate redundant safety net since
-  // /messenger is the page where the original click trap lived.
-  useGlobalScrollLockRecovery();
-
-  // Additional safety net for task #324: even with body scroll-locks
-  // released, a stale fixed-position overlay (e.g. an unmounted modal
-  // whose root was hidden via `visibility:hidden` rather than
-  // `display:none`) can still cover the top-nav strip and intercept every
-  // tap on THE LAB / BATTLE / LEADERBOARD / balance / bell / chat / Bet
-  // Slip / avatar until the user hard-refreshes. The shared watchdog
-  // hook probes the top-nav band and neutralises any orphan offender.
-  // Kept as a deliberate redundancy on the page where the original trap
-  // lived; the same hook is also wired into pages/battle.js (task #345).
-  useTopNavOrphanOverlayWatchdog({ logPrefix: 'messenger' });
 
   // Pre-select a conversation from ?chat=<id>.
   useEffect(() => {

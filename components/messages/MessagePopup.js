@@ -7,7 +7,7 @@ export default function MessagePopup({ isOpen, friend, ctx, myId, onClose }) {
   const router = useRouter();
   const cardRef = useRef(null);
 
-  useModalScrollLock(isOpen, { restoreScroll: true, allowScrollRef: cardRef });
+  useModalScrollLock(isOpen, { restoreScroll: true });
 
   useEffect(() => {
     if (!isOpen) return undefined;

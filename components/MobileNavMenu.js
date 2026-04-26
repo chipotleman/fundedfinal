@@ -134,17 +134,18 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
     return () => router.events.off('routeChangeStart', handleRouteChange);
   }, [router.events, isOpen, onClose]);
 
-  const handleSignOut = async () => {
-    await signOut({ redirect: false });
-    localStorage.removeItem('current_user');
-    // Auto-hide the cash balance again on sign-out so the next signed-in
-    // session starts masked instead of inheriting the previous user's choice.
-    try {
-      localStorage.removeItem('hide_cash_balance');
-    } catch {}
-    setCashRevealed(false);
+  const handleSignOut = () => {
+    // Navigate first, then fire signOut + cleanup as side effects so a
+    // slow signOut request can never block the tap-to-navigation path.
     onClose();
     router.push('/');
+    Promise.resolve(signOut({ redirect: false })).catch(() => {});
+    try { localStorage.removeItem('current_user'); } catch {}
+    // Auto-hide the cash balance again on sign-out so the next signed-in
+    // session starts masked instead of inheriting the previous user's
+    // choice.
+    try { localStorage.removeItem('hide_cash_balance'); } catch {}
+    setCashRevealed(false);
   };
 
   const handleNavigation = (href) => {
