@@ -591,13 +591,18 @@ export function NotificationsProvider({ children }) {
     };
   }, [isAuthed, refresh, markTyping, enqueueToast, enqueueAchievementUnlock, addIncomingInvite, session?.user?.id]);
 
-  // Auto-dismiss toasts after their duration
+  // Auto-dismiss toasts after their duration. Toasts flagged `persistent`
+  // (currently the voice-note send-failure toast, which carries a Try-again
+  // action the user may need a beat to read and tap) opt out and stay on
+  // screen until they're explicitly dismissed or removed by their owner.
   useEffect(() => {
     if (toasts.length === 0) return;
-    const timers = toasts.map(t => {
-      const remaining = Math.max(500, TOAST_DURATION_MS - (Date.now() - t.createdAt));
-      return setTimeout(() => dismissToast(t.id), remaining);
-    });
+    const timers = toasts
+      .filter((t) => !t.persistent)
+      .map(t => {
+        const remaining = Math.max(500, TOAST_DURATION_MS - (Date.now() - t.createdAt));
+        return setTimeout(() => dismissToast(t.id), remaining);
+      });
     return () => timers.forEach(clearTimeout);
   }, [toasts, dismissToast]);
 
@@ -806,6 +811,7 @@ export function NotificationsProvider({ children }) {
     ...data,
     toasts,
     dismissToast,
+    enqueueToast,
     incomingInvites,
     currentIncomingInvite: incomingInvites[0] || null,
     dismissIncomingInvite,
@@ -844,6 +850,7 @@ export function useNotifications() {
       ...EMPTY,
       toasts: [],
       dismissToast: () => {},
+      enqueueToast: () => {},
       incomingInvites: [],
       currentIncomingInvite: null,
       dismissIncomingInvite: () => {},

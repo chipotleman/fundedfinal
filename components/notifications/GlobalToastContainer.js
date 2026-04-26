@@ -187,6 +187,12 @@ function Toast({ toast, ctx, router }) {
     );
   }
 
+  if (toast.type === 'voice_send_error') {
+    return (
+      <VoiceSendErrorToast toast={toast} ctx={ctx} baseStyle={baseStyle} />
+    );
+  }
+
   if (toast.type === 'rematch') {
     const matchupId = toast.payload?.matchupId;
     return (
@@ -392,6 +398,82 @@ function MessageToast({ toast, ctx, router, baseStyle }) {
           Reply sent ✓
         </div>
       )}
+    </div>
+  );
+}
+
+// Surfaces a voice-note send failure with the specific reason from
+// MessagesPanel.messageForSendError plus a Try-again action that re-runs
+// the upload + POST against the same cached preview blob and trim window.
+// The inline composer error label remains visible underneath so users who
+// dismiss the toast still have a fallback path back to the same state.
+function VoiceSendErrorToast({ toast, ctx, baseStyle }) {
+  const message = toast.payload?.message || 'Could not send voice note.';
+  const retry = toast.payload?.retry;
+  const [busy, setBusy] = useState(false);
+
+  const handleRetry = async () => {
+    if (busy) return;
+    if (typeof retry !== 'function') {
+      ctx.dismissToast(toast.id);
+      return;
+    }
+    setBusy(true);
+    let ok = false;
+    try {
+      // The retry callback re-runs sendVoiceBlob with the same trimmed
+      // buffer. On success it returns truthy; on failure the caller
+      // enqueues a fresh error toast (with whatever the new failure
+      // mode is), so we just dismiss this one either way and let the
+      // next toast — if any — take over.
+      ok = await retry();
+    } finally {
+      setBusy(false);
+      ctx.dismissToast(toast.id);
+    }
+    return ok;
+  };
+
+  return (
+    <div
+      className="bg-gradient-to-r from-red-900/95 to-rose-800/95 border border-red-500/60 rounded-xl p-3"
+      style={baseStyle}
+      role="alert"
+    >
+      <div className="flex items-start gap-3">
+        <div
+          aria-hidden="true"
+          className="flex-shrink-0 w-9 h-9 rounded-full bg-red-500/20 border border-red-400/40 flex items-center justify-center text-red-200 text-lg"
+        >
+          !
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="text-red-100 text-[10px] uppercase tracking-wider font-bold">
+            Voice note failed
+          </div>
+          <div className="text-white text-sm font-semibold leading-snug">
+            {message}
+          </div>
+        </div>
+        <CloseBtn onClick={() => ctx.dismissToast(toast.id)} />
+      </div>
+      <div className="flex gap-2 mt-2">
+        <button
+          type="button"
+          disabled={busy || typeof retry !== 'function'}
+          onClick={handleRetry}
+          className="flex-1 bg-red-500 hover:bg-red-400 disabled:opacity-60 text-white text-xs font-bold py-1.5 rounded-lg"
+        >
+          {busy ? 'Sending…' : 'Try again'}
+        </button>
+        <button
+          type="button"
+          onClick={() => ctx.dismissToast(toast.id)}
+          className="px-3 bg-red-950/60 hover:bg-red-950/80 text-red-100 text-xs font-medium py-1.5 rounded-lg"
+        >
+          Dismiss
+        </button>
+      </div>
     </div>
   );
 }

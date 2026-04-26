@@ -1170,6 +1170,11 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   const lastTypingSentRef = useRef(0);
   const lastTypingFriendRef = useRef(null);
   const inputRef = useRef(null);
+  // Tracks the most recently surfaced voice-note error toast id so repeated
+  // Send taps replace the previous toast instead of stacking a new red card
+  // on top of an old one. Cleared on successful send, friend switch, and
+  // unmount so a stale toast never lingers across conversations.
+  const lastVoiceErrorToastIdRef = useRef(null);
   const isTyping = !!friend?.id && ctx.typingSenderIds?.has?.(friend.id);
 
   useEffect(() => {
@@ -1444,8 +1449,12 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     return 'Could not send voice note.';
   };
 
+  // Returns `{ ok, message }`. The caller (handleSendPreview / its retry
+  // closure) cares about both: `ok` drives whether to clear the cached
+  // preview blob, and `message` is the per-stage user-facing string we
+  // push into the failure toast alongside the Try-again action.
   const sendVoiceBlob = async (blob, durationMs, peaks) => {
-    if (!friend?.id) return false;
+    if (!friend?.id) return { ok: false, message: 'Could not send voice note.' };
     setSending(true);
     setSendError(null);
     setVoiceError(null);
@@ -1506,7 +1515,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
         }
       }
       ctx.refresh?.();
-      return true;
+      return { ok: true };
     } catch (err) {
       console.error('[voice-note] send failed:', {
         stage: err?.stage || 'unknown',
@@ -1516,8 +1525,9 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
         network: !!err?.network,
         message: err?.message,
       });
-      setSendError(messageForSendError(err));
-      return false;
+      const message = messageForSendError(err);
+      setSendError(message);
+      return { ok: false, message };
     } finally {
       setSending(false);
     }
@@ -2199,12 +2209,56 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
         // UX nicety — losing it is recoverable, losing the take isn't.
       }
     }
-    const ok = await sendVoiceBlob(outBlob, outDuration, outPeaks);
-    if (ok) {
+    await attemptSendVoice(outBlob, outDuration, outPeaks);
+  };
+
+  // Single send-attempt entry point shared by the initial Send tap and any
+  // subsequent retries surfaced from the failure toast. On success it tears
+  // down the recorder + clears the cached preview blob so the composer
+  // returns to its idle state. On failure it leaves the cached blob + trim
+  // window in place (so the inline composer error label remains a fallback)
+  // and pushes a toast carrying the per-stage failure message plus a
+  // Try-again action whose retry callback re-runs *this* function with the
+  // same already-trimmed buffer — no re-record, no re-trim, one tap.
+  const attemptSendVoice = async (outBlob, outDuration, outPeaks) => {
+    const result = await sendVoiceBlob(outBlob, outDuration, outPeaks);
+    if (result?.ok) {
+      // Drop any lingering error toast from an earlier failed attempt so
+      // the success isn't visually contradicted by a still-visible red card.
+      if (lastVoiceErrorToastIdRef.current) {
+        ctx.dismissToast?.(lastVoiceErrorToastIdRef.current);
+        lastVoiceErrorToastIdRef.current = null;
+      }
       tearDownLingeringRecorder();
       setResumableTake(false);
       clearVoicePreview();
+      return true;
     }
+    const errorMessage = result?.message || 'Could not send voice note.';
+    if (typeof ctx?.enqueueToast === 'function') {
+      // Replace any previous voice-error toast so repeated Send taps don't
+      // stack a column of identical red cards. Each new failure gets its
+      // own time-stamped id (the seen-set in NotificationsContext dedups
+      // by id and would otherwise swallow the replacement).
+      if (lastVoiceErrorToastIdRef.current) {
+        ctx.dismissToast?.(lastVoiceErrorToastIdRef.current);
+      }
+      const toastId = `voice_send_error:${Date.now()}`;
+      lastVoiceErrorToastIdRef.current = toastId;
+      ctx.enqueueToast({
+        id: toastId,
+        type: 'voice_send_error',
+        // Persistent — the toast carries an action and shouldn't time out
+        // before the user has a chance to read the reason and tap Try again.
+        // Manual dismiss + the Try-again button still close it normally.
+        persistent: true,
+        payload: {
+          message: errorMessage,
+          retry: () => attemptSendVoice(outBlob, outDuration, outPeaks),
+        },
+      });
+    }
+    return false;
   };
 
   useEffect(() => {
@@ -2227,6 +2281,12 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
         }
         return null;
       });
+      // Drop any lingering voice-error toast — its retry callback closes
+      // over state from this conversation that won't be valid anymore.
+      if (lastVoiceErrorToastIdRef.current) {
+        ctxRef.current?.dismissToast?.(lastVoiceErrorToastIdRef.current);
+        lastVoiceErrorToastIdRef.current = null;
+      }
     };
   }, []);
 
@@ -2276,6 +2336,13 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     setResumableTake(false);
     clearVoicePreview();
     setVoiceError(null);
+    // The error toast carries a retry closure tied to the previous
+    // conversation's blob — drop it so a stale Try-again tap can't ship
+    // audio to the wrong friend.
+    if (lastVoiceErrorToastIdRef.current) {
+      ctx.dismissToast?.(lastVoiceErrorToastIdRef.current);
+      lastVoiceErrorToastIdRef.current = null;
+    }
     // tearDownLingeringRecorder is intentionally not in deps — it's defined
     // inline each render and only needs to fire when the active friend
     // changes (same intent as the existing clearVoicePreview behavior).
