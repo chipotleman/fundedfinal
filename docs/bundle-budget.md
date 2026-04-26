@@ -70,13 +70,25 @@ In the `build` job:
    measurement.
 3. `node scripts/check-bundle-budget.js --current bundle-current.json
    --baseline docs/bundle-baseline.json --github-summary
-   "$GITHUB_STEP_SUMMARY" --mode fail` compares them. On a regression
-   it:
-   - Prints a `FAIL: …` line per offending metric to the step log.
+   "$GITHUB_STEP_SUMMARY" --markdown-out bundle-report.md --mode fail`
+   compares them. On every run it:
+   - Prints a one-line summary (and any `FAIL:` / `INFO:` lines) to the
+     step log.
    - Appends a Markdown report to the GitHub Actions step summary so
-     reviewers see the numbers right in the PR's Checks tab.
-   - Exits non-zero, which fails the `build` job and blocks the PR.
-4. `bundle-current.json` is uploaded as a workflow artifact
+     reviewers see the numbers in the PR's Checks tab.
+   - Writes the same Markdown report to `bundle-report.md` so the
+     sticky-comment step below can post it to the PR conversation.
+   - On a regression, exits non-zero, which fails the `build` job and
+     blocks the PR. The report file is written *before* the non-zero
+     exit, so the PR comment still gets posted on a failed budget.
+4. On `pull_request` events only, the `Comment bundle-size report on
+   PR` step (`marocchino/sticky-pull-request-comment@v2`) posts
+   `bundle-report.md` as a single comment on the PR — keyed on the
+   `bundle-size-report` header so subsequent runs update the existing
+   comment instead of spamming a new one. Skipped on `push` events.
+   Runs with `if: always()` so a regression that fails the check still
+   gets commented.
+5. `bundle-current.json` is uploaded as a workflow artifact
    (`bundle-size`) regardless of pass/fail, so you can download the raw
    numbers from any run.
 

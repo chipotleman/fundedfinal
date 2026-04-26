@@ -10,6 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
+    # `pull-requests: write` is needed so the sticky-comment step below
+    # can post / update the bundle-size report on the PR conversation.
+    # `contents: read` is the default for checkout; spelled out so the
+    # narrowed permissions block doesn't accidentally drop it.
+    permissions:
+      contents: read
+      pull-requests: write
+
     env:
       CI: 'true'
       NEXTAUTH_SECRET: ci-placeholder-secret
@@ -101,7 +109,27 @@ jobs:
             --current bundle-current.json \
             --baseline docs/bundle-baseline.json \
             --github-summary "$GITHUB_STEP_SUMMARY" \
+            --markdown-out bundle-report.md \
             --mode fail
+
+      # Mirror the same Markdown report into the PR conversation as a
+      # single sticky comment (updated on subsequent runs instead of
+      # spamming a new comment per push). Reviewers usually skim the
+      # PR thread, not the Checks tab where $GITHUB_STEP_SUMMARY lives,
+      # so this is what actually surfaces a regression — or a healthy
+      # shrink — in front of them.
+      #
+      # Runs only on `pull_request` events: pushes to a branch outside
+      # a PR have nowhere to comment, and pushes to `main` would just
+      # spam an unrelated PR. `if: always()` is important because the
+      # check step above exits non-zero on a budget regression, and
+      # that regression is exactly the case we most want commented.
+      - name: Comment bundle-size report on PR
+        if: always() && github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: bundle-size-report
+          path: bundle-report.md
 
       - name: Upload bundle-size measurement
         if: always()
