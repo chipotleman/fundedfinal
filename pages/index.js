@@ -634,15 +634,19 @@ export default function Dashboard() {
   }, [leadChangedGames]);
 
   // Sport filter mappings
+  // NBA/NCAAB and NHL/Int'l Hockey are kept disjoint: the generic 'BASKETBALL'
+  // and 'HOCKEY' fallbacks (used for real Goalserve games whose teams don't
+  // match a specific league, and for Int'l Hockey demo games) only fall under
+  // Euro Basketball / Int'l Hockey, never under NBA, NCAAB, or NHL.
   const sportMappings = useMemo(() => ({
-    'NBA': ['NBA', 'BASKETBALL', "WOMEN'S BASKETBALL"],
-    'NCAAB': ['NCAAB', 'BASKETBALL', "WOMEN'S BASKETBALL", "WOMEN'S NCAAB"],
+    'NBA': ['NBA'],
+    'NCAAB': ['NCAAB', "WOMEN'S NCAAB"],
     'NFL': ['NFL', 'FOOTBALL'],
     'NCAAF': ['NCAAF', 'FOOTBALL'],
     'MLB': ['MLB', 'BASEBALL', 'COLLEGE BASEBALL'],
-    'NHL': ['NHL', 'HOCKEY'],
+    'NHL': ['NHL'],
     'Euro Basketball': ['EUROLEAGUE', 'TURKEY BASKETBALL', 'ITALY BASKETBALL', 'GREECE BASKETBALL', 'SPAIN BASKETBALL', 'FRANCE BASKETBALL', 'GERMANY BASKETBALL', 'EUROPEAN BASKETBALL', 'BASKETBALL'],
-    "Int'l Hockey": ['HOCKEY', 'NHL']
+    "Int'l Hockey": ['HOCKEY']
   }), []);
 
   // CRITICAL FOR SSR: Derive games at render time (not in useEffect)
