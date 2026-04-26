@@ -21,7 +21,7 @@ import { useProfileCache } from '../contexts/ProfileCacheContext';
 import { formatMoney } from '../utils/formatMoney';
 import { formatLastSeen } from '../utils/relativeTime';
 import { readBattleResult, clearBattleResult } from '../utils/battleResultCache';
-import { readLastBuyIn, writeLastBuyIn } from '../utils/lastBattleBuyIn';
+import { readLastBuyIn, fetchLastBuyIn, saveLastBuyIn } from '../utils/lastBattleBuyIn';
 import { getBattleStreamClient } from '../lib/battleStreamClient';
 
 function UserAvatar({ user, size = 'md' }) {
@@ -207,15 +207,21 @@ export default function BattlePage() {
     fetchData();
   }, [fetchData]);
 
-  // Hydrate the remembered buy-in once we know who the user is. Reads from
-  // localStorage so it's safe to call after mount without an extra fetch.
-  const refreshLastBuyIn = useCallback(() => {
+  // Hydrate the remembered buy-in once we know who the user is. Seeds from
+  // the local cache for an instant render (no flicker on slow networks),
+  // then refreshes from the server so the value follows the user across
+  // devices and sessions.
+  const refreshLastBuyIn = useCallback(async () => {
     if (!userId) {
       setLastBuyIn(null);
       return;
     }
-    setLastBuyIn(readLastBuyIn(userId));
-  }, [userId]);
+    const cached = readLastBuyIn(userId);
+    if (cached) setLastBuyIn(cached);
+    if (isGuest) return;
+    const fresh = await fetchLastBuyIn(userId);
+    setLastBuyIn(fresh);
+  }, [userId, isGuest]);
 
   useEffect(() => {
     refreshLastBuyIn();
@@ -954,7 +960,10 @@ export default function BattlePage() {
       showQuickToast("You're already in a battle — finish it first.", 'error');
       return;
     }
-    const last = readLastBuyIn(userId);
+    // Prefer the freshly-hydrated value (which already reflects the
+    // cross-device server copy when available) and only fall back to the
+    // local cache if state hasn't caught up yet.
+    const last = lastBuyIn || readLastBuyIn(userId);
     if (!last) {
       // No remembered buy-in — open the modal so the user can pick one.
       setPlayFriendInitial(friend);
@@ -979,8 +988,10 @@ export default function BattlePage() {
         if (data?.error) showQuickToast(data.error, 'error');
         return;
       }
-      // Refresh the remembered values (mode may have been normalised server-side).
-      writeLastBuyIn(userId, { buyIn: last.buyIn, gameMode: last.gameMode });
+      // Refresh the remembered values (mode may have been normalised
+      // server-side) and persist to the user's profile so the shortcut
+      // stays in sync on every device.
+      await saveLastBuyIn(userId, { buyIn: last.buyIn, gameMode: last.gameMode });
       refreshLastBuyIn();
       showQuickToast(`Invite sent to ${friend.username || 'friend'} · $${last.buyIn} buy-in`);
       fetchData();
@@ -989,7 +1000,7 @@ export default function BattlePage() {
     } finally {
       setQuickInviteFor(null);
     }
-  }, [isGuest, globalHasActive, userId, quickInviteFor, fetchData, showQuickToast, refreshLastBuyIn]);
+  }, [isGuest, globalHasActive, userId, quickInviteFor, lastBuyIn, fetchData, showQuickToast, refreshLastBuyIn]);
 
   const handleCancelInvite = async (inviteId) => {
     try {
@@ -2035,6 +2046,7 @@ export default function BattlePage() {
         onClose={() => { setShowPlayFriend(false); setPlayFriendInitial(null); refreshLastBuyIn(); }}
         friends={friends}
         initialFriend={playFriendInitial}
+        initialBuyIn={lastBuyIn}
         currentUser={profile ? { id: userId, username: profile.username, avatar: profile.avatar, frameId: profile.equippedFrame } : (session?.user ? { id: userId, username: session.user.name, avatar: session.user.image } : null)}
         onInviteSent={() => { fetchData(); refreshLastBuyIn(); }}
         onInviteCancelled={() => fetchData()}

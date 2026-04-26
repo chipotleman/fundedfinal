@@ -4,7 +4,7 @@ import useModalScrollLock from '../../hooks/useModalScrollLock';
 import SharedUserAvatar from '../UserAvatar';
 import { useProfileCacheOptional } from '../../contexts/ProfileCacheContext';
 import { useMatchup } from '../../contexts/MatchupContext';
-import { writeLastBuyIn } from '../../utils/lastBattleBuyIn';
+import { saveLastBuyIn } from '../../utils/lastBattleBuyIn';
 
 const ACTIVE_BATTLE_BLOCK_MESSAGE = "You're already in a battle — finish it before inviting someone else.";
 
@@ -27,14 +27,23 @@ function UserAvatar({ user, size = 36 }) {
   return <SharedUserAvatar user={user} size={size} />;
 }
 
-export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onInviteCancelled, onSwitchToPrivate, initialFriend = null, lockedFriend = null, currentUser = null, onOpenMessage = null }) {
+export default function PlayFriendModal({ isOpen, onClose, friends = [], onInviteSent, onInviteCancelled, onSwitchToPrivate, initialFriend = null, lockedFriend = null, currentUser = null, onOpenMessage = null, initialBuyIn = null }) {
   const router = useRouter();
   const profileCache = useProfileCacheOptional();
   const { hasActiveMatchup } = useMatchup();
   useModalScrollLock(isOpen);
   const [selectedFriend, setSelectedFriend] = useState(null);
-  const [buyIn, setBuyIn] = useState(10);
-  const [gameMode, setGameMode] = useState('original');
+  // Seed from the remembered buy-in (which is hydrated server-side and
+  // therefore follows the user across devices) so the modal's defaults
+  // match whatever the friend-row shortcut would send.
+  const rememberedBuyIn = initialBuyIn && BUY_IN_OPTIONS.includes(Number(initialBuyIn.buyIn))
+    ? Number(initialBuyIn.buyIn)
+    : 10;
+  const rememberedMode = initialBuyIn?.gameMode === 'rush' || initialBuyIn?.gameMode === 'tournament' || initialBuyIn?.gameMode === 'original'
+    ? initialBuyIn.gameMode
+    : 'original';
+  const [buyIn, setBuyIn] = useState(rememberedBuyIn);
+  const [gameMode, setGameMode] = useState(rememberedMode);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
@@ -76,14 +85,26 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
       setActiveTab('friends');
       setShowGameModeInfo(false);
       if (countdownRef.current) clearInterval(countdownRef.current);
-    } else if (lockedFriend) {
-      setSelectedFriend(lockedFriend);
-      setActiveTab('friends');
-    } else if (initialFriend) {
-      setSelectedFriend(initialFriend);
-      setActiveTab('friends');
+    } else {
+      // Re-apply the remembered buy-in every time the modal opens. This
+      // covers the case where `initialBuyIn` arrived after the component
+      // mounted (the parent hydrates it from the server asynchronously),
+      // and keeps the modal defaults in sync with the friend-row shortcut.
+      if (initialBuyIn) {
+        const rb = Number(initialBuyIn.buyIn);
+        if (BUY_IN_OPTIONS.includes(rb)) setBuyIn(rb);
+        const rm = initialBuyIn.gameMode;
+        if (rm === 'rush' || rm === 'tournament' || rm === 'original') setGameMode(rm);
+      }
+      if (lockedFriend) {
+        setSelectedFriend(lockedFriend);
+        setActiveTab('friends');
+      } else if (initialFriend) {
+        setSelectedFriend(initialFriend);
+        setActiveTab('friends');
+      }
     }
-  }, [isOpen, initialFriend, lockedFriend]);
+  }, [isOpen, initialFriend, lockedFriend, initialBuyIn]);
 
   useEffect(() => {
     return () => {
@@ -189,8 +210,9 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
       setSent(true);
       setSentInviteId(data?.invite?.id || null);
       // Remember the buy-in + mode so the friend row can offer a one-tap
-      // "send last buy-in" shortcut next time.
-      writeLastBuyIn(currentUser?.id, { buyIn, gameMode });
+      // "send last buy-in" shortcut next time. Mirrors to the user's
+      // profile so the value follows them across devices.
+      saveLastBuyIn(currentUser?.id, { buyIn, gameMode });
       const expirySeconds = INVITE_EXPIRY_HOURS * 3600;
       setInviteCountdown(expirySeconds);
       countdownRef.current = setInterval(() => {
