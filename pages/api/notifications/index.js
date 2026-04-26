@@ -171,10 +171,13 @@ export default async function handler(req, res) {
         }
 
         // 4. Pre-compute mutual-friend id lists per sender (intersection of
-        //    sender's friends with mine), capped at 3 each for the preview
-        //    avatar stack. Collect every mutual id we want to display so we
-        //    can fetch their profiles in one batched query below.
-        const MUTUAL_PREVIEW_LIMIT = 3;
+        //    sender's friends with mine), capped per sender for the preview
+        //    payload. The avatar stack only renders 3 faces, but the friend
+        //    request card now lets users tap the stack to open a popover
+        //    listing every previewed mutual — so we widen the cap to a small
+        //    page-sized list (avatars + usernames only, kept compact) without
+        //    blowing up payload size for users with deep overlap.
+        const MUTUAL_PREVIEW_LIMIT = 12;
         const mutualIdsBySender = new Map();
         const allMutualPreviewIds = new Set();
         for (const sid of friendRequestSenderIds) {
