@@ -867,6 +867,24 @@ function writeOneTapPrefs(buyIn, gameMode) {
   } catch {}
 }
 
+// LocalStorage key for the "Don't ask again" preference on the
+// homepage Play Now card. We store the *version* the user opted out
+// against rather than a plain boolean so bumping
+// PLAY_NOW_SKIP_CONFIRM_VERSION re-prompts every existing user the
+// next time they tap Play Now. This honours the spec's "any user the
+// first time after a deploy" line whenever product changes the
+// matchmaking buy-in, mode, or anything else worth re-confirming.
+const PLAY_NOW_SKIP_CONFIRM_KEY = 'playnow:skipConfirmVersion';
+const PLAY_NOW_SKIP_CONFIRM_VERSION = '1';
+// How long the confirmation step stays open before snapping back to
+// idle if the user doesn't act. Long enough to read and decide, short
+// enough that an accidental enter doesn't leave the card "armed".
+const PLAY_NOW_CONFIRM_TIMEOUT_MS = 10000;
+// Inline notice text used after a no-cost cancel from the confirm
+// step. Centralised so the "neutral, not an error" styling check in
+// the idle render branch stays in sync with the helper that sets it.
+const PLAY_NOW_CANCEL_NOTICE = 'Cancelled — no money spent.';
+
 function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, onMatchFound = null }) {
   const router = useRouter();
   const { refresh: refreshMatchup } = useMatchup();
@@ -935,17 +953,24 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
   // In-card matchmaking state. Drives the new "finding battle" animation
   // that plays inside the card before the standard match-found popup
   // takes over. `idle` means we're showing the graffiti PLAY NOW
-  // treatment; `searching` means we're polling for a match; `error`
-  // shows a brief inline message before snapping back to idle.
+  // treatment; `confirm` means the user tapped once and we're waiting
+  // for them to confirm the $5 spend before any API call fires;
+  // `searching` means we're polling for a match; `error` shows a brief
+  // inline message before snapping back to idle.
   const [searchState, setSearchState] = useState('idle');
   const [searchError, setSearchError] = useState('');
   const [searchTimer, setSearchTimer] = useState(0);
   const [shuffleTick, setShuffleTick] = useState(0);
+  // Local "Don't ask again" toggle inside the confirm step. Persisted
+  // to localStorage only when the user actually confirms — backing out
+  // shouldn't quietly opt them out of future warnings.
+  const [confirmDontAsk, setConfirmDontAsk] = useState(false);
   const matchmakingCancelledRef = useRef(false);
   const cancelNoticeTimerRef = useRef(null);
   const searchTimerIntervalRef = useRef(null);
   const pollTimeoutRef = useRef(null);
   const errorResetTimeoutRef = useRef(null);
+  const confirmTimeoutRef = useRef(null);
 
   const cleanupSearchTimers = useCallback(() => {
     if (searchTimerIntervalRef.current) {
@@ -970,6 +995,10 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
         clearTimeout(cancelNoticeTimerRef.current);
         cancelNoticeTimerRef.current = null;
       }
+      if (confirmTimeoutRef.current) {
+        clearTimeout(confirmTimeoutRef.current);
+        confirmTimeoutRef.current = null;
+      }
     };
   }, [cleanupSearchTimers]);
 
@@ -993,8 +1022,13 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
     if (!isIdle && searchState !== 'idle') {
       matchmakingCancelledRef.current = true;
       cleanupSearchTimers();
+      if (confirmTimeoutRef.current) {
+        clearTimeout(confirmTimeoutRef.current);
+        confirmTimeoutRef.current = null;
+      }
       setSearchState('idle');
       setSearchError('');
+      setConfirmDontAsk(false);
     }
   }, [isIdle, searchState, cleanupSearchTimers]);
 
@@ -1087,6 +1121,10 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
     topLabel = 'Searching…';
     topDotColor = '#06b6d4';
     metaRight = `${searchTimer}s`;
+  } else if (searchState === 'confirm') {
+    topLabel = 'Confirm Spend';
+    topDotColor = '#fbbf24';
+    metaRight = `1v1 · $${ONE_TAP_BUY_IN}`;
   } else if (isActive) {
     topLabel = 'In Battle';
     topDotColor = '#10b981';
@@ -1278,11 +1316,85 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
     try { refreshMatchup(); } catch {}
   }, [cleanupSearchTimers, refreshMatchup]);
 
+  // Read the persisted "Don't ask again" preference. We read from
+  // storage on demand (rather than caching in state) so the flag
+  // stays accurate across tab/storage updates without needing an
+  // explicit listener.
+  const shouldSkipConfirm = useCallback(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      // Match against the current version so users only skip the
+      // confirm when they previously opted out under the same
+      // version. Bumping PLAY_NOW_SKIP_CONFIRM_VERSION re-prompts
+      // everyone on their next tap after a deploy.
+      return window.localStorage.getItem(PLAY_NOW_SKIP_CONFIRM_KEY) === PLAY_NOW_SKIP_CONFIRM_VERSION;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  // Move from the graffiti idle layout into the one-tap confirmation
+  // step. No API calls run here — money is not committed until the
+  // user explicitly confirms in the next step.
+  const enterConfirmStep = useCallback(() => {
+    setSearchError('');
+    setConfirmDontAsk(false);
+    setSearchState('confirm');
+    if (confirmTimeoutRef.current) clearTimeout(confirmTimeoutRef.current);
+    // Auto-revert to idle if the user walks away. Avoids the card
+    // staying "armed" indefinitely after an accidental tap.
+    confirmTimeoutRef.current = setTimeout(() => {
+      confirmTimeoutRef.current = null;
+      setSearchState((prev) => (prev === 'confirm' ? 'idle' : prev));
+      setConfirmDontAsk(false);
+    }, PLAY_NOW_CONFIRM_TIMEOUT_MS);
+  }, []);
+
+  // User backed out of the confirmation step. Per the spec, this must
+  // not trigger any API calls; we just snap back to idle and show a
+  // brief inline notice so the cancellation feels acknowledged.
+  const cancelConfirmStep = useCallback(() => {
+    if (confirmTimeoutRef.current) {
+      clearTimeout(confirmTimeoutRef.current);
+      confirmTimeoutRef.current = null;
+    }
+    setSearchState('idle');
+    setConfirmDontAsk(false);
+    setSearchError(PLAY_NOW_CANCEL_NOTICE);
+    if (cancelNoticeTimerRef.current) clearTimeout(cancelNoticeTimerRef.current);
+    cancelNoticeTimerRef.current = setTimeout(() => {
+      setSearchError((prev) => (prev === PLAY_NOW_CANCEL_NOTICE ? '' : prev));
+    }, 2500);
+  }, []);
+
+  // User confirmed the spend. Persist their "Don't ask again" choice
+  // (only if they actually opted in) and kick off matchmaking.
+  const confirmAndStartSearch = useCallback(() => {
+    if (confirmTimeoutRef.current) {
+      clearTimeout(confirmTimeoutRef.current);
+      confirmTimeoutRef.current = null;
+    }
+    if (confirmDontAsk && typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem(PLAY_NOW_SKIP_CONFIRM_KEY, PLAY_NOW_SKIP_CONFIRM_VERSION);
+      } catch {}
+    }
+    setConfirmDontAsk(false);
+    startInCardSearch();
+  }, [confirmDontAsk, startInCardSearch]);
+
   const handleCardTap = () => {
     if (isIdle) {
       // While searching, the card is "busy" — only the explicit cancel
       // affordance should escape, never the card-wide tap.
       if (searchState === 'searching') return;
+      // While in the confirm step, a card-wide tap is treated as the
+      // "tap again to confirm" gesture. The explicit Cancel button
+      // below stops propagation so it can still back out.
+      if (searchState === 'confirm') {
+        confirmAndStartSearch();
+        return;
+      }
       // Clear any lingering cancel/error inline notice from the
       // previous attempt so the new search starts visually clean.
       if (cancelNoticeTimerRef.current) {
@@ -1294,7 +1406,15 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
       // Signed-out users (no profile yet) fall back to navigating to
       // /battle so they can sign in / pick a mode there.
       if (myProfile?.id && onMatchFound) {
-        startInCardSearch();
+        // First-time confirmation gate. Repeat players who opted out
+        // skip straight to matchmaking; everyone else sees the
+        // lightweight "tap again to confirm" step first so a stray
+        // tap can't quietly deduct money.
+        if (shouldSkipConfirm()) {
+          startInCardSearch();
+        } else {
+          enterConfirmStep();
+        }
       } else {
         handleNavigate();
       }
@@ -1367,7 +1487,9 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
       tabIndex={0}
       aria-label={
         isIdle
-          ? 'Your battle — Tap to start a 1v1'
+          ? (searchState === 'confirm'
+              ? `Confirm $${ONE_TAP_BUY_IN} ${ONE_TAP_GAME_MODE.toUpperCase()} battle. Tap again to confirm or use the cancel button to back out.`
+              : 'Your battle — Tap to start a 1v1')
           : `Your battle — ${topLabel}. Tap to ${isExpanded ? 'hide' : 'show'} preview.`
       }
       aria-expanded={isIdle ? undefined : isExpanded}
@@ -1458,6 +1580,17 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
           0%, 80%, 100% { opacity: 0.25; transform: scale(0.85); }
           40% { opacity: 1; transform: scale(1.1); }
         }
+        /* Pulse on the "Tap to confirm" button so the confirmation
+           gate visibly invites a second tap without blending into
+           the rest of the card chrome. */
+        @keyframes playNowConfirmPulse {
+          0%, 100% { transform: scale(1); box-shadow: 0 3px 0 rgba(0,0,0,0.55), 0 0 18px rgba(251,146,60,0.5); }
+          50% { transform: scale(1.04); box-shadow: 0 3px 0 rgba(0,0,0,0.55), 0 0 26px rgba(251,146,60,0.85); }
+        }
+        :global(.play-now-confirm-btn) {
+          animation: playNowConfirmPulse 1.4s ease-in-out infinite;
+          transform-origin: center;
+        }
         :global(.youvs-radar) {
           animation: youvsRadarSweep 2.2s linear infinite;
           transform-origin: center;
@@ -1481,7 +1614,8 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
           :global(.youvs-radar),
           :global(.youvs-ring),
           :global(.youvs-shuffle),
-          :global(.youvs-dot) {
+          :global(.youvs-dot),
+          :global(.play-now-confirm-btn) {
             animation: none !important;
           }
         }
@@ -1653,6 +1787,93 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
               Cancel
             </button>
           </div>
+        ) : isIdle && searchState === 'confirm' ? (
+          // First-time confirmation step. We've intentionally NOT
+          // hit any matchmaking endpoint yet — the user must tap
+          // again (either the card or the explicit confirm button)
+          // to actually commit the $5 spend. The Cancel button
+          // backs out without any API calls.
+          <div
+            className="flex flex-col items-center justify-center text-center py-2 select-none"
+            style={{ minHeight: 148 }}
+          >
+            <div
+              className="flex items-center gap-1.5 mb-1.5 px-2.5 py-1 rounded-full"
+              style={{
+                background: 'rgba(251, 191, 36, 0.12)',
+                border: '1px solid rgba(251, 191, 36, 0.45)',
+              }}
+              aria-hidden="true"
+            >
+              <svg
+                className="w-3 h-3"
+                viewBox="0 0 20 20"
+                fill="#fbbf24"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 6a1 1 0 011 1v3a1 1 0 11-2 0V7a1 1 0 011-1zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              <span
+                className="text-[10px] font-bold uppercase tracking-wider"
+                style={{ color: '#fbbf24' }}
+              >
+                Real money · ${ONE_TAP_BUY_IN}
+              </span>
+            </div>
+            <p className="text-[15px] font-extrabold text-white leading-tight">
+              Spend ${ONE_TAP_BUY_IN} on a {ONE_TAP_GAME_MODE.toUpperCase()} battle?
+            </p>
+            <p className="text-[11px] text-gray-400 mt-1 mb-2.5 px-2">
+              ${ONE_TAP_BUY_IN} comes out of your balance the moment a match starts.
+            </p>
+            <div className="flex items-center gap-2 mb-2">
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); confirmAndStartSearch(); }}
+                className="play-now-confirm-btn px-4 py-2 rounded-lg text-[12px] font-extrabold text-white uppercase tracking-wider"
+                style={{
+                  background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 55%, #ec4899 100%)',
+                  border: '2px solid #0d0d0d',
+                  boxShadow: '0 3px 0 rgba(0,0,0,0.55), 0 0 18px rgba(251,146,60,0.5)',
+                }}
+                aria-label={`Confirm $${ONE_TAP_BUY_IN} ${ONE_TAP_GAME_MODE.toUpperCase()} battle`}
+              >
+                Tap to confirm ${ONE_TAP_BUY_IN}
+              </button>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); cancelConfirmStep(); }}
+                className="px-3 py-2 text-[11px] font-medium text-gray-300 hover:text-red-400 rounded-lg transition-colors"
+                style={{
+                  background: 'rgba(0,0,0,0.4)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                }}
+                aria-label="Cancel — do not spend money"
+              >
+                Cancel
+              </button>
+            </div>
+            <label
+              className="inline-flex items-center gap-1.5 text-[10px] text-gray-400 cursor-pointer select-none"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <input
+                type="checkbox"
+                checked={confirmDontAsk}
+                onChange={(e) => {
+                  e.stopPropagation();
+                  setConfirmDontAsk(e.target.checked);
+                }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-3 h-3 accent-amber-500 cursor-pointer"
+                aria-label="Don't ask me again"
+              />
+              <span>Don't ask me again</span>
+            </label>
+          </div>
         ) : isIdle ? (
           // Graffiti / cartoon PLAY NOW treatment — replaces the
           // cycling fake-opponent layout. This is the new single
@@ -1822,7 +2043,9 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
             {searchError && (
               <p
                 className={`text-[10px] font-medium mt-1.5 ${
-                  searchError === 'Matchmaking cancelled.' ? 'text-gray-400' : 'text-red-400'
+                  searchError === 'Matchmaking cancelled.' || searchError === PLAY_NOW_CANCEL_NOTICE
+                    ? 'text-gray-400'
+                    : 'text-red-400'
                 }`}
                 role="status"
               >
