@@ -868,7 +868,7 @@ const PLAY_NOW_CONFIRM_TIMEOUT_MS = 10000;
 // the idle render branch stays in sync with the helper that sets it.
 const PLAY_NOW_CANCEL_NOTICE = 'Cancelled — no money spent.';
 
-function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, onMatchFound = null, currentUserId = null }) {
+function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, onMatchFound = null, currentUserId = null, balance = null }) {
   const router = useRouter();
   const { refresh: refreshMatchup } = useMatchup();
   const [cancelling, setCancelling] = useState(false);
@@ -1130,6 +1130,15 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
     if (Number.isFinite(bi) && bi > 0) pot = bi * 2;
   }
 
+  // Balance comes in from the homepage so we don't refetch just to
+  // render the confirm step. Treat any non-finite value (signed-out,
+  // not yet hydrated) as "unknown" — in that case we render no
+  // balance row at all and keep the original confirm CTA.
+  const numericBalance = balance != null && Number.isFinite(Number(balance)) ? Number(balance) : null;
+  const hasBalance = numericBalance != null;
+  const insufficientBalance = hasBalance && numericBalance < buyIn;
+  const balanceShortfall = insufficientBalance ? Math.max(0, buyIn - numericBalance) : 0;
+
   let topLabel = 'Play Now';
   let topDotColor = '#fbbf24';
   let ctaText = 'Tap to Start a 1v1';
@@ -1143,7 +1152,7 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
   } else if (searchState === 'confirm') {
     topLabel = 'Confirm Spend';
     topDotColor = '#fbbf24';
-    metaRight = `1v1 · $${ONE_TAP_BUY_IN}`;
+    metaRight = `1v1 · $${buyIn}`;
   } else if (isActive) {
     topLabel = 'In Battle';
     topDotColor = '#10b981';
@@ -1409,9 +1418,19 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
       if (searchState === 'searching') return;
       // While in the confirm step, a card-wide tap is treated as the
       // "tap again to confirm" gesture. The explicit Cancel button
-      // below stops propagation so it can still back out.
+      // below stops propagation so it can still back out. If the
+      // user can't actually cover the buy-in, the tap is treated as
+      // an "Add funds" gesture instead so the card-wide path matches
+      // the visible CTA — otherwise a stray tap would still kick off
+      // matchmaking and hit the server-side insufficient-balance error
+      // we're trying to prevent.
       if (searchState === 'confirm') {
-        confirmAndStartSearch();
+        if (insufficientBalance) {
+          cancelConfirmStep();
+          router.push(`/deposit?amount=${Math.ceil(balanceShortfall)}`);
+        } else {
+          confirmAndStartSearch();
+        }
         return;
       }
       // Clear any lingering cancel/error inline notice from the
@@ -1507,7 +1526,9 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
       aria-label={
         isIdle
           ? (searchState === 'confirm'
-              ? `Confirm $${ONE_TAP_BUY_IN} ${ONE_TAP_GAME_MODE.toUpperCase()} battle. Tap again to confirm or use the cancel button to back out.`
+              ? (insufficientBalance
+                  ? `Not enough balance for a $${buyIn} ${gameMode.toUpperCase()} battle. Tap to add funds, or use the cancel button to back out.`
+                  : `Confirm $${buyIn} ${gameMode.toUpperCase()} battle. Tap again to confirm or use the cancel button to back out.`)
               : 'Your battle — Tap to start a 1v1')
           : `Your battle — ${topLabel}. Tap to ${isExpanded ? 'hide' : 'show'} preview.`
       }
@@ -1839,29 +1860,95 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
                 className="text-[10px] font-bold uppercase tracking-wider"
                 style={{ color: '#fbbf24' }}
               >
-                Real money · ${ONE_TAP_BUY_IN}
+                Real money · ${buyIn}
               </span>
             </div>
             <p className="text-[15px] font-extrabold text-white leading-tight">
-              Spend ${ONE_TAP_BUY_IN} on a {ONE_TAP_GAME_MODE.toUpperCase()} battle?
+              Spend ${buyIn} on a {gameMode.toUpperCase()} battle?
             </p>
-            <p className="text-[11px] text-gray-400 mt-1 mb-2.5 px-2">
-              ${ONE_TAP_BUY_IN} comes out of your balance the moment a match starts.
+            <p className="text-[11px] text-gray-400 mt-1 mb-2 px-2">
+              ${buyIn} comes out of your balance the moment a match starts.
             </p>
-            <div className="flex items-center gap-2 mb-2">
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); confirmAndStartSearch(); }}
-                className="play-now-confirm-btn px-4 py-2 rounded-lg text-[12px] font-extrabold text-white uppercase tracking-wider"
+            {/* Balance row — sourced from the homepage's already-fetched
+                bankroll so we don't add a server call just to render it.
+                When the player can't cover the buy-in we surface a clear
+                "Add funds" affordance instead of the confirm button so
+                they don't run into a server-side insufficient-balance
+                error after committing. Hidden entirely when no balance
+                is known (e.g. signed-out fallback). */}
+            {hasBalance && (
+              <div
+                className="flex items-center gap-1.5 mb-2.5 px-2.5 py-1 rounded-full"
                 style={{
-                  background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 55%, #ec4899 100%)',
-                  border: '2px solid #0d0d0d',
-                  boxShadow: '0 3px 0 rgba(0,0,0,0.55), 0 0 18px rgba(251,146,60,0.5)',
+                  background: insufficientBalance
+                    ? 'rgba(239, 68, 68, 0.12)'
+                    : 'rgba(255, 255, 255, 0.06)',
+                  border: insufficientBalance
+                    ? '1px solid rgba(239, 68, 68, 0.45)'
+                    : '1px solid rgba(255, 255, 255, 0.12)',
                 }}
-                aria-label={`Confirm $${ONE_TAP_BUY_IN} ${ONE_TAP_GAME_MODE.toUpperCase()} battle`}
+                aria-label={
+                  insufficientBalance
+                    ? `Your balance is $${formatMoney(numericBalance)} — not enough for the $${buyIn} buy-in`
+                    : `Your balance is $${formatMoney(numericBalance)}`
+                }
               >
-                Tap to confirm ${ONE_TAP_BUY_IN}
-              </button>
+                <span
+                  className="text-[10px] uppercase tracking-wider font-semibold"
+                  style={{ color: insufficientBalance ? '#fca5a5' : 'rgba(148,163,184,0.95)' }}
+                >
+                  Your balance
+                </span>
+                <span
+                  className="text-[11px] font-extrabold tabular-nums"
+                  style={{ color: insufficientBalance ? '#fca5a5' : '#ffffff' }}
+                >
+                  ${formatMoney(numericBalance)}
+                </span>
+                {insufficientBalance && (
+                  <span
+                    className="text-[9px] font-bold uppercase tracking-wider"
+                    style={{ color: '#fca5a5' }}
+                  >
+                    · Need ${formatMoney(balanceShortfall)}
+                  </span>
+                )}
+              </div>
+            )}
+            <div className="flex items-center gap-2 mb-2">
+              {insufficientBalance ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    cancelConfirmStep();
+                    router.push(`/deposit?amount=${Math.ceil(balanceShortfall)}`);
+                  }}
+                  className="play-now-confirm-btn px-4 py-2 rounded-lg text-[12px] font-extrabold text-white uppercase tracking-wider"
+                  style={{
+                    background: 'linear-gradient(135deg, #facc15 0%, #f59e0b 55%, #ef4444 100%)',
+                    border: '2px solid #0d0d0d',
+                    boxShadow: '0 3px 0 rgba(0,0,0,0.55), 0 0 18px rgba(248,113,113,0.55)',
+                  }}
+                  aria-label={`Add funds to play a $${buyIn} battle`}
+                >
+                  Add funds to play
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); confirmAndStartSearch(); }}
+                  className="play-now-confirm-btn px-4 py-2 rounded-lg text-[12px] font-extrabold text-white uppercase tracking-wider"
+                  style={{
+                    background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 55%, #ec4899 100%)',
+                    border: '2px solid #0d0d0d',
+                    boxShadow: '0 3px 0 rgba(0,0,0,0.55), 0 0 18px rgba(251,146,60,0.5)',
+                  }}
+                  aria-label={`Confirm $${buyIn} ${gameMode.toUpperCase()} battle`}
+                >
+                  Tap to confirm ${buyIn}
+                </button>
+              )}
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); cancelConfirmStep(); }}
@@ -2271,7 +2358,7 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
   );
 }
 
-export default function LiveBattlesSection({ compact = false, focusBattleId = null, currentUserId = null, youVsState = null, onYouVsClick = null }) {
+export default function LiveBattlesSection({ compact = false, focusBattleId = null, currentUserId = null, youVsState = null, onYouVsClick = null, balance = null }) {
   const [battles, setBattles] = useState(() => getSimulatedBattles([]));
   const [avatars, setAvatars] = useState([]);
   const [expandedKey, setExpandedKey] = useState(null);
@@ -2558,6 +2645,7 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
               onToggle={() => toggleExpandedKey('youvs')}
               onMatchFound={(data) => setMatchFoundData(data)}
               currentUserId={currentUserId}
+              balance={balance}
             />
           </div>
           {compactBattles.map(battle => (

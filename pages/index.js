@@ -1035,6 +1035,7 @@ export default function Dashboard() {
         <LiveBattlesSection
           compact
           currentUserId={user?.id}
+          balance={bankroll}
           youVsState={{
             status: hasActiveMatchup
               ? 'active'
