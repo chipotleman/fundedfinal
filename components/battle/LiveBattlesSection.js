@@ -335,7 +335,7 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
           transition: 'border-color 200ms ease',
         }}
       >
-        <div className="p-3.5 flex flex-col">
+        <div className="p-3.5 flex flex-col flex-1">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-1.5">
               <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
@@ -711,13 +711,6 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
         .battle-cta-particle {
           animation: battleCtaFloat 3s ease-in-out infinite;
         }
-        @keyframes youvsCycleFade {
-          0% { opacity: 0; transform: translateY(4px) scale(0.92); }
-          100% { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .youvs-cycle-fade {
-          animation: youvsCycleFade 360ms ease-out both;
-        }
         @media (hover: hover) {
           .battle-cta-card:hover {
             border-color: rgba(59,130,246,0.45) !important;
@@ -744,6 +737,49 @@ function formatElapsed(ms) {
   return `${seconds}s`;
 }
 
+const ANONYMOUS_OPPONENTS = [
+  { gradient: 'linear-gradient(135deg, #10b981, #06b6d4)' },
+  { gradient: 'linear-gradient(135deg, #6366f1, #8b5cf6)' },
+  { gradient: 'linear-gradient(135deg, #f59e0b, #ec4899)' },
+  { gradient: 'linear-gradient(135deg, #06b6d4, #3b82f6)' },
+  { gradient: 'linear-gradient(135deg, #8b5cf6, #ec4899)' },
+];
+
+function SilhouetteAvatar({ gradient, size = 40 }) {
+  return (
+    <div
+      style={{
+        width: size,
+        height: size,
+        borderRadius: '50%',
+        flexShrink: 0,
+        background: gradient,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.18)',
+      }}
+    >
+      <svg
+        width={size * 0.62}
+        height={size * 0.62}
+        viewBox="0 0 24 24"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path
+          d="M12 12.5a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0"
+          stroke="rgba(255,255,255,0.85)"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="rgba(255,255,255,0.18)"
+        />
+      </svg>
+    </div>
+  );
+}
+
 function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null }) {
   const router = useRouter();
   const { refresh: refreshMatchup } = useMatchup();
@@ -759,43 +795,36 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null })
   const isWaiting = status === 'waiting';
   const isQueued = status === 'queued';
   const showOpponent = !!opponent && (isActive || isWaiting || isQueued);
+  const isIdle = !isActive && !isWaiting && !isQueued;
 
-  const [opponentPool, setOpponentPool] = useState([]);
   const [opponentTick, setOpponentTick] = useState(0);
 
   useEffect(() => {
     if (showOpponent) return;
-    let cancelled = false;
-    fetch('/api/battles/recent?limit=10')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        if (cancelled || !data?.battles?.length) return;
-        const seen = new Set();
-        const players = [];
-        for (const b of data.battles) {
-          for (const p of [b.winner, b.loser]) {
-            if (p && p.id && !seen.has(p.id)) {
-              seen.add(p.id);
-              players.push({ id: p.id, username: p.username, avatar: p.avatar });
-            }
-          }
-        }
-        if (players.length >= 2) setOpponentPool(players);
-      })
-      .catch(() => {});
+    if (typeof window === 'undefined') return;
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (mq.matches) return;
+    let id = null;
+    const start = () => {
+      if (!id) id = setInterval(() => setOpponentTick((t) => t + 1), 1800);
+    };
+    const stop = () => {
+      if (id) {
+        clearInterval(id);
+        id = null;
+      }
+    };
+    const onVis = () => (document.hidden ? stop() : start());
+    if (!document.hidden) start();
+    document.addEventListener('visibilitychange', onVis);
     return () => {
-      cancelled = true;
+      stop();
+      document.removeEventListener('visibilitychange', onVis);
     };
   }, [showOpponent]);
 
-  useEffect(() => {
-    if (showOpponent || opponentPool.length === 0) return;
-    const id = setInterval(() => setOpponentTick((t) => t + 1), 1400);
-    return () => clearInterval(id);
-  }, [showOpponent, opponentPool.length]);
-
-  const cyclingOpponent = !showOpponent && opponentPool.length > 0
-    ? opponentPool[opponentTick % opponentPool.length]
+  const anonymousOpponent = !showOpponent
+    ? ANONYMOUS_OPPONENTS[opponentTick % ANONYMOUS_OPPONENTS.length]
     : null;
 
   const endsAt = matchup?.endsAt || null;
@@ -859,11 +888,11 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null })
     if (Number.isFinite(bi) && bi > 0) pot = bi * 2;
   }
 
-  let topLabel = '1v1 Battle';
-  let topDotColor = '#3b82f6';
-  let ctaText = 'Tap to Start';
-  let metaRight = 'Find a match';
-  let progressLabel = 'Personalized 1v1';
+  let topLabel = 'Tap to Play';
+  let topDotColor = '#a78bfa';
+  let ctaText = 'Tap to Start a 1v1';
+  let metaRight = 'Random opponent';
+  let progressLabel = 'Tap to start a 1v1';
 
   if (isActive) {
     topLabel = 'In Battle';
@@ -1002,6 +1031,26 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null })
           0% { background-position: 0% 50%; }
           100% { background-position: 200% 50%; }
         }
+        @keyframes youvsAnonFade {
+          0% { opacity: 0; transform: scale(0.9); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        :global(.youvs-anon-fade) {
+          animation: youvsAnonFade 420ms ease-out both;
+        }
+        @keyframes tapToStartPulse {
+          0%, 100% { opacity: 0.55; transform: translateX(0); }
+          50% { opacity: 1; transform: translateX(2px); }
+        }
+        .tap-to-start-cta {
+          animation: tapToStartPulse 1.6s ease-in-out infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          :global(.youvs-anon-fade),
+          .tap-to-start-cta {
+            animation: none !important;
+          }
+        }
         .youvs-card:focus-visible {
           border-color: rgba(167, 139, 250, 0.95) !important;
           box-shadow:
@@ -1121,23 +1170,13 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null })
                     Opponent
                   </span>
                 </>
-              ) : cyclingOpponent ? (
-                <>
-                  <p
-                    key={`name-${cyclingOpponent.id}-${opponentTick}`}
-                    className="text-sm font-medium truncate text-gray-200 youvs-cycle-fade"
-                  >
-                    {cyclingOpponent.username || 'Opponent'}
-                  </p>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
-                    {isQueued ? 'Searching' : 'Possible Match'}
-                  </span>
-                </>
               ) : (
                 <>
-                  <p className="text-sm font-medium truncate text-gray-300">???</p>
-                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                    {isQueued ? 'Searching' : 'Open Spot'}
+                  <p className="text-sm font-medium truncate text-gray-300">
+                    Random Opponent
+                  </p>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                    {isQueued ? 'Searching…' : 'Tap to start'}
                   </span>
                 </>
               )}
@@ -1149,47 +1188,23 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null })
                 size={40}
                 bgColor="#065f46"
               />
-            ) : cyclingOpponent ? (
+            ) : (
               <div
-                key={`avatar-${cyclingOpponent.id}-${opponentTick}`}
-                className="youvs-cycle-fade"
+                key={`anon-avatar-${opponentTick}`}
+                className="youvs-anon-fade"
                 style={{
                   width: 44,
                   height: 44,
                   flexShrink: 0,
                   borderRadius: '50%',
                   padding: 2,
-                  background: 'linear-gradient(135deg, rgba(16,185,129,0.55), rgba(6,182,212,0.55))',
+                  background: 'linear-gradient(135deg, rgba(16,185,129,0.45), rgba(6,182,212,0.45))',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
               >
-                <PlayerAvatar
-                  user={cyclingOpponent}
-                  isWinning={false}
-                  size={40}
-                  bgColor="#065f46"
-                />
-              </div>
-            ) : (
-              <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  flexShrink: 0,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: 'linear-gradient(135deg, rgba(16,185,129,0.12), rgba(6,182,212,0.12))',
-                  border: '2px dashed rgba(16,185,129,0.45)',
-                  color: '#10b981',
-                  fontWeight: 800,
-                  fontSize: 16,
-                }}
-              >
-                ?
+                <SilhouetteAvatar gradient={anonymousOpponent.gradient} size={40} />
               </div>
             )}
           </div>
@@ -1219,15 +1234,20 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null })
                 {cancelling ? 'Cancelling…' : (isQueued ? 'Leave Queue' : 'Cancel')}
               </button>
             )}
-            <span className="text-[11px] font-semibold flex items-center gap-1" style={{ color: '#a78bfa' }}>
-              {isExpanded ? 'Hide' : 'Preview'}
+            <span
+              className={`text-[11px] font-semibold flex items-center gap-1 ${isIdle && !isExpanded ? 'tap-to-start-cta' : ''}`}
+              style={{ color: '#a78bfa' }}
+            >
+              {isExpanded ? 'Hide' : (isIdle ? 'Tap to start' : 'Preview')}
               <svg
                 className="w-3 h-3"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
                 style={{
-                  transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transform: isExpanded
+                    ? 'rotate(180deg)'
+                    : (isIdle ? 'rotate(-90deg)' : 'rotate(0deg)'),
                   transition: 'transform 220ms ease',
                 }}
               >
@@ -1383,7 +1403,7 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
             See All
           </button>
         </div>
-        <div className="flex gap-3 items-start overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="flex gap-3 items-stretch overflow-x-auto pb-2 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
           <div className="flex-shrink-0 w-[380px] flex">
             <YouVsCard
               youVsState={youVsState}
