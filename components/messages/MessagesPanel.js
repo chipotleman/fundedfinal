@@ -72,6 +72,8 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState(null);
   const [recording, setRecording] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [pauseSupported, setPauseSupported] = useState(true);
   const [recordElapsed, setRecordElapsed] = useState(0);
   const [voiceError, setVoiceError] = useState(null);
   const LEVEL_BAR_COUNT = 18;
@@ -80,6 +82,11 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   const recorderRef = useRef(null);
   const recordChunksRef = useRef([]);
   const recordStartRef = useRef(0);
+  // Accumulated elapsed ms from previously-completed segments (i.e. the time
+  // captured before the current pause/resume cycle). The visible elapsed time
+  // is this plus the current segment's running time.
+  const recordAccumRef = useRef(0);
+  const recordPausedRef = useRef(false);
   const recordTimerRef = useRef(null);
   const recordCancelledRef = useRef(false);
   const recordMimeRef = useRef('audio/webm');
@@ -246,6 +253,13 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     }
   };
 
+  const computeElapsedMs = () => {
+    const segment = recordPausedRef.current
+      ? 0
+      : Math.max(0, Date.now() - recordStartRef.current);
+    return recordAccumRef.current + segment;
+  };
+
   const cleanupRecorderStream = () => {
     const rec = recorderRef.current;
     if (rec?.stream) {
@@ -295,6 +309,17 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       // Throttle to ~14fps so we don't churn React on every paint.
       if (t - last < 70) return;
       last = t;
+      // While the take is paused, freeze the visualizer at zero so the
+      // indicator visibly "flatlines" — even though the underlying mic
+      // stream is still live, we shouldn't be drawing new activity.
+      if (recordPausedRef.current) {
+        setAudioLevels((prev) => {
+          const next = prev.slice(1);
+          next.push(0);
+          return next;
+        });
+        return;
+      }
       try { analyser.getByteTimeDomainData(data); } catch { return; }
       let sum = 0;
       for (let i = 0; i < data.length; i++) {
@@ -419,17 +444,26 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       recordMimeRef.current = recorder.mimeType || mimeType || 'audio/webm';
       recordChunksRef.current = [];
       recordCancelledRef.current = false;
+      recordAccumRef.current = 0;
+      recordPausedRef.current = false;
+      setPaused(false);
+      setPauseSupported(
+        typeof recorder.pause === 'function' && typeof recorder.resume === 'function'
+      );
       recorder.ondataavailable = (ev) => {
         if (ev.data && ev.data.size > 0) recordChunksRef.current.push(ev.data);
       };
       recorder.onstop = () => {
         try { stopRecordingTimer(); } catch {}
         try { stopAudioMeter(); } catch {}
-        const elapsed = Date.now() - recordStartRef.current;
+        const elapsed = computeElapsedMs();
         const chunks = recordChunksRef.current;
         recordChunksRef.current = [];
+        recordAccumRef.current = 0;
+        recordPausedRef.current = false;
         try { cleanupRecorderStream(); } catch {}
         setRecording(false);
+        setPaused(false);
         setRecordElapsed(0);
         setAudioLevels(new Array(LEVEL_BAR_COUNT).fill(0));
         if (recordCancelledRef.current) {
@@ -458,7 +492,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       setRecording(true);
       try { startAudioMeter(stream); } catch {}
       recordTimerRef.current = setInterval(() => {
-        const elapsed = Date.now() - recordStartRef.current;
+        const elapsed = computeElapsedMs();
         setRecordElapsed(elapsed);
         if (elapsed >= MAX_VOICE_MS) {
           try { recorder.stop(); } catch {}
@@ -473,7 +507,10 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       recorderRef.current = null;
       recordChunksRef.current = [];
       recordCancelledRef.current = false;
+      recordAccumRef.current = 0;
+      recordPausedRef.current = false;
       setRecording(false);
+      setPaused(false);
       setRecordElapsed(0);
       setAudioLevels(new Array(LEVEL_BAR_COUNT).fill(0));
       const name = err?.name || '';
@@ -494,10 +531,39 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     try { rec.stop(); } catch {}
   };
 
+  const handlePauseRecording = () => {
+    const rec = recorderRef.current;
+    if (!rec || rec.state !== 'recording' || recordPausedRef.current) return;
+    if (typeof rec.pause !== 'function') return;
+    try { rec.pause(); } catch { return; }
+    // Snapshot the current segment's elapsed ms into the accumulator and
+    // freeze the visible timer at that value. computeElapsedMs() returns
+    // just the accumulator while paused.
+    recordAccumRef.current += Math.max(0, Date.now() - recordStartRef.current);
+    recordPausedRef.current = true;
+    setPaused(true);
+    setRecordElapsed(recordAccumRef.current);
+    setAudioLevels(new Array(LEVEL_BAR_COUNT).fill(0));
+  };
+
+  const handleResumeRecording = () => {
+    const rec = recorderRef.current;
+    if (!rec || !recordPausedRef.current) return;
+    if (typeof rec.resume !== 'function') return;
+    try { rec.resume(); } catch { return; }
+    // Re-base the segment start so computeElapsedMs() resumes counting
+    // from the point we paused at, never losing the prior take.
+    recordStartRef.current = Date.now();
+    recordPausedRef.current = false;
+    setPaused(false);
+  };
+
   const handleCancelRecording = () => {
     const rec = recorderRef.current;
     if (!rec) return;
     recordCancelledRef.current = true;
+    // stop() works on both 'recording' and 'paused' states and finalizes
+    // the take, firing onstop where we'll discard the chunks.
     try { if (rec.state !== 'inactive') rec.stop(); } catch {}
   };
 
@@ -534,6 +600,8 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
         recordCancelledRef.current = true;
         try { rec.stop(); } catch {}
       }
+      recordAccumRef.current = 0;
+      recordPausedRef.current = false;
       cleanupRecorderStream();
       setVoicePreview((prev) => {
         if (prev?.url) {
@@ -849,14 +917,25 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
               className="flex items-center gap-2 px-3 py-2 rounded-lg"
               style={{
                 backgroundColor: inputBg,
-                border: '1px solid rgba(239,68,68,0.4)',
+                border: paused
+                  ? '1px solid rgba(156,163,175,0.4)'
+                  : '1px solid rgba(239,68,68,0.4)',
               }}
             >
               <span
-                className="inline-block w-2 h-2 rounded-full bg-red-500"
-                style={{ boxShadow: '0 0 10px rgba(239,68,68,0.7)', animation: 'piksRecPulse 1s ease-in-out infinite' }}
+                className={`inline-block w-2 h-2 rounded-full ${paused ? 'bg-gray-400' : 'bg-red-500'}`}
+                style={
+                  paused
+                    ? undefined
+                    : { boxShadow: '0 0 10px rgba(239,68,68,0.7)', animation: 'piksRecPulse 1s ease-in-out infinite' }
+                }
               />
-              <span className="text-xs text-red-300 font-medium">Recording</span>
+              <span
+                className="text-xs font-medium"
+                style={{ color: paused ? '#9ca3af' : '#fca5a5' }}
+              >
+                {paused ? 'Paused' : 'Recording'}
+              </span>
               <div
                 className="flex items-end gap-[2px] h-3.5"
                 aria-hidden="true"
@@ -867,10 +946,10 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
                   return (
                     <span
                       key={i}
-                      className="block w-[2px] rounded-sm bg-red-400"
+                      className={`block w-[2px] rounded-sm ${paused ? 'bg-gray-500' : 'bg-red-400'}`}
                       style={{
                         height: `${h}px`,
-                        opacity: 0.55 + lvl * 0.45,
+                        opacity: paused ? 0.5 : 0.55 + lvl * 0.45,
                         transition: 'height 80ms linear, opacity 80ms linear',
                       }}
                     />
@@ -889,6 +968,36 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
                 >
                   Cancel
                 </button>
+                {pauseSupported && (
+                  paused ? (
+                    <button
+                      type="button"
+                      onClick={handleResumeRecording}
+                      aria-label="Resume recording"
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white"
+                      style={{
+                        backgroundColor: '#7f1d1d',
+                        border: '1px solid rgba(239,68,68,0.5)',
+                      }}
+                    >
+                      Resume
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handlePauseRecording}
+                      aria-label="Pause recording"
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold"
+                      style={{
+                        backgroundColor: '#1f1f1f',
+                        color: '#e5e7eb',
+                        border: `1px solid ${cardBorder}`,
+                      }}
+                    >
+                      Pause
+                    </button>
+                  )
+                )}
                 <button
                   type="button"
                   onClick={handleStopRecording}
