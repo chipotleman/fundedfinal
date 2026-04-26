@@ -364,6 +364,12 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   // the user can tap "Continue" to resume the same take instead of starting
   // over. False when the take was finalized via a full stop (no resume path).
   const [resumableTake, setResumableTake] = useState(false);
+  // True when the current browser supports the pause + requestData flow that
+  // powers "Continue". Some Safari/iOS versions ship MediaRecorder without
+  // these methods (or throw at runtime), in which case we surface a disabled
+  // Continue button with an explanation rather than silently hiding it so
+  // users know why it's not available.
+  const [continueSupported, setContinueSupported] = useState(true);
   const recorderRef = useRef(null);
   const recordChunksRef = useRef([]);
   const recordStartRef = useRef(0);
@@ -743,6 +749,14 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       setPauseSupported(
         typeof recorder.pause === 'function' && typeof recorder.resume === 'function'
       );
+      // Continue needs all three: pause + resume to keep the take alive, and
+      // requestData to flush a preview blob without finalizing it. Older
+      // Safari/iOS builds expose MediaRecorder but omit one or more of these.
+      setContinueSupported(
+        typeof recorder.pause === 'function' &&
+        typeof recorder.resume === 'function' &&
+        typeof recorder.requestData === 'function'
+      );
       recorder.ondataavailable = (ev) => {
         if (ev.data && ev.data.size > 0) recordChunksRef.current.push(ev.data);
       };
@@ -987,8 +1001,12 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
         pauseForPreview(rec);
         return;
       } catch {
-        // Pause/flush failed — fall through to the plain stop path below so
-        // the user still gets their preview.
+        // Pause/flush failed at runtime even though the methods exist (some
+        // Safari/iOS builds throw here). Mark Continue unsupported so the
+        // preview row can render a disabled, explanatory button instead of
+        // silently hiding the option, then fall through to the plain stop
+        // path so the user still gets their preview.
+        setContinueSupported(false);
       }
     }
     try { rec.stop(); } catch {}
@@ -1438,6 +1456,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       {!loadError && (
         <form onSubmit={handleSend} className="p-3 flex-shrink-0" style={{ borderTop: `1px solid ${cardBorder}` }}>
           {voicePreview && !recording ? (
+            <>
             <div
               className="flex items-center gap-2 px-3 py-2 rounded-lg flex-wrap"
               style={{
@@ -1466,7 +1485,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
                 >
                   Re-record
                 </button>
-                {resumableTake && (
+                {resumableTake ? (
                   <button
                     type="button"
                     onClick={handleContinueRecording}
@@ -1482,7 +1501,29 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
                   >
                     Continue
                   </button>
-                )}
+                ) : !continueSupported ? (
+                  // The browser (typically older Safari/iOS) doesn't support
+                  // pause + requestData on MediaRecorder, so we can't keep the
+                  // take alive across a preview. Show the option in a clearly
+                  // disabled state with an explanation so users understand why
+                  // it isn't actionable instead of just not seeing it at all.
+                  <button
+                    type="button"
+                    disabled
+                    aria-disabled="true"
+                    aria-label="Continue isn't supported in this browser. Re-record to capture a longer voice note."
+                    title="Continue isn't supported in this browser. Re-record to capture a longer voice note."
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold cursor-not-allowed"
+                    style={{
+                      backgroundColor: '#0f1622',
+                      color: '#bfdbfe',
+                      border: '1px dashed rgba(148,163,184,0.45)',
+                      opacity: 0.5,
+                    }}
+                  >
+                    Continue
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   onClick={handleSendPreview}
@@ -1494,6 +1535,19 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
                 </button>
               </div>
             </div>
+            {!resumableTake && !continueSupported && (
+              // Mobile Safari (the main browser this affects) doesn't show
+              // `title` tooltips on tap, so put the explanation inline as
+              // well so users actually see why Continue is greyed out.
+              <p
+                className="mt-1 text-[11px] flex items-start gap-1.5"
+                style={{ color: textSecondary }}
+              >
+                <span aria-hidden="true">ⓘ</span>
+                <span>Continue isn't supported in this browser — re-record to capture a longer voice note.</span>
+              </p>
+            )}
+            </>
           ) : recording ? (
             <>
             <div
