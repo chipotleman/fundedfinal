@@ -780,13 +780,15 @@ export default function BattlePage() {
   const inviteCount = invites.received?.length || 0;
   const onlineFriendCount = friends.filter(f => f.isOnline).length;
 
-  // Map of friendId -> pending outgoing invite. Lets each friend row show a
-  // "pending" indicator and disable the quick-invite shortcut so the user
-  // can't fire duplicate invites that the server would reject.
-  const pendingInviteByFriendId = new Map();
+  // Map of receiver userId -> pending outgoing invite. Lets friend rows and
+  // search-result rows show a "pending" indicator and disable the
+  // quick-invite shortcut so the user can't fire duplicate invites that the
+  // server would reject. Keyed by user id (not friend id) since search
+  // results aren't necessarily friends.
+  const pendingInviteByUserId = new Map();
   (invites.sent || []).forEach(inv => {
     const rid = inv.receiverId || inv.receiver?.id;
-    if (rid && !pendingInviteByFriendId.has(rid)) pendingInviteByFriendId.set(rid, inv);
+    if (rid && !pendingInviteByUserId.has(rid)) pendingInviteByUserId.set(rid, inv);
   });
 
   const openPendingInvite = useCallback((inviteId) => {
@@ -868,7 +870,7 @@ export default function BattlePage() {
             <div className="divide-y" style={{ borderColor: cardBorder }}>
               {friends.map(friend => {
                 const lastSeenLabel = !friend.isOnline && friend.lastSeenAt != null ? formatLastSeen(friend.lastSeenAt) : '';
-                const pendingInvite = pendingInviteByFriendId.get(friend.id);
+                const pendingInvite = pendingInviteByUserId.get(friend.id);
                 const hasPendingInvite = !!pendingInvite;
                 return (
                 <div key={friend.id} className="flex items-center gap-3 px-3 py-3 group transition-colors hover:bg-white/[0.02]">
@@ -1101,14 +1103,30 @@ export default function BattlePage() {
             </div>
           ) : (
             <div className="divide-y" style={{ borderColor: cardBorder }}>
-              {searchResults.map(user => (
+              {searchResults.map(user => {
+                const pendingInvite = pendingInviteByUserId.get(user.id);
+                const hasPendingInvite = !!pendingInvite;
+                return (
                 <div key={user.id} className="flex items-center gap-2.5 px-3 py-2.5">
                   <div className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer" style={{ backgroundColor: '#374151' }} onClick={() => goToProfile(user)}>
                     {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" alt="" /> : <span className="text-xs font-bold" style={{ color: textPrimary }}>{user.username?.[0]?.toUpperCase()}</span>}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-medium truncate cursor-pointer" style={{ color: textPrimary }} onClick={() => goToProfile(user)}>{user.username}</div>
-                    <div className="text-[10px]" style={{ color: textSecondary }}>{user.battleWins || 0}W-{user.battleLosses || 0}L</div>
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                      <span className="text-[10px]" style={{ color: textSecondary }}>{user.battleWins || 0}W-{user.battleLosses || 0}L</span>
+                      {hasPendingInvite && (
+                        <button
+                          type="button"
+                          onClick={() => openPendingInvite(pendingInvite.id)}
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-orange-500/15 text-orange-300 border border-orange-500/30 hover:bg-orange-500/25 transition-colors"
+                          title="View pending invite"
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
+                          Invite pending
+                        </button>
+                      )}
+                    </div>
                   </div>
                   {userId !== user.id && (
                     friendIds.has(user.id) ? (
@@ -1118,7 +1136,8 @@ export default function BattlePage() {
                     )
                   )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           )
         )}
