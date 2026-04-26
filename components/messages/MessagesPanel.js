@@ -600,7 +600,23 @@ function VoiceWaveform({
         setCurrentMs(startMs);
       }
       const p = a.play();
-      if (p && typeof p.catch === 'function') p.catch(() => {});
+      if (p && typeof p.catch === 'function') {
+        p.catch((err) => {
+          // Log play() rejections so silent preview/bubble playback failures
+          // (autoplay block, NotSupportedError on a malformed blob, missing
+          // src, etc.) leave a breadcrumb in the console rather than just
+          // bouncing the play button back to the idle state.
+          try {
+            console.error('[voice-note] audio.play() failed:', {
+              variant,
+              hasSrc: !!a.src,
+              readyState: a.readyState,
+              networkState: a.networkState,
+              error: err?.name || err?.message || String(err),
+            });
+          } catch (_e) {}
+        });
+      }
     }
   };
 
@@ -820,16 +836,19 @@ function VoiceWaveform({
       <audio
         ref={audioRef}
         src={url}
-        // The waveform bars are driven by the peaks array (either persisted
-        // server-side at send time or decoded lazily during a low-priority
-        // warm-up), and the duration label comes from the persisted message
-        // metadata, so the bubble itself never needs the audio bytes until
-        // the user actually hits play. Using preload="none" prevents the
-        // browser from kicking off a network request for every voice note
-        // the moment a thread opens, which is the whole point of this
-        // change. The browser will load the file lazily when togglePlay
-        // calls .play() below.
-        preload="none"
+        // Chat bubbles use preload="none" so opening a thread doesn't kick
+        // off a network request for every voice note up-front (waveform
+        // bars come from persisted peaks; bytes are loaded lazily when
+        // togglePlay calls .play()).
+        //
+        // The composer preview is the opposite: the blob is already in
+        // memory and the user is about to tap play, so we let the element
+        // load metadata immediately. Without this, some browsers (and
+        // playwright) don't reliably resolve the blob URL on the first
+        // .play() and the preview row plays silently — the same regression
+        // that surfaced as "tapping play on the just-recorded preview
+        // produces no audio" in this task.
+        preload={isPreview ? 'metadata' : 'none'}
         onPlay={(e) => { claimVoicePlayback(e.currentTarget); setPlaying(true); }}
         onPause={(e) => { releaseVoicePlayback(e.currentTarget); setPlaying(false); }}
         onEnded={(e) => { releaseVoicePlayback(e.currentTarget); setPlaying(false); setCurrentMs(endMs); }}
@@ -1391,6 +1410,40 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     audioRafRef.current = requestAnimationFrame(tick);
   };
 
+  // Translate the structured errors thrown by uploadVoiceBlob and the
+  // /api/messages POST into specific user-facing messages so distinct
+  // failure modes (storage down, not friends, signed PUT failed, server
+  // insert error, network drop) no longer collapse to the same generic
+  // "Could not send voice note." string. The original error is also
+  // surfaced via console.error so it remains diagnosable from logs.
+  const messageForSendError = (err) => {
+    const stage = err?.stage;
+    const code = err?.code;
+    const status = err?.status;
+    if (stage === 'request-url') {
+      if (status === 401) return 'You need to sign in again to send voice notes.';
+      if (status === 413) return 'Voice note is too long. Try a shorter recording.';
+      if (status === 503) {
+        if (code === 'storage_sidecar_unreachable') {
+          return "Voice storage isn't reachable right now. Please try again in a moment.";
+        }
+        return 'Voice storage is temporarily unavailable. Please try again later.';
+      }
+      return "Couldn't get an upload slot. Please check your connection and try again.";
+    }
+    if (stage === 'put') {
+      if (err?.network) return "Couldn't upload the voice note — please check your connection.";
+      return `Voice note upload failed${status ? ` (HTTP ${status})` : ''}. Please try again.`;
+    }
+    if (stage === 'message') {
+      if (status === 401) return 'You need to sign in again to send voice notes.';
+      if (status === 403) return 'You can only message friends.';
+      if (status === 400) return 'This voice note was rejected by the server.';
+      return "Voice note uploaded but the server couldn't save it. Please try again.";
+    }
+    return 'Could not send voice note.';
+  };
+
   const sendVoiceBlob = async (blob, durationMs, peaks) => {
     if (!friend?.id) return false;
     setSending(true);
@@ -1399,17 +1452,33 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     try {
       const { attachmentUrl, attachmentDurationMs } = await uploadVoiceBlob(blob, durationMs);
       const cleanPeaks = Array.isArray(peaks) && peaks.length > 0 ? peaks : null;
-      const res = await sendMessagePayload({
-        receiverId: friend.id,
-        content: '',
-        messageType: 'voice',
-        attachmentUrl,
-        attachmentDurationMs,
-        attachmentPeaks: cleanPeaks,
-      });
+      let res;
+      try {
+        res = await sendMessagePayload({
+          receiverId: friend.id,
+          content: '',
+          messageType: 'voice',
+          attachmentUrl,
+          attachmentDurationMs,
+          attachmentPeaks: cleanPeaks,
+        });
+      } catch (netErr) {
+        const wrapped = new Error('voice-send-message-network');
+        wrapped.stage = 'message';
+        wrapped.network = true;
+        wrapped.cause = netErr;
+        throw wrapped;
+      }
       if (!res.ok) {
-        setSendError(res.status === 403 ? 'You can only message friends.' : 'Could not send voice note.');
-        return false;
+        const wrapped = new Error('voice-send-message-failed');
+        wrapped.stage = 'message';
+        wrapped.status = res.status;
+        try {
+          const body = await res.clone().json();
+          if (body?.error) wrapped.serverMessage = body.error;
+          if (body?.code) wrapped.code = body.code;
+        } catch (_e) {}
+        throw wrapped;
       }
       const data = await res.json();
       if (data?.message) {
@@ -1439,7 +1508,15 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       ctx.refresh?.();
       return true;
     } catch (err) {
-      setSendError('Could not send voice note.');
+      console.error('[voice-note] send failed:', {
+        stage: err?.stage || 'unknown',
+        status: err?.status,
+        code: err?.code,
+        serverMessage: err?.serverMessage,
+        network: !!err?.network,
+        message: err?.message,
+      });
+      setSendError(messageForSendError(err));
       return false;
     } finally {
       setSending(false);
@@ -1452,25 +1529,64 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       : blob.type.includes('ogg') ? 'ogg'
       : 'webm';
     const filename = `voice-${Date.now()}.${ext}`;
-    const reqRes = await fetch('/api/uploads/request-url', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        name: filename,
-        size: blob.size,
-        contentType: blob.type || 'audio/webm',
-        kind: 'voice-note',
-      }),
-    });
-    if (!reqRes.ok) throw new Error('upload-url-failed');
+    // Strip the codec parameter from the MIME (e.g. `audio/webm;codecs=opus`
+    // → `audio/webm`) before signing/uploading. The bare type is what other
+    // browsers expect to see when the file is later re-served, so stashing
+    // the parameter-laden value in object-storage metadata isn't worth the
+    // playback risk for receivers on Safari.
+    const baseMime = (blob.type || 'audio/webm').split(';')[0].trim() || 'audio/webm';
+    let reqRes;
+    try {
+      reqRes = await fetch('/api/uploads/request-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: filename,
+          size: blob.size,
+          contentType: baseMime,
+          kind: 'voice-note',
+        }),
+      });
+    } catch (netErr) {
+      const wrapped = new Error('voice-request-url-network');
+      wrapped.stage = 'request-url';
+      wrapped.network = true;
+      wrapped.cause = netErr;
+      throw wrapped;
+    }
+    if (!reqRes.ok) {
+      const wrapped = new Error('voice-request-url-failed');
+      wrapped.stage = 'request-url';
+      wrapped.status = reqRes.status;
+      try {
+        const body = await reqRes.clone().json();
+        if (body?.error) wrapped.serverMessage = body.error;
+        if (body?.code) wrapped.code = body.code;
+      } catch (_e) {}
+      throw wrapped;
+    }
     const { uploadURL, objectPath } = await reqRes.json();
-    const putRes = await fetch(uploadURL, {
-      method: 'PUT',
-      headers: { 'Content-Type': blob.type || 'audio/webm' },
-      body: blob,
-    });
-    if (!putRes.ok) throw new Error('upload-failed');
+    let putRes;
+    try {
+      putRes = await fetch(uploadURL, {
+        method: 'PUT',
+        headers: { 'Content-Type': baseMime },
+        body: blob,
+      });
+    } catch (netErr) {
+      const wrapped = new Error('voice-put-network');
+      wrapped.stage = 'put';
+      wrapped.network = true;
+      wrapped.cause = netErr;
+      throw wrapped;
+    }
+    if (!putRes.ok) {
+      const wrapped = new Error('voice-put-failed');
+      wrapped.stage = 'put';
+      wrapped.status = putRes.status;
+      throw wrapped;
+    }
     return { attachmentUrl: objectPath, attachmentDurationMs: durationMs };
   };
 
