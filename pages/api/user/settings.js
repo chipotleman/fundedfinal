@@ -7,6 +7,7 @@ import { eq, and, ne } from 'drizzle-orm';
 const ALLOWED_ODDS_FORMATS = ['american', 'decimal'];
 const ALLOWED_NOTIF_KEYS = ['betResults', 'challengeUpdates', 'promotions', 'weeklyReports'];
 const ALLOWED_PRIVACY_KEYS = ['profileVisible', 'showStats', 'showInLeaderboard'];
+const ALLOWED_NOTIF_FILTERS = ['all', 'invite', 'rematch', 'result', 'friend'];
 
 const DEFAULT_NOTIFS = {
   betResults: true,
@@ -89,6 +90,9 @@ export default async function handler(req, res) {
           facebookUrl: profile?.facebookUrl || '',
           oddsFormat: profile?.oddsFormat || 'american',
           notifications: { ...DEFAULT_NOTIFS, ...(profile?.notificationPrefs || {}) },
+          notificationsFilter: ALLOWED_NOTIF_FILTERS.includes(profile?.notificationsFilter)
+            ? profile.notificationsFilter
+            : 'all',
           privacy: { ...DEFAULT_PRIVACY, ...(profile?.privacyPrefs || {}) },
         },
       });
@@ -154,6 +158,13 @@ export default async function handler(req, res) {
         updates.oddsFormat = body.oddsFormat;
       }
 
+      if (body.notificationsFilter !== undefined) {
+        if (!ALLOWED_NOTIF_FILTERS.includes(body.notificationsFilter)) {
+          return res.status(400).json({ error: 'Invalid notifications filter' });
+        }
+        updates.notificationsFilter = body.notificationsFilter;
+      }
+
       if (body.notifications && typeof body.notifications === 'object') {
         const cleaned = {};
         for (const k of ALLOWED_NOTIF_KEYS) {
@@ -208,6 +219,9 @@ export default async function handler(req, res) {
           facebookUrl: saved.facebookUrl || '',
           oddsFormat: saved.oddsFormat || 'american',
           notifications: { ...DEFAULT_NOTIFS, ...(saved.notificationPrefs || {}) },
+          notificationsFilter: ALLOWED_NOTIF_FILTERS.includes(saved.notificationsFilter)
+            ? saved.notificationsFilter
+            : 'all',
           privacy: { ...DEFAULT_PRIVACY, ...(saved.privacyPrefs || {}) },
         },
       });

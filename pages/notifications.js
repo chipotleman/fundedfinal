@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import TopNavbar from '../components/TopNavbar';
@@ -519,13 +519,19 @@ export default function NotificationsPage() {
   const { data: session, status } = useSession();
   const ctx = useNotifications();
   const [filter, setFilterState] = useState('all');
+  // Tracks whether the user has manually changed the filter in this session.
+  // Used to discard a late-arriving server fetch that would otherwise
+  // clobber a fresh local choice (race between initial GET and a quick tap).
+  const userChangedFilterRef = useRef(false);
 
   const isAuthed = status === 'authenticated';
 
   // Restore the user's last-selected filter from localStorage so it sticks
   // across browser sessions (closing the tab/browser still preserves it).
   // We also fall back to any value previously stored in sessionStorage so
-  // users mid-session don't lose their selection on the upgrade.
+  // users mid-session don't lose their selection on the upgrade. For
+  // signed-in users this is just the initial guess — the server-side
+  // account preference (fetched below) takes precedence and overwrites it.
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -540,13 +546,58 @@ export default function NotificationsPage() {
     } catch {}
   }, []);
 
+  // For signed-in users, fetch the per-account preference and prefer it
+  // over the locally cached value so the chosen filter follows them across
+  // devices. We only apply the server value if it's a known filter key.
+  useEffect(() => {
+    if (!isAuthed) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/user/settings');
+        if (!res.ok) return;
+        const data = await res.json();
+        const serverFilter = data?.settings?.notificationsFilter;
+        if (cancelled) return;
+        // If the user already changed the filter while this fetch was in
+        // flight, their fresh choice takes precedence — discard the server
+        // value to avoid a flicker / clobber.
+        if (userChangedFilterRef.current) return;
+        if (serverFilter && FILTERS.some((f) => f.key === serverFilter)) {
+          setFilterState(serverFilter);
+          // Mirror to localStorage so the next visit on this device renders
+          // the right pill instantly without waiting on the network.
+          if (typeof window !== 'undefined') {
+            try { window.localStorage.setItem(FILTER_STORAGE_KEY, serverFilter); } catch {}
+          }
+        }
+      } catch {
+        // Network errors fall through silently — we keep the localStorage
+        // / default value rather than blocking the page.
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isAuthed]);
+
   const setFilter = (next) => {
+    userChangedFilterRef.current = true;
     setFilterState(next);
     if (typeof window !== 'undefined') {
       try { window.localStorage.setItem(FILTER_STORAGE_KEY, next); } catch {}
       // Keep sessionStorage in sync (and clear stale values) so the two
       // stores don't disagree if some other code path still reads it.
       try { window.sessionStorage.setItem(FILTER_STORAGE_KEY, next); } catch {}
+    }
+    // Write through to the per-account preference so the choice follows
+    // the user to other devices. Anonymous users keep using localStorage
+    // only. We only fire-and-forget — the optimistic state update above
+    // already reflects the change in the UI.
+    if (isAuthed) {
+      fetch('/api/user/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notificationsFilter: next }),
+      }).catch(() => {});
     }
   };
 

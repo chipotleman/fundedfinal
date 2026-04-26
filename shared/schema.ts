@@ -57,6 +57,7 @@ export const profiles = pgTable("profiles", {
   facebookUrl: text("facebook_url"),
   oddsFormat: varchar("odds_format", { length: 20 }).default('american'),
   notificationPrefs: jsonb("notification_prefs").$type<Record<string, boolean>>().default({}),
+  notificationsFilter: varchar("notifications_filter", { length: 20 }).default('all'),
   privacyPrefs: jsonb("privacy_prefs").$type<Record<string, boolean>>().default({}),
   sportPreferences: jsonb("sport_preferences").default([]),
   bettingStyle: varchar("betting_style", { length: 50 }),
