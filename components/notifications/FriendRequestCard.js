@@ -88,6 +88,41 @@ function pickContextLine(context) {
   return null;
 }
 
+/**
+ * Small overlapping stack of mutual-friend avatars rendered next to the
+ * "<N> mutual friends" line. Caps at 3 so the row stays compact, and falls
+ * back to nothing when no preview is provided so the layout collapses
+ * gracefully on senders with no overlap.
+ */
+function MutualFriendsStack({ preview, size = 18 }) {
+  if (!Array.isArray(preview) || preview.length === 0) return null;
+  const items = preview.slice(0, 3);
+  const overlap = Math.round(size * 0.35);
+  return (
+    <span
+      className="inline-flex items-center flex-shrink-0"
+      aria-hidden="true"
+    >
+      {items.map((u, i) => (
+        <span
+          key={u.id || i}
+          style={{
+            marginLeft: i === 0 ? 0 : `-${overlap}px`,
+            borderRadius: '9999px',
+            padding: '1px',
+            background: 'rgba(168,85,247,0.55)',
+            display: 'inline-flex',
+            zIndex: items.length - i,
+          }}
+          title={u.username || 'Player'}
+        >
+          <UserAvatar user={u} size={size} />
+        </span>
+      ))}
+    </span>
+  );
+}
+
 export default function FriendRequestCard({
   sender,
   time,
@@ -113,7 +148,12 @@ export default function FriendRequestCard({
   onProfileNavigate,
 }) {
   const contextLine = pickContextLine(context);
+  const mutualPreview = Array.isArray(context?.mutualFriendPreview)
+    ? context.mutualFriendPreview
+    : [];
+  const showMutualStack = (Number(context?.mutualFriends) || 0) > 0 && mutualPreview.length > 0;
   const avatarSize = compact ? 52 : 60;
+  const stackAvatarSize = compact ? 16 : 18;
   const containerCls = inset
     ? 'relative px-4 py-3'
     : 'relative rounded-xl p-3.5 sm:p-4';
@@ -188,10 +228,13 @@ export default function FriendRequestCard({
           </div>
           {contextLine && (
             <div
-              className="text-[11px] sm:text-xs mt-0.5 truncate"
+              className="flex items-center gap-1.5 text-[11px] sm:text-xs mt-0.5 min-w-0"
               style={{ color: 'rgba(216,180,254,0.85)' }}
             >
-              {contextLine}
+              {showMutualStack && (
+                <MutualFriendsStack preview={mutualPreview} size={stackAvatarSize} />
+              )}
+              <span className="truncate">{contextLine}</span>
             </div>
           )}
         </div>

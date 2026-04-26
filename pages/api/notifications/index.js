@@ -169,20 +169,54 @@ export default async function handler(req, res) {
           priorBattlesBySender.set(otherId, (priorBattlesBySender.get(otherId) || 0) + 1);
         }
 
-        // 4. Build the per-sender context payload.
+        // 4. Pre-compute mutual-friend id lists per sender (intersection of
+        //    sender's friends with mine), capped at 3 each for the preview
+        //    avatar stack. Collect every mutual id we want to display so we
+        //    can fetch their profiles in one batched query below.
+        const MUTUAL_PREVIEW_LIMIT = 3;
+        const mutualIdsBySender = new Map();
+        const allMutualPreviewIds = new Set();
         for (const sid of friendRequestSenderIds) {
-          let mutualFriends = 0;
           const senderSet = senderFriendIdsBySender.get(sid);
+          const mutualIds = [];
           if (senderSet && myFriendIds.size > 0) {
             for (const fid of senderSet) {
-              if (myFriendIds.has(fid)) mutualFriends += 1;
+              if (myFriendIds.has(fid)) mutualIds.push(fid);
             }
           }
+          mutualIdsBySender.set(sid, mutualIds);
+          for (let i = 0; i < Math.min(MUTUAL_PREVIEW_LIMIT, mutualIds.length); i++) {
+            allMutualPreviewIds.add(mutualIds[i]);
+          }
+        }
+
+        // 5. Batched profile lookup for every avatar we'll display.
+        const mutualProfileMap = new Map();
+        if (allMutualPreviewIds.size > 0) {
+          const previewProfiles = await db
+            .select({ id: profiles.id, username: profiles.username, avatar: profiles.avatar })
+            .from(profiles)
+            .where(inArray(profiles.id, [...allMutualPreviewIds]));
+          previewProfiles.forEach(p => mutualProfileMap.set(p.id, p));
+        }
+
+        // 6. Build the per-sender context payload.
+        for (const sid of friendRequestSenderIds) {
+          const mutualIds = mutualIdsBySender.get(sid) || [];
+          const mutualFriends = mutualIds.length;
+          const mutualFriendPreview = mutualIds
+            .slice(0, MUTUAL_PREVIEW_LIMIT)
+            .map(fid => {
+              const p = mutualProfileMap.get(fid);
+              if (!p) return null;
+              return { id: p.id, username: p.username || 'Player', avatar: p.avatar || null };
+            })
+            .filter(Boolean);
           const priorBattles = priorBattlesBySender.get(sid) || 0;
           const joinedAt = userMap.get(sid)?.createdAt
             ? new Date(userMap.get(sid).createdAt).toISOString()
             : null;
-          friendCtxMap.set(sid, { mutualFriends, priorBattles, joinedAt });
+          friendCtxMap.set(sid, { mutualFriends, mutualFriendPreview, priorBattles, joinedAt });
         }
       } catch (_e) {}
     }
