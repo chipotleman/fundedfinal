@@ -6,6 +6,7 @@ import TopNavbar from '../../components/TopNavbar';
 import BetSlip from '../../components/BetSlip';
 import UserAvatar from '../../components/UserAvatar';
 import AchievementBadge from '../../components/AchievementBadge';
+import AchievementDetailModal from '../../components/AchievementDetailModal';
 import ActiveStatus from '../../components/ActiveStatus';
 import ProfileEditPanel from '../../components/ProfileEditPanel';
 import MessagePopup from '../../components/messages/MessagePopup';
@@ -33,6 +34,7 @@ export default function PublicProfile() {
   const { id } = router.query;
   const notificationsCtx = useNotifications();
   const [messageOpen, setMessageOpen] = useState(false);
+  const [selectedAchievement, setSelectedAchievement] = useState(null);
 
   const cachedProfileEntry = id ? cache.getProfile(id) : null;
   const cachedHistoryEntry = id ? cache.getHistory(id) : null;
@@ -990,10 +992,31 @@ export default function PublicProfile() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {profile.frames.map((f) => {
                 const isEquipped = profile.equippedFrame === f.id;
+                const progress = Array.isArray(profile.allAchievements)
+                  ? profile.allAchievements.find((a) => a && a.id === f.achievementId)
+                  : null;
+                const detail = {
+                  achievementId: f.achievementId,
+                  name: f.name,
+                  description: f.description,
+                  rarity: f.rarity,
+                  earned: !!f.unlocked,
+                  earnedAt: progress?.earnedAt || null,
+                  progressText: progress?.progressText || '',
+                  progressLabel: progress?.progressLabel || '',
+                  progressPercent: progress
+                    ? progress.progressPercent
+                    : f.unlocked
+                      ? 100
+                      : 0,
+                };
                 return (
-                  <div
+                  <button
                     key={f.id}
-                    className="rounded-xl p-3 flex flex-col items-center text-center gap-2"
+                    type="button"
+                    onClick={() => setSelectedAchievement(detail)}
+                    aria-label={`View details for ${f.name} ${f.unlocked ? '(unlocked)' : '(locked)'}`}
+                    className="rounded-xl p-3 flex flex-col items-center text-center gap-2 text-left transition-colors hover:bg-[#161616] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                     style={{
                       backgroundColor: '#111',
                       border: `1px solid ${isEquipped ? '#3b82f6' : '#1a1a1a'}`,
@@ -1015,7 +1038,7 @@ export default function PublicProfile() {
                         <div className="text-[10px] text-blue-400 font-semibold mt-0.5">Equipped</div>
                       )}
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -1181,6 +1204,11 @@ export default function PublicProfile() {
         ctx={notificationsCtx}
         myId={session?.user?.id}
         onClose={() => setMessageOpen(false)}
+      />
+      <AchievementDetailModal
+        isOpen={!!selectedAchievement}
+        achievement={selectedAchievement}
+        onClose={() => setSelectedAchievement(null)}
       />
     </div>
   );

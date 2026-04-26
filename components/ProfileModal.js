@@ -1,13 +1,19 @@
 
-import { Fragment, useEffect } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import useModalScrollLock from '../hooks/useModalScrollLock';
 import { formatMoney } from '../utils/formatMoney';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import AchievementBadge from './AchievementBadge';
+import AchievementDetailModal from './AchievementDetailModal';
 
 export default function ProfileModal({ profile, isOpen, onClose }) {
   useModalScrollLock(isOpen);
   const { formatOdds } = useUserPreferences();
+  const [selectedAchievement, setSelectedAchievement] = useState(null);
+
+  useEffect(() => {
+    if (!isOpen) setSelectedAchievement(null);
+  }, [isOpen]);
 
   if (!isOpen || !profile) return null;
 
@@ -117,10 +123,26 @@ export default function ProfileModal({ profile, isOpen, onClose }) {
                         const isEarned = !!achievement.earned;
                         const pct = Math.max(0, Math.min(100, Number(achievement.progressPercent) || 0));
                         const earnedDate = formatEarnedAt(achievement.earnedAt) || formatEarnedAt(earnedById.get(achievement.id)?.earnedAt);
+                        const handleOpen = () => {
+                          setSelectedAchievement({
+                            achievementId: achievement.id,
+                            name: achievement.name || achievement.title,
+                            description: achievement.description,
+                            rarity: achievement.rarity,
+                            earned: isEarned,
+                            earnedAt: achievement.earnedAt || earnedById.get(achievement.id)?.earnedAt || null,
+                            progressText: achievement.progressText || '',
+                            progressLabel: achievement.progressLabel || '',
+                            progressPercent: pct,
+                          });
+                        };
                         return (
-                          <div
+                          <button
                             key={achievement.id || index}
-                            className="rounded-lg p-3"
+                            type="button"
+                            onClick={handleOpen}
+                            aria-label={`View details for ${achievement.name || achievement.title} ${isEarned ? '(unlocked)' : '(locked)'}`}
+                            className="w-full text-left rounded-lg p-3 transition-colors hover:bg-[#161616] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                             style={{
                               backgroundColor: isEarned ? '#111' : '#0a0a0a',
                               border: `1px solid ${isEarned ? '#1a1a1a' : '#161616'}`,
@@ -166,7 +188,7 @@ export default function ProfileModal({ profile, isOpen, onClose }) {
                                 </div>
                               </div>
                             )}
-                          </div>
+                          </button>
                         );
                       })}
                     </div>
@@ -252,6 +274,11 @@ export default function ProfileModal({ profile, isOpen, onClose }) {
             </div>
           </div>
         </div>
+      <AchievementDetailModal
+        isOpen={!!selectedAchievement}
+        achievement={selectedAchievement}
+        onClose={() => setSelectedAchievement(null)}
+      />
     </div>
   );
 }
