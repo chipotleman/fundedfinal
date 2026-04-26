@@ -18,7 +18,8 @@ export default function TopNavbar({
   betSlipCount,
   onBetSlipClick,
   pinned = true,
-  condensedEngaged = false,
+  headerPassed = false,
+  sportsRowPassed = false,
   renderCondensedSportPills,
 }) {
   const { betSlip: ctxBetSlip, showBetSlip: ctxShowBetSlip, setShowBetSlip: ctxSetShowBetSlip } = useBetSlip();
@@ -26,7 +27,14 @@ export default function TopNavbar({
   const effectiveOnBetSlipClick = onBetSlipClick || (() => ctxSetShowBetSlip(!ctxShowBetSlip));
   const condensedBarRef = useRef(null);
   const hasCondensedBar = !!renderCondensedSportPills;
-  const showCondensedBar = hasCondensedBar && condensedEngaged;
+  // Stage 1: condensed bar mounts as soon as the main header scrolls away
+  // (`headerPassed`). The mount/unmount on this flip is what lets iOS
+  // Safari re-engage cleanly on every scroll-up-then-down pass.
+  // Stage 2: once the inline sport row also scrolls away
+  // (`sportsRowPassed`), the already-mounted bar swaps in its sport
+  // pills slot — no remount, just a content swap.
+  const showCondensedBar = hasCondensedBar && headerPassed;
+  const showCondensedPills = showCondensedBar && sportsRowPassed;
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
@@ -950,7 +958,7 @@ export default function TopNavbar({
             borderBottom: '1px solid rgba(255,255,255,0.06)',
           }}
         >
-          <div className="px-3 sm:px-6 py-1.5 flex items-center gap-2 sm:gap-3 min-h-[52px] sm:min-h-[56px]">
+          <div className="px-2 sm:px-4 py-1 flex items-center gap-1.5 sm:gap-2 min-h-[48px] sm:min-h-[52px]">
             {/* Logo / scroll-to-top */}
             <a
               href="/"
@@ -966,28 +974,35 @@ export default function TopNavbar({
               <img
                 src="/pikslogotransparent.png"
                 alt="Piks"
-                className="h-8 sm:h-9 w-auto flex-shrink-0"
+                className="h-7 sm:h-8 w-auto flex-shrink-0"
               />
             </a>
 
-            {/* Sport pills (rendered by parent so selection stays in sync) */}
-            <div className="flex-1 min-w-0 overflow-hidden">
-              {renderCondensedSportPills && renderCondensedSportPills()}
-            </div>
+            {/* Sport pills (rendered by parent so selection stays in sync).
+                Only the pills slot grows + scrolls horizontally. When stage 2
+                hasn't engaged yet we render an empty flex spacer so the
+                right-side controls stay anchored to the right edge. */}
+            {showCondensedPills ? (
+              <div className="flex-1 min-w-0 overflow-hidden">
+                {renderCondensedSportPills && renderCondensedSportPills()}
+              </div>
+            ) : (
+              <div className="flex-1 min-w-0" aria-hidden="true" />
+            )}
 
             {/* Cash balance — same source as the desktop pill in the full nav */}
             {isLoggedIn && hasActiveChallenge && userProfile && (
               <button
                 onClick={() => setExplainerType('cash')}
                 title="Real cash balance — click for details"
-                className="flex-shrink-0 flex items-center gap-1 rounded-md px-2 py-1.5 transition-colors hover:brightness-110"
+                className="flex-shrink-0 flex items-center gap-1 rounded-md px-1.5 py-1 transition-colors hover:brightness-110"
                 style={{
                   background: 'linear-gradient(180deg, rgba(34,197,94,0.15) 0%, rgba(21,128,61,0.08) 100%)',
                   border: '1px solid rgba(34,197,94,0.45)',
                 }}
               >
-                <span className="text-xs leading-none">💵</span>
-                <span className="font-bold text-xs whitespace-nowrap" style={{ color: '#86efac' }}>
+                <span className="text-[11px] leading-none">💵</span>
+                <span className="font-bold text-[11px] sm:text-xs whitespace-nowrap" style={{ color: '#86efac' }}>
                   ${formatMoney(parseFloat(userProfile.bankroll), 0)}
                 </span>
               </button>
@@ -998,29 +1013,76 @@ export default function TopNavbar({
               <button
                 onClick={() => setExplainerType('coins')}
                 title="In-battle play coins — click for details"
-                className="flex-shrink-0 flex items-center gap-1 rounded-md px-2 py-1.5 transition-colors hover:brightness-110"
+                className="flex-shrink-0 flex items-center gap-1 rounded-md px-1.5 py-1 transition-colors hover:brightness-110"
                 style={{
                   background: 'linear-gradient(180deg, rgba(251,146,60,0.15) 0%, rgba(194,65,12,0.08) 100%)',
                   border: '1px solid rgba(251,146,60,0.45)',
                 }}
                 aria-label="Battle coins details"
               >
-                <span className="text-xs leading-none" style={{ color: '#fb923c' }}>⚔</span>
-                <span className="font-bold text-xs whitespace-nowrap" style={{ color: '#fed7aa' }}>
+                <span className="text-[11px] leading-none" style={{ color: '#fb923c' }}>⚔</span>
+                <span className="font-bold text-[11px] sm:text-xs whitespace-nowrap" style={{ color: '#fed7aa' }}>
                   {formatMoney(parseFloat(matchupBalance), 0)}
                 </span>
               </button>
+            )}
+
+            {/* Notifications + messages affordances — kept as plain links to
+                the dedicated pages so they work on mobile (where the main
+                nav hides them behind the hamburger) and avoid dropdown
+                anchoring conflicts with the main nav versions that are
+                still mounted underneath. Badges mirror the main nav. */}
+            {isLoggedIn && (
+              <Link
+                href="/notifications"
+                title={notifTotal > 0 ? `${notifTotal} new notification${notifTotal > 1 ? 's' : ''}` : 'Notifications'}
+                aria-label={notifTotal > 0 ? `${notifTotal} new notifications` : 'Notifications'}
+                className="relative flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full transition-colors hover:bg-blue-400/10"
+              >
+                <svg className="w-4 h-4 sm:w-[18px] sm:h-[18px]" fill="none" stroke="#e5e7eb" strokeWidth={1.8} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                </svg>
+                {notifTotal > 0 && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center"
+                    style={{ boxShadow: '0 0 6px rgba(239,68,68,0.6)' }}
+                  >
+                    {notifTotal > 9 ? '9+' : notifTotal}
+                  </span>
+                )}
+              </Link>
+            )}
+
+            {isLoggedIn && (
+              <Link
+                href="/messenger"
+                title={notifMessages > 0 ? `${notifMessages} unread message${notifMessages > 1 ? 's' : ''}` : 'Messages'}
+                aria-label={notifMessages > 0 ? `${notifMessages} unread messages` : 'Messages'}
+                className="relative flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full transition-colors hover:bg-blue-400/10"
+              >
+                <svg className="w-4 h-4 sm:w-[18px] sm:h-[18px]" fill="none" stroke="#e5e7eb" strokeWidth={1.8} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
+                </svg>
+                {notifMessages > 0 && (
+                  <span
+                    className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center"
+                    style={{ boxShadow: '0 0 6px rgba(239,68,68,0.6)' }}
+                  >
+                    {notifMessages > 9 ? '9+' : notifMessages}
+                  </span>
+                )}
+              </Link>
             )}
 
             {/* Bet slip mirror — only when slip has items */}
             {effectiveBetSlipCount > 0 && (
               <button
                 onClick={effectiveOnBetSlipClick}
-                className="relative flex-shrink-0 font-bold py-1.5 px-2 sm:px-3 rounded-md flex items-center space-x-1 text-xs no-hover-effect"
+                className="relative flex-shrink-0 font-bold py-1 px-1.5 sm:px-2.5 rounded-md flex items-center space-x-1 text-[11px] sm:text-xs no-hover-effect"
                 style={{ backgroundColor: '#2563eb', color: '#ffffff' }}
                 aria-label="Open bet slip"
               >
-                <svg className="w-3.5 h-3.5" style={{ fill: '#ffffff' }} viewBox="0 0 20 20">
+                <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" style={{ fill: '#ffffff' }} viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
                 </svg>
                 <span style={{ color: '#ffffff' }}>Slip</span>
