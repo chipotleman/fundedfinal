@@ -34,6 +34,10 @@ export default function MessagePopup({ isOpen, friend, ctx, myId, onClose }) {
       className="fixed inset-0 z-[80] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm message-popup-fade"
       onClick={onClose}
       role="presentation"
+      // Defense-in-depth boundary marker, matching BattleOverviewPopup.
+      // The actual scroll isolation is enforced by `overscroll-contain`
+      // on the ConversationThread message list (the only inner scroller).
+      style={{ overscrollBehavior: 'contain' }}
     >
       <div
         ref={cardRef}

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import html2canvas from 'html2canvas';
 import PiksBetCard from './PiksBetCard';
+import useModalScrollLock from '../hooks/useModalScrollLock';
 import { formatMoney } from '../utils/formatMoney';
 import { calculatePayout } from '../utils/odds';
 import { trackShare } from '../lib/shareTracking';
@@ -17,44 +18,12 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [message, setMessage] = useState('');
   const cardContainerRef = useRef(null);
-  const scrollPositionRef = useRef(0);
 
-  useEffect(() => {
-    if (!isVisible) return;
-
-    scrollPositionRef.current = window.scrollY;
-
-    const scrollY = window.scrollY;
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.left = '0';
-    document.body.style.right = '0';
-    document.body.style.width = '100%';
-    document.body.style.overflow = 'hidden';
-    document.documentElement.style.overflow = 'hidden';
-
-    const preventScroll = (e) => {
-      e.preventDefault();
-    };
-    
-    document.addEventListener('touchmove', preventScroll, { passive: false });
-    document.addEventListener('wheel', preventScroll, { passive: false });
-
-    return () => {
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
-      document.body.style.width = '';
-      document.body.style.overflow = '';
-      document.documentElement.style.overflow = '';
-      
-      document.removeEventListener('touchmove', preventScroll);
-      document.removeEventListener('wheel', preventScroll);
-      
-      window.scrollTo(0, scrollPositionRef.current);
-    };
-  }, [isVisible]);
+  // Use the shared hook so this modal composes with the stacked-modal
+  // counter and route-change cleanup. The overlay below already carries
+  // `touch-action: none` + `overflow: hidden`, so iOS Safari refuses to
+  // scroll the page from a pan on the backdrop without any JS listeners.
+  useModalScrollLock(isVisible, { restoreScroll: true });
 
   const showMessage = (text) => {
     setMessage(text);
