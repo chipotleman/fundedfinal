@@ -1701,6 +1701,25 @@ export default function BattlePage() {
             </div>
           )}
 
+          {/* Stable empty slot for the active matchup section. The matchup
+              card itself only mounts when an active matchup exists, so a
+              failed/timed-out fetch would otherwise look identical to "you
+              have no active battle right now". When the matchup fetch is in
+              the failed/retrying state and we have nothing to show, surface
+              the same soft retry hint used by friends/requests/invites so the
+              user can try again without a full page reload. */}
+          {!isGuest && !activeMatchup && (sectionStatus.matchup === 'failed' || sectionStatus.matchup === 'retrying') && (
+            <div className="mb-4 rounded-xl overflow-hidden" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, boxShadow: cardShadow }}>
+              <div className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#6b7280' }}></div>
+                  <span className="text-sm font-semibold" style={{ color: textPrimary }}>Active Battle</span>
+                </div>
+              </div>
+              <RetryHint sectionKey="matchup" />
+            </div>
+          )}
+
           {activeMatchup && activeMatchup.status === 'waiting' && (
             <div className="mb-4 rounded-xl overflow-hidden" style={{ backgroundColor: '#0d0d0d', border: `1px solid ${'rgba(249,115,22,0.2)'}`, boxShadow: cardShadow }}>
               <div className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: `1px solid ${cardBorder}` }}>
@@ -2133,6 +2152,81 @@ export default function BattlePage() {
 
                 <div className="flex-1 min-w-0 order-2 lg:order-1">
                   {socialHeader}
+                  {/* Your recent matches list. Renders the previously-unused
+                      `recentMatches` state so a failed/timed-out
+                      `/api/battles/history` fetch can surface the same soft
+                      retry hint we already use for friends/requests/invites.
+                      The card only mounts for authenticated users when there
+                      is something meaningful to show (loaded matches, or a
+                      failed/retrying status); successful empty results stay
+                      silent so brand-new accounts aren't shown an
+                      "always-empty" surface. */}
+                  {!isGuest && (recentMatches.length > 0 || sectionStatus.history === 'failed' || sectionStatus.history === 'retrying') && (
+                    <div className="mb-5 rounded-xl overflow-hidden" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, boxShadow: cardShadow }}>
+                      <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: `1px solid ${cardBorder}` }}>
+                        <span className="text-sm font-bold" style={{ color: textPrimary }}>Your recent matches</span>
+                        {recentMatches.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => setShowHistory(true)}
+                            className="text-xs font-medium text-blue-400"
+                          >
+                            View all
+                          </button>
+                        )}
+                      </div>
+                      {recentMatches.length === 0 ? (
+                        <RetryHint sectionKey="history" />
+                      ) : (
+                        <div className="divide-y" style={{ borderColor: cardBorder }}>
+                          {recentMatches.slice(0, 5).map((m) => {
+                            const result = m.result;
+                            const badge = result === 'win'
+                              ? { text: 'WIN', color: 'bg-green-500/15 text-green-300 border-green-500/30' }
+                              : result === 'loss'
+                                ? { text: 'LOSS', color: 'bg-red-500/15 text-red-300 border-red-500/30' }
+                                : result === 'tie'
+                                  ? { text: 'TIE', color: 'bg-yellow-500/15 text-yellow-300 border-yellow-500/30' }
+                                  : result === 'cancelled'
+                                    ? { text: 'CANCELLED', color: 'bg-gray-500/15 text-gray-300 border-gray-500/30' }
+                                    : { text: 'ACTIVE', color: 'bg-blue-500/15 text-blue-300 border-blue-500/30' };
+                            const pnl = parseFloat(m.pnl || 0);
+                            const pnlPositive = pnl >= 0;
+                            return (
+                              <div key={m.id} className="flex items-center gap-3 px-3 py-3 hover:bg-white/[0.02] transition-colors">
+                                <div className="flex-shrink-0 cursor-pointer" onClick={() => goToProfile(m.opponent)}>
+                                  <FramedAvatar user={m.opponent} size={40} onlineDotBorderColor={cardBg} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="text-sm font-bold truncate cursor-pointer" style={{ color: textPrimary }} onClick={() => goToProfile(m.opponent)}>
+                                    {m.opponent?.username || 'Player'}
+                                  </div>
+                                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold border ${badge.color}`}>
+                                      {badge.text}
+                                    </span>
+                                    <span className="text-[10px]" style={{ color: textSecondary }}>
+                                      ${formatMoney(m.potSize || 0, 0)} pot
+                                    </span>
+                                    {m.endsAt && (
+                                      <span className="text-[10px]" style={{ color: textSecondary }}>
+                                        · {formatLastSeen(m.endsAt)}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                {result !== 'cancelled' && result !== 'pending' && (
+                                  <div className={`text-sm font-bold flex-shrink-0 ${pnlPositive ? 'text-green-400' : 'text-red-400'}`}>
+                                    {pnlPositive ? '+' : ''}${formatMoney(pnl, 0)}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   <div className="mb-5">
                     <LiveBattlesSection focusBattleId={focusLiveBattleId || router.query.battle} currentUserId={userId} />
                   </div>
