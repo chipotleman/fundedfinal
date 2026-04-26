@@ -12,6 +12,7 @@ import { MatchupProvider, useMatchup } from '../contexts/MatchupContext';
 import { NotificationsProvider } from '../contexts/NotificationsContext';
 import { PushNotificationsProvider } from '../contexts/PushNotificationsContext';
 import GlobalToastContainer from '../components/notifications/GlobalToastContainer';
+import AchievementUnlockOverlay from '../components/notifications/AchievementUnlockOverlay';
 import IncomingInviteModal from '../components/battle/IncomingInviteModal';
 import BonusClaimedCelebration from '../components/BonusClaimedCelebration';
 import PushOptInPrompt from '../components/notifications/PushOptInPrompt';
@@ -531,6 +532,7 @@ function MyApp({ Component, pageProps: { session, ...pageProps }, router }) {
                 <PresenceHeartbeat isLoggedIn={isLoggedIn} />
                 <AutoGrader />
                 <GlobalToastContainer />
+                <AchievementUnlockOverlay />
                 <IncomingInviteModal />
                 <PushOptInPrompt />
                 <BonusClaimedCelebration />

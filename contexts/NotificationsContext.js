@@ -43,6 +43,15 @@ export function NotificationsProvider({ children }) {
   // dismissed) in this session, so we don't pop the modal twice for the
   // same invite (e.g. SSE event followed by a refresh catch-up).
   const incomingInviteSeenRef = useRef(new Set());
+  // Queue of achievements to celebrate with the full-screen unlock overlay.
+  // FIFO — only the head is shown. Each unlock auto-promotes to a quieter
+  // toast confirmation after the overlay dismisses (see
+  // dismissAchievementUnlock below).
+  const [achievementUnlocks, setAchievementUnlocks] = useState([]);
+  // In-memory set of achievement ids already queued for the overlay this
+  // session so a duplicate SSE event doesn't celebrate the same unlock
+  // twice (e.g. reconnect catch-up).
+  const achievementUnlockSeenRef = useRef(new Set());
   const [typingSenderIds, setTypingSenderIds] = useState(() => new Set());
   const [conversations, setConversations] = useState([]);
   const [conversationsLoaded, setConversationsLoaded] = useState(false);
@@ -152,6 +161,40 @@ export function NotificationsProvider({ children }) {
       return [...prev, { ...toast, createdAt: Date.now() }];
     });
   }, [isSuppressed]);
+
+  const enqueueAchievementUnlock = useCallback((achievement) => {
+    if (!achievement?.id) return;
+    if (achievementUnlockSeenRef.current.has(achievement.id)) return;
+    achievementUnlockSeenRef.current.add(achievement.id);
+    setAchievementUnlocks((prev) => {
+      if (prev.some((a) => a.id === achievement.id)) return prev;
+      return [...prev, achievement];
+    });
+  }, []);
+
+  const dismissAchievementUnlock = useCallback((id) => {
+    if (!id) return;
+    let dismissed = null;
+    setAchievementUnlocks((prev) => {
+      const next = prev.filter((a) => {
+        if (a.id === id) {
+          dismissed = a;
+          return false;
+        }
+        return true;
+      });
+      return next.length === prev.length ? prev : next;
+    });
+    // Promote the celebrated unlock to a quieter toast confirmation so users
+    // who looked away still have a persistent reminder of what they earned.
+    if (dismissed) {
+      enqueueToast({
+        id: `achievement:${dismissed.id}`,
+        type: 'achievement',
+        payload: dismissed,
+      });
+    }
+  }, [enqueueToast]);
 
   const refreshConversations = useCallback(async () => {
     if (!isAuthed) return;
@@ -329,6 +372,8 @@ export function NotificationsProvider({ children }) {
       outgoingInvitesRef.current = new Map();
       setIncomingInvites([]);
       incomingInviteSeenRef.current = new Set();
+      setAchievementUnlocks([]);
+      achievementUnlockSeenRef.current = new Set();
       return;
     }
     refresh();
@@ -419,11 +464,11 @@ export function NotificationsProvider({ children }) {
       } else if (ev.type === 'notification:refresh' || ev.type.startsWith('notification:')) {
         refresh();
       } else if (ev.type === 'achievement:earned' && ev.achievement?.id) {
-        enqueueToast({
-          id: `achievement:${ev.achievement.id}`,
-          type: 'achievement',
-          payload: ev.achievement,
-        });
+        // Surface the full-screen unlock celebration. The overlay component
+        // promotes it to a quieter toast confirmation when dismissed, so the
+        // existing achievement toast still appears — just after the
+        // celebratory moment, not concurrently.
+        enqueueAchievementUnlock(ev.achievement);
       }
     };
 
@@ -459,7 +504,7 @@ export function NotificationsProvider({ children }) {
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('piks:invite:ended', handleInviteEndedFromModal);
     };
-  }, [isAuthed, refresh, markTyping, enqueueToast, addIncomingInvite, session?.user?.id]);
+  }, [isAuthed, refresh, markTyping, enqueueToast, enqueueAchievementUnlock, addIncomingInvite, session?.user?.id]);
 
   // Auto-dismiss toasts after their duration
   useEffect(() => {
@@ -651,6 +696,9 @@ export function NotificationsProvider({ children }) {
     incomingInvites,
     currentIncomingInvite: incomingInvites[0] || null,
     dismissIncomingInvite,
+    achievementUnlocks,
+    currentAchievementUnlock: achievementUnlocks[0] || null,
+    dismissAchievementUnlock,
     refresh,
     setSuppress,
     acceptInvite,
@@ -685,6 +733,9 @@ export function useNotifications() {
       incomingInvites: [],
       currentIncomingInvite: null,
       dismissIncomingInvite: () => {},
+      achievementUnlocks: [],
+      currentAchievementUnlock: null,
+      dismissAchievementUnlock: () => {},
       refresh: () => {},
       setSuppress: () => {},
       acceptInvite: async () => {},
