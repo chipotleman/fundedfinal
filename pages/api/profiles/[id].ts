@@ -1,10 +1,61 @@
 import { NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../../../lib/auth";
+// @ts-ignore - JS module without types
+import { verifyAdminAuth } from "../../../lib/adminAuth";
 import { db } from "../../../lib/db";
 import { profiles, userBets, fakeOpponents } from "../../../shared/schema";
 import { desc, eq } from "drizzle-orm";
 import { evaluateAndAwardAchievements, getAchievementsWithProgress } from "../../../lib/achievements";
 import { buildFrameCatalog, deriveUnlockedFrameIds } from "../../../lib/profileFrames";
 import { normalizeFavoriteTeams, findTeam, BANNER_LIBRARY } from "../../../lib/teamCatalog";
+
+// Fields that may be written through this generic profile-update endpoint.
+// Anything not in this set is silently ignored. Sensitive identity fields
+// (id, createdAt, updatedAt, username, avatar, bannerUrl, equippedFrame,
+// unlockedFrames, favoriteTeams, lastBattleBuyIn, lastSeenAt, isFakeAccount,
+// firstDepositMatch*) are intentionally excluded — they have their own
+// dedicated endpoints with proper validation, or should not be writable here.
+const ALLOWED_UPDATE_FIELDS = new Set<string>([
+  "bio",
+  "challenge",
+  "challengeStartDate",
+  "status",
+  "bankroll",
+  "pnl",
+  "totalBets",
+  "winRate",
+  "betsHistory",
+  "challengePhase",
+  "dailyLoss",
+  "maxDailyLoss",
+  "profitTarget",
+  "lastBetDate",
+  "bettingDays",
+  "achievements",
+  "profileStats",
+  "oddsFormat",
+  "notificationPrefs",
+  "notificationsFilter",
+  "privacyPrefs",
+  "sportPreferences",
+  "bettingStyle",
+  "experienceLevel",
+  "onboardingCompleted",
+  "instagramHandle",
+  "facebookUrl",
+]);
+
+function pickAllowed(body: unknown): Record<string, unknown> {
+  if (!body || typeof body !== "object") return {};
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(body as Record<string, unknown>)) {
+    if (ALLOWED_UPDATE_FIELDS.has(key)) {
+      out[key] = value;
+    }
+  }
+  return out;
+}
 
 function parseAmericanOdds(odds: unknown): number | null {
   if (odds === null || odds === undefined) return null;
@@ -217,7 +268,42 @@ export default async function handler(
 
   if (req.method === "PATCH" || req.method === "PUT") {
     try {
-      const updateData = req.body;
+      // Authenticate: must be the owner of the profile, or an admin.
+      const session = await getServerSession(req, res, authOptions);
+      const sessionUserId = (session?.user as { id?: string } | undefined)?.id;
+      const isOwner = !!sessionUserId && sessionUserId === id;
+
+      let isAdmin = false;
+      if (!isOwner) {
+        try {
+          const adminResult = await verifyAdminAuth(req);
+          isAdmin = !!adminResult?.valid;
+        } catch (adminErr) {
+          console.error("[PROFILES PATCH] admin auth check failed:", adminErr);
+          isAdmin = false;
+        }
+      }
+
+      if (!isOwner && !isAdmin) {
+        if (!sessionUserId) {
+          return res.status(401).json({ message: "Unauthorized" });
+        }
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const updateData = pickAllowed(req.body);
+
+      if (Object.keys(updateData).length === 0) {
+        // Nothing valid to write — return the current profile unchanged.
+        const [existing] = await db
+          .select()
+          .from(profiles)
+          .where(eq(profiles.id, id));
+        if (!existing) {
+          return res.status(404).json({ message: "Profile not found" });
+        }
+        return res.status(200).json(existing);
+      }
 
       const [updatedProfile] = await db
         .update(profiles)
