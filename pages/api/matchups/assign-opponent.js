@@ -3,6 +3,7 @@ import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { matchups, matchupQueue, matchmakingQueue, fakeOpponents, profiles, users } from '../../../shared/schema';
 import { eq, and, desc } from 'drizzle-orm';
+const { publishMatchupStart } = require('../../../lib/battle-events');
 
 const DURATION_CONFIGS = {
   '30_min': { minutes: 30, label: '30 Minutes' },
@@ -147,6 +148,10 @@ export default async function handler(req, res) {
         .set({ status: 'matched', updatedAt: now })
         .where(eq(matchmakingQueue.id, queueEntry.id));
     }
+
+    try {
+      publishMatchupStart(newMatchup, { reason: 'opponent_assigned' });
+    } catch (_e) {}
 
     return res.status(200).json({
       status: 'matched',

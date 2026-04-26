@@ -3,6 +3,7 @@ import { authOptions } from '../../../lib/auth';
 import { db } from '../../../lib/db';
 import { matchmakingQueue, matchups, profiles } from '../../../shared/schema';
 import { eq, and, ne } from 'drizzle-orm';
+const { publishMatchupStart } = require('../../../lib/battle-events');
 
 export default async function handler(req, res) {
   if (req.method === 'DELETE') {
@@ -112,6 +113,10 @@ export default async function handler(req, res) {
         .select({ username: profiles.username, avatar: profiles.avatar })
         .from(profiles)
         .where(eq(profiles.id, opponent.userId));
+
+      try {
+        publishMatchupStart(newMatchup, { reason: 'queue_matched' });
+      } catch (_e) {}
 
       return res.status(200).json({
         matched: true,
