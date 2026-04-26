@@ -7,6 +7,7 @@ import { useBetSlip } from '../contexts/BetSlipContext';
 import { useNotifications } from '../contexts/NotificationsContext';
 import MessagesPanel from '../components/messages/MessagesPanel';
 import PlayFriendModal from '../components/battle/PlayFriendModal';
+import { leavePage } from '../utils/leavePage';
 
 export default function MessengerPage() {
   const router = useRouter();
@@ -57,19 +58,17 @@ export default function MessengerPage() {
   // of Messenger even when the on-screen keyboard is up. We blur whatever
   // currently has focus first so iOS dismisses the keyboard before we
   // navigate (otherwise the keyboard can briefly stay up over the next
-  // page and swallow the first tap there). Falls back to the dashboard for
-  // signed-in users and the landing page otherwise when there's no app
-  // history to pop (e.g. user opened Messenger from a notification deep
-  // link in a fresh tab).
+  // page and swallow the first tap there). `leavePage` distinguishes
+  // genuine in-app history from a deep-link entry (push notification,
+  // shared link, email, etc.) so we don't bounce the user out to whatever
+  // unrelated page was previously open in their tab — instead falling
+  // back to the dashboard for signed-in users and the landing page
+  // otherwise.
   const handleLeaveMessenger = useCallback(() => {
     if (typeof document !== 'undefined' && document.activeElement && typeof document.activeElement.blur === 'function') {
       try { document.activeElement.blur(); } catch (_e) {}
     }
-    if (typeof window !== 'undefined' && window.history && window.history.length > 1) {
-      router.back();
-      return;
-    }
-    router.push(isAuthed ? '/dashboard' : '/');
+    leavePage({ router, fallbackHref: isAuthed ? '/dashboard' : '/' });
   }, [router, isAuthed]);
 
   const bg = '#000000';
