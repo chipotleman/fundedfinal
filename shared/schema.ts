@@ -66,6 +66,7 @@ export const profiles = pgTable("profiles", {
   firstDepositMatchGrantedAt: timestamp("first_deposit_match_granted_at"),
   firstDepositMatchAmount: decimal("first_deposit_match_amount", { precision: 10, scale: 2 }),
   lastBattleBuyIn: jsonb("last_battle_buy_in").$type<{ buyIn: number; gameMode: string }>(),
+  oneTapPrefs: jsonb("one_tap_prefs").$type<{ buyIn: number; gameMode: string }>(),
   lastSeenAt: timestamp("last_seen_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

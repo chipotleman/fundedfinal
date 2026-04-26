@@ -12,6 +12,7 @@ import {
   PLAY_NOW_SKIP_CONFIRM_KEY,
   PLAY_NOW_SKIP_CONFIRM_VERSION,
 } from '../../lib/playNowConfirm';
+import { readLocalOneTapPrefs, writeLocalOneTapPrefs, fetchOneTapPrefs, saveOneTapPrefs } from '../../utils/oneTapPrefs';
 
 function formatTimeRemaining(ms) {
   if (!ms || ms <= 0) return 'Ended';
@@ -844,36 +845,10 @@ const ONE_TAP_GAME_MODE_OPTIONS = [
   { id: 'tournament', label: 'Tournament', icon: '👑', coins: 100000 },
 ];
 const ONE_TAP_GAME_MODE_IDS = ONE_TAP_GAME_MODE_OPTIONS.map((m) => m.id);
-// Persisted in localStorage so the next visit's tap goes straight to
-// the user's preferred buy-in / mode. Schema is intentionally tiny so a
-// future migration can lift it without touching anything else.
-const ONE_TAP_PREFS_STORAGE_KEY = 'piks:onetap-prefs:v1';
-
-function readOneTapPrefs() {
-  if (typeof window === 'undefined') return null;
-  try {
-    const raw = window.localStorage.getItem(ONE_TAP_PREFS_STORAGE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== 'object') return null;
-    const next = {};
-    if (ONE_TAP_BUY_IN_OPTIONS.includes(parsed.buyIn)) next.buyIn = parsed.buyIn;
-    if (ONE_TAP_GAME_MODE_IDS.includes(parsed.gameMode)) next.gameMode = parsed.gameMode;
-    return Object.keys(next).length > 0 ? next : null;
-  } catch {
-    return null;
-  }
-}
-
-function writeOneTapPrefs(buyIn, gameMode) {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(
-      ONE_TAP_PREFS_STORAGE_KEY,
-      JSON.stringify({ buyIn, gameMode })
-    );
-  } catch {}
-}
+// Persisted defaults for the one-tap card live in `utils/oneTapPrefs`,
+// which keeps a localStorage cache for instant render and — for signed-in
+// users — mirrors the value to their profile so it follows them across
+// devices. Signed-out users keep the original localStorage-only behaviour.
 
 // The localStorage key + version that gate the "Don't ask again"
 // preference on the homepage Play Now card live in
@@ -893,7 +868,7 @@ const PLAY_NOW_CONFIRM_TIMEOUT_MS = 10000;
 // the idle render branch stays in sync with the helper that sets it.
 const PLAY_NOW_CANCEL_NOTICE = 'Cancelled — no money spent.';
 
-function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, onMatchFound = null }) {
+function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, onMatchFound = null, currentUserId = null }) {
   const router = useRouter();
   const { refresh: refreshMatchup } = useMatchup();
   const [cancelling, setCancelling] = useState(false);
@@ -909,6 +884,12 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
   // visitor's preferred buy-in / mode is what their first tap fires.
   // Hydrating in an effect (rather than the initial state) keeps the
   // server-rendered markup deterministic and avoids hydration mismatch.
+  // For signed-in users we additionally fetch the server-stored value
+  // on mount and apply it on top of the local cache so the choice
+  // follows them across devices, browsers, and reinstalls. Local
+  // writes still happen synchronously for instant UI feedback (and so
+  // signed-out users keep the original behaviour); the server write is
+  // a fire-and-forget mirror.
   const [buyIn, setBuyIn] = useState(ONE_TAP_DEFAULT_BUY_IN);
   const [gameMode, setGameMode] = useState(ONE_TAP_DEFAULT_GAME_MODE);
   // Latest-prefs ref that's hydrated synchronously the very first time
@@ -918,7 +899,7 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
   const prefsRef = useRef(null);
   const ensurePrefsHydrated = useCallback(() => {
     if (prefsRef.current) return prefsRef.current;
-    const stored = readOneTapPrefs();
+    const stored = readLocalOneTapPrefs();
     const next = {
       buyIn: stored?.buyIn ?? ONE_TAP_DEFAULT_BUY_IN,
       gameMode: stored?.gameMode ?? ONE_TAP_DEFAULT_GAME_MODE,
@@ -935,20 +916,50 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
     prefsRef.current = { buyIn, gameMode };
   }, [buyIn, gameMode]);
 
+  // Pull the server-stored value once we know who's signed in, then
+  // apply it on top of whatever the local cache rendered with. We
+  // intentionally let the server value win (it's the cross-device
+  // source of truth) but only when it's a valid normalized payload —
+  // a missing column or transient error keeps the local-first state
+  // we already showed.
+  useEffect(() => {
+    if (!currentUserId) return;
+    let cancelled = false;
+    fetchOneTapPrefs().then((prefs) => {
+      if (cancelled || !prefs) return;
+      if (prefs.buyIn != null) setBuyIn(prefs.buyIn);
+      if (prefs.gameMode != null) setGameMode(prefs.gameMode);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUserId]);
+
+  const persistPrefs = useCallback((nextBuyIn, nextMode) => {
+    // Always write the local cache (so guests still benefit) and, for
+    // signed-in users, mirror to the profile API. We don't await — a
+    // chip tap should feel instant; the network write is a quiet
+    // background sync.
+    writeLocalOneTapPrefs(nextBuyIn, nextMode);
+    if (currentUserId) {
+      saveOneTapPrefs({ buyIn: nextBuyIn, gameMode: nextMode, isSignedIn: true });
+    }
+  }, [currentUserId]);
+
   const handleSelectBuyIn = useCallback((next) => {
     setBuyIn(next);
     setGameMode((currentMode) => {
-      writeOneTapPrefs(next, currentMode);
+      persistPrefs(next, currentMode);
       return currentMode;
     });
-  }, []);
+  }, [persistPrefs]);
   const handleSelectGameMode = useCallback((next) => {
     setGameMode(next);
     setBuyIn((currentBuyIn) => {
-      writeOneTapPrefs(currentBuyIn, next);
+      persistPrefs(currentBuyIn, next);
       return currentBuyIn;
     });
-  }, []);
+  }, [persistPrefs]);
   const selectedGameMode = ONE_TAP_GAME_MODE_OPTIONS.find((m) => m.id === gameMode)
     || ONE_TAP_GAME_MODE_OPTIONS[0];
 
@@ -2546,6 +2557,7 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
               isExpanded={expandedKey === 'youvs'}
               onToggle={() => toggleExpandedKey('youvs')}
               onMatchFound={(data) => setMatchFoundData(data)}
+              currentUserId={currentUserId}
             />
           </div>
           {compactBattles.map(battle => (
