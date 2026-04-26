@@ -10,14 +10,39 @@ import { evaluateAndAwardAchievements, getAchievementsWithProgress } from "../..
 import { buildFrameCatalog, deriveUnlockedFrameIds } from "../../../lib/profileFrames";
 import { normalizeFavoriteTeams, findTeam, BANNER_LIBRARY } from "../../../lib/teamCatalog";
 
-// Fields that may be written through this generic profile-update endpoint.
-// Anything not in this set is silently ignored. Sensitive identity fields
-// (id, createdAt, updatedAt, username, avatar, bannerUrl, equippedFrame,
-// unlockedFrames, favoriteTeams, lastBattleBuyIn, lastSeenAt, isFakeAccount,
-// firstDepositMatch*) are intentionally excluded — they have their own
-// dedicated endpoints with proper validation, or should not be writable here.
-const ALLOWED_UPDATE_FIELDS = new Set<string>([
+// Fields that an authenticated owner may write through this generic
+// profile-update endpoint. Anything not in this set is silently ignored.
+// Sensitive identity fields (id, createdAt, updatedAt, username, avatar,
+// bannerUrl, equippedFrame, unlockedFrames, favoriteTeams, lastBattleBuyIn,
+// lastSeenAt, isFakeAccount, firstDepositMatch*) are intentionally excluded —
+// they have their own dedicated endpoints with proper validation, or should
+// not be writable here.
+//
+// Financial / settlement fields (bankroll, pnl, betsHistory, totalBets,
+// winRate, dailyLoss, lastBetDate, bettingDays, profileStats, status,
+// profitTarget, maxDailyLoss, challenge, challengeStartDate, challengePhase,
+// achievements) are deliberately NOT in the owner allow-list. They are only
+// mutated by server-side bet-settlement and challenge-start logic
+// (see /api/challenges/start). A user must not be able to rewrite their own
+// bankroll, win rate, or settled-bet history by PATCHing /api/profiles/{me}.
+const OWNER_ALLOWED_UPDATE_FIELDS = new Set<string>([
   "bio",
+  "oddsFormat",
+  "notificationPrefs",
+  "notificationsFilter",
+  "privacyPrefs",
+  "sportPreferences",
+  "bettingStyle",
+  "experienceLevel",
+  "onboardingCompleted",
+  "instagramHandle",
+  "facebookUrl",
+]);
+
+// Additional fields admins are allowed to write through this endpoint, on top
+// of OWNER_ALLOWED_UPDATE_FIELDS. Admins can perform manual fix-ups of
+// financial / challenge state when needed; regular owners cannot.
+const ADMIN_ONLY_UPDATE_FIELDS = new Set<string>([
   "challenge",
   "challengeStartDate",
   "status",
@@ -34,23 +59,16 @@ const ALLOWED_UPDATE_FIELDS = new Set<string>([
   "bettingDays",
   "achievements",
   "profileStats",
-  "oddsFormat",
-  "notificationPrefs",
-  "notificationsFilter",
-  "privacyPrefs",
-  "sportPreferences",
-  "bettingStyle",
-  "experienceLevel",
-  "onboardingCompleted",
-  "instagramHandle",
-  "facebookUrl",
 ]);
 
-function pickAllowed(body: unknown): Record<string, unknown> {
+function pickAllowed(
+  body: unknown,
+  allowed: Set<string>,
+): Record<string, unknown> {
   if (!body || typeof body !== "object") return {};
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(body as Record<string, unknown>)) {
-    if (ALLOWED_UPDATE_FIELDS.has(key)) {
+    if (allowed.has(key)) {
       out[key] = value;
     }
   }
@@ -291,7 +309,13 @@ export default async function handler(
         return res.status(403).json({ message: "Forbidden" });
       }
 
-      const updateData = pickAllowed(req.body);
+      const allowed = isAdmin
+        ? new Set<string>([
+            ...Array.from(OWNER_ALLOWED_UPDATE_FIELDS),
+            ...Array.from(ADMIN_ONLY_UPDATE_FIELDS),
+          ])
+        : OWNER_ALLOWED_UPDATE_FIELDS;
+      const updateData = pickAllowed(req.body, allowed);
 
       if (Object.keys(updateData).length === 0) {
         // Nothing valid to write — return the current profile unchanged.

@@ -264,67 +264,28 @@ export default function AuthPage() {
         return;
       }
 
-      const userId = session.user.id;
+      // Server-side initialization. The endpoint reads the user's purchased
+      // challenge row from the database and writes the financial fields
+      // itself — the client is intentionally not trusted to set bankroll,
+      // pnl, betsHistory, etc. We only forward the purchased-challenge id
+      // (when known) so the server can pick the right row.
+      const purchasedId =
+        selectedChallenge && typeof selectedChallenge.purchasedId === 'string'
+          ? selectedChallenge.purchasedId
+          : null;
 
-      // Fetch current user profile data from database
-      const response = await fetch(`/api/profiles/${userId}`);
-      if (!response.ok) throw new Error('User profile not found');
-      
-      const currentUser = await response.json();
-
-      // Use selected package data or fallback to default challenge
-      const challengeData = {
-        id: selectedChallenge.id,
-        name: selectedChallenge.name,
-        startingBalance: selectedChallenge.startingBalance,
-        target: selectedChallenge.target,
-        maxBet: selectedChallenge.maxBet,
-        payout: selectedChallenge.payout,
-        price: selectedChallenge.adjustedPrice || selectedChallenge.price,
-        userSplit: selectedChallenge.userSplit || 80,
-        licenseKey: selectedChallenge.licenseKey,
-        purchaseDate: selectedChallenge.purchaseDate
-      };
-
-      // Update user profile with challenge info
-      const updatedUserProfile = {
-        ...currentUser,
-        challenge: challengeData,
-        bankroll: challengeData.startingBalance,
-        challengeStartDate: new Date().toISOString(),
-        status: 'active',
-        pnl: 0,
-        totalBets: 0,
-        winRate: 0,
-        betsHistory: [],
-        challengePhase: 1,
-        dailyLoss: 0,
-        maxDailyLoss: challengeData.startingBalance * 0.08,
-        profitTarget: challengeData.target,
-        lastBetDate: null,
-        bettingDays: 0,
-        achievements: [],
-        profileStats: {
-          totalWins: 0,
-          totalLosses: 0,
-          biggestWin: 0,
-          biggestLoss: 0,
-          averageBetSize: 0,
-          longestWinStreak: 0,
-          currentWinStreak: 0
-        }
-      };
-
-      // Update user profile in database
-      const updateResponse = await fetch(`/api/profiles/${userId}`, {
-        method: 'PATCH',
+      const updateResponse = await fetch('/api/challenges/start', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(updatedUserProfile),
+        body: JSON.stringify(purchasedId ? { challengeId: purchasedId } : {}),
       });
 
-      if (!updateResponse.ok) throw new Error('Failed to update profile');
+      if (!updateResponse.ok) {
+        const data = await updateResponse.json().catch(() => ({}));
+        throw new Error(data?.message || 'Failed to start challenge');
+      }
 
       // Clear the purchased challenge from localStorage after successful save
       localStorage.removeItem('purchased_challenge');
