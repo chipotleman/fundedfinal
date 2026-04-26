@@ -7,6 +7,12 @@ import LiveGameTimer from '../components/LiveGameTimer';
 import DepositMatchContainer from '../components/DepositMatchContainer';
 import TrendingBetContainer from '../components/TrendingBetContainer';
 import DepositMatchAppliedBanner from '../components/DepositMatchAppliedBanner';
+import CasinoDepositMatchContainer from '../components/CasinoDepositMatchContainer';
+import FireBattleContainer from '../components/FireBattleContainer';
+import PoolContainer from '../components/PoolContainer';
+import ReferralBonusContainer from '../components/ReferralBonusContainer';
+import PromoCarousel from '../components/PromoCarousel';
+import { DEFAULT_PROMO_SLOTS, normalizePromoSlots } from '../lib/promoSlots';
 import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
 import LiveBattlesSection from '../components/battle/LiveBattlesSection';
 import Footer from '../components/Footer';
@@ -31,8 +37,48 @@ export default function Dashboard() {
   const [walkthroughStep, setWalkthroughStep] = useState(0);
   const [walkthroughDismissed, setWalkthroughDismissed] = useState(false);
   const [forfeitConfirmation, setForfeitConfirmation] = useState(null);
+  const [promoSlots, setPromoSlots] = useState(() =>
+    DEFAULT_PROMO_SLOTS.map((s) => ({ ...s })),
+  );
 
   const battleStartedRetryRef = useRef(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/promo-slots')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data?.slots) return;
+        setPromoSlots(normalizePromoSlots(data.slots));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const promoSlides = useMemo(() => {
+    const renderers = {
+      reload_match: () => <DepositMatchContainer />,
+      trending: () => <TrendingBetContainer />,
+      deposit_match_applied: () => <DepositMatchAppliedBanner />,
+      casino_match: () => <CasinoDepositMatchContainer />,
+      fire_battle: () => <FireBattleContainer />,
+      pool: () => <PoolContainer />,
+      referral: () => <ReferralBonusContainer />,
+      empty: () => null,
+    };
+    return promoSlots
+      .map((slot, i) => {
+        if (!slot.enabled) return null;
+        const render = renderers[slot.containerType];
+        if (!render) return null;
+        const node = render();
+        if (!node) return null;
+        return { key: `${i}-${slot.containerType}`, node };
+      })
+      .filter(Boolean);
+  }, [promoSlots]);
 
   useModalScrollLock(showBattleWalkthrough, { restoreScroll: true });
 
@@ -619,13 +665,7 @@ export default function Dashboard() {
 
       <div className="pt-3 sm:pt-4 lg:pt-5 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
         <div className="mb-4">
-          <div className="overflow-x-auto overflow-y-visible scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <div className="flex gap-3 py-1" style={{ minWidth: 'max-content' }}>
-              <DepositMatchContainer />
-              <TrendingBetContainer />
-              <DepositMatchAppliedBanner />
-            </div>
-          </div>
+          <PromoCarousel slides={promoSlides} />
         </div>
 
         <div 

@@ -1,5 +1,10 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin-panel/AdminLayout';
+import {
+  PROMO_SLOT_TYPES,
+  DEFAULT_PROMO_SLOTS,
+  normalizePromoSlots,
+} from '../../lib/promoSlots';
 
 export default function AdminSettings() {
   const [settings, setSettings] = useState({
@@ -22,16 +27,52 @@ export default function AdminSettings() {
       cashoutFee: 10,
       inactivityDays: 5,
     },
+    promoSlots: DEFAULT_PROMO_SLOTS.map((s) => ({ ...s })),
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    const token =
+      typeof window !== 'undefined'
+        ? localStorage.getItem('admin_token')
+        : null;
+    fetch('/api/admin-panel/settings', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return;
+        setSettings((prev) => ({
+          ...prev,
+          ...data,
+          promoSlots: normalizePromoSlots(data.promoSlots),
+        }));
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSave = async () => {
     setSaving(true);
     try {
+      const token =
+        typeof window !== 'undefined'
+          ? localStorage.getItem('admin_token')
+          : null;
       const res = await fetch('/api/admin-panel/settings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(settings),
       });
       if (res.ok) {
@@ -43,6 +84,27 @@ export default function AdminSettings() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const updatePromoSlot = (idx, patch) => {
+    setSettings((prev) => {
+      const next = prev.promoSlots.map((slot, i) =>
+        i === idx ? { ...slot, ...patch } : slot,
+      );
+      return { ...prev, promoSlots: next };
+    });
+  };
+
+  const movePromoSlot = (idx, direction) => {
+    setSettings((prev) => {
+      const target = idx + direction;
+      if (target < 0 || target >= prev.promoSlots.length) return prev;
+      const next = [...prev.promoSlots];
+      const tmp = next[idx];
+      next[idx] = next[target];
+      next[target] = tmp;
+      return { ...prev, promoSlots: next };
+    });
   };
 
   return (
@@ -82,6 +144,78 @@ export default function AdminSettings() {
                 <span className="text-gray-300">Demo Enabled</span>
               </label>
             </div>
+          </div>
+        </div>
+
+        <div className="glass-card p-6">
+          <h2 className="text-xl font-semibold text-white mb-2 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </div>
+            Promo Slots
+          </h2>
+          <p className="text-gray-400 text-sm mb-6">
+            Configure the four promo containers that auto-rotate at the top of the dashboard. Disabled or empty slots are skipped.
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {settings.promoSlots.map((slot, idx) => (
+              <div key={idx} className="p-5 bg-white/5 rounded-xl border border-white/10">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-bold text-white">Slot {idx + 1}</h3>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => movePromoSlot(idx, -1)}
+                      disabled={idx === 0}
+                      aria-label={`Move slot ${idx + 1} up`}
+                      className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => movePromoSlot(idx, 1)}
+                      disabled={idx === settings.promoSlots.length - 1}
+                      aria-label={`Move slot ${idx + 1} down`}
+                      className="w-8 h-8 rounded-lg bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all flex items-center justify-center"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={slot.enabled}
+                      onChange={(e) => updatePromoSlot(idx, { enabled: e.target.checked })}
+                      className="w-5 h-5 rounded bg-white/5 border-white/10 text-purple-500 focus:ring-purple-500"
+                    />
+                    <span className="text-gray-300">Enabled</span>
+                  </label>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-1">Container</label>
+                    <select
+                      value={slot.containerType}
+                      onChange={(e) => updatePromoSlot(idx, { containerType: e.target.value })}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500/50"
+                    >
+                      {PROMO_SLOT_TYPES.map((t) => (
+                        <option key={t.id} value={t.id} className="bg-gray-900">
+                          {t.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -137,7 +271,7 @@ export default function AdminSettings() {
         </div>
 
         <div className="flex items-center gap-4">
-          <button onClick={handleSave} disabled={saving} className="px-8 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 text-white rounded-xl font-semibold transition-all flex items-center gap-2">
+          <button onClick={handleSave} disabled={saving || loading} className="px-8 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:opacity-50 text-white rounded-xl font-semibold transition-all flex items-center gap-2">
             {saving ? (
               <><span className="animate-spin">⏳</span> Saving...</>
             ) : (

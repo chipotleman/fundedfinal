@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS app_settings (
+  key VARCHAR(64) PRIMARY KEY,
+  value JSONB NOT NULL,
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
