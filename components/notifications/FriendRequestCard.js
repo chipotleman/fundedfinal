@@ -92,17 +92,18 @@ function pickContextLine(context) {
  * Small overlapping stack of mutual-friend avatars rendered next to the
  * "<N> mutual friends" line. Caps at 3 so the row stays compact, and falls
  * back to nothing when no preview is provided so the layout collapses
- * gracefully on senders with no overlap.
+ * gracefully on senders with no overlap. Each avatar is tappable and links
+ * to that user's profile so people can quickly verify "oh yeah, I know that
+ * person" before accepting; the same `onProfileNavigate` callback used by
+ * the requester avatar/name is forwarded so overlay surfaces (bell dropdown,
+ * global toast) get out of the way on tap.
  */
-function MutualFriendsStack({ preview, size = 18 }) {
+function MutualFriendsStack({ preview, size = 18, onProfileNavigate }) {
   if (!Array.isArray(preview) || preview.length === 0) return null;
   const items = preview.slice(0, 3);
   const overlap = Math.round(size * 0.35);
   return (
-    <span
-      className="inline-flex items-center flex-shrink-0"
-      aria-hidden="true"
-    >
+    <span className="inline-flex items-center flex-shrink-0">
       {items.map((u, i) => (
         <span
           key={u.id || i}
@@ -116,7 +117,12 @@ function MutualFriendsStack({ preview, size = 18 }) {
           }}
           title={u.username || 'Player'}
         >
-          <UserAvatar user={u} size={size} />
+          <UserAvatar
+            user={u}
+            size={size}
+            link
+            onLinkClick={onProfileNavigate}
+          />
         </span>
       ))}
     </span>
@@ -232,7 +238,11 @@ export default function FriendRequestCard({
               style={{ color: 'rgba(216,180,254,0.85)' }}
             >
               {showMutualStack && (
-                <MutualFriendsStack preview={mutualPreview} size={stackAvatarSize} />
+                <MutualFriendsStack
+                  preview={mutualPreview}
+                  size={stackAvatarSize}
+                  onProfileNavigate={onProfileNavigate}
+                />
               )}
               <span className="truncate">{contextLine}</span>
             </div>
