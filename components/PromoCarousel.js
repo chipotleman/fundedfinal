@@ -21,9 +21,67 @@ function usePrefersReducedMotion() {
   return reduced;
 }
 
+function SlideHost({
+  slideKey,
+  isEmpty,
+  registerRef,
+  onContentChange,
+  onClickCapture,
+  ariaLabel,
+  children,
+}) {
+  const localRef = useRef(null);
+
+  const setRef = useCallback(
+    (el) => {
+      localRef.current = el;
+      registerRef(slideKey, el);
+    },
+    [slideKey, registerRef],
+  );
+
+  useLayoutEffect(() => {
+    const el = localRef.current;
+    if (!el) return;
+    const update = () => {
+      onContentChange(slideKey, el.childNodes.length === 0);
+    };
+    update();
+    let mo = null;
+    if (typeof MutationObserver !== 'undefined') {
+      mo = new MutationObserver(update);
+      mo.observe(el, { childList: true });
+    }
+    return () => {
+      if (mo) mo.disconnect();
+    };
+  }, [slideKey, onContentChange]);
+
+  useEffect(() => {
+    return () => {
+      registerRef(slideKey, null);
+    };
+  }, [slideKey, registerRef]);
+
+  return (
+    <div
+      ref={setRef}
+      className={isEmpty ? '' : 'snap-start snap-always flex-shrink-0'}
+      style={isEmpty ? { display: 'none' } : undefined}
+      role={isEmpty ? undefined : 'group'}
+      aria-roledescription={isEmpty ? undefined : 'slide'}
+      aria-label={ariaLabel}
+      aria-hidden={isEmpty ? 'true' : undefined}
+      onClickCapture={isEmpty ? undefined : onClickCapture}
+    >
+      {children}
+    </div>
+  );
+}
+
 export default function PromoCarousel({ slides }) {
   const containerRef = useRef(null);
-  const slideRefs = useRef([]);
+  const slideRefs = useRef(new Map());
   const programmaticRef = useRef(false);
   const programmaticTimeoutRef = useRef(null);
   const resumeTimeoutRef = useRef(null);
@@ -31,9 +89,10 @@ export default function PromoCarousel({ slides }) {
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [emptyKeys, setEmptyKeys] = useState({});
   const reducedMotion = usePrefersReducedMotion();
 
-  const visible = (slides || [])
+  const candidates = (slides || [])
     .map((s, i) => {
       if (s == null || s === false) return null;
       if (typeof s === 'object' && 'node' in s) {
@@ -48,9 +107,30 @@ export default function PromoCarousel({ slides }) {
       return { key: i, node: s, slotIndex: null, containerType: null };
     })
     .filter(Boolean);
+
+  const visible = candidates.filter((s) => !emptyKeys[s.key]);
   const count = visible.length;
 
-  // Reset index if it's out of bounds after visible-list changes
+  const reportContent = useCallback((key, isEmpty) => {
+    setEmptyKeys((prev) => {
+      const wasEmpty = !!prev[key];
+      if (wasEmpty === isEmpty) return prev;
+      const next = { ...prev };
+      if (isEmpty) next[key] = true;
+      else delete next[key];
+      return next;
+    });
+  }, []);
+
+  const registerRef = useCallback((key, el) => {
+    if (el) {
+      slideRefs.current.set(key, el);
+    } else {
+      slideRefs.current.delete(key);
+    }
+  }, []);
+
+  // Reset index if it's out of bounds after the visible list shrinks
   useEffect(() => {
     if (count === 0) return;
     if (activeIndex >= count) setActiveIndex(0);
@@ -72,25 +152,29 @@ export default function PromoCarousel({ slides }) {
     });
   }, [activeIndex, count, visible]);
 
-  const scrollToIndex = useCallback((idx, smooth = true) => {
-    const container = containerRef.current;
-    const slide = slideRefs.current[idx];
-    if (!container || !slide) return;
-    programmaticRef.current = true;
-    if (programmaticTimeoutRef.current) {
-      clearTimeout(programmaticTimeoutRef.current);
-    }
-    container.scrollTo({
-      left: slide.offsetLeft,
-      behavior: smooth ? 'smooth' : 'auto',
-    });
-    programmaticTimeoutRef.current = setTimeout(
-      () => {
-        programmaticRef.current = false;
-      },
-      smooth ? 700 : 100,
-    );
-  }, []);
+  const scrollToIndex = useCallback(
+    (idx, smooth = true) => {
+      const container = containerRef.current;
+      const slideKey = visible[idx]?.key;
+      const slide = slideKey != null ? slideRefs.current.get(slideKey) : null;
+      if (!container || !slide) return;
+      programmaticRef.current = true;
+      if (programmaticTimeoutRef.current) {
+        clearTimeout(programmaticTimeoutRef.current);
+      }
+      container.scrollTo({
+        left: slide.offsetLeft,
+        behavior: smooth ? 'smooth' : 'auto',
+      });
+      programmaticTimeoutRef.current = setTimeout(
+        () => {
+          programmaticRef.current = false;
+        },
+        smooth ? 700 : 100,
+      );
+    },
+    [visible],
+  );
 
   // Auto-advance timer
   useEffect(() => {
@@ -113,8 +197,8 @@ export default function PromoCarousel({ slides }) {
     const center = container.scrollLeft + container.clientWidth / 2;
     let bestIdx = 0;
     let bestDist = Infinity;
-    for (let i = 0; i < slideRefs.current.length; i++) {
-      const child = slideRefs.current[i];
+    for (let i = 0; i < visible.length; i++) {
+      const child = slideRefs.current.get(visible[i].key);
       if (!child) continue;
       const childCenter = child.offsetLeft + child.offsetWidth / 2;
       const dist = Math.abs(childCenter - center);
@@ -124,7 +208,7 @@ export default function PromoCarousel({ slides }) {
       }
     }
     setActiveIndex((curr) => (curr === bestIdx ? curr : bestIdx));
-  }, []);
+  }, [visible]);
 
   // Re-snap to active slide after a viewport resize so the layout stays correct
   useLayoutEffect(() => {
@@ -162,7 +246,7 @@ export default function PromoCarousel({ slides }) {
     };
   }, []);
 
-  if (count === 0) return null;
+  if (candidates.length === 0) return null;
 
   const handleDotClick = (idx) => {
     setActiveIndex(idx);
@@ -195,21 +279,28 @@ export default function PromoCarousel({ slides }) {
         aria-roledescription="carousel"
         aria-label="Promotions"
       >
-        {visible.map((slide, i) => (
-          <div
-            key={slide.key}
-            ref={(el) => {
-              slideRefs.current[i] = el;
-            }}
-            className="snap-start snap-always flex-shrink-0"
-            role="group"
-            aria-roledescription="slide"
-            aria-label={`Slide ${i + 1} of ${count}`}
-            onClickCapture={() => handleSlideClick(slide)}
-          >
-            {slide.node}
-          </div>
-        ))}
+        {candidates.map((slide) => {
+          const isEmpty = !!emptyKeys[slide.key];
+          const visibleIdx = isEmpty
+            ? -1
+            : visible.findIndex((s) => s.key === slide.key);
+          const ariaLabel = isEmpty
+            ? undefined
+            : `Slide ${visibleIdx + 1} of ${count}`;
+          return (
+            <SlideHost
+              key={slide.key}
+              slideKey={slide.key}
+              isEmpty={isEmpty}
+              registerRef={registerRef}
+              onContentChange={reportContent}
+              onClickCapture={() => handleSlideClick(slide)}
+              ariaLabel={ariaLabel}
+            >
+              {slide.node}
+            </SlideHost>
+          );
+        })}
       </div>
 
       {count > 1 && (
