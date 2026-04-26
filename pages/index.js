@@ -26,6 +26,86 @@ import { categorizeGames, filterGamesBySport } from '../lib/gamesUtils';
 import { useGoalserveLive } from '../hooks/useGoalserveLive';
 import useModalScrollLock from '../hooks/useModalScrollLock';
 
+// Tiny inline strip showing the recent score-gap trajectory for a close-games
+// card. Renders a small SVG sparkline plus a "Gap N" label tinted by trend
+// (green = closing, orange = widening, gray = stable). Always reserves the
+// same vertical space so newly arriving history can't shift the card layout.
+function GapHistoryStrip({ history, currentGap }) {
+  const RESERVED_HEIGHT = 18;
+  const points = Array.isArray(history) ? history : [];
+  const hasUsable = points.length >= 2;
+
+  if (!hasUsable) {
+    return (
+      <div
+        className="mb-2"
+        style={{ height: RESERVED_HEIGHT }}
+        aria-hidden="true"
+      />
+    );
+  }
+
+  const last = points[points.length - 1];
+  const prev = points[points.length - 2];
+  const trend = last < prev ? 'closer' : last > prev ? 'wider' : 'stable';
+  const color = trend === 'closer' ? '#10b981' : trend === 'wider' ? '#f97316' : '#9ca3af';
+  const arrow = trend === 'closer' ? '▾' : trend === 'wider' ? '▴' : '·';
+
+  const w = 56;
+  const h = 12;
+  const maxVal = Math.max(...points, 1);
+  const stepX = points.length > 1 ? w / (points.length - 1) : 0;
+  const coords = points.map((v, i) => {
+    const x = i * stepX;
+    // Larger gap sits higher on the chart so a downward slope reads as
+    // "getting closer" — the same direction as good news for these cards.
+    const y = h - (v / maxVal) * h;
+    return { x, y };
+  });
+  const polyPoints = coords.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+  const displayGap = typeof currentGap === 'number' ? currentGap : last;
+
+  return (
+    <div
+      className="mb-2 flex items-center gap-1.5"
+      style={{ height: RESERVED_HEIGHT }}
+      title={`Recent score gaps: ${points.join(' → ')}`}
+    >
+      <svg
+        width={w}
+        height={h}
+        viewBox={`0 -1 ${w} ${h + 2}`}
+        style={{ overflow: 'visible', flexShrink: 0 }}
+        aria-hidden="true"
+      >
+        <polyline
+          fill="none"
+          stroke={color}
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          points={polyPoints}
+        />
+        {coords.map((p, i) => {
+          const isLast = i === coords.length - 1;
+          return (
+            <circle
+              key={i}
+              cx={p.x}
+              cy={p.y}
+              r={isLast ? 1.8 : 1.1}
+              fill={color}
+            />
+          );
+        })}
+      </svg>
+      <span className="text-[10px] font-semibold tabular-nums" style={{ color }}>
+        {arrow} Gap {displayGap}
+      </span>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const router = useRouter();
   const { user } = useAuth();
@@ -540,13 +620,21 @@ export default function Dashboard() {
   // so the card can briefly highlight without shifting layout.
   const prevGapsRef = useRef(new Map());
   const prevLeadersRef = useRef(new Map());
+  // Last score key seen per game (e.g. "5-3") so we only append to the gap
+  // history when the underlying score actually changes, not every render.
+  const prevScoreKeysRef = useRef(new Map());
   const [tightenedGames, setTightenedGames] = useState({});
   const [leadChangedGames, setLeadChangedGames] = useState({});
+  // Rolling per-game history of recent score gaps, used to render the tiny
+  // momentum sparkline on each card. Capped to GAP_HISTORY_LEN entries.
+  const [gapHistories, setGapHistories] = useState({});
   const HIGHLIGHT_MS = 5000;
+  const GAP_HISTORY_LEN = 6;
 
   useEffect(() => {
     const newlyTightened = {};
     const newlyLeadChanged = {};
+    const historyAppends = {};
     const seenIds = new Set();
     closeGames.forEach((game) => {
       seenIds.add(game.id);
@@ -560,6 +648,17 @@ export default function Dashboard() {
           newlyTightened[game.id] = Date.now();
         }
         prevGapsRef.current.set(game.id, currentDiff);
+      }
+
+      // Append to the gap history only when the score line actually changes
+      // (so identity-only re-renders don't flood the strip with duplicates).
+      if (typeof homeScore === 'number' && typeof awayScore === 'number' && typeof currentDiff === 'number') {
+        const scoreKey = `${homeScore}-${awayScore}`;
+        const prevScoreKey = prevScoreKeysRef.current.get(game.id);
+        if (scoreKey !== prevScoreKey) {
+          historyAppends[game.id] = currentDiff;
+          prevScoreKeysRef.current.set(game.id, scoreKey);
+        }
       }
 
       let currentLeader = null;
@@ -581,12 +680,35 @@ export default function Dashboard() {
     for (const id of Array.from(prevLeadersRef.current.keys())) {
       if (!seenIds.has(id)) prevLeadersRef.current.delete(id);
     }
+    for (const id of Array.from(prevScoreKeysRef.current.keys())) {
+      if (!seenIds.has(id)) prevScoreKeysRef.current.delete(id);
+    }
     if (Object.keys(newlyTightened).length > 0) {
       setTightenedGames((prev) => ({ ...prev, ...newlyTightened }));
     }
     if (Object.keys(newlyLeadChanged).length > 0) {
       setLeadChangedGames((prev) => ({ ...prev, ...newlyLeadChanged }));
     }
+    setGapHistories((prev) => {
+      const appendIds = Object.keys(historyAppends);
+      // Determine which games dropped out so we can prune their history.
+      const stale = [];
+      for (const id of Object.keys(prev)) {
+        if (!seenIds.has(id)) stale.push(id);
+      }
+      if (appendIds.length === 0 && stale.length === 0) return prev;
+      const next = { ...prev };
+      for (const id of stale) delete next[id];
+      for (const id of appendIds) {
+        const existing = next[id] || [];
+        const updated = [...existing, historyAppends[id]];
+        if (updated.length > GAP_HISTORY_LEN) {
+          updated.splice(0, updated.length - GAP_HISTORY_LEN);
+        }
+        next[id] = updated;
+      }
+      return next;
+    });
   }, [closeGames]);
 
   // Clear the tightened highlight after a short window so it never lingers.
@@ -939,6 +1061,7 @@ export default function Dashboard() {
                         {isLive && <span className="font-bold text-sm tabular-nums" style={{ color: '#ffffff' }}>{game.scores?.home?.total || 0}</span>}
                       </div>
                     </div>
+                    <GapHistoryStrip history={gapHistories[game.id]} currentGap={game._scoreGap} />
                     <div className="flex gap-1.5">
                       {game.lines?.moneyline?.away ? (
                         <TapSurface
