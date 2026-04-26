@@ -57,6 +57,35 @@ jobs:
       - name: Build Next.js (production)
         run: npm run build
 
+      # Measure the freshly-built bundle and compare against the
+      # committed baseline in `docs/bundle-baseline.json`. The check
+      # fails the build if the total `.next/static` size grows by more
+      # than `thresholds.totalStaticBytesIncreaseAbsolute` bytes or any
+      # single page grows by more than `thresholds.perPageIncreaseRatio`
+      # (with a small absolute floor to ignore hash-rename noise). If
+      # you intentionally grew the bundle, refresh the baseline by
+      # committing the new `bundle-current.json` numbers into
+      # `docs/bundle-baseline.json` — see `docs/bundle-budget.md`.
+      - name: Measure bundle size
+        run: node scripts/measure-bundle.js --out bundle-current.json
+
+      - name: Check bundle-size budget
+        run: |
+          node scripts/check-bundle-budget.js \
+            --current bundle-current.json \
+            --baseline docs/bundle-baseline.json \
+            --github-summary "$GITHUB_STEP_SUMMARY" \
+            --mode fail
+
+      - name: Upload bundle-size measurement
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-size
+          path: bundle-current.json
+          if-no-files-found: ignore
+          retention-days: 14
+
       # Hand the built `.next/` to the matrix e2e jobs. Using an
       # artifact (rather than letting each matrix job restore the
       # build cache itself) means we build exactly once per workflow

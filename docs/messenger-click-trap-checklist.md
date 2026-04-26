@@ -47,6 +47,17 @@ download that artifact and boot it with `next start` via Playwright's
   parallel — the matrix jobs share the artifact rather than each
   racing to populate the same build cache.
 
+The `build` job also enforces a bundle-size budget after `next build`
+finishes. It runs `scripts/measure-bundle.js` to record the size of
+`.next/static` and the per-page chunk sizes from the build manifest,
+then `scripts/check-bundle-budget.js` compares those numbers against
+the committed baseline in `docs/bundle-baseline.json`. If the total
+bundle grows by more than 50 KB or any single page grows by more than
+20%, the `build` job fails the PR and a Markdown report is added to
+the workflow's step summary. See [`bundle-budget.md`](./bundle-budget.md)
+for how to investigate a regression and how to refresh the baseline
+when the growth is intentional.
+
 The `build` job caches **only** Next.js's incremental compiler cache at
 `.next/cache` (SWC transforms, the webpack module graph, etc.) keyed on
 `${{ runner.os }}-nextjs-cache-<hash of package-lock.json>-<commit sha>`,
