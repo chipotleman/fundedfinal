@@ -44,33 +44,24 @@ function formatDuration(ms) {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-function VoiceBubble({ url, durationMs, mine }) {
-  return (
-    <div className="flex items-center gap-2">
-      <audio
-        controls
-        preload="metadata"
-        src={url}
-        style={{ height: 32, maxWidth: 200 }}
-      />
-      <span
-        className="text-[10px] tabular-nums"
-        style={{ color: mine ? 'rgba(255,255,255,0.85)' : '#9ca3af' }}
-      >
-        {formatDuration(durationMs)}
-      </span>
-    </div>
-  );
-}
-
 const WAVEFORM_BAR_COUNT = 36;
 
-// Custom waveform-style scrubber for the voice preview row, replacing the
-// browser's default <audio controls> element. We decode the recorded blob in
-// an AudioContext to extract per-bar peaks, then render the same kind of
-// vertical bars used by the live recording level meter so the preview UI
-// feels visually consistent with the recording UI.
-function VoiceWaveformPreview({ blob, url, durationMs }) {
+// Custom waveform-style scrubber shared by the recorded-voice preview row
+// and the sent/received chat bubbles. We decode the source audio in an
+// AudioContext to extract per-bar peaks, then render the same kind of
+// vertical bars used by the live recording level meter so the entire
+// voice-note experience (record → preview → send → bubble) stays
+// visually consistent.
+//
+// `variant` controls the colour treatment:
+//   - 'preview'  — composer preview row (gray time, blue accents, glow)
+//   - 'mine'     — outgoing chat bubble (white-on-blue)
+//   - 'theirs'   — incoming chat bubble (blue-on-dark)
+//
+// For the preview row callers pass an in-memory `blob` so we can decode
+// without an extra round-trip. Chat bubbles only have a URL, in which
+// case we fetch + decode it once on mount.
+function VoiceWaveform({ blob, url, durationMs, variant = 'preview' }) {
   const audioRef = useRef(null);
   const trackRef = useRef(null);
   const [peaks, setPeaks] = useState(null);
@@ -78,11 +69,12 @@ function VoiceWaveformPreview({ blob, url, durationMs }) {
   const [currentMs, setCurrentMs] = useState(0);
   const totalMs = Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 0;
 
-  // Decode the blob into a small array of normalized amplitudes that we use
-  // to size each bar. If decoding fails (e.g. unsupported codec on Safari)
-  // we fall back to a flat baseline so the UI still renders something.
+  // Decode the source audio into a small array of normalized amplitudes that
+  // we use to size each bar. If decoding fails (e.g. unsupported codec on
+  // Safari, or a fetch error for a remote URL) we fall back to a flat
+  // baseline so the UI still renders something.
   useEffect(() => {
-    if (!blob) { setPeaks(null); return undefined; }
+    if (!blob && !url) { setPeaks(null); return undefined; }
     let cancelled = false;
     let ctx = null;
     (async () => {
@@ -91,7 +83,14 @@ function VoiceWaveformPreview({ blob, url, durationMs }) {
           ? (window.AudioContext || window.webkitAudioContext)
           : null;
         if (!Ctx) { if (!cancelled) setPeaks(new Array(WAVEFORM_BAR_COUNT).fill(0.4)); return; }
-        const arrBuf = await blob.arrayBuffer();
+        let arrBuf;
+        if (blob) {
+          arrBuf = await blob.arrayBuffer();
+        } else {
+          const res = await fetch(url, { credentials: 'include' });
+          if (!res.ok) throw new Error('fetch-failed');
+          arrBuf = await res.arrayBuffer();
+        }
         ctx = new Ctx();
         const decoded = await ctx.decodeAudioData(arrBuf.slice(0));
         if (cancelled) return;
@@ -119,7 +118,7 @@ function VoiceWaveformPreview({ blob, url, durationMs }) {
       }
     })();
     return () => { cancelled = true; };
-  }, [blob]);
+  }, [blob, url]);
 
   // Reset transport state when a new blob comes in (e.g. after re-record).
   useEffect(() => {
@@ -218,8 +217,36 @@ function VoiceWaveformPreview({ blob, url, durationMs }) {
     : totalMs;
   const bars = peaks ?? new Array(WAVEFORM_BAR_COUNT).fill(0.25);
 
+  const isPreview = variant === 'preview';
+  const isMine = variant === 'mine';
+  // White-on-blue treatment for outgoing bubbles (which sit on a solid
+  // bg-blue-500 background) and blue-on-dark for the preview row and
+  // incoming bubbles (which sit on the dark composer / dark thread bg).
+  const palette = isMine
+    ? {
+        playBg: 'rgba(255,255,255,0.22)',
+        playIcon: '#ffffff',
+        playShadow: 'none',
+        played: '#ffffff',
+        unplayed: 'rgba(255,255,255,0.4)',
+        time: 'rgba(255,255,255,0.85)',
+      }
+    : {
+        playBg: '#3b82f6',
+        playIcon: '#ffffff',
+        playShadow: isPreview ? '0 0 10px rgba(59,130,246,0.5)' : 'none',
+        played: '#3b82f6',
+        unplayed: 'rgba(96,165,250,0.35)',
+        time: '#9ca3af',
+      };
+
+  const playLabel = playing
+    ? (isPreview ? 'Pause voice preview' : 'Pause voice message')
+    : (isPreview ? 'Play voice preview' : 'Play voice message');
+  const sliderLabel = isPreview ? 'Voice preview scrubber' : 'Voice message scrubber';
+
   return (
-    <div className="flex items-center gap-2 min-w-0 flex-1">
+    <div className={`flex items-center gap-2 ${isPreview ? 'min-w-0 flex-1' : ''}`}>
       <audio
         ref={audioRef}
         src={url}
@@ -233,11 +260,12 @@ function VoiceWaveformPreview({ blob, url, durationMs }) {
       <button
         type="button"
         onClick={togglePlay}
-        aria-label={playing ? 'Pause voice preview' : 'Play voice preview'}
-        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white"
+        aria-label={playLabel}
+        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
         style={{
-          backgroundColor: '#3b82f6',
-          boxShadow: '0 0 10px rgba(59,130,246,0.5)',
+          backgroundColor: palette.playBg,
+          color: palette.playIcon,
+          boxShadow: palette.playShadow,
         }}
       >
         {playing ? (
@@ -259,12 +287,12 @@ function VoiceWaveformPreview({ blob, url, durationMs }) {
         onPointerCancel={endDrag}
         onKeyDown={handleTrackKeyDown}
         role="slider"
-        aria-label="Voice preview scrubber"
+        aria-label={sliderLabel}
         aria-valuemin={0}
         aria-valuemax={Math.max(1, Math.round(totalMs))}
         aria-valuenow={Math.round(currentMs)}
         tabIndex={0}
-        className="flex items-center gap-[2px] h-8 cursor-pointer min-w-0 flex-1 outline-none"
+        className={`flex items-center gap-[2px] h-8 cursor-pointer outline-none overflow-hidden ${isPreview ? 'min-w-0 flex-1' : 'w-[150px] max-w-full'}`}
         // touch-action: none keeps the browser from stealing horizontal drags
         // for page scroll/back-swipe while the user is scrubbing.
         style={{ touchAction: 'none' }}
@@ -279,7 +307,7 @@ function VoiceWaveformPreview({ blob, url, durationMs }) {
               style={{
                 width: 2,
                 height: `${h}px`,
-                backgroundColor: played ? '#3b82f6' : 'rgba(96,165,250,0.35)',
+                backgroundColor: played ? palette.played : palette.unplayed,
                 transition: 'background-color 60ms linear',
               }}
             />
@@ -288,11 +316,22 @@ function VoiceWaveformPreview({ blob, url, durationMs }) {
       </div>
       <span
         className="text-[10px] tabular-nums flex-shrink-0"
-        style={{ color: '#9ca3af' }}
+        style={{ color: palette.time }}
       >
         {formatDuration(displayMs)}
       </span>
     </div>
+  );
+}
+
+// Thin wrapper used by the chat thread so the call site stays expressive.
+function VoiceBubble({ url, durationMs, mine }) {
+  return (
+    <VoiceWaveform
+      url={url}
+      durationMs={durationMs}
+      variant={mine ? 'mine' : 'theirs'}
+    />
   );
 }
 
@@ -1406,10 +1445,11 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
                 border: '1px solid rgba(59,130,246,0.4)',
               }}
             >
-              <VoiceWaveformPreview
+              <VoiceWaveform
                 blob={voicePreview.blob}
                 url={voicePreview.url}
                 durationMs={voicePreview.durationMs}
+                variant="preview"
               />
               <div className="ml-auto flex gap-2 flex-shrink-0">
                 <button
