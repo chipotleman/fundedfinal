@@ -3,12 +3,15 @@
  * Build a time series of bundle-size baselines from the git history
  * of `docs/bundle-baseline.json`.
  *
- * The baseline file is auto-refreshed after every successful build on
- * the default branch (see `docs/bundle-budget.md` and the
- * `refresh-baseline` job in `.github/workflows/messenger-click-trap.yml`),
- * so its git history is itself a time series of the headline numbers
- * `totalStaticBytes`, `totalJsBytes`, the `largestPageRoute`, and that
- * route's `totalBytes`. Reading that history straight out of
+ * The baseline file used to be auto-refreshed after every successful
+ * build on the default branch (see `docs/bundle-budget.md` and the
+ * now-removed `refresh-baseline` job that lived in
+ * `.github/workflows/messenger-click-trap.yml`). The workflow has
+ * been parked along with the click-trap suite it rode on, so the
+ * baseline only updates when a maintainer regenerates it locally.
+ * Even so, its git history is still a time series of the headline
+ * numbers `totalStaticBytes`, `totalJsBytes`, the `largestPageRoute`,
+ * and that route's `totalBytes`. Reading that history straight out of
  * `git log -p` requires eyeballing JSON diffs, which is exactly the
  * kind of friction that lets the bundle creep up by 1–2 KB per merge
  * inside the per-PR cap.

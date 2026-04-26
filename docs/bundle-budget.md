@@ -1,5 +1,88 @@
 # Bundle-size budget
 
+> **Status: not currently enforced in CI.**
+>
+> The bundle-size budget used to ride along inside the
+> **Messenger click-trap E2E** workflow
+> (`.github/workflows/messenger-click-trap.yml`), which was deleted as
+> part of the cleanup that followed task #524 (the click-trap defense
+> layer that workflow validated was removed, so the surrounding
+> Playwright matrix and shared `build` job went with it).
+>
+> Everything in this document still works as a **local** check —
+> `scripts/measure-bundle.js`, `scripts/check-bundle-budget.js`,
+> `scripts/refresh-bundle-baseline.js`, and `scripts/bundle-history.js`
+> are unchanged, the baselines in `docs/bundle-baseline.json` /
+> `docs/bundle-baseline-modules.json` are still maintained, and you can
+> run the budget check by hand using the [Running the check
+> locally](#running-the-check-locally) recipe.
+>
+> The two pieces that **do not** happen automatically right now are:
+>
+> 1. The per-PR enforcement (`--mode fail` on every push and pull
+>    request) — no workflow currently runs `next build` and pipes the
+>    result through `check-bundle-budget.js`. PRs are not blocked on
+>    bundle regressions until that gate is re-wired.
+> 2. The `refresh-baseline` job that auto-stamped the post-merge
+>    measurement back into `docs/bundle-baseline.json` and into the
+>    [Recent baselines](#recent-baselines) trend table below — no
+>    workflow does that either, so the trend table will go stale until
+>    a maintainer regenerates it locally with `node scripts/bundle-history.js
+>    --update-doc docs/bundle-budget.md --limit 10` (or until the
+>    workflow is restored).
+>
+> ## Re-enabling automated enforcement
+>
+> When this is wired back up — either inside a restored
+> `messenger-click-trap.yml` or as a standalone `bundle-budget.yml` —
+> the `build` job needs to:
+>
+> 1. Run `next build`.
+> 2. Run `node scripts/measure-bundle.js --out bundle-current.json`.
+> 3. Run `node scripts/check-bundle-budget.js --current
+>    bundle-current.json --baseline docs/bundle-baseline.json
+>    --github-summary "$GITHUB_STEP_SUMMARY" --markdown-out
+>    bundle-report.md --mode fail`.
+> 4. Upload `bundle-current.json` as an artifact (named `bundle-size`)
+>    so the post-merge `refresh-baseline` job can consume it.
+> 5. Post `bundle-report.md` to the PR via
+>    `marocchino/sticky-pull-request-comment@v2` (skipping fork PRs;
+>    the report is still available in `$GITHUB_STEP_SUMMARY`).
+>
+> A separate `refresh-baseline` job — gated on `push` to the default
+> branch — should download the artifact and run
+> `node scripts/refresh-bundle-baseline.js` followed by
+> `node scripts/bundle-history.js --update-doc docs/bundle-budget.md
+> --limit 10`, then commit any change as `github-actions[bot]` with
+> `[skip ci]`. See the [Auto-refresh on push to the default
+> branch](#auto-refresh-on-push-to-the-default-branch) section below
+> for the full set of operational guarantees the previous job
+> provided (freshness guard, concurrency group, retry behaviour) so
+> the replacement matches.
+>
+> The rest of this document describes how the check works, how to
+> read a regression report, and how to refresh the baseline when a
+> bundle growth is intentional. **Treat the references to "the
+> Messenger click-trap E2E workflow" below as a description of how
+> things used to run; until the workflow is restored, the equivalent
+> steps need to be triggered by hand.**
+
+## Historical reference (CI enforcement is parked — see banner above)
+
+The remainder of this document describes how the budget **used to be
+enforced** before its host workflow was deleted. Wording is in the
+present tense because the sections are preserved verbatim for whoever
+re-wires the check, but only the local-recipe paths still apply
+today. Every "the workflow does X" statement should be read as
+"whatever workflow takes over needs to do X" until the [Re-enabling
+automated enforcement](#re-enabling-automated-enforcement) checklist
+above is acted on. The local recipes in [Running the check
+locally](#running-the-check-locally) and the manual baseline-refresh
+recipe in [When the check fails](#when-the-check-fails) are the
+parts that still work as written today.
+
+### Overview
+
 We run `next build` on every push and pull request as part of the
 **Messenger click-trap E2E** workflow
 (`.github/workflows/messenger-click-trap.yml`). After the build, two
@@ -10,7 +93,7 @@ downloads — e.g. a stray `import 'firebase'` in a shared component, a
 polyfill being pulled into every page, or a giant chart library landing
 in `_app.js`.
 
-## What gets measured
+### What gets measured
 
 `scripts/measure-bundle.js` reads `.next/build-manifest.json` and the
 file sizes under `.next/static`, then writes a JSON summary with:
@@ -51,7 +134,7 @@ Pass `--no-modules` to skip the source-map analysis (faster; produces
 no per-page module breakdown — useful for ad-hoc spot-checks where you
 only need the totals).
 
-## Current baseline
+### Current baseline
 
 Stored in [`docs/bundle-baseline.json`](./bundle-baseline.json) (totals
 + thresholds + per-page byte totals) and
@@ -70,7 +153,7 @@ module table lives in `bundle-baseline-modules.json`. Each value is
 on-disk byte size (uncompressed) of the files Next.js wrote to
 `.next/static` during a CI-equivalent build.
 
-## Budget thresholds
+### Budget thresholds
 
 Defined inline in `bundle-baseline.json` under `thresholds`:
 
@@ -84,7 +167,7 @@ You can edit the thresholds in `bundle-baseline.json` if the project's
 appetite changes — the CI step reads them at runtime, no workflow edit
 needed.
 
-## What CI does
+### What CI does (when the workflow is wired up)
 
 In the `build` job:
 
@@ -136,7 +219,7 @@ In the `build` job:
 `--baseline-modules ''` to skip the diff entirely (it falls back to
 listing only that the breakdown was unavailable).
 
-## When the check fails
+### When the check fails
 
 You will see something like this in the failed job:
 
@@ -198,7 +281,7 @@ are three reasonable responses, in order of preference:
    rule and the 50 KB total cap, but if it happens, refresh the
    baseline as in (2) and note it in the PR.
 
-## Auto-refresh on push to the default branch
+### Auto-refresh on push to the default branch
 
 To keep the committed baseline honest without relying on a maintainer
 remembering to regenerate it, the `Messenger click-trap E2E` workflow
@@ -270,7 +353,7 @@ A few operational notes:
   auto-refresh is a convenience for tracking real, reviewed growth,
   not a way to silently absorb regressions that skipped review.
 
-### Opting out of the auto-refresh on a given PR
+#### Opting out of the auto-refresh on a given PR
 
 The auto-refresh is a convenience, not a requirement. If you would
 rather the baseline change ship under your name (e.g. an intentional
@@ -301,7 +384,7 @@ basis — pre-stamping the baseline is the supported opt-out, and it
 also makes the byte delta visible during code review instead of
 landing as a follow-up bot commit.
 
-## Recent baselines
+### Recent baselines
 
 Each row below is one commit to `docs/bundle-baseline.json` (newest
 first), so this *is* the bundle-size trend over time. The "Δ total vs
@@ -338,7 +421,7 @@ writing (handy in pre-commit checks).
 
 <!-- BUNDLE_HISTORY:END -->
 
-## Running the check locally
+### Running the check locally
 
 ```bash
 npm run build
@@ -351,7 +434,7 @@ node scripts/check-bundle-budget.js \
 
 Use `--mode warn` to print the diff without exiting non-zero.
 
-## Dependencies
+### Dependencies
 
 The per-module breakdown depends on
 [`source-map-explorer`](https://www.npmjs.com/package/source-map-explorer)

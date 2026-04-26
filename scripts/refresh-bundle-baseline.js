@@ -15,11 +15,14 @@
  *   - perPage          <- { route: current.perPage[route].totalBytes }
  *
  * It is used by:
- *   - the `Messenger click-trap E2E` workflow on `push` to the default
- *     branch, to keep the committed baseline in sync with what just
- *     shipped (see `docs/bundle-budget.md`); and
  *   - maintainers who want to refresh the baseline locally after an
- *     intentional bundle growth.
+ *     intentional bundle growth (the recommended path right now); and
+ *   - any future CI workflow that re-enables automated bundle-budget
+ *     enforcement. The previous integration was a `refresh-baseline`
+ *     job inside `.github/workflows/messenger-click-trap.yml`, which
+ *     was removed alongside the click-trap suite — see the status
+ *     banner in `docs/bundle-budget.md` for what a replacement needs
+ *     to do.
  *
  * Usage:
  *   node scripts/refresh-bundle-baseline.js \

@@ -10,10 +10,14 @@ Once live, we will proceed with Stripe and Supabase integration for RollrFunded.
 
 ## Manual regression checklists
 
-After touching `pages/messenger.js`, `pages/notifications.js`,
-`components/TopNavbar.js`, `components/MobileNavMenu.js`, or
-`hooks/useModalScrollLock.js`, run the click-trap checklist in
-[`docs/messenger-click-trap-checklist.md`](docs/messenger-click-trap-checklist.md)
-on desktop, mobile-width emulation, **and** a real iOS Safari device. The
-"stuck on messages/notifications" bug has regressed twice and only reliably
-reproduces on real iOS Safari.
+The messenger / notifications click-trap checklist that used to live
+here has been **parked**. Task #524 removed the click-trap defense
+layer it was written to validate, the matching Playwright projects
+were removed from `playwright.config.js`, and the
+`.github/workflows/messenger-click-trap.yml` workflow was deleted, so
+neither the automated suite nor the manual steps are part of the
+required pre-merge flow right now. The full checklist is preserved
+for reference (and for whoever re-enables the suite) at
+[`docs/messenger-click-trap-checklist.md`](docs/messenger-click-trap-checklist.md);
+see the banner at the top of that doc for what would need to be put
+back in place to turn it back on.

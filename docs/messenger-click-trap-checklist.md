@@ -1,6 +1,62 @@
 # Messenger / Notifications Click-Trap Regression Checklist
 
-## First line of defense: the automated smoke test
+> **Status: PARKED — not currently enforced in CI.**
+>
+> Task #524 stripped the click-trap defense layer this checklist was
+> written to validate (the orphan-overlay watchdog, the scroll-lock
+> recovery watchdog, the custom touch interceptors, and the global
+> click delegate). With those layers gone, the matching Playwright
+> projects (`messenger-click-trap`, `messenger-click-trap-mobile`,
+> and `page-smoke`) were removed from `playwright.config.js` and the
+> `.github/workflows/messenger-click-trap.yml` GitHub Actions workflow
+> was deleted.
+>
+> The spec files themselves were intentionally left on disk
+> (`tests/e2e/messenger-click-trap.spec.js`,
+> `tests/e2e/messenger-click-trap.mobile.spec.js`,
+> `tests/e2e/page-smoke.spec.js`, `tests/e2e/helpers/clickTrap.js`)
+> so the suite can be re-enabled later. **Until that happens, none of
+> the "automated" assertions described below run on PRs, and reviewers
+> should not block on a green click-trap check that no longer exists.**
+>
+> ## What it would take to turn this back on
+>
+> 1. Re-introduce a defense layer that the specs can validate. Without
+>    one, the WebKit smoke runs will pass trivially and won't catch
+>    the regression they were written for. Re-add (or replace) the
+>    overlay/scroll-lock watchdogs and the global tap-handling code
+>    that task #524 removed.
+> 2. Re-register the Playwright projects in `playwright.config.js`
+>    (the file currently contains a comment block at the top of
+>    `projects:` describing what was removed). At minimum:
+>    `messenger-click-trap` (WebKit desktop), `messenger-click-trap-mobile`
+>    (WebKit iPhone-14-Pro viewport), and `page-smoke` (Chromium
+>    desktop + mobile against `setupSmokeStubs` / `setupSignedOutStubs`).
+> 3. Re-create `.github/workflows/messenger-click-trap.yml` (or fold
+>    the equivalent jobs into another workflow). The previous
+>    incarnation ran a single `build` job that produced a `.next/`
+>    artifact and an `e2e` matrix that consumed it; if the budget
+>    check (see `docs/bundle-budget.md`) is being re-enabled at the
+>    same time, host it inside that `build` job to share the
+>    `next build` pass.
+> 4. Re-link this checklist (and `docs/bundle-budget.md`) from the
+>    README's manual-regression section.
+>
+> Everything below this banner is preserved verbatim as a reference
+> for whoever re-enables the suite. **Treat it as historical
+> documentation, not as the current workflow.**
+
+---
+
+## Historical reference (suite is parked — see banner above)
+
+The remainder of this document describes how the suite **used to run**
+before task #524 retired it. Wording is in the present tense because
+this section is preserved verbatim for whoever re-enables the suite,
+but none of it currently happens on PRs. Re-read the banner at the top
+of the doc before acting on any of the steps below.
+
+### First line of defense: the automated smoke test
 
 The WebKit smoke test runs automatically in CI on every pull request via
 the **Messenger click-trap E2E** GitHub Actions workflow
@@ -90,6 +146,13 @@ iteration cycle while debugging a spec, `npm run test:e2e` still works
 and falls back to `next dev` (no build required, but the per-request
 compile cost is back).
 
+> **Note (parked):** because the click-trap and page-smoke projects
+> are no longer registered in `playwright.config.js`, running
+> `npm run test:e2e:ci` today executes only the projects that *are*
+> registered (`chromium-voice-note`,
+> `profile-bankroll-owner-lockout`). To actually run the specs
+> described below you need to add their project entries back first.
+
 The suite lives in `tests/e2e/`:
 - `messenger-click-trap.spec.js` — desktop Safari (>= 1024px wide), exercises
   the bell + messages dropdowns, the bell "View all" navigation to
@@ -148,7 +211,7 @@ against an already-running server instead, set
 `E2E_BASE_URL=http://localhost:3000` (or wherever the server is) and
 Playwright will skip booting its own.
 
-## When to still run the manual checklist
+### When to still run the manual checklist
 
 WebKit emulation does **not** perfectly reproduce real iOS Safari's
 click-trap behavior, so after the automated test passes you must still run
@@ -165,7 +228,7 @@ Run it on **all three** environments below. Every tap must register on the
 **first** try. If you have to tap twice, or if a tap is swallowed by an
 invisible overlay, the bug is back.
 
-## Environments
+### Environments
 
 1. Desktop browser (Chrome or Firefox at >= 1024px wide).
 2. Mobile-width emulation in desktop devtools (iPhone 14 Pro / 390px).
@@ -173,7 +236,7 @@ invisible overlay, the bug is back.
    reproduce the iOS Safari click-trap bug — you must test on a real device
    or a simulator running mobile Safari.
 
-## Steps (run on each environment)
+### Steps (run on each environment)
 
 Steps marked **[automated]** are now covered by the WebKit smoke test
 above and only need to be re-checked manually on real iOS Safari.
@@ -226,7 +289,7 @@ For each environment, sign in as a normal user, then:
     should return to idle. Tap a top-bar icon to confirm it still
     responds on the first tap.
 
-## Pass criteria
+### Pass criteria
 
 - Every tap in steps 2–13 registers on the first attempt.
 - After every dropdown / menu dismissal, the page scrolls normally and
