@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import ReactDOM from 'react-dom';
+import { useRouter } from 'next/router';
+import { useSession } from 'next-auth/react';
 import { useNotifications } from '../../contexts/NotificationsContext';
 import AchievementDetailModal from '../AchievementDetailModal';
 
@@ -52,6 +54,9 @@ export default function AchievementUnlockOverlay() {
 function Celebration({ achievement, onDismiss }) {
   const dismissedRef = useRef(false);
   const openedAtRef = useRef(Date.now());
+  const router = useRouter();
+  const { data: session } = useSession();
+  const viewerId = session?.user?.id || null;
 
   // Reset entrance state whenever a new achievement takes the head of the
   // queue so back-to-back unlocks each get a fresh celebration. Also fire
@@ -85,6 +90,24 @@ function Celebration({ achievement, onDismiss }) {
     onDismiss?.(achievement.id);
   };
 
+  // Tap-through CTA: dismisses the celebration and routes the user straight
+  // to their own profile so they can admire the new badge alongside the
+  // rest of their progress (task #381). Same entrance-lockout guard as the
+  // generic close so the button can't fire from the entrance tap-through.
+  const handleViewAchievements = () => {
+    if (dismissedRef.current) return;
+    if (Date.now() - openedAtRef.current < ENTRANCE_LOCKOUT_MS) return;
+    dismissedRef.current = true;
+    onDismiss?.(achievement.id);
+    // Prefer the user's full public profile (where the achievements grid
+    // lives) when we know the viewer's id, otherwise fall back to the
+    // generic /profile page so the CTA never becomes dismiss-only.
+    const target = viewerId
+      ? `/profile/${encodeURIComponent(viewerId)}`
+      : '/profile';
+    router.push(target);
+  };
+
   // Map the SSE/catch-up payload onto the shape AchievementDetailModal
   // expects. The modal already looks up rarity + badge art via the
   // achievement id, so we only need the human-readable bits + earned
@@ -106,6 +129,10 @@ function Celebration({ achievement, onDismiss }) {
         @keyframes achv-unlock-banner-in {
           0% { opacity: 0; transform: translate(-50%, -16px); }
           100% { opacity: 1; transform: translate(-50%, 0); }
+        }
+        @keyframes achv-unlock-cta-in {
+          0% { opacity: 0; transform: translateY(12px); }
+          100% { opacity: 1; transform: translateY(0); }
         }
         @keyframes achv-unlock-burst {
           0% { transform: translate(-50%, -50%) scale(0.2); opacity: 0; }
@@ -130,6 +157,12 @@ function Celebration({ achievement, onDismiss }) {
             opacity: 0;
           }
         }
+        .achv-unlock-cta-btn:hover {
+          filter: brightness(1.05);
+        }
+        .achv-unlock-cta-btn:active {
+          transform: translateY(1px);
+        }
         @media (prefers-reduced-motion: reduce) {
           .achv-unlock-fx,
           .achv-unlock-fx * {
@@ -140,7 +173,8 @@ function Celebration({ achievement, onDismiss }) {
           .achv-unlock-fx .achv-unlock-particles { display: none !important; }
           .achv-unlock-fx .achv-unlock-burst,
           .achv-unlock-fx .achv-unlock-ring,
-          .achv-unlock-fx .achv-unlock-banner { animation: none !important; }
+          .achv-unlock-fx .achv-unlock-banner,
+          .achv-unlock-cta-btn { animation: none !important; }
         }
       `}</style>
 
@@ -247,6 +281,48 @@ function Celebration({ achievement, onDismiss }) {
               }}
             />
           ))}
+          {/* Tap-through CTA — sits below the centered detail card. The
+              wrapping flex column is pointer-events:none so taps in the
+              empty space around the button still fall through to the modal
+              backdrop and dismiss the overlay; only the button itself
+              accepts pointer events. */}
+          <div
+            className="absolute inset-x-0 flex justify-center px-4 pointer-events-none"
+            style={{ top: 'calc(50% + 200px)' }}
+          >
+            <button
+              type="button"
+              onClick={handleViewAchievements}
+              className="achv-unlock-cta-btn pointer-events-auto inline-flex items-center gap-2 px-5 py-3 rounded-full text-sm font-bold uppercase tracking-wider focus:outline-none focus-visible:ring-2 focus-visible:ring-yellow-300"
+              style={{
+                background: 'linear-gradient(90deg, #f59e0b, #fbbf24)',
+                border: '1px solid rgba(253, 224, 71, 0.7)',
+                color: '#1a1100',
+                boxShadow:
+                  '0 12px 28px rgba(0,0,0,0.55), 0 0 22px rgba(253, 224, 71, 0.45)',
+                animation: 'achv-unlock-cta-in 0.45s ease-out 0.25s both',
+                transition: 'filter 120ms ease, transform 120ms ease',
+              }}
+              aria-label="View all achievements"
+            >
+              <span>View achievements</span>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2.5}
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </button>
+          </div>
+
           {SPARKLE_POSITIONS.map((s, i) => (
             <div
               key={`spark-${i}`}
