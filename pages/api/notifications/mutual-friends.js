@@ -39,16 +39,25 @@ export default async function handler(req, res) {
     ? otherIdRaw
     : null;
   // Lightweight mode for surfaces (e.g. the public profile header badge)
-  // that only need "how many mutuals do we share?" — skips the second
-  // round-trip to load profile/avatar/presence data for each mutual id.
+  // that only need "how many mutuals do we share?" plus a tiny avatar
+  // preview — skips loading per-row presence and "how do you know them"
+  // signals which the full popup shows. Cuts the per-profile-load cost
+  // down to a single batched profile lookup capped at `MUTUAL_PREVIEW_LIMIT`
+  // ids, regardless of how many mutuals the two users actually share.
   const countOnly = req.query?.countOnly === '1' || req.query?.countOnly === 'true';
+  // Match the friend-request notification preview cap so the badge stack
+  // (rendered by `MutualFriendsStack`) and the friend-request card stack
+  // share the same look and visual budget — 3 visible avatars + a "+N" chip.
+  const MUTUAL_PREVIEW_LIMIT = 3;
 
   if (!otherId) {
     return res.status(400).json({ error: 'userId is required' });
   }
   if (otherId === userId) {
     return res.status(200).json(
-      countOnly ? { mutualFriendsCount: 0 } : { mutualFriends: [] }
+      countOnly
+        ? { mutualFriendsCount: 0, mutualFriendPreview: [] }
+        : { mutualFriends: [] }
     );
   }
 
@@ -109,7 +118,42 @@ export default async function handler(req, res) {
     }
 
     if (countOnly) {
-      return res.status(200).json({ mutualFriendsCount: mutualIds.length });
+      if (mutualIds.length === 0) {
+        return res.status(200).json({
+          mutualFriendsCount: 0,
+          mutualFriendPreview: [],
+        });
+      }
+      // Pull a tiny avatar preview for the badge stack. Equipped frame is
+      // included so the framed look matches what `UserAvatar` renders
+      // elsewhere (and what the task spec asked for: avatars "with frames").
+      const previewIds = mutualIds.slice(0, MUTUAL_PREVIEW_LIMIT);
+      const previewProfs = await db
+        .select({
+          id: profiles.id,
+          username: profiles.username,
+          avatar: profiles.avatar,
+          equippedFrame: profiles.equippedFrame,
+        })
+        .from(profiles)
+        .where(inArray(profiles.id, previewIds));
+      const previewMap = new Map(previewProfs.map(p => [p.id, p]));
+      const mutualFriendPreview = previewIds
+        .map(pid => {
+          const p = previewMap.get(pid);
+          if (!p) return null;
+          return {
+            id: p.id,
+            username: p.username || 'Player',
+            avatar: p.avatar || null,
+            equippedFrame: p.equippedFrame || null,
+          };
+        })
+        .filter(Boolean);
+      return res.status(200).json({
+        mutualFriendsCount: mutualIds.length,
+        mutualFriendPreview,
+      });
     }
 
     if (mutualIds.length === 0) {

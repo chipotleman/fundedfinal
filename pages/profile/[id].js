@@ -11,6 +11,7 @@ import ActiveStatus from '../../components/ActiveStatus';
 import ProfileEditPanel from '../../components/ProfileEditPanel';
 import MessagePopup from '../../components/messages/MessagePopup';
 import MutualFriendsModal from '../../components/notifications/MutualFriendsModal';
+import MutualFriendsStack from '../../components/notifications/MutualFriendsStack';
 import { useBetSlip } from '../../contexts/BetSlipContext';
 import { useProfileCache } from '../../contexts/ProfileCacheContext';
 import { useNotifications } from '../../contexts/NotificationsContext';
@@ -84,6 +85,7 @@ export default function PublicProfile() {
   const [friendRequestId, setFriendRequestId] = useState(null);
   const [friendActionLoading, setFriendActionLoading] = useState(false);
   const [mutualFriendsCount, setMutualFriendsCount] = useState(0);
+  const [mutualFriendsPreview, setMutualFriendsPreview] = useState([]);
   const [mutualFriendsOpen, setMutualFriendsOpen] = useState(false);
   const [showBattleInvite, setShowBattleInvite] = useState(false);
   const [battleInviteLoading, setBattleInviteLoading] = useState(false);
@@ -379,26 +381,32 @@ export default function PublicProfile() {
     }
   }, [id, session, cache]);
 
-  // Fetch the mutual-friends count whenever a signed-in viewer lands on
-  // someone else's profile so the "<N> mutual friends" badge can render
-  // before the popup is opened. Uses the lightweight countOnly mode so
-  // we don't pay for full profile/avatar/presence enrichment up front —
-  // the modal itself does that fetch on open. Hidden on own profile and
-  // for signed-out viewers per the task spec.
+  // Fetch the mutual-friends count + 3-avatar preview whenever a signed-in
+  // viewer lands on someone else's profile so the "<N> mutual friends"
+  // badge can render its avatar stack before the popup is opened. Uses the
+  // lightweight countOnly mode so we don't pay for full presence /
+  // "how do you know them" enrichment up front — the modal itself does
+  // that fetch on open. A single round-trip backs both the count and the
+  // preview so we don't double the cost of profile load. Hidden on own
+  // profile and for signed-out viewers per the task spec.
   useEffect(() => {
     if (!id) return undefined;
     if (!session?.user?.id) {
       setMutualFriendsCount(0);
+      setMutualFriendsPreview([]);
       return undefined;
     }
     if (session.user.id === id) {
       setMutualFriendsCount(0);
+      setMutualFriendsPreview([]);
       return undefined;
     }
     const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
-    // Clear immediately so a previous profile's count never lingers on the
-    // header while the new fetch is in flight (or if it ultimately fails).
+    // Clear immediately so a previous profile's count/preview never lingers
+    // on the header while the new fetch is in flight (or if it ultimately
+    // fails).
     setMutualFriendsCount(0);
+    setMutualFriendsPreview([]);
     fetch(
       `/api/notifications/mutual-friends?userId=${encodeURIComponent(id)}&countOnly=1`,
       { credentials: 'same-origin', signal: ctrl?.signal },
@@ -406,17 +414,23 @@ export default function PublicProfile() {
       .then(async (res) => {
         if (!res.ok) {
           setMutualFriendsCount(0);
+          setMutualFriendsPreview([]);
           return;
         }
         const data = await res.json();
         const n = Number(data?.mutualFriendsCount) || 0;
+        const preview = Array.isArray(data?.mutualFriendPreview)
+          ? data.mutualFriendPreview
+          : [];
         setMutualFriendsCount(n);
+        setMutualFriendsPreview(preview);
       })
       .catch((err) => {
         if (err?.name === 'AbortError') return;
         // Silently swallow — the badge just won't render. Other surfaces
         // (search, live feed) still work without it.
         setMutualFriendsCount(0);
+        setMutualFriendsPreview([]);
       });
     return () => {
       try { ctrl?.abort(); } catch (_e) {}
@@ -1089,30 +1103,54 @@ export default function PublicProfile() {
                   })()}
                   {!isOwnProfile && session?.user?.id && mutualFriendsCount > 0 && (
                     <div className="flex justify-center md:justify-start mb-3">
-                      <button
-                        type="button"
-                        onClick={() => setMutualFriendsOpen(true)}
-                        className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors hover:bg-[#1a1228] focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+                      {/*
+                        Pill: avatar stack + count text. We can't nest the
+                        per-avatar `<Link>`s inside an outer `<button>` (HTML
+                        doesn't allow interactive descendants of buttons), so
+                        the pill is a presentational `<div>` containing two
+                        independent interactive children — the stack (each
+                        avatar links to its profile, "+N" opens the popup)
+                        and the count `<button>` (also opens the popup). When
+                        no preview is available (cold load, or count===0
+                        which is already filtered above) we fall back to the
+                        people icon so the pill never renders empty.
+                      */}
+                      <div
+                        className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold"
                         style={{
                           backgroundColor: 'rgba(168,85,247,0.12)',
                           border: '1px solid rgba(168,85,247,0.45)',
                           color: '#e9d5ff',
                         }}
-                        aria-label={`See ${mutualFriendsCount} mutual ${mutualFriendsCount === 1 ? 'friend' : 'friends'}`}
                       >
-                        <svg
-                          className="w-3.5 h-3.5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                          aria-hidden="true"
+                        {mutualFriendsPreview.length > 0 ? (
+                          <MutualFriendsStack
+                            preview={mutualFriendsPreview}
+                            size={18}
+                            total={mutualFriendsCount}
+                            onSeeAll={() => setMutualFriendsOpen(true)}
+                          />
+                        ) : (
+                          <svg
+                            className="w-3.5 h-3.5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5.13a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                          </svg>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setMutualFriendsOpen(true)}
+                          className="rounded-full transition-colors hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+                          style={{ color: 'inherit', background: 'transparent' }}
+                          aria-label={`See ${mutualFriendsCount} mutual ${mutualFriendsCount === 1 ? 'friend' : 'friends'}`}
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-5.13a4 4 0 11-8 0 4 4 0 018 0zm6 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                        <span>
                           {mutualFriendsCount} mutual {mutualFriendsCount === 1 ? 'friend' : 'friends'}
-                        </span>
-                      </button>
+                        </button>
+                      </div>
                     </div>
                   )}
                   {Array.isArray(profile.favoriteTeams) && profile.favoriteTeams.length > 0 && (

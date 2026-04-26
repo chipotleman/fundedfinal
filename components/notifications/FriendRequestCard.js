@@ -3,6 +3,7 @@ import Link from 'next/link';
 import UserAvatar, { useProfilePrefetchHandlers } from '../UserAvatar';
 import { NotifIcon } from './notificationTypeStyles';
 import MutualFriendsModal from './MutualFriendsModal';
+import MutualFriendsStack from './MutualFriendsStack';
 
 const PURPLE = '#a855f7';
 
@@ -88,88 +89,6 @@ function pickContextLine(context) {
     if (ago) return `Joined Piks ${ago}`;
   }
   return null;
-}
-
-/**
- * Small overlapping stack of mutual-friend avatars rendered next to the
- * "<N> mutual friends" line. Caps at 3 so the row stays compact, and falls
- * back to nothing when no preview is provided so the layout collapses
- * gracefully on senders with no overlap. Each avatar is tappable and links
- * to that user's profile so people can quickly verify "oh yeah, I know that
- * person" before accepting; the same `onProfileNavigate` callback used by
- * the requester avatar/name is forwarded so overlay surfaces (bell dropdown,
- * global toast) get out of the way on tap. When `total` exceeds the number
- * of avatars shown, an extra "+N" chip is appended to the stack — tapping
- * that chip opens the full mutual-friends list (`MutualFriendsModal`) so
- * users with many mutuals can still scan everyone before accepting.
- */
-function MutualFriendsStack({ preview, size = 18, total = 0, onProfileNavigate, onSeeAll }) {
-  if (!Array.isArray(preview) || preview.length === 0) return null;
-  const items = preview.slice(0, 3);
-  const overlap = Math.round(size * 0.35);
-  const extra = Math.max(0, Number(total) - items.length);
-  return (
-    <span className="inline-flex items-center flex-shrink-0">
-      {items.map((u, i) => (
-        <span
-          key={u.id || i}
-          style={{
-            marginLeft: i === 0 ? 0 : `-${overlap}px`,
-            borderRadius: '9999px',
-            padding: '1px',
-            background: 'rgba(168,85,247,0.55)',
-            display: 'inline-flex',
-            zIndex: items.length - i,
-          }}
-          title={u.username || 'Player'}
-        >
-          <UserAvatar
-            user={u}
-            size={size}
-            link
-            onLinkClick={onProfileNavigate}
-          />
-        </span>
-      ))}
-      {extra > 0 && (
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onSeeAll?.();
-          }}
-          style={{
-            marginLeft: `-${overlap}px`,
-            borderRadius: '9999px',
-            padding: '1px',
-            background: 'rgba(168,85,247,0.55)',
-            display: 'inline-flex',
-            zIndex: 0,
-            border: 'none',
-            cursor: onSeeAll ? 'pointer' : 'default',
-          }}
-          title={`See all ${total} mutual ${total === 1 ? 'friend' : 'friends'}`}
-          aria-label={`See all ${total} mutual ${total === 1 ? 'friend' : 'friends'}`}
-        >
-          <span
-            className="inline-flex items-center justify-center font-bold text-white"
-            style={{
-              width: size,
-              height: size,
-              borderRadius: '9999px',
-              background: 'linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)',
-              fontSize: Math.max(8, Math.round(size * 0.5)),
-              lineHeight: 1,
-              letterSpacing: '-0.02em',
-            }}
-          >
-            +{extra}
-          </span>
-        </button>
-      )}
-    </span>
-  );
 }
 
 export default function FriendRequestCard({
