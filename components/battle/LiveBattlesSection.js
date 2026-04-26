@@ -3,6 +3,8 @@ import { useRouter } from 'next/router';
 import BattleChat from './BattleChat';
 import QuickMatchModal from './QuickMatchModal';
 import BattleModeChooser from './BattleModeChooser';
+import PlayFriendModal from './PlayFriendModal';
+import PrivateMatchModal from './PrivateMatchModal';
 import { formatMoney } from '../../utils/formatMoney';
 import UserAvatar from '../UserAvatar';
 import MutualFriendsLine from '../social/MutualFriendsLine';
@@ -989,7 +991,27 @@ const PLAY_NOW_CONFIRM_TIMEOUT_MS = 10000;
 // the idle render branch stays in sync with the helper that sets it.
 const PLAY_NOW_CANCEL_NOTICE = 'Cancelled — no money spent.';
 
-function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, onMatchFound = null, currentUserId = null, balance = null }) {
+function YouVsCard({
+  youVsState,
+  onClick,
+  isExpanded = false,
+  onToggle = null,
+  onMatchFound = null,
+  currentUserId = null,
+  balance = null,
+  // Friends list, remembered last buy-in, and full current-user profile
+  // are forwarded from the home page so the in-card "Choose Battle Mode"
+  // chooser can mount the Play Friend / Private Match modals directly
+  // (no `/battle?openPlayFriend=1` page jump). Pages that don't pass these
+  // (e.g. the legacy /battle full-list view) fall back to the previous
+  // router.push hand-off via `legacyChooserHandoff` below.
+  friends = null,
+  lastBuyIn = null,
+  currentUser = null,
+  onPlayFriendInviteSent = null,
+  onPlayFriendInviteCancelled = null,
+  onPrivateMatchJoined = null,
+}) {
   const router = useRouter();
   const { refresh: refreshMatchup } = useMatchup();
   const [cancelling, setCancelling] = useState(false);
@@ -1110,6 +1132,20 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
   // the same Quick Match / Challenge Friend / Private Match options
   // instead of jumping straight into a Quick Match search.
   const [showChooser, setShowChooser] = useState(false);
+  // In-card Play Friend / Private Match modals. When the home page
+  // wires up the `friends` / `currentUser` props the chooser opens
+  // these directly so the user never leaves the home page; the
+  // legacy hand-off (router.push to `/battle?openPlayFriend=1`)
+  // remains for callers that don't supply that data.
+  const [showPlayFriend, setShowPlayFriend] = useState(false);
+  const [showPrivateMatch, setShowPrivateMatch] = useState(false);
+  // Whether this card has the data it needs to mount the in-card
+  // Play Friend / Private Match modals. We don't gate on `friends`
+  // length (a brand-new user with zero friends still gets the Find
+  // Players tab inside the modal) — only on the prop being passed at
+  // all, so the legacy /battle full-list usage stays on the old
+  // router.push path.
+  const canMountChooserModals = Array.isArray(friends) && !!currentUser;
   const matchmakingCancelledRef = useRef(false);
   const cancelNoticeTimerRef = useRef(null);
   const searchTimerIntervalRef = useRef(null);
@@ -1653,18 +1689,29 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
     }
   };
 
-  // Challenge Friend / Private Match picks hand off to /battle so the
-  // user lands in the same Play Friend / Private Match modal — and the
-  // same lobby/active-battle destination — they would have reached by
-  // tapping Start a Battle on the Battle page itself.
+  // Challenge Friend / Private Match picks. When the home page wires
+  // up the in-card data (friends + currentUser), open the matching
+  // modal directly so the entire chooser experience stays on the
+  // home page. Otherwise fall back to the legacy router hand-off so
+  // callers that don't provide that data (and the existing
+  // `?openPlayFriend=1` / `?openPrivateMatch=1` deep-link entry on
+  // /battle) keep working.
   const handleChooserChallengeFriend = () => {
     setShowChooser(false);
-    router.push('/battle?openPlayFriend=1');
+    if (canMountChooserModals) {
+      setShowPlayFriend(true);
+    } else {
+      router.push('/battle?openPlayFriend=1');
+    }
   };
 
   const handleChooserPrivateMatch = () => {
     setShowChooser(false);
-    router.push('/battle?openPrivateMatch=1');
+    if (canMountChooserModals) {
+      setShowPrivateMatch(true);
+    } else {
+      router.push('/battle?openPrivateMatch=1');
+    }
   };
 
   return (
@@ -2488,11 +2535,69 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
       onPickChallengeFriend={handleChooserChallengeFriend}
       onPickPrivateMatch={handleChooserPrivateMatch}
     />
+    {/* In-card Play Friend / Private Match modals — mounted only when
+        the home page supplies the friends list + current-user profile
+        so the chooser experience stays on the home page (no jump to
+        /battle). The /battle page mounts its own copy of these modals
+        for the deep-link query handoff. */}
+    {canMountChooserModals && (
+      <>
+        <PlayFriendModal
+          isOpen={showPlayFriend}
+          onClose={() => setShowPlayFriend(false)}
+          friends={friends}
+          currentUser={currentUser}
+          initialBuyIn={lastBuyIn}
+          onInviteSent={() => {
+            if (onPlayFriendInviteSent) onPlayFriendInviteSent();
+          }}
+          onInviteCancelled={() => {
+            if (onPlayFriendInviteCancelled) onPlayFriendInviteCancelled();
+          }}
+          onSwitchToPrivate={() => {
+            setShowPlayFriend(false);
+            setShowPrivateMatch(true);
+          }}
+        />
+        <PrivateMatchModal
+          isOpen={showPrivateMatch}
+          onClose={() => setShowPrivateMatch(false)}
+          onMatchJoined={(matchup) => {
+            setShowPrivateMatch(false);
+            if (onPrivateMatchJoined) {
+              onPrivateMatchJoined(matchup);
+            } else {
+              // Mirror /battle's behavior: a created+joined private
+              // match should land the user in the same lobby/active-
+              // battle destination they would have reached on /battle.
+              router.push('/battle');
+            }
+          }}
+        />
+      </>
+    )}
     </>
   );
 }
 
-export default function LiveBattlesSection({ compact = false, focusBattleId = null, currentUserId = null, youVsState = null, onYouVsClick = null, balance = null }) {
+export default function LiveBattlesSection({
+  compact = false,
+  focusBattleId = null,
+  currentUserId = null,
+  youVsState = null,
+  onYouVsClick = null,
+  balance = null,
+  // Forwarded straight to YouVsCard so the in-card chooser can mount
+  // the Play Friend / Private Match modals without leaving the home
+  // page. Optional — when omitted, the chooser falls back to the
+  // legacy `router.push('/battle?openPlayFriend=1')` hand-off.
+  friends = null,
+  lastBuyIn = null,
+  currentUser = null,
+  onPlayFriendInviteSent = null,
+  onPlayFriendInviteCancelled = null,
+  onPrivateMatchJoined = null,
+}) {
   const [battles, setBattles] = useState(() => getSimulatedBattles([]));
   const [avatars, setAvatars] = useState([]);
   const [expandedKey, setExpandedKey] = useState(null);
@@ -2787,6 +2892,12 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
               onMatchFound={(data) => setMatchFoundData(data)}
               currentUserId={currentUserId}
               balance={balance}
+              friends={friends}
+              lastBuyIn={lastBuyIn}
+              currentUser={currentUser}
+              onPlayFriendInviteSent={onPlayFriendInviteSent}
+              onPlayFriendInviteCancelled={onPlayFriendInviteCancelled}
+              onPrivateMatchJoined={onPrivateMatchJoined}
             />
           </div>
           {compactBattles.map(battle => (

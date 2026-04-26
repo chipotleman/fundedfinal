@@ -17,6 +17,7 @@ import { DEFAULT_PROMO_SLOTS, normalizePromoSlots } from '../lib/promoSlots';
 import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
 import LiveBattlesSection from '../components/battle/LiveBattlesSection';
 import Footer from '../components/Footer';
+import { readLastBuyIn, fetchLastBuyIn } from '../utils/lastBattleBuyIn';
 import { inferLeague } from '../lib/leagueInference';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
@@ -214,6 +215,17 @@ export default function Dashboard() {
   // placeholder before the real profile fetch resolves.
   const [bankroll, setBankroll] = useState(null);
   const [pnl, setPnl] = useState(0);
+  // Friends list + remembered last buy-in for the in-card Play Friend
+  // modal that the "Choose Battle Mode" chooser opens directly from
+  // the home page's Your Battle card. Fetched lazily for signed-in
+  // users only — guests never see the chooser flow that needs them.
+  const [friendsList, setFriendsList] = useState([]);
+  const [lastBuyIn, setLastBuyIn] = useState(null);
+  // Profile snapshot used as `currentUser` for the in-card Play Friend
+  // modal. We keep a small mirror of the same `/api/profiles/:id`
+  // response that already powers the bankroll display so the modal
+  // gets username/avatar/equipped frame without an extra fetch.
+  const [profileSnapshot, setProfileSnapshot] = useState(null);
   const [expandedGames, setExpandedGames] = useState({});
   const scrollPositionRef = useRef(0);
   const isFrozenRef = useRef(false);
@@ -332,6 +344,19 @@ export default function Dashboard() {
             if (profile?.pnl != null) {
               setPnl(parseFloat(profile.pnl));
             }
+            // Cache username/avatar/frame so the in-card Play Friend
+            // modal can render the current user without a second fetch.
+            // The endpoint sometimes wraps under `profile` and sometimes
+            // returns the row directly — handle both shapes.
+            const p = profile?.profile || profile;
+            if (p) {
+              setProfileSnapshot({
+                id: user.id,
+                username: p.username || user.username || user.name,
+                avatar: p.avatar ?? null,
+                frameId: p.equippedFrame || null,
+              });
+            }
           }
         } catch (error) {
           console.error('Error fetching profile:', error);
@@ -340,6 +365,61 @@ export default function Dashboard() {
     };
     fetchUserProfile();
   }, [user]);
+
+  // Friends list — needed by the in-card Play Friend modal that the
+  // Your Battle card's chooser opens directly. Bounded with a short
+  // timeout so a slow/hung endpoint can't strand the chooser flow.
+  const fetchFriendsList = useCallback(async () => {
+    if (!user?.id) {
+      setFriendsList([]);
+      return;
+    }
+    if (typeof AbortController === 'undefined') {
+      try {
+        const res = await fetch('/api/friends');
+        if (!res.ok) return;
+        const data = await res.json();
+        setFriendsList(data.friends || []);
+      } catch {}
+      return;
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      try { controller.abort(); } catch {}
+    }, 8000);
+    try {
+      const res = await fetch('/api/friends', { signal: controller.signal });
+      if (!res.ok) return;
+      const data = await res.json();
+      setFriendsList(data.friends || []);
+    } catch {} finally {
+      clearTimeout(timer);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchFriendsList();
+  }, [fetchFriendsList]);
+
+  // Hydrate the remembered buy-in once we know who the user is so the
+  // in-card Play Friend modal opens with the same defaults the friend-
+  // row shortcut would use. Mirrors the `refreshLastBuyIn` flow on
+  // /battle: seed from the local cache for an instant render, then
+  // refresh from the server so the value follows them across devices.
+  const refreshLastBuyIn = useCallback(async () => {
+    if (!user?.id) {
+      setLastBuyIn(null);
+      return;
+    }
+    const cached = readLastBuyIn(user.id);
+    if (cached) setLastBuyIn(cached);
+    const fresh = await fetchLastBuyIn(user.id);
+    setLastBuyIn(fresh);
+  }, [user?.id]);
+
+  useEffect(() => {
+    refreshLastBuyIn();
+  }, [refreshLastBuyIn]);
 
   const handleBetPlaced = (newBankroll) => {
     const bankrollValue = Number(newBankroll);
@@ -1096,6 +1176,35 @@ export default function Dashboard() {
             timeRemaining: timeRemaining,
           }}
           onYouVsClick={() => router.push('/battle')}
+          // Wire the in-card chooser modals so Challenge Friend /
+          // Private Match open inline (no jump to /battle). The
+          // `currentUser` prop is what gates this — without a signed-in
+          // profile the chooser falls back to its legacy router
+          // hand-off inside YouVsCard.
+          friends={friendsList}
+          lastBuyIn={lastBuyIn}
+          currentUser={profileSnapshot || (user ? { id: user.id, username: user.username || user.name, avatar: user.avatar } : null)}
+          onPlayFriendInviteSent={() => {
+            // Refresh both: the friends list (its activeMatchupId
+            // markers may have changed) and the remembered buy-in
+            // (PlayFriendModal writes a new value when an invite is
+            // sent). Mirrors /battle's `onInviteSent` behavior.
+            fetchFriendsList();
+            refreshLastBuyIn();
+            refreshMatchup();
+          }}
+          onPlayFriendInviteCancelled={() => {
+            fetchFriendsList();
+            refreshMatchup();
+          }}
+          onPrivateMatchJoined={() => {
+            // Once a private match has its second player, hand off to
+            // /battle so the user lands in the same lobby/active-
+            // battle destination /battle uses today (the matchup is
+            // surfaced there from the global MatchupContext).
+            refreshMatchup();
+            router.push('/battle');
+          }}
         />
 
         {categorizedGames.liveGames.some(g => g.isLive || g.status === 'IN_PROGRESS') && (
