@@ -63,6 +63,201 @@ function VoiceBubble({ url, durationMs, mine }) {
   );
 }
 
+const WAVEFORM_BAR_COUNT = 36;
+
+// Custom waveform-style scrubber for the voice preview row, replacing the
+// browser's default <audio controls> element. We decode the recorded blob in
+// an AudioContext to extract per-bar peaks, then render the same kind of
+// vertical bars used by the live recording level meter so the preview UI
+// feels visually consistent with the recording UI.
+function VoiceWaveformPreview({ blob, url, durationMs }) {
+  const audioRef = useRef(null);
+  const trackRef = useRef(null);
+  const [peaks, setPeaks] = useState(null);
+  const [playing, setPlaying] = useState(false);
+  const [currentMs, setCurrentMs] = useState(0);
+  const totalMs = Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 0;
+
+  // Decode the blob into a small array of normalized amplitudes that we use
+  // to size each bar. If decoding fails (e.g. unsupported codec on Safari)
+  // we fall back to a flat baseline so the UI still renders something.
+  useEffect(() => {
+    if (!blob) { setPeaks(null); return undefined; }
+    let cancelled = false;
+    let ctx = null;
+    (async () => {
+      try {
+        const Ctx = typeof window !== 'undefined'
+          ? (window.AudioContext || window.webkitAudioContext)
+          : null;
+        if (!Ctx) { if (!cancelled) setPeaks(new Array(WAVEFORM_BAR_COUNT).fill(0.4)); return; }
+        const arrBuf = await blob.arrayBuffer();
+        ctx = new Ctx();
+        const decoded = await ctx.decodeAudioData(arrBuf.slice(0));
+        if (cancelled) return;
+        const channel = decoded.getChannelData(0);
+        const samplesPerBar = Math.max(1, Math.floor(channel.length / WAVEFORM_BAR_COUNT));
+        const out = new Array(WAVEFORM_BAR_COUNT).fill(0);
+        let max = 0;
+        for (let b = 0; b < WAVEFORM_BAR_COUNT; b++) {
+          let peak = 0;
+          const start = b * samplesPerBar;
+          const end = Math.min(channel.length, start + samplesPerBar);
+          for (let i = start; i < end; i++) {
+            const v = Math.abs(channel[i]);
+            if (v > peak) peak = v;
+          }
+          out[b] = peak;
+          if (peak > max) max = peak;
+        }
+        const norm = max > 0 ? out.map((v) => Math.min(1, (v / max) * 1.1)) : out;
+        if (!cancelled) setPeaks(norm);
+      } catch {
+        if (!cancelled) setPeaks(new Array(WAVEFORM_BAR_COUNT).fill(0.4));
+      } finally {
+        if (ctx) { try { await ctx.close(); } catch {} }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [blob]);
+
+  // Reset transport state when a new blob comes in (e.g. after re-record).
+  useEffect(() => {
+    setPlaying(false);
+    setCurrentMs(0);
+  }, [url]);
+
+  const togglePlay = () => {
+    const a = audioRef.current;
+    if (!a) return;
+    if (playing) {
+      try { a.pause(); } catch {}
+    } else {
+      // If we ended previously, rewind so play resumes from the start.
+      if (totalMs > 0 && currentMs >= totalMs - 50) {
+        try { a.currentTime = 0; } catch {}
+        setCurrentMs(0);
+      }
+      const p = a.play();
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    }
+  };
+
+  const seekFromClientX = (clientX) => {
+    const a = audioRef.current;
+    const track = trackRef.current;
+    if (!a || !track || totalMs <= 0) return;
+    const rect = track.getBoundingClientRect();
+    if (rect.width <= 0) return;
+    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    const ms = ratio * totalMs;
+    try { a.currentTime = ms / 1000; } catch {}
+    setCurrentMs(ms);
+  };
+
+  const handleTrackClick = (e) => {
+    seekFromClientX(e.clientX);
+  };
+
+  const handleTrackKeyDown = (e) => {
+    const a = audioRef.current;
+    if (!a || totalMs <= 0) return;
+    const step = Math.max(250, totalMs * 0.05);
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const next = Math.max(0, currentMs - step);
+      try { a.currentTime = next / 1000; } catch {}
+      setCurrentMs(next);
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      const next = Math.min(totalMs, currentMs + step);
+      try { a.currentTime = next / 1000; } catch {}
+      setCurrentMs(next);
+    } else if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      togglePlay();
+    }
+  };
+
+  const progress = totalMs > 0 ? Math.min(1, Math.max(0, currentMs / totalMs)) : 0;
+  const displayMs = playing || currentMs > 0
+    ? Math.max(0, totalMs - currentMs)
+    : totalMs;
+  const bars = peaks ?? new Array(WAVEFORM_BAR_COUNT).fill(0.25);
+
+  return (
+    <div className="flex items-center gap-2 min-w-0 flex-1">
+      <audio
+        ref={audioRef}
+        src={url}
+        preload="metadata"
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
+        onEnded={() => { setPlaying(false); setCurrentMs(totalMs); }}
+        onTimeUpdate={(e) => setCurrentMs(e.currentTarget.currentTime * 1000)}
+        style={{ display: 'none' }}
+      />
+      <button
+        type="button"
+        onClick={togglePlay}
+        aria-label={playing ? 'Pause voice preview' : 'Play voice preview'}
+        className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white"
+        style={{
+          backgroundColor: '#3b82f6',
+          boxShadow: '0 0 10px rgba(59,130,246,0.5)',
+        }}
+      >
+        {playing ? (
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
+            <rect x="2.5" y="2" width="2.5" height="8" rx="0.5" />
+            <rect x="7" y="2" width="2.5" height="8" rx="0.5" />
+          </svg>
+        ) : (
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true">
+            <path d="M3 1.6 L10 6 L3 10.4 Z" />
+          </svg>
+        )}
+      </button>
+      <div
+        ref={trackRef}
+        onClick={handleTrackClick}
+        onKeyDown={handleTrackKeyDown}
+        role="slider"
+        aria-label="Voice preview scrubber"
+        aria-valuemin={0}
+        aria-valuemax={Math.max(1, Math.round(totalMs))}
+        aria-valuenow={Math.round(currentMs)}
+        tabIndex={0}
+        className="flex items-center gap-[2px] h-8 cursor-pointer min-w-0 flex-1 outline-none"
+        style={{ touchAction: 'manipulation' }}
+      >
+        {bars.map((p, i) => {
+          const h = Math.max(2, Math.round(p * 24));
+          const played = (i + 0.5) / WAVEFORM_BAR_COUNT <= progress;
+          return (
+            <span
+              key={i}
+              className="block rounded-sm"
+              style={{
+                width: 2,
+                height: `${h}px`,
+                backgroundColor: played ? '#3b82f6' : 'rgba(96,165,250,0.35)',
+                transition: 'background-color 60ms linear',
+              }}
+            />
+          );
+        })}
+      </div>
+      <span
+        className="text-[10px] tabular-nums flex-shrink-0"
+        style={{ color: '#9ca3af' }}
+      >
+        {formatDuration(displayMs)}
+      </span>
+    </div>
+  );
+}
+
 export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   const { hasActiveMatchup } = useMatchup();
   const [thread, setThread] = useState([]);
@@ -912,20 +1107,11 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
                 border: '1px solid rgba(59,130,246,0.4)',
               }}
             >
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <audio
-                  controls
-                  preload="metadata"
-                  src={voicePreview.url}
-                  style={{ height: 32, maxWidth: 200 }}
-                />
-                <span
-                  className="text-[10px] tabular-nums"
-                  style={{ color: textSecondary }}
-                >
-                  {formatDuration(voicePreview.durationMs)}
-                </span>
-              </div>
+              <VoiceWaveformPreview
+                blob={voicePreview.blob}
+                url={voicePreview.url}
+                durationMs={voicePreview.durationMs}
+              />
               <div className="ml-auto flex gap-2 flex-shrink-0">
                 <button
                   type="button"
