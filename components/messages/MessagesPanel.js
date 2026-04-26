@@ -258,9 +258,20 @@ function VoiceWaveform({
 }) {
   const audioRef = useRef(null);
   const trackRef = useRef(null);
-  const [peaks, setPeaks] = useState(() => (
-    Array.isArray(storedPeaks) && storedPeaks.length > 0 ? storedPeaks : null
-  ));
+  // Seed `peaks` synchronously during the initial render so bubbles paint
+  // their bars on the very first frame instead of briefly showing the flat
+  // baseline before the decode `useEffect` runs. Two fast paths:
+  //   1. `storedPeaks` — sent alongside the message after the waveform-
+  //      persistence rollout. Authoritative, so it wins.
+  //   2. URL-keyed LRU cache — populated by previous decodes within this
+  //      session (legacy voice notes without stored peaks).
+  // Composer-blob previews don't have a stable URL key, so they keep
+  // starting from null and decode fresh on mount as before.
+  const [peaks, setPeaks] = useState(() => {
+    if (Array.isArray(storedPeaks) && storedPeaks.length > 0) return storedPeaks;
+    if (!blob && url) return getCachedWaveformPeaks(url);
+    return null;
+  });
   const [playing, setPlaying] = useState(false);
   const [currentMs, setCurrentMs] = useState(0);
   const totalMs = Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 0;
