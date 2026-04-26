@@ -39,6 +39,12 @@ function UserAvatar({ user, size = 'md' }) {
 
 // In-page ChatModal removed — messaging now lives on /notifications.
 
+// Compact labels/badges for the remembered game mode shown on the friend-row
+// quick-invite shortcut. Original is the default mode, so its badge is
+// suppressed to keep the button compact.
+const QUICK_MODE_LABELS = { rush: 'Rush', original: 'Original', tournament: 'Tournament' };
+const QUICK_MODE_BADGES = { rush: 'R', tournament: 'T' };
+
 export default function BattlePage() {
   const router = useRouter();
   const { data: session, status } = useSession();
@@ -88,6 +94,12 @@ export default function BattlePage() {
   const [quickInviteFor, setQuickInviteFor] = useState(null);
   const [quickToast, setQuickToast] = useState(null);
   const quickToastTimerRef = useRef(null);
+  // Remembered buy-in + game mode for the current user. Surfaced on the
+  // friend-row lightning shortcut so users can see what the next quick
+  // invite will fire off before they tap. Updated after any quick invite
+  // and after the PlayFriendModal closes (which may have written a new
+  // value during a normal invite flow).
+  const [lastBuyIn, setLastBuyIn] = useState(null);
 
   const [socialTab, setSocialTab] = useState('friends');
   const [searchQuery, setSearchQuery] = useState('');
@@ -167,6 +179,20 @@ export default function BattlePage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Hydrate the remembered buy-in once we know who the user is. Reads from
+  // localStorage so it's safe to call after mount without an extra fetch.
+  const refreshLastBuyIn = useCallback(() => {
+    if (!userId) {
+      setLastBuyIn(null);
+      return;
+    }
+    setLastBuyIn(readLastBuyIn(userId));
+  }, [userId]);
+
+  useEffect(() => {
+    refreshLastBuyIn();
+  }, [refreshLastBuyIn]);
 
   useEffect(() => {
     let cancelled = false;
@@ -801,6 +827,7 @@ export default function BattlePage() {
       }
       // Refresh the remembered values (mode may have been normalised server-side).
       writeLastBuyIn(userId, { buyIn: last.buyIn, gameMode: last.gameMode });
+      refreshLastBuyIn();
       showQuickToast(`Invite sent to ${friend.username || 'friend'} · $${last.buyIn} buy-in`);
       fetchData();
     } catch {
@@ -808,7 +835,7 @@ export default function BattlePage() {
     } finally {
       setQuickInviteFor(null);
     }
-  }, [isGuest, globalHasActive, userId, quickInviteFor, fetchData, showQuickToast]);
+  }, [isGuest, globalHasActive, userId, quickInviteFor, fetchData, showQuickToast, refreshLastBuyIn]);
 
   const handleCancelInvite = async (inviteId) => {
     try {
@@ -1011,18 +1038,46 @@ export default function BattlePage() {
                     {/* Quick invite: re-send last buy-in with one tap.
                         When an invite to this friend is already pending, we
                         disable it so the user doesn't fire a duplicate the
-                        server would reject. */}
+                        server would reject. The button surfaces the
+                        remembered buy-in (and a tiny mode hint for non-default
+                        modes) so power users know exactly what they're firing
+                        off. When nothing is remembered yet, a small "Pick"
+                        label tells them the first tap will open the picker. */}
                     <button
                       onClick={() => handleQuickInvite(friend)}
                       disabled={quickInviteFor === friend.id || hasPendingInvite}
-                      className="p-2 rounded-lg transition-all bg-yellow-500/10 hover:bg-yellow-500/20 active:bg-yellow-500/30 text-yellow-300 border border-yellow-500/20 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-yellow-500/10"
-                      title={hasPendingInvite ? 'Invite already pending' : 'Quick invite — re-send last buy-in'}
-                      aria-label={hasPendingInvite ? `Invite to ${friend.username || 'friend'} already pending` : `Quick invite ${friend.username || 'friend'} with last buy-in`}
+                      className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg transition-all bg-yellow-500/10 hover:bg-yellow-500/20 active:bg-yellow-500/30 text-yellow-300 border border-yellow-500/20 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-yellow-500/10"
+                      title={
+                        hasPendingInvite
+                          ? 'Invite already pending'
+                          : lastBuyIn
+                          ? `Quick invite — $${lastBuyIn.buyIn} ${QUICK_MODE_LABELS[lastBuyIn.gameMode] || 'Original'}`
+                          : 'Quick invite — pick a buy-in (opens the full picker)'
+                      }
+                      aria-label={
+                        hasPendingInvite
+                          ? `Invite to ${friend.username || 'friend'} already pending`
+                          : lastBuyIn
+                          ? `Quick invite ${friend.username || 'friend'} with $${lastBuyIn.buyIn} ${QUICK_MODE_LABELS[lastBuyIn.gameMode] || 'Original'} buy-in`
+                          : `Quick invite ${friend.username || 'friend'} — opens picker to set a buy-in`
+                      }
                     >
                       {quickInviteFor === friend.id ? (
                         <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12a8 8 0 018-8" /></svg>
                       ) : (
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        <>
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                          {lastBuyIn ? (
+                            <span className="text-[10px] font-bold leading-none whitespace-nowrap">
+                              ${lastBuyIn.buyIn}
+                              {lastBuyIn.gameMode && lastBuyIn.gameMode !== 'original' && (
+                                <span className="ml-0.5 opacity-70">{QUICK_MODE_BADGES[lastBuyIn.gameMode] || ''}</span>
+                              )}
+                            </span>
+                          ) : (
+                            <span className="text-[10px] font-semibold leading-none opacity-70">Pick</span>
+                          )}
+                        </>
                       )}
                     </button>
                     {/* Play button. When an invite is already pending, we
@@ -1823,11 +1878,11 @@ export default function BattlePage() {
 
       <PlayFriendModal
         isOpen={showPlayFriend}
-        onClose={() => { setShowPlayFriend(false); setPlayFriendInitial(null); }}
+        onClose={() => { setShowPlayFriend(false); setPlayFriendInitial(null); refreshLastBuyIn(); }}
         friends={friends}
         initialFriend={playFriendInitial}
         currentUser={profile ? { id: userId, username: profile.username, avatar: profile.avatar, frameId: profile.equippedFrame } : (session?.user ? { id: userId, username: session.user.name, avatar: session.user.image } : null)}
-        onInviteSent={() => fetchData()}
+        onInviteSent={() => { fetchData(); refreshLastBuyIn(); }}
         onInviteCancelled={() => fetchData()}
         onSwitchToPrivate={() => { setShowPlayFriend(false); setPlayFriendInitial(null); setShowPrivateMatch(true); }}
         onOpenMessage={(friend) => { setShowPlayFriend(false); setPlayFriendInitial(null); openMessagePopup(friend); }}
