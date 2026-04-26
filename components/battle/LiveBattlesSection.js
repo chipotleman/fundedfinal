@@ -2082,8 +2082,14 @@ function YouVsCard({
           // First-time confirmation step. We've intentionally NOT
           // hit any matchmaking endpoint yet — the user must tap
           // again (either the card or the explicit confirm button)
-          // to actually commit the $5 spend. The Cancel button
-          // backs out without any API calls.
+          // to actually commit the spend. The Cancel button
+          // backs out without any API calls. The buy-in / mode
+          // selectors live here (instead of on the idle card) so
+          // the home card can lead with PLAY NOW and let users
+          // pick their stake & mode at the moment they actually
+          // care about it. Selections are persisted via the same
+          // local + server prefs path the idle card used to use,
+          // so the "remembered preference" behaviour is unchanged.
           <div
             className="flex flex-col items-center justify-center text-center py-1 sm:py-2 select-none min-h-0 sm:min-h-[148px]"
           >
@@ -2116,9 +2122,86 @@ function YouVsCard({
             <p className="text-[15px] font-extrabold text-white leading-tight">
               Spend ${buyIn} on a {gameMode.toUpperCase()} battle?
             </p>
-            <p className="text-[11px] text-gray-400 mt-1 mb-2 px-2">
-              ${buyIn} comes out of your balance the moment a match starts.
+            <p className="text-[11px] text-gray-400 mt-0.5 mb-1.5 px-2">
+              Pick your stake &amp; mode, then tap to confirm.
             </p>
+            {/* Buy-in chooser — moved here from the idle card so the
+                home card can lead with PLAY NOW. Stops propagation so
+                taps on the chips don't fire the card-wide "tap again
+                to confirm" gesture. */}
+            <div
+              className="flex items-center justify-center gap-1.5 mb-1 flex-wrap"
+              role="radiogroup"
+              aria-label="Buy-in"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {ONE_TAP_BUY_IN_OPTIONS.map((amount) => {
+                const selected = amount === buyIn;
+                return (
+                  <CartoonChip
+                    key={amount}
+                    asButton
+                    role="radio"
+                    ariaChecked={selected}
+                    ariaLabel={`Buy-in $${amount}`}
+                    icon="💰"
+                    label={`$${amount}`}
+                    color="orange"
+                    selected={selected}
+                    animate={selected ? 'bounce' : 'none'}
+                    onClick={(e) => { e.stopPropagation(); handleSelectBuyIn(amount); }}
+                  />
+                );
+              })}
+            </div>
+            <div
+              className="flex items-center justify-center gap-1.5 mb-1 flex-wrap"
+              role="radiogroup"
+              aria-label="Game mode"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {ONE_TAP_GAME_MODE_OPTIONS.map((mode) => {
+                const selected = mode.id === gameMode;
+                const meta = CARTOON_MODE_META[mode.id] || { color: 'blue' };
+                return (
+                  <CartoonChip
+                    key={mode.id}
+                    asButton
+                    role="radio"
+                    ariaChecked={selected}
+                    ariaLabel={`Game mode ${mode.label}`}
+                    icon={mode.icon}
+                    label={mode.label}
+                    color={meta.color}
+                    selected={selected}
+                    animate={selected ? 'bounce' : 'none'}
+                    onClick={(e) => { e.stopPropagation(); handleSelectGameMode(mode.id); }}
+                  />
+                );
+              })}
+            </div>
+            {/* Live summary of what the current chip selection gets
+                you: the resulting pot (buy-in × 2) and the starting
+                coin bankroll for the chosen mode. */}
+            <div
+              className="flex items-center justify-center gap-1.5 mb-1.5 flex-wrap"
+              aria-live="polite"
+            >
+              <CartoonChip
+                icon="💎"
+                label={`$${buyIn * 2} pot`}
+                color="emerald"
+                animate="bounce"
+                ariaLabel={`Total pot of $${buyIn * 2}`}
+              />
+              <CartoonChip
+                icon="🪙"
+                label={`${selectedGameMode.coins.toLocaleString()} coins`}
+                color="cyan"
+                animate="bounce"
+                ariaLabel={`Starts with ${selectedGameMode.coins.toLocaleString()} coins`}
+              />
+            </div>
             {/* Balance row — sourced from the homepage's already-fetched
                 bankroll so we don't add a server call just to render it.
                 When the player can't cover the buy-in we surface a clear
@@ -2231,43 +2314,45 @@ function YouVsCard({
             </label>
           </div>
         ) : isIdle ? (
-          // Graffiti / cartoon PLAY NOW treatment — replaces the
-          // cycling fake-opponent layout. This is the new single
-          // eye-catching "play anyone" visual.
-          <div className="flex flex-col items-center justify-center text-center py-0 sm:py-2 select-none min-h-0 sm:min-h-[148px]">
-            <div className="relative inline-flex items-center justify-center mb-1 sm:mb-2.5 h-[36px] sm:h-[76px]">
+          // Graffiti / cartoon PLAY NOW treatment — the sticker is the
+          // focal point of the card. The buy-in / game-mode / pot
+          // chips that used to live here moved into the confirmation
+          // popup so the home card can lead with the call to action
+          // and a short explainer of what tapping it actually does.
+          <div className="flex flex-col items-center justify-center text-center py-2 sm:py-3 select-none min-h-0 sm:min-h-[148px]">
+            <div className="relative inline-flex items-center justify-center mb-2 sm:mb-3 h-[58px] sm:h-[100px]">
               <svg
                 className="absolute pointer-events-none hidden sm:block"
-                width="180"
-                height="60"
-                viewBox="0 0 180 60"
+                width="260"
+                height="84"
+                viewBox="0 0 260 84"
                 aria-hidden="true"
                 style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
               >
-                <g stroke="#fbbf24" strokeWidth="2" strokeLinecap="round" fill="none" opacity="0.85">
-                  <line className="youvs-motion-line" x1="6" y1="14" x2="30" y2="14" />
-                  <line className="youvs-motion-line" x1="2" y1="30" x2="34" y2="30" style={{ animationDelay: '0.2s' }} />
-                  <line className="youvs-motion-line" x1="6" y1="46" x2="30" y2="46" style={{ animationDelay: '0.4s' }} />
-                  <line className="youvs-motion-line" x1="150" y1="14" x2="174" y2="14" style={{ animationDelay: '0.1s' }} />
-                  <line className="youvs-motion-line" x1="146" y1="30" x2="178" y2="30" style={{ animationDelay: '0.3s' }} />
-                  <line className="youvs-motion-line" x1="150" y1="46" x2="174" y2="46" style={{ animationDelay: '0.5s' }} />
+                <g stroke="#fbbf24" strokeWidth="2.5" strokeLinecap="round" fill="none" opacity="0.85">
+                  <line className="youvs-motion-line" x1="6" y1="20" x2="44" y2="20" />
+                  <line className="youvs-motion-line" x1="2" y1="42" x2="48" y2="42" style={{ animationDelay: '0.2s' }} />
+                  <line className="youvs-motion-line" x1="6" y1="64" x2="44" y2="64" style={{ animationDelay: '0.4s' }} />
+                  <line className="youvs-motion-line" x1="216" y1="20" x2="254" y2="20" style={{ animationDelay: '0.1s' }} />
+                  <line className="youvs-motion-line" x1="212" y1="42" x2="258" y2="42" style={{ animationDelay: '0.3s' }} />
+                  <line className="youvs-motion-line" x1="216" y1="64" x2="254" y2="64" style={{ animationDelay: '0.5s' }} />
                 </g>
               </svg>
 
               <div
-                className="youvs-play-sticker relative inline-flex items-center justify-center px-3 py-1 sm:px-5 sm:py-2 rounded-2xl"
+                className="youvs-play-sticker relative inline-flex items-center justify-center px-5 py-2 sm:px-8 sm:py-3 rounded-2xl sm:rounded-3xl"
                 style={{
                   background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 55%, #ea580c 100%)',
-                  border: '3px solid #0d0d0d',
-                  boxShadow: '0 5px 0 rgba(0,0,0,0.55), 0 0 22px rgba(251,146,60,0.55)',
+                  border: '4px solid #0d0d0d',
+                  boxShadow: '0 6px 0 rgba(0,0,0,0.55), 0 0 28px rgba(251,146,60,0.6)',
                 }}
               >
                 <span
-                  className="text-base sm:text-3xl font-black tracking-tight leading-none"
+                  className="text-2xl sm:text-5xl font-black tracking-tight leading-none"
                   style={{
                     color: '#fff',
-                    WebkitTextStroke: '1.5px #0d0d0d',
-                    textShadow: '2px 2px 0 #0d0d0d',
+                    WebkitTextStroke: '2px #0d0d0d',
+                    textShadow: '3px 3px 0 #0d0d0d',
                     fontStyle: 'italic',
                     letterSpacing: '-0.01em',
                   }}
@@ -2279,17 +2364,17 @@ function YouVsCard({
               <div
                 className="youvs-tag absolute"
                 style={{
-                  top: -10,
-                  right: -8,
-                  padding: '2px 6px',
-                  borderRadius: 6,
+                  top: -12,
+                  right: -12,
+                  padding: '3px 8px',
+                  borderRadius: 8,
                   background: '#10b981',
-                  border: '2px solid #0d0d0d',
-                  boxShadow: '0 2px 0 rgba(0,0,0,0.55)',
+                  border: '2.5px solid #0d0d0d',
+                  boxShadow: '0 3px 0 rgba(0,0,0,0.55)',
                 }}
               >
                 <span
-                  className="text-[9px] font-black uppercase tracking-wider"
+                  className="text-[10px] sm:text-xs font-black uppercase tracking-wider"
                   style={{ color: '#0d0d0d', letterSpacing: '0.05em' }}
                 >
                   1v1
@@ -2297,109 +2382,26 @@ function YouVsCard({
               </div>
 
               <span
-                className="youvs-spark absolute text-lg"
-                style={{ top: -8, left: -10, filter: 'drop-shadow(0 0 4px rgba(251,191,36,0.7))' }}
+                className="youvs-spark absolute text-2xl"
+                style={{ top: -14, left: -18, filter: 'drop-shadow(0 0 5px rgba(251,191,36,0.7))' }}
                 aria-hidden="true"
               >
                 ⚡
               </span>
               <span
-                className="youvs-spark absolute text-base"
-                style={{ bottom: -6, right: 4, animationDelay: '0.6s', filter: 'drop-shadow(0 0 4px rgba(34,211,238,0.7))' }}
+                className="youvs-spark absolute text-xl"
+                style={{ bottom: -10, right: 4, animationDelay: '0.6s', filter: 'drop-shadow(0 0 5px rgba(34,211,238,0.7))' }}
                 aria-hidden="true"
               >
                 ✦
               </span>
             </div>
-            <p className="hidden sm:block text-sm font-extrabold text-white">
+            <p className="text-sm sm:text-base font-extrabold text-white leading-tight px-2">
               Tap to face anyone in a 1v1
             </p>
-            <p className="hidden sm:block text-[11px] text-gray-400 mt-0.5">
-              Random opponent · ${buyIn} buy-in · {selectedGameMode.label}
+            <p className="text-[11px] sm:text-xs text-gray-400 mt-1 px-3 leading-snug">
+              Pick your stake &amp; mode in the next step
             </p>
-
-            {/* One-tap chooser. Lets power users pick a buy-in / game
-                mode without leaving the homepage. The card-wide tap
-                still fires matchmaking, so a user who doesn't touch
-                the chips keeps the original one-tap feel — and the
-                selection is persisted to localStorage so the next
-                visit's tap goes straight to their preferred default. */}
-            <div
-              className="flex items-center justify-center gap-1.5 mt-1 sm:mt-2 flex-wrap"
-              role="radiogroup"
-              aria-label="Buy-in"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {ONE_TAP_BUY_IN_OPTIONS.map((amount) => {
-                const selected = amount === buyIn;
-                return (
-                  <CartoonChip
-                    key={amount}
-                    asButton
-                    role="radio"
-                    ariaChecked={selected}
-                    ariaLabel={`Buy-in $${amount}`}
-                    icon="💰"
-                    label={`$${amount}`}
-                    color="orange"
-                    selected={selected}
-                    animate={selected ? 'bounce' : 'none'}
-                    onClick={(e) => { e.stopPropagation(); handleSelectBuyIn(amount); }}
-                  />
-                );
-              })}
-            </div>
-            <div
-              className="flex items-center justify-center gap-1.5 mt-1 sm:mt-1.5 flex-wrap"
-              role="radiogroup"
-              aria-label="Game mode"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {ONE_TAP_GAME_MODE_OPTIONS.map((mode) => {
-                const selected = mode.id === gameMode;
-                const meta = CARTOON_MODE_META[mode.id] || { color: 'blue' };
-                return (
-                  <CartoonChip
-                    key={mode.id}
-                    asButton
-                    role="radio"
-                    ariaChecked={selected}
-                    ariaLabel={`Game mode ${mode.label}`}
-                    icon={mode.icon}
-                    label={mode.label}
-                    color={meta.color}
-                    selected={selected}
-                    animate={selected ? 'bounce' : 'none'}
-                    onClick={(e) => { e.stopPropagation(); handleSelectGameMode(mode.id); }}
-                  />
-                );
-              })}
-            </div>
-
-            {/* Live summary of what the current chip selection gets
-                you: the resulting pot (buy-in × 2) and the starting
-                coin bankroll for the chosen mode. Rendered as cartoon
-                chips so the whole row reads as one cartoon family
-                with the live battle cards. */}
-            <div
-              className="flex items-center justify-center gap-1.5 mt-1 sm:mt-2 flex-wrap"
-              aria-live="polite"
-            >
-              <CartoonChip
-                icon="💎"
-                label={`$${buyIn * 2} pot`}
-                color="emerald"
-                animate="bounce"
-                ariaLabel={`Total pot of $${buyIn * 2}`}
-              />
-              <CartoonChip
-                icon="🪙"
-                label={`${selectedGameMode.coins.toLocaleString()} coins`}
-                color="cyan"
-                animate="bounce"
-                ariaLabel={`Starts with ${selectedGameMode.coins.toLocaleString()} coins`}
-              />
-            </div>
 
             {searchError && (
               <p
