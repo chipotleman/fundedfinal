@@ -28,30 +28,53 @@ time off the smoke test. The cache is automatically invalidated whenever
 `package-lock.json` changes, so any dependency bump produces a fresh
 install on the next run.
 
-Finally, the workflow also caches Next.js's incremental build cache at
-`.next/cache` (the directory Next.js uses to persist compiler output and
-SWC transforms between dev-server runs — see `next.config.js`, which
-doesn't override `distDir`, so build artifacts land in the default
-`.next/`). The cache is keyed on `${{ runner.os }}-nextjs-<hash of
-package-lock.json>-<hash of next.config.js + pages/components/lib/hooks/
-contexts/app source files>`, with a `restore-keys` fallback of
-`${{ runner.os }}-nextjs-<hash of package-lock.json>-` so a source-only
-change still warm-starts from the most recent matching build. On a cache
-hit the dev server's first-request compile is dramatically faster — the
-"Run messenger click-trap smoke test" step no longer has to pay the full
-cold Next.js warmup before Playwright can hit `/messenger` and
-`/notifications`. The cache is automatically invalidated whenever
-dependencies (`package-lock.json`) change, and the primary key flips
-whenever the Next.js config or any tracked source file changes (so stale
-compiler output for deleted/renamed files can't linger).
+The workflow itself is split into two jobs. A single **`build`** job
+runs `next build` once and uploads the resulting `.next/` directory as
+a workflow artifact; the six matrix **`e2e`** jobs (`needs: build`)
+download that artifact and boot it with `next start` via Playwright's
+`webServer`. This means:
+
+- The smoke test runs against the same production bundle real users
+  load — so a `getStaticProps` failure, a missing dependency that only
+  shows up in the production tree, or a build-time crash now blocks
+  the PR instead of slipping through behind `next dev`'s on-demand
+  compiler.
+- Each matrix job no longer pays the per-request `next dev` compile
+  pass on first hit to `/messenger` and `/notifications`. `next start`
+  serves the prebuilt output immediately, so the long Playwright
+  `webServer` warm-up window collapses from minutes to seconds.
+- We build exactly once per workflow run instead of six times in
+  parallel — the matrix jobs share the artifact rather than each
+  racing to populate the same build cache.
+
+The `build` job caches **only** Next.js's incremental compiler cache at
+`.next/cache` (SWC transforms, the webpack module graph, etc.) keyed on
+`${{ runner.os }}-nextjs-cache-<hash of package-lock.json>-<commit sha>`,
+with `restore-keys` falling back to the same key without the sha and
+then to any `${{ runner.os }}-nextjs-cache-` entry. The commit sha in
+the primary key guarantees a fresh write of `.next/cache` after every
+successful build, while the restore-keys give us the warmest available
+previous cache to start from. We deliberately do **not** cache the
+full `.next/` output — that would risk reusing a stale production
+build whenever a source file outside our cache-key glob changes
+(`utils/`, `shared/`, `tailwind.config.js`, `instrumentation.js`,
+`_app.js`, …). The incremental cache is purely an accelerator;
+`next build` runs on every workflow run and produces the source of
+truth that the matrix jobs actually test against.
 
 If you want to reproduce a CI failure locally (or run the suite before
-pushing), the same commands CI uses are:
+pushing), the same flow CI uses is:
 
 ```bash
-npm run test:e2e:install   # one-time: installs the WebKit browser binary
-npm run test:e2e           # runs the click-trap suite
+npm run test:e2e:install   # one-time: installs the browser binaries
+npm run test:e2e:ci        # next build + next start + the click-trap suite
 ```
+
+`npm run test:e2e:ci` is just a shortcut for `next build` followed by
+`E2E_PROD_BUILD=1 playwright test`. If you want a faster inner-loop
+iteration cycle while debugging a spec, `npm run test:e2e` still works
+and falls back to `next dev` (no build required, but the per-request
+compile cost is back).
 
 The suite lives in `tests/e2e/`:
 - `messenger-click-trap.spec.js` — desktop Safari (>= 1024px wide), exercises
@@ -76,9 +99,13 @@ scroll-lock styles, and that no fixed-position element covering the
 viewport is left in the DOM. If any spec fails, the regression is back
 — fix it before shipping and before bothering with the manual checklist.
 
-The automated test is configured to start `npm run dev` on port 3100 via
-Playwright's `webServer`. To run against an already-running server, set
-`E2E_BASE_URL=http://localhost:3000` (or wherever the dev server is).
+The automated test is configured to start a Next.js server on port 3100
+via Playwright's `webServer`. By default that's `npm run dev`, but with
+`E2E_PROD_BUILD=1` set it switches to `npm run start` (which is what
+`npm run test:e2e:ci` and the GitHub Actions workflow use). To run
+against an already-running server instead, set
+`E2E_BASE_URL=http://localhost:3000` (or wherever the server is) and
+Playwright will skip booting its own.
 
 ## When to still run the manual checklist
 

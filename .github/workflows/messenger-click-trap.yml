@@ -5,31 +5,13 @@ on:
   pull_request:
 
 jobs:
-  e2e:
-    name: E2E (${{ matrix.project }})
+  build:
+    name: Build (next build)
     runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - project: webkit-desktop
-            browser: webkit
-          - project: chromium-desktop
-            browser: chromium
-          - project: firefox-desktop
-            browser: firefox
-          - project: webkit-mobile
-            browser: webkit
-          - project: chromium-mobile
-            browser: chromium
-          - project: firefox-mobile
-            browser: firefox
+    timeout-minutes: 15
 
     env:
       CI: 'true'
-      NODE_ENV: test
       NEXTAUTH_SECRET: ci-placeholder-secret
       NEXTAUTH_URL: http://127.0.0.1:3100
 
@@ -54,6 +36,98 @@ jobs:
         if: steps.node-modules-cache.outputs.cache-hit != 'true'
         run: npm ci
 
+      # Only cache `.next/cache` — Next.js's incremental compiler
+      # cache (SWC transforms, webpack module graph, etc.). We do
+      # NOT cache the entire `.next/` directory, because doing so
+      # would let a stale build slip through whenever a source file
+      # outside our cache-key glob changes (utils/, shared/,
+      # tailwind.config.js, instrumentation.js, _app.js, ...). The
+      # incremental cache is purely an accelerator: `next build`
+      # still runs on every workflow run and produces a fresh,
+      # source-of-truth `.next/` from the actual current code.
+      - name: Cache Next.js incremental build cache (.next/cache)
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-cache-${{ hashFiles('package-lock.json') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-cache-${{ hashFiles('package-lock.json') }}-
+            ${{ runner.os }}-nextjs-cache-
+
+      - name: Build Next.js (production)
+        run: npm run build
+
+      # Hand the built `.next/` to the matrix e2e jobs. Using an
+      # artifact (rather than letting each matrix job restore the
+      # build cache itself) means we build exactly once per workflow
+      # run instead of having all six matrix jobs race to build/cache.
+      - name: Upload .next build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nextjs-build
+          path: .next
+          if-no-files-found: error
+          retention-days: 1
+          include-hidden-files: true
+
+  e2e:
+    name: E2E (${{ matrix.project }})
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: webkit-desktop
+            browser: webkit
+          - project: chromium-desktop
+            browser: chromium
+          - project: firefox-desktop
+            browser: firefox
+          - project: webkit-mobile
+            browser: webkit
+          - project: chromium-mobile
+            browser: chromium
+          - project: firefox-mobile
+            browser: firefox
+
+    env:
+      CI: 'true'
+      NEXTAUTH_SECRET: ci-placeholder-secret
+      NEXTAUTH_URL: http://127.0.0.1:3100
+      # Tell playwright.config.js to boot `next start` (against the
+      # `.next/` artifact downloaded below) instead of `next dev`.
+      E2E_PROD_BUILD: '1'
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Cache node_modules
+        id: node-modules-cache
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-modules-${{ hashFiles('package-lock.json') }}
+
+      - name: Install dependencies
+        if: steps.node-modules-cache.outputs.cache-hit != 'true'
+        run: npm ci
+
+      - name: Download .next build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: nextjs-build
+          path: .next
+
       - name: Resolve Playwright version
         id: playwright-version
         run: |
@@ -74,14 +148,6 @@ jobs:
       - name: Install Playwright system dependencies
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps ${{ matrix.browser }}
-
-      - name: Cache Next.js build (.next/cache)
-        uses: actions/cache@v4
-        with:
-          path: .next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('next.config.js', 'pages/**/*.{js,jsx,ts,tsx}', 'components/**/*.{js,jsx,ts,tsx}', 'lib/**/*.{js,jsx,ts,tsx}', 'hooks/**/*.{js,jsx,ts,tsx}', 'contexts/**/*.{js,jsx,ts,tsx}', 'app/**/*.{js,jsx,ts,tsx}') }}
-          restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
 
       - name: Run messenger click-trap smoke test (${{ matrix.project }})
         run: npx playwright test --project=${{ matrix.project }}

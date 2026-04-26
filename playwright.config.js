@@ -2,6 +2,13 @@ const { defineConfig, devices } = require('@playwright/test');
 
 const PORT = Number(process.env.E2E_PORT || 3100);
 const BASE_URL = process.env.E2E_BASE_URL || `http://127.0.0.1:${PORT}`;
+// Opt into running the suite against a real production build
+// (`next start`) instead of the dev server. CI uses this so the
+// smoke test reflects what actually ships, and so that warm runs
+// don't pay the per-request `next dev` compile cost. Locally,
+// `npm run test:e2e:ci` flips this on after running `next build`.
+const USE_PROD_BUILD = process.env.E2E_PROD_BUILD === '1'
+  || process.env.E2E_PROD_BUILD === 'true';
 
 module.exports = defineConfig({
   testDir: './tests/e2e',
@@ -66,10 +73,19 @@ module.exports = defineConfig({
   webServer: process.env.E2E_BASE_URL
     ? undefined
     : {
-        command: `npm run dev -- -p ${PORT}`,
+        // `next start` boots the prebuilt `.next/` output and serves it
+        // immediately — no per-request compile pass like `next dev`.
+        // It also requires `npm run build` to have already produced a
+        // matching `.next/` directory; CI does that in a separate
+        // build job, and `npm run test:e2e:ci` does it locally.
+        command: USE_PROD_BUILD
+          ? `npm run start -- -p ${PORT}`
+          : `npm run dev -- -p ${PORT}`,
         url: BASE_URL,
         reuseExistingServer: !process.env.CI,
-        timeout: 180_000,
+        // `next start` is essentially instant once the build is in
+        // place; only the dev server needs the long warm-up window.
+        timeout: USE_PROD_BUILD ? 60_000 : 180_000,
         stdout: 'ignore',
         stderr: 'pipe',
       },

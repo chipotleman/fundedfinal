@@ -8,6 +8,7 @@
     "start": "next start",
     "db:push": "drizzle-kit push",
     "test:e2e": "playwright test",
+    "test:e2e:ci": "next build && E2E_PROD_BUILD=1 playwright test",
     "test:e2e:install": "playwright install --with-deps webkit chromium firefox"
   },
   "dependencies": {
