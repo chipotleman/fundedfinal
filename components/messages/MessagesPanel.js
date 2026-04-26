@@ -357,6 +357,15 @@ function VoiceWaveform({
     if (playing) {
       try { a.pause(); } catch {}
     } else {
+      // Pause any other voice clip *before* we start ours so the two
+      // never overlap, even briefly. The native `play` event fires
+      // asynchronously (sometimes after a buffering delay), so relying
+      // on the audio element's `onPlay` handler alone leaves a window
+      // where both clips are audible. Claiming the registry slot here
+      // synchronously pauses whichever clip held it previously, and
+      // that pause fires the other bubble's native `pause` event so
+      // its UI flips back to the play state without any extra wiring.
+      claimVoicePlayback(a);
       // If we're outside the trim window or sitting at its end, rewind to
       // the start of the trim so play picks up from the trimmed beginning.
       if (trimmedMs > 0 && (currentMs < startMs || currentMs >= endMs - 50)) {
