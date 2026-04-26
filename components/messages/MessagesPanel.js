@@ -265,6 +265,43 @@ function setCachedWaveformPeaks(key, peaks) {
   }
 }
 
+// Schedule low-priority work (e.g. the legacy waveform warm-up decode) so it
+// runs after the thread has finished its initial render rather than racing
+// every other voice bubble for bandwidth the moment a thread opens. Falls
+// back to a short setTimeout on browsers without requestIdleCallback (Safari).
+function scheduleIdle(cb) {
+  if (typeof window === 'undefined') return { cancel() {} };
+  if (typeof window.requestIdleCallback === 'function') {
+    const handle = window.requestIdleCallback(cb, { timeout: 2000 });
+    return {
+      cancel() {
+        try { window.cancelIdleCallback(handle); } catch {}
+      },
+    };
+  }
+  const handle = setTimeout(cb, 250);
+  return { cancel() { clearTimeout(handle); } };
+}
+
+// Best-effort POST that persists peaks decoded from a legacy voice note back
+// to the server so future thread opens can render the bubble instantly from
+// stored data instead of repeating the warm-up decode. Safe to call from
+// every client that decodes — the server only writes when peaks are still
+// NULL, so the last-write-wins race is harmless. Failures are swallowed:
+// the bubble already shows the freshly-decoded peaks locally either way.
+function backfillPeaksToServer(messageId, peaks) {
+  if (!messageId || !Array.isArray(peaks) || peaks.length === 0) return;
+  if (typeof fetch !== 'function') return;
+  try {
+    fetch('/api/messages/peaks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ messageId, peaks }),
+    }).catch(() => {});
+  } catch {}
+}
+
 // Custom waveform-style scrubber shared by the recorded-voice preview row
 // and the sent/received chat bubbles. We decode the source audio in an
 // AudioContext to extract per-bar peaks, then render the same kind of
@@ -307,6 +344,12 @@ function VoiceWaveform({
   // so the parent can ship them along with the audio when the user taps
   // Send. Optional — bubbles never pass this.
   onPeaks,
+  // Server-side message id — used to backfill freshly decoded peaks for
+  // legacy voice notes (sent before the persistence rollout) so subsequent
+  // thread opens render those bubbles instantly too. Composer previews
+  // and the in-flight optimistic insert don't have one yet, which is fine:
+  // the backfill helper short-circuits when messageId is missing.
+  messageId,
 }) {
   const audioRef = useRef(null);
   const trackRef = useRef(null);
@@ -368,7 +411,7 @@ function VoiceWaveform({
     }
     let cancelled = false;
     let ctx = null;
-    (async () => {
+    const runDecode = async () => {
       try {
         const Ctx = typeof window !== 'undefined'
           ? (window.AudioContext || window.webkitAudioContext)
@@ -399,15 +442,39 @@ function VoiceWaveform({
           if (typeof onPeaks === 'function') {
             try { onPeaks(norm); } catch {}
           }
+          // Persist the decoded peaks back to the server so subsequent thread
+          // opens render this bubble from stored data (the fast path) instead
+          // of repeating the warm-up fetch+decode. Only meaningful for legacy
+          // URL-backed bubbles with a known message id; the server itself
+          // refuses to overwrite a row that already has peaks.
+          if (!blob && url && messageId) {
+            backfillPeaksToServer(messageId, norm);
+          }
         }
       } catch {
         if (!cancelled) setPeaks(new Array(WAVEFORM_BAR_COUNT).fill(0.4));
       } finally {
         if (ctx) { try { await ctx.close(); } catch {} }
       }
-    })();
-    return () => { cancelled = true; };
-  }, [blob, url]);
+    };
+    // Composer blob previews need to decode immediately so the user sees the
+    // waveform of the take they just recorded. URL-only chat bubbles (legacy
+    // voice notes that don't have stored peaks yet) defer their decode to
+    // browser idle time so opening a thread doesn't kick off N parallel audio
+    // downloads up-front — the bubble shows a flat baseline until the warm-up
+    // completes, which matches the "low-priority background warm-up" allowance
+    // in the spec for legacy attachments.
+    let idle = null;
+    if (blob) {
+      runDecode();
+    } else {
+      idle = scheduleIdle(() => { if (!cancelled) runDecode(); });
+    }
+    return () => {
+      cancelled = true;
+      if (idle) idle.cancel();
+    };
+  }, [blob, url, messageId]);
 
   // Reset transport state when the source changes (e.g. after re-record,
   // or when scrolling between bubbles backed by different attachments).
@@ -697,7 +764,16 @@ function VoiceWaveform({
       <audio
         ref={audioRef}
         src={url}
-        preload="metadata"
+        // The waveform bars are driven by the peaks array (either persisted
+        // server-side at send time or decoded lazily during a low-priority
+        // warm-up), and the duration label comes from the persisted message
+        // metadata, so the bubble itself never needs the audio bytes until
+        // the user actually hits play. Using preload="none" prevents the
+        // browser from kicking off a network request for every voice note
+        // the moment a thread opens, which is the whole point of this
+        // change. The browser will load the file lazily when togglePlay
+        // calls .play() below.
+        preload="none"
         onPlay={(e) => { claimVoicePlayback(e.currentTarget); setPlaying(true); }}
         onPause={(e) => { releaseVoicePlayback(e.currentTarget); setPlaying(false); }}
         onEnded={(e) => { releaseVoicePlayback(e.currentTarget); setPlaying(false); setCurrentMs(endMs); }}
@@ -934,12 +1010,13 @@ function VoiceWaveform({
 // VoiceWaveform and skip the bubble's mount-time fetch+decode entirely.
 // Older messages have no peaks stored: VoiceWaveform falls back to the
 // on-demand decode path (and to a flat baseline if that decode fails).
-function VoiceBubble({ url, durationMs, peaks, mine }) {
+function VoiceBubble({ url, durationMs, peaks, mine, messageId }) {
   return (
     <VoiceWaveform
       url={url}
       durationMs={durationMs}
       peaks={peaks}
+      messageId={messageId}
       variant={mine ? 'mine' : 'theirs'}
     />
   );
@@ -2252,6 +2329,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
                   url={m.attachmentUrl}
                   durationMs={m.attachmentDurationMs}
                   peaks={m.attachmentPeaks}
+                  messageId={m.id}
                   mine={m.senderId === myId}
                 />
               ) : (
