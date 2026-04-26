@@ -44,6 +44,62 @@ function formatDuration(ms) {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+// Tiny static waveform used in the conversation list to preview a voice
+// note without playback controls. Downsamples the persisted peaks array
+// (typically 36 entries — see WAVEFORM_BAR_COUNT) to a smaller bar count
+// so the visualization fits comfortably alongside the username + timestamp
+// in a single inbox row. Bars inherit the surrounding text color via
+// `currentColor`, so they automatically pick up the unread/read styling
+// applied by the parent row.
+const INBOX_WAVEFORM_BAR_COUNT = 22;
+
+function downsamplePeaksForInbox(peaks, targetCount = INBOX_WAVEFORM_BAR_COUNT) {
+  if (!Array.isArray(peaks) || peaks.length === 0) return [];
+  if (peaks.length <= targetCount) return peaks.map((v) => Math.max(0, Math.min(1, Number(v) || 0)));
+  const out = new Array(targetCount).fill(0);
+  const step = peaks.length / targetCount;
+  for (let i = 0; i < targetCount; i++) {
+    let max = 0;
+    const start = Math.floor(i * step);
+    const end = Math.min(peaks.length, Math.floor((i + 1) * step) || start + 1);
+    for (let j = start; j < end; j++) {
+      const v = Math.abs(Number(peaks[j]) || 0);
+      if (v > max) max = v;
+    }
+    out[i] = Math.max(0, Math.min(1, max));
+  }
+  return out;
+}
+
+function InboxVoicePreview({ peaks, durationMs, fromMe }) {
+  const bars = useMemo(() => downsamplePeaksForInbox(peaks), [peaks]);
+  if (bars.length === 0) return null;
+  const durationLabel = formatDuration(durationMs);
+  return (
+    <span className="inline-flex items-center gap-1.5 align-middle">
+      {fromMe ? <span className="flex-shrink-0">You:</span> : null}
+      <span
+        aria-hidden="true"
+        className="inline-flex items-end gap-[1px] h-3 flex-shrink-0"
+      >
+        {bars.map((p, i) => (
+          <span
+            key={i}
+            className="w-[2px] rounded-sm"
+            style={{
+              height: `${Math.max(15, Math.round(p * 100))}%`,
+              backgroundColor: 'currentColor',
+              opacity: 0.85,
+            }}
+          />
+        ))}
+      </span>
+      <span className="flex-shrink-0 tabular-nums">{durationLabel}</span>
+      <span className="sr-only">Voice message</span>
+    </span>
+  );
+}
+
 // Encode a (mono or stereo) AudioBuffer into a 16-bit PCM WAV blob. WAV is
 // the only browser-native container we can synthesize without a third-party
 // encoder, so we use it as the trimmed output format. For ~60s mono speech
@@ -2955,6 +3011,17 @@ export default function MessagesPanel({
             const isSelected = selectedId === f.id;
             const unread = (last?.unread || liveUnreadIds.has(f.id)) && !isSelected;
             const isTyping = ctx.typingSenderIds?.has?.(f.id);
+            // For voice notes whose peaks are persisted alongside the message
+            // we render a tiny static waveform + duration in place of the
+            // generic "🎤 Voice message" placeholder so users can tell at a
+            // glance which thread has a fresh voice note. Older voice notes
+            // (no peaks stored yet) keep the placeholder text.
+            const lastIsVoiceWithPeaks = !!(
+              last
+              && last.messageType === 'voice'
+              && Array.isArray(last.attachmentPeaks)
+              && last.attachmentPeaks.length > 0
+            );
             const previewText = last
               ? `${last.fromMe ? 'You: ' : ''}${last.preview || last.content || ''}`
               : `${f.battleWins || 0}W-${f.battleLosses || 0}L`;
@@ -3011,6 +3078,12 @@ export default function MessagesPanel({
                   >
                     {isTyping ? (
                       <span className="text-blue-300 italic">typing…</span>
+                    ) : lastIsVoiceWithPeaks ? (
+                      <InboxVoicePreview
+                        peaks={last.attachmentPeaks}
+                        durationMs={last.attachmentDurationMs}
+                        fromMe={last.fromMe}
+                      />
                     ) : (
                       previewText
                     )}
