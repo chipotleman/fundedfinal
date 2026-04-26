@@ -253,6 +253,13 @@ function MutualRow({ user, onProfileNavigate, onClose }) {
     onProfileNavigate?.(e);
     onClose?.(e);
   };
+  // Prefer the "how do you know them" line the API computes (battles
+  // together, friendship age) — that's the whole point of this row's
+  // secondary line. Fall back to plain online/offline only when the API
+  // couldn't produce any connection signal, so the row never looks empty.
+  const connectionText = user?.connection?.text || null;
+  const fallbackText = user?.isOnline ? 'Online' : 'Offline';
+  const secondaryText = connectionText || fallbackText;
   return (
     <div
       className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5 transition-colors"
@@ -261,6 +268,7 @@ function MutualRow({ user, onProfileNavigate, onClose }) {
         user={user}
         frameId={user?.equippedFrame}
         size={40}
+        isOnline={!!user?.isOnline}
         link
         onLinkClick={handleNavigate}
       />
@@ -272,17 +280,9 @@ function MutualRow({ user, onProfileNavigate, onClose }) {
         <div className="text-white text-sm font-semibold truncate">
           {user.username || 'Player'}
         </div>
-        {user.isOnline ? (
-          <div className="flex items-center gap-1.5 mt-0.5">
-            <span
-              className="inline-block h-1.5 w-1.5 rounded-full"
-              style={{ backgroundColor: '#22c55e', boxShadow: '0 0 6px #22c55e' }}
-            />
-            <span className="text-[11px] text-emerald-300/90">Online</span>
-          </div>
-        ) : (
-          <div className="text-[11px] text-purple-100/50">Offline</div>
-        )}
+        <div className="text-[11px] text-purple-100/60 truncate mt-0.5">
+          {secondaryText}
+        </div>
       </a>
     </div>
   );
