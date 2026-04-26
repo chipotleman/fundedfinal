@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
-import ReactDOM from 'react-dom';
+import { useState } from 'react';
 import Link from 'next/link';
 import UserAvatar, { useProfilePrefetchHandlers } from '../UserAvatar';
 import { NotifIcon } from './notificationTypeStyles';
+import MutualFriendsModal from './MutualFriendsModal';
 
 const PURPLE = '#a855f7';
 
@@ -94,222 +94,81 @@ function pickContextLine(context) {
  * Small overlapping stack of mutual-friend avatars rendered next to the
  * "<N> mutual friends" line. Caps at 3 so the row stays compact, and falls
  * back to nothing when no preview is provided so the layout collapses
- * gracefully on senders with no overlap. The whole stack (avatars + the
- * trailing "+N" chip when present) is now a single tap target that opens a
- * `MutualFriendsPopover` listing every previewed mutual with their avatar,
- * username, and a profile link, so users can actually explore the social
- * proof before accepting or declining the request. The `onProfileNavigate`
- * callback used by the requester avatar/name is forwarded so overlay
- * surfaces (bell dropdown, global toast) get out of the way once the user
- * taps a profile inside the popover.
+ * gracefully on senders with no overlap. Each avatar is tappable and links
+ * to that user's profile so people can quickly verify "oh yeah, I know that
+ * person" before accepting; the same `onProfileNavigate` callback used by
+ * the requester avatar/name is forwarded so overlay surfaces (bell dropdown,
+ * global toast) get out of the way on tap. When `total` exceeds the number
+ * of avatars shown, an extra "+N" chip is appended to the stack — tapping
+ * that chip opens the full mutual-friends list (`MutualFriendsModal`) so
+ * users with many mutuals can still scan everyone before accepting.
  */
-function MutualFriendsStack({ preview, size = 18, total = 0, onProfileNavigate }) {
-  const [open, setOpen] = useState(false);
+function MutualFriendsStack({ preview, size = 18, total = 0, onProfileNavigate, onSeeAll }) {
   if (!Array.isArray(preview) || preview.length === 0) return null;
   const items = preview.slice(0, 3);
   const overlap = Math.round(size * 0.35);
   const extra = Math.max(0, Number(total) - items.length);
-  const totalLabel = Math.max(Number(total) || 0, preview.length);
-  const ariaLabel = totalLabel === 1 ? 'View 1 mutual friend' : `View ${totalLabel} mutual friends`;
   return (
-    <>
-      <button
-        type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setOpen(true);
-        }}
-        className="inline-flex items-center flex-shrink-0 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/70"
-        aria-label={ariaLabel}
-        aria-haspopup="dialog"
-        aria-expanded={open}
-      >
-        {items.map((u, i) => (
-          <span
-            key={u.id || i}
-            style={{
-              marginLeft: i === 0 ? 0 : `-${overlap}px`,
-              borderRadius: '9999px',
-              padding: '1px',
-              background: 'rgba(168,85,247,0.55)',
-              display: 'inline-flex',
-              zIndex: items.length - i,
-            }}
-          >
-            <UserAvatar user={u} size={size} />
-          </span>
-        ))}
-        {extra > 0 && (
-          <span
-            style={{
-              marginLeft: `-${overlap}px`,
-              borderRadius: '9999px',
-              padding: '1px',
-              background: 'rgba(168,85,247,0.55)',
-              display: 'inline-flex',
-              zIndex: 0,
-            }}
-          >
-            <span
-              className="inline-flex items-center justify-center font-bold text-white"
-              style={{
-                width: size,
-                height: size,
-                borderRadius: '9999px',
-                background: 'linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)',
-                fontSize: Math.max(8, Math.round(size * 0.5)),
-                lineHeight: 1,
-                letterSpacing: '-0.02em',
-              }}
-            >
-              +{extra}
-            </span>
-          </span>
-        )}
-      </button>
-      {open && (
-        <MutualFriendsPopover
-          preview={preview}
-          total={totalLabel}
-          onClose={() => setOpen(false)}
-          onProfileNavigate={onProfileNavigate}
-        />
-      )}
-    </>
-  );
-}
-
-/**
- * Lightweight portal-rendered list of mutual friends, opened from the
- * avatar stack on a friend-request card. Lives in the host so it can sit
- * above the bell dropdown (z-70), the global toast stack (z-80), and the
- * full /notifications page. Closes on backdrop tap, Escape, or the close
- * button. Profile links also fire `onProfileNavigate` so the surface that
- * opened the popover (dropdown, toast) dismisses in the same gesture.
- */
-function MutualFriendsPopover({ preview, total, onClose, onProfileNavigate }) {
-  const [mounted, setMounted] = useState(false);
-  const closeRef = useRef(null);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    const onKey = (e) => {
-      if (e.key === 'Escape') {
-        e.stopPropagation();
-        onClose?.();
-      }
-    };
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, [onClose]);
-
-  useEffect(() => {
-    if (!mounted) return;
-    closeRef.current?.focus();
-  }, [mounted]);
-
-  if (!mounted || typeof document === 'undefined') return null;
-
-  const heading = total === 1 ? '1 mutual friend' : `${total} mutual friends`;
-  const moreCount = Math.max(0, Number(total) - preview.length);
-
-  const handleProfileClick = (e) => {
-    // Close the popover first; then let the parent surface (dropdown / toast)
-    // dismiss in the same gesture so we land cleanly on the profile page.
-    onClose?.();
-    onProfileNavigate?.(e);
-  };
-
-  return ReactDOM.createPortal(
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={heading}
-      className="fixed inset-0 z-[90] flex items-end sm:items-center justify-center p-3 sm:p-4"
-      onClick={(e) => {
-        // Stop propagation so global outside-click listeners on the host
-        // (bell dropdown, etc.) don't also fire when the popover handles
-        // the tap itself.
-        e.stopPropagation();
-      }}
-    >
-      <button
-        type="button"
-        aria-label="Close"
-        onClick={(e) => {
-          e.stopPropagation();
-          onClose?.();
-        }}
-        className="absolute inset-0 bg-black/60 cursor-default focus:outline-none"
-        style={{ backdropFilter: 'blur(2px)' }}
-      />
-      <div
-        className="relative w-full max-w-sm rounded-2xl overflow-hidden"
-        style={{
-          background: 'linear-gradient(135deg, #1a0b2e 0%, #0a0a0a 100%)',
-          border: '1px solid rgba(168,85,247,0.55)',
-          boxShadow: '0 20px 60px -10px rgba(168,85,247,0.55)',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div
-          className="flex items-center justify-between px-4 py-3"
-          style={{ borderBottom: '1px solid rgba(168,85,247,0.25)' }}
+    <span className="inline-flex items-center flex-shrink-0">
+      {items.map((u, i) => (
+        <span
+          key={u.id || i}
+          style={{
+            marginLeft: i === 0 ? 0 : `-${overlap}px`,
+            borderRadius: '9999px',
+            padding: '1px',
+            background: 'rgba(168,85,247,0.55)',
+            display: 'inline-flex',
+            zIndex: items.length - i,
+          }}
+          title={u.username || 'Player'}
         >
-          <div className="flex items-center gap-2 min-w-0">
-            <NotifIcon name="userPlus" size={14} color={PURPLE} strokeWidth={2.5} />
-            <span className="text-white text-sm font-bold truncate">{heading}</span>
-          </div>
-          <button
-            ref={closeRef}
-            type="button"
-            onClick={onClose}
-            className="text-purple-200/70 hover:text-white text-2xl leading-none px-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/70 rounded"
-            aria-label="Close"
+          <UserAvatar
+            user={u}
+            size={size}
+            link
+            onLinkClick={onProfileNavigate}
+          />
+        </span>
+      ))}
+      {extra > 0 && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onSeeAll?.();
+          }}
+          style={{
+            marginLeft: `-${overlap}px`,
+            borderRadius: '9999px',
+            padding: '1px',
+            background: 'rgba(168,85,247,0.55)',
+            display: 'inline-flex',
+            zIndex: 0,
+            border: 'none',
+            cursor: onSeeAll ? 'pointer' : 'default',
+          }}
+          title={`See all ${total} mutual ${total === 1 ? 'friend' : 'friends'}`}
+          aria-label={`See all ${total} mutual ${total === 1 ? 'friend' : 'friends'}`}
+        >
+          <span
+            className="inline-flex items-center justify-center font-bold text-white"
+            style={{
+              width: size,
+              height: size,
+              borderRadius: '9999px',
+              background: 'linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)',
+              fontSize: Math.max(8, Math.round(size * 0.5)),
+              lineHeight: 1,
+              letterSpacing: '-0.02em',
+            }}
           >
-            ×
-          </button>
-        </div>
-        <ul className="max-h-[60vh] overflow-y-auto py-1">
-          {preview.map((u, i) => (
-            <li key={u.id || i}>
-              {u.id ? (
-                <Link
-                  href={`/profile/${u.id}`}
-                  onClick={handleProfileClick}
-                  className="flex items-center gap-3 px-4 py-2.5 hover:bg-purple-500/10 transition-colors focus:outline-none focus-visible:bg-purple-500/15"
-                >
-                  <UserAvatar user={u} size={36} />
-                  <span className="text-white text-sm font-semibold truncate">
-                    {u.username || 'Player'}
-                  </span>
-                </Link>
-              ) : (
-                <div className="flex items-center gap-3 px-4 py-2.5">
-                  <UserAvatar user={u} size={36} />
-                  <span className="text-white text-sm font-semibold truncate">
-                    {u.username || 'Player'}
-                  </span>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
-        {moreCount > 0 && (
-          <div
-            className="px-4 py-2 text-[11px] text-purple-200/70 text-center"
-            style={{ borderTop: '1px solid rgba(168,85,247,0.25)' }}
-          >
-            +{moreCount} more not shown
-          </div>
-        )}
-      </div>
-    </div>,
-    document.body,
+            +{extra}
+          </span>
+        </button>
+      )}
+    </span>
   );
 }
 
@@ -341,7 +200,15 @@ export default function FriendRequestCard({
   const mutualPreview = Array.isArray(context?.mutualFriendPreview)
     ? context.mutualFriendPreview
     : [];
-  const showMutualStack = (Number(context?.mutualFriends) || 0) > 0 && mutualPreview.length > 0;
+  const mutualCount = Number(context?.mutualFriends) || 0;
+  const showMutualStack = mutualCount > 0 && mutualPreview.length > 0;
+  // Allow opening the full mutual-friends list whenever there's at least one
+  // mutual — even small lists are worth seeing in full ("oh I know all 2 of
+  // them"), and it keeps the affordance consistent across cards.
+  const canSeeAllMutuals = mutualCount > 0 && !!sender?.id;
+  const [mutualOpen, setMutualOpen] = useState(false);
+  const openMutualList = () => { if (canSeeAllMutuals) setMutualOpen(true); };
+  const closeMutualList = () => setMutualOpen(false);
   const avatarSize = compact ? 52 : 60;
   const stackAvatarSize = compact ? 16 : 18;
   const containerCls = inset
@@ -425,11 +292,28 @@ export default function FriendRequestCard({
                 <MutualFriendsStack
                   preview={mutualPreview}
                   size={stackAvatarSize}
-                  total={Number(context?.mutualFriends) || 0}
+                  total={mutualCount}
                   onProfileNavigate={onProfileNavigate}
+                  onSeeAll={canSeeAllMutuals ? openMutualList : undefined}
                 />
               )}
-              <span className="truncate">{contextLine}</span>
+              {canSeeAllMutuals ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openMutualList();
+                  }}
+                  className="truncate text-left hover:underline focus:outline-none focus-visible:underline"
+                  style={{ color: 'rgba(216,180,254,0.95)' }}
+                  aria-label={`See all ${mutualCount} mutual ${mutualCount === 1 ? 'friend' : 'friends'}`}
+                >
+                  {contextLine}
+                </button>
+              ) : (
+                <span className="truncate">{contextLine}</span>
+              )}
             </div>
           )}
         </div>
@@ -458,6 +342,17 @@ export default function FriendRequestCard({
           Decline
         </button>
       </div>
+
+      {canSeeAllMutuals && (
+        <MutualFriendsModal
+          isOpen={mutualOpen}
+          onClose={closeMutualList}
+          senderId={sender?.id}
+          senderUsername={sender?.username}
+          expectedCount={mutualCount}
+          onProfileNavigate={onProfileNavigate}
+        />
+      )}
     </div>
   );
 }
