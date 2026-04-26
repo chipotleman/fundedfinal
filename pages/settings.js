@@ -5,7 +5,14 @@ import TopNavbar from '../components/TopNavbar';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import PushSettingsSection from '../components/notifications/PushSettingsSection';
+import { LEAD_CUE_STORAGE_KEYS } from '../hooks/useLeadChangeCue';
 import { BANNER_LIBRARY } from '../lib/teamCatalog';
+
+const LEAD_CUE_LABELS = [
+  ['haptics', 'Lead-change vibration', 'Short buzz on your phone when a close game flips its leader.', LEAD_CUE_STORAGE_KEYS.HAPTIC_KEY, true],
+  ['sound', 'Lead-change sound', 'Quick low-volume blip when a close game flips its leader.', LEAD_CUE_STORAGE_KEYS.SOUND_KEY, false],
+  ['quiet', 'Quiet mode', 'Mute all lead-change cues, regardless of the toggles above.', LEAD_CUE_STORAGE_KEYS.QUIET_KEY, false],
+];
 
 const NOTIF_LABELS = {
   betResults: ['Bet Results', 'Get notified when your bets are settled'],
@@ -100,6 +107,40 @@ export default function Settings() {
   const bannerInputRef = useRef(null);
 
   const [form, setForm] = useState(DEFAULTS);
+
+  const [leadCues, setLeadCues] = useState(() => {
+    const initial = {};
+    for (const [key, , , , defaultVal] of LEAD_CUE_LABELS) initial[key] = defaultVal;
+    return initial;
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setLeadCues((prev) => {
+      const next = { ...prev };
+      for (const [key, , , storageKey, defaultVal] of LEAD_CUE_LABELS) {
+        try {
+          const v = window.localStorage.getItem(storageKey);
+          if (v === null) next[key] = defaultVal;
+          else next[key] = v === 'on' || v === 'true' || v === '1';
+        } catch {
+          next[key] = defaultVal;
+        }
+      }
+      return next;
+    });
+  }, []);
+
+  const setLeadCue = (key, storageKey, value) => {
+    setLeadCues((prev) => ({ ...prev, [key]: value }));
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem(storageKey, value ? 'on' : 'off');
+      } catch {
+        // Ignore storage failures so settings still update in-memory.
+      }
+    }
+  };
 
   useEffect(() => {
     if (status === 'loading') return;
@@ -488,6 +529,30 @@ export default function Settings() {
 
           {/* Push notifications (existing) */}
           <PushSettingsSection />
+
+          {/* Lead-change cues */}
+          <section className={sectionClass}>
+            <h2 className="text-xl font-bold text-white mb-2">Lead-change cues</h2>
+            <p className="text-gray-400 text-sm mb-6">
+              Get a quick buzz or blip when a close game on the live rail flips its leader.
+              Cues respect your device&apos;s reduced-motion setting and never fire more than
+              once per game per ~30 seconds.
+            </p>
+            <div className="space-y-4">
+              {LEAD_CUE_LABELS.map(([key, label, desc, storageKey]) => (
+                <div key={key} className="flex items-center justify-between py-3 border-b border-[#1a1a1a] last:border-0">
+                  <div className="pr-4">
+                    <div className="text-white font-medium">{label}</div>
+                    <div className="text-gray-400 text-sm">{desc}</div>
+                  </div>
+                  <Toggle
+                    value={!!leadCues[key]}
+                    onChange={(v) => setLeadCue(key, storageKey, v)}
+                  />
+                </div>
+              ))}
+            </div>
+          </section>
 
           {/* Notifications */}
           <section className={sectionClass}>

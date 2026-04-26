@@ -25,6 +25,7 @@ import { useMatchup } from '../contexts/MatchupContext';
 import { categorizeGames, filterGamesBySport } from '../lib/gamesUtils';
 import { useGoalserveLive } from '../hooks/useGoalserveLive';
 import useModalScrollLock from '../hooks/useModalScrollLock';
+import useLeadChangeCue from '../hooks/useLeadChangeCue';
 
 // Tiny inline strip showing the recent score-gap trajectory for a close-games
 // card. Renders a small SVG sparkline plus a "Gap N" label tinted by trend
@@ -732,6 +733,10 @@ export default function Dashboard() {
     }, remaining + 50);
     return () => clearTimeout(timer);
   }, [tightenedGames]);
+
+  // Trigger a brief haptic / audio cue whenever a tracked game flips its
+  // leader, so users not staring at the rail still feel the moment.
+  useLeadChangeCue(leadChangedGames);
 
   // Clear the lead-change highlight after the same short window.
   useEffect(() => {
