@@ -171,6 +171,12 @@ export default function BattlePage() {
   // `sectionStatus[key]` to 'ok' or 'failed' depending on the outcome, and
   // marks 'retrying' while a manual retry is in flight so the hint can show
   // a spinner instead of the tap-to-retry copy.
+  //
+  // To absorb transient blips (brief network hiccups, cold-start timeouts)
+  // without making the user tap the hint, the initial (non-manual) path
+  // silently retries one extra time after a ~1.5s backoff before flipping
+  // the section to 'failed'. Manual retries from the hint stay single-shot
+  // so a tap still feels immediate.
   const fetchSection = useCallback(async (key, { isRetry = false } = {}) => {
     if (!userId) return;
     if (isRetry) {
@@ -178,65 +184,81 @@ export default function BattlePage() {
     }
     const markOk = () => setSectionStatus(prev => (prev[key] === 'ok' ? prev : { ...prev, [key]: 'ok' }));
     const markFailed = () => setSectionStatus(prev => (prev[key] === 'failed' ? prev : { ...prev, [key]: 'failed' }));
-    try {
-      switch (key) {
-        case 'profile': {
-          const res = await fetchWithTimeout(`/api/profiles/${userId}`);
-          if (!res.ok) { markFailed(); return; }
-          const data = await res.json();
-          setProfile(data.profile || data);
-          markOk();
-          return;
-        }
-        case 'friends': {
-          const res = await fetchWithTimeout('/api/friends');
-          if (!res.ok) { markFailed(); return; }
-          const data = await res.json();
-          setFriends(data.friends || []);
-          markOk();
-          return;
-        }
-        case 'invites': {
-          const res = await fetchWithTimeout('/api/battles/invite');
-          if (!res.ok) { markFailed(); return; }
-          const data = await res.json();
-          setInvites(data);
-          markOk();
-          return;
-        }
-        case 'history': {
-          const res = await fetchWithTimeout('/api/battles/history?limit=5');
-          if (!res.ok) { markFailed(); return; }
-          const data = await res.json();
-          setRecentMatches(data.matches || []);
-          markOk();
-          return;
-        }
-        case 'matchup': {
-          const res = await fetchWithTimeout('/api/matchups/current');
-          if (!res.ok) { markFailed(); return; }
-          const data = await res.json();
-          if (data.matchup && (data.matchup.status === 'active' || data.matchup.status === 'matched' || data.matchup.status === 'waiting')) {
-            setActiveMatchup(data.matchup);
-            setMatchupData(data);
+
+    // Run one fetch attempt for `key`. Returns true on success (and applies
+    // the section's state + markOk), false on any failure. The caller
+    // decides whether to retry or mark the section as failed.
+    const attempt = async () => {
+      try {
+        switch (key) {
+          case 'profile': {
+            const res = await fetchWithTimeout(`/api/profiles/${userId}`);
+            if (!res.ok) return false;
+            const data = await res.json();
+            setProfile(data.profile || data);
+            markOk();
+            return true;
           }
-          markOk();
-          return;
+          case 'friends': {
+            const res = await fetchWithTimeout('/api/friends');
+            if (!res.ok) return false;
+            const data = await res.json();
+            setFriends(data.friends || []);
+            markOk();
+            return true;
+          }
+          case 'invites': {
+            const res = await fetchWithTimeout('/api/battles/invite');
+            if (!res.ok) return false;
+            const data = await res.json();
+            setInvites(data);
+            markOk();
+            return true;
+          }
+          case 'history': {
+            const res = await fetchWithTimeout('/api/battles/history?limit=5');
+            if (!res.ok) return false;
+            const data = await res.json();
+            setRecentMatches(data.matches || []);
+            markOk();
+            return true;
+          }
+          case 'matchup': {
+            const res = await fetchWithTimeout('/api/matchups/current');
+            if (!res.ok) return false;
+            const data = await res.json();
+            if (data.matchup && (data.matchup.status === 'active' || data.matchup.status === 'matched' || data.matchup.status === 'waiting')) {
+              setActiveMatchup(data.matchup);
+              setMatchupData(data);
+            }
+            markOk();
+            return true;
+          }
+          case 'requests': {
+            const res = await fetchWithTimeout('/api/friends/requests');
+            if (!res.ok) return false;
+            const data = await res.json();
+            setFriendRequests(data.requests || []);
+            markOk();
+            return true;
+          }
+          default:
+            return true;
         }
-        case 'requests': {
-          const res = await fetchWithTimeout('/api/friends/requests');
-          if (!res.ok) { markFailed(); return; }
-          const data = await res.json();
-          setFriendRequests(data.requests || []);
-          markOk();
-          return;
-        }
-        default:
-          return;
+      } catch (_e) {
+        return false;
       }
-    } catch (_e) {
-      markFailed();
-    }
+    };
+
+    if (await attempt()) return;
+    // Manual retries from the inline hint keep their existing single-shot
+    // behavior so the tap feels immediate.
+    if (isRetry) { markFailed(); return; }
+    // Silent auto-retry after a short backoff to absorb transient failures
+    // before the user ever sees the retry hint.
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    if (await attempt()) return;
+    markFailed();
   }, [userId, fetchWithTimeout]);
 
   const fetchData = useCallback(async () => {
