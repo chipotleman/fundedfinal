@@ -25,6 +25,11 @@ The 1v1 Battle System, inspired by Trivia Crack, features a redesigned Battle Ho
 #### System Design Choices
 The authentication flow progresses from beta access through NextAuth.js, JWT sessions, user profiling, and challenge selection. A comprehensive Database Schema supports users, profiles, bets, challenges, and other core functionalities. A Bet Autograding System automatically grades pending bets against completed games, supporting various bet types and updating user bankrolls. The API architecture is RESTful. A context-specific balance system ensures that user balances accurately reflect their active challenge (1v1 battle or Pik Pool), with mutual exclusivity enforced for active challenges.
 
+#### Top-Nav Click-Trap Defenses (tasks #228, #322, #324)
+The top-nav buttons (THE LAB, BATTLE, LEADERBOARD, balance, bell, chat, Bet Slip, avatar) have historically been intercepted on iOS Safari after visiting `/messenger` or `/battle`, requiring a hard refresh to recover. Two defenses are in place:
+1. **Source fixes** — global modals that previously stayed mounted with only `visibility:hidden` + `pointer-events:none` (`AuthPopup`, `ChallengePopup`, the `BetSlip` persistent logo wrapper) now also apply `display: none` when closed, so the layout box is fully detached and cannot capture pointer events.
+2. **Messenger watchdog** — `pages/messenger.js` runs a 1.5 s interval that (a) clears any leftover body / html scroll-lock when no real modal is open, and (b) probes the top-nav strip with `document.elementFromPoint` and forces `pointer-events:none` on any orphan fixed-position ancestor that isn't allow-listed (`[data-topnavbar]`, `[data-betslip]`, `[data-toast-stack]`, `[role=dialog][aria-modal=true]`, `[data-scroll-lock-owner]`, `[data-allow-fixed-overlay]`). When it neutralises an offender it logs `[messenger] neutralised orphan fixed overlay covering top-nav: ...` to the console so the offender can be identified next time the bug recurs. New full-screen overlays must either unmount when closed or set one of the allow-list data attributes.
+
 ### External Dependencies
 - **Authentication**: NextAuth.js v4
 - **Database**: Replit PostgreSQL (Neon-backed) via Drizzle ORM

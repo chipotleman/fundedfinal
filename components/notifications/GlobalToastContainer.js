@@ -18,6 +18,7 @@ export default function GlobalToastContainer() {
 
   return ReactDOM.createPortal(
     <div
+      data-toast-stack="true"
       className="fixed z-[80] flex flex-col gap-2 pointer-events-none toast-stack"
       style={{
         top: 'calc(var(--top-nav-height, 70px) + 12px)',

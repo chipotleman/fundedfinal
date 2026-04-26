@@ -489,7 +489,7 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
 
   return (
     <>
-      <nav ref={navRef} className="sticky top-0 left-0 right-0 z-50" style={{ backgroundColor: '#000000' }}>
+      <nav ref={navRef} data-topnavbar="true" className="sticky top-0 left-0 right-0 z-50" style={{ backgroundColor: '#000000' }}>
         <div className="px-3 sm:px-6 h-[70px] sm:h-auto sm:py-1 sm:-mb-6 flex items-center">
           <div className="flex items-center justify-between w-full sm:justify-between min-h-[70px] sm:min-h-[48px] relative">
             {/* Logo - absolutely positioned on mobile to not affect bar height */}

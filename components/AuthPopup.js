@@ -170,7 +170,12 @@ export default function AuthPopup({ isOpen, onClose, initialMode = 'signin' }) {
     setError(`${provider} sign-in will be available soon!`);
   };
 
+  // When closed, fully detach this overlay from the layout so it cannot trap
+  // pointer events on top-nav buttons (the messenger / battle "click trap"
+  // bug — see task #324). `display: none` is belt-and-suspenders on top of
+  // pointer-events:none in case a UA repaints the layer interactive.
   const hiddenStyle = !isOpen ? {
+    display: 'none',
     visibility: 'hidden',
     pointerEvents: 'none',
     position: 'fixed',

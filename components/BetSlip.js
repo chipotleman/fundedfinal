@@ -684,13 +684,19 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
     <>
       <CoinRain trigger={showCoinRain} onComplete={() => setShowCoinRain(false)} />
 
-      {/* Persistent logo - always in DOM, visibility controlled */}
+      {/* Persistent logo - mounted only when bet slip is open. Fully detached
+          when closed so this fixed-position layer cannot trap pointer events
+          on top-nav buttons (the messenger / battle "click trap" bug — see
+          task #324). `display: none` is belt-and-suspenders on top of
+          pointer-events:none in case a UA promotes the layer to interactive. */}
       <div 
+        data-betslip="true"
         className="fixed z-[100]"
         style={{ 
           top: 0,
           left: 0,
           right: 0,
+          display: isOpen ? 'block' : 'none',
           visibility: isOpen ? 'visible' : 'hidden',
           pointerEvents: 'none'
         }}
@@ -722,6 +728,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
         <>
           {/* Backdrop - blocks clicks but NOT body scroll (preserves sticky positioning) */}
           <div 
+            data-betslip="true"
             className="fixed inset-0 z-[98] hidden md:block"
             style={{ backgroundColor: '#000000' }}
             onClick={onClose}
@@ -729,6 +736,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
           
           {/* Bet slip panel - uses overscroll-behavior to contain scroll within panel */}
           <div 
+            data-betslip="true"
             className="fixed inset-0 md:inset-auto md:top-0 md:right-0 md:bottom-0 md:w-[420px] z-[99] flex flex-col" 
             style={{ 
               backgroundColor: '#000000',
