@@ -255,7 +255,12 @@ export default function BattlePage() {
     // behavior so the tap feels immediate.
     if (isRetry) { markFailed(); return; }
     // Silent auto-retry after a short backoff to absorb transient failures
-    // before the user ever sees the retry hint.
+    // before the user ever sees the retry hint. Mark the section as
+    // 'reconnecting' so the render path can show a subtle pulsing dot
+    // during the wait — without the failure copy — so the moment feels
+    // intentional instead of stuck. `attempt()` will overwrite this back
+    // to 'ok' on success; a final failure flips it to 'failed' below.
+    setSectionStatus(prev => (prev[key] === 'reconnecting' ? prev : { ...prev, [key]: 'reconnecting' }));
     await new Promise(resolve => setTimeout(resolve, 1500));
     if (await attempt()) return;
     markFailed();
@@ -1184,6 +1189,30 @@ export default function BattlePage() {
   const RetryHint = ({ sectionKey }) => {
     const status = sectionStatus[sectionKey];
     const isRetrying = status === 'retrying';
+    const isReconnecting = status === 'reconnecting';
+    // While the section is in its silent auto-retry window, swap the
+    // failure copy for a subtle pulsing dot + "Reconnecting…" label so
+    // the wait feels intentional. No tap target — the retry is happening
+    // automatically — and no error styling, since this isn't (yet) a
+    // failure. If the retry succeeds the section flips to 'ok' and this
+    // disappears; if it fails the manual hint takes over.
+    if (isReconnecting) {
+      return (
+        <div className="text-center py-6" role="status" aria-live="polite">
+          <span
+            className="inline-flex items-center gap-1.5 text-xs font-medium"
+            style={{ color: textSecondary }}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full animate-pulse"
+              style={{ backgroundColor: 'currentColor' }}
+              aria-hidden="true"
+            />
+            Reconnecting…
+          </span>
+        </div>
+      );
+    }
     return (
       <div className="text-center py-6">
         <button
@@ -1270,7 +1299,7 @@ export default function BattlePage() {
       <div className="max-h-72 overflow-y-auto">
         {socialTab === 'friends' && (
           friends.length === 0 ? (
-            (sectionStatus.friends === 'failed' || sectionStatus.friends === 'retrying') ? (
+            (sectionStatus.friends === 'failed' || sectionStatus.friends === 'retrying' || sectionStatus.friends === 'reconnecting') ? (
               <RetryHint sectionKey="friends" />
             ) : (
               <div className="text-center py-6">
@@ -1418,7 +1447,7 @@ export default function BattlePage() {
 
         {socialTab === 'requests' && (
           requestCount === 0 ? (
-            (sectionStatus.requests === 'failed' || sectionStatus.requests === 'retrying') ? (
+            (sectionStatus.requests === 'failed' || sectionStatus.requests === 'retrying' || sectionStatus.requests === 'reconnecting') ? (
               <RetryHint sectionKey="requests" />
             ) : (
               <div className="text-center py-6">
@@ -1458,7 +1487,7 @@ export default function BattlePage() {
 
         {socialTab === 'invites' && (
           (invites.received?.length === 0 && invites.sent?.length === 0) ? (
-            (sectionStatus.invites === 'failed' || sectionStatus.invites === 'retrying') ? (
+            (sectionStatus.invites === 'failed' || sectionStatus.invites === 'retrying' || sectionStatus.invites === 'reconnecting') ? (
               <RetryHint sectionKey="invites" />
             ) : (
               <div className="text-center py-6">
@@ -1708,7 +1737,7 @@ export default function BattlePage() {
               the failed/retrying state and we have nothing to show, surface
               the same soft retry hint used by friends/requests/invites so the
               user can try again without a full page reload. */}
-          {!isGuest && !activeMatchup && (sectionStatus.matchup === 'failed' || sectionStatus.matchup === 'retrying') && (
+          {!isGuest && !activeMatchup && (sectionStatus.matchup === 'failed' || sectionStatus.matchup === 'retrying' || sectionStatus.matchup === 'reconnecting') && (
             <div className="mb-4 rounded-xl overflow-hidden" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, boxShadow: cardShadow }}>
               <div className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: `1px solid ${cardBorder}` }}>
                 <div className="flex items-center gap-2">
@@ -2161,7 +2190,7 @@ export default function BattlePage() {
                       failed/retrying status); successful empty results stay
                       silent so brand-new accounts aren't shown an
                       "always-empty" surface. */}
-                  {!isGuest && (recentMatches.length > 0 || sectionStatus.history === 'failed' || sectionStatus.history === 'retrying') && (
+                  {!isGuest && (recentMatches.length > 0 || sectionStatus.history === 'failed' || sectionStatus.history === 'retrying' || sectionStatus.history === 'reconnecting') && (
                     <div className="mb-5 rounded-xl overflow-hidden" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, boxShadow: cardShadow }}>
                       <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: `1px solid ${cardBorder}` }}>
                         <span className="text-sm font-bold" style={{ color: textPrimary }}>Your recent matches</span>
