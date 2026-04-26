@@ -78,6 +78,8 @@ export default async function handler(req, res) {
       promoSlotDailyStatsRaw,
       badgeShareStatsRaw,
       badgeShareTotalsRaw,
+      itemShareStatsRaw,
+      itemShareTotalsRaw,
     ] = await Promise.all([
       sql`SELECT COUNT(*) as count FROM user_events WHERE created_at >= ${startDateStr}`.catch(() => [{ count: 0 }]),
       sql`SELECT COUNT(DISTINCT session_id) as count FROM session_metrics WHERE created_at >= ${startDateStr}`.catch(() => [{ count: 0 }]),
@@ -164,6 +166,48 @@ export default async function handler(req, res) {
         WHERE created_at >= ${startDateStr}
           AND event_type IN ('badge_share', 'badge_share_profile_visit')
       `.catch(() => [{ total_shares: 0, native_shares: 0, files_shares: 0, clipboard_shares: 0, profile_visits: 0 }]),
+      // Generic share tracking (lib/shareTracking.js) — groups every
+      // surface (bet/win shares, profile-frame shares, etc.) by
+      // itemType + itemId so we can answer the same questions across
+      // the app without bespoke queries per surface.
+      sql`
+        SELECT
+          event_data->>'itemType' AS item_type,
+          event_data->>'itemId' AS item_id,
+          COUNT(*) AS total_shares,
+          COUNT(*) FILTER (WHERE event_data->>'sharePath' = 'native') AS native_shares,
+          COUNT(*) FILTER (WHERE event_data->>'sharePath' = 'files') AS files_shares,
+          COUNT(*) FILTER (WHERE event_data->>'sharePath' = 'clipboard') AS clipboard_shares,
+          COUNT(*) FILTER (WHERE event_data->>'sharePath' = 'twitter') AS twitter_shares,
+          COUNT(*) FILTER (WHERE event_data->>'sharePath' = 'image_download') AS image_download_shares,
+          COUNT(*) FILTER (WHERE event_data->>'sharePath' = 'copy_text') AS copy_text_shares
+        FROM user_events
+        WHERE created_at >= ${startDateStr}
+          AND event_type = 'item_share'
+          AND event_data ? 'itemType'
+          AND NULLIF(event_data->>'itemType', '') IS NOT NULL
+        GROUP BY item_type, item_id
+        ORDER BY total_shares DESC, item_type ASC, item_id ASC
+        LIMIT 100
+      `.catch(() => []),
+      sql`
+        SELECT
+          event_data->>'itemType' AS item_type,
+          COUNT(*) AS total_shares,
+          COUNT(*) FILTER (WHERE event_data->>'sharePath' = 'native') AS native_shares,
+          COUNT(*) FILTER (WHERE event_data->>'sharePath' = 'files') AS files_shares,
+          COUNT(*) FILTER (WHERE event_data->>'sharePath' = 'clipboard') AS clipboard_shares,
+          COUNT(*) FILTER (WHERE event_data->>'sharePath' = 'twitter') AS twitter_shares,
+          COUNT(*) FILTER (WHERE event_data->>'sharePath' = 'image_download') AS image_download_shares,
+          COUNT(*) FILTER (WHERE event_data->>'sharePath' = 'copy_text') AS copy_text_shares
+        FROM user_events
+        WHERE created_at >= ${startDateStr}
+          AND event_type = 'item_share'
+          AND event_data ? 'itemType'
+          AND NULLIF(event_data->>'itemType', '') IS NOT NULL
+        GROUP BY item_type
+        ORDER BY total_shares DESC, item_type ASC
+      `.catch(() => []),
     ]);
 
     return res.status(200).json({
@@ -212,6 +256,27 @@ export default async function handler(req, res) {
         clipboardShares: parseInt(badgeShareTotalsRaw?.[0]?.clipboard_shares || 0),
         profileVisits: parseInt(badgeShareTotalsRaw?.[0]?.profile_visits || 0),
       },
+      itemShareStats: (itemShareStatsRaw || []).map((r) => ({
+        itemType: r.item_type,
+        itemId: r.item_id,
+        totalShares: parseInt(r.total_shares || 0),
+        nativeShares: parseInt(r.native_shares || 0),
+        filesShares: parseInt(r.files_shares || 0),
+        clipboardShares: parseInt(r.clipboard_shares || 0),
+        twitterShares: parseInt(r.twitter_shares || 0),
+        imageDownloadShares: parseInt(r.image_download_shares || 0),
+        copyTextShares: parseInt(r.copy_text_shares || 0),
+      })),
+      itemShareTotalsByType: (itemShareTotalsRaw || []).map((r) => ({
+        itemType: r.item_type,
+        totalShares: parseInt(r.total_shares || 0),
+        nativeShares: parseInt(r.native_shares || 0),
+        filesShares: parseInt(r.files_shares || 0),
+        clipboardShares: parseInt(r.clipboard_shares || 0),
+        twitterShares: parseInt(r.twitter_shares || 0),
+        imageDownloadShares: parseInt(r.image_download_shares || 0),
+        copyTextShares: parseInt(r.copy_text_shares || 0),
+      })),
     });
   } catch (error) {
     console.error('Failed to fetch analytics:', error);

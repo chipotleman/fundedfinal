@@ -1,10 +1,19 @@
 import { useState, useRef, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import html2canvas from 'html2canvas';
 import PiksBetCard from './PiksBetCard';
 import { formatMoney } from '../utils/formatMoney';
 import { calculatePayout } from '../utils/odds';
+import { trackShare } from '../lib/shareTracking';
+
+// itemType used for analytics aggregations of bet/win shares from this
+// modal — keep stable so `pages/api/admin-panel/analytics.js` queries
+// can group on it.
+const SHARE_ITEM_TYPE = 'bet';
 
 export default function ShareableBetSlip({ bet, isVisible, onClose }) {
+  const { data: session } = useSession();
+  const sharerProfileId = session?.user?.id || null;
   const [isGenerating, setIsGenerating] = useState(false);
   const [message, setMessage] = useState('');
   const cardContainerRef = useRef(null);
@@ -73,6 +82,17 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
     }
   };
 
+  // Centralised so every share path records the same itemType + itemId
+  // for the admin analytics aggregation.
+  const recordShare = (sharePath) => {
+    trackShare({
+      itemType: SHARE_ITEM_TYPE,
+      itemId: bet?.id ?? null,
+      sharePath,
+      sharerProfileId,
+    });
+  };
+
   const downloadImage = async () => {
     const canvas = await generateImage();
     if (!canvas) {
@@ -85,6 +105,7 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
     link.download = `piks-win-${Date.now()}.png`;
     link.href = imageDataUrl;
     link.click();
+    recordShare('image_download');
     showMessage('Image downloaded!');
   };
 
@@ -100,15 +121,18 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
           text: text,
           url: url
         });
+        recordShare('native');
         showMessage('Shared!');
       } catch (error) {
         if (error.name !== 'AbortError') {
           await navigator.clipboard.writeText(`${text} ${url}`);
+          recordShare('clipboard');
           showMessage('Link copied!');
         }
       }
     } else {
       await navigator.clipboard.writeText(`${text} ${url}`);
+      recordShare('clipboard');
       showMessage('Link copied!');
     }
   };
@@ -117,11 +141,13 @@ export default function ShareableBetSlip({ bet, isVisible, onClose }) {
     const payout = calculatePayout(bet.odds, bet.stake);
     const text = `Just won $${formatMoney(payout)} on Piks!`;
     window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent('https://fundedpiks.com')}`, '_blank');
+    recordShare('twitter');
   };
 
   const copyText = () => {
     const payout = calculatePayout(bet.odds, bet.stake);
     navigator.clipboard.writeText(`Just won $${formatMoney(payout)} on Piks! https://fundedpiks.com`);
+    recordShare('copy_text');
     showMessage('Copied!');
   };
 

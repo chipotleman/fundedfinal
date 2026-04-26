@@ -87,6 +87,8 @@ export default function AdminAnalytics() {
     recentEvents: [], topPages: [], eventsByType: [], promoSlotStats: [], promoSlotDailyStats: [],
     badgeShareStats: [],
     badgeShareTotals: { totalShares: 0, nativeShares: 0, filesShares: 0, clipboardShares: 0, profileVisits: 0 },
+    itemShareStats: [],
+    itemShareTotalsByType: [],
   });
   const [dateRange, setDateRange] = useState('7d');
   const [expandedPromo, setExpandedPromo] = useState(null);
@@ -328,6 +330,63 @@ export default function AdminAnalytics() {
                   </tbody>
                 </table>
               </div>
+            )}
+          </div>
+
+          <div className="glass-card p-6 mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-xl font-semibold text-white">Item Share Performance</h2>
+              <div className="p-2 rounded-lg bg-purple-500/20"><svg className="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg></div>
+            </div>
+            <p className="text-gray-400 text-sm mb-4">Generic share tracking for non-badge surfaces (bet/win shares, profile frame shares, etc.) recorded via <code className="text-purple-300">lib/shareTracking.js</code>. Grouped by <code className="text-purple-300">itemType</code> + <code className="text-purple-300">itemId</code> with the most popular items first.</p>
+            {(!analytics.itemShareTotalsByType || analytics.itemShareTotalsByType.length === 0) ? (
+              <div className="text-center py-8"><p className="text-gray-500">No item shares recorded in this range yet</p></div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                  {analytics.itemShareTotalsByType.map((row) => (
+                    <div key={row.itemType} className="rounded-xl bg-white/5 border border-white/5 px-3 py-2">
+                      <p className="text-[10px] uppercase tracking-wider text-gray-500">{row.itemType}</p>
+                      <p className="text-lg font-bold text-white">{(row.totalShares || 0).toLocaleString()}</p>
+                      <p className="text-[10px] text-gray-500 mt-0.5">
+                        N {row.nativeShares || 0} · F {row.filesShares || 0} · C {row.clipboardShares || 0} · T {row.twitterShares || 0} · D {row.imageDownloadShares || 0} · CT {row.copyTextShares || 0}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-white/5 border-b border-white/10">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Item Type</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Item ID</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Shares</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Native</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Files</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Clipboard</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Twitter</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Image DL</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Copy Text</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {analytics.itemShareStats.map((row, idx) => (
+                        <tr key={`${row.itemType}-${row.itemId || 'null'}-${idx}`} className="hover:bg-white/5 transition-colors">
+                          <td className="px-4 py-3 text-white text-sm font-semibold">{row.itemType}</td>
+                          <td className="px-4 py-3 text-gray-400 text-xs font-mono truncate max-w-[180px]">{row.itemId || <span className="text-gray-600">—</span>}</td>
+                          <td className="px-4 py-3 text-white text-sm font-bold text-right">{(row.totalShares || 0).toLocaleString()}</td>
+                          <td className="px-4 py-3 text-blue-300 text-sm text-right">{(row.nativeShares || 0).toLocaleString()}</td>
+                          <td className="px-4 py-3 text-emerald-300 text-sm text-right">{(row.filesShares || 0).toLocaleString()}</td>
+                          <td className="px-4 py-3 text-orange-300 text-sm text-right">{(row.clipboardShares || 0).toLocaleString()}</td>
+                          <td className="px-4 py-3 text-cyan-300 text-sm text-right">{(row.twitterShares || 0).toLocaleString()}</td>
+                          <td className="px-4 py-3 text-pink-300 text-sm text-right">{(row.imageDownloadShares || 0).toLocaleString()}</td>
+                          <td className="px-4 py-3 text-yellow-300 text-sm text-right">{(row.copyTextShares || 0).toLocaleString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
 
