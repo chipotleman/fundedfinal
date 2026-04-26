@@ -549,46 +549,6 @@ export default function TopNavbar({
       >
         <div className="px-3 sm:px-6 h-[70px] sm:h-auto sm:py-1 sm:-mb-6 flex items-center">
           <div className="flex items-center justify-between w-full sm:justify-between min-h-[70px] sm:min-h-[48px] relative">
-            {/* Logo - absolutely positioned on mobile to not affect bar height */}
-            <div className="absolute left-[-35px] top-1/2 -translate-y-1/2 sm:relative sm:left-0 sm:top-auto sm:translate-y-0 sm:-mt-[5.75px]">
-              <a 
-                href="/"
-                onClick={(e) => {
-                  if (window.location.pathname === '/') {
-                    e.preventDefault();
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }
-                }}
-                className="flex items-center"
-              >
-                <img
-                  src="/pikslogotransparent.png"
-                  alt="Piks"
-                  className="h-[140px] sm:h-[230px] w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
-                  style={{
-                    filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
-                    animation: 'logoRedYellowGlow 4s infinite ease-in-out'
-                  }}
-                  onLoad={(e) => {
-                    console.log('Logo loaded successfully');
-                    e.target.style.display = 'block';
-                    e.target.nextElementSibling.style.display = 'none';
-                  }}
-                  onError={(e) => {
-                    console.log('Logo failed to load, showing text fallback');
-                    e.target.style.display = 'none';
-                    e.target.nextElementSibling.style.display = 'block';
-                  }}
-                />
-                <span
-                  className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent"
-                  style={{ display: 'none' }}
-                >
-                  Piks
-                </span>
-              </a>
-            </div>
-
             {/* Desktop Navigation - Show different links based on auth status */}
             <div className="hidden lg:flex items-center space-x-8">
               {isLoggedIn ? (
@@ -756,17 +716,34 @@ export default function TopNavbar({
                 </div>
               )}
 
-              {/* Bet Slip Button - Only show when there are bets */}
+              {/* Pik Slip Button - sized to match the sport filter pills */}
               {effectiveBetSlipCount > 0 && (
                 <button
                   onClick={effectiveOnBetSlipClick}
-                  className="relative font-bold py-2 sm:py-3 px-2 sm:px-6 rounded-lg flex items-center space-x-1 sm:space-x-2 text-sm sm:text-base no-hover-effect"
-                  style={{ backgroundColor: '#2563eb', marginRight: '50px', color: '#ffffff' }}
+                  className="relative no-hover-effect"
+                  style={{
+                    flexShrink: 0,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 16px',
+                    borderRadius: '9999px',
+                    fontSize: '14px',
+                    fontWeight: 600,
+                    borderWidth: '1px',
+                    borderStyle: 'solid',
+                    borderColor: '#2563eb',
+                    backgroundColor: '#2563eb',
+                    color: '#ffffff',
+                    marginRight: '50px',
+                    lineHeight: 1,
+                  }}
+                  aria-label="Open Pik Slip"
                 >
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" style={{ fill: '#ffffff' }} viewBox="0 0 20 20">
+                  <svg style={{ width: '16px', height: '16px', fill: '#ffffff' }} viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
                   </svg>
-                  <span className="text-xs sm:text-base" style={{ color: '#ffffff' }}>Bet Slip</span>
+                  <span style={{ color: '#ffffff' }}>Pik Slip</span>
                   <span className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full h-5 w-5 flex items-center justify-center" style={{ color: '#ffffff' }}>
                     {effectiveBetSlipCount}
                   </span>
@@ -965,25 +942,6 @@ export default function TopNavbar({
           }}
         >
           <div className="px-2 sm:px-4 py-1 flex items-center gap-1.5 sm:gap-2 min-h-[48px] sm:min-h-[52px]">
-            {/* Logo / scroll-to-top */}
-            <a
-              href="/"
-              onClick={(e) => {
-                if (typeof window !== 'undefined' && window.location.pathname === '/') {
-                  e.preventDefault();
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }
-              }}
-              className="flex items-center flex-shrink-0"
-              aria-label="Piks home"
-            >
-              <img
-                src="/pikslogotransparent.png"
-                alt="Piks"
-                className="h-7 sm:h-8 w-auto flex-shrink-0"
-              />
-            </a>
-
             {/* Sport pills (rendered by parent so selection stays in sync).
                 Only the pills slot grows + scrolls horizontally. When stage 2
                 hasn't engaged yet we render an empty flex spacer so the
@@ -1080,18 +1038,33 @@ export default function TopNavbar({
               </Link>
             )}
 
-            {/* Bet slip mirror — only when slip has items */}
+            {/* Pik Slip mirror — sized to match the condensed sport pills */}
             {effectiveBetSlipCount > 0 && (
               <button
                 onClick={effectiveOnBetSlipClick}
-                className="relative flex-shrink-0 font-bold py-1 px-1.5 sm:px-2.5 rounded-md flex items-center space-x-1 text-[11px] sm:text-xs no-hover-effect"
-                style={{ backgroundColor: '#2563eb', color: '#ffffff' }}
-                aria-label="Open bet slip"
+                className="relative no-hover-effect"
+                style={{
+                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '6px 12px',
+                  borderRadius: '9999px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  borderWidth: '1px',
+                  borderStyle: 'solid',
+                  borderColor: '#2563eb',
+                  backgroundColor: '#2563eb',
+                  color: '#ffffff',
+                  lineHeight: 1,
+                }}
+                aria-label="Open Pik Slip"
               >
-                <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" style={{ fill: '#ffffff' }} viewBox="0 0 20 20">
+                <svg style={{ width: '13px', height: '13px', fill: '#ffffff' }} viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
                 </svg>
-                <span style={{ color: '#ffffff' }}>Slip</span>
+                <span style={{ color: '#ffffff' }}>Pik Slip</span>
                 <span
                   className="absolute -top-1 -right-1 bg-red-500 text-[10px] rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center"
                   style={{ color: '#ffffff' }}
@@ -1138,12 +1111,6 @@ export default function TopNavbar({
       />
 
       <style jsx>{`
-        @keyframes logoRedYellowGlow {
-          0% { filter: hue-rotate(-30deg) saturate(1.2) brightness(1.1); }
-          50% { filter: hue-rotate(30deg) saturate(1.3) brightness(1.2); }
-          100% { filter: hue-rotate(-30deg) saturate(1.2) brightness(1.1); }
-        }
-        
         .snake-border-container {
           position: relative;
           border-radius: 8px;
