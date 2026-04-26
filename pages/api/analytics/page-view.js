@@ -1,4 +1,5 @@
 import { neon } from '@neondatabase/serverless';
+import { isAuthenticatedUserAnalyticsOptedOut } from '../../../lib/analyticsOptOut';
 
 const sql = neon(process.env.DATABASE_URL);
 
@@ -20,6 +21,10 @@ export default async function handler(req, res) {
 
   if (!pageUrl) {
     return res.status(400).json({ error: 'Page URL is required' });
+  }
+
+  if (await isAuthenticatedUserAnalyticsOptedOut(req, res)) {
+    return res.status(200).json({ success: true, dropped: true });
   }
 
   try {
