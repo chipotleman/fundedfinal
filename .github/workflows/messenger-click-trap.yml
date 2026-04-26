@@ -75,6 +75,14 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         run: npx playwright install-deps ${{ matrix.browser }}
 
+      - name: Cache Next.js build (.next/cache)
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('next.config.js', 'pages/**/*.{js,jsx,ts,tsx}', 'components/**/*.{js,jsx,ts,tsx}', 'lib/**/*.{js,jsx,ts,tsx}', 'hooks/**/*.{js,jsx,ts,tsx}', 'contexts/**/*.{js,jsx,ts,tsx}', 'app/**/*.{js,jsx,ts,tsx}') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
+
       - name: Run messenger click-trap smoke test (${{ matrix.project }})
         run: npx playwright test --project=${{ matrix.project }}
 

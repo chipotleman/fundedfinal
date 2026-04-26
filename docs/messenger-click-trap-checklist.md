@@ -28,6 +28,23 @@ time off the smoke test. The cache is automatically invalidated whenever
 `package-lock.json` changes, so any dependency bump produces a fresh
 install on the next run.
 
+Finally, the workflow also caches Next.js's incremental build cache at
+`.next/cache` (the directory Next.js uses to persist compiler output and
+SWC transforms between dev-server runs — see `next.config.js`, which
+doesn't override `distDir`, so build artifacts land in the default
+`.next/`). The cache is keyed on `${{ runner.os }}-nextjs-<hash of
+package-lock.json>-<hash of next.config.js + pages/components/lib/hooks/
+contexts/app source files>`, with a `restore-keys` fallback of
+`${{ runner.os }}-nextjs-<hash of package-lock.json>-` so a source-only
+change still warm-starts from the most recent matching build. On a cache
+hit the dev server's first-request compile is dramatically faster — the
+"Run messenger click-trap smoke test" step no longer has to pay the full
+cold Next.js warmup before Playwright can hit `/messenger` and
+`/notifications`. The cache is automatically invalidated whenever
+dependencies (`package-lock.json`) change, and the primary key flips
+whenever the Next.js config or any tracked source file changes (so stale
+compiler output for deleted/renamed files can't linger).
+
 If you want to reproduce a CI failure locally (or run the suite before
 pushing), the same commands CI uses are:
 
