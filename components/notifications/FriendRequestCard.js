@@ -96,12 +96,15 @@ function pickContextLine(context) {
  * to that user's profile so people can quickly verify "oh yeah, I know that
  * person" before accepting; the same `onProfileNavigate` callback used by
  * the requester avatar/name is forwarded so overlay surfaces (bell dropdown,
- * global toast) get out of the way on tap.
+ * global toast) get out of the way on tap. When `total` exceeds the number
+ * of avatars shown, an extra "+N" chip is appended to the stack so users
+ * can tell at a glance there are more mutuals than just the previewed faces.
  */
-function MutualFriendsStack({ preview, size = 18, onProfileNavigate }) {
+function MutualFriendsStack({ preview, size = 18, total = 0, onProfileNavigate }) {
   if (!Array.isArray(preview) || preview.length === 0) return null;
   const items = preview.slice(0, 3);
   const overlap = Math.round(size * 0.35);
+  const extra = Math.max(0, Number(total) - items.length);
   return (
     <span className="inline-flex items-center flex-shrink-0">
       {items.map((u, i) => (
@@ -125,6 +128,34 @@ function MutualFriendsStack({ preview, size = 18, onProfileNavigate }) {
           />
         </span>
       ))}
+      {extra > 0 && (
+        <span
+          style={{
+            marginLeft: `-${overlap}px`,
+            borderRadius: '9999px',
+            padding: '1px',
+            background: 'rgba(168,85,247,0.55)',
+            display: 'inline-flex',
+            zIndex: 0,
+          }}
+          title={`+${extra} more mutual ${extra === 1 ? 'friend' : 'friends'}`}
+        >
+          <span
+            className="inline-flex items-center justify-center font-bold text-white"
+            style={{
+              width: size,
+              height: size,
+              borderRadius: '9999px',
+              background: 'linear-gradient(135deg, #7e22ce 0%, #a855f7 100%)',
+              fontSize: Math.max(8, Math.round(size * 0.5)),
+              lineHeight: 1,
+              letterSpacing: '-0.02em',
+            }}
+          >
+            +{extra}
+          </span>
+        </span>
+      )}
     </span>
   );
 }
@@ -241,6 +272,7 @@ export default function FriendRequestCard({
                 <MutualFriendsStack
                   preview={mutualPreview}
                   size={stackAvatarSize}
+                  total={Number(context?.mutualFriends) || 0}
                   onProfileNavigate={onProfileNavigate}
                 />
               )}
