@@ -11,7 +11,7 @@ import BalanceExplainerModal from './BalanceExplainerModal';
 import CoinRain from './CoinRain';
 import haptic from '../utils/haptics';
 import { formatMoney } from '../utils/formatMoney';
-import { calculatePayout } from '../utils/odds';
+import { calculatePayout, americanToDecimal } from '../utils/odds';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import { releaseBodyScrollLock } from '../hooks/useGlobalScrollLockRecovery';
 
@@ -339,12 +339,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
     let decimalOdds = 1;
     bets.forEach(bet => {
       const american = typeof bet.odds === 'object' ? bet.odds.odds || bet.odds.value || 0 : bet.odds;
-      let decimal;
-      if (american > 0) {
-        decimal = (american / 100) + 1;
-      } else {
-        decimal = (100 / Math.abs(american)) + 1;
-      }
+      const decimal = americanToDecimal(american) ?? 1;
       decimalOdds *= decimal;
     });
     if (decimalOdds >= 2) {
@@ -488,7 +483,7 @@ export default function BetSlip({ bankroll: profileBankroll, onClose, isOpen, on
     ? (() => {
         const parlayDecimal = bets.reduce((acc, bet) => {
           const oddsValue = typeof bet.odds === 'object' ? bet.odds.odds || bet.odds.value || 0 : bet.odds;
-          const decimal = oddsValue > 0 ? (oddsValue/100 + 1) : (100/Math.abs(oddsValue) + 1);
+          const decimal = americanToDecimal(oddsValue) ?? 1;
           return acc * decimal;
         }, 1);
         return parlayStake * parlayDecimal;
