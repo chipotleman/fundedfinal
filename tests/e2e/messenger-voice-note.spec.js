@@ -12,6 +12,9 @@
  *      /api/messages → bubble appears in the thread.
  *   2. Verify the iOS `audio/mp4` fallback ships an `m4a` extension and
  *      a matching `Content-Type` on the PUT.
+ *   3. Verify the module-level `claimVoicePlayback` registry pauses any
+ *      previously-playing voice clip when a second one starts, so two
+ *      bubbles (or the composer preview + a bubble) never overlap.
  *
  * MediaRecorder is environment-agnostic once stubbed, so we run these
  * specs on a single desktop browser to keep the suite fast — the
@@ -363,5 +366,226 @@ test.describe('voice-note record + upload pipeline', () => {
     expect(posted).toHaveLength(1);
     expect(posted[0].messageType).toBe('voice');
     expect(posted[0].attachmentUrl).toBe(objectPath);
+  });
+});
+
+/**
+ * Patches HTMLMediaElement so `play()` / `pause()` / `paused` behave
+ * deterministically without needing a decodable audio source. Real
+ * audio loading is unreliable in headless browsers (the bubble's
+ * `<audio src="/objects/...">` would otherwise depend on actually
+ * fetching + decoding bytes), and we don't care about audio rendering
+ * here — only that the registry's `pause()` call on the previously
+ * playing element transitions it from "playing" back to "paused" and
+ * fires the native `pause` event the bubble UI listens to.
+ */
+async function installFakeAudioPlayback(page) {
+  await page.addInitScript(() => {
+    const proto = HTMLMediaElement.prototype;
+    Object.defineProperty(proto, 'paused', {
+      configurable: true,
+      get() { return this.__fakePaused !== false; },
+    });
+    proto.play = function () {
+      if (this.__fakePaused !== false) {
+        this.__fakePaused = false;
+        try { this.dispatchEvent(new Event('play')); } catch (_e) {}
+      }
+      return Promise.resolve();
+    };
+    proto.pause = function () {
+      if (this.__fakePaused === false) {
+        this.__fakePaused = true;
+        try { this.dispatchEvent(new Event('pause')); } catch (_e) {}
+      }
+    };
+  });
+}
+
+/**
+ * Mirrors the shape `GET /api/messages` returns for a stored voice
+ * note: `messageType: 'voice'` + `attachmentUrl` is what the thread
+ * uses to render a `VoiceBubble`.
+ */
+function makeVoiceMessage({ id, senderId, receiverId, attachmentUrl, durationMs = 1500 }) {
+  return {
+    id,
+    senderId,
+    receiverId,
+    content: '',
+    messageType: 'voice',
+    attachmentUrl,
+    attachmentDurationMs: durationMs,
+    attachmentPeaks: null,
+    read: true,
+    readAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Both bubbles share the same "Play voice message" aria-label, so we
+ * scope the click to the play button that lives next to the audio
+ * element with the given src. The audio is `display: none` but still
+ * sits in the DOM as a sibling of the play button under the
+ * VoiceWaveform wrapper.
+ */
+async function clickAudioPlayButton(page, src) {
+  await page.evaluate((s) => {
+    const audio = document.querySelector(`audio[src="${s}"]`);
+    if (!audio || !audio.parentElement) {
+      throw new Error(`no audio element found for src ${s}`);
+    }
+    const btn = audio.parentElement.querySelector('button');
+    if (!btn) throw new Error(`no play button found for src ${s}`);
+    btn.click();
+  }, src);
+}
+
+async function audioPaused(page, src) {
+  return page.evaluate((s) => {
+    const audio = document.querySelector(`audio[src="${s}"]`);
+    return audio ? audio.paused : null;
+  }, src);
+}
+
+test.describe('voice-note overlap prevention', () => {
+  test('playing a second bubble pauses the first (mine + theirs registry)', async ({ page }) => {
+    await installBrowserStubs(page, { mimeTypes: ['audio/webm'] });
+    await installFakeAudioPlayback(page);
+    await setupMessengerStubs(page);
+    const conversation = await setupConversationRoute(page);
+
+    // The bubble's <audio preload="metadata"> would otherwise hit the
+    // dev server for the (non-existent) object path and pollute the
+    // log; serve an empty body so the metadata fetch resolves cleanly.
+    await page.route('**/objects/**', (route) =>
+      route.fulfill({ status: 200, body: '' }),
+    );
+
+    const minePath = '/objects/uploads/voice-notes/voice-mine.webm';
+    const theirsPath = '/objects/uploads/voice-notes/voice-theirs.webm';
+    // Pre-seed two voice messages — one outgoing (variant 'mine') and
+    // one incoming (variant 'theirs') — so we exercise both bubble
+    // variants of the shared registry in a single test.
+    conversation.messages.push(
+      makeVoiceMessage({
+        id: 'seed-mine',
+        senderId: FAKE_USER.id,
+        receiverId: FRIEND.id,
+        attachmentUrl: minePath,
+      }),
+      makeVoiceMessage({
+        id: 'seed-theirs',
+        senderId: FRIEND.id,
+        receiverId: FAKE_USER.id,
+        attachmentUrl: theirsPath,
+      }),
+    );
+
+    await page.goto(`/messenger?chat=${FRIEND.id}`);
+
+    // Both bubbles must be mounted before we start poking play buttons,
+    // otherwise the second click can race the GET poll that hydrates the
+    // thread state.
+    await expect(page.locator(`audio[src="${minePath}"]`)).toHaveCount(1);
+    await expect(page.locator(`audio[src="${theirsPath}"]`)).toHaveCount(1);
+
+    // Sanity: nothing is playing initially.
+    expect(await audioPaused(page, minePath)).toBe(true);
+    expect(await audioPaused(page, theirsPath)).toBe(true);
+
+    // Tap play on the first (outgoing) bubble.
+    await clickAudioPlayButton(page, minePath);
+    await expect.poll(() => audioPaused(page, minePath)).toBe(false);
+    expect(await audioPaused(page, theirsPath)).toBe(true);
+    // The bubble UI flips to a Pause label as soon as the native
+    // `play` event fires — confirms the registry didn't leave the
+    // bubble's `playing` state out of sync with the audio element.
+    await expect(
+      page.getByRole('button', { name: 'Pause voice message' }),
+    ).toHaveCount(1);
+
+    // Tap play on the second (incoming) bubble. The registry must
+    // synchronously pause the first audio *before* the second starts
+    // playing, so they never overlap — even briefly.
+    await clickAudioPlayButton(page, theirsPath);
+    await expect.poll(() => audioPaused(page, minePath)).toBe(true);
+    await expect.poll(() => audioPaused(page, theirsPath)).toBe(false);
+    // Exactly one bubble should report a Pause label (the second one).
+    await expect(
+      page.getByRole('button', { name: 'Pause voice message' }),
+    ).toHaveCount(1);
+    await expect(
+      page.getByRole('button', { name: 'Play voice message' }),
+    ).toHaveCount(1);
+  });
+
+  test('playing a sent bubble pauses the composer preview (preview + mine registry)', async ({ page }) => {
+    await installBrowserStubs(page, { mimeTypes: ['audio/webm'] });
+    await installFakeAudioPlayback(page);
+    await setupMessengerStubs(page);
+    const conversation = await setupConversationRoute(page);
+
+    await page.route('**/objects/**', (route) =>
+      route.fulfill({ status: 200, body: '' }),
+    );
+
+    const bubblePath = '/objects/uploads/voice-notes/voice-existing.webm';
+    conversation.messages.push(
+      makeVoiceMessage({
+        id: 'seed-existing',
+        senderId: FAKE_USER.id,
+        receiverId: FRIEND.id,
+        attachmentUrl: bubblePath,
+      }),
+    );
+
+    await page.goto(`/messenger?chat=${FRIEND.id}`);
+    await expect(page.locator(`audio[src="${bubblePath}"]`)).toHaveCount(1);
+
+    // Drive the recorder into the preview state without sending — that
+    // surfaces the composer's `<VoiceWaveform variant="preview">` row,
+    // which shares the same module-level registry as the bubbles.
+    await page.getByRole('button', { name: 'Record voice message' }).click();
+    await expect(page.getByText('Recording')).toBeVisible();
+    await page
+      .getByRole('button', { name: 'Finish recording and preview' })
+      .click();
+    await expect(
+      page.getByRole('button', { name: 'Play voice preview' }),
+    ).toBeVisible();
+
+    // The preview's <audio> uses an in-memory blob: URL so we can't
+    // pin it down by a stable src; pick the one audio element whose
+    // src isn't the seeded bubble path.
+    const previewSrc = await page.evaluate((bubble) => {
+      const audios = Array.from(document.querySelectorAll('audio'));
+      const preview = audios.find((a) => a.getAttribute('src') !== bubble);
+      return preview ? preview.getAttribute('src') : null;
+    }, bubblePath);
+    expect(previewSrc).toBeTruthy();
+
+    // Start playback on the composer preview row.
+    await page.getByRole('button', { name: 'Play voice preview' }).click();
+    await expect.poll(() => audioPaused(page, previewSrc)).toBe(false);
+    expect(await audioPaused(page, bubblePath)).toBe(true);
+
+    // Now tap play on the previously-sent bubble. The registry must
+    // pause the preview audio so the two clips don't overlap.
+    await clickAudioPlayButton(page, bubblePath);
+    await expect.poll(() => audioPaused(page, previewSrc)).toBe(true);
+    await expect.poll(() => audioPaused(page, bubblePath)).toBe(false);
+
+    // The preview row's button label flips back to "Play voice
+    // preview" because the registry's pause fired the native `pause`
+    // event on the preview audio, which clears its bubble's
+    // `playing` state.
+    await expect(
+      page.getByRole('button', { name: 'Play voice preview' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Pause voice message' }),
+    ).toHaveCount(1);
   });
 });
