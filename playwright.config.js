@@ -34,6 +34,15 @@ module.exports = defineConfig({
       use: { ...devices['Desktop Firefox'], viewport: { width: 1280, height: 800 } },
     },
     {
+      // Voice-note pipeline runs on a single desktop browser — the
+      // branching being tested is in MessagesPanel.js (mime selection,
+      // Content-Type matching, POST shape) and is browser-agnostic once
+      // MediaRecorder + getUserMedia are stubbed.
+      name: 'chromium-voice-note',
+      testMatch: /messenger-voice-note\.spec\.js$/,
+      use: { ...devices['Desktop Chrome'], viewport: { width: 1280, height: 800 } },
+    },
+    {
       name: 'webkit-mobile',
       testMatch: /messenger-click-trap\.mobile\.spec\.js$/,
       use: { ...devices['iPhone 14 Pro'] },
