@@ -66,8 +66,26 @@ export function CartoonChip({
       }}
     >
       {icon ? (
-        <span aria-hidden="true" style={{ fontSize: fontSize + 1, lineHeight: 1 }}>
-          {icon}
+        <span
+          aria-hidden="true"
+          style={{
+            fontSize: fontSize + 1,
+            lineHeight: 1,
+            // Force the system color-emoji font to win over any
+            // inherited UI font, and reset the text color so the
+            // chip's dark `color` (used to make the white label
+            // readable on the bright gradient when selected) cannot
+            // tint the glyph into text-presentation / monochrome
+            // mode on iOS Safari and Android Chrome.
+            fontFamily:
+              '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", "Android Emoji", sans-serif',
+            color: 'initial',
+          }}
+        >
+          {/* Append the emoji variation selector (U+FE0F) so platforms
+              that default ambiguous codepoints to text presentation
+              still pick the color-emoji glyph. */}
+          {`${icon}\uFE0F`}
         </span>
       ) : null}
       <span style={{ lineHeight: 1.1 }}>{label}</span>
