@@ -5,6 +5,7 @@ import { useBetSlip } from '../../contexts/BetSlipContext';
 import { useGames } from '../../contexts/GamesContext';
 import LiveGameTracker from '../../components/LiveGameTracker';
 import { useUserPreferences } from '../../contexts/UserPreferencesContext';
+import { leavePage } from '../../utils/leavePage';
 
 export default function GameDetail() {
   const router = useRouter();
@@ -195,7 +196,7 @@ export default function GameDetail() {
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
         <p className="text-xl mb-4">Game not found</p>
         <button 
-          onClick={() => router.back()}
+          onClick={() => leavePage({ router, fallbackHref: '/dashboard' })}
           className="bg-green-600 px-6 py-3 rounded-lg font-semibold"
         >
           Go Back
@@ -230,7 +231,7 @@ export default function GameDetail() {
         <div className="sticky top-0 z-50 bg-black border-b border-[#1a1a1a]">
           <div className="flex items-center justify-between px-4 py-3">
             <button 
-              onClick={() => router.back()}
+              onClick={() => leavePage({ router, fallbackHref: '/dashboard' })}
               className="p-2 -ml-2 rounded-full hover:bg-[#111]"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

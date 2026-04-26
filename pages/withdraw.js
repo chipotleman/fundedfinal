@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { leavePage } from '../utils/leavePage';
 
 export default function Withdraw() {
   const [selectedMethod, setSelectedMethod] = useState('');
@@ -256,7 +257,7 @@ export default function Withdraw() {
               </p>
             </div>
             <button
-              onClick={() => router.back()}
+              onClick={() => leavePage({ router, fallbackHref: '/dashboard' })}
               className="bg-white/20 hover:bg-white/30 rounded-lg p-2 transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
