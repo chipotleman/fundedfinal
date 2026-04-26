@@ -4,6 +4,7 @@ import BattleChat from './BattleChat';
 import QuickMatchModal from './QuickMatchModal';
 import { formatMoney } from '../../utils/formatMoney';
 import UserAvatar from '../UserAvatar';
+import MutualFriendsLine from '../social/MutualFriendsLine';
 import { useProfileCacheOptional } from '../../contexts/ProfileCacheContext';
 import { useMatchup } from '../../contexts/MatchupContext';
 import { getBattleStreamClient } from '../../lib/battleStreamClient';
@@ -468,6 +469,15 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
                     <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5 truncate">
                       {user1.username || 'Player 1'}'s picks
                     </div>
+                    {user1.id && (
+                      <div className="mb-1.5">
+                        <MutualFriendsLine
+                          userId={user1.id}
+                          username={user1.username}
+                          size="xs"
+                        />
+                      </div>
+                    )}
                     <div className="space-y-1.5">
                       {picks.user1.length === 0 ? (
                         <div className="text-[10px] text-gray-600">No picks yet</div>
@@ -480,6 +490,15 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
                     <div className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 mb-1.5 truncate text-right">
                       {user2.username || 'Player 2'}'s picks
                     </div>
+                    {user2.id && (
+                      <div className="mb-1.5 flex justify-end">
+                        <MutualFriendsLine
+                          userId={user2.id}
+                          username={user2.username}
+                          size="xs"
+                        />
+                      </div>
+                    )}
                     <div className="space-y-1.5">
                       {picks.user2.length === 0 ? (
                         <div className="text-[10px] text-gray-600 text-right">No picks yet</div>
@@ -667,6 +686,15 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
                   <div className="flex items-center gap-1.5 mb-2">
                     <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">{user1.username}'s Picks</span>
                   </div>
+                  {user1.id && (
+                    <div className="mb-2">
+                      <MutualFriendsLine
+                        userId={user1.id}
+                        username={user1.username}
+                        size="xs"
+                      />
+                    </div>
+                  )}
                   <div className="space-y-1.5">
                     {picks.user1.map((pick, i) => (
                       <PickPill key={i} pick={pick} />
@@ -677,6 +705,15 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
                   <div className="flex items-center gap-1.5 mb-2 justify-end">
                     <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500">{user2.username}'s Picks</span>
                   </div>
+                  {user2.id && (
+                    <div className="mb-2 flex justify-end">
+                      <MutualFriendsLine
+                        userId={user2.id}
+                        username={user2.username}
+                        size="xs"
+                      />
+                    </div>
+                  )}
                   <div className="space-y-1.5">
                     {picks.user2.map((pick, i) => (
                       <PickPill key={i} pick={pick} />

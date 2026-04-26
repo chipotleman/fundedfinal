@@ -5,6 +5,7 @@ import { formatMoney } from '../utils/formatMoney';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import AchievementBadge from './AchievementBadge';
 import AchievementDetailModal from './AchievementDetailModal';
+import MutualFriendsLine from './social/MutualFriendsLine';
 
 export default function ProfileModal({ profile, isOpen, onClose }) {
   useModalScrollLock(isOpen);
@@ -25,13 +26,20 @@ export default function ProfileModal({ profile, isOpen, onClose }) {
           <div className="flex justify-between items-start mb-6">
             <div>
               <h2 className="text-3xl font-bold text-white">{profile.username}</h2>
-              <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-medium ${
-                profile.tier === 'Elite' ? 'bg-blue-500/20 text-blue-400' :
-                profile.tier === 'Pro' ? 'bg-cyan-500/20 text-cyan-400' :
-                'bg-green-500/20 text-green-400'
-              }`}>
-                {profile.tier} User
-              </span>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                  profile.tier === 'Elite' ? 'bg-blue-500/20 text-blue-400' :
+                  profile.tier === 'Pro' ? 'bg-cyan-500/20 text-cyan-400' :
+                  'bg-green-500/20 text-green-400'
+                }`}>
+                  {profile.tier} User
+                </span>
+                <MutualFriendsLine
+                  userId={profile.id}
+                  username={profile.username}
+                  onProfileNavigate={onClose}
+                />
+              </div>
             </div>
             <button
               onClick={onClose}

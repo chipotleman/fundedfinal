@@ -5,6 +5,7 @@ import Head from 'next/head';
 import TopNavbar from '../components/TopNavbar';
 import UserAvatar from '../components/UserAvatar';
 import MessagePopup from '../components/messages/MessagePopup';
+import MutualFriendsLine from '../components/social/MutualFriendsLine';
 import { useProfileCache } from '../contexts/ProfileCacheContext';
 import { useNotifications } from '../contexts/NotificationsContext';
 import { useMatchup } from '../contexts/MatchupContext';
@@ -346,9 +347,16 @@ export default function FriendsPage() {
                     {searchResults.map((user) => (
                       <div key={user.id} className="flex items-center gap-3 p-4">
                         <UserAvatar user={user} size={40} />
-                        <div className="flex-1">
-                          <p className="font-medium">{user.username}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{user.username}</p>
                           <p className="text-xs text-gray-400">{user.battleWins || 0}W - {user.battleLosses || 0}L</p>
+                          <div className="mt-1">
+                            <MutualFriendsLine
+                              userId={user.id}
+                              username={user.username}
+                              size="xs"
+                            />
+                          </div>
                         </div>
                         <button onClick={() => handleAddFriend(user.id)} className="px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm">Add</button>
                       </div>
