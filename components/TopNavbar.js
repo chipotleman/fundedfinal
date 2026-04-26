@@ -14,10 +14,19 @@ import MessagesDropdown from './notifications/MessagesDropdown';
 import MessagePopup from './messages/MessagePopup';
 import { formatMoney } from '../utils/formatMoney';
 
-export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
+export default function TopNavbar({
+  betSlipCount,
+  onBetSlipClick,
+  pinned = true,
+  condensedEngaged = false,
+  renderCondensedSportPills,
+}) {
   const { betSlip: ctxBetSlip, showBetSlip: ctxShowBetSlip, setShowBetSlip: ctxSetShowBetSlip } = useBetSlip();
   const effectiveBetSlipCount = betSlipCount !== undefined ? betSlipCount : (ctxBetSlip?.length || 0);
   const effectiveOnBetSlipClick = onBetSlipClick || (() => ctxSetShowBetSlip(!ctxShowBetSlip));
+  const condensedBarRef = useRef(null);
+  const hasCondensedBar = !!renderCondensedSportPills;
+  const showCondensedBar = hasCondensedBar && condensedEngaged;
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showBalanceModal, setShowBalanceModal] = useState(false);
@@ -70,19 +79,43 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
     };
   }, [router]);
   
-  // Measure and expose navbar height as CSS variable for sticky elements below
+  // Measure and expose navbar height as CSS variable for sticky elements below.
+  // The variable must reflect WHICHEVER bar is currently pinned at the top of
+  // the viewport so downstream sticky elements line up correctly:
+  //   - condensed bar engaged  → its height
+  //   - main nav is pinned      → main nav height
+  //   - main nav is unpinned and condensed bar not yet engaged → 0
+  //     (nothing is pinned, so sticky children should sit at the very top)
+  // Recompute on resize, orientation change, and engagement / pinned flips.
   useEffect(() => {
     const updateNavHeight = () => {
-      if (navRef.current) {
-        const height = navRef.current.offsetHeight;
-        document.documentElement.style.setProperty('--top-nav-height', `${height}px`);
+      let height = 0;
+      if (showCondensedBar && condensedBarRef.current) {
+        height = condensedBarRef.current.offsetHeight;
+      } else if (pinned && navRef.current) {
+        height = navRef.current.offsetHeight;
+      } else {
+        height = 0;
       }
+      document.documentElement.style.setProperty('--top-nav-height', `${height}px`);
     };
-    
+
     updateNavHeight();
+    // Re-measure on the next frame too — the condensed bar may have just
+    // mounted and its layout dimensions may not be final yet.
+    const raf = typeof requestAnimationFrame === 'function'
+      ? requestAnimationFrame(updateNavHeight)
+      : null;
     window.addEventListener('resize', updateNavHeight);
-    return () => window.removeEventListener('resize', updateNavHeight);
-  }, []);
+    window.addEventListener('orientationchange', updateNavHeight);
+    return () => {
+      if (raf !== null && typeof cancelAnimationFrame === 'function') {
+        cancelAnimationFrame(raf);
+      }
+      window.removeEventListener('resize', updateNavHeight);
+      window.removeEventListener('orientationchange', updateNavHeight);
+    };
+  }, [showCondensedBar, pinned]);
   
   // Derive isLoggedIn directly from session status for instant rendering
   const isLoggedIn = status === 'authenticated' || (typeof window !== 'undefined' && !!localStorage.getItem('current_user'));
@@ -494,7 +527,12 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
 
   return (
     <>
-      <nav ref={navRef} data-topnavbar="true" className="sticky top-0 left-0 right-0 z-50" style={{ backgroundColor: '#000000' }}>
+      <nav
+        ref={navRef}
+        data-topnavbar="true"
+        className={`${pinned ? 'sticky top-0' : 'relative'} left-0 right-0 z-50`}
+        style={{ backgroundColor: '#000000' }}
+      >
         <div className="px-3 sm:px-6 h-[70px] sm:h-auto sm:py-1 sm:-mb-6 flex items-center">
           <div className="flex items-center justify-between w-full sm:justify-between min-h-[70px] sm:min-h-[48px] relative">
             {/* Logo - absolutely positioned on mobile to not affect bar height */}
@@ -893,6 +931,92 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
           </div>
         </div>
       </nav>
+
+      {/* Condensed sticky header — only when a parent (e.g. dashboard) opts in
+          via renderCondensedSportPills AND its sentinel says we're scrolled
+          past the original sport row. Mounts/unmounts on every engagement
+          flip so mobile re-engages on every scroll-up-then-down pass. */}
+      {showCondensedBar && (
+        <div
+          ref={condensedBarRef}
+          data-topnavbar="true"
+          data-condensed-topnavbar="true"
+          className="fixed top-0 left-0 right-0 z-50"
+          style={{
+            backgroundColor: '#000000',
+            paddingTop: 'env(safe-area-inset-top, 0px)',
+            paddingLeft: 'env(safe-area-inset-left, 0px)',
+            paddingRight: 'env(safe-area-inset-right, 0px)',
+            borderBottom: '1px solid rgba(255,255,255,0.06)',
+          }}
+        >
+          <div className="px-3 sm:px-6 py-1.5 flex items-center gap-2 sm:gap-3 min-h-[52px] sm:min-h-[56px]">
+            {/* Logo / scroll-to-top */}
+            <a
+              href="/"
+              onClick={(e) => {
+                if (typeof window !== 'undefined' && window.location.pathname === '/') {
+                  e.preventDefault();
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+              }}
+              className="flex items-center flex-shrink-0"
+              aria-label="Piks home"
+            >
+              <span
+                className="font-black bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent"
+                style={{ fontSize: 22, letterSpacing: '-0.02em' }}
+              >
+                piks
+              </span>
+            </a>
+
+            {/* Sport pills (rendered by parent so selection stays in sync) */}
+            <div className="flex-1 min-w-0 overflow-hidden">
+              {renderCondensedSportPills && renderCondensedSportPills()}
+            </div>
+
+            {/* Cash balance — same source as the desktop pill in the full nav */}
+            {isLoggedIn && hasActiveChallenge && userProfile && (
+              <button
+                onClick={() => setExplainerType('cash')}
+                title="Real cash balance — click for details"
+                className="flex-shrink-0 flex items-center gap-1 rounded-md px-2 py-1.5 transition-colors hover:brightness-110"
+                style={{
+                  background: 'linear-gradient(180deg, rgba(34,197,94,0.15) 0%, rgba(21,128,61,0.08) 100%)',
+                  border: '1px solid rgba(34,197,94,0.45)',
+                }}
+              >
+                <span className="text-xs leading-none">💵</span>
+                <span className="font-bold text-xs whitespace-nowrap" style={{ color: '#86efac' }}>
+                  ${formatMoney(parseFloat(userProfile.bankroll), 0)}
+                </span>
+              </button>
+            )}
+
+            {/* Bet slip mirror — only when slip has items */}
+            {effectiveBetSlipCount > 0 && (
+              <button
+                onClick={effectiveOnBetSlipClick}
+                className="relative flex-shrink-0 font-bold py-1.5 px-2 sm:px-3 rounded-md flex items-center space-x-1 text-xs no-hover-effect"
+                style={{ backgroundColor: '#2563eb', color: '#ffffff' }}
+                aria-label="Open bet slip"
+              >
+                <svg className="w-3.5 h-3.5" style={{ fill: '#ffffff' }} viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
+                </svg>
+                <span style={{ color: '#ffffff' }}>Slip</span>
+                <span
+                  className="absolute -top-1 -right-1 bg-red-500 text-[10px] rounded-full h-4 min-w-[16px] px-1 flex items-center justify-center"
+                  style={{ color: '#ffffff' }}
+                >
+                  {effectiveBetSlipCount}
+                </span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {hasActiveChallenge && userProfile && (
         <BalanceModal

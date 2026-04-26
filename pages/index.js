@@ -878,13 +878,137 @@ export default function Dashboard() {
     setSelectedSport(sport);
   };
 
+  // Sticky condensed-header engagement: when the sentinel placed just
+  // above the sport-choice row scrolls past the top of the viewport, swap
+  // the full top-nav for a slim condensed bar. We use IntersectionObserver
+  // (root: null) so the engaged/disengaged state re-fires on every
+  // scroll-up-then-down pass — the previous direct-scroll handler worked
+  // once on iOS Safari and then got stuck.
+  //
+  // The sentinel is wired through a state variable + callback ref so that
+  // if the underlying DOM node changes for any reason (route transition
+  // back to the dashboard, conditional re-mount, etc.) the observer is
+  // torn down and re-created against the new node. A plain `useRef` would
+  // not trigger that re-bind.
+  const [sentinelNode, setSentinelNode] = useState(null);
+  const setSportRowSentinelRef = useCallback((node) => {
+    setSentinelNode(node || null);
+  }, []);
+  const [stickyEngaged, setStickyEngaged] = useState(false);
+
+  useEffect(() => {
+    if (!sentinelNode || typeof IntersectionObserver === 'undefined') return undefined;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry) return;
+        // Engage only when the sentinel has scrolled ABOVE the top edge —
+        // i.e. it's no longer intersecting AND its rect is above the
+        // viewport. That way scrolling back up past the sentinel
+        // disengages, and the next downward pass re-engages cleanly.
+        const above = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+        setStickyEngaged((prev) => (prev === above ? prev : above));
+      },
+      { root: null, threshold: 0 }
+    );
+    observer.observe(sentinelNode);
+    return () => {
+      observer.disconnect();
+    };
+  }, [sentinelNode]);
+
+  // Reusable sport-pill row. Rendered inline at the top of the page AND
+  // inside the condensed sticky header — both share the same selectedSport
+  // state so picking a sport in either updates both immediately.
+  const renderSportPills = (variant = 'inline') => {
+    const isCondensed = variant === 'condensed';
+    const pillPadding = isCondensed ? '6px 12px' : '10px 16px';
+    const pillFontSize = isCondensed ? '12px' : '14px';
+    const iconSize = isCondensed ? '13px' : '16px';
+    return (
+      <div
+        className={`flex items-center space-x-2 overflow-x-auto scrollbar-hide ${isCondensed ? '' : 'pb-1'}`}
+        style={isCondensed ? { WebkitOverflowScrolling: 'touch' } : undefined}
+      >
+        {isDemoMode && (
+          <div className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10">
+            <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></div>
+            <span className="text-cyan-400 text-[10px] font-bold uppercase tracking-wider">Demo</span>
+          </div>
+        )}
+        <TapSurface
+          onTap={() => handleSportClick('Live')}
+          isActive={selectedSport === 'Live'}
+          activeColor="#dc2626"
+          inactiveColor="transparent"
+          activeTextColor="#ffffff"
+          inactiveTextColor={'#9ca3af'}
+          style={{
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: pillPadding,
+            borderRadius: '9999px',
+            fontSize: pillFontSize,
+            fontWeight: '600',
+            borderWidth: '1px',
+            borderStyle: 'solid',
+            borderColor: selectedSport === 'Live' ? '#dc2626' : ('#1f2937')
+          }}
+        >
+          <span
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: selectedSport === 'Live' ? '#ffffff' : (categorizedGames.liveGames.length > 0 ? '#ef4444' : '#6b7280')
+            }}
+          ></span>
+          <span>Live {categorizedGames.liveGames.length > 0 && `(${categorizedGames.liveGames.length})`}</span>
+        </TapSurface>
+        {sports.map((sport) => (
+          <TapSurface
+            key={sport}
+            onTap={() => handleSportClick(sport)}
+            isActive={selectedSport === sport}
+            activeColor={'#1a1a1a'}
+            inactiveColor="transparent"
+            activeTextColor={'#ffffff'}
+            inactiveTextColor={'#9ca3af'}
+            style={{
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: pillPadding,
+              borderRadius: '9999px',
+              fontSize: pillFontSize,
+              fontWeight: '500',
+              borderWidth: '1px',
+              borderStyle: 'solid',
+              borderColor: selectedSport === sport ? ('#4b5563') : ('#1f2937')
+            }}
+          >
+            <span style={{ fontSize: iconSize }}>{getSportIcon(sport)}</span>
+            <span>{getSportLabel(sport)}</span>
+          </TapSurface>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#000000' }}>
-      <TopNavbar 
+      <TopNavbar
         bankroll={bankroll}
         pnl={pnl}
         betSlipCount={betSlip.length}
         onBetSlipClick={handleBetSlipClick}
+        pinned={false}
+        condensedEngaged={stickyEngaged}
+        renderCondensedSportPills={() => renderSportPills('condensed')}
       />
 
       <div className="pt-3 sm:pt-4 lg:pt-5 px-4 sm:px-6 lg:px-8 pb-24 sm:pb-16">
@@ -892,79 +1016,20 @@ export default function Dashboard() {
           <PromoCarousel slides={promoSlides} />
         </div>
 
-        <div 
-          className="sticky z-40 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-2 mb-3"
-          style={{ 
-            top: 'var(--top-nav-height, 70px)',
-            backgroundColor: '#000000',
-          }}
+        {/* Sentinel: placed immediately above the inline sport-choice row.
+            When this scrolls above the top of the viewport the condensed
+            sticky header takes over (see IntersectionObserver above). */}
+        <div
+          ref={setSportRowSentinelRef}
+          aria-hidden="true"
+          style={{ height: 1, width: '100%', pointerEvents: 'none' }}
+        />
+
+        <div
+          className="-mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-2 mb-3"
+          style={{ backgroundColor: '#000000' }}
         >
-          <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-hide">
-            {isDemoMode && (
-              <div className="flex-shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full border border-cyan-500/30 bg-cyan-500/10">
-                <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></div>
-                <span className="text-cyan-400 text-[10px] font-bold uppercase tracking-wider">Demo</span>
-              </div>
-            )}
-            <TapSurface
-              onTap={() => handleSportClick('Live')}
-              isActive={selectedSport === 'Live'}
-              activeColor="#dc2626"
-              inactiveColor="transparent"
-              activeTextColor="#ffffff"
-              inactiveTextColor={'#9ca3af'}
-              style={{
-                flexShrink: 0,
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '10px 16px',
-                borderRadius: '9999px',
-                fontSize: '14px',
-                fontWeight: '600',
-                borderWidth: '1px',
-                borderStyle: 'solid',
-                borderColor: selectedSport === 'Live' ? '#dc2626' : ('#1f2937')
-              }}
-            >
-              <span 
-                style={{
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  backgroundColor: selectedSport === 'Live' ? '#ffffff' : (categorizedGames.liveGames.length > 0 ? '#ef4444' : '#6b7280')
-                }}
-              ></span>
-              <span>Live {categorizedGames.liveGames.length > 0 && `(${categorizedGames.liveGames.length})`}</span>
-            </TapSurface>
-            {sports.map((sport) => (
-              <TapSurface
-                key={sport}
-                onTap={() => handleSportClick(sport)}
-                isActive={selectedSport === sport}
-                activeColor={'#1a1a1a'}
-                inactiveColor="transparent"
-                activeTextColor={'#ffffff'}
-                inactiveTextColor={'#9ca3af'}
-                style={{
-                  flexShrink: 0,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '10px 16px',
-                  borderRadius: '9999px',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  borderWidth: '1px',
-                  borderStyle: 'solid',
-                  borderColor: selectedSport === sport ? ('#4b5563') : ('#1f2937')
-                }}
-              >
-                <span style={{ fontSize: '16px' }}>{getSportIcon(sport)}</span>
-                <span>{getSportLabel(sport)}</span>
-              </TapSurface>
-            ))}
-          </div>
+          {renderSportPills('inline')}
         </div>
 
         <LiveBattlesSection
