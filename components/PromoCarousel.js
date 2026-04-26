@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
+import { trackPromoEvent } from '../lib/promoTracking';
 
 const AUTO_ADVANCE_MS = 5000;
 const RESUME_DELAY_MS = 600;
@@ -26,6 +27,7 @@ export default function PromoCarousel({ slides }) {
   const programmaticRef = useRef(false);
   const programmaticTimeoutRef = useRef(null);
   const resumeTimeoutRef = useRef(null);
+  const seenImpressionsRef = useRef(new Set());
 
   const [activeIndex, setActiveIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -36,9 +38,14 @@ export default function PromoCarousel({ slides }) {
       if (s == null || s === false) return null;
       if (typeof s === 'object' && 'node' in s) {
         if (!s.node) return null;
-        return { key: s.key ?? i, node: s.node };
+        return {
+          key: s.key ?? i,
+          node: s.node,
+          slotIndex: typeof s.slotIndex === 'number' ? s.slotIndex : null,
+          containerType: s.containerType || null,
+        };
       }
-      return { key: i, node: s };
+      return { key: i, node: s, slotIndex: null, containerType: null };
     })
     .filter(Boolean);
   const count = visible.length;
@@ -48,6 +55,22 @@ export default function PromoCarousel({ slides }) {
     if (count === 0) return;
     if (activeIndex >= count) setActiveIndex(0);
   }, [count, activeIndex]);
+
+  // Fire an impression event whenever a new slide becomes the active one.
+  // Dedup per (slotIndex, containerType) for the lifetime of this mount so
+  // auto-advancing past the same slide repeatedly doesn't inflate counts.
+  useEffect(() => {
+    if (count === 0) return;
+    const slide = visible[activeIndex];
+    if (!slide || slide.slotIndex == null || !slide.containerType) return;
+    const key = `${slide.slotIndex}:${slide.containerType}`;
+    if (seenImpressionsRef.current.has(key)) return;
+    seenImpressionsRef.current.add(key);
+    trackPromoEvent('promo_impression', {
+      slotIndex: slide.slotIndex,
+      containerType: slide.containerType,
+    });
+  }, [activeIndex, count, visible]);
 
   const scrollToIndex = useCallback((idx, smooth = true) => {
     const container = containerRef.current;
@@ -146,6 +169,14 @@ export default function PromoCarousel({ slides }) {
     scrollToIndex(idx, true);
   };
 
+  const handleSlideClick = (slide) => {
+    if (slide.slotIndex == null || !slide.containerType) return;
+    trackPromoEvent('promo_click', {
+      slotIndex: slide.slotIndex,
+      containerType: slide.containerType,
+    });
+  };
+
   return (
     <div
       className="relative"
@@ -174,6 +205,7 @@ export default function PromoCarousel({ slides }) {
             role="group"
             aria-roledescription="slide"
             aria-label={`Slide ${i + 1} of ${count}`}
+            onClickCapture={() => handleSlideClick(slide)}
           >
             {slide.node}
           </div>

@@ -70,6 +70,7 @@ export default async function handler(req, res) {
       eventsByType,
       topPages,
       recentEvents,
+      promoSlotStats,
     ] = await Promise.all([
       sql`SELECT COUNT(*) as count FROM user_events WHERE created_at > ${startDateStr}`.catch(() => [{ count: 0 }]),
       sql`SELECT COUNT(DISTINCT session_id) as count FROM session_metrics WHERE created_at > ${startDateStr}`.catch(() => [{ count: 0 }]),
@@ -98,6 +99,20 @@ export default async function handler(req, res) {
         ORDER BY created_at DESC 
         LIMIT 20
       `.catch(() => []),
+      sql`
+        SELECT
+          (event_data->>'slotIndex')::int AS slot_index,
+          event_data->>'containerType' AS container_type,
+          COUNT(*) FILTER (WHERE event_type = 'promo_impression') AS impressions,
+          COUNT(*) FILTER (WHERE event_type = 'promo_click') AS clicks
+        FROM user_events
+        WHERE created_at > ${startDateStr}
+          AND event_type IN ('promo_impression', 'promo_click')
+          AND event_data ? 'slotIndex'
+          AND event_data ? 'containerType'
+        GROUP BY slot_index, container_type
+        ORDER BY slot_index ASC, impressions DESC
+      `.catch(() => []),
     ]);
 
     return res.status(200).json({
@@ -116,6 +131,12 @@ export default async function handler(req, res) {
         eventType: e.event_type,
         pageUrl: e.page_url,
         createdAt: e.created_at,
+      })),
+      promoSlotStats: promoSlotStats.map(r => ({
+        slotIndex: r.slot_index,
+        containerType: r.container_type,
+        impressions: parseInt(r.impressions || 0),
+        clicks: parseInt(r.clicks || 0),
       })),
     });
   } catch (error) {

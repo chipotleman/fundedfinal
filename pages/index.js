@@ -75,7 +75,12 @@ export default function Dashboard() {
         if (!render) return null;
         const node = render();
         if (!node) return null;
-        return { key: `${i}-${slot.containerType}`, node };
+        return {
+          key: `${i}-${slot.containerType}`,
+          node,
+          slotIndex: i,
+          containerType: slot.containerType,
+        };
       })
       .filter(Boolean);
   }, [promoSlots]);
