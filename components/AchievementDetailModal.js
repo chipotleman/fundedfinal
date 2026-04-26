@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import useModalScrollLock from '../hooks/useModalScrollLock';
 import AchievementBadge from './AchievementBadge';
 import { getBadgeForAchievement } from '../lib/achievementBadges';
@@ -23,11 +23,23 @@ function formatDate(iso) {
   }
 }
 
-export default function AchievementDetailModal({ achievement, isOpen, onClose }) {
+export default function AchievementDetailModal({
+  achievement,
+  isOpen,
+  onClose,
+  canShare = false,
+  viewerProfileId = null,
+  viewerUsername = null,
+}) {
   useModalScrollLock(isOpen);
   const closeBtnRef = useRef(null);
   const dialogRef = useRef(null);
   const previousFocusRef = useRef(null);
+  const [shareState, setShareState] = useState({ status: 'idle', message: '' });
+
+  useEffect(() => {
+    if (!isOpen) setShareState({ status: 'idle', message: '' });
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -114,6 +126,86 @@ export default function AchievementDetailModal({ achievement, isOpen, onClose })
   const pct = Math.max(0, Math.min(100, Number(progressPercent) || 0));
   const earnedDate = formatDate(earnedAt);
 
+  const shareEligible =
+    !!earned && !!canShare && !!viewerProfileId && !!achievementId;
+  const shareUsername = (viewerUsername || '').replace(/^@/, '');
+
+  const handleShare = async () => {
+    if (!shareEligible || shareState.status === 'loading') return;
+    if (typeof window === 'undefined') return;
+
+    setShareState({ status: 'loading', message: '' });
+
+    const origin = window.location.origin;
+    const profilePath = `/profile/${encodeURIComponent(viewerProfileId)}`;
+    const shareUrl = `${origin}${profilePath}`;
+    const shareText = `I just unlocked the ${displayName} ${rarity} badge on Piks!`;
+    const shareTitle = `${displayName} unlocked on Piks`;
+    const imagePath = `/api/og/badge/${encodeURIComponent(achievementId)}?u=${encodeURIComponent(shareUsername || 'Player')}`;
+    const imageUrl = `${origin}${imagePath}`;
+
+    const nav = typeof navigator !== 'undefined' ? navigator : null;
+
+    if (nav && typeof nav.share === 'function') {
+      try {
+        if (typeof nav.canShare === 'function') {
+          try {
+            const res = await fetch(imageUrl);
+            if (res.ok) {
+              const blob = await res.blob();
+              const file = new File(
+                [blob],
+                `${achievementId}-piks.png`,
+                { type: blob.type || 'image/png' }
+              );
+              if (nav.canShare({ files: [file] })) {
+                await nav.share({
+                  files: [file],
+                  title: shareTitle,
+                  text: shareText,
+                  url: shareUrl,
+                });
+                setShareState({ status: 'success', message: 'Shared!' });
+                return;
+              }
+            }
+          } catch (err) {
+            if (err && err.name === 'AbortError') {
+              setShareState({ status: 'idle', message: '' });
+              return;
+            }
+          }
+        }
+
+        await nav.share({
+          title: shareTitle,
+          text: shareText,
+          url: shareUrl,
+        });
+        setShareState({ status: 'success', message: 'Shared!' });
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') {
+          setShareState({ status: 'idle', message: '' });
+          return;
+        }
+      }
+    }
+
+    try {
+      if (nav && nav.clipboard && typeof nav.clipboard.writeText === 'function') {
+        await nav.clipboard.writeText(shareUrl);
+        setShareState({ status: 'success', message: 'Link copied!' });
+        return;
+      }
+    } catch (_) {}
+
+    setShareState({
+      status: 'error',
+      message: 'Sharing is not available — try again from your phone.',
+    });
+  };
+
   return (
     <div
       className="achv-modal-root fixed inset-0 z-[60] flex items-center justify-center p-4"
@@ -186,21 +278,98 @@ export default function AchievementDetailModal({ achievement, isOpen, onClose })
 
           <div className="w-full mt-5">
             {earned ? (
-              <div
-                className="rounded-lg px-3 py-2 text-sm flex items-center justify-center gap-2"
-                style={{
-                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                  border: '1px solid rgba(16, 185, 129, 0.3)',
-                  color: '#6ee7b7',
-                }}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>
-                  Unlocked{earnedDate ? ` · ${earnedDate}` : ''}
-                </span>
-              </div>
+              <>
+                <div
+                  className="rounded-lg px-3 py-2 text-sm flex items-center justify-center gap-2"
+                  style={{
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    border: '1px solid rgba(16, 185, 129, 0.3)',
+                    color: '#6ee7b7',
+                  }}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>
+                    Unlocked{earnedDate ? ` · ${earnedDate}` : ''}
+                  </span>
+                </div>
+                {shareEligible && (
+                  <div className="mt-3">
+                    <button
+                      type="button"
+                      onClick={handleShare}
+                      disabled={shareState.status === 'loading'}
+                      aria-label={`Share the ${displayName} badge`}
+                      className="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 disabled:opacity-60"
+                      style={{
+                        background: 'linear-gradient(90deg, #2563eb, #7c3aed)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                      }}
+                    >
+                      {shareState.status === 'loading' ? (
+                        <>
+                          <svg
+                            className="w-4 h-4 animate-spin"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            aria-hidden="true"
+                          >
+                            <circle
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeOpacity="0.3"
+                              strokeWidth="3"
+                            />
+                            <path
+                              d="M22 12a10 10 0 00-10-10"
+                              stroke="currentColor"
+                              strokeWidth="3"
+                              strokeLinecap="round"
+                            />
+                          </svg>
+                          <span>Preparing…</span>
+                        </>
+                      ) : (
+                        <>
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4-4 4M12 2v14"
+                            />
+                          </svg>
+                          <span>Share badge</span>
+                        </>
+                      )}
+                    </button>
+                    {shareState.message && (
+                      <div
+                        role="status"
+                        aria-live="polite"
+                        className="mt-2 text-xs text-center"
+                        style={{
+                          color:
+                            shareState.status === 'error'
+                              ? '#fca5a5'
+                              : '#6ee7b7',
+                        }}
+                      >
+                        {shareState.message}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
             ) : (
               <div className="text-left">
                 <div className="flex items-baseline justify-between text-xs mb-1.5">

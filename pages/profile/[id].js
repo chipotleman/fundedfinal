@@ -1209,6 +1209,9 @@ export default function PublicProfile() {
         isOpen={!!selectedAchievement}
         achievement={selectedAchievement}
         onClose={() => setSelectedAchievement(null)}
+        canShare={isOwnProfile}
+        viewerProfileId={id}
+        viewerUsername={profile?.username}
       />
     </div>
   );
