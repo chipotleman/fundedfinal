@@ -271,11 +271,19 @@ test.describe('voice-note record + upload pipeline', () => {
     await recordBtn.click();
 
     // While recording, the composer swaps in a "Recording" pill and a
-    // dedicated Send button that fires handleStopRecording → onstop.
+    // "Done" button that fires handleStopRecording → onstop, which
+    // hands off to the waveform preview state (not a direct send).
     await expect(page.getByText('Recording')).toBeVisible();
-    const sendBtn = page.getByRole('button', { name: 'Send', exact: true });
-    await expect(sendBtn).toBeVisible();
-    await sendBtn.click();
+    const doneBtn = page.getByRole('button', { name: 'Finish recording and preview' });
+    await expect(doneBtn).toBeVisible();
+    await doneBtn.click();
+
+    // The preview state surfaces a Re-record + Send pair around the
+    // captured waveform. Tapping "Send" here is what actually ships
+    // the take to the friend.
+    const previewSend = page.getByRole('button', { name: 'Send', exact: true });
+    await expect(previewSend).toBeVisible();
+    await previewSend.click();
 
     // The audio bubble renders once the POST resolves and the new
     // message is appended to the thread state.
@@ -331,6 +339,8 @@ test.describe('voice-note record + upload pipeline', () => {
 
     await page.getByRole('button', { name: 'Record voice message' }).click();
     await expect(page.getByText('Recording')).toBeVisible();
+    // Recording → preview hand-off, then preview → actual send.
+    await page.getByRole('button', { name: 'Finish recording and preview' }).click();
     await page.getByRole('button', { name: 'Send', exact: true }).click();
 
     // Bubble renders against the m4a object path returned by the (stubbed)

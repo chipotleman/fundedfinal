@@ -891,17 +891,12 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     });
   }, []);
 
-  const handleDiscardPreview = () => {
-    if (sending) return;
-    setVoiceError(null);
-    setSendError(null);
-    tearDownLingeringRecorder();
-    setResumableTake(false);
-    clearVoicePreview();
-  };
-
+  // Discard the current take and immediately arm the recorder for a fresh
+  // attempt — saves the user a tap when they didn't like what they heard.
   const handleRerecordPreview = () => {
     if (sending || recording) return;
+    setVoiceError(null);
+    setSendError(null);
     tearDownLingeringRecorder();
     setResumableTake(false);
     clearVoicePreview();
@@ -1285,7 +1280,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
         <form onSubmit={handleSend} className="p-3 flex-shrink-0" style={{ borderTop: `1px solid ${cardBorder}` }}>
           {voicePreview && !recording ? (
             <div
-              className="flex items-center gap-2 px-3 py-2 rounded-lg"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg flex-wrap"
               style={{
                 backgroundColor: inputBg,
                 border: '1px solid rgba(59,130,246,0.4)',
@@ -1297,15 +1292,6 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
                 durationMs={voicePreview.durationMs}
               />
               <div className="ml-auto flex gap-2 flex-shrink-0">
-                <button
-                  type="button"
-                  onClick={handleDiscardPreview}
-                  disabled={sending}
-                  className="px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50"
-                  style={{ backgroundColor: '#1f1f1f', color: '#e5e7eb', border: `1px solid ${cardBorder}` }}
-                >
-                  Discard
-                </button>
                 <button
                   type="button"
                   onClick={handleRerecordPreview}
@@ -1438,10 +1424,11 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
                 <button
                   type="button"
                   onClick={handleStopRecording}
+                  aria-label="Finish recording and preview"
                   className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-blue-500"
                   style={{ boxShadow: '0 0 14px rgba(59,130,246,0.5)' }}
                 >
-                  Send
+                  Done
                 </button>
               </div>
               <style>{`@keyframes piksRecPulse{0%,100%{opacity:1}50%{opacity:0.35}}`}</style>
