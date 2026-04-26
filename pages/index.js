@@ -11,6 +11,7 @@ import CasinoDepositMatchContainer from '../components/CasinoDepositMatchContain
 import FireBattleContainer from '../components/FireBattleContainer';
 import PoolContainer from '../components/PoolContainer';
 import ReferralBonusContainer from '../components/ReferralBonusContainer';
+import MostSharedBadgeContainer from '../components/MostSharedBadgeContainer';
 import PromoCarousel from '../components/PromoCarousel';
 import { DEFAULT_PROMO_SLOTS, normalizePromoSlots } from '../lib/promoSlots';
 import ForfeitConfirmedModal from '../components/ForfeitConfirmedModal';
@@ -147,6 +148,7 @@ export default function Dashboard() {
       fire_battle: () => <FireBattleContainer />,
       pool: () => <PoolContainer />,
       referral: () => <ReferralBonusContainer />,
+      most_shared_badge: () => <MostSharedBadgeContainer />,
       empty: () => null,
     };
     return promoSlots
