@@ -10,11 +10,17 @@
  *       these fields out of reach of a signed-in regular user.
  *
  *   - tests/e2e/profile-bankroll-owner-lockout.spec.js (the
- *       supplemental describe block added for task #472) — proves
- *       every OTHER client-callable handler that writes to the
- *       `profiles` table (`pages/api/user/*`, `pages/api/profiles/*`)
- *       neither reads any of these fields off `req.body` nor spreads
- *       `req.body` into a Drizzle `.set(...)` / `.values(...)`.
+ *       supplemental describe block added for task #472, broadened by
+ *       task #487) — proves every OTHER client-callable handler that
+ *       writes to the `profiles` table (`pages/api/user/*`,
+ *       `pages/api/profiles/*`, `pages/api/profile/*`,
+ *       `pages/api/bets/*`, `pages/api/pools/*`, `pages/api/battles/*`,
+ *       `pages/api/matchups/*`, `pages/api/withdrawals/*`,
+ *       `pages/api/auth/*`) and the explicitly-listed `lib/` helpers
+ *       (`lib/achievements.js`, `lib/firstDepositMatch.js`,
+ *       `lib/auth/service.ts`) neither reads any of these fields off
+ *       `req.body` nor spreads `req.body` into a Drizzle `.set(...)` /
+ *       `.values(...)`.
  *
  * Adding a new financial / settlement field here therefore re-runs
  * both lockouts for every endpoint at once, so the source-level

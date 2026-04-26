@@ -514,14 +514,119 @@ test.describe('supplemental source-level guardrails', () => {
 // dedicated allow-list-split coverage above.
 // ---------------------------------------------------------------------------
 
-const PROFILE_WRITE_SCAN_DIRS = ['pages/api/user', 'pages/api/profiles'];
+// Task #472 covered these two API directories. Task #487 broadens the
+// scan to every other directory under `pages/api/` that hosts a
+// client-callable handler writing to `profiles`. Adding a new dir here
+// auto-enrolls every `update(profiles)` / `insert(profiles)` file
+// inside it (the per-file pre-filter below ignores everything else).
+const PROFILE_WRITE_SCAN_DIRS = [
+  'pages/api/user',
+  'pages/api/profiles',
+  // Task #487: singular `pages/api/profile/` — currently just
+  // `avatar.js`, but future avatar / banner / cover handlers will land
+  // here too and are auto-covered by the recursive walk.
+  'pages/api/profile',
+  // Task #487: `place.js` writes `totalBets` / `lastBetDate` after a
+  // bet is recorded; `grade.js` writes `bankroll` after settlement.
+  'pages/api/bets',
+  // Task #487: `join.js` debits `bankroll` by the pool buy-in.
+  'pages/api/pools',
+  // Task #487: `forfeit.js` updates the winner's `bankroll` and the
+  // loser's `battleLosses` after a battle ends early.
+  'pages/api/battles',
+  // Task #487: `resolve.js` writes `battleWins` / `battleLosses` after
+  // a battle finishes by clock expiry. (Doesn't touch any FINANCIAL
+  // field today, but the file is enrolled so it can't silently start.)
+  'pages/api/matchups',
+  // Task #487: `index.ts` debits `bankroll` on withdrawal request,
+  // `[id].ts` refunds `bankroll` on withdrawal cancel.
+  'pages/api/withdrawals',
+  // Task #487: `validate-impersonation.js` rewrites `status` /
+  // `bankroll` / `challenge` / `challengePhase` from a server-derived
+  // fakeOpponent matchup balance.
+  'pages/api/auth',
+];
+
+// Task #487: server-side helpers (not under `pages/api/`) that the
+// task explicitly calls out as needing the same guardrails. Listed
+// individually because their parent dirs (`lib/`, `lib/auth/`)
+// contain many unrelated files and a recursive walk over all of
+// `lib/` would pull in dozens of helpers that don't touch `profiles`.
+// New helpers that write to `profiles` should be added here so they
+// pick up the same four invariants the API handlers do.
+const PROFILE_WRITE_EXTRA_FILES = [
+  'lib/achievements.js',
+  'lib/firstDepositMatch.js',
+  path.normalize('lib/auth/service.ts'),
+];
+
 const PROFILE_WRITE_ALREADY_COVERED = new Set([
   path.normalize('pages/api/profiles/[id].ts'),
+]);
+
+// Task #487: files where the literal-only assertion on FINANCIAL_FIELDS
+// inside `db.update(profiles).set(...)` / `db.insert(profiles).values(...)`
+// must be relaxed because the handler legitimately needs to write a
+// server-derived (NOT body-derived) value to one of these columns. The
+// other three guardrails (no FINANCIAL_FIELDS off req.body, no req.body
+// spreads, no dynamic-key reads on req.body) STILL run on every file in
+// this set — so even an exempt file is locked against the task #393
+// self-reset shape; the relaxation is strictly about the inline literal
+// check, never about request-body data flow.
+//
+// Each entry comes with a one-line justification of WHY the file must
+// write a non-literal FINANCIAL_FIELD value. Adding a new entry is a
+// flag during code review: if there isn't a clean server-side derivation
+// you can point at, the right fix is to refactor the writer, not extend
+// this set.
+// All keys are normalized via `path.normalize` so lookups stay
+// deterministic on non-POSIX platforms (Windows-style separators,
+// trailing-slash variations, etc.) — the discovery walker also stores
+// normalized `rel` paths, so both sides agree.
+const PROFILE_WRITE_LITERAL_EXEMPTIONS = new Map([
+  // `totalBets` is `(profile.totalBets || 0) + insertedBets.length`
+  // and `lastBetDate` is `new Date()`. Both come from the count of
+  // rows the handler itself just inserted into `userBets`, never from
+  // the request body.
+  [path.normalize('pages/api/bets/place.js'), 'increments totalBets / sets lastBetDate from server-side bet insert count'],
+  // `bankroll` is `parseFloat(profile.bankroll) + bankrollChange`,
+  // where `bankrollChange` is derived from each `userBets` row's
+  // settled `pnl` / `stake` (not the request).
+  [path.normalize('pages/api/bets/grade.js'), 'credits bankroll from server-side settled-bet pnl + stake'],
+  // `bankroll: (userBalance - buyInAmount).toFixed(2)`. `buyInAmount`
+  // comes from the trusted `pikPools` row, `userBalance` from the
+  // trusted `profiles` row — body only carries `poolId`.
+  [path.normalize('pages/api/pools/join.js'), 'debits bankroll by the pool row\'s buy-in, not body'],
+  // `bankroll: newBankroll.toFixed(2)` where `newBankroll` is
+  // `parseFloat(oppProfile.bankroll || 0) + winnerPayout`, and
+  // `winnerPayout` is computed from the matchup's potSize. Body is
+  // not even read by this handler.
+  [path.normalize('pages/api/battles/forfeit.js'), 'credits opponent bankroll with server-derived winnerPayout'],
+  // `bankroll: newBankroll` where `newBankroll = (currentBalance -
+  // amountNum).toFixed(2)`. `currentBalance` is from the profiles
+  // row; `amountNum` is validated against `availableToWithdraw`
+  // (computed from profile + challenge) before the deduction lands.
+  [path.normalize('pages/api/withdrawals/index.ts'), 'debits bankroll by validated withdrawal amount'],
+  // `bankroll: newBankroll` where `newBankroll = (currentBankroll +
+  // refundAmount).toFixed(2)`. Both inputs come from the profile and
+  // the previously-persisted `withdrawals` row, not the request.
+  [path.normalize('pages/api/withdrawals/[id].ts'), 'refunds bankroll on withdrawal cancel from stored withdrawal row'],
+  // `status` / `bankroll` / `challenge` / `challengePhase` are set
+  // from the totalBalance summed across the fake opponent's active
+  // `matchups` rows (server-side aggregate). The body only carries a
+  // signed JWT identifying the impersonation target.
+  [path.normalize('pages/api/auth/validate-impersonation.js'), 'syncs profile from server-side fakeOpponent matchup aggregate'],
+  // `achievements: updated` is `[...existing, ...newlyEarned]` where
+  // both halves are derived from `userBets` / `profiles` rows the
+  // helper just read; this is a server-side helper and never even
+  // sees a request body.
+  [path.normalize('lib/achievements.js'), 'rewrites achievements array from server-computed bet stats (no req.body in scope)'],
 ]);
 
 function discoverProfileWriteEndpoints() {
   const out = [];
   const repoRoot = path.resolve(__dirname, '..', '..');
+  const seen = new Set();
   // Recursive walk so any future nested handler — e.g.
   // `pages/api/user/security/disable-2fa.ts` — is auto-covered the
   // moment it lands. Stays inside PROFILE_WRITE_SCAN_DIRS so we don't
@@ -543,11 +648,42 @@ function discoverProfileWriteEndpoints() {
       // `update(profiles)` or `insert(profiles)`. Read-only handlers
       // and unrelated files are ignored.
       if (!/\b(?:update|insert)\(\s*profiles\b/.test(src)) continue;
+      if (seen.has(childRel)) continue;
+      seen.add(childRel);
       out.push({ rel: childRel, src });
     }
   }
   for (const dir of PROFILE_WRITE_SCAN_DIRS) {
     walkDir(path.resolve(repoRoot, dir), dir);
+  }
+  // Pull in the explicitly-listed `lib/` helpers from
+  // PROFILE_WRITE_EXTRA_FILES. We don't recurse into `lib/` wholesale
+  // because most files there don't touch `profiles` at all and a blind
+  // walk would spam the suite with irrelevant subtests.
+  for (const rel of PROFILE_WRITE_EXTRA_FILES) {
+    const normRel = path.normalize(rel);
+    if (PROFILE_WRITE_ALREADY_COVERED.has(normRel)) continue;
+    if (seen.has(normRel)) continue;
+    const abs = path.resolve(repoRoot, normRel);
+    if (!fs.existsSync(abs)) {
+      throw new Error(
+        `PROFILE_WRITE_EXTRA_FILES entry "${rel}" does not exist on disk — ` +
+          'has the file been moved or deleted? Update the list.',
+      );
+    }
+    const src = fs.readFileSync(abs, 'utf8');
+    // Sanity-check the pre-filter so we don't silently retain a stale
+    // entry whose `update(profiles)` / `insert(profiles)` call was
+    // refactored away — at that point it doesn't need this lockout
+    // anymore and should be removed from the list.
+    if (!/\b(?:update|insert)\(\s*profiles\b/.test(src)) {
+      throw new Error(
+        `PROFILE_WRITE_EXTRA_FILES entry "${rel}" no longer calls ` +
+          'update(profiles) / insert(profiles). Remove it from the list.',
+      );
+    }
+    seen.add(normRel);
+    out.push({ rel: normRel, src });
   }
   out.sort((a, b) => a.rel.localeCompare(b.rel));
   return out;
@@ -815,6 +951,57 @@ test.describe('task #472 — every other client-callable profile-write endpoint 
     expect(PROFILE_WRITE_ENDPOINTS.length).toBeGreaterThanOrEqual(3);
   });
 
+  test('discovery picks up every endpoint task #487 explicitly called out', () => {
+    // Each of these files writes to `profiles` from a path the original
+    // task #472 scan didn't cover (different pages/api dir, or under
+    // lib/). Re-locating any of them without updating the scan dirs /
+    // extra-files list would silently drop coverage — flag that here.
+    const rels = PROFILE_WRITE_ENDPOINTS.map((e) => e.rel);
+    for (const must of [
+      path.normalize('pages/api/profile/avatar.js'),
+      path.normalize('pages/api/bets/place.js'),
+      path.normalize('pages/api/bets/grade.js'),
+      path.normalize('pages/api/pools/join.js'),
+      path.normalize('pages/api/battles/forfeit.js'),
+      path.normalize('pages/api/matchups/resolve.js'),
+      path.normalize('pages/api/withdrawals/index.ts'),
+      path.normalize('pages/api/withdrawals/[id].ts'),
+      path.normalize('pages/api/auth/validate-impersonation.js'),
+      path.normalize('lib/achievements.js'),
+      path.normalize('lib/firstDepositMatch.js'),
+      path.normalize('lib/auth/service.ts'),
+    ]) {
+      expect(
+        rels,
+        `${must} must be discovered by the profile-write endpoint scan — if it ` +
+          'has been moved or renamed, update PROFILE_WRITE_SCAN_DIRS / ' +
+          'PROFILE_WRITE_EXTRA_FILES accordingly.',
+      ).toContain(must);
+    }
+  });
+
+  test('every literal-only exemption points at a discovered file (no stale entries)', () => {
+    // If a file in PROFILE_WRITE_LITERAL_EXEMPTIONS isn't in the scan
+    // result, the exemption is silently dead — a future regression in
+    // that file wouldn't trigger ANY guardrail. Flag stale entries so
+    // they're either re-enrolled or removed.
+    const rels = new Set(PROFILE_WRITE_ENDPOINTS.map((e) => e.rel));
+    const stale = [];
+    for (const key of PROFILE_WRITE_LITERAL_EXEMPTIONS.keys()) {
+      // Keys in PROFILE_WRITE_LITERAL_EXEMPTIONS are already normalized
+      // at construction time, matching the normalized `rel` paths the
+      // discovery walker stores.
+      if (!rels.has(key)) stale.push(key);
+    }
+    expect(
+      stale,
+      'PROFILE_WRITE_LITERAL_EXEMPTIONS contains entries that the scan no ' +
+        'longer discovers. Either re-enroll the file (add its dir to ' +
+        'PROFILE_WRITE_SCAN_DIRS / PROFILE_WRITE_EXTRA_FILES) or remove the ' +
+        'stale exemption.',
+    ).toEqual([]);
+  });
+
   for (const { rel, src } of PROFILE_WRITE_ENDPOINTS) {
     test.describe(rel, () => {
       const ast = parseEndpointSource(src);
@@ -855,7 +1042,15 @@ test.describe('task #472 — every other client-callable profile-write endpoint 
         ).toBe(0);
       });
 
+      const literalExemptionReason = PROFILE_WRITE_LITERAL_EXEMPTIONS.get(rel);
+
       test('inline `.set(...)` / `.values(...)` literals only set FINANCIAL_FIELDS to literal values', () => {
+        test.skip(
+          Boolean(literalExemptionReason),
+          `Exempt per PROFILE_WRITE_LITERAL_EXEMPTIONS — ${literalExemptionReason ?? ''}. ` +
+            'The other three guardrails (no FINANCIAL_FIELDS off req.body, no req.body ' +
+            'spreads, no dynamic-key reads) STILL run on this file.',
+        );
         const violations = [];
         for (const call of profileSetCalls) {
           const arg = call.arguments[0];
@@ -871,7 +1066,10 @@ test.describe('task #472 — every other client-callable profile-write endpoint 
             `inside a profiles \`.set(...)\` / \`.values(...)\` call: ` +
             `${JSON.stringify(violations)}. Hardcoded literals like ` +
             "`bankroll: '0'` / `bankroll: '1000'` are the only permitted shape — " +
-            'anything else risks pulling a request-derived value into the row.',
+            'anything else risks pulling a request-derived value into the row. ' +
+            'If this file legitimately needs to write a server-derived value to ' +
+            'one of these columns, add it to PROFILE_WRITE_LITERAL_EXEMPTIONS ' +
+            'with a one-line justification of where the value comes from.',
         ).toEqual([]);
       });
     });
