@@ -306,11 +306,15 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   const [sendError, setSendError] = useState(null);
   const [recording, setRecording] = useState(false);
   const [paused, setPaused] = useState(false);
-  // True only when the most recent pause came from the auto-pause-on-hidden
-  // effect, so we can show a one-line "we paused for you" hint without the
-  // user wondering whether something broke. Manual Pause taps leave this
-  // false so the hint stays out of the way.
-  const [autoPaused, setAutoPaused] = useState(false);
+  // Set when the most recent pause was *not* a manual Pause tap, so we can
+  // show a one-line "we paused for you" hint and explain why. `null` means
+  // either we're not paused or the user paused themselves (no hint needed).
+  // 'tab'    — auto-paused because the tab was hidden / window blurred.
+  // 'system' — paused by the browser/OS (mic taken by another app, device
+  //            locked, headset disconnected, etc.). Detected via the
+  //            MediaRecorder `pause` event firing without us asking, or via
+  //            the audio track's `mute`/`ended` events.
+  const [pauseReason, setPauseReason] = useState(null);
   const [pauseSupported, setPauseSupported] = useState(true);
   const [recordElapsed, setRecordElapsed] = useState(0);
   const [voiceError, setVoiceError] = useState(null);
@@ -329,6 +333,12 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   // is this plus the current segment's running time.
   const recordAccumRef = useRef(0);
   const recordPausedRef = useRef(false);
+  // Set to true immediately before we ourselves call rec.pause() (manual
+  // tap, auto-pause-on-hidden, pause-for-preview). The MediaRecorder
+  // `onpause` handler reads & clears this so it can tell our intentional
+  // pauses apart from system-initiated ones (mic stolen, device locked,
+  // headset unplugged, etc.) and only flag the latter as 'system'.
+  const selfPauseExpectedRef = useRef(false);
   const recordTimerRef = useRef(null);
   const recordCancelledRef = useRef(false);
   const recordMimeRef = useRef('audio/webm');
@@ -688,14 +698,67 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       recordCancelledRef.current = false;
       recordAccumRef.current = 0;
       recordPausedRef.current = false;
+      selfPauseExpectedRef.current = false;
       setPaused(false);
-      setAutoPaused(false);
+      setPauseReason(null);
       setPauseSupported(
         typeof recorder.pause === 'function' && typeof recorder.resume === 'function'
       );
       recorder.ondataavailable = (ev) => {
         if (ev.data && ev.data.size > 0) recordChunksRef.current.push(ev.data);
       };
+      // Detect pauses we didn't initiate ourselves — e.g. another app grabs
+      // the microphone, the device locks, or the user takes a phone call.
+      // Our own pauses set selfPauseExpectedRef just before calling pause(),
+      // so the unexpected branch only runs for true external interruptions.
+      recorder.onpause = () => {
+        if (selfPauseExpectedRef.current) {
+          selfPauseExpectedRef.current = false;
+          return;
+        }
+        // Sync our internal accounting the same way handlePauseRecording
+        // would have, so the elapsed timer freezes correctly.
+        if (!recordPausedRef.current) {
+          recordAccumRef.current += Math.max(0, Date.now() - recordStartRef.current);
+          recordPausedRef.current = true;
+          setPaused(true);
+          setRecordElapsed(recordAccumRef.current);
+          setAudioLevels(new Array(LEVEL_BAR_COUNT).fill(0));
+        }
+        setPauseReason('system');
+      };
+      // Track-level interruptions (mic source going mute/ended) sometimes
+      // happen *without* the MediaRecorder transitioning to paused on its
+      // own — typically when another app temporarily grabs the device.
+      // Pause it ourselves so the visualizer/timer freeze and the user
+      // sees a hint instead of a silent dead-air recording.
+      const interruptHandler = () => {
+        const r = recorderRef.current;
+        if (!r) return;
+        if (r.state === 'recording' && !recordPausedRef.current) {
+          try {
+            selfPauseExpectedRef.current = true;
+            r.pause();
+          } catch {
+            selfPauseExpectedRef.current = false;
+          }
+          recordAccumRef.current += Math.max(0, Date.now() - recordStartRef.current);
+          recordPausedRef.current = true;
+          setPaused(true);
+          setRecordElapsed(recordAccumRef.current);
+          setAudioLevels(new Array(LEVEL_BAR_COUNT).fill(0));
+        }
+        setPauseReason('system');
+      };
+      try {
+        const tracks = typeof stream.getAudioTracks === 'function'
+          ? stream.getAudioTracks()
+          : [];
+        tracks.forEach((track) => {
+          try { track.addEventListener('mute', interruptHandler); } catch {}
+          try { track.addEventListener('ended', interruptHandler); } catch {}
+        });
+      } catch {}
       recorder.onstop = () => {
         try { stopRecordingTimer(); } catch {}
         try { stopAudioMeter(); } catch {}
@@ -704,10 +767,11 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
         recordChunksRef.current = [];
         recordAccumRef.current = 0;
         recordPausedRef.current = false;
+        selfPauseExpectedRef.current = false;
         try { cleanupRecorderStream(); } catch {}
         setRecording(false);
         setPaused(false);
-        setAutoPaused(false);
+        setPauseReason(null);
         setRecordElapsed(0);
         setAudioLevels(new Array(LEVEL_BAR_COUNT).fill(0));
         if (recordCancelledRef.current) {
@@ -753,9 +817,10 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       recordCancelledRef.current = false;
       recordAccumRef.current = 0;
       recordPausedRef.current = false;
+      selfPauseExpectedRef.current = false;
       setRecording(false);
       setPaused(false);
-      setAutoPaused(false);
+      setPauseReason(null);
       setRecordElapsed(0);
       setAudioLevels(new Array(LEVEL_BAR_COUNT).fill(0));
       const name = err?.name || '';
@@ -822,8 +887,12 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     }
     if (wasRecording) {
       try {
+        // Mark this pause as self-initiated so onpause doesn't misread it
+        // as an external/system interruption.
+        selfPauseExpectedRef.current = true;
         rec.pause();
       } catch (e) {
+        selfPauseExpectedRef.current = false;
         rec.removeEventListener('dataavailable', onceData);
         throw e;
       }
@@ -842,6 +911,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     recorderRef.current = null;
     try { rec.ondataavailable = null; } catch {}
     try { rec.onstop = null; } catch {}
+    try { rec.onpause = null; } catch {}
     try { stopRecordingTimer(); } catch {}
     try { stopAudioMeter(); } catch {}
     try { if (rec.state !== 'inactive') rec.stop(); } catch {}
@@ -851,9 +921,11 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     recordChunksRef.current = [];
     recordAccumRef.current = 0;
     recordPausedRef.current = false;
+    selfPauseExpectedRef.current = false;
     recordCancelledRef.current = false;
     setRecording(false);
     setPaused(false);
+    setPauseReason(null);
     setRecordElapsed(0);
     setAudioLevels(new Array(LEVEL_BAR_COUNT).fill(0));
   };
@@ -887,7 +959,13 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     const rec = recorderRef.current;
     if (!rec || rec.state !== 'recording' || recordPausedRef.current) return;
     if (typeof rec.pause !== 'function') return;
-    try { rec.pause(); } catch { return; }
+    // Mark this pause as self-initiated so the recorder's onpause handler
+    // doesn't misclassify it as an external/system interruption.
+    selfPauseExpectedRef.current = true;
+    try { rec.pause(); } catch {
+      selfPauseExpectedRef.current = false;
+      return;
+    }
     // Snapshot the current segment's elapsed ms into the accumulator and
     // freeze the visible timer at that value. computeElapsedMs() returns
     // just the accumulator while paused.
@@ -908,7 +986,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     recordStartRef.current = Date.now();
     recordPausedRef.current = false;
     setPaused(false);
-    setAutoPaused(false);
+    setPauseReason(null);
   };
 
   const handleCancelRecording = () => {
@@ -969,6 +1047,10 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     recordStartRef.current = Date.now();
     recordPausedRef.current = false;
     setPaused(false);
+    // Clear any stale pause hint (e.g. the take was system-paused before
+    // the user previewed it) so a later manual pause doesn't accidentally
+    // re-show a system/tab hint that no longer applies.
+    setPauseReason(null);
     setRecording(true);
     // Restart the visible elapsed timer (we cleared it during pauseForPreview)
     // so the running counter and MAX_VOICE_MS auto-stop continue working.
@@ -1032,7 +1114,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       const rec = recorderRef.current;
       if (!rec || rec.state !== 'recording' || recordPausedRef.current) return;
       handlePauseRecording();
-      if (recordPausedRef.current) setAutoPaused(true);
+      if (recordPausedRef.current) setPauseReason('tab');
     };
     const onVisibilityChange = () => {
       if (document.visibilityState !== 'hidden') return;
@@ -1471,7 +1553,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
               </div>
               <style>{`@keyframes piksRecPulse{0%,100%{opacity:1}50%{opacity:0.35}}`}</style>
             </div>
-            {paused && autoPaused && (
+            {paused && pauseReason === 'tab' && (
               <p
                 className="mt-1 text-[11px] flex items-start gap-1.5"
                 style={{ color: textSecondary }}
@@ -1479,6 +1561,16 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
               >
                 <span aria-hidden="true">⏸</span>
                 <span>Paused because you switched tabs — tap Resume to continue.</span>
+              </p>
+            )}
+            {paused && pauseReason === 'system' && (
+              <p
+                className="mt-1 text-[11px] flex items-start gap-1.5"
+                style={{ color: '#fcd34d' }}
+                aria-live="polite"
+              >
+                <span aria-hidden="true">⚠</span>
+                <span>Paused — your microphone was interrupted. Tap Resume to continue.</span>
               </p>
             )}
             </>
