@@ -30,6 +30,29 @@ function formatTimeRemaining(ms) {
   return `${seconds}s`;
 }
 
+function formatStartedAgo(startsAt) {
+  if (!startsAt) return null;
+  const ms = Date.now() - new Date(startsAt).getTime();
+  if (Number.isNaN(ms) || ms < 0) return null;
+  const seconds = Math.floor(ms / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  if (days > 0) return `Started ${days}d ago`;
+  if (hours > 0) return `Started ${hours}h ago`;
+  if (minutes > 0) return `Started ${minutes}m ago`;
+  return 'Just started';
+}
+
+function formatBattleRecord(user) {
+  const w = parseInt(user?.battleWins, 10);
+  const l = parseInt(user?.battleLosses, 10);
+  const wins = Number.isFinite(w) ? w : 0;
+  const losses = Number.isFinite(l) ? l : 0;
+  if (wins === 0 && losses === 0) return null;
+  return `${wins}-${losses}`;
+}
+
 const SIMULATED_PICKS = {
   'sim-1': {
     user1: [
@@ -307,7 +330,6 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
   const user1Winning = (user1.balance || 0) > (user2.balance || 0);
   const user2Winning = (user2.balance || 0) > (user1.balance || 0);
   const potSize = parseFloat(battle.potSize) || 0;
-  const progress = battle.progressPercent || 0;
   const rawPicks = battle.picks || SIMULATED_PICKS[battle.id] || null;
   const isSimulated = !battle.picks && !!SIMULATED_PICKS[battle.id];
   const bothHavePicks = rawPicks && rawPicks.user1.length > 0 && rawPicks.user2.length > 0;
@@ -475,31 +497,49 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
             );
           })()}
 
-          <div className="mt-auto">
-            <div className="h-1 rounded-full overflow-hidden mb-1 sm:mb-2" style={{ background: '#1a1a1a' }}>
-              <div
-                className="h-full rounded-full transition-all duration-1000"
-                style={{ width: `${progress}%`, background: 'linear-gradient(90deg, #3b82f6, #06b6d4)' }}
-              ></div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600 text-[10px]">{progress.toFixed(0)}% complete</span>
-              <span className="text-[11px] font-medium text-blue-400 flex items-center gap-1">
-                {expanded ? 'Hide' : 'Preview'}
-                <svg
-                  className="w-3 h-3"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  style={{
-                    transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 220ms ease',
-                  }}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-                </svg>
-              </span>
-            </div>
+          <div className="mt-auto pt-1 sm:pt-1.5">
+            {(() => {
+              const startedAgo = formatStartedAgo(battle.startsAt);
+              const u1Record = formatBattleRecord(user1);
+              const u2Record = formatBattleRecord(user2);
+              const showRecords = u1Record && u2Record;
+              const showFallback = !startedAgo && !showRecords;
+              return (
+                <div className="flex items-center justify-between gap-2 min-w-0">
+                  <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
+                    {startedAgo && (
+                      <span className="text-gray-500 text-[10px] truncate">{startedAgo}</span>
+                    )}
+                    {startedAgo && showRecords && (
+                      <span className="text-gray-700 text-[10px]" aria-hidden="true">·</span>
+                    )}
+                    {showRecords && (
+                      <span className="text-gray-500 text-[10px] tabular-nums truncate">
+                        {u1Record} vs {u2Record}
+                      </span>
+                    )}
+                    {showFallback && (
+                      <span className="text-gray-500 text-[10px] truncate">Live now</span>
+                    )}
+                  </div>
+                  <span className="text-[11px] font-medium text-blue-400 flex items-center gap-1 flex-shrink-0">
+                    {expanded ? 'Hide' : 'Preview'}
+                    <svg
+                      className="w-3 h-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      style={{
+                        transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 220ms ease',
+                      }}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </span>
+                </div>
+              );
+            })()}
           </div>
         </div>
 
@@ -789,18 +829,39 @@ function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = n
           );
         })()}
 
-        <div className="h-1 rounded-full overflow-hidden mb-2" style={{ background: '#1a1a1a' }}>
-          <div className="h-full rounded-full transition-all duration-1000" style={{ width: `${progress}%`, backgroundColor: '#3b82f6' }}></div>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-gray-600 text-[10px]">{progress.toFixed(0)}% complete</span>
-          <button
-            onClick={(e) => { e.stopPropagation(); router.push(`/battle?battle=${battle.id}`); }}
-            className="text-[11px] font-medium text-blue-400"
-          >
-            Watch
-          </button>
-        </div>
+        {(() => {
+          const startedAgo = formatStartedAgo(battle.startsAt);
+          const u1Record = formatBattleRecord(user1);
+          const u2Record = formatBattleRecord(user2);
+          const showRecords = u1Record && u2Record;
+          const showFallback = !startedAgo && !showRecords;
+          return (
+            <div className="flex items-center justify-between gap-2 min-w-0 pt-1.5">
+              <div className="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
+                {startedAgo && (
+                  <span className="text-gray-500 text-[10px] truncate">{startedAgo}</span>
+                )}
+                {startedAgo && showRecords && (
+                  <span className="text-gray-700 text-[10px]" aria-hidden="true">·</span>
+                )}
+                {showRecords && (
+                  <span className="text-gray-500 text-[10px] tabular-nums truncate">
+                    {u1Record} vs {u2Record}
+                  </span>
+                )}
+                {showFallback && (
+                  <span className="text-gray-500 text-[10px] truncate">Live now</span>
+                )}
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); router.push(`/battle?battle=${battle.id}`); }}
+                className="text-[11px] font-medium text-blue-400 flex-shrink-0"
+              >
+                Watch
+              </button>
+            </div>
+          );
+        })()}
       </div>
 
       {expanded && (
