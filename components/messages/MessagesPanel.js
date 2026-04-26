@@ -46,6 +46,28 @@ function formatDuration(ms) {
 
 const WAVEFORM_BAR_COUNT = 36;
 
+// Module-level coordination so only one voice clip plays at a time across the
+// messenger (sent bubbles, received bubbles, and the composer preview row all
+// share the same registry). When a `VoiceWaveform` starts playback it calls
+// `claimVoicePlayback(audioEl)`; if a different audio element was previously
+// playing we pause it, which fires its native `pause` event and flips its
+// bubble UI back to the play state. Because we never touch `currentTime` the
+// paused clip keeps its scrub position so the user can resume where they left
+// off by tapping play again.
+let currentVoicePlayer = null;
+
+function claimVoicePlayback(audioEl) {
+  if (!audioEl) return;
+  if (currentVoicePlayer && currentVoicePlayer !== audioEl) {
+    try { currentVoicePlayer.pause(); } catch {}
+  }
+  currentVoicePlayer = audioEl;
+}
+
+function releaseVoicePlayback(audioEl) {
+  if (currentVoicePlayer === audioEl) currentVoicePlayer = null;
+}
+
 // Custom waveform-style scrubber shared by the recorded-voice preview row
 // and the sent/received chat bubbles. We decode the source audio in an
 // AudioContext to extract per-bar peaks, then render the same kind of
@@ -130,6 +152,14 @@ function VoiceWaveform({ blob, url, durationMs, variant = 'preview' }) {
     setPlaying(false);
     setCurrentMs(0);
   }, [url]);
+
+  // If this player unmounts (e.g. the thread closes or the bubble scrolls out
+  // of a virtualized list in the future) make sure we don't leave a dangling
+  // reference in the shared registry.
+  useEffect(() => () => {
+    const a = audioRef.current;
+    if (a) releaseVoicePlayback(a);
+  }, []);
 
   const togglePlay = () => {
     const a = audioRef.current;
@@ -256,9 +286,9 @@ function VoiceWaveform({ blob, url, durationMs, variant = 'preview' }) {
         ref={audioRef}
         src={url}
         preload="metadata"
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        onEnded={() => { setPlaying(false); setCurrentMs(totalMs); }}
+        onPlay={(e) => { claimVoicePlayback(e.currentTarget); setPlaying(true); }}
+        onPause={(e) => { releaseVoicePlayback(e.currentTarget); setPlaying(false); }}
+        onEnded={(e) => { releaseVoicePlayback(e.currentTarget); setPlaying(false); setCurrentMs(totalMs); }}
         onTimeUpdate={(e) => setCurrentMs(e.currentTarget.currentTime * 1000)}
         style={{ display: 'none' }}
       />
