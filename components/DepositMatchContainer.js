@@ -64,10 +64,6 @@ export default function DepositMatchContainer() {
           0%, 100% { opacity: 0; transform: scale(0.5); }
           50% { opacity: 1; transform: scale(1); }
         }
-        @keyframes deposit-glow-pulse {
-          0%, 100% { box-shadow: 0 0 20px rgba(250, 204, 21, 0.5), inset 0 0 30px rgba(250, 204, 21, 0.1); }
-          50% { box-shadow: 0 0 40px rgba(250, 204, 21, 0.8), inset 0 0 50px rgba(250, 204, 21, 0.2); }
-        }
         @keyframes deposit-badge-bob {
           0%, 100% { transform: rotate(-6deg) scale(1); }
           50% { transform: rotate(-3deg) scale(1.05); }
@@ -84,20 +80,11 @@ export default function DepositMatchContainer() {
           background:
             'linear-gradient(135deg, #2d1b00 0%, #5a3a00 20%, #8a5d00 45%, #b8830d 70%, #6b4500 100%)',
           border: '2px solid rgba(250, 204, 21, 0.6)',
-          animation: 'deposit-glow-pulse 2.5s ease-in-out infinite',
         }}
         onClick={handleClick}
         role="button"
         aria-label="Claim first deposit match"
       >
-        <div
-          className="absolute inset-0 opacity-50 pointer-events-none"
-          style={{
-            background:
-              'radial-gradient(ellipse at 30% 20%, rgba(253, 224, 71, 0.4) 0%, transparent 55%), radial-gradient(ellipse at 80% 90%, rgba(217, 119, 6, 0.5) 0%, transparent 55%)',
-          }}
-        />
-
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
           {[...Array(10)].map((_, i) => (
             <div

@@ -89,10 +89,6 @@ export default function TrendingBetContainer() {
   return (
     <>
       <style>{`
-        @keyframes trend-glow {
-          0%, 100% { box-shadow: 0 0 18px rgba(59,130,246,0.28), inset 0 0 24px rgba(59,130,246,0.08); }
-          50% { box-shadow: 0 0 32px rgba(59,130,246,0.45), inset 0 0 36px rgba(59,130,246,0.14); }
-        }
         @keyframes trend-flame {
           0%, 100% { transform: scale(1) rotate(-3deg); opacity: 0.95; }
           50% { transform: scale(1.12) rotate(3deg); opacity: 1; }
@@ -116,20 +112,11 @@ export default function TrendingBetContainer() {
         style={{
           background: 'linear-gradient(135deg, #07111f 0%, #0c1a2c 35%, #0a1628 65%, #050d1a 100%)',
           border: '1.5px solid rgba(59, 130, 246, 0.4)',
-          animation: 'trend-glow 2.6s ease-in-out infinite',
         }}
         onClick={handleClick}
         role="button"
         aria-label="Trending bets right now"
       >
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background:
-              'radial-gradient(ellipse at 20% 20%, rgba(59,130,246,0.22) 0%, transparent 55%), radial-gradient(ellipse at 85% 85%, rgba(249,115,22,0.16) 0%, transparent 55%)',
-          }}
-        />
-
         <div className="absolute top-2 left-2 md:top-3 md:left-3 flex items-center gap-1.5 z-20">
           <span className="text-base md:text-lg" style={{ animation: 'trend-flame 1.3s ease-in-out infinite', display: 'inline-block' }}>
             🔥

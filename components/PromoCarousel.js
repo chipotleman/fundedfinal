@@ -2,8 +2,6 @@ import { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react
 import { trackPromoEvent } from '../lib/promoTracking';
 
 const SCROLL_SPEED_PX_PER_SEC = 30;
-const RESUME_DELAY_MS = 600;
-const DOT_RESUME_DELAY_MS = 1200;
 
 function usePrefersReducedMotion() {
   const [reduced, setReduced] = useState(false);
@@ -87,13 +85,9 @@ export default function PromoCarousel({ slides }) {
   const setWidthRef = useRef(0);
   const rafRef = useRef(null);
   const lastTimeRef = useRef(0);
-  const programmaticRef = useRef(false);
-  const programmaticTimeoutRef = useRef(null);
-  const resumeTimeoutRef = useRef(null);
   const seenImpressionsRef = useRef(new Set());
 
   const [activeIndex, setActiveIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
   const [emptyKeys, setEmptyKeys] = useState({});
   const reducedMotion = usePrefersReducedMotion();
 
@@ -181,7 +175,7 @@ export default function PromoCarousel({ slides }) {
 
   // Continuous slow horizontal scroll using rAF, with seamless wraparound.
   useEffect(() => {
-    if (paused || reducedMotion || !showLoop) return;
+    if (reducedMotion || !showLoop) return;
     let raf;
     const tick = (time) => {
       if (lastTimeRef.current === 0) lastTimeRef.current = time;
@@ -203,12 +197,11 @@ export default function PromoCarousel({ slides }) {
       if (raf) cancelAnimationFrame(raf);
       lastTimeRef.current = 0;
     };
-  }, [paused, reducedMotion, showLoop]);
+  }, [reducedMotion, showLoop]);
 
   // Track scroll → update active index based on which slide is most centered
   // (after normalizing position into the first set's coordinate space).
   const handleScroll = useCallback(() => {
-    if (programmaticRef.current) return;
     const container = containerRef.current;
     if (!container) return;
     const setWidth = setWidthRef.current;
@@ -230,30 +223,9 @@ export default function PromoCarousel({ slides }) {
     setActiveIndex((curr) => (curr === bestIdx ? curr : bestIdx));
   }, [visible]);
 
-  // Pause helpers
-  const pauseNow = useCallback(() => {
-    if (resumeTimeoutRef.current) {
-      clearTimeout(resumeTimeoutRef.current);
-      resumeTimeoutRef.current = null;
-    }
-    setPaused(true);
-  }, []);
-
-  const resumeAfter = useCallback((delay) => {
-    if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
-    resumeTimeoutRef.current = setTimeout(() => {
-      setPaused(false);
-      resumeTimeoutRef.current = null;
-    }, delay);
-  }, []);
-
-  const resumeSoon = useCallback(() => resumeAfter(RESUME_DELAY_MS), [resumeAfter]);
-
   useEffect(() => {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      if (programmaticTimeoutRef.current) clearTimeout(programmaticTimeoutRef.current);
-      if (resumeTimeoutRef.current) clearTimeout(resumeTimeoutRef.current);
     };
   }, []);
 
@@ -267,19 +239,12 @@ export default function PromoCarousel({ slides }) {
       setActiveIndex(idx);
       return;
     }
-    pauseNow();
     const setWidth = setWidthRef.current;
     if (setWidth > 0 && container.scrollLeft >= setWidth) {
       container.scrollLeft = container.scrollLeft - setWidth;
     }
-    programmaticRef.current = true;
-    if (programmaticTimeoutRef.current) clearTimeout(programmaticTimeoutRef.current);
-    container.scrollTo({ left: target.offsetLeft, behavior: 'smooth' });
-    programmaticTimeoutRef.current = setTimeout(() => {
-      programmaticRef.current = false;
-    }, 700);
+    container.scrollLeft = target.offsetLeft;
     setActiveIndex(idx);
-    resumeAfter(DOT_RESUME_DELAY_MS);
   };
 
   const handleSlideClick = (slide) => {
@@ -291,29 +256,10 @@ export default function PromoCarousel({ slides }) {
   };
 
   return (
-    <div
-      className="relative"
-      onMouseEnter={pauseNow}
-      onMouseLeave={resumeSoon}
-    >
+    <div className="relative">
       <div
         ref={containerRef}
         onScroll={handleScroll}
-        onTouchStart={pauseNow}
-        onTouchEnd={resumeSoon}
-        onTouchCancel={resumeSoon}
-        onPointerDown={(e) => {
-          if (e.pointerType === 'mouse') return;
-          pauseNow();
-        }}
-        onPointerUp={(e) => {
-          if (e.pointerType === 'mouse') return;
-          resumeSoon();
-        }}
-        onPointerCancel={(e) => {
-          if (e.pointerType === 'mouse') return;
-          resumeSoon();
-        }}
         className="overflow-x-auto overflow-y-visible scrollbar-hide flex gap-3 py-1"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         role="region"
