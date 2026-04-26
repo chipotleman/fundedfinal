@@ -31,12 +31,18 @@ export default async function handler(req, res) {
   const otherId = typeof otherIdRaw === 'string' && otherIdRaw.length > 0
     ? otherIdRaw
     : null;
+  // Lightweight mode for surfaces (e.g. the public profile header badge)
+  // that only need "how many mutuals do we share?" — skips the second
+  // round-trip to load profile/avatar/presence data for each mutual id.
+  const countOnly = req.query?.countOnly === '1' || req.query?.countOnly === 'true';
 
   if (!otherId) {
     return res.status(400).json({ error: 'userId is required' });
   }
   if (otherId === userId) {
-    return res.status(200).json({ mutualFriends: [] });
+    return res.status(200).json(
+      countOnly ? { mutualFriendsCount: 0 } : { mutualFriends: [] }
+    );
   }
 
   try {
@@ -70,6 +76,10 @@ export default async function handler(req, res) {
     const mutualIds = [];
     for (const id of mySet) {
       if (theirSet.has(id)) mutualIds.push(id);
+    }
+
+    if (countOnly) {
+      return res.status(200).json({ mutualFriendsCount: mutualIds.length });
     }
 
     if (mutualIds.length === 0) {
