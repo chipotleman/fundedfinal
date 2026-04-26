@@ -994,6 +994,25 @@ export default function TopNavbar({
               </button>
             )}
 
+            {/* Battle coins pill — mirrors the full nav's ⚔ pill while a matchup is active */}
+            {isLoggedIn && hasActiveMatchup && matchupBalance != null && (
+              <button
+                onClick={() => setExplainerType('coins')}
+                title="In-battle play coins — click for details"
+                className="flex-shrink-0 flex items-center gap-1 rounded-md px-2 py-1.5 transition-colors hover:brightness-110"
+                style={{
+                  background: 'linear-gradient(180deg, rgba(251,146,60,0.15) 0%, rgba(194,65,12,0.08) 100%)',
+                  border: '1px solid rgba(251,146,60,0.45)',
+                }}
+                aria-label="Battle coins details"
+              >
+                <span className="text-xs leading-none" style={{ color: '#fb923c' }}>⚔</span>
+                <span className="font-bold text-xs whitespace-nowrap" style={{ color: '#fed7aa' }}>
+                  {formatMoney(parseFloat(matchupBalance), 0)}
+                </span>
+              </button>
+            )}
+
             {/* Bet slip mirror — only when slip has items */}
             {effectiveBetSlipCount > 0 && (
               <button
