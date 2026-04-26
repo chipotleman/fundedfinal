@@ -60,7 +60,9 @@ const WAVEFORM_BAR_COUNT = 36;
 //
 // For the preview row callers pass an in-memory `blob` so we can decode
 // without an extra round-trip. Chat bubbles only have a URL, in which
-// case we fetch + decode it once on mount.
+// case we fetch + decode it once on mount. If decoding fails (unsupported
+// codec, fetch error, no AudioContext, etc.) we fall back to a flat
+// baseline so older voice notes still render and play.
 function VoiceWaveform({ blob, url, durationMs, variant = 'preview' }) {
   const audioRef = useRef(null);
   const trackRef = useRef(null);
@@ -70,9 +72,10 @@ function VoiceWaveform({ blob, url, durationMs, variant = 'preview' }) {
   const totalMs = Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 0;
 
   // Decode the source audio into a small array of normalized amplitudes that
-  // we use to size each bar. If decoding fails (e.g. unsupported codec on
-  // Safari, or a fetch error for a remote URL) we fall back to a flat
-  // baseline so the UI still renders something.
+  // we use to size each bar. We prefer the in-memory blob (composer preview)
+  // and otherwise fetch the URL (sent/received bubbles). If decoding fails
+  // (unsupported codec on Safari, fetch error for a remote URL, etc.) we
+  // fall back to a flat baseline so the UI still renders something.
   useEffect(() => {
     if (!blob && !url) { setPeaks(null); return undefined; }
     let cancelled = false;
@@ -91,6 +94,7 @@ function VoiceWaveform({ blob, url, durationMs, variant = 'preview' }) {
           if (!res.ok) throw new Error('fetch-failed');
           arrBuf = await res.arrayBuffer();
         }
+        if (cancelled) return;
         ctx = new Ctx();
         const decoded = await ctx.decodeAudioData(arrBuf.slice(0));
         if (cancelled) return;
@@ -120,7 +124,8 @@ function VoiceWaveform({ blob, url, durationMs, variant = 'preview' }) {
     return () => { cancelled = true; };
   }, [blob, url]);
 
-  // Reset transport state when a new blob comes in (e.g. after re-record).
+  // Reset transport state when the source changes (e.g. after re-record,
+  // or when scrolling between bubbles backed by different attachments).
   useEffect(() => {
     setPlaying(false);
     setCurrentMs(0);
@@ -325,6 +330,9 @@ function VoiceWaveform({ blob, url, durationMs, variant = 'preview' }) {
 }
 
 // Thin wrapper used by the chat thread so the call site stays expressive.
+// Older messages without a captured waveform decode the URL on demand; if
+// decoding fails, the waveform falls back to a flat baseline and the
+// play/scrub controls still work.
 function VoiceBubble({ url, durationMs, mine }) {
   return (
     <VoiceWaveform
