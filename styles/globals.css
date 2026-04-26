@@ -14,7 +14,6 @@ button,
   appearance: none !important;
   -webkit-touch-callout: none !important;
   outline: none !important;
-  background-image: none !important;
 }
 
 button:active,
@@ -516,7 +515,6 @@ button:not(.no-hover-effect):not(.bet-btn):hover, .btn:not(.no-hover-effect):not
   -webkit-tap-highlight-color: transparent !important;
   -webkit-appearance: none !important;
   appearance: none !important;
-  background-image: none !important;
 }
 
 .no-hover-effect:not(.hamburger-btn):hover,
@@ -567,7 +565,6 @@ button:not(.no-hover-effect):not(.bet-btn):hover, .btn:not(.no-hover-effect):not
   filter: none !important;
   -webkit-filter: none !important;
   opacity: 1 !important;
-  background-image: none !important;
 }
 
 /* Override browser default button:active darkening */
