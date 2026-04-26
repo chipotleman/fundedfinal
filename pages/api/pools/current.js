@@ -1,5 +1,5 @@
 import { getServerSession } from "next-auth/next";
-import { authOptions } from "../auth/[...nextauth]";
+import { authOptions } from "../../../lib/auth";
 import { db } from "../../../lib/db";
 import { pikPools, poolParticipants, poolBets, profiles } from "../../../shared/schema";
 import { eq, and, or, desc, sql } from "drizzle-orm";

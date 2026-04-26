@@ -55,7 +55,33 @@ jobs:
             ${{ runner.os }}-nextjs-cache-
 
       - name: Build Next.js (production)
-        run: npm run build
+        run: |
+          set -o pipefail
+          npm run build 2>&1 | tee build.log
+
+      # `next build` only logs "Attempted import error: ..." as a
+      # warning and still exits 0, so a broken import sneaks through
+      # the build job and only blows up at request time in
+      # `next start` (and then in production). Fail the build here if
+      # any such warning shows up so import regressions are caught
+      # immediately instead of surfacing as 500s in CI's e2e shards
+      # or — worse — in production.
+      - name: Fail on "Attempted import error" warnings
+        run: |
+          if grep -n "Attempted import error" build.log; then
+            echo ""
+            echo "::error::next build emitted 'Attempted import error' warning(s) above. These cause runtime 500s in production. Fix the imports before merging."
+            exit 1
+          fi
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          if-no-files-found: ignore
+          retention-days: 7
 
       # Measure the freshly-built bundle and compare against the
       # committed baseline in `docs/bundle-baseline.json`. The check

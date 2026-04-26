@@ -354,4 +354,6 @@ export function useLiveSport(sport, options = {}) {
   };
 }
 
+export const useLiveGame = useLiveEvent;
+
 export default useGoalserveLive;
