@@ -820,12 +820,52 @@ function SilhouetteAvatar({ gradient, size = 40 }) {
 }
 
 // Defaults for the homepage one-tap matchmaking flow. Picked as the
-// smallest available buy-in and the fastest mode so a tap on the
-// graffiti "PLAY NOW" sticker drops the user into the lightest commit
-// path. The QuickMatchModal still drives any other entry point with
-// its own config screen.
-const ONE_TAP_BUY_IN = 5;
-const ONE_TAP_GAME_MODE = 'rush';
+// smallest available buy-in and the fastest mode so a first-time tap on
+// the graffiti "PLAY NOW" sticker drops the user into the lightest
+// commit path. Power users can change the buy-in / mode from the chips
+// rendered on the card itself, and that choice is remembered between
+// visits so the next tap goes straight to their preferred default. The
+// QuickMatchModal still drives any other entry point with its own
+// config screen.
+const ONE_TAP_DEFAULT_BUY_IN = 5;
+const ONE_TAP_DEFAULT_GAME_MODE = 'rush';
+const ONE_TAP_BUY_IN_OPTIONS = [5, 10, 25];
+const ONE_TAP_GAME_MODE_OPTIONS = [
+  { id: 'rush', label: 'Rush', icon: '⚡' },
+  { id: 'original', label: 'Original', icon: '🏆' },
+  { id: 'tournament', label: 'Tournament', icon: '👑' },
+];
+const ONE_TAP_GAME_MODE_IDS = ONE_TAP_GAME_MODE_OPTIONS.map((m) => m.id);
+// Persisted in localStorage so the next visit's tap goes straight to
+// the user's preferred buy-in / mode. Schema is intentionally tiny so a
+// future migration can lift it without touching anything else.
+const ONE_TAP_PREFS_STORAGE_KEY = 'piks:onetap-prefs:v1';
+
+function readOneTapPrefs() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(ONE_TAP_PREFS_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return null;
+    const next = {};
+    if (ONE_TAP_BUY_IN_OPTIONS.includes(parsed.buyIn)) next.buyIn = parsed.buyIn;
+    if (ONE_TAP_GAME_MODE_IDS.includes(parsed.gameMode)) next.gameMode = parsed.gameMode;
+    return Object.keys(next).length > 0 ? next : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeOneTapPrefs(buyIn, gameMode) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(
+      ONE_TAP_PREFS_STORAGE_KEY,
+      JSON.stringify({ buyIn, gameMode })
+    );
+  } catch {}
+}
 
 function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, onMatchFound = null }) {
   const router = useRouter();
@@ -837,6 +877,54 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
   const matchup = youVsState?.matchup || null;
   const queueEntry = youVsState?.queueEntry || null;
   const initialTimeRemaining = youVsState?.timeRemaining ?? null;
+
+  // One-tap matchmaking preferences. Seeded with the safe lightweight
+  // defaults, then hydrated from localStorage on mount so a returning
+  // visitor's preferred buy-in / mode is what their first tap fires.
+  // Hydrating in an effect (rather than the initial state) keeps the
+  // server-rendered markup deterministic and avoids hydration mismatch.
+  const [buyIn, setBuyIn] = useState(ONE_TAP_DEFAULT_BUY_IN);
+  const [gameMode, setGameMode] = useState(ONE_TAP_DEFAULT_GAME_MODE);
+  // Latest-prefs ref that's hydrated synchronously the very first time
+  // it's read — guards against the edge case where a returning visitor
+  // taps the card before our hydration effect has had a chance to run,
+  // which would otherwise fire matchmaking with the stale defaults.
+  const prefsRef = useRef(null);
+  const ensurePrefsHydrated = useCallback(() => {
+    if (prefsRef.current) return prefsRef.current;
+    const stored = readOneTapPrefs();
+    const next = {
+      buyIn: stored?.buyIn ?? ONE_TAP_DEFAULT_BUY_IN,
+      gameMode: stored?.gameMode ?? ONE_TAP_DEFAULT_GAME_MODE,
+    };
+    prefsRef.current = next;
+    return next;
+  }, []);
+  useEffect(() => {
+    const prefs = ensurePrefsHydrated();
+    setBuyIn(prefs.buyIn);
+    setGameMode(prefs.gameMode);
+  }, [ensurePrefsHydrated]);
+  useEffect(() => {
+    prefsRef.current = { buyIn, gameMode };
+  }, [buyIn, gameMode]);
+
+  const handleSelectBuyIn = useCallback((next) => {
+    setBuyIn(next);
+    setGameMode((currentMode) => {
+      writeOneTapPrefs(next, currentMode);
+      return currentMode;
+    });
+  }, []);
+  const handleSelectGameMode = useCallback((next) => {
+    setGameMode(next);
+    setBuyIn((currentBuyIn) => {
+      writeOneTapPrefs(currentBuyIn, next);
+      return currentBuyIn;
+    });
+  }, []);
+  const selectedGameMode = ONE_TAP_GAME_MODE_OPTIONS.find((m) => m.id === gameMode)
+    || ONE_TAP_GAME_MODE_OPTIONS[0];
 
   const isActive = status === 'active';
   const isWaiting = status === 'waiting';
@@ -992,7 +1080,7 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
   let topLabel = 'Play Now';
   let topDotColor = '#fbbf24';
   let ctaText = 'Tap to Start a 1v1';
-  let metaRight = '1v1 · $5';
+  let metaRight = `1v1 · $${buyIn} · ${selectedGameMode.label}`;
   let progressLabel = 'Tap to start a 1v1';
 
   if (searchState === 'searching') {
@@ -1069,15 +1157,19 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
     setSearchError('');
     setSearchTimer(0);
     if (onMatchFound) {
+      // Pull from the prefs ref so the hand-off carries the same
+      // buy-in / mode the matchmaking POST was actually fired with —
+      // even on a very-fast first tap that beat the hydration effect.
+      const activePrefs = ensurePrefsHydrated();
       onMatchFound({
         opponent: opp || null,
         matchup: foundMatchup,
-        buyIn: ONE_TAP_BUY_IN,
-        gameMode: ONE_TAP_GAME_MODE,
+        buyIn: activePrefs.buyIn,
+        gameMode: activePrefs.gameMode,
       });
     }
     try { refreshMatchup(); } catch {}
-  }, [cleanupSearchTimers, onMatchFound, refreshMatchup]);
+  }, [ensurePrefsHydrated, cleanupSearchTimers, onMatchFound, refreshMatchup]);
 
   const pollForInCardMatch = useCallback(() => {
     let attempts = 0;
@@ -1138,11 +1230,14 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
     searchTimerIntervalRef.current = setInterval(() => {
       setSearchTimer((t) => t + 1);
     }, 1000);
+    // Read prefs through the ref so a returning visitor who taps before
+    // the hydration effect lands still gets their persisted defaults.
+    const activePrefs = ensurePrefsHydrated();
     try {
       const res = await fetch('/api/battles/matchmaking', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ buyIn: ONE_TAP_BUY_IN, gameMode: ONE_TAP_GAME_MODE }),
+        body: JSON.stringify({ buyIn: activePrefs.buyIn, gameMode: activePrefs.gameMode }),
       });
       if (matchmakingCancelledRef.current) return;
       if (!res.ok) {
@@ -1161,7 +1256,7 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
       if (matchmakingCancelledRef.current) return;
       handleSearchError('Couldn\'t reach matchmaking. Try again.');
     }
-  }, [cleanupSearchTimers, handleInCardMatchFound, handleSearchError, pollForInCardMatch]);
+  }, [ensurePrefsHydrated, cleanupSearchTimers, handleInCardMatchFound, handleSearchError, pollForInCardMatch]);
 
   const cancelInCardSearch = useCallback(async () => {
     matchmakingCancelledRef.current = true;
@@ -1643,8 +1738,87 @@ function YouVsCard({ youVsState, onClick, isExpanded = false, onToggle = null, o
               Tap to face anyone in a 1v1
             </p>
             <p className="text-[11px] text-gray-400 mt-0.5">
-              Random opponent · ${ONE_TAP_BUY_IN} buy-in · Instant match
+              Random opponent · ${buyIn} buy-in · {selectedGameMode.label}
             </p>
+
+            {/* One-tap chooser. Lets power users pick a buy-in / game
+                mode without leaving the homepage. The card-wide tap
+                still fires matchmaking, so a user who doesn't touch
+                the chips keeps the original one-tap feel — and the
+                selection is persisted to localStorage so the next
+                visit's tap goes straight to their preferred default. */}
+            <div
+              className="flex items-center justify-center gap-1.5 mt-2"
+              role="radiogroup"
+              aria-label="Buy-in"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {ONE_TAP_BUY_IN_OPTIONS.map((amount) => {
+                const selected = amount === buyIn;
+                return (
+                  <button
+                    key={amount}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={(e) => { e.stopPropagation(); handleSelectBuyIn(amount); }}
+                    className="text-[11px] font-bold rounded-full transition-colors"
+                    style={{
+                      padding: '3px 10px',
+                      color: selected ? '#0d0d0d' : 'rgba(229,231,235,0.85)',
+                      background: selected
+                        ? 'linear-gradient(135deg, #fbbf24, #f97316)'
+                        : 'rgba(255,255,255,0.06)',
+                      border: selected
+                        ? '1px solid rgba(251,191,36,0.85)'
+                        : '1px solid rgba(255,255,255,0.12)',
+                      boxShadow: selected
+                        ? '0 0 10px rgba(251,146,60,0.45)'
+                        : 'none',
+                    }}
+                  >
+                    ${amount}
+                  </button>
+                );
+              })}
+            </div>
+            <div
+              className="flex items-center justify-center gap-1 mt-1.5"
+              role="radiogroup"
+              aria-label="Game mode"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {ONE_TAP_GAME_MODE_OPTIONS.map((mode) => {
+                const selected = mode.id === gameMode;
+                return (
+                  <button
+                    key={mode.id}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={(e) => { e.stopPropagation(); handleSelectGameMode(mode.id); }}
+                    className="text-[10px] font-semibold rounded-full transition-colors inline-flex items-center gap-1"
+                    style={{
+                      padding: '3px 9px',
+                      color: selected ? '#fff' : 'rgba(229,231,235,0.8)',
+                      background: selected
+                        ? 'linear-gradient(135deg, #8b5cf6, #06b6d4)'
+                        : 'rgba(255,255,255,0.05)',
+                      border: selected
+                        ? '1px solid rgba(167,139,250,0.85)'
+                        : '1px solid rgba(255,255,255,0.1)',
+                      boxShadow: selected
+                        ? '0 0 8px rgba(139,92,246,0.4)'
+                        : 'none',
+                    }}
+                  >
+                    <span aria-hidden="true">{mode.icon}</span>
+                    {mode.label}
+                  </button>
+                );
+              })}
+            </div>
+
             {searchError && (
               <p
                 className={`text-[10px] font-medium mt-1.5 ${
