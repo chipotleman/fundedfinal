@@ -44,7 +44,92 @@ function formatDuration(ms) {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+// Encode a (mono or stereo) AudioBuffer into a 16-bit PCM WAV blob. WAV is
+// the only browser-native container we can synthesize without a third-party
+// encoder, so we use it as the trimmed output format. For ~60s mono speech
+// at 44.1 kHz this is roughly 5 MB, comfortably inside the 10 MB voice-note
+// upload cap.
+function audioBufferToWavBlob(buffer) {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const samples = buffer.length;
+  const dataSize = samples * numChannels * 2;
+  const ab = new ArrayBuffer(44 + dataSize);
+  const view = new DataView(ab);
+  let offset = 0;
+  const writeStr = (s) => {
+    for (let i = 0; i < s.length; i++) view.setUint8(offset++, s.charCodeAt(i));
+  };
+  const writeU32 = (v) => { view.setUint32(offset, v, true); offset += 4; };
+  const writeU16 = (v) => { view.setUint16(offset, v, true); offset += 2; };
+  writeStr('RIFF');
+  writeU32(36 + dataSize);
+  writeStr('WAVE');
+  writeStr('fmt ');
+  writeU32(16);
+  writeU16(1); // PCM
+  writeU16(numChannels);
+  writeU32(sampleRate);
+  writeU32(sampleRate * numChannels * 2);
+  writeU16(numChannels * 2);
+  writeU16(16);
+  writeStr('data');
+  writeU32(dataSize);
+  const channelData = [];
+  for (let c = 0; c < numChannels; c++) channelData.push(buffer.getChannelData(c));
+  for (let i = 0; i < samples; i++) {
+    for (let c = 0; c < numChannels; c++) {
+      let s = Math.max(-1, Math.min(1, channelData[c][i]));
+      s = s < 0 ? s * 0x8000 : s * 0x7fff;
+      view.setInt16(offset, s, true);
+      offset += 2;
+    }
+  }
+  return new Blob([ab], { type: 'audio/wav' });
+}
+
+// Decode `blob`, slice the [startMs, endMs] window, and re-encode it as a
+// new WAV blob. Returns null if the environment can't decode audio (e.g.
+// AudioContext is unavailable) so callers can fall back to the original.
+async function trimVoiceBlobToWav(blob, startMs, endMs) {
+  if (typeof window === 'undefined') return null;
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return null;
+  const arrBuf = await blob.arrayBuffer();
+  const ctx = new Ctx();
+  let decoded;
+  try {
+    decoded = await ctx.decodeAudioData(arrBuf.slice(0));
+  } catch (err) {
+    try { await ctx.close(); } catch {}
+    throw err;
+  }
+  const sampleRate = decoded.sampleRate;
+  const startSample = Math.max(0, Math.floor((startMs / 1000) * sampleRate));
+  const endSample = Math.min(
+    decoded.length,
+    Math.ceil((endMs / 1000) * sampleRate),
+  );
+  const length = Math.max(0, endSample - startSample);
+  if (length <= 0) {
+    try { await ctx.close(); } catch {}
+    return null;
+  }
+  const numChannels = decoded.numberOfChannels;
+  const trimmed = ctx.createBuffer(numChannels, length, sampleRate);
+  for (let c = 0; c < numChannels; c++) {
+    const src = decoded.getChannelData(c);
+    trimmed.getChannelData(c).set(src.subarray(startSample, endSample));
+  }
+  try { await ctx.close(); } catch {}
+  return audioBufferToWavBlob(trimmed);
+}
+
 const WAVEFORM_BAR_COUNT = 36;
+// Smallest allowed gap between the trim start and trim end handles. Anything
+// shorter than this is functionally a zero-length clip, so the handles refuse
+// to cross or sit on top of each other.
+const MIN_TRIM_MS = 200;
 
 // Module-level coordination so only one voice clip plays at a time across the
 // messenger (sent bubbles, received bubbles, and the composer preview row all
@@ -85,13 +170,36 @@ function releaseVoicePlayback(audioEl) {
 // case we fetch + decode it once on mount. If decoding fails (unsupported
 // codec, fetch error, no AudioContext, etc.) we fall back to a flat
 // baseline so older voice notes still render and play.
-function VoiceWaveform({ blob, url, durationMs, variant = 'preview' }) {
+//
+// `trimStartMs` / `trimEndMs` (preview only) define the playable window
+// inside the recorded take. When `onTrimChange` is supplied, two yellow
+// handles appear over the bars so the user can shave silence off the head
+// or tail without re-recording. Playback is clamped to the window, and the
+// parent component re-encodes that same window into the blob it actually
+// sends. Chat bubbles never pass `onTrimChange`, so the handles + trim UI
+// are inert and the bubble waveform plays end-to-end as before.
+function VoiceWaveform({
+  blob,
+  url,
+  durationMs,
+  variant = 'preview',
+  trimStartMs = 0,
+  trimEndMs,
+  onTrimChange,
+}) {
   const audioRef = useRef(null);
   const trackRef = useRef(null);
   const [peaks, setPeaks] = useState(null);
   const [playing, setPlaying] = useState(false);
   const [currentMs, setCurrentMs] = useState(0);
   const totalMs = Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 0;
+  const startMs = Math.max(0, Math.min(totalMs, Number.isFinite(trimStartMs) ? trimStartMs : 0));
+  const endMs = Math.max(
+    startMs,
+    Math.min(totalMs, Number.isFinite(trimEndMs) ? trimEndMs : totalMs),
+  );
+  const trimmedMs = Math.max(0, endMs - startMs);
+  const trimmable = totalMs > 0 && typeof onTrimChange === 'function';
 
   // Decode the source audio into a small array of normalized amplitudes that
   // we use to size each bar. We prefer the in-memory blob (composer preview)
@@ -148,9 +256,19 @@ function VoiceWaveform({ blob, url, durationMs, variant = 'preview' }) {
 
   // Reset transport state when the source changes (e.g. after re-record,
   // or when scrolling between bubbles backed by different attachments).
+  // Snap the playhead to the start of the trim window so the play button
+  // doesn't appear to skip past silence the user didn't intend to keep.
   useEffect(() => {
     setPlaying(false);
-    setCurrentMs(0);
+    setCurrentMs(startMs);
+    const a = audioRef.current;
+    if (a) {
+      try { a.currentTime = startMs / 1000; } catch {}
+    }
+    // Intentionally only react to a new blob — startMs is captured here so a
+    // re-record resets the playhead, but tweaks to the handles below handle
+    // their own re-clamping without rewinding mid-playback.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [url]);
 
   // If this player unmounts (e.g. the thread closes or the bubble scrolls out
@@ -161,16 +279,38 @@ function VoiceWaveform({ blob, url, durationMs, variant = 'preview' }) {
     if (a) releaseVoicePlayback(a);
   }, []);
 
+  // If the user drags a handle past the current playhead, snap the playhead
+  // back into the new window so we don't keep playing audio that's now
+  // outside the trim range.
+  useEffect(() => {
+    if (totalMs <= 0) return;
+    setCurrentMs((prev) => {
+      if (prev < startMs) return startMs;
+      if (prev > endMs) return endMs;
+      return prev;
+    });
+    const a = audioRef.current;
+    if (!a) return;
+    const cur = a.currentTime * 1000;
+    if (cur < startMs - 5) {
+      try { a.currentTime = startMs / 1000; } catch {}
+    } else if (cur > endMs) {
+      try { a.pause(); } catch {}
+      try { a.currentTime = startMs / 1000; } catch {}
+    }
+  }, [startMs, endMs, totalMs]);
+
   const togglePlay = () => {
     const a = audioRef.current;
     if (!a) return;
     if (playing) {
       try { a.pause(); } catch {}
     } else {
-      // If we ended previously, rewind so play resumes from the start.
-      if (totalMs > 0 && currentMs >= totalMs - 50) {
-        try { a.currentTime = 0; } catch {}
-        setCurrentMs(0);
+      // If we're outside the trim window or sitting at its end, rewind to
+      // the start of the trim so play picks up from the trimmed beginning.
+      if (trimmedMs > 0 && (currentMs < startMs || currentMs >= endMs - 50)) {
+        try { a.currentTime = startMs / 1000; } catch {}
+        setCurrentMs(startMs);
       }
       const p = a.play();
       if (p && typeof p.catch === 'function') p.catch(() => {});
@@ -184,7 +324,10 @@ function VoiceWaveform({ blob, url, durationMs, variant = 'preview' }) {
     const rect = track.getBoundingClientRect();
     if (rect.width <= 0) return;
     const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-    const ms = ratio * totalMs;
+    let ms = ratio * totalMs;
+    // Clamp scrub to the trim window so clicking in the dimmed (trimmed-out)
+    // region snaps to the nearest edge instead of seeking outside it.
+    ms = Math.max(startMs, Math.min(endMs, ms));
     try { a.currentTime = ms / 1000; } catch {}
     setCurrentMs(ms);
   };
@@ -229,15 +372,15 @@ function VoiceWaveform({ blob, url, durationMs, variant = 'preview' }) {
   const handleTrackKeyDown = (e) => {
     const a = audioRef.current;
     if (!a || totalMs <= 0) return;
-    const step = Math.max(250, totalMs * 0.05);
+    const step = Math.max(250, trimmedMs * 0.05);
     if (e.key === 'ArrowLeft') {
       e.preventDefault();
-      const next = Math.max(0, currentMs - step);
+      const next = Math.max(startMs, currentMs - step);
       try { a.currentTime = next / 1000; } catch {}
       setCurrentMs(next);
     } else if (e.key === 'ArrowRight') {
       e.preventDefault();
-      const next = Math.min(totalMs, currentMs + step);
+      const next = Math.min(endMs, currentMs + step);
       try { a.currentTime = next / 1000; } catch {}
       setCurrentMs(next);
     } else if (e.key === ' ' || e.key === 'Enter') {
@@ -246,11 +389,112 @@ function VoiceWaveform({ blob, url, durationMs, variant = 'preview' }) {
     }
   };
 
+  // Trim-handle drag — separate pointer-capture lifecycle from the scrub
+  // drag above so the handle wins when both could fire (the handle is
+  // rendered on top of the bars and stops propagation).
+  const handleDragModeRef = useRef(null);
+
+  const trimMsFromClientX = (clientX) => {
+    const track = trackRef.current;
+    if (!track) return null;
+    const rect = track.getBoundingClientRect();
+    if (rect.width <= 0) return null;
+    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    return ratio * totalMs;
+  };
+
+  const applyHandleDrag = (clientX) => {
+    if (!trimmable) return;
+    const ms = trimMsFromClientX(clientX);
+    if (ms == null) return;
+    if (handleDragModeRef.current === 'start') {
+      const next = Math.max(0, Math.min(ms, endMs - MIN_TRIM_MS));
+      onTrimChange(next, endMs);
+    } else if (handleDragModeRef.current === 'end') {
+      const next = Math.min(totalMs, Math.max(ms, startMs + MIN_TRIM_MS));
+      onTrimChange(startMs, next);
+    }
+  };
+
+  const startHandleDrag = (mode) => (e) => {
+    if (!trimmable) return;
+    if (e.button !== undefined && e.button !== 0) return;
+    // Don't let the underlying scrub track steal this gesture — the trim
+    // handles render on top of the bars and own this pointer interaction.
+    e.stopPropagation();
+    if (e.cancelable) e.preventDefault();
+    handleDragModeRef.current = mode;
+    const target = e.currentTarget;
+    if (target && typeof target.setPointerCapture === 'function') {
+      try { target.setPointerCapture(e.pointerId); } catch {}
+    }
+  };
+
+  const moveHandleDrag = (e) => {
+    if (!handleDragModeRef.current) return;
+    if (e.cancelable) e.preventDefault();
+    applyHandleDrag(e.clientX);
+  };
+
+  const endHandleDrag = (e) => {
+    if (!handleDragModeRef.current) return;
+    applyHandleDrag(e.clientX);
+    const target = e.currentTarget;
+    if (target && typeof target.releasePointerCapture === 'function') {
+      try { target.releasePointerCapture(e.pointerId); } catch {}
+    }
+    handleDragModeRef.current = null;
+  };
+
+  const nudgeHandle = (mode, deltaMs) => {
+    if (!trimmable) return;
+    if (mode === 'start') {
+      const next = Math.max(0, Math.min(startMs + deltaMs, endMs - MIN_TRIM_MS));
+      onTrimChange(next, endMs);
+    } else {
+      const next = Math.min(totalMs, Math.max(endMs + deltaMs, startMs + MIN_TRIM_MS));
+      onTrimChange(startMs, next);
+    }
+  };
+
+  const handleHandleKeyDown = (mode) => (e) => {
+    if (!trimmable) return;
+    const step = Math.max(100, totalMs * 0.02);
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      e.stopPropagation();
+      nudgeHandle(mode, -step);
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      e.stopPropagation();
+      nudgeHandle(mode, step);
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      e.stopPropagation();
+      if (mode === 'start') onTrimChange(0, endMs);
+      else onTrimChange(startMs, Math.max(startMs + MIN_TRIM_MS, totalMs));
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      e.stopPropagation();
+      if (mode === 'end') onTrimChange(startMs, totalMs);
+      else onTrimChange(Math.max(0, endMs - MIN_TRIM_MS), endMs);
+    }
+  };
+
+  const startPct = totalMs > 0 ? (startMs / totalMs) * 100 : 0;
+  const endPct = totalMs > 0 ? (endMs / totalMs) * 100 : 100;
+  // Progress is only meaningful inside the trim window — keep using the
+  // overall ratio (so the playhead aligns with the bars) but the painted
+  // "played" state below is gated to bars that fall inside the window.
   const progress = totalMs > 0 ? Math.min(1, Math.max(0, currentMs / totalMs)) : 0;
-  const displayMs = playing || currentMs > 0
-    ? Math.max(0, totalMs - currentMs)
-    : totalMs;
+  const playedInTrim = Math.max(0, Math.min(trimmedMs, currentMs - startMs));
+  // Show the remaining time of the *trimmed* take so the duration the user
+  // sees in the preview matches what their friend will eventually receive.
+  const displayMs = playing || playedInTrim > 0
+    ? Math.max(0, trimmedMs - playedInTrim)
+    : trimmedMs;
   const bars = peaks ?? new Array(WAVEFORM_BAR_COUNT).fill(0.25);
+  const trimmed = trimmedMs < totalMs - 1;
 
   const isPreview = variant === 'preview';
   const isMine = variant === 'mine';
@@ -288,8 +532,23 @@ function VoiceWaveform({ blob, url, durationMs, variant = 'preview' }) {
         preload="metadata"
         onPlay={(e) => { claimVoicePlayback(e.currentTarget); setPlaying(true); }}
         onPause={(e) => { releaseVoicePlayback(e.currentTarget); setPlaying(false); }}
-        onEnded={(e) => { releaseVoicePlayback(e.currentTarget); setPlaying(false); setCurrentMs(totalMs); }}
-        onTimeUpdate={(e) => setCurrentMs(e.currentTarget.currentTime * 1000)}
+        onEnded={(e) => { releaseVoicePlayback(e.currentTarget); setPlaying(false); setCurrentMs(endMs); }}
+        onTimeUpdate={(e) => {
+          const ms = e.currentTarget.currentTime * 1000;
+          // Stop playback at the trim end so the preview only plays the
+          // window the user will actually send. Chat bubbles use the full
+          // take, so endMs === totalMs and this branch is never taken.
+          if (endMs > 0 && endMs < totalMs && ms >= endMs) {
+            try { e.currentTarget.pause(); } catch {}
+            try { e.currentTarget.currentTime = startMs / 1000; } catch {}
+            setCurrentMs(startMs);
+          } else if (startMs > 0 && ms < startMs) {
+            try { e.currentTarget.currentTime = startMs / 1000; } catch {}
+            setCurrentMs(startMs);
+          } else {
+            setCurrentMs(ms);
+          }
+        }}
         style={{ display: 'none' }}
       />
       <button
@@ -327,14 +586,21 @@ function VoiceWaveform({ blob, url, durationMs, variant = 'preview' }) {
         aria-valuemax={Math.max(1, Math.round(totalMs))}
         aria-valuenow={Math.round(currentMs)}
         tabIndex={0}
-        className={`flex items-center gap-[2px] h-8 cursor-pointer outline-none overflow-hidden ${isPreview ? 'min-w-0 flex-1' : 'w-[150px] max-w-full'}`}
+        className={`flex items-center gap-[2px] h-8 cursor-pointer outline-none ${isPreview ? 'relative min-w-0 flex-1' : 'overflow-hidden w-[150px] max-w-full'}`}
         // touch-action: none keeps the browser from stealing horizontal drags
         // for page scroll/back-swipe while the user is scrubbing.
         style={{ touchAction: 'none' }}
       >
         {bars.map((p, i) => {
           const h = Math.max(2, Math.round(p * 24));
-          const played = (i + 0.5) / WAVEFORM_BAR_COUNT <= progress;
+          const barCenter = (i + 0.5) / WAVEFORM_BAR_COUNT;
+          const inTrim = totalMs <= 0
+            || (barCenter * totalMs >= startMs && barCenter * totalMs <= endMs);
+          const played = inTrim && barCenter <= progress;
+          let bg;
+          if (!inTrim) bg = 'rgba(96,165,250,0.12)';
+          else if (played) bg = '#3b82f6';
+          else bg = 'rgba(96,165,250,0.45)';
           return (
             <span
               key={i}
@@ -342,16 +608,121 @@ function VoiceWaveform({ blob, url, durationMs, variant = 'preview' }) {
               style={{
                 width: 2,
                 height: `${h}px`,
-                backgroundColor: played ? palette.played : palette.unplayed,
+                backgroundColor: !inTrim
+                  ? (isMine ? 'rgba(255,255,255,0.18)' : 'rgba(96,165,250,0.15)')
+                  : (played ? palette.played : palette.unplayed),
                 transition: 'background-color 60ms linear',
               }}
             />
           );
         })}
+        {trimmable && (
+          <>
+            {/* Translucent overlay highlighting the kept (in-trim) region so
+                the active window reads at a glance even before any drag. */}
+            <span
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                top: 0,
+                bottom: 0,
+                left: `${startPct}%`,
+                width: `${Math.max(0, endPct - startPct)}%`,
+                pointerEvents: 'none',
+                background: 'rgba(59,130,246,0.08)',
+                borderTop: '1px solid rgba(59,130,246,0.35)',
+                borderBottom: '1px solid rgba(59,130,246,0.35)',
+              }}
+            />
+            <button
+              type="button"
+              role="slider"
+              aria-label="Trim start"
+              aria-valuemin={0}
+              aria-valuemax={Math.max(0, Math.round(endMs - MIN_TRIM_MS))}
+              aria-valuenow={Math.round(startMs)}
+              onPointerDown={startHandleDrag('start')}
+              onPointerMove={moveHandleDrag}
+              onPointerUp={endHandleDrag}
+              onPointerCancel={endHandleDrag}
+              onKeyDown={handleHandleKeyDown('start')}
+              title="Drag to trim the start"
+              style={{
+                position: 'absolute',
+                top: -2,
+                bottom: -2,
+                left: `${startPct}%`,
+                transform: 'translateX(-50%)',
+                width: 18,
+                padding: 0,
+                margin: 0,
+                background: 'transparent',
+                border: 'none',
+                cursor: 'ew-resize',
+                touchAction: 'none',
+              }}
+            >
+              <span
+                aria-hidden="true"
+                style={{
+                  display: 'block',
+                  width: 4,
+                  height: '100%',
+                  margin: '0 auto',
+                  background: '#fbbf24',
+                  borderRadius: 2,
+                  boxShadow: '0 0 6px rgba(251,191,36,0.7)',
+                }}
+              />
+            </button>
+            <button
+              type="button"
+              role="slider"
+              aria-label="Trim end"
+              aria-valuemin={Math.round(startMs + MIN_TRIM_MS)}
+              aria-valuemax={Math.max(1, Math.round(totalMs))}
+              aria-valuenow={Math.round(endMs)}
+              onPointerDown={startHandleDrag('end')}
+              onPointerMove={moveHandleDrag}
+              onPointerUp={endHandleDrag}
+              onPointerCancel={endHandleDrag}
+              onKeyDown={handleHandleKeyDown('end')}
+              title="Drag to trim the end"
+              style={{
+                position: 'absolute',
+                top: -2,
+                bottom: -2,
+                left: `${endPct}%`,
+                transform: 'translateX(-50%)',
+                width: 18,
+                padding: 0,
+                margin: 0,
+                background: 'transparent',
+                border: 'none',
+                cursor: 'ew-resize',
+                touchAction: 'none',
+              }}
+            >
+              <span
+                aria-hidden="true"
+                style={{
+                  display: 'block',
+                  width: 4,
+                  height: '100%',
+                  margin: '0 auto',
+                  background: '#fbbf24',
+                  borderRadius: 2,
+                  boxShadow: '0 0 6px rgba(251,191,36,0.7)',
+                }}
+              />
+            </button>
+          </>
+        )}
       </div>
       <span
         className="text-[10px] tabular-nums flex-shrink-0"
-        style={{ color: palette.time }}
+        style={{ color: trimmable && trimmed ? '#fbbf24' : palette.time }}
+        title={trimmable && trimmed ? 'Trimmed length' : undefined}
       >
         {formatDuration(displayMs)}
       </span>
@@ -725,7 +1096,8 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   };
 
   const uploadVoiceBlob = async (blob, durationMs) => {
-    const ext = blob.type.includes('mp4') ? 'm4a'
+    const ext = blob.type.includes('wav') ? 'wav'
+      : blob.type.includes('mp4') ? 'm4a'
       : blob.type.includes('ogg') ? 'ogg'
       : 'webm';
     const filename = `voice-${Date.now()}.${ext}`;
@@ -881,7 +1253,14 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
             url = URL.createObjectURL(blob);
           }
         } catch {}
-        setVoicePreview({ blob, url, durationMs: elapsed, mime });
+        setVoicePreview({
+          blob,
+          url,
+          durationMs: elapsed,
+          mime,
+          trimStartMs: 0,
+          trimEndMs: elapsed,
+        });
       };
       recorderRef.current = recorder;
       recordStartRef.current = Date.now();
@@ -944,7 +1323,14 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
         url = URL.createObjectURL(blob);
       }
     } catch {}
-    setVoicePreview({ blob, url, durationMs, mime });
+    setVoicePreview({
+      blob,
+      url,
+      durationMs,
+      mime,
+      trimStartMs: 0,
+      trimEndMs: durationMs,
+    });
     setRecording(false);
     // Only enable Continue if there's still recording budget; otherwise the
     // user has already maxed out and resuming would just immediately stop.
@@ -1102,6 +1488,16 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     });
   }, []);
 
+  // Update the trim window on the active preview without touching the
+  // underlying blob/recorder — Continue still resumes from the full take
+  // because the recorder chunks aren't mutated by trimming.
+  const setVoicePreviewTrim = useCallback((trimStartMs, trimEndMs) => {
+    setVoicePreview((prev) => {
+      if (!prev) return prev;
+      return { ...prev, trimStartMs, trimEndMs };
+    });
+  }, []);
+
   // Discard the current take and immediately arm the recorder for a fresh
   // attempt — saves the user a tap when they didn't like what they heard.
   const handleRerecordPreview = () => {
@@ -1161,8 +1557,28 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   const handleSendPreview = async () => {
     if (sending) return;
     if (!voicePreview?.blob) return;
-    const { blob, durationMs } = voicePreview;
-    const ok = await sendVoiceBlob(blob, durationMs);
+    const { blob, durationMs, trimStartMs, trimEndMs } = voicePreview;
+    const startMs = Math.max(0, Math.min(durationMs, trimStartMs ?? 0));
+    const endMs = Math.max(startMs, Math.min(durationMs, trimEndMs ?? durationMs));
+    const trimmedDuration = Math.max(0, endMs - startMs);
+    let outBlob = blob;
+    let outDuration = durationMs;
+    // Only re-encode when the user actually trimmed something meaningful;
+    // otherwise the existing fast path uploads the original codec untouched.
+    if (startMs > 50 || endMs < durationMs - 50) {
+      try {
+        const trimmedBlob = await trimVoiceBlobToWav(blob, startMs, endMs);
+        if (trimmedBlob) {
+          outBlob = trimmedBlob;
+          outDuration = trimmedDuration;
+        }
+      } catch (err) {
+        // If decoding/encoding fails for any reason, fall back to sending
+        // the original take rather than blocking the user. The trim was a
+        // UX nicety — losing it is recoverable, losing the take isn't.
+      }
+    }
+    const ok = await sendVoiceBlob(outBlob, outDuration);
     if (ok) {
       tearDownLingeringRecorder();
       setResumableTake(false);
@@ -1507,6 +1923,9 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
                 url={voicePreview.url}
                 durationMs={voicePreview.durationMs}
                 variant="preview"
+                trimStartMs={voicePreview.trimStartMs ?? 0}
+                trimEndMs={voicePreview.trimEndMs ?? voicePreview.durationMs}
+                onTrimChange={setVoicePreviewTrim}
               />
               <div className="ml-auto flex gap-2 flex-shrink-0">
                 <button
