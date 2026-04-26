@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { useRouter } from 'next/router';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
 
@@ -133,8 +134,9 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
   };
 
   if (!isOpen) return null;
+  if (typeof document === 'undefined') return null;
 
-  return (
+  const content = (
     <div data-allow-fixed-overlay="true" className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose}>
       <div className="rounded-2xl max-w-md w-full overflow-hidden my-auto" style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }} onClick={e => e.stopPropagation()}>
         <div className="p-5" style={{ borderBottom: '1px solid #1a1a1a' }}>
@@ -336,4 +338,5 @@ export default function PrivateMatchModal({ isOpen, onClose, onMatchJoined }) {
       </div>
     </div>
   );
+  return ReactDOM.createPortal(content, document.body);
 }

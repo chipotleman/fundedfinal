@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { useRouter } from 'next/router';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
 import SharedUserAvatar from '../UserAvatar';
@@ -395,6 +396,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
   };
 
   if (!isOpen) return null;
+  if (typeof document === 'undefined') return null;
 
   const filteredFriends = friends.filter(f =>
     !searchQuery || f.username?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -412,7 +414,7 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
 
   const requestCount = friendRequests.length;
 
-  return (
+  const content = (
     <div data-allow-fixed-overlay="true" className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={onClose} onKeyDown={e => { if (e.key === 'Escape') onClose(); }}>
       <div
         role="dialog"
@@ -1102,4 +1104,5 @@ export default function PlayFriendModal({ isOpen, onClose, friends = [], onInvit
       `}</style>
     </div>
   );
+  return ReactDOM.createPortal(content, document.body);
 }

@@ -1,3 +1,4 @@
+import ReactDOM from 'react-dom';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
 
 const cardBg = '#0d0d0d';
@@ -8,7 +9,8 @@ const textSecondary = '#9ca3af';
 export default function BattleModeChooser({ isOpen, onClose, onPickQuickMatch, onPickChallengeFriend, onPickPrivateMatch }) {
   useModalScrollLock(isOpen);
   if (!isOpen) return null;
-  return (
+  if (typeof document === 'undefined') return null;
+  const content = (
     <div
       data-allow-fixed-overlay="true"
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
@@ -66,4 +68,5 @@ export default function BattleModeChooser({ isOpen, onClose, onPickQuickMatch, o
       </div>
     </div>
   );
+  return ReactDOM.createPortal(content, document.body);
 }
