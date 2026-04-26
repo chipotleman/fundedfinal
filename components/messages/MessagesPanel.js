@@ -74,12 +74,17 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   const [recording, setRecording] = useState(false);
   const [recordElapsed, setRecordElapsed] = useState(0);
   const [voiceError, setVoiceError] = useState(null);
+  const LEVEL_BAR_COUNT = 18;
+  const [audioLevels, setAudioLevels] = useState(() => new Array(LEVEL_BAR_COUNT).fill(0));
   const recorderRef = useRef(null);
   const recordChunksRef = useRef([]);
   const recordStartRef = useRef(0);
   const recordTimerRef = useRef(null);
   const recordCancelledRef = useRef(false);
   const recordMimeRef = useRef('audio/webm');
+  const audioContextRef = useRef(null);
+  const analyserRef = useRef(null);
+  const audioRafRef = useRef(null);
   const scrollRef = useRef(null);
   const lastTypingSentRef = useRef(0);
   const lastTypingFriendRef = useRef(null);
@@ -248,6 +253,64 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     recorderRef.current = null;
   };
 
+  const stopAudioMeter = () => {
+    if (audioRafRef.current != null && typeof cancelAnimationFrame !== 'undefined') {
+      try { cancelAnimationFrame(audioRafRef.current); } catch {}
+    }
+    audioRafRef.current = null;
+    analyserRef.current = null;
+    const ac = audioContextRef.current;
+    audioContextRef.current = null;
+    if (ac && typeof ac.close === 'function') {
+      try { ac.close(); } catch {}
+    }
+  };
+
+  const startAudioMeter = (stream) => {
+    if (typeof window === 'undefined') return;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC || typeof requestAnimationFrame === 'undefined') return;
+    let ctx;
+    try { ctx = new AC(); } catch { return; }
+    let source;
+    try {
+      source = ctx.createMediaStreamSource(stream);
+    } catch {
+      try { ctx.close(); } catch {}
+      return;
+    }
+    const analyser = ctx.createAnalyser();
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = 0.7;
+    source.connect(analyser);
+    audioContextRef.current = ctx;
+    analyserRef.current = analyser;
+    const data = new Uint8Array(analyser.fftSize);
+    let last = 0;
+    const tick = (t) => {
+      // Analyser was torn down (stop / cancel / error / unmount) — bail out.
+      if (analyserRef.current !== analyser) return;
+      audioRafRef.current = requestAnimationFrame(tick);
+      // Throttle to ~14fps so we don't churn React on every paint.
+      if (t - last < 70) return;
+      last = t;
+      try { analyser.getByteTimeDomainData(data); } catch { return; }
+      let sum = 0;
+      for (let i = 0; i < data.length; i++) {
+        const v = (data[i] - 128) / 128;
+        sum += v * v;
+      }
+      const rms = Math.sqrt(sum / data.length);
+      const level = Math.min(1, rms * 3.2);
+      setAudioLevels((prev) => {
+        const next = prev.slice(1);
+        next.push(level);
+        return next;
+      });
+    };
+    audioRafRef.current = requestAnimationFrame(tick);
+  };
+
   const uploadVoiceBlob = async (blob, durationMs) => {
     const ext = blob.type.includes('mp4') ? 'm4a'
       : blob.type.includes('ogg') ? 'ogg'
@@ -308,12 +371,14 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       };
       recorder.onstop = async () => {
         try { stopRecordingTimer(); } catch {}
+        try { stopAudioMeter(); } catch {}
         const elapsed = Date.now() - recordStartRef.current;
         const chunks = recordChunksRef.current;
         recordChunksRef.current = [];
         try { cleanupRecorderStream(); } catch {}
         setRecording(false);
         setRecordElapsed(0);
+        setAudioLevels(new Array(LEVEL_BAR_COUNT).fill(0));
         if (recordCancelledRef.current) {
           recordCancelledRef.current = false;
           return;
@@ -374,8 +439,10 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       recorderRef.current = recorder;
       recordStartRef.current = Date.now();
       setRecordElapsed(0);
+      setAudioLevels(new Array(LEVEL_BAR_COUNT).fill(0));
       recorder.start();
       setRecording(true);
+      try { startAudioMeter(stream); } catch {}
       recordTimerRef.current = setInterval(() => {
         const elapsed = Date.now() - recordStartRef.current;
         setRecordElapsed(elapsed);
@@ -385,6 +452,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       }, 100);
     } catch (err) {
       try { stopRecordingTimer(); } catch {}
+      try { stopAudioMeter(); } catch {}
       if (stream) {
         try { stream.getTracks().forEach((t) => t.stop()); } catch {}
       }
@@ -393,6 +461,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       recordCancelledRef.current = false;
       setRecording(false);
       setRecordElapsed(0);
+      setAudioLevels(new Array(LEVEL_BAR_COUNT).fill(0));
       const name = err?.name || '';
       if (name === 'NotAllowedError' || name === 'SecurityError') {
         setVoiceError('Microphone access denied.');
@@ -421,6 +490,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   useEffect(() => {
     return () => {
       stopRecordingTimer();
+      stopAudioMeter();
       const rec = recorderRef.current;
       if (rec && rec.state !== 'inactive') {
         recordCancelledRef.current = true;
@@ -693,6 +763,26 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
                 style={{ boxShadow: '0 0 10px rgba(239,68,68,0.7)', animation: 'piksRecPulse 1s ease-in-out infinite' }}
               />
               <span className="text-xs text-red-300 font-medium">Recording</span>
+              <div
+                className="flex items-end gap-[2px] h-3.5"
+                aria-hidden="true"
+                style={{ minWidth: 56 }}
+              >
+                {audioLevels.map((lvl, i) => {
+                  const h = Math.max(2, Math.round(lvl * 14));
+                  return (
+                    <span
+                      key={i}
+                      className="block w-[2px] rounded-sm bg-red-400"
+                      style={{
+                        height: `${h}px`,
+                        opacity: 0.55 + lvl * 0.45,
+                        transition: 'height 80ms linear, opacity 80ms linear',
+                      }}
+                    />
+                  );
+                })}
+              </div>
               <span className="text-xs tabular-nums" style={{ color: textSecondary }}>
                 {formatDuration(recordElapsed)} / {formatDuration(MAX_VOICE_MS)}
               </span>
