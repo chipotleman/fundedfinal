@@ -966,6 +966,10 @@ export default function TopNavbar({
               <div className="flex-1 min-w-0" aria-hidden="true" />
             )}
 
+            {/* Right-side controls — hidden on mobile so the condensed bar
+                shows only the sport pills row at small widths. Desktop keeps
+                the full set of controls anchored to the right edge. */}
+            <div className="hidden sm:flex items-center gap-1.5 sm:gap-2">
             {/* Cash balance — same source as the desktop pill in the full nav */}
             {isLoggedIn && hasActiveChallenge && userProfile && (
               <button
@@ -1110,6 +1114,7 @@ export default function TopNavbar({
                 </span>
               </button>
             )}
+            </div>
           </div>
         </div>
       )}
