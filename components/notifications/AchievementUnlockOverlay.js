@@ -4,10 +4,18 @@ import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import { useNotifications } from '../../contexts/NotificationsContext';
 import AchievementDetailModal from '../AchievementDetailModal';
+import { CUE_STORAGE_KEYS } from '../../lib/cueStorageKeys';
 
 const AUTO_DISMISS_MS = 4500;
 const ENTRANCE_LOCKOUT_MS = 350;
 const UNLOCK_VIBRATION_PATTERN = [30, 40, 60];
+
+// Centralized in-app preference keys shared with the Settings page so users
+// can opt out of the unlock buzz without disabling OS-level reduced-motion.
+// The quiet mode key is shared with the lead-change cues so a single "shut
+// everything up" toggle covers both surfaces (task #419).
+const UNLOCK_HAPTICS_KEY = CUE_STORAGE_KEYS.ACHIEVEMENT_UNLOCK_HAPTIC;
+const QUIET_MODE_KEY = CUE_STORAGE_KEYS.QUIET_MODE;
 
 function prefersReducedMotion() {
   if (typeof window === 'undefined' || !window.matchMedia) return false;
@@ -18,10 +26,25 @@ function prefersReducedMotion() {
   }
 }
 
+function readBoolPref(key, fallback) {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    const v = window.localStorage.getItem(key);
+    if (v === null) return fallback;
+    return v === 'on' || v === 'true' || v === '1';
+  } catch {
+    return fallback;
+  }
+}
+
 function buzzForUnlock() {
   if (typeof navigator === 'undefined') return;
   if (typeof navigator.vibrate !== 'function') return;
   if (prefersReducedMotion()) return;
+  // Respect the in-app toggle and the shared quiet-mode switch — same
+  // pattern as `useLeadChangeCue` so both surfaces behave consistently.
+  if (readBoolPref(QUIET_MODE_KEY, false)) return;
+  if (!readBoolPref(UNLOCK_HAPTICS_KEY, true)) return;
   try {
     navigator.vibrate(UNLOCK_VIBRATION_PATTERN);
   } catch {

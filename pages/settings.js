@@ -5,13 +5,14 @@ import TopNavbar from '../components/TopNavbar';
 import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import PushSettingsSection from '../components/notifications/PushSettingsSection';
-import { LEAD_CUE_STORAGE_KEYS } from '../hooks/useLeadChangeCue';
+import { CUE_STORAGE_KEYS } from '../lib/cueStorageKeys';
 import { BANNER_LIBRARY } from '../lib/teamCatalog';
 
 const LEAD_CUE_LABELS = [
-  ['haptics', 'Lead-change vibration', 'Short buzz on your phone when a close game flips its leader.', LEAD_CUE_STORAGE_KEYS.HAPTIC_KEY, true],
-  ['sound', 'Lead-change sound', 'Quick low-volume blip when a close game flips its leader.', LEAD_CUE_STORAGE_KEYS.SOUND_KEY, false],
-  ['quiet', 'Quiet mode', 'Mute all lead-change cues, regardless of the toggles above.', LEAD_CUE_STORAGE_KEYS.QUIET_KEY, false],
+  ['haptics', 'Lead-change vibration', 'Short buzz on your phone when a close game flips its leader.', CUE_STORAGE_KEYS.LEAD_HAPTIC, true],
+  ['sound', 'Lead-change sound', 'Quick low-volume blip when a close game flips its leader.', CUE_STORAGE_KEYS.LEAD_SOUND, false],
+  ['achievementHaptics', 'Achievement unlock vibration', 'Short buzz when the full-screen achievement unlock celebration appears.', CUE_STORAGE_KEYS.ACHIEVEMENT_UNLOCK_HAPTIC, true],
+  ['quiet', 'Quiet mode', 'Mute all lead-change and achievement cues, regardless of the toggles above.', CUE_STORAGE_KEYS.QUIET_MODE, false],
 ];
 
 const NOTIF_LABELS = {
@@ -536,11 +537,11 @@ export default function Settings() {
 
           {/* Lead-change cues */}
           <section className={sectionClass}>
-            <h2 className="text-xl font-bold text-white mb-2">Lead-change cues</h2>
+            <h2 className="text-xl font-bold text-white mb-2">In-app cues</h2>
             <p className="text-gray-400 text-sm mb-6">
-              Get a quick buzz or blip when a close game on the live rail flips its leader.
-              Cues respect your device&apos;s reduced-motion setting and never fire more than
-              once per game per ~30 seconds.
+              Quick buzzes and blips for live moments — like a close game flipping its
+              leader, or unlocking a new achievement. All cues respect your device&apos;s
+              reduced-motion setting.
             </p>
             <div className="space-y-4">
               {LEAD_CUE_LABELS.map(([key, label, desc, storageKey]) => (

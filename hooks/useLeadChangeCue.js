@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { triggerHaptic } from '../utils/haptics';
+import { CUE_STORAGE_KEYS } from '../lib/cueStorageKeys';
 
-const HAPTIC_KEY = 'piks_lead_cue_haptics';
-const SOUND_KEY = 'piks_lead_cue_sound';
-const QUIET_KEY = 'piks_quiet_mode';
+const HAPTIC_KEY = CUE_STORAGE_KEYS.LEAD_HAPTIC;
+const SOUND_KEY = CUE_STORAGE_KEYS.LEAD_SOUND;
+const QUIET_KEY = CUE_STORAGE_KEYS.QUIET_MODE;
 const COOLDOWN_MS = 30_000;
 
 function readPref(key, fallback) {
@@ -116,9 +117,3 @@ export default function useLeadChangeCue(leadChanges) {
     }
   }, [leadChanges]);
 }
-
-export const LEAD_CUE_STORAGE_KEYS = {
-  HAPTIC_KEY,
-  SOUND_KEY,
-  QUIET_KEY,
-};
