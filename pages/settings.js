@@ -6,6 +6,10 @@ import { useBetSlip } from '../contexts/BetSlipContext';
 import { useUserPreferences } from '../contexts/UserPreferencesContext';
 import PushSettingsSection from '../components/notifications/PushSettingsSection';
 import { CUE_STORAGE_KEYS } from '../lib/cueStorageKeys';
+import {
+  isPlayNowConfirmSkipped,
+  setPlayNowConfirmSkipped,
+} from '../lib/playNowConfirm';
 import { BANNER_LIBRARY } from '../lib/teamCatalog';
 
 const LEAD_CUE_LABELS = [
@@ -115,6 +119,23 @@ export default function Settings() {
     for (const [key, , , , defaultVal] of LEAD_CUE_LABELS) initial[key] = defaultVal;
     return initial;
   });
+
+  // Reflects the per-device "Tap to confirm $5 RUSH" warning on the
+  // homepage Play Now card. The toggle is "on" when the warning is
+  // enabled (i.e. the skip flag is NOT set), so flipping it on
+  // re-prompts the user the next time they tap Play Now even if
+  // they previously chose "Don't ask me again".
+  const [playNowConfirmEnabled, setPlayNowConfirmEnabled] = useState(true);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setPlayNowConfirmEnabled(!isPlayNowConfirmSkipped());
+  }, []);
+
+  const handlePlayNowConfirmToggle = (enabled) => {
+    setPlayNowConfirmEnabled(enabled);
+    setPlayNowConfirmSkipped(!enabled);
+  };
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -534,6 +555,32 @@ export default function Settings() {
 
           {/* Push notifications (existing) */}
           <PushSettingsSection />
+
+          {/* Gameplay */}
+          <section className={sectionClass}>
+            <h2 className="text-xl font-bold text-white mb-2">Gameplay</h2>
+            <p className="text-gray-400 text-sm mb-6">
+              Per-device safeguards for paid actions. Saved on this
+              browser only — flip these on each device you use.
+            </p>
+            <div className="flex items-center justify-between py-3">
+              <div className="pr-4">
+                <div className="text-white font-medium">
+                  Confirm before starting a paid battle
+                </div>
+                <div className="text-gray-400 text-sm">
+                  Show the &ldquo;Tap to confirm&rdquo; spend warning on the
+                  homepage Play Now card. Turn this back on if you
+                  previously chose &ldquo;Don&apos;t ask me again&rdquo; and want
+                  the prompt back.
+                </div>
+              </div>
+              <Toggle
+                value={playNowConfirmEnabled}
+                onChange={handlePlayNowConfirmToggle}
+              />
+            </div>
+          </section>
 
           {/* Lead-change cues */}
           <section className={sectionClass}>

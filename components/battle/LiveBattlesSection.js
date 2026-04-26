@@ -8,6 +8,10 @@ import MutualFriendsLine from '../social/MutualFriendsLine';
 import { useProfileCacheOptional } from '../../contexts/ProfileCacheContext';
 import { useMatchup } from '../../contexts/MatchupContext';
 import { getBattleStreamClient } from '../../lib/battleStreamClient';
+import {
+  PLAY_NOW_SKIP_CONFIRM_KEY,
+  PLAY_NOW_SKIP_CONFIRM_VERSION,
+} from '../../lib/playNowConfirm';
 
 function formatTimeRemaining(ms) {
   if (!ms || ms <= 0) return 'Ended';
@@ -871,15 +875,15 @@ function writeOneTapPrefs(buyIn, gameMode) {
   } catch {}
 }
 
-// LocalStorage key for the "Don't ask again" preference on the
-// homepage Play Now card. We store the *version* the user opted out
-// against rather than a plain boolean so bumping
-// PLAY_NOW_SKIP_CONFIRM_VERSION re-prompts every existing user the
-// next time they tap Play Now. This honours the spec's "any user the
-// first time after a deploy" line whenever product changes the
-// matchmaking buy-in, mode, or anything else worth re-confirming.
-const PLAY_NOW_SKIP_CONFIRM_KEY = 'playnow:skipConfirmVersion';
-const PLAY_NOW_SKIP_CONFIRM_VERSION = '1';
+// The localStorage key + version that gate the "Don't ask again"
+// preference on the homepage Play Now card live in
+// `lib/playNowConfirm.js` so the Settings page can let users flip
+// the spend warning back on without us duplicating the contract.
+// Bumping PLAY_NOW_SKIP_CONFIRM_VERSION there will re-prompt every
+// existing user the next time they tap Play Now — honouring the
+// spec's "any user the first time after a deploy" line whenever
+// product changes the matchmaking buy-in, mode, or anything else
+// worth re-confirming.
 // How long the confirmation step stays open before snapping back to
 // idle if the user doesn't act. Long enough to read and decide, short
 // enough that an accidental enter doesn't leave the card "armed".
