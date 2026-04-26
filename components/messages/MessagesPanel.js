@@ -583,6 +583,12 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     clearVoicePreview();
   };
 
+  const handleRerecordPreview = () => {
+    if (sending || recording) return;
+    clearVoicePreview();
+    handleStartRecording();
+  };
+
   const handleSendPreview = async () => {
     if (sending) return;
     if (!voicePreview?.blob) return;
@@ -900,6 +906,20 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
                   style={{ backgroundColor: '#1f1f1f', color: '#e5e7eb', border: `1px solid ${cardBorder}` }}
                 >
                   Discard
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRerecordPreview}
+                  disabled={sending}
+                  aria-label="Re-record voice note"
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50"
+                  style={{
+                    backgroundColor: '#1f1f1f',
+                    color: '#fca5a5',
+                    border: '1px solid rgba(239,68,68,0.4)',
+                  }}
+                >
+                  Re-record
                 </button>
                 <button
                   type="button"
