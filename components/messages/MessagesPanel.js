@@ -600,11 +600,15 @@ function VoiceWaveform({
   // "played" state below is gated to bars that fall inside the window.
   const progress = totalMs > 0 ? Math.min(1, Math.max(0, currentMs / totalMs)) : 0;
   const playedInTrim = Math.max(0, Math.min(trimmedMs, currentMs - startMs));
-  // Show the remaining time of the *trimmed* take so the duration the user
-  // sees in the preview matches what their friend will eventually receive.
-  const displayMs = playing || playedInTrim > 0
-    ? Math.max(0, trimmedMs - playedInTrim)
-    : trimmedMs;
+  // Once playback has started (or the user has scrubbed off the start) show
+  // the elapsed time alongside the total length of the *trimmed* take —
+  // pairs with the playhead line so users can see exactly how far in they
+  // are. Idle bubbles still just show the total length so the row stays
+  // compact before any interaction.
+  const inPlayback = playing || playedInTrim > 0;
+  const elapsedLabel = formatDuration(playedInTrim);
+  const totalLabel = formatDuration(trimmedMs);
+  const timeLabel = inPlayback ? `${elapsedLabel} / ${totalLabel}` : totalLabel;
   const bars = peaks ?? new Array(WAVEFORM_BAR_COUNT).fill(0.25);
   const trimmed = trimmedMs < totalMs - 1;
 
@@ -866,7 +870,7 @@ function VoiceWaveform({
         style={{ color: trimmable && trimmed ? '#fbbf24' : palette.time }}
         title={trimmable && trimmed ? 'Trimmed length' : undefined}
       >
-        {formatDuration(displayMs)}
+        {timeLabel}
       </span>
     </div>
   );
