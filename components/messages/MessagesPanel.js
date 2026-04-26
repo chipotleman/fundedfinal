@@ -618,6 +618,22 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     };
   }, []);
 
+  // Auto-pause an in-progress take when the messenger tab becomes hidden so
+  // we don't silently capture dead air while the user is elsewhere. The
+  // recorder stays paused on return — the user must tap Resume to continue.
+  // handlePauseRecording is itself a no-op if the recorder isn't actively
+  // recording or pause isn't supported, so the guard here is just to avoid
+  // attaching the listener when there's nothing to pause.
+  useEffect(() => {
+    if (!recording || paused) return undefined;
+    if (typeof document === 'undefined') return undefined;
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') handlePauseRecording();
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+  }, [recording, paused]);
+
   // Switching to a different conversation should drop any pending preview so
   // the recorded blob isn't accidentally sent to the wrong friend.
   useEffect(() => {
