@@ -5,6 +5,7 @@ import {
   signObjectURL,
   resolvePrivateObjectPath,
   describeObjectStorageMisconfig,
+  describeStorageEnvSnapshot,
 } from '../../../lib/objectStorage';
 
 // Single user-facing string so callers don't see internal codes. Internal
@@ -53,19 +54,26 @@ export default async function handler(req, res) {
     }
 
     const misconfig = describeObjectStorageMisconfig();
+    const envSnapshot = describeStorageEnvSnapshot();
     if (misconfig.warnings.length > 0) {
       // Non-blocking: signing only needs PRIVATE_OBJECT_DIR + a reachable
       // sidecar, but other Object Storage env vars look misconfigured too.
       // Surface them as warnings so a partial misconfiguration is visible.
+      // The redacted env snapshot is appended so the warning is enough to
+      // diagnose without needing a separate env dump.
       console.warn(
         '[uploads/request-url] object storage env warnings: ' +
-          misconfig.warnings.join('; ')
+          misconfig.warnings.join('; ') +
+          ' | ' +
+          envSnapshot
       );
     }
     if (misconfig.blocking.length > 0) {
       console.error(
         '[uploads/request-url] storage_not_configured — ' +
-          misconfig.blocking.join('; ')
+          misconfig.blocking.join('; ') +
+          ' | kind=' + (kind || 'unknown') +
+          ' | ' + envSnapshot
       );
       return res.status(503).json({
         error: UPLOAD_UNAVAILABLE_MESSAGE,
@@ -82,11 +90,11 @@ export default async function handler(req, res) {
     if (!resolved) {
       // Belt-and-braces: env vars passed the check above but the resolver
       // still couldn't produce a bucket/object pair. Log enough detail to
-      // diagnose without leaking secrets.
+      // diagnose without leaking secrets — the redacted snapshot already
+      // includes PRIVATE_OBJECT_DIR's length so we just append it.
       console.error(
         '[uploads/request-url] storage_not_configured — resolvePrivateObjectPath returned null. ' +
-          `PRIVATE_OBJECT_DIR length=${(process.env.PRIVATE_OBJECT_DIR || '').length}, ` +
-          `subPath="${subPath}"`
+          `subPath="${subPath}" | ${envSnapshot}`
       );
       return res.status(503).json({
         error: UPLOAD_UNAVAILABLE_MESSAGE,
@@ -105,7 +113,9 @@ export default async function handler(req, res) {
     } catch (signErr) {
       // Distinct from "not configured": env vars look fine, but the sidecar
       // either is unreachable or rejected the signing request. Log the full
-      // error so future regressions are diagnosable from logs alone.
+      // error AND the redacted env snapshot (which carries the resolved
+      // sidecar host + env-var presence) so the next regression can be
+      // diagnosed from this single line without a code read.
       console.error(
         '[uploads/request-url] sign_failed — bucket=' +
           resolved.bucketName +
@@ -113,8 +123,12 @@ export default async function handler(req, res) {
           resolved.objectName +
           ' code=' +
           (signErr?.code || 'unknown') +
+          ' status=' +
+          (signErr?.status || 'n/a') +
           ': ' +
-          (signErr?.message || signErr)
+          (signErr?.message || signErr) +
+          ' | ' +
+          envSnapshot
       );
       return res.status(503).json({
         error: UPLOAD_UNAVAILABLE_MESSAGE,
