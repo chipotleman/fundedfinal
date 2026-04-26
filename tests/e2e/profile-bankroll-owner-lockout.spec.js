@@ -62,29 +62,15 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const parser = require('@babel/parser');
 const { test, expect } = require('@playwright/test');
 
 // The full list of financial / settlement fields task #393 removed
-// from the owner allow-list. Keep this in sync with the docstring at
-// the top of `pages/api/profiles/[id].ts`.
-const FINANCIAL_FIELDS = [
-  'bankroll',
-  'pnl',
-  'betsHistory',
-  'totalBets',
-  'winRate',
-  'dailyLoss',
-  'lastBetDate',
-  'bettingDays',
-  'profileStats',
-  'status',
-  'profitTarget',
-  'maxDailyLoss',
-  'challenge',
-  'challengeStartDate',
-  'challengePhase',
-  'achievements',
-];
+// from the owner allow-list. The list itself lives in a shared
+// helper module so the supplemental task #472 guardrails below can
+// key off the same source of truth — adding a new field there flags
+// every profile-write endpoint at once.
+const { FINANCIAL_FIELDS } = require('./helpers/financialFields');
 
 // ---------------------------------------------------------------------------
 // Source helpers — small, used by the supplemental guardrails below.
@@ -477,4 +463,417 @@ test.describe('supplemental source-level guardrails', () => {
     // session userId before its starting balance is trusted.
     expect(challengesStartSrc).toMatch(/eq\(userChallenges\.userId,\s*userId\)/);
   });
+});
+
+// ---------------------------------------------------------------------------
+// Task #472 — every OTHER client-callable profile-write endpoint.
+//
+// The supplemental guardrails above only cover `pages/api/profiles/[id].ts`
+// and `pages/api/challenges/start.ts`. Several other handlers also write
+// to the `profiles` table (`pages/api/user/settings.js`,
+// `pages/api/user/profile.js`, `pages/api/user/complete-onboarding.js`,
+// `pages/api/profiles/update.js`, `pages/api/profiles/last-buyin.js`,
+// `pages/api/user/heartbeat.js`, …). None of them currently accept any
+// `FINANCIAL_FIELDS` value from the request body — they either don't
+// touch those columns, or hardcode `'0'` / `'1000'` for new-account
+// initialisation. But there is no automated check asserting that, and a
+// future refactor that drops a generic `...req.body` spread into any of
+// these would silently re-open the task #393 self-reset vulnerability.
+//
+// The block below discovers every `pages/api/{user,profiles}/*` handler
+// that targets the `profiles` table (so a NEW such file is auto-covered
+// the moment it lands), parses each one with @babel/parser, and asserts:
+//
+//   1. The file never reads any `FINANCIAL_FIELDS` member directly off
+//      `req.body` — neither via `req.body.bankroll` nor via destructure
+//      `const { bankroll } = req.body`. We also follow the common
+//      `const body = req.body || {}` aliasing pattern so accesses on
+//      that alias count too.
+//
+//   2. The file never spreads `req.body` (or any alias of it) anywhere
+//      — the explicit "no `...req.body` straight into `.set(...)`"
+//      property task #472 calls out, generalised to the whole file
+//      because `const updates = { ...req.body }; …set(updates)` is the
+//      same vulnerability with one extra hop.
+//
+//   3. The file never indexes `req.body[<dyn>]` / `<alias>[<dyn>]`
+//      directly — that's the dynamic-key version of the same flow
+//      (`for (const k of allKeys) updates[k] = body[k]`), and would
+//      bypass static checks on named member access.
+//
+//   4. Every inline ObjectExpression literal passed as the first arg
+//      to a `db.update(profiles).set(...)` or `db.insert(profiles)
+//      .values(...)` call MAY only set a `FINANCIAL_FIELDS` key to a
+//      literal value (string / number / boolean / null / unary-negated
+//      numeric / no-substitution template). That preserves the current
+//      legitimate `bankroll: '0'` / `bankroll: '1000'` initialisations
+//      while rejecting any expression that could carry a request-derived
+//      value (`bankroll: body.bankroll`, `bankroll: chosenAmount`, …).
+//
+// `pages/api/profiles/[id].ts` is excluded because it has its own
+// dedicated allow-list-split coverage above.
+// ---------------------------------------------------------------------------
+
+const PROFILE_WRITE_SCAN_DIRS = ['pages/api/user', 'pages/api/profiles'];
+const PROFILE_WRITE_ALREADY_COVERED = new Set([
+  path.normalize('pages/api/profiles/[id].ts'),
+]);
+
+function discoverProfileWriteEndpoints() {
+  const out = [];
+  const repoRoot = path.resolve(__dirname, '..', '..');
+  // Recursive walk so any future nested handler — e.g.
+  // `pages/api/user/security/disable-2fa.ts` — is auto-covered the
+  // moment it lands. Stays inside PROFILE_WRITE_SCAN_DIRS so we don't
+  // wander into unrelated `pages/api/*` trees.
+  function walkDir(absDir, relDir) {
+    if (!fs.existsSync(absDir)) return;
+    for (const entry of fs.readdirSync(absDir, { withFileTypes: true })) {
+      const childAbs = path.join(absDir, entry.name);
+      const childRel = path.normalize(path.join(relDir, entry.name));
+      if (entry.isDirectory()) {
+        walkDir(childAbs, childRel);
+        continue;
+      }
+      if (!entry.isFile()) continue;
+      if (!/\.(js|ts)$/.test(entry.name)) continue;
+      if (PROFILE_WRITE_ALREADY_COVERED.has(childRel)) continue;
+      const src = fs.readFileSync(childAbs, 'utf8');
+      // Cheap pre-filter: only scan files that actually call
+      // `update(profiles)` or `insert(profiles)`. Read-only handlers
+      // and unrelated files are ignored.
+      if (!/\b(?:update|insert)\(\s*profiles\b/.test(src)) continue;
+      out.push({ rel: childRel, src });
+    }
+  }
+  for (const dir of PROFILE_WRITE_SCAN_DIRS) {
+    walkDir(path.resolve(repoRoot, dir), dir);
+  }
+  out.sort((a, b) => a.rel.localeCompare(b.rel));
+  return out;
+}
+
+function parseEndpointSource(src) {
+  return parser.parse(src, {
+    sourceType: 'module',
+    plugins: ['jsx', 'typescript'],
+  });
+}
+
+// Recursive AST walker that doesn't descend into structural metadata
+// (locations, ranges, comment arrays attached by @babel/parser).
+function walkAst(node, visitor) {
+  if (!node || typeof node.type !== 'string') return;
+  visitor(node);
+  for (const k of Object.keys(node)) {
+    if (
+      k === 'loc' ||
+      k === 'start' ||
+      k === 'end' ||
+      k === 'range' ||
+      k === 'extra' ||
+      k === 'comments' ||
+      k === 'leadingComments' ||
+      k === 'trailingComments' ||
+      k === 'innerComments'
+    ) {
+      continue;
+    }
+    const v = node[k];
+    if (Array.isArray(v)) {
+      for (const c of v) walkAst(c, visitor);
+    } else if (v && typeof v.type === 'string') {
+      walkAst(v, visitor);
+    }
+  }
+}
+
+function isReqBodyExpr(node) {
+  return (
+    node?.type === 'MemberExpression' &&
+    !node.computed &&
+    node.object?.type === 'Identifier' &&
+    node.object.name === 'req' &&
+    node.property?.type === 'Identifier' &&
+    node.property.name === 'body'
+  );
+}
+
+// Treats `req.body` and the common `req.body || {}` / `req.body ?? {}`
+// "default to empty object" pattern as the same passthrough. Anything
+// else (e.g. `req.body.foo`, `normalize(req.body)`) is NOT a
+// passthrough — those don't preserve the body's keys verbatim.
+function isReqBodyPassthrough(node) {
+  if (!node) return false;
+  if (isReqBodyExpr(node)) return true;
+  if (
+    node.type === 'LogicalExpression' &&
+    (node.operator === '||' || node.operator === '??') &&
+    isReqBodyExpr(node.left)
+  ) {
+    return true;
+  }
+  return false;
+}
+
+// Collects identifier names that point at `req.body` (or a passthrough
+// alias of it) via a `const x = req.body[ || {}]` declarator. We treat
+// these aliases as equivalent to `req.body` for the rest of the file —
+// reads on the alias count as reads on the body, spreads of the alias
+// count as body spreads, etc.
+function collectReqBodyAliases(ast) {
+  const aliases = new Set();
+  walkAst(ast, (node) => {
+    if (
+      node.type === 'VariableDeclarator' &&
+      node.init &&
+      isReqBodyPassthrough(node.init) &&
+      node.id?.type === 'Identifier'
+    ) {
+      aliases.add(node.id.name);
+    }
+  });
+  return aliases;
+}
+
+// Property names read directly off `req.body` (or any alias). Covers:
+//   - `req.body.foo`            (MemberExpression on `req.body`)
+//   - `body.foo`                (MemberExpression on an alias)
+//   - `const { foo } = req.body`  (ObjectPattern destructure)
+//   - `const { foo } = body`      (destructure off an alias)
+function collectReqBodyPropertyReads(ast, aliases) {
+  const props = new Set();
+  walkAst(ast, (node) => {
+    if (
+      node.type === 'MemberExpression' &&
+      !node.computed &&
+      node.property?.type === 'Identifier'
+    ) {
+      const obj = node.object;
+      const fromBody =
+        isReqBodyExpr(obj) ||
+        (obj?.type === 'Identifier' && aliases.has(obj.name));
+      if (fromBody) props.add(node.property.name);
+    }
+    if (
+      node.type === 'VariableDeclarator' &&
+      node.id?.type === 'ObjectPattern' &&
+      node.init
+    ) {
+      const init = node.init;
+      const fromBody =
+        isReqBodyPassthrough(init) ||
+        (init.type === 'Identifier' && aliases.has(init.name));
+      if (fromBody) {
+        for (const p of node.id.properties) {
+          if (
+            (p.type === 'ObjectProperty' || p.type === 'Property') &&
+            p.key?.type === 'Identifier'
+          ) {
+            props.add(p.key.name);
+          }
+        }
+      }
+    }
+  });
+  return props;
+}
+
+// Counts spreads of `req.body` (or a passthrough alias) anywhere in
+// the file — `{ ...req.body }`, `{ ...body }`, `[...req.body]`, etc.
+// The threat is ANY such spread, not just inside `.set(...)`, because
+// `const updates = { ...body }; await db.update(profiles).set(updates)`
+// is the same vulnerability with one indirection.
+function findReqBodySpreads(ast, aliases) {
+  let count = 0;
+  walkAst(ast, (node) => {
+    if (node.type !== 'SpreadElement' && node.type !== 'SpreadProperty') return;
+    const arg = node.argument;
+    if (
+      isReqBodyExpr(arg) ||
+      (arg?.type === 'Identifier' && aliases.has(arg.name))
+    ) {
+      count++;
+    }
+  });
+  return count;
+}
+
+// Counts dynamic indexed reads on `req.body` / alias — `body[k]`,
+// `req.body[someKey]`, etc. Static `body.notifications[k]` is NOT
+// flagged because the outer object there is `body.notifications`,
+// not `body` itself.
+function findReqBodyComputedReads(ast, aliases) {
+  let count = 0;
+  walkAst(ast, (node) => {
+    if (node.type !== 'MemberExpression' || !node.computed) return;
+    const obj = node.object;
+    if (
+      isReqBodyExpr(obj) ||
+      (obj?.type === 'Identifier' && aliases.has(obj.name))
+    ) {
+      count++;
+    }
+  });
+  return count;
+}
+
+// True if `node` is a value that could not possibly carry information
+// from the request body — a string, number, boolean, null, the
+// negation of a numeric literal, or an interpolation-free template.
+function isLiteralValue(node) {
+  if (!node) return false;
+  switch (node.type) {
+    case 'StringLiteral':
+    case 'NumericLiteral':
+    case 'BooleanLiteral':
+    case 'NullLiteral':
+      return true;
+    case 'TemplateLiteral':
+      return node.expressions.length === 0;
+    case 'UnaryExpression':
+      return (
+        (node.operator === '-' || node.operator === '+') &&
+        isLiteralValue(node.argument)
+      );
+    default:
+      return false;
+  }
+}
+
+// Returns every `db.update(profiles).set({...})` /
+// `db.insert(profiles).values({...})` CallExpression in the AST.
+// We walk back the receiver chain on each `.set` / `.values` call
+// looking for an inner `.update(profiles)` / `.insert(profiles)` —
+// that's the structural marker that tells us this write targets the
+// `profiles` table specifically (and not some other Drizzle table).
+function findProfileTableSetCalls(ast) {
+  const out = [];
+  walkAst(ast, (node) => {
+    if (node.type !== 'CallExpression') return;
+    const callee = node.callee;
+    if (callee?.type !== 'MemberExpression') return;
+    const propName = callee.property?.name;
+    if (propName !== 'set' && propName !== 'values') return;
+    let cur = callee.object;
+    while (cur) {
+      if (
+        cur.type === 'CallExpression' &&
+        cur.callee?.type === 'MemberExpression'
+      ) {
+        const innerName = cur.callee.property?.name;
+        if (innerName === 'update' || innerName === 'insert') {
+          const arg = cur.arguments[0];
+          if (arg?.type === 'Identifier' && arg.name === 'profiles') {
+            out.push(node);
+          }
+          return;
+        }
+        cur = cur.callee.object;
+      } else {
+        return;
+      }
+    }
+  });
+  return out;
+}
+
+function findFinancialFieldKeysInObjectLiteral(objExpr) {
+  if (!objExpr || objExpr.type !== 'ObjectExpression') return [];
+  const found = [];
+  for (const p of objExpr.properties) {
+    if (p.type !== 'ObjectProperty' && p.type !== 'Property') continue;
+    let name = null;
+    if (!p.computed && p.key?.type === 'Identifier') name = p.key.name;
+    else if (p.key?.type === 'StringLiteral') name = p.key.value;
+    if (name && FINANCIAL_FIELDS.includes(name)) {
+      found.push({ name, value: p.value });
+    }
+  }
+  return found;
+}
+
+const PROFILE_WRITE_ENDPOINTS = discoverProfileWriteEndpoints();
+
+test.describe('task #472 — every other client-callable profile-write endpoint stays bankroll-safe', () => {
+  test('discovery picks up the three endpoints task #472 explicitly called out', () => {
+    const rels = PROFILE_WRITE_ENDPOINTS.map((e) => e.rel);
+    for (const must of [
+      path.normalize('pages/api/user/settings.js'),
+      path.normalize('pages/api/user/profile.js'),
+      path.normalize('pages/api/user/complete-onboarding.js'),
+    ]) {
+      expect(
+        rels,
+        `${must} must be discovered by the profile-write endpoint scan — if it ` +
+          'has been moved or renamed, update PROFILE_WRITE_SCAN_DIRS / the ' +
+          'pre-filter regex above accordingly.',
+      ).toContain(must);
+    }
+    // Belt-and-suspenders: at least the three above plus profiles/[id].ts is
+    // covered by the existing suite, so the new scan must yield ≥ 3.
+    expect(PROFILE_WRITE_ENDPOINTS.length).toBeGreaterThanOrEqual(3);
+  });
+
+  for (const { rel, src } of PROFILE_WRITE_ENDPOINTS) {
+    test.describe(rel, () => {
+      const ast = parseEndpointSource(src);
+      const aliases = collectReqBodyAliases(ast);
+      const reqBodyReads = collectReqBodyPropertyReads(ast, aliases);
+      const reqBodySpreadCount = findReqBodySpreads(ast, aliases);
+      const reqBodyComputedCount = findReqBodyComputedReads(ast, aliases);
+      const profileSetCalls = findProfileTableSetCalls(ast);
+
+      test('does not read any FINANCIAL_FIELD off req.body (or an alias of it)', () => {
+        const offenders = FINANCIAL_FIELDS.filter((f) => reqBodyReads.has(f));
+        expect(
+          offenders,
+          `${rel} reads financial field(s) ${JSON.stringify(offenders)} from ` +
+            'the request body. Any value flowing from req.body into a profiles ' +
+            'update payload re-opens the task #393 self-reset vulnerability — ' +
+            'derive these server-side (e.g. from a userChallenges row) instead.',
+        ).toEqual([]);
+      });
+
+      test('does not spread req.body (or an alias) anywhere in the file', () => {
+        expect(
+          reqBodySpreadCount,
+          `${rel} contains ${reqBodySpreadCount} spread(s) of req.body / a body ` +
+            'alias. Even one such spread (`{ ...req.body, updatedAt: new Date() }`, ' +
+            '`const updates = { ...body }; …set(updates)`) lets a future request ' +
+            'silently land any FINANCIAL_FIELD value into the profile.',
+        ).toBe(0);
+      });
+
+      test('does not index req.body (or an alias) with a dynamic key', () => {
+        expect(
+          reqBodyComputedCount,
+          `${rel} contains ${reqBodyComputedCount} dynamic-key read(s) on ` +
+            'req.body / a body alias (`body[k]`, `req.body[someKey]`). That ' +
+            'pattern bypasses every static check by funnelling arbitrary body ' +
+            'keys through a loop — including FINANCIAL_FIELDS.',
+        ).toBe(0);
+      });
+
+      test('inline `.set(...)` / `.values(...)` literals only set FINANCIAL_FIELDS to literal values', () => {
+        const violations = [];
+        for (const call of profileSetCalls) {
+          const arg = call.arguments[0];
+          for (const { name, value } of findFinancialFieldKeysInObjectLiteral(arg)) {
+            if (!isLiteralValue(value)) {
+              violations.push({ field: name, valueType: value?.type ?? 'unknown' });
+            }
+          }
+        }
+        expect(
+          violations,
+          `${rel} sets one or more FINANCIAL_FIELDS to a non-literal value ` +
+            `inside a profiles \`.set(...)\` / \`.values(...)\` call: ` +
+            `${JSON.stringify(violations)}. Hardcoded literals like ` +
+            "`bankroll: '0'` / `bankroll: '1000'` are the only permitted shape — " +
+            'anything else risks pulling a request-derived value into the row.',
+        ).toEqual([]);
+      });
+    });
+  }
 });
