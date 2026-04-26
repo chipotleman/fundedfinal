@@ -132,6 +132,12 @@ export const messages = pgTable("messages", {
   messageType: varchar("message_type", { length: 20 }).default('text'),
   attachmentUrl: text("attachment_url"),
   attachmentDurationMs: integer("attachment_duration_ms"),
+  // Pre-computed waveform peaks captured at send time so chat bubbles can
+  // render the visualizer instantly without re-fetching and decoding the
+  // audio file on mount. Stored as a small array of normalized floats
+  // (typically 36 entries between 0 and 1). Older messages predating this
+  // column have NULL here and fall back to the on-demand decode path.
+  attachmentPeaks: jsonb("attachment_peaks"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
   senderIdIdx: index("messages_sender_id_idx").on(table.senderId),

@@ -88,9 +88,37 @@ function audioBufferToWavBlob(buffer) {
   return new Blob([ab], { type: 'audio/wav' });
 }
 
+const WAVEFORM_BAR_COUNT = 36;
+
+// Compute a small array of normalized waveform peaks (0..1) from a decoded
+// AudioBuffer. Shared between the live preview decode (inside VoiceWaveform)
+// and the trim re-encode path so the two emit identical-shaped peak arrays
+// regardless of which one the bubble ends up rendering from.
+function extractPeaksFromAudioBuffer(decoded, barCount = WAVEFORM_BAR_COUNT) {
+  const channel = decoded.getChannelData(0);
+  const samplesPerBar = Math.max(1, Math.floor(channel.length / barCount));
+  const out = new Array(barCount).fill(0);
+  let max = 0;
+  for (let b = 0; b < barCount; b++) {
+    let peak = 0;
+    const start = b * samplesPerBar;
+    const end = Math.min(channel.length, start + samplesPerBar);
+    for (let i = start; i < end; i++) {
+      const v = Math.abs(channel[i]);
+      if (v > peak) peak = v;
+    }
+    out[b] = peak;
+    if (peak > max) max = peak;
+  }
+  return max > 0 ? out.map((v) => Math.min(1, (v / max) * 1.1)) : out;
+}
+
 // Decode `blob`, slice the [startMs, endMs] window, and re-encode it as a
-// new WAV blob. Returns null if the environment can't decode audio (e.g.
-// AudioContext is unavailable) so callers can fall back to the original.
+// new WAV blob. Also returns the same kind of waveform peaks the preview
+// captured so the trimmed bubble can render its visualizer instantly on
+// the receiver's side without a second decode. Returns null if the
+// environment can't decode audio (e.g. AudioContext is unavailable) so
+// callers can fall back to the original blob.
 async function trimVoiceBlobToWav(blob, startMs, endMs) {
   if (typeof window === 'undefined') return null;
   const Ctx = window.AudioContext || window.webkitAudioContext;
@@ -121,11 +149,12 @@ async function trimVoiceBlobToWav(blob, startMs, endMs) {
     const src = decoded.getChannelData(c);
     trimmed.getChannelData(c).set(src.subarray(startSample, endSample));
   }
+  let peaks = null;
+  try { peaks = extractPeaksFromAudioBuffer(trimmed); } catch { peaks = null; }
   try { await ctx.close(); } catch {}
-  return audioBufferToWavBlob(trimmed);
+  return { blob: audioBufferToWavBlob(trimmed), peaks };
 }
 
-const WAVEFORM_BAR_COUNT = 36;
 // Smallest allowed gap between the trim start and trim end handles. Anything
 // shorter than this is functionally a zero-length clip, so the handles refuse
 // to cross or sit on top of each other.
@@ -217,10 +246,21 @@ function VoiceWaveform({
   trimStartMs = 0,
   trimEndMs,
   onTrimChange,
+  // Pre-computed peaks captured at send time. When provided we render
+  // them straight away and skip the on-demand fetch + decode entirely,
+  // which is the fast path for chat bubbles whose voice notes were sent
+  // after the waveform-persistence rollout.
+  peaks: storedPeaks,
+  // Called once with the freshly decoded peaks during the live preview
+  // so the parent can ship them along with the audio when the user taps
+  // Send. Optional — bubbles never pass this.
+  onPeaks,
 }) {
   const audioRef = useRef(null);
   const trackRef = useRef(null);
-  const [peaks, setPeaks] = useState(null);
+  const [peaks, setPeaks] = useState(() => (
+    Array.isArray(storedPeaks) && storedPeaks.length > 0 ? storedPeaks : null
+  ));
   const [playing, setPlaying] = useState(false);
   const [currentMs, setCurrentMs] = useState(0);
   const totalMs = Number.isFinite(durationMs) && durationMs > 0 ? durationMs : 0;
@@ -238,12 +278,23 @@ function VoiceWaveform({
   // (unsupported codec on Safari, fetch error for a remote URL, etc.) we
   // fall back to a flat baseline so the UI still renders something.
   //
-  // For URL-backed bubbles we consult an in-memory LRU cache first so the
-  // same attachment doesn't re-fetch + re-decode every time the bubble
-  // re-mounts (e.g. while scrolling a long thread). Composer-blob previews
-  // are skipped intentionally — they're one-off recordings whose bytes
-  // change on each take, so caching by blob identity wouldn't help.
+  // Skipped entirely when the parent already handed us a `peaks` array —
+  // chat bubbles for messages sent after the waveform-persistence rollout
+  // come with their peaks pre-computed, which is the whole point of
+  // storing them server-side.
+  //
+  // For URL-backed bubbles that *don't* have stored peaks (legacy voice
+  // notes from before the persistence rollout) we consult an in-memory
+  // LRU cache first so the same attachment doesn't re-fetch + re-decode
+  // every time the bubble re-mounts (e.g. while scrolling a long thread).
+  // Composer-blob previews are skipped intentionally — they're one-off
+  // recordings whose bytes change on each take, so caching by blob
+  // identity wouldn't help.
   useEffect(() => {
+    if (Array.isArray(storedPeaks) && storedPeaks.length > 0) {
+      setPeaks(storedPeaks);
+      return undefined;
+    }
     if (!blob && !url) { setPeaks(null); return undefined; }
     if (!blob && url) {
       const cached = getCachedWaveformPeaks(url);
@@ -272,22 +323,7 @@ function VoiceWaveform({
         ctx = new Ctx();
         const decoded = await ctx.decodeAudioData(arrBuf.slice(0));
         if (cancelled) return;
-        const channel = decoded.getChannelData(0);
-        const samplesPerBar = Math.max(1, Math.floor(channel.length / WAVEFORM_BAR_COUNT));
-        const out = new Array(WAVEFORM_BAR_COUNT).fill(0);
-        let max = 0;
-        for (let b = 0; b < WAVEFORM_BAR_COUNT; b++) {
-          let peak = 0;
-          const start = b * samplesPerBar;
-          const end = Math.min(channel.length, start + samplesPerBar);
-          for (let i = start; i < end; i++) {
-            const v = Math.abs(channel[i]);
-            if (v > peak) peak = v;
-          }
-          out[b] = peak;
-          if (peak > max) max = peak;
-        }
-        const norm = max > 0 ? out.map((v) => Math.min(1, (v / max) * 1.1)) : out;
+        const norm = extractPeaksFromAudioBuffer(decoded);
         // Cache successful URL decodes even if this instance was cancelled
         // mid-flight — the bytes are deterministic, and the next mount of
         // the same bubble can then pick up the result instantly. Fallback
@@ -295,7 +331,12 @@ function VoiceWaveform({
         // skipped: failures shouldn't poison retries, and composer blobs
         // aren't stable across re-records.
         if (!blob && url) setCachedWaveformPeaks(url, norm);
-        if (!cancelled) setPeaks(norm);
+        if (!cancelled) {
+          setPeaks(norm);
+          if (typeof onPeaks === 'function') {
+            try { onPeaks(norm); } catch {}
+          }
+        }
       } catch {
         if (!cancelled) setPeaks(new Array(WAVEFORM_BAR_COUNT).fill(0.4));
       } finally {
@@ -821,14 +862,17 @@ function VoiceWaveform({
 }
 
 // Thin wrapper used by the chat thread so the call site stays expressive.
-// Older messages without a captured waveform decode the URL on demand; if
-// decoding fails, the waveform falls back to a flat baseline and the
-// play/scrub controls still work.
-function VoiceBubble({ url, durationMs, mine }) {
+// Voice notes sent after the waveform-persistence rollout carry their
+// pre-computed peaks on the message row, so we hand those straight to
+// VoiceWaveform and skip the bubble's mount-time fetch+decode entirely.
+// Older messages have no peaks stored: VoiceWaveform falls back to the
+// on-demand decode path (and to a flat baseline if that decode fails).
+function VoiceBubble({ url, durationMs, peaks, mine }) {
   return (
     <VoiceWaveform
       url={url}
       durationMs={durationMs}
+      peaks={peaks}
       variant={mine ? 'mine' : 'theirs'}
     />
   );
@@ -1133,19 +1177,21 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     audioRafRef.current = requestAnimationFrame(tick);
   };
 
-  const sendVoiceBlob = async (blob, durationMs) => {
+  const sendVoiceBlob = async (blob, durationMs, peaks) => {
     if (!friend?.id) return false;
     setSending(true);
     setSendError(null);
     setVoiceError(null);
     try {
       const { attachmentUrl, attachmentDurationMs } = await uploadVoiceBlob(blob, durationMs);
+      const cleanPeaks = Array.isArray(peaks) && peaks.length > 0 ? peaks : null;
       const res = await sendMessagePayload({
         receiverId: friend.id,
         content: '',
         messageType: 'voice',
         attachmentUrl,
         attachmentDurationMs,
+        attachmentPeaks: cleanPeaks,
       });
       if (!res.ok) {
         setSendError(res.status === 403 ? 'You can only message friends.' : 'Could not send voice note.');
@@ -1166,6 +1212,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
                 messageType: m.messageType || 'voice',
                 attachmentUrl: m.attachmentUrl || attachmentUrl,
                 attachmentDurationMs: m.attachmentDurationMs ?? attachmentDurationMs,
+                attachmentPeaks: m.attachmentPeaks ?? cleanPeaks,
                 createdAt:
                   m.createdAt instanceof Date
                     ? m.createdAt.toISOString()
@@ -1588,6 +1635,22 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     });
   }, []);
 
+  // Captured by VoiceWaveform during the preview decode. We stash the peaks
+  // on the preview so handleSendPreview can ship them with the upload —
+  // without this the receiver's bubble would have to fetch+decode the audio
+  // again on mount just to redraw the same bars we already computed here.
+  const setVoicePreviewPeaks = useCallback((peaks) => {
+    if (!Array.isArray(peaks) || peaks.length === 0) return;
+    setVoicePreview((prev) => {
+      if (!prev) return prev;
+      // Bail if we already have an identical-length array — avoids a
+      // setState churn loop now that VoiceWaveform's effect re-fires
+      // whenever the parent rerenders with new props.
+      if (prev.peaks && prev.peaks.length === peaks.length) return prev;
+      return { ...prev, peaks };
+    });
+  }, []);
+
   // Discard the current take and immediately arm the recorder for a fresh
   // attempt — saves the user a tap when they didn't like what they heard.
   const handleRerecordPreview = () => {
@@ -1647,20 +1710,28 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   const handleSendPreview = async () => {
     if (sending) return;
     if (!voicePreview?.blob) return;
-    const { blob, durationMs, trimStartMs, trimEndMs } = voicePreview;
+    const { blob, durationMs, trimStartMs, trimEndMs, peaks } = voicePreview;
     const startMs = Math.max(0, Math.min(durationMs, trimStartMs ?? 0));
     const endMs = Math.max(startMs, Math.min(durationMs, trimEndMs ?? durationMs));
     const trimmedDuration = Math.max(0, endMs - startMs);
     let outBlob = blob;
     let outDuration = durationMs;
+    // Default to the peaks captured during the preview decode. When the
+    // user trimmed the take we recompute peaks from the trimmed buffer
+    // below so the bubble's bars line up with the audio that actually
+    // went out the door.
+    let outPeaks = peaks || null;
     // Only re-encode when the user actually trimmed something meaningful;
     // otherwise the existing fast path uploads the original codec untouched.
     if (startMs > 50 || endMs < durationMs - 50) {
       try {
-        const trimmedBlob = await trimVoiceBlobToWav(blob, startMs, endMs);
-        if (trimmedBlob) {
-          outBlob = trimmedBlob;
+        const trimResult = await trimVoiceBlobToWav(blob, startMs, endMs);
+        if (trimResult && trimResult.blob) {
+          outBlob = trimResult.blob;
           outDuration = trimmedDuration;
+          if (Array.isArray(trimResult.peaks) && trimResult.peaks.length > 0) {
+            outPeaks = trimResult.peaks;
+          }
         }
       } catch (err) {
         // If decoding/encoding fails for any reason, fall back to sending
@@ -1668,7 +1739,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
         // UX nicety — losing it is recoverable, losing the take isn't.
       }
     }
-    const ok = await sendVoiceBlob(outBlob, outDuration);
+    const ok = await sendVoiceBlob(outBlob, outDuration, outPeaks);
     if (ok) {
       tearDownLingeringRecorder();
       setResumableTake(false);
@@ -1967,6 +2038,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
                 <VoiceBubble
                   url={m.attachmentUrl}
                   durationMs={m.attachmentDurationMs}
+                  peaks={m.attachmentPeaks}
                   mine={m.senderId === myId}
                 />
               ) : (
@@ -2016,6 +2088,8 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
                 trimStartMs={voicePreview.trimStartMs ?? 0}
                 trimEndMs={voicePreview.trimEndMs ?? voicePreview.durationMs}
                 onTrimChange={setVoicePreviewTrim}
+                peaks={voicePreview.peaks}
+                onPeaks={setVoicePreviewPeaks}
               />
               <div className="ml-auto flex gap-2 flex-shrink-0">
                 <button

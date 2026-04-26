@@ -81,7 +81,7 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
-    const { receiverId, content, messageType, attachmentUrl, attachmentDurationMs } = req.body;
+    const { receiverId, content, messageType, attachmentUrl, attachmentDurationMs, attachmentPeaks } = req.body;
 
     const isVoice = messageType === 'voice';
     if (!receiverId) {
@@ -98,6 +98,22 @@ export default async function handler(req, res) {
       }
     } else if (!content?.trim()) {
       return res.status(400).json({ error: 'Receiver ID and content required' });
+    }
+
+    // Optional pre-computed waveform peaks. Sanitize aggressively because
+    // this comes straight from the client: cap the length so a malicious
+    // payload can't bloat the row, drop non-finite entries, and clamp every
+    // value to [0, 1] (the visualizer expects normalized amplitudes).
+    let cleanPeaks = null;
+    if (isVoice && Array.isArray(attachmentPeaks) && attachmentPeaks.length > 0) {
+      const MAX_PEAK_BARS = 64;
+      const trimmed = attachmentPeaks.slice(0, MAX_PEAK_BARS);
+      const sanitized = trimmed.map((v) => {
+        const n = Number(v);
+        if (!Number.isFinite(n)) return 0;
+        return Math.max(0, Math.min(1, n));
+      });
+      cleanPeaks = sanitized;
     }
 
     try {
@@ -133,6 +149,9 @@ export default async function handler(req, res) {
             Math.min(120000, Math.round(Number(attachmentDurationMs)))
           );
         }
+        if (cleanPeaks) {
+          insertValues.attachmentPeaks = cleanPeaks;
+        }
       }
 
       const [newMessage] = await db
@@ -149,6 +168,7 @@ export default async function handler(req, res) {
           messageType: newMessage.messageType || 'text',
           attachmentUrl: newMessage.attachmentUrl || null,
           attachmentDurationMs: newMessage.attachmentDurationMs || null,
+          attachmentPeaks: newMessage.attachmentPeaks || null,
           createdAt:
             newMessage.createdAt instanceof Date
               ? newMessage.createdAt.toISOString()

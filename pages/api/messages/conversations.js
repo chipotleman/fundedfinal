@@ -54,12 +54,13 @@ export default async function handler(req, res) {
         created_at,
         message_type,
         attachment_url,
-        attachment_duration_ms
+        attachment_duration_ms,
+        attachment_peaks
       FROM (
         SELECT
           CASE WHEN sender_id = ${userId} THEN receiver_id ELSE sender_id END AS other_id,
           id, sender_id, receiver_id, content, read, created_at,
-          message_type, attachment_url, attachment_duration_ms
+          message_type, attachment_url, attachment_duration_ms, attachment_peaks
         FROM messages
         WHERE (sender_id = ${userId} AND receiver_id IN (${friendIdList}))
            OR (receiver_id = ${userId} AND sender_id IN (${friendIdList}))
@@ -83,6 +84,7 @@ export default async function handler(req, res) {
         messageType: r.message_type || 'text',
         attachmentUrl: r.attachment_url || null,
         attachmentDurationMs: r.attachment_duration_ms || null,
+        attachmentPeaks: r.attachment_peaks || null,
       });
     }
 
@@ -148,6 +150,7 @@ export default async function handler(req, res) {
             messageType: last.messageType,
             attachmentUrl: last.attachmentUrl,
             attachmentDurationMs: last.attachmentDurationMs,
+            attachmentPeaks: last.attachmentPeaks,
             createdAt: last.createdAt,
             fromMe: last.senderId === userId,
             unread: !last.read && last.receiverId === userId,
