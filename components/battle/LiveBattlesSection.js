@@ -1836,6 +1836,18 @@ function YouVsCard({
         :global(.youvs-shuffle) {
           animation: youvsShufflePop 0.6s ease-out both;
         }
+        /* On mobile the radar ring is shrunk to 56px square (vs 96px
+           on tablet+); scale the silhouette avatar inside to match so
+           it doesn't overflow the smaller ring. */
+        :global(.youvs-shuffle-scale) {
+          transform: scale(0.6);
+          transform-origin: center;
+        }
+        @media (min-width: 640px) {
+          :global(.youvs-shuffle-scale) {
+            transform: none;
+          }
+        }
         :global(.youvs-dot) {
           animation: youvsDotsPulse 1.2s ease-in-out infinite;
         }
@@ -1898,8 +1910,8 @@ function YouVsCard({
           }
         }
       `}</style>
-      <div className="p-3.5 flex flex-col flex-1">
-        <div className="flex items-center justify-between mb-3">
+      <div className="p-2 sm:p-3.5 flex flex-col flex-1">
+        <div className="flex items-center justify-between mb-1.5 sm:mb-3">
           <div className="flex items-center gap-1.5 min-w-0">
             <span
               className="text-[9px] font-extrabold uppercase tracking-[0.18em] px-2 py-0.5 rounded-md flex items-center gap-1 flex-shrink-0"
@@ -1933,57 +1945,52 @@ function YouVsCard({
           // In-card "finding battle" animation. Stays inside the same
           // card footprint — no navigation, no modal — until matchmaking
           // resolves and the standard match-found popup takes over.
-          <div className="flex flex-col items-center justify-center text-center py-2 select-none" style={{ minHeight: 148 }}>
+          <div className="flex flex-col items-center justify-center text-center py-1 sm:py-2 select-none min-h-0 sm:min-h-[148px]">
             <div
-              className="relative flex items-center justify-center mb-2.5"
-              style={{ width: 96, height: 96 }}
+              className="relative flex items-center justify-center mb-1 sm:mb-2.5 w-[56px] h-[56px] sm:w-24 sm:h-24"
               aria-hidden="true"
             >
               <div
-                className="youvs-ring absolute"
+                className="youvs-ring absolute w-full h-full"
                 style={{
-                  width: 96,
-                  height: 96,
                   borderRadius: '50%',
                   border: '1.5px solid rgba(6,182,212,0.55)',
                 }}
               />
               <div
-                className="youvs-ring absolute"
+                className="youvs-ring absolute w-full h-full"
                 style={{
-                  width: 96,
-                  height: 96,
                   borderRadius: '50%',
                   border: '1.5px solid rgba(16,185,129,0.45)',
                   animationDelay: '0.6s',
                 }}
               />
               <div
-                className="youvs-radar absolute"
+                className="youvs-radar absolute w-full h-full"
                 style={{
-                  width: 96,
-                  height: 96,
                   borderRadius: '50%',
                   background: 'conic-gradient(from 0deg, transparent 0deg, rgba(6,182,212,0.35) 60deg, transparent 120deg)',
                 }}
               />
-              <div
-                key={shuffleTick}
-                className="youvs-shuffle relative"
-                style={{
-                  borderRadius: '50%',
-                  padding: 2,
-                  background: 'linear-gradient(135deg, rgba(6,182,212,0.65), rgba(16,185,129,0.65))',
-                }}
-              >
-                <SilhouetteAvatar
-                  gradient={ANONYMOUS_OPPONENTS[shuffleTick % ANONYMOUS_OPPONENTS.length].gradient}
-                  size={56}
-                />
+              <div className="youvs-shuffle-scale relative">
+                <div
+                  key={shuffleTick}
+                  className="youvs-shuffle relative"
+                  style={{
+                    borderRadius: '50%',
+                    padding: 2,
+                    background: 'linear-gradient(135deg, rgba(6,182,212,0.65), rgba(16,185,129,0.65))',
+                  }}
+                >
+                  <SilhouetteAvatar
+                    gradient={ANONYMOUS_OPPONENTS[shuffleTick % ANONYMOUS_OPPONENTS.length].gradient}
+                    size={56}
+                  />
+                </div>
               </div>
             </div>
             <p className="text-sm font-bold text-white mb-0.5">Finding your battle…</p>
-            <div className="flex items-center gap-1.5 mb-2" aria-hidden="true">
+            <div className="flex items-center gap-1.5 mb-1 sm:mb-2" aria-hidden="true">
               {[0, 1, 2].map((i) => (
                 <span
                   key={i}
@@ -2017,8 +2024,7 @@ function YouVsCard({
           // to actually commit the $5 spend. The Cancel button
           // backs out without any API calls.
           <div
-            className="flex flex-col items-center justify-center text-center py-2 select-none"
-            style={{ minHeight: 148 }}
+            className="flex flex-col items-center justify-center text-center py-1 sm:py-2 select-none min-h-0 sm:min-h-[148px]"
           >
             <div
               className="flex items-center gap-1.5 mb-1.5 px-2.5 py-1 rounded-full"
@@ -2167,10 +2173,10 @@ function YouVsCard({
           // Graffiti / cartoon PLAY NOW treatment — replaces the
           // cycling fake-opponent layout. This is the new single
           // eye-catching "play anyone" visual.
-          <div className="flex flex-col items-center justify-center text-center py-2 select-none" style={{ minHeight: 148 }}>
-            <div className="relative inline-flex items-center justify-center mb-2.5" style={{ height: 76 }}>
+          <div className="flex flex-col items-center justify-center text-center py-0 sm:py-2 select-none min-h-0 sm:min-h-[148px]">
+            <div className="relative inline-flex items-center justify-center mb-1 sm:mb-2.5 h-[36px] sm:h-[76px]">
               <svg
-                className="absolute pointer-events-none"
+                className="absolute pointer-events-none hidden sm:block"
                 width="180"
                 height="60"
                 viewBox="0 0 180 60"
@@ -2188,7 +2194,7 @@ function YouVsCard({
               </svg>
 
               <div
-                className="youvs-play-sticker relative inline-flex items-center justify-center px-5 py-2 rounded-2xl"
+                className="youvs-play-sticker relative inline-flex items-center justify-center px-3 py-1 sm:px-5 sm:py-2 rounded-2xl"
                 style={{
                   background: 'linear-gradient(135deg, #fbbf24 0%, #f97316 55%, #ea580c 100%)',
                   border: '3px solid #0d0d0d',
@@ -2196,7 +2202,7 @@ function YouVsCard({
                 }}
               >
                 <span
-                  className="text-3xl font-black tracking-tight leading-none"
+                  className="text-base sm:text-3xl font-black tracking-tight leading-none"
                   style={{
                     color: '#fff',
                     WebkitTextStroke: '1.5px #0d0d0d',
@@ -2244,10 +2250,10 @@ function YouVsCard({
                 ✦
               </span>
             </div>
-            <p className="text-sm font-extrabold text-white">
+            <p className="hidden sm:block text-sm font-extrabold text-white">
               Tap to face anyone in a 1v1
             </p>
-            <p className="text-[11px] text-gray-400 mt-0.5">
+            <p className="hidden sm:block text-[11px] text-gray-400 mt-0.5">
               Random opponent · ${buyIn} buy-in · {selectedGameMode.label}
             </p>
 
@@ -2258,7 +2264,7 @@ function YouVsCard({
                 selection is persisted to localStorage so the next
                 visit's tap goes straight to their preferred default. */}
             <div
-              className="flex items-center justify-center gap-1.5 mt-2 flex-wrap"
+              className="flex items-center justify-center gap-1.5 mt-1 sm:mt-2 flex-wrap"
               role="radiogroup"
               aria-label="Buy-in"
               onClick={(e) => e.stopPropagation()}
@@ -2283,7 +2289,7 @@ function YouVsCard({
               })}
             </div>
             <div
-              className="flex items-center justify-center gap-1.5 mt-1.5 flex-wrap"
+              className="flex items-center justify-center gap-1.5 mt-1 sm:mt-1.5 flex-wrap"
               role="radiogroup"
               aria-label="Game mode"
               onClick={(e) => e.stopPropagation()}
@@ -2315,7 +2321,7 @@ function YouVsCard({
                 chips so the whole row reads as one cartoon family
                 with the live battle cards. */}
             <div
-              className="flex items-center justify-center gap-1.5 mt-2 flex-wrap"
+              className="flex items-center justify-center gap-1.5 mt-1 sm:mt-2 flex-wrap"
               aria-live="polite"
             >
               <CartoonChip
@@ -2351,7 +2357,7 @@ function YouVsCard({
           // Active / waiting / queued — unchanged from the existing
           // layout per the task contract.
           <>
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-1.5 sm:mb-3">
               <div className="flex items-center gap-2.5 flex-1 min-w-0">
                 <PlayerAvatar user={youUser} isWinning={false} size={40} bgColor="#1e40af" />
                 <div className="min-w-0">
@@ -2423,7 +2429,7 @@ function YouVsCard({
               </div>
             </div>
 
-            <div className="h-1 rounded-full overflow-hidden mb-2" style={{ background: '#1a1a1a' }}>
+            <div className="h-1 rounded-full overflow-hidden mb-1 sm:mb-2" style={{ background: '#1a1a1a' }}>
               <div
                 className="h-full rounded-full transition-all duration-1000"
                 style={{

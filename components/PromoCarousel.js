@@ -304,7 +304,7 @@ export default function PromoCarousel({ slides }) {
       </div>
 
       {count > 1 && (
-        <div className="flex justify-center items-center gap-1.5 mt-3">
+        <div className="flex justify-center items-center gap-0 sm:gap-1.5 mt-3">
           {visible.map((_, i) => (
             <button
               key={i}
@@ -312,16 +312,23 @@ export default function PromoCarousel({ slides }) {
               aria-label={`Go to slide ${i + 1}`}
               aria-current={i === activeIndex ? 'true' : 'false'}
               onClick={() => handleDotClick(i)}
-              className="rounded-full transition-all duration-300"
-              style={{
-                width: i === activeIndex ? 22 : 6,
-                height: 6,
-                background:
+              className="flex items-center justify-center cursor-pointer p-2 sm:p-0 bg-transparent"
+              style={{ border: 0 }}
+            >
+              <span
+                className={`rounded-full block transition-all duration-300 ${
                   i === activeIndex
-                    ? 'rgba(255,255,255,0.85)'
-                    : 'rgba(255,255,255,0.28)',
-              }}
-            />
+                    ? 'w-[5px] h-[2px] sm:w-[22px] sm:h-[6px]'
+                    : 'w-[2px] h-[2px] sm:w-[6px] sm:h-[6px]'
+                }`}
+                style={{
+                  background:
+                    i === activeIndex
+                      ? 'rgba(255,255,255,0.85)'
+                      : 'rgba(255,255,255,0.28)',
+                }}
+              />
+            </button>
           ))}
         </div>
       )}
