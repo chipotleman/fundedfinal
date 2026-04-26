@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, Fragment } from 'react';
 import AdminLayout from '../../components/admin-panel/AdminLayout';
 import { PROMO_SLOT_TYPES } from '../../lib/promoSlots';
 
@@ -7,15 +7,101 @@ const PROMO_TYPE_LABELS = PROMO_SLOT_TYPES.reduce((acc, t) => {
   return acc;
 }, {});
 
+const RANGE_DAYS = { '1d': 1, '7d': 7, '30d': 30 };
+
+function buildDayBuckets(daysAgo) {
+  const days = [];
+  const now = new Date();
+  for (let i = daysAgo - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setUTCDate(d.getUTCDate() - i);
+    days.push(d.toISOString().slice(0, 10));
+  }
+  return days;
+}
+
+function PromoTrendChart({ days, impressions, clicks }) {
+  const width = 480;
+  const height = 140;
+  const padL = 32;
+  const padR = 8;
+  const padT = 12;
+  const padB = 28;
+  const innerW = width - padL - padR;
+  const innerH = height - padT - padB;
+  const maxVal = Math.max(1, ...impressions, ...clicks);
+  const n = days.length;
+  const xFor = (i) => padL + (n <= 1 ? innerW / 2 : (i * innerW) / (n - 1));
+  const yFor = (v) => padT + innerH - (v / maxVal) * innerH;
+  const pathFor = (arr) => arr.map((v, i) => `${i === 0 ? 'M' : 'L'}${xFor(i).toFixed(1)},${yFor(v).toFixed(1)}`).join(' ');
+  const gridLines = [0, 0.5, 1].map((p) => padT + innerH - p * innerH);
+  const showEveryX = n > 14 ? Math.ceil(n / 7) : 1;
+
+  return (
+    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto" role="img" aria-label="Daily impressions and clicks">
+      {gridLines.map((y, i) => (
+        <line key={i} x1={padL} x2={width - padR} y1={y} y2={y} stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+      ))}
+      {[0, 0.5, 1].map((p, i) => (
+        <text key={i} x={padL - 6} y={padT + innerH - p * innerH + 3} textAnchor="end" fontSize="9" fill="rgba(255,255,255,0.5)">
+          {Math.round(maxVal * p)}
+        </text>
+      ))}
+      <path d={pathFor(impressions)} fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      <path d={pathFor(clicks)} fill="none" stroke="#c084fc" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      {impressions.map((v, i) => (
+        <circle key={`i-${i}`} cx={xFor(i)} cy={yFor(v)} r="2.5" fill="#60a5fa">
+          <title>{`${days[i]} · ${v.toLocaleString()} impressions`}</title>
+        </circle>
+      ))}
+      {clicks.map((v, i) => (
+        <circle key={`c-${i}`} cx={xFor(i)} cy={yFor(v)} r="2.5" fill="#c084fc">
+          <title>{`${days[i]} · ${v.toLocaleString()} clicks`}</title>
+        </circle>
+      ))}
+      {days.map((d, i) => {
+        if (i % showEveryX !== 0 && i !== n - 1) return null;
+        const label = d.slice(5);
+        return (
+          <text key={d} x={xFor(i)} y={height - 10} textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.5)">
+            {label}
+          </text>
+        );
+      })}
+    </svg>
+  );
+}
+
 export default function AdminAnalytics() {
   const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState({
     totalEvents: 0, totalSessions: 0, totalPageViews: 0, demoBets: 0, unplacedBets: 0,
-    recentEvents: [], topPages: [], eventsByType: [], promoSlotStats: [],
+    recentEvents: [], topPages: [], eventsByType: [], promoSlotStats: [], promoSlotDailyStats: [],
   });
   const [dateRange, setDateRange] = useState('7d');
+  const [expandedPromo, setExpandedPromo] = useState(null);
 
-  useEffect(() => { fetchAnalytics(); }, [dateRange]);
+  useEffect(() => { fetchAnalytics(); setExpandedPromo(null); }, [dateRange]);
+
+  const days = useMemo(() => buildDayBuckets(RANGE_DAYS[dateRange] || 7), [dateRange]);
+
+  const promoDailyByKey = useMemo(() => {
+    const map = new Map();
+    for (const r of analytics.promoSlotDailyStats || []) {
+      const key = `${r.slotIndex}|${r.containerType}`;
+      if (!map.has(key)) map.set(key, new Map());
+      map.get(key).set(r.day, { impressions: r.impressions, clicks: r.clicks });
+    }
+    return map;
+  }, [analytics.promoSlotDailyStats]);
+
+  const seriesFor = (slotIndex, containerType) => {
+    const key = `${slotIndex}|${containerType}`;
+    const byDay = promoDailyByKey.get(key);
+    const impressions = days.map((d) => (byDay?.get(d)?.impressions) || 0);
+    const clicks = days.map((d) => (byDay?.get(d)?.clicks) || 0);
+    return { impressions, clicks };
+  };
 
   const fetchAnalytics = async () => {
     setLoading(true);
@@ -111,7 +197,7 @@ export default function AdminAnalytics() {
               <h2 className="text-xl font-semibold text-white">Promo Slot Performance</h2>
               <div className="p-2 rounded-lg bg-pink-500/20"><svg className="w-5 h-5 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg></div>
             </div>
-            <p className="text-gray-400 text-sm mb-6">Impressions and clicks per dashboard slot and container type. Slot 1 is the leftmost slot.</p>
+            <p className="text-gray-400 text-sm mb-6">Impressions and clicks per dashboard slot and container type. Slot 1 is the leftmost slot. Click any row to see the day-by-day trend.</p>
             {analytics.promoSlotStats.length === 0 ? (
               <div className="text-center py-8"><p className="text-gray-500">No promo activity recorded in this range yet</p></div>
             ) : (
@@ -119,6 +205,7 @@ export default function AdminAnalytics() {
                 <table className="w-full">
                   <thead className="bg-white/5 border-b border-white/10">
                     <tr>
+                      <th className="px-4 py-3 w-8"></th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Slot</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Container</th>
                       <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Impressions</th>
@@ -129,14 +216,38 @@ export default function AdminAnalytics() {
                   <tbody className="divide-y divide-white/5">
                     {analytics.promoSlotStats.map((row, idx) => {
                       const ctr = row.impressions > 0 ? (row.clicks / row.impressions) * 100 : 0;
+                      const rowKey = `${row.slotIndex}|${row.containerType}`;
+                      const isOpen = expandedPromo === rowKey;
+                      const series = isOpen ? seriesFor(row.slotIndex, row.containerType) : null;
                       return (
-                        <tr key={idx} className="hover:bg-white/5 transition-colors">
-                          <td className="px-4 py-3 text-white text-sm font-semibold">Slot {Number(row.slotIndex) + 1}</td>
-                          <td className="px-4 py-3 text-gray-300 text-sm">{PROMO_TYPE_LABELS[row.containerType] || row.containerType}</td>
-                          <td className="px-4 py-3 text-blue-400 text-sm font-bold text-right">{row.impressions.toLocaleString()}</td>
-                          <td className="px-4 py-3 text-purple-400 text-sm font-bold text-right">{row.clicks.toLocaleString()}</td>
-                          <td className="px-4 py-3 text-gray-300 text-sm text-right">{ctr.toFixed(1)}%</td>
-                        </tr>
+                        <Fragment key={rowKey}>
+                          <tr
+                            className="hover:bg-white/5 transition-colors cursor-pointer"
+                            onClick={() => setExpandedPromo(isOpen ? null : rowKey)}
+                            aria-expanded={isOpen}
+                          >
+                            <td className="px-4 py-3 text-gray-400">
+                              <svg className={`w-4 h-4 transition-transform ${isOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                            </td>
+                            <td className="px-4 py-3 text-white text-sm font-semibold">Slot {Number(row.slotIndex) + 1}</td>
+                            <td className="px-4 py-3 text-gray-300 text-sm">{PROMO_TYPE_LABELS[row.containerType] || row.containerType}</td>
+                            <td className="px-4 py-3 text-blue-400 text-sm font-bold text-right">{row.impressions.toLocaleString()}</td>
+                            <td className="px-4 py-3 text-purple-400 text-sm font-bold text-right">{row.clicks.toLocaleString()}</td>
+                            <td className="px-4 py-3 text-gray-300 text-sm text-right">{ctr.toFixed(1)}%</td>
+                          </tr>
+                          {isOpen && (
+                            <tr className="bg-white/[0.02]">
+                              <td colSpan={6} className="px-4 py-4">
+                                <div className="flex items-center gap-4 mb-2 text-xs">
+                                  <div className="flex items-center gap-1.5"><span className="inline-block w-3 h-0.5 bg-blue-400"></span><span className="text-gray-400">Impressions</span></div>
+                                  <div className="flex items-center gap-1.5"><span className="inline-block w-3 h-0.5 bg-purple-400"></span><span className="text-gray-400">Clicks</span></div>
+                                  <span className="text-gray-500 ml-auto">Daily totals · {days.length === 1 ? 'today' : `last ${days.length} days`}</span>
+                                </div>
+                                <PromoTrendChart days={days} impressions={series.impressions} clicks={series.clicks} />
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
                       );
                     })}
                   </tbody>

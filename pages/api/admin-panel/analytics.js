@@ -56,8 +56,12 @@ export default async function handler(req, res) {
       daysAgo = 7;
   }
 
-  const startDate = new Date();
-  startDate.setDate(startDate.getDate() - daysAgo);
+  const now = new Date();
+  const startDate = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate() - (daysAgo - 1),
+  ));
   const startDateStr = startDate.toISOString();
 
   try {
@@ -71,16 +75,17 @@ export default async function handler(req, res) {
       topPages,
       recentEvents,
       promoSlotStats,
+      promoSlotDailyStatsRaw,
     ] = await Promise.all([
-      sql`SELECT COUNT(*) as count FROM user_events WHERE created_at > ${startDateStr}`.catch(() => [{ count: 0 }]),
-      sql`SELECT COUNT(DISTINCT session_id) as count FROM session_metrics WHERE created_at > ${startDateStr}`.catch(() => [{ count: 0 }]),
-      sql`SELECT COUNT(*) as count FROM page_views WHERE created_at > ${startDateStr}`.catch(() => [{ count: 0 }]),
-      sql`SELECT COUNT(*) as count FROM demo_bets WHERE created_at > ${startDateStr}`.catch(() => [{ count: 0 }]),
-      sql`SELECT COUNT(*) as count FROM unplaced_bets WHERE added_at > ${startDateStr}`.catch(() => [{ count: 0 }]),
+      sql`SELECT COUNT(*) as count FROM user_events WHERE created_at >= ${startDateStr}`.catch(() => [{ count: 0 }]),
+      sql`SELECT COUNT(DISTINCT session_id) as count FROM session_metrics WHERE created_at >= ${startDateStr}`.catch(() => [{ count: 0 }]),
+      sql`SELECT COUNT(*) as count FROM page_views WHERE created_at >= ${startDateStr}`.catch(() => [{ count: 0 }]),
+      sql`SELECT COUNT(*) as count FROM demo_bets WHERE created_at >= ${startDateStr}`.catch(() => [{ count: 0 }]),
+      sql`SELECT COUNT(*) as count FROM unplaced_bets WHERE added_at >= ${startDateStr}`.catch(() => [{ count: 0 }]),
       sql`
         SELECT event_type as type, COUNT(*) as count 
         FROM user_events 
-        WHERE created_at > ${startDateStr}
+        WHERE created_at >= ${startDateStr}
         GROUP BY event_type 
         ORDER BY count DESC 
         LIMIT 10
@@ -88,7 +93,7 @@ export default async function handler(req, res) {
       sql`
         SELECT page_url as url, COUNT(*) as views 
         FROM page_views 
-        WHERE created_at > ${startDateStr}
+        WHERE created_at >= ${startDateStr}
         GROUP BY page_url 
         ORDER BY views DESC 
         LIMIT 10
@@ -106,12 +111,27 @@ export default async function handler(req, res) {
           COUNT(*) FILTER (WHERE event_type = 'promo_impression') AS impressions,
           COUNT(*) FILTER (WHERE event_type = 'promo_click') AS clicks
         FROM user_events
-        WHERE created_at > ${startDateStr}
+        WHERE created_at >= ${startDateStr}
           AND event_type IN ('promo_impression', 'promo_click')
           AND event_data ? 'slotIndex'
           AND event_data ? 'containerType'
         GROUP BY slot_index, container_type
         ORDER BY slot_index ASC, impressions DESC
+      `.catch(() => []),
+      sql`
+        SELECT
+          to_char(date_trunc('day', created_at AT TIME ZONE 'UTC'), 'YYYY-MM-DD') AS day,
+          (event_data->>'slotIndex')::int AS slot_index,
+          event_data->>'containerType' AS container_type,
+          COUNT(*) FILTER (WHERE event_type = 'promo_impression') AS impressions,
+          COUNT(*) FILTER (WHERE event_type = 'promo_click') AS clicks
+        FROM user_events
+        WHERE created_at >= ${startDateStr}
+          AND event_type IN ('promo_impression', 'promo_click')
+          AND event_data ? 'slotIndex'
+          AND event_data ? 'containerType'
+        GROUP BY day, slot_index, container_type
+        ORDER BY day ASC, slot_index ASC, container_type ASC
       `.catch(() => []),
     ]);
 
@@ -133,6 +153,13 @@ export default async function handler(req, res) {
         createdAt: e.created_at,
       })),
       promoSlotStats: promoSlotStats.map(r => ({
+        slotIndex: r.slot_index,
+        containerType: r.container_type,
+        impressions: parseInt(r.impressions || 0),
+        clicks: parseInt(r.clicks || 0),
+      })),
+      promoSlotDailyStats: (promoSlotDailyStatsRaw || []).map(r => ({
+        day: r.day,
         slotIndex: r.slot_index,
         containerType: r.container_type,
         impressions: parseInt(r.impressions || 0),
