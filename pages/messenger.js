@@ -52,6 +52,26 @@ export default function MessengerPage() {
     setSelectedId(id);
   }, []);
 
+  // Page-level escape hatch. The header back button (mobile) and the in-page
+  // close action both call this so users always have a guaranteed way out
+  // of Messenger even when the on-screen keyboard is up. We blur whatever
+  // currently has focus first so iOS dismisses the keyboard before we
+  // navigate (otherwise the keyboard can briefly stay up over the next
+  // page and swallow the first tap there). Falls back to the dashboard for
+  // signed-in users and the landing page otherwise when there's no app
+  // history to pop (e.g. user opened Messenger from a notification deep
+  // link in a fresh tab).
+  const handleLeaveMessenger = useCallback(() => {
+    if (typeof document !== 'undefined' && document.activeElement && typeof document.activeElement.blur === 'function') {
+      try { document.activeElement.blur(); } catch (_e) {}
+    }
+    if (typeof window !== 'undefined' && window.history && window.history.length > 1) {
+      router.back();
+      return;
+    }
+    router.push(isAuthed ? '/dashboard' : '/');
+  }, [router, isAuthed]);
+
   const bg = '#000000';
   const textPrimary = '#ffffff';
   const textSecondary = '#9ca3af';
@@ -92,18 +112,18 @@ export default function MessengerPage() {
     );
   }
 
-  // Use a dynamic viewport-relative height for the chat surface so the inner
-  // thread body scrolls but page-level navigation (TopNavbar links, dropdowns,
-  // etc.) keep working — wrapping the entire page in `overflow: hidden` was
-  // intercepting clicks on iOS Safari and trapping the user on this page.
-  // The chat surface is sized to fill the viewport below the live top nav
-  // height (exposed by TopNavbar as `--top-nav-height`) and the Messenger
-  // title row, so the piks logo, nav, conversation header, messages, and
-  // input row all stay visible at once. We deliberately avoid wrapping the
-  // page in `overflow: hidden` so nav dropdowns aren't clipped and iOS
-  // Safari clicks aren't trapped.
-  const headerRowHeightDesktop = 80;
-  const headerRowHeightMobile = 56;
+  // The Messenger page is strictly viewport-bound: only the inner thread
+  // body scrolls. We sit the inner wrap inside a container sized to
+  // `100dvh - top-nav-height` and clip its overflow so the page itself can
+  // never grow taller than the visible viewport (which on iOS Safari
+  // shrinks when the keyboard pops up — `dvh` follows that, keeping the
+  // composer and friend header in view).
+  //
+  // We deliberately apply `overflow: hidden` to this *inner* wrap rather
+  // than to the outermost page div. The outer div still contains the
+  // TopNavbar and any portaled overlays (BetSlip, PlayFriendModal), so
+  // their dropdowns and click targets are never clipped, and iOS Safari
+  // taps on the piks logo / hamburger keep working from this page.
   return (
     <div style={{ backgroundColor: bg, minHeight: '100dvh' }}>
       <TopNavbar
@@ -113,26 +133,60 @@ export default function MessengerPage() {
       {showBetSlip && (
         <BetSlip isOpen={showBetSlip} onClose={() => setShowBetSlip(false)} />
       )}
-      <div className="max-w-7xl w-full mx-auto px-2 sm:px-4 py-2 sm:py-4">
-        <div className="flex items-center mb-2 sm:mb-3">
+      <div
+        className="max-w-7xl w-full mx-auto px-2 sm:px-4 py-2 sm:py-4 flex flex-col"
+        style={{
+          height: 'calc(100dvh - var(--top-nav-height, 70px))',
+          overflow: 'hidden',
+        }}
+      >
+        <div className="flex items-center gap-2 mb-2 sm:mb-3 flex-shrink-0">
+          {/* Mobile-only Back/Close — guaranteed escape hatch out of
+              Messenger that's always reachable in one tap, even when the
+              iOS keyboard or Safari URL bar is on screen. The TopNavbar's
+              piks logo / hamburger remain available too; this is an
+              additional, more obvious affordance. Tap target is at least
+              44x44 to satisfy iOS touch guidance. */}
+          <button
+            type="button"
+            onClick={handleLeaveMessenger}
+            aria-label="Leave Messenger"
+            className="sm:hidden inline-flex items-center gap-1 px-2 -ml-1 rounded-lg font-semibold text-sm text-white"
+            style={{
+              minHeight: 44,
+              minWidth: 44,
+              backgroundColor: 'rgba(59,130,246,0.16)',
+              border: '1px solid rgba(59,130,246,0.45)',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
+            </svg>
+            <span>Back</span>
+          </button>
           <h1 className="text-lg sm:text-2xl font-bold tracking-tight" style={{ color: '#3b82f6' }}>
             Messenger
           </h1>
+          {/* Desktop-only Close link so parity with mobile is maintained
+              without disturbing the existing desktop layout. */}
+          <button
+            type="button"
+            onClick={handleLeaveMessenger}
+            aria-label="Close Messenger"
+            className="hidden sm:inline-flex items-center gap-1 ml-auto px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-300 hover:text-white"
+            style={{
+              backgroundColor: 'rgba(59,130,246,0.10)',
+              border: '1px solid rgba(59,130,246,0.35)',
+            }}
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            <span>Close</span>
+          </button>
         </div>
-        <div
-          className="messenger-surface"
-          style={{
-            height: `calc(100dvh - var(--top-nav-height, 70px) - ${headerRowHeightMobile}px)`,
-            minHeight: 320,
-          }}
-        >
-          <style jsx>{`
-            @media (min-width: 640px) {
-              .messenger-surface {
-                height: calc(100dvh - var(--top-nav-height, 48px) - ${headerRowHeightDesktop}px) !important;
-              }
-            }
-          `}</style>
+        <div className="flex-1 min-h-0">
           <MessagesPanel
             selectedId={selectedId}
             onSelect={handleSelect}
