@@ -276,8 +276,18 @@ body {
   animation: close-game-tightened-pulse 1.6s ease-in-out infinite;
 }
 
+@keyframes close-game-lead-change-pulse {
+  0%, 100% { box-shadow: 0 0 14px rgba(249, 115, 22, 0.32); }
+  50%      { box-shadow: 0 0 28px rgba(249, 115, 22, 0.60); }
+}
+
+.close-game-lead-change {
+  animation: close-game-lead-change-pulse 1.4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .close-game-tightened {
+  .close-game-tightened,
+  .close-game-lead-change {
     animation: none;
   }
 }

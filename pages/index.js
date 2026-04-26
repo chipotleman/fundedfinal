@@ -529,36 +529,62 @@ export default function Dashboard() {
       .map(({ game, diff }) => ({ ...game, _scoreGap: diff }));
   }, [categorizedGames.liveGames]);
 
-  // Track which close games just got tighter than they were on the previous tick.
-  // We compare each game's current score gap to the previously-seen gap and flag
-  // any decrease so the card can briefly highlight without shifting layout.
+  // Track which close games just got tighter than they were on the previous tick,
+  // and which ones flipped which side is leading. We compare each game's current
+  // score gap and current leader to the previously-seen ones and flag any change
+  // so the card can briefly highlight without shifting layout.
   const prevGapsRef = useRef(new Map());
+  const prevLeadersRef = useRef(new Map());
   const [tightenedGames, setTightenedGames] = useState({});
+  const [leadChangedGames, setLeadChangedGames] = useState({});
   const HIGHLIGHT_MS = 5000;
 
   useEffect(() => {
     const newlyTightened = {};
+    const newlyLeadChanged = {};
     const seenIds = new Set();
     closeGames.forEach((game) => {
       seenIds.add(game.id);
       const currentDiff = game._scoreGap;
-      if (typeof currentDiff !== 'number') return;
-      const prevDiff = prevGapsRef.current.get(game.id);
-      if (typeof prevDiff === 'number' && currentDiff < prevDiff) {
-        newlyTightened[game.id] = Date.now();
+      const homeScore = game.scores?.home?.total;
+      const awayScore = game.scores?.away?.total;
+
+      if (typeof currentDiff === 'number') {
+        const prevDiff = prevGapsRef.current.get(game.id);
+        if (typeof prevDiff === 'number' && currentDiff < prevDiff) {
+          newlyTightened[game.id] = Date.now();
+        }
+        prevGapsRef.current.set(game.id, currentDiff);
       }
-      prevGapsRef.current.set(game.id, currentDiff);
+
+      let currentLeader = null;
+      if (typeof homeScore === 'number' && typeof awayScore === 'number') {
+        if (homeScore > awayScore) currentLeader = 'home';
+        else if (awayScore > homeScore) currentLeader = 'away';
+      }
+      const prevLeader = prevLeadersRef.current.get(game.id);
+      if (currentLeader && prevLeader && currentLeader !== prevLeader) {
+        newlyLeadChanged[game.id] = Date.now();
+      }
+      // Only persist a known leader so transient ties don't erase the prior side.
+      if (currentLeader) prevLeadersRef.current.set(game.id, currentLeader);
     });
-    // Drop any tracked games no longer in the rail so the map can't grow unbounded
+    // Drop any tracked games no longer in the rail so the maps can't grow unbounded
     for (const id of Array.from(prevGapsRef.current.keys())) {
       if (!seenIds.has(id)) prevGapsRef.current.delete(id);
+    }
+    for (const id of Array.from(prevLeadersRef.current.keys())) {
+      if (!seenIds.has(id)) prevLeadersRef.current.delete(id);
     }
     if (Object.keys(newlyTightened).length > 0) {
       setTightenedGames((prev) => ({ ...prev, ...newlyTightened }));
     }
+    if (Object.keys(newlyLeadChanged).length > 0) {
+      setLeadChangedGames((prev) => ({ ...prev, ...newlyLeadChanged }));
+    }
   }, [closeGames]);
 
-  // Clear the highlight after a short window so it never lingers.
+  // Clear the tightened highlight after a short window so it never lingers.
   useEffect(() => {
     const ids = Object.keys(tightenedGames);
     if (ids.length === 0) return;
@@ -579,6 +605,28 @@ export default function Dashboard() {
     }, remaining + 50);
     return () => clearTimeout(timer);
   }, [tightenedGames]);
+
+  // Clear the lead-change highlight after the same short window.
+  useEffect(() => {
+    const ids = Object.keys(leadChangedGames);
+    if (ids.length === 0) return;
+    const now = Date.now();
+    const earliest = Math.min(...Object.values(leadChangedGames));
+    const remaining = Math.max(0, HIGHLIGHT_MS - (now - earliest));
+    const timer = setTimeout(() => {
+      const cutoff = Date.now() - HIGHLIGHT_MS;
+      setLeadChangedGames((prev) => {
+        let changed = false;
+        const next = {};
+        for (const [id, ts] of Object.entries(prev)) {
+          if (ts > cutoff) next[id] = ts;
+          else changed = true;
+        }
+        return changed ? next : prev;
+      });
+    }, remaining + 50);
+    return () => clearTimeout(timer);
+  }, [leadChangedGames]);
 
   // Sport filter mappings
   const sportMappings = useMemo(() => ({
@@ -810,38 +858,64 @@ export default function Dashboard() {
             {closeGames.map((game) => {
               const isLive = game.isLive || game.status === 'IN_PROGRESS';
               const isTightened = !!tightenedGames[game.id];
+              const isLeadChange = !!leadChangedGames[game.id];
+              const hasHighlight = isTightened || isLeadChange;
+              // Lead change is the more dramatic event, so its accent wins on the
+              // border + glow when both pills are active simultaneously.
+              const accentBorder = isLeadChange ? '#f97316' : (isTightened ? '#10b981' : '#1a1a1a');
+              const accentShadow = isLeadChange
+                ? '0 0 18px rgba(249, 115, 22, 0.40)'
+                : (isTightened ? '0 0 18px rgba(16, 185, 129, 0.35)' : 'none');
+              const pulseClass = isLeadChange
+                ? 'close-game-lead-change'
+                : (isTightened ? 'close-game-tightened' : '');
               return (
                 <div 
                   key={game.id} 
-                  className={`flex-shrink-0 w-[260px] rounded-xl overflow-hidden ${isTightened ? 'close-game-tightened' : ''}`}
+                  className={`flex-shrink-0 w-[260px] rounded-xl overflow-hidden ${pulseClass}`}
                   style={{
                     backgroundColor: '#0d0d0d',
-                    border: `1px solid ${isTightened ? '#10b981' : '#1a1a1a'}`,
-                    boxShadow: isTightened ? '0 0 18px rgba(16, 185, 129, 0.35)' : 'none',
+                    border: `1px solid ${accentBorder}`,
+                    boxShadow: accentShadow,
                     transition: 'border-color 250ms ease, box-shadow 250ms ease',
                   }}
                 >
                   <div className="p-3.5">
-                    <div className="flex items-center gap-2 mb-2.5">
-                      <span className="text-gray-500 text-[11px] font-medium">{game.sportName}</span>
-                      {isTightened ? (
-                        <div
-                          className="flex items-center gap-1 ml-auto px-2 py-0.5 rounded-full"
-                          style={{
-                            backgroundColor: 'rgba(16, 185, 129, 0.15)',
-                            border: '1px solid rgba(16, 185, 129, 0.45)',
-                          }}
-                        >
-                          <span className="text-emerald-400 text-[10px] font-bold uppercase tracking-wider">Just got closer</span>
-                        </div>
-                      ) : isLive ? (
-                        <div className="flex items-center gap-1 ml-auto">
-                          <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
-                          <span className="text-red-500 text-[11px] font-semibold">LIVE</span>
-                        </div>
-                      ) : (
-                        <span className="text-gray-500 text-[11px] ml-auto">{game.time || 'TBD'}</span>
-                      )}
+                    <div className="flex items-center gap-2 mb-2.5" style={{ minHeight: '22px' }}>
+                      <span className="text-gray-500 text-[11px] font-medium truncate" style={{ minWidth: 0 }}>{game.sportName}</span>
+                      <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
+                        {isLeadChange && (
+                          <div
+                            className="flex items-center px-2 py-0.5 rounded-full"
+                            style={{
+                              backgroundColor: 'rgba(249, 115, 22, 0.15)',
+                              border: '1px solid rgba(249, 115, 22, 0.45)',
+                            }}
+                          >
+                            <span className="text-orange-400 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">Lead change</span>
+                          </div>
+                        )}
+                        {isTightened && (
+                          <div
+                            className="flex items-center px-2 py-0.5 rounded-full"
+                            style={{
+                              backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                              border: '1px solid rgba(16, 185, 129, 0.45)',
+                            }}
+                          >
+                            <span className="text-emerald-400 text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">{isLeadChange ? 'Closer' : 'Just got closer'}</span>
+                          </div>
+                        )}
+                        {!hasHighlight && isLive && (
+                          <div className="flex items-center gap-1">
+                            <div className="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"></div>
+                            <span className="text-red-500 text-[11px] font-semibold">LIVE</span>
+                          </div>
+                        )}
+                        {!hasHighlight && !isLive && (
+                          <span className="text-gray-500 text-[11px]">{game.time || 'TBD'}</span>
+                        )}
+                      </div>
                     </div>
                     <div 
                       className="mb-3 cursor-pointer -mx-1.5 px-1.5 py-1 rounded-lg transition-colors"
