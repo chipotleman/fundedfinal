@@ -509,8 +509,13 @@ body {
   transform: translateY(-1px);
 }
 
-/* Enhanced Button Hover Effects */
-button:not(.no-hover-effect):not(.bet-btn):hover, .btn:not(.no-hover-effect):not(.bet-btn):hover {
+/* Enhanced Button Hover Effects (opt-in)
+   The lift + blue glow is opt-in via the `.btn-lift` class. New buttons stay
+   flat on hover by default — add `btn-lift` to any element that should rise
+   and glow (typically primary action buttons). Previously this rule applied to
+   every <button> / .btn unless the element opted out with `no-hover-effect`,
+   which silently leaked the effect onto things like nav pills. */
+.btn-lift:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
 }
@@ -651,10 +656,12 @@ button.no-hover-effect.rounded-lg:focus-visible {
     -webkit-touch-callout: none !important;
   }
   
-  /* Disable hover effects on specific elements - exclude SVGs, no-hover-effect, bet-btn, and hamburger-btn */
-  button:not(svg):not(.no-hover-effect):not(.bet-btn):not(.hamburger-btn):hover,
+  /* Disable hover effects on touch devices for elements that opt into a
+     transform / shadow on hover. Buttons no longer get a lift by default,
+     so we only need to neutralize the explicit opt-in (.btn-lift) plus the
+     long-standing card / glass hover effects. */
+  .btn-lift:hover,
   a:not(svg):not(.no-hover-effect):not(.bet-btn):not(.hamburger-btn):hover,
-  .btn:not(.no-hover-effect):not(.bet-btn):not(.hamburger-btn):hover,
   .glass-button:not(.hamburger-btn):hover,
   .modern-card:hover,
   .card-hover:hover,

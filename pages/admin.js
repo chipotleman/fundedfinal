@@ -256,6 +256,7 @@ export default function AdminPanel() {
           <button
             onClick={handleAddAvatars}
             disabled={uploadingAvatars || !newAvatarUrls.trim()}
+            className="btn-lift"
             style={{
               background: 'linear-gradient(135deg, #8B5CF6, #6366F1)',
               color: '#fff',
@@ -378,6 +379,7 @@ export default function AdminPanel() {
             <button
               onClick={handleCreateMockUsers}
               disabled={creatingMockUsers || !mockUserUrls.trim()}
+              className="btn-lift"
               style={{
                 background: 'linear-gradient(135deg, #3b82f6, #06b6d4)',
                 color: '#fff',
@@ -482,6 +484,7 @@ export default function AdminPanel() {
             {evaluation.payout_status === 'approved' && (
               <button
                 onClick={() => markAsPaid(evaluation.id)}
+                className="btn-lift"
                 style={{
                   backgroundColor: '#a020f0',
                   color: '#fff',

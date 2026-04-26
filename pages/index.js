@@ -1789,7 +1789,7 @@ export default function Dashboard() {
                     setWalkthroughStep(0);
                   }
                 }}
-                className="flex-1 py-3 rounded-xl text-sm font-bold transition-all active:scale-[0.98]"
+                className="btn-lift flex-1 py-3 rounded-xl text-sm font-bold transition-all active:scale-[0.98]"
                 style={{ backgroundColor: '#2563eb', color: '#ffffff' }}
               >
                 {walkthroughStep === 0 ? 'How Does It Work?' : walkthroughStep === 1 ? 'Got It, Any Tips?' : 'Start Picking'}

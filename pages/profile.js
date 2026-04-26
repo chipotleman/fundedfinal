@@ -309,7 +309,7 @@ export default function Profile() {
                     <button
                       type="submit"
                       disabled={saving || uploading}
-                      className="bg-green-600 hover:bg-green-700 disabled:bg-green-600/50 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                      className="btn-lift bg-green-600 hover:bg-green-700 disabled:bg-green-600/50 text-white font-bold py-3 px-6 rounded-lg transition-colors"
                     >
                       {saving ? 'Saving...' : 'Save Changes'}
                     </button>
@@ -346,7 +346,7 @@ export default function Profile() {
                   
                   <button
                     onClick={() => setEditing(true)}
-                    className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                    className="btn-lift bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
                   >
                     Edit Profile
                   </button>

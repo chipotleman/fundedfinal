@@ -417,7 +417,7 @@ export default function Settings() {
                     })
                   }
                   disabled={savingSection === 'profile'}
-                  className="bg-blue-500 hover:bg-blue-400 disabled:opacity-60 text-white font-semibold px-5 py-2 rounded-lg"
+                  className="btn-lift bg-blue-500 hover:bg-blue-400 disabled:opacity-60 text-white font-semibold px-5 py-2 rounded-lg"
                 >
                   {savingSection === 'profile' ? 'Saving…' : 'Save profile'}
                 </button>
@@ -498,7 +498,7 @@ export default function Settings() {
                   type="button"
                   onClick={() => saveSection('preferences', { oddsFormat: form.oddsFormat })}
                   disabled={savingSection === 'preferences'}
-                  className="bg-blue-500 hover:bg-blue-400 disabled:opacity-60 text-white font-semibold px-5 py-2 rounded-lg"
+                  className="btn-lift bg-blue-500 hover:bg-blue-400 disabled:opacity-60 text-white font-semibold px-5 py-2 rounded-lg"
                 >
                   {savingSection === 'preferences' ? 'Saving…' : 'Save preferences'}
                 </button>
@@ -545,7 +545,7 @@ export default function Settings() {
                     })
                   }
                   disabled={savingSection === 'social'}
-                  className="bg-blue-500 hover:bg-blue-400 disabled:opacity-60 text-white font-semibold px-5 py-2 rounded-lg"
+                  className="btn-lift bg-blue-500 hover:bg-blue-400 disabled:opacity-60 text-white font-semibold px-5 py-2 rounded-lg"
                 >
                   {savingSection === 'social' ? 'Saving…' : 'Save socials'}
                 </button>
@@ -627,7 +627,7 @@ export default function Settings() {
                   type="button"
                   onClick={() => saveSection('notifications', { notifications: form.notifications })}
                   disabled={savingSection === 'notifications'}
-                  className="bg-blue-500 hover:bg-blue-400 disabled:opacity-60 text-white font-semibold px-5 py-2 rounded-lg"
+                  className="btn-lift bg-blue-500 hover:bg-blue-400 disabled:opacity-60 text-white font-semibold px-5 py-2 rounded-lg"
                 >
                   {savingSection === 'notifications' ? 'Saving…' : 'Save notifications'}
                 </button>
@@ -673,7 +673,7 @@ export default function Settings() {
                   type="button"
                   onClick={() => saveSection('privacy', { privacy: form.privacy })}
                   disabled={savingSection === 'privacy'}
-                  className="bg-blue-500 hover:bg-blue-400 disabled:opacity-60 text-white font-semibold px-5 py-2 rounded-lg"
+                  className="btn-lift bg-blue-500 hover:bg-blue-400 disabled:opacity-60 text-white font-semibold px-5 py-2 rounded-lg"
                 >
                   {savingSection === 'privacy' ? 'Saving…' : 'Save privacy'}
                 </button>
