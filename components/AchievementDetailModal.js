@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import useModalScrollLock from '../hooks/useModalScrollLock';
 import AchievementBadge from './AchievementBadge';
 import { getBadgeForAchievement } from '../lib/achievementBadges';
+import { trackBadgeShare, BADGE_SHARE_REF } from '../lib/badgeShareTracking';
 
 const RARITY_STYLE = {
   Common: { bg: 'rgba(148, 163, 184, 0.15)', border: 'rgba(148, 163, 184, 0.4)', text: '#cbd5e1' },
@@ -138,11 +139,20 @@ export default function AchievementDetailModal({
 
     const origin = window.location.origin;
     const profilePath = `/profile/${encodeURIComponent(viewerProfileId)}`;
-    const shareUrl = `${origin}${profilePath}`;
+    const shareUrl = `${origin}${profilePath}?ref=${BADGE_SHARE_REF}&b=${encodeURIComponent(achievementId)}`;
     const shareText = `I just unlocked the ${displayName} ${rarity} badge on Piks!`;
     const shareTitle = `${displayName} unlocked on Piks`;
     const imagePath = `/api/og/badge/${encodeURIComponent(achievementId)}?u=${encodeURIComponent(shareUsername || 'Player')}`;
     const imageUrl = `${origin}${imagePath}`;
+
+    const recordShare = (sharePath) => {
+      trackBadgeShare({
+        achievementId,
+        rarity,
+        sharePath,
+        sharerProfileId: viewerProfileId,
+      });
+    };
 
     const nav = typeof navigator !== 'undefined' ? navigator : null;
 
@@ -165,6 +175,7 @@ export default function AchievementDetailModal({
                   text: shareText,
                   url: shareUrl,
                 });
+                recordShare('files');
                 setShareState({ status: 'success', message: 'Shared!' });
                 return;
               }
@@ -182,6 +193,7 @@ export default function AchievementDetailModal({
           text: shareText,
           url: shareUrl,
         });
+        recordShare('native');
         setShareState({ status: 'success', message: 'Shared!' });
         return;
       } catch (err) {
@@ -195,6 +207,7 @@ export default function AchievementDetailModal({
     try {
       if (nav && nav.clipboard && typeof nav.clipboard.writeText === 'function') {
         await nav.clipboard.writeText(shareUrl);
+        recordShare('clipboard');
         setShareState({ status: 'success', message: 'Link copied!' });
         return;
       }

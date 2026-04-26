@@ -15,6 +15,10 @@ import { useProfileCache } from '../../contexts/ProfileCacheContext';
 import { useNotifications } from '../../contexts/NotificationsContext';
 import { formatMoney } from '../../utils/formatMoney';
 import { getFrameById } from '../../lib/profileFrames';
+import {
+  trackBadgeShareProfileVisit,
+  BADGE_SHARE_REF,
+} from '../../lib/badgeShareTracking';
 
 const EMPTY_PROFILE = {
   username: '',
@@ -74,6 +78,7 @@ export default function PublicProfile() {
   const [inlineError, setInlineError] = useState(null);
   const avatarFileRef = useRef(null);
   const bannerFileRef = useRef(null);
+  const badgeShareVisitFiredRef = useRef(null);
   
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
   const { data: session } = useSession();
@@ -135,6 +140,34 @@ export default function PublicProfile() {
   useEffect(() => {
     setIsOwnProfile(!!session?.user?.id && session.user.id === id);
   }, [session, id]);
+
+  // Track profile visits that originated from a shared badge link
+  // (e.g. /profile/123?ref=badge_share&b=first_battle). We fire once per
+  // (id + ref) pair, then strip the params from the URL so a refresh or
+  // share-back doesn't double-count.
+  useEffect(() => {
+    if (!id || !router.isReady) return;
+    const ref = router.query.ref;
+    if (ref !== BADGE_SHARE_REF) return;
+    const badge = router.query.b;
+    const key = `${id}|${typeof badge === 'string' ? badge : ''}`;
+    if (badgeShareVisitFiredRef.current === key) return;
+    badgeShareVisitFiredRef.current = key;
+    trackBadgeShareProfileVisit({
+      profileId: id,
+      achievementId: typeof badge === 'string' ? badge : null,
+    });
+    // Clean the URL so the analytics ping isn't repeated on refresh and the
+    // tracking params don't leak into subsequent re-shares.
+    const cleanedQuery = { ...router.query };
+    delete cleanedQuery.ref;
+    delete cleanedQuery.b;
+    router.replace(
+      { pathname: router.pathname, query: cleanedQuery },
+      undefined,
+      { shallow: true, scroll: false },
+    );
+  }, [id, router.isReady, router.query.ref, router.query.b]);
 
   // Trigger background refresh on every navigation.
   useEffect(() => {

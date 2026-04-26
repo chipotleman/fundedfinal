@@ -76,6 +76,8 @@ export default async function handler(req, res) {
       recentEvents,
       promoSlotStats,
       promoSlotDailyStatsRaw,
+      badgeShareStatsRaw,
+      badgeShareTotalsRaw,
     ] = await Promise.all([
       sql`SELECT COUNT(*) as count FROM user_events WHERE created_at >= ${startDateStr}`.catch(() => [{ count: 0 }]),
       sql`SELECT COUNT(DISTINCT session_id) as count FROM session_metrics WHERE created_at >= ${startDateStr}`.catch(() => [{ count: 0 }]),
@@ -133,6 +135,35 @@ export default async function handler(req, res) {
         GROUP BY day, slot_index, container_type
         ORDER BY day ASC, slot_index ASC, container_type ASC
       `.catch(() => []),
+      sql`
+        SELECT
+          event_data->>'achievementId' AS achievement_id,
+          MAX(NULLIF(event_data->>'rarity', '')) AS rarity,
+          COUNT(*) FILTER (WHERE event_type = 'badge_share') AS total_shares,
+          COUNT(*) FILTER (WHERE event_type = 'badge_share' AND event_data->>'sharePath' = 'native') AS native_shares,
+          COUNT(*) FILTER (WHERE event_type = 'badge_share' AND event_data->>'sharePath' = 'files') AS files_shares,
+          COUNT(*) FILTER (WHERE event_type = 'badge_share' AND event_data->>'sharePath' = 'clipboard') AS clipboard_shares,
+          COUNT(*) FILTER (WHERE event_type = 'badge_share_profile_visit') AS profile_visits
+        FROM user_events
+        WHERE created_at >= ${startDateStr}
+          AND event_type IN ('badge_share', 'badge_share_profile_visit')
+          AND event_data ? 'achievementId'
+          AND NULLIF(event_data->>'achievementId', '') IS NOT NULL
+        GROUP BY achievement_id
+        ORDER BY total_shares DESC, profile_visits DESC, achievement_id ASC
+        LIMIT 50
+      `.catch(() => []),
+      sql`
+        SELECT
+          COUNT(*) FILTER (WHERE event_type = 'badge_share') AS total_shares,
+          COUNT(*) FILTER (WHERE event_type = 'badge_share' AND event_data->>'sharePath' = 'native') AS native_shares,
+          COUNT(*) FILTER (WHERE event_type = 'badge_share' AND event_data->>'sharePath' = 'files') AS files_shares,
+          COUNT(*) FILTER (WHERE event_type = 'badge_share' AND event_data->>'sharePath' = 'clipboard') AS clipboard_shares,
+          COUNT(*) FILTER (WHERE event_type = 'badge_share_profile_visit') AS profile_visits
+        FROM user_events
+        WHERE created_at >= ${startDateStr}
+          AND event_type IN ('badge_share', 'badge_share_profile_visit')
+      `.catch(() => [{ total_shares: 0, native_shares: 0, files_shares: 0, clipboard_shares: 0, profile_visits: 0 }]),
     ]);
 
     return res.status(200).json({
@@ -165,6 +196,22 @@ export default async function handler(req, res) {
         impressions: parseInt(r.impressions || 0),
         clicks: parseInt(r.clicks || 0),
       })),
+      badgeShareStats: (badgeShareStatsRaw || []).map(r => ({
+        achievementId: r.achievement_id,
+        rarity: r.rarity || null,
+        totalShares: parseInt(r.total_shares || 0),
+        nativeShares: parseInt(r.native_shares || 0),
+        filesShares: parseInt(r.files_shares || 0),
+        clipboardShares: parseInt(r.clipboard_shares || 0),
+        profileVisits: parseInt(r.profile_visits || 0),
+      })),
+      badgeShareTotals: {
+        totalShares: parseInt(badgeShareTotalsRaw?.[0]?.total_shares || 0),
+        nativeShares: parseInt(badgeShareTotalsRaw?.[0]?.native_shares || 0),
+        filesShares: parseInt(badgeShareTotalsRaw?.[0]?.files_shares || 0),
+        clipboardShares: parseInt(badgeShareTotalsRaw?.[0]?.clipboard_shares || 0),
+        profileVisits: parseInt(badgeShareTotalsRaw?.[0]?.profile_visits || 0),
+      },
     });
   } catch (error) {
     console.error('Failed to fetch analytics:', error);

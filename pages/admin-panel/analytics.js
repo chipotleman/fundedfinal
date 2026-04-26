@@ -1,11 +1,19 @@
 import { useState, useEffect, useMemo, Fragment } from 'react';
 import AdminLayout from '../../components/admin-panel/AdminLayout';
 import { PROMO_SLOT_TYPES } from '../../lib/promoSlots';
+import { getBadgeForAchievement } from '../../lib/achievementBadges';
 
 const PROMO_TYPE_LABELS = PROMO_SLOT_TYPES.reduce((acc, t) => {
   acc[t.id] = t.label;
   return acc;
 }, {});
+
+const RARITY_BADGE_STYLE = {
+  Common: 'bg-slate-500/20 text-slate-300 border-slate-500/30',
+  Uncommon: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+  Rare: 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30',
+  Epic: 'bg-orange-500/20 text-orange-300 border-orange-500/30',
+};
 
 const RANGE_DAYS = { '1d': 1, '7d': 7, '30d': 30 };
 
@@ -77,6 +85,8 @@ export default function AdminAnalytics() {
   const [analytics, setAnalytics] = useState({
     totalEvents: 0, totalSessions: 0, totalPageViews: 0, demoBets: 0, unplacedBets: 0,
     recentEvents: [], topPages: [], eventsByType: [], promoSlotStats: [], promoSlotDailyStats: [],
+    badgeShareStats: [],
+    badgeShareTotals: { totalShares: 0, nativeShares: 0, filesShares: 0, clipboardShares: 0, profileVisits: 0 },
   });
   const [dateRange, setDateRange] = useState('7d');
   const [expandedPromo, setExpandedPromo] = useState(null);
@@ -248,6 +258,71 @@ export default function AdminAnalytics() {
                             </tr>
                           )}
                         </Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          <div className="glass-card p-6 mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-xl font-semibold text-white">Badge Share Performance</h2>
+              <div className="p-2 rounded-lg bg-cyan-500/20"><svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12v7a1 1 0 001 1h14a1 1 0 001-1v-7M16 6l-4-4-4 4M12 2v14" /></svg></div>
+            </div>
+            <p className="text-gray-400 text-sm mb-4">Which achievement badges players share most, broken down by share path (native sheet, files share, or clipboard fallback). Profile visits count opens of <code className="text-cyan-300">/profile/&#123;id&#125;?ref=badge_share</code> referral links.</p>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
+              {[
+                { label: 'Total Shares', value: analytics.badgeShareTotals?.totalShares || 0, color: 'text-white' },
+                { label: 'Native', value: analytics.badgeShareTotals?.nativeShares || 0, color: 'text-blue-300' },
+                { label: 'Files', value: analytics.badgeShareTotals?.filesShares || 0, color: 'text-emerald-300' },
+                { label: 'Clipboard', value: analytics.badgeShareTotals?.clipboardShares || 0, color: 'text-orange-300' },
+                { label: 'Profile Visits', value: analytics.badgeShareTotals?.profileVisits || 0, color: 'text-cyan-300' },
+              ].map((s) => (
+                <div key={s.label} className="rounded-xl bg-white/5 border border-white/5 px-3 py-2">
+                  <p className="text-[10px] uppercase tracking-wider text-gray-500">{s.label}</p>
+                  <p className={`text-lg font-bold ${s.color}`}>{s.value.toLocaleString()}</p>
+                </div>
+              ))}
+            </div>
+            {(!analytics.badgeShareStats || analytics.badgeShareStats.length === 0) ? (
+              <div className="text-center py-8"><p className="text-gray-500">No badge shares recorded in this range yet</p></div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-white/5 border-b border-white/10">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Badge</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wider">Rarity</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Shares</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Native</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Files</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Clipboard</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold text-gray-400 uppercase tracking-wider">Profile Visits</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {analytics.badgeShareStats.map((row) => {
+                      const meta = getBadgeForAchievement(row.achievementId) || {};
+                      const rarity = row.rarity || meta.rarity || 'Common';
+                      const rarityClass = RARITY_BADGE_STYLE[rarity] || RARITY_BADGE_STYLE.Common;
+                      const displayName = meta.name || row.achievementId;
+                      return (
+                        <tr key={row.achievementId} className="hover:bg-white/5 transition-colors">
+                          <td className="px-4 py-3 text-white text-sm font-semibold">
+                            <div>{displayName}</div>
+                            <div className="text-[11px] text-gray-500 font-mono">{row.achievementId}</div>
+                          </td>
+                          <td className="px-4 py-3 text-sm">
+                            <span className={`px-2 py-0.5 rounded-full text-[11px] font-semibold uppercase tracking-wider border ${rarityClass}`}>{rarity}</span>
+                          </td>
+                          <td className="px-4 py-3 text-white text-sm font-bold text-right">{row.totalShares.toLocaleString()}</td>
+                          <td className="px-4 py-3 text-blue-300 text-sm text-right">{row.nativeShares.toLocaleString()}</td>
+                          <td className="px-4 py-3 text-emerald-300 text-sm text-right">{row.filesShares.toLocaleString()}</td>
+                          <td className="px-4 py-3 text-orange-300 text-sm text-right">{row.clipboardShares.toLocaleString()}</td>
+                          <td className="px-4 py-3 text-cyan-300 text-sm font-bold text-right">{row.profileVisits.toLocaleString()}</td>
+                        </tr>
                       );
                     })}
                   </tbody>
