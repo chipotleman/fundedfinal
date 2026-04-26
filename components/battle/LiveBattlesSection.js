@@ -5,6 +5,7 @@ import { formatMoney } from '../../utils/formatMoney';
 import UserAvatar from '../UserAvatar';
 import { useProfileCacheOptional } from '../../contexts/ProfileCacheContext';
 import { useMatchup } from '../../contexts/MatchupContext';
+import { getBattleStreamClient } from '../../lib/battleStreamClient';
 
 function formatTimeRemaining(ms) {
   if (!ms || ms <= 0) return 'Ended';
@@ -1350,25 +1351,56 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
       .then(data => {
         const all = data.avatars || [];
         const shuffled = [...all].sort(() => Math.random() - 0.5);
-        setAvatars(shuffled.slice(0, 6));
-        setBattles(getSimulatedBattles(shuffled.slice(0, 6)));
+        const pool = shuffled.slice(0, 6);
+        setAvatars(pool);
+        // Only refresh the simulated placeholder list if no real battles
+        // have been loaded yet. With the SSE push model `load()` may
+        // resolve before this avatar fetch does, and we must not stomp
+        // on real live battles with simulated entries.
+        setBattles((prev) => {
+          const allSimulated = prev.length > 0 && prev.every((b) => b.simulated);
+          return allSimulated ? getSimulatedBattles(pool) : prev;
+        });
       })
       .catch(() => {});
   }, []);
 
-  const fetchBattles = useCallback(async () => {
-    try {
+  // Always read the latest avatar pool inside `load()` without re-binding
+  // the SSE subscription every time the avatars array changes.
+  const avatarsRef = useRef(avatars);
+  useEffect(() => { avatarsRef.current = avatars; }, [avatars]);
+
+  // Live Battles list. Pushed in real time by the shared SSE singleton:
+  // server-side publishers (`publishMatchupStart` / `publishMatchupEnd` in
+  // `lib/battle-events.js`) emit a lightweight `highlights:refresh` global
+  // event whenever any battle starts or completes, and the SSE stream fans
+  // it out to every connected client. We refetch on those pushes (with a
+  // short debounce so a burst at battle-end is coalesced) instead of
+  // polling on a 30s timer. While SSE is unhealthy — including the public
+  // unauthenticated view, where `/api/battles/stream` 401s and the shared
+  // client emits `piks:disconnected` — a fallback poll keeps the list
+  // populated on a slower cadence so we don't hammer the endpoint when
+  // SSE is doing its job. Mirrors the recent-winners strip in pages/battle.js.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    let cancelled = false;
+    let debounce = null;
+    let fallback = null;
+    let fallbackGrace = null;
+
+    const load = async () => {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5000);
-      const res = await fetch('/api/battles/live', { signal: controller.signal });
-      clearTimeout(timeout);
-      if (res.ok) {
+      try {
+        const res = await fetch('/api/battles/live', { signal: controller.signal });
+        if (!res.ok) return;
         const data = await res.json();
+        if (cancelled) return;
         const liveBattles = (data.battles || []).filter(b => {
           if (!b.user2 || b.remainingMs <= 0) return false;
           return true;
         });
-        const simulated = getSimulatedBattles(avatars);
+        const simulated = getSimulatedBattles(avatarsRef.current);
         if (liveBattles.length >= 3) {
           setBattles(liveBattles);
         } else if (liveBattles.length > 0) {
@@ -1377,19 +1409,98 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
         } else {
           setBattles(simulated);
         }
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('Error fetching live battles:', err);
+        }
+      } finally {
+        clearTimeout(timeout);
       }
-    } catch (err) {
-      if (err.name !== 'AbortError') {
-        console.error('Error fetching live battles:', err);
-      }
-    }
-  }, [avatars]);
+    };
 
-  useEffect(() => {
-    fetchBattles();
-    const interval = setInterval(fetchBattles, 30000);
-    return () => clearInterval(interval);
-  }, [fetchBattles]);
+    // Coalesce bursts (e.g. matchup:end immediately followed by another
+    // start when both sides accept a rematch handshake within a tick).
+    const scheduleLoad = () => {
+      if (debounce || cancelled) return;
+      debounce = setTimeout(() => {
+        debounce = null;
+        load();
+      }, 750);
+    };
+
+    const FALLBACK_GRACE_MS = 5000;
+    const FALLBACK_INTERVAL_MS = 30000;
+
+    const stopFallback = () => {
+      if (fallbackGrace) { clearTimeout(fallbackGrace); fallbackGrace = null; }
+      if (fallback) { clearInterval(fallback); fallback = null; }
+    };
+
+    const startFallback = () => {
+      if (fallback || fallbackGrace || cancelled) return;
+      fallbackGrace = setTimeout(() => {
+        fallbackGrace = null;
+        if (cancelled) return;
+        load();
+        fallback = setInterval(load, FALLBACK_INTERVAL_MS);
+      }, FALLBACK_GRACE_MS);
+    };
+
+    // Initial fetch — render the list ASAP regardless of SSE health.
+    load();
+
+    const client = getBattleStreamClient();
+    let unsubscribe = null;
+    let watchdog = null;
+
+    if (client) {
+      unsubscribe = client.subscribe((ev) => {
+        if (!ev || !ev.type) return;
+        if (ev.type === 'highlights:refresh') {
+          scheduleLoad();
+          return;
+        }
+        if (ev.type === 'piks:disconnected') {
+          startFallback();
+          return;
+        }
+        if (ev.type === 'piks:reconnected' || ev.type === 'connected') {
+          stopFallback();
+          // Reconnect catch-up — pick up anything that joined or left the
+          // list during the outage without waiting on the next push.
+          load();
+        }
+      });
+
+      // Late-mount safety: if the stream singleton was already in a known
+      // state by the time we subscribed, react to it now (the lifecycle
+      // events that established that state won't replay).
+      if (typeof client.getState === 'function') {
+        const initial = client.getState();
+        if (initial === 'disconnected') startFallback();
+      }
+
+      // Watchdog: if SSE never reaches `connected` (auth wall for guests,
+      // network failure, etc.), engage the fallback poll so the list
+      // doesn't go indefinitely stale waiting on push.
+      watchdog = setTimeout(() => {
+        const s = typeof client.getState === 'function' ? client.getState() : null;
+        if (s !== 'connected') startFallback();
+      }, 10000);
+    } else {
+      // No EventSource available at all (very old browser / SSR fallback)
+      // — just poll on the slow cadence.
+      startFallback();
+    }
+
+    return () => {
+      cancelled = true;
+      if (debounce) clearTimeout(debounce);
+      if (watchdog) clearTimeout(watchdog);
+      stopFallback();
+      if (unsubscribe) unsubscribe();
+    };
+  }, []);
 
   const sortedBattles = focusBattleId
     ? [...battles].sort((a, b) => (a.id === focusBattleId ? -1 : b.id === focusBattleId ? 1 : 0))
