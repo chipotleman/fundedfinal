@@ -210,9 +210,14 @@ runs an extra `refresh-baseline` job after every successful build on a
    bundle-current.json --baseline docs/bundle-baseline.json`, which
    preserves the `thresholds` block and overwrites the measured
    numbers from the build that just shipped.
-3. If `docs/bundle-baseline.json` actually changed, commits the diff
-   as `github-actions[bot]` with a `[skip ci]` marker and pushes it
-   directly back to the default branch.
+3. Runs `node scripts/bundle-history.js --update-doc
+   docs/bundle-budget.md --limit 10` to splice the just-stamped
+   numbers into the [Recent baselines](#recent-baselines) trend table
+   below.
+4. If `docs/bundle-baseline.json` or `docs/bundle-budget.md` actually
+   changed, commits both together as `github-actions[bot]` with a
+   `[skip ci]` marker and pushes the commit directly back to the
+   default branch.
 
 This means **`docs/bundle-baseline.json` may show up in `git log`
 authored by `github-actions[bot]`** with no human author. That is
@@ -295,6 +300,43 @@ pushing. There is no flag to disable the job entirely on a per-PR
 basis — pre-stamping the baseline is the supported opt-out, and it
 also makes the byte delta visible during code review instead of
 landing as a follow-up bot commit.
+
+## Recent baselines
+
+Each row below is one commit to `docs/bundle-baseline.json` (newest
+first), so this *is* the bundle-size trend over time. The "Δ total vs
+prev" column makes 1–2 KB-per-merge creep visible at a glance — the
+kind of bloat that the per-PR cap intentionally allows but that no
+single PR check will ever flag. Refreshed automatically by the
+`refresh-baseline` workflow job (see above) after every merge to the
+default branch, in the same commit that refreshes the baseline JSON.
+
+To regenerate the table locally (e.g. after a manual baseline refresh):
+
+```bash
+node scripts/bundle-history.js --update-doc docs/bundle-budget.md --limit 10
+```
+
+`scripts/bundle-history.js` walks the git history of
+`docs/bundle-baseline.json` and can also emit the full series as CSV
+or JSON for spreadsheets / charting tools:
+
+```bash
+node scripts/bundle-history.js --format csv --out bundle-history.csv
+node scripts/bundle-history.js --format json --limit 0
+```
+
+Pass `--check` to verify the table is in sync with history without
+writing (handy in pre-commit checks).
+
+<!-- BUNDLE_HISTORY:START -->
+
+| Date | Commit | Total static | Total JS | Largest page | Δ total vs prev |
+| --- | --- | ---: | ---: | --- | ---: |
+| 2026-04-26 | `5843def` | 2.78 MB | 2.67 MB | `/` (788.1 KB) | +51.4 KB |
+| 2026-04-26 | `d5be040` | 2.73 MB | 2.62 MB | `/` (778.6 KB) | — |
+
+<!-- BUNDLE_HISTORY:END -->
 
 ## Running the check locally
 
