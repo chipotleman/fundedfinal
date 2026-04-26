@@ -288,9 +288,25 @@ export default function BattlePage() {
     refreshLastBuyIn();
   }, [refreshLastBuyIn]);
 
+  // Recent-winners strip. Pushed in real time by the shared SSE singleton:
+  // server-side publishers (`publishMatchupStart` / `publishMatchupEnd` in
+  // `lib/battle-events.js`) emit a lightweight `highlights:refresh` global
+  // event whenever any battle starts or completes, and the SSE stream fans
+  // it out to every connected client. We refetch on those pushes (with a
+  // short debounce so a burst at battle-end is coalesced) instead of
+  // polling on a 30s timer. While SSE is unhealthy — including the public
+  // unauthenticated view, where `/api/battles/stream` 401s and the shared
+  // client emits `piks:disconnected` — a fallback poll keeps the strip
+  // populated on a slower cadence so we don't hammer the endpoint when
+  // SSE is doing its job.
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     let cancelled = false;
+    let debounce = null;
+    let fallback = null;
+    let fallbackGrace = null;
     const limit = isGuest ? 5 : 3;
+
     const load = async () => {
       try {
         const res = await fetch(`/api/battles/recent?limit=${limit}`);
@@ -299,9 +315,89 @@ export default function BattlePage() {
         if (!cancelled) setRecentHighlights(Array.isArray(data.battles) ? data.battles : []);
       } catch {}
     };
+
+    // Coalesce bursts (e.g. matchup:end immediately followed by another
+    // start when both sides accept a rematch handshake within a tick).
+    const scheduleLoad = () => {
+      if (debounce || cancelled) return;
+      debounce = setTimeout(() => {
+        debounce = null;
+        load();
+      }, 750);
+    };
+
+    const FALLBACK_GRACE_MS = 5000;
+    const FALLBACK_INTERVAL_MS = 30000;
+
+    const stopFallback = () => {
+      if (fallbackGrace) { clearTimeout(fallbackGrace); fallbackGrace = null; }
+      if (fallback) { clearInterval(fallback); fallback = null; }
+    };
+
+    const startFallback = () => {
+      if (fallback || fallbackGrace || cancelled) return;
+      fallbackGrace = setTimeout(() => {
+        fallbackGrace = null;
+        if (cancelled) return;
+        load();
+        fallback = setInterval(load, FALLBACK_INTERVAL_MS);
+      }, FALLBACK_GRACE_MS);
+    };
+
+    // Initial fetch — render the strip ASAP regardless of SSE health.
     load();
-    const interval = setInterval(load, 30000);
-    return () => { cancelled = true; clearInterval(interval); };
+
+    const client = getBattleStreamClient();
+    let unsubscribe = null;
+    let watchdog = null;
+
+    if (client) {
+      unsubscribe = client.subscribe((ev) => {
+        if (!ev || !ev.type) return;
+        if (ev.type === 'highlights:refresh') {
+          scheduleLoad();
+          return;
+        }
+        if (ev.type === 'piks:disconnected') {
+          startFallback();
+          return;
+        }
+        if (ev.type === 'piks:reconnected' || ev.type === 'connected') {
+          stopFallback();
+          // Reconnect catch-up — pick up anything that ended during the
+          // outage without waiting on the next push.
+          load();
+        }
+      });
+
+      // Late-mount safety: if the stream singleton was already in a known
+      // state by the time we subscribed, react to it now (the lifecycle
+      // events that established that state won't replay).
+      if (typeof client.getState === 'function') {
+        const initial = client.getState();
+        if (initial === 'disconnected') startFallback();
+      }
+
+      // Watchdog: if SSE never reaches `connected` (auth wall for guests,
+      // network failure, etc.), engage the fallback poll so the strip
+      // doesn't go indefinitely stale waiting on push.
+      watchdog = setTimeout(() => {
+        const s = typeof client.getState === 'function' ? client.getState() : null;
+        if (s !== 'connected') startFallback();
+      }, 10000);
+    } else {
+      // No EventSource available at all (very old browser / SSR fallback)
+      // — just poll on the slow cadence.
+      startFallback();
+    }
+
+    return () => {
+      cancelled = true;
+      if (debounce) clearTimeout(debounce);
+      if (watchdog) clearTimeout(watchdog);
+      stopFallback();
+      if (unsubscribe) unsubscribe();
+    };
   }, [isGuest]);
 
   useEffect(() => {

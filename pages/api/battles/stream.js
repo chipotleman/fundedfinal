@@ -1,6 +1,6 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../lib/auth';
-const { subscribeBattleEvents } = require('../../../lib/battle-events');
+const { subscribeBattleEvents, subscribeGlobalEvents } = require('../../../lib/battle-events');
 
 export const config = {
   api: {
@@ -37,7 +37,13 @@ export default async function handler(req, res) {
 
   send({ type: 'connected', ts: Date.now() });
 
-  const unsubscribe = subscribeBattleEvents(userId, (event) => {
+  const unsubscribeUser = subscribeBattleEvents(userId, (event) => {
+    send(event);
+  });
+  // Also subscribe to the global channel so events meant for every
+  // connected client (currently `highlights:refresh` for the /battle
+  // recent-winners strip) reach this user too.
+  const unsubscribeGlobal = subscribeGlobalEvents((event) => {
     send(event);
   });
 
@@ -47,7 +53,8 @@ export default async function handler(req, res) {
 
   const cleanup = () => {
     clearInterval(heartbeat);
-    unsubscribe();
+    unsubscribeUser();
+    unsubscribeGlobal();
     try { res.end(); } catch (_e) {}
   };
 
