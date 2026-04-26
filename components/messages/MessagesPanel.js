@@ -76,6 +76,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
   const [voiceError, setVoiceError] = useState(null);
   const LEVEL_BAR_COUNT = 18;
   const [audioLevels, setAudioLevels] = useState(() => new Array(LEVEL_BAR_COUNT).fill(0));
+  const [voicePreview, setVoicePreview] = useState(null);
   const recorderRef = useRef(null);
   const recordChunksRef = useRef([]);
   const recordStartRef = useRef(0);
@@ -311,6 +312,58 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     audioRafRef.current = requestAnimationFrame(tick);
   };
 
+  const sendVoiceBlob = async (blob, durationMs) => {
+    if (!friend?.id) return false;
+    setSending(true);
+    setSendError(null);
+    setVoiceError(null);
+    try {
+      const { attachmentUrl, attachmentDurationMs } = await uploadVoiceBlob(blob, durationMs);
+      const res = await sendMessagePayload({
+        receiverId: friend.id,
+        content: '',
+        messageType: 'voice',
+        attachmentUrl,
+        attachmentDurationMs,
+      });
+      if (!res.ok) {
+        setSendError(res.status === 403 ? 'You can only message friends.' : 'Could not send voice note.');
+        return false;
+      }
+      const data = await res.json();
+      if (data?.message) {
+        setThread((prev) => [...prev, data.message]);
+        if (typeof window !== 'undefined') {
+          const m = data.message;
+          window.dispatchEvent(
+            new CustomEvent('piks:message:new', {
+              detail: {
+                id: m.id,
+                senderId: m.senderId,
+                receiverId: m.receiverId,
+                content: m.content,
+                messageType: m.messageType || 'voice',
+                attachmentUrl: m.attachmentUrl || attachmentUrl,
+                attachmentDurationMs: m.attachmentDurationMs ?? attachmentDurationMs,
+                createdAt:
+                  m.createdAt instanceof Date
+                    ? m.createdAt.toISOString()
+                    : m.createdAt,
+              },
+            })
+          );
+        }
+      }
+      ctx.refresh?.();
+      return true;
+    } catch (err) {
+      setSendError('Could not send voice note.');
+      return false;
+    } finally {
+      setSending(false);
+    }
+  };
+
   const uploadVoiceBlob = async (blob, durationMs) => {
     const ext = blob.type.includes('mp4') ? 'm4a'
       : blob.type.includes('ogg') ? 'ogg'
@@ -369,7 +422,7 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
       recorder.ondataavailable = (ev) => {
         if (ev.data && ev.data.size > 0) recordChunksRef.current.push(ev.data);
       };
-      recorder.onstop = async () => {
+      recorder.onstop = () => {
         try { stopRecordingTimer(); } catch {}
         try { stopAudioMeter(); } catch {}
         const elapsed = Date.now() - recordStartRef.current;
@@ -387,54 +440,15 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
           setVoiceError('Recording was empty. Try again.');
           return;
         }
-        const blob = new Blob(chunks, { type: recordMimeRef.current || 'audio/webm' });
-        if (!friend?.id) return;
-        setSending(true);
-        setSendError(null);
-        setVoiceError(null);
+        const mime = recordMimeRef.current || 'audio/webm';
+        const blob = new Blob(chunks, { type: mime });
+        let url = '';
         try {
-          const { attachmentUrl, attachmentDurationMs } = await uploadVoiceBlob(blob, elapsed);
-          const res = await sendMessagePayload({
-            receiverId: friend.id,
-            content: '',
-            messageType: 'voice',
-            attachmentUrl,
-            attachmentDurationMs,
-          });
-          if (!res.ok) {
-            setSendError(res.status === 403 ? 'You can only message friends.' : 'Could not send voice note.');
-            return;
+          if (typeof URL !== 'undefined' && URL.createObjectURL) {
+            url = URL.createObjectURL(blob);
           }
-          const data = await res.json();
-          if (data?.message) {
-            setThread((prev) => [...prev, data.message]);
-            if (typeof window !== 'undefined') {
-              const m = data.message;
-              window.dispatchEvent(
-                new CustomEvent('piks:message:new', {
-                  detail: {
-                    id: m.id,
-                    senderId: m.senderId,
-                    receiverId: m.receiverId,
-                    content: m.content,
-                    messageType: m.messageType || 'voice',
-                    attachmentUrl: m.attachmentUrl || attachmentUrl,
-                    attachmentDurationMs: m.attachmentDurationMs ?? attachmentDurationMs,
-                    createdAt:
-                      m.createdAt instanceof Date
-                        ? m.createdAt.toISOString()
-                        : m.createdAt,
-                  },
-                })
-              );
-            }
-          }
-          ctx.refresh?.();
-        } catch (err) {
-          setSendError('Could not send voice note.');
-        } finally {
-          setSending(false);
-        }
+        } catch {}
+        setVoicePreview({ blob, url, durationMs: elapsed, mime });
       };
       recorderRef.current = recorder;
       recordStartRef.current = Date.now();
@@ -487,6 +501,30 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
     try { if (rec.state !== 'inactive') rec.stop(); } catch {}
   };
 
+  const clearVoicePreview = useCallback(() => {
+    setVoicePreview((prev) => {
+      if (prev?.url) {
+        try { URL.revokeObjectURL(prev.url); } catch {}
+      }
+      return null;
+    });
+  }, []);
+
+  const handleDiscardPreview = () => {
+    if (sending) return;
+    setVoiceError(null);
+    setSendError(null);
+    clearVoicePreview();
+  };
+
+  const handleSendPreview = async () => {
+    if (sending) return;
+    if (!voicePreview?.blob) return;
+    const { blob, durationMs } = voicePreview;
+    const ok = await sendVoiceBlob(blob, durationMs);
+    if (ok) clearVoicePreview();
+  };
+
   useEffect(() => {
     return () => {
       stopRecordingTimer();
@@ -497,8 +535,21 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
         try { rec.stop(); } catch {}
       }
       cleanupRecorderStream();
+      setVoicePreview((prev) => {
+        if (prev?.url) {
+          try { URL.revokeObjectURL(prev.url); } catch {}
+        }
+        return null;
+      });
     };
   }, []);
+
+  // Switching to a different conversation should drop any pending preview so
+  // the recorded blob isn't accidentally sent to the wrong friend.
+  useEffect(() => {
+    clearVoicePreview();
+    setVoiceError(null);
+  }, [friend?.id, clearVoicePreview]);
 
   const handleSend = async (e) => {
     e?.preventDefault?.();
@@ -750,7 +801,50 @@ export function ConversationThread({ friend, ctx, myId, onStartBattle }) {
 
       {!loadError && (
         <form onSubmit={handleSend} className="p-3 flex-shrink-0" style={{ borderTop: `1px solid ${cardBorder}` }}>
-          {recording ? (
+          {voicePreview && !recording ? (
+            <div
+              className="flex items-center gap-2 px-3 py-2 rounded-lg"
+              style={{
+                backgroundColor: inputBg,
+                border: '1px solid rgba(59,130,246,0.4)',
+              }}
+            >
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <audio
+                  controls
+                  preload="metadata"
+                  src={voicePreview.url}
+                  style={{ height: 32, maxWidth: 200 }}
+                />
+                <span
+                  className="text-[10px] tabular-nums"
+                  style={{ color: textSecondary }}
+                >
+                  {formatDuration(voicePreview.durationMs)}
+                </span>
+              </div>
+              <div className="ml-auto flex gap-2 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={handleDiscardPreview}
+                  disabled={sending}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50"
+                  style={{ backgroundColor: '#1f1f1f', color: '#e5e7eb', border: `1px solid ${cardBorder}` }}
+                >
+                  Discard
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendPreview}
+                  disabled={sending}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-blue-500 disabled:opacity-50"
+                  style={{ boxShadow: '0 0 14px rgba(59,130,246,0.5)' }}
+                >
+                  {sending ? '…' : 'Send'}
+                </button>
+              </div>
+            </div>
+          ) : recording ? (
             <div
               className="flex items-center gap-2 px-3 py-2 rounded-lg"
               style={{
