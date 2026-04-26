@@ -73,6 +73,13 @@ export default function BattlePage() {
   const [activeMatchup, setActiveMatchup] = useState(null);
   const [matchupData, setMatchupData] = useState(null);
   const [friendRequests, setFriendRequests] = useState([]);
+  // Per-section fetch status for the six initial fetches in fetchData.
+  // Values: undefined (not yet attempted / in flight), 'ok' (loaded), 'failed'
+  // (errored or timed out), 'retrying' (a manual retry is in flight). The
+  // visible empty states for friends/invites/requests use this to surface a
+  // soft "couldn't load — tap to retry" hint per section so a single hung
+  // endpoint doesn't leave the user staring at an unexplained empty list.
+  const [sectionStatus, setSectionStatus] = useState({});
 
   const [showQuickMatch, setShowQuickMatch] = useState(false);
   const [showPlayFriend, setShowPlayFriend] = useState(false);
@@ -158,66 +165,104 @@ export default function BattlePage() {
     return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(timer));
   }, []);
 
+  // Each of the six initial fetches is split into its own runner so a single
+  // failed/timed-out section can be retried in isolation from the inline
+  // retry hint without re-triggering the other five. `fetchSection` flips
+  // `sectionStatus[key]` to 'ok' or 'failed' depending on the outcome, and
+  // marks 'retrying' while a manual retry is in flight so the hint can show
+  // a spinner instead of the tap-to-retry copy.
+  const fetchSection = useCallback(async (key, { isRetry = false } = {}) => {
+    if (!userId) return;
+    if (isRetry) {
+      setSectionStatus(prev => ({ ...prev, [key]: 'retrying' }));
+    }
+    const markOk = () => setSectionStatus(prev => (prev[key] === 'ok' ? prev : { ...prev, [key]: 'ok' }));
+    const markFailed = () => setSectionStatus(prev => (prev[key] === 'failed' ? prev : { ...prev, [key]: 'failed' }));
+    try {
+      switch (key) {
+        case 'profile': {
+          const res = await fetchWithTimeout(`/api/profiles/${userId}`);
+          if (!res.ok) { markFailed(); return; }
+          const data = await res.json();
+          setProfile(data.profile || data);
+          markOk();
+          return;
+        }
+        case 'friends': {
+          const res = await fetchWithTimeout('/api/friends');
+          if (!res.ok) { markFailed(); return; }
+          const data = await res.json();
+          setFriends(data.friends || []);
+          markOk();
+          return;
+        }
+        case 'invites': {
+          const res = await fetchWithTimeout('/api/battles/invite');
+          if (!res.ok) { markFailed(); return; }
+          const data = await res.json();
+          setInvites(data);
+          markOk();
+          return;
+        }
+        case 'history': {
+          const res = await fetchWithTimeout('/api/battles/history?limit=5');
+          if (!res.ok) { markFailed(); return; }
+          const data = await res.json();
+          setRecentMatches(data.matches || []);
+          markOk();
+          return;
+        }
+        case 'matchup': {
+          const res = await fetchWithTimeout('/api/matchups/current');
+          if (!res.ok) { markFailed(); return; }
+          const data = await res.json();
+          if (data.matchup && (data.matchup.status === 'active' || data.matchup.status === 'matched' || data.matchup.status === 'waiting')) {
+            setActiveMatchup(data.matchup);
+            setMatchupData(data);
+          }
+          markOk();
+          return;
+        }
+        case 'requests': {
+          const res = await fetchWithTimeout('/api/friends/requests');
+          if (!res.ok) { markFailed(); return; }
+          const data = await res.json();
+          setFriendRequests(data.requests || []);
+          markOk();
+          return;
+        }
+        default:
+          return;
+      }
+    } catch (_e) {
+      markFailed();
+    }
+  }, [userId, fetchWithTimeout]);
+
   const fetchData = useCallback(async () => {
     if (!userId) {
       setLoading(false);
       return;
     }
     try {
-      const [profileRes, friendsRes, invitesRes, historyRes, matchupRes, requestsRes] = await Promise.allSettled([
-        fetchWithTimeout(`/api/profiles/${userId}`),
-        fetchWithTimeout('/api/friends'),
-        fetchWithTimeout('/api/battles/invite'),
-        fetchWithTimeout('/api/battles/history?limit=5'),
-        fetchWithTimeout('/api/matchups/current'),
-        fetchWithTimeout('/api/friends/requests'),
+      await Promise.allSettled([
+        fetchSection('profile'),
+        fetchSection('friends'),
+        fetchSection('invites'),
+        fetchSection('history'),
+        fetchSection('matchup'),
+        fetchSection('requests'),
       ]);
-
-      if (profileRes.status === 'fulfilled' && profileRes.value.ok) {
-        try {
-          const data = await profileRes.value.json();
-          setProfile(data.profile || data);
-        } catch (_e) {}
-      }
-      if (friendsRes.status === 'fulfilled' && friendsRes.value.ok) {
-        try {
-          const data = await friendsRes.value.json();
-          setFriends(data.friends || []);
-        } catch (_e) {}
-      }
-      if (invitesRes.status === 'fulfilled' && invitesRes.value.ok) {
-        try {
-          const data = await invitesRes.value.json();
-          setInvites(data);
-        } catch (_e) {}
-      }
-      if (historyRes.status === 'fulfilled' && historyRes.value.ok) {
-        try {
-          const data = await historyRes.value.json();
-          setRecentMatches(data.matches || []);
-        } catch (_e) {}
-      }
-      if (matchupRes.status === 'fulfilled' && matchupRes.value.ok) {
-        try {
-          const data = await matchupRes.value.json();
-          if (data.matchup && (data.matchup.status === 'active' || data.matchup.status === 'matched' || data.matchup.status === 'waiting')) {
-            setActiveMatchup(data.matchup);
-            setMatchupData(data);
-          }
-        } catch (_e) {}
-      }
-      if (requestsRes.status === 'fulfilled' && requestsRes.value.ok) {
-        try {
-          const data = await requestsRes.value.json();
-          setFriendRequests(data.requests || []);
-        } catch (_e) {}
-      }
     } catch (err) {
       console.error('Error fetching battle data:', err);
     } finally {
       setLoading(false);
     }
-  }, [userId, fetchWithTimeout]);
+  }, [userId, fetchSection]);
+
+  const retrySection = useCallback((key) => {
+    fetchSection(key, { isRetry: true });
+  }, [fetchSection]);
 
   useEffect(() => {
     fetchData();
@@ -1013,6 +1058,44 @@ export default function BattlePage() {
   const textSecondary = '#9ca3af';
   const inputBg = '#111';
 
+  // Inline soft-retry hint shown inside a section that failed or timed out
+  // during the initial fetch. Sized to mirror the existing empty-state copy
+  // (`text-center py-6`) so swapping between empty/failed/loaded states does
+  // not visibly shift the surrounding layout. Tapping the hint re-runs only
+  // the affected fetch via `retrySection`.
+  const RetryHint = ({ sectionKey }) => {
+    const status = sectionStatus[sectionKey];
+    const isRetrying = status === 'retrying';
+    return (
+      <div className="text-center py-6">
+        <button
+          type="button"
+          onClick={() => retrySection(sectionKey)}
+          disabled={isRetrying}
+          className="inline-flex items-center gap-1.5 text-xs font-medium transition-colors disabled:opacity-60"
+          style={{ color: textSecondary }}
+          aria-label="Retry loading this section"
+        >
+          {isRetrying ? (
+            <>
+              <svg className="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12a8 8 0 018-8" />
+              </svg>
+              Retrying…
+            </>
+          ) : (
+            <>
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Couldn&apos;t load this — tap to retry
+            </>
+          )}
+        </button>
+      </div>
+    );
+  };
+
   const SocialSection = () => (
     <div className="rounded-xl overflow-hidden" style={{ backgroundColor: cardBg, border: `1px solid ${cardBorder}`, boxShadow: cardShadow }}>
       {socialTab === 'search' && (
@@ -1069,10 +1152,14 @@ export default function BattlePage() {
       <div className="max-h-72 overflow-y-auto">
         {socialTab === 'friends' && (
           friends.length === 0 ? (
-            <div className="text-center py-6">
-              <p className="text-sm mb-2" style={{ color: textSecondary }}>No friends yet</p>
-              <button onClick={() => setSocialTab('search')} className="text-blue-400 text-xs font-medium">Find players</button>
-            </div>
+            (sectionStatus.friends === 'failed' || sectionStatus.friends === 'retrying') ? (
+              <RetryHint sectionKey="friends" />
+            ) : (
+              <div className="text-center py-6">
+                <p className="text-sm mb-2" style={{ color: textSecondary }}>No friends yet</p>
+                <button onClick={() => setSocialTab('search')} className="text-blue-400 text-xs font-medium">Find players</button>
+              </div>
+            )
           ) : (
             <div className="divide-y" style={{ borderColor: cardBorder }}>
               {friends.map(friend => {
@@ -1213,9 +1300,13 @@ export default function BattlePage() {
 
         {socialTab === 'requests' && (
           requestCount === 0 ? (
-            <div className="text-center py-6">
-              <p className="text-sm" style={{ color: textSecondary }}>No pending requests</p>
-            </div>
+            (sectionStatus.requests === 'failed' || sectionStatus.requests === 'retrying') ? (
+              <RetryHint sectionKey="requests" />
+            ) : (
+              <div className="text-center py-6">
+                <p className="text-sm" style={{ color: textSecondary }}>No pending requests</p>
+              </div>
+            )
           ) : (
             <div className="divide-y" style={{ borderColor: cardBorder }}>
               {friendRequests.map(req => (
@@ -1249,9 +1340,13 @@ export default function BattlePage() {
 
         {socialTab === 'invites' && (
           (invites.received?.length === 0 && invites.sent?.length === 0) ? (
-            <div className="text-center py-6">
-              <p className="text-sm" style={{ color: textSecondary }}>No pending battle invites</p>
-            </div>
+            (sectionStatus.invites === 'failed' || sectionStatus.invites === 'retrying') ? (
+              <RetryHint sectionKey="invites" />
+            ) : (
+              <div className="text-center py-6">
+                <p className="text-sm" style={{ color: textSecondary }}>No pending battle invites</p>
+              </div>
+            )
           ) : (
             <div className="divide-y" style={{ borderColor: cardBorder }}>
               {(invites.received || []).map(invite => (
