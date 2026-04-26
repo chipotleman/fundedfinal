@@ -11,6 +11,15 @@ Failed runs upload the Playwright HTML report and traces as workflow
 artifacts so you can download and inspect them directly from the PR's
 Checks tab.
 
+The workflow caches the Playwright browser binaries
+(`~/.cache/ms-playwright`) keyed on the resolved `@playwright/test`
+version, so on a cache hit the "Install Playwright browsers" step is
+skipped entirely and only a quick system-deps install runs in its place.
+That's expected — if you don't see the usual "Downloading WebKit…"
+output in the logs, the cache hit just saved you ~30–60s. The cache is
+automatically invalidated whenever `@playwright/test` is bumped in
+`package.json` / `package-lock.json`.
+
 If you want to reproduce a CI failure locally (or run the suite before
 pushing), the same commands CI uses are:
 
