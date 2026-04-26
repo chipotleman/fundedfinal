@@ -985,11 +985,21 @@ export default function Dashboard() {
           onYouVsClick={() => router.push('/battle')}
         />
 
-        {closeGames.length > 0 && (
+        {categorizedGames.liveGames.some(g => g.isLive || g.status === 'IN_PROGRESS') && (
         <div className="mb-6">
           <div className="flex items-center justify-between px-1 mb-3">
             <h2 className="text-sm font-semibold uppercase tracking-wider" style={{ color: '#6b7280' }}>Close Games</h2>
           </div>
+          {closeGames.length === 0 ? (
+            <div
+              className="rounded-lg px-3 py-2.5"
+              style={{ backgroundColor: '#0d0d0d', border: '1px solid #1a1a1a' }}
+            >
+              <p className="text-xs" style={{ color: '#6b7280' }}>
+                No nail-biters right now — check back soon.
+              </p>
+            </div>
+          ) : (
           <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide">
             {closeGames.map((game) => {
               const isLive = game.isLive || game.status === 'IN_PROGRESS';
@@ -1110,6 +1120,7 @@ export default function Dashboard() {
               );
             })}
           </div>
+          )}
         </div>
         )}
 
