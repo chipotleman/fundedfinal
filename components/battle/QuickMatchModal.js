@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useSession } from 'next-auth/react';
 import useModalScrollLock from '../../hooks/useModalScrollLock';
 import UserAvatar from '../UserAvatar';
+import { CartoonChip, CARTOON_MODE_META, CartoonChipStyles } from './CartoonChip';
 
 const GAME_MODE_OPTIONS = [
   {
@@ -350,6 +351,11 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
 
   return (
     <>
+      {/* Ensure the shared cartoon-chip keyframes are present even when
+          the modal opens from a page that doesn't render
+          LiveBattlesSection. Safe to render alongside the LiveBattles
+          copy — duplicate @keyframes are idempotent. */}
+      <CartoonChipStyles />
       <style>{`
         @keyframes qm-pulse-ring {
           0% { transform: scale(1); opacity: 0.5; }
@@ -451,55 +457,86 @@ export default function QuickMatchModal({ isOpen, onClose, userId, onMatchFound,
 
                 <div>
                   <label className={`text-xs font-medium ${th.labelText} uppercase tracking-wider mb-2 block`}>Buy-In</label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {BUY_IN_OPTIONS.map(amount => (
-                      <button
-                        key={amount}
-                        onClick={() => setBuyIn(amount)}
-                        className={`py-2.5 rounded-xl text-sm font-bold transition-all ${
-                          buyIn === amount
-                            ? 'text-white shadow-lg shadow-blue-500/20'
-                            : th.btnText
-                        }`}
-                        style={buyIn === amount ? { backgroundColor: '#2563eb' } : { backgroundColor: th.btnBg, border: `1px solid ${th.btnBorder}` }}
-                      >
-                        ${amount}
-                      </button>
-                    ))}
+                  {/* Cartoon chip row — same primitive as the homepage
+                      "Your Battle" card so the matchmaking UX reads as
+                      one product. radio role + aria-checked preserve
+                      the keyboard / SR semantics of the original
+                      grid of buttons. */}
+                  <div
+                    className="flex items-center gap-1.5 flex-wrap"
+                    role="radiogroup"
+                    aria-label="Buy-in"
+                  >
+                    {BUY_IN_OPTIONS.map(amount => {
+                      const selected = buyIn === amount;
+                      return (
+                        <CartoonChip
+                          key={amount}
+                          asButton
+                          role="radio"
+                          ariaChecked={selected}
+                          ariaLabel={`Buy-in $${amount}`}
+                          icon="💰"
+                          label={`$${amount}`}
+                          color="orange"
+                          size="lg"
+                          selected={selected}
+                          animate={selected ? 'bounce' : 'none'}
+                          onClick={() => setBuyIn(amount)}
+                        />
+                      );
+                    })}
                   </div>
                 </div>
 
                 <div>
                   <label className={`text-xs font-medium ${th.labelText} uppercase tracking-wider mb-2 block`}>Game Mode</label>
-                  <div className="space-y-2">
+                  {/* Cartoon chip row for mode selection — matches the
+                      homepage "Your Battle" mode chooser. The
+                      description / starting-coin metadata for the
+                      chosen mode is shown below so we keep the info
+                      density of the old radio rows without losing the
+                      cartoon-chip family look. */}
+                  <div
+                    className="flex items-center gap-1.5 flex-wrap"
+                    role="radiogroup"
+                    aria-label="Game mode"
+                  >
                     {GAME_MODE_OPTIONS.map(mode => {
                       const selected = gameMode === mode.id;
+                      const meta = CARTOON_MODE_META[mode.id] || { color: 'blue', icon: mode.icon, label: mode.label };
                       return (
-                        <button
+                        <CartoonChip
                           key={mode.id}
+                          asButton
+                          role="radio"
+                          ariaChecked={selected}
+                          ariaLabel={`Game mode ${mode.label}${mode.recommended ? ' (popular)' : ''}`}
+                          icon={meta.icon || mode.icon}
+                          label={meta.label || mode.label}
+                          color={meta.color}
+                          size="lg"
+                          selected={selected}
+                          animate={selected ? 'bounce' : 'none'}
                           onClick={() => setGameMode(mode.id)}
-                          className="w-full flex items-center gap-3 px-3.5 py-3 rounded-xl text-left transition-all"
-                          style={{
-                            backgroundColor: selected ? `${mode.color}15` : th.modeBtnBg,
-                            border: `1px solid ${selected ? `${mode.color}60` : th.btnBorder}`,
-                          }}
-                        >
-                          <span className="text-xl flex-shrink-0">{mode.icon}</span>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className={`font-bold text-sm ${th.modeText} tracking-wide`}>{mode.label}</span>
-                              {mode.recommended && <span className="text-[9px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full font-semibold">POPULAR</span>}
-                            </div>
-                            <p className={`${th.modeDesc} text-[11px] mt-0.5`}>{mode.description}</p>
-                          </div>
-                          <div className="text-right flex-shrink-0">
-                            <div className={`${th.infoValue} font-bold text-xs`}>{mode.coins.toLocaleString()}</div>
-                            <div className="text-gray-500 text-[10px]">coins</div>
-                          </div>
-                        </button>
+                        />
                       );
                     })}
                   </div>
+                  {selectedMode && (
+                    <div className="mt-2 flex items-start gap-2">
+                      <p className={`${th.modeDesc} text-[11px] flex-1`}>
+                        {selectedMode.description}
+                        {selectedMode.recommended && (
+                          <span className="ml-1.5 text-[9px] bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded-full font-semibold align-middle">POPULAR</span>
+                        )}
+                      </p>
+                      <div className="text-right flex-shrink-0">
+                        <div className={`${th.infoValue} font-bold text-xs`}>{selectedMode.coins.toLocaleString()}</div>
+                        <div className="text-gray-500 text-[10px]">coins</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="rounded-xl p-3 flex items-center justify-between" style={{ backgroundColor: th.infoBg, border: `1px solid ${th.infoBorder}` }}>

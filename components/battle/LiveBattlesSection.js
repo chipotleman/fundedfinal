@@ -13,6 +13,7 @@ import {
   PLAY_NOW_SKIP_CONFIRM_VERSION,
 } from '../../lib/playNowConfirm';
 import { readLocalOneTapPrefs, writeLocalOneTapPrefs, fetchOneTapPrefs, saveOneTapPrefs } from '../../utils/oneTapPrefs';
+import { CartoonChip, CARTOON_MODE_META, CartoonChipStyles } from './CartoonChip';
 
 function formatTimeRemaining(ms) {
   if (!ms || ms <= 0) return 'Ended';
@@ -268,125 +269,6 @@ function PnlBadge({ pnlPercent, size = 'normal' }) {
     </span>
   );
 }
-
-// Shared cartoon-style info chip used by every Featured Battles card so
-// the live cards and the "Your Battle" card visibly belong to one
-// family. Chunky rounded shape, thick dark outline, optional bounce /
-// wobble micro-animation. The animation classes are emitted globally
-// from the LiveBattlesSection container (so they're available even
-// when no live battles render) and the keyframes are gated by
-// prefers-reduced-motion to stay accessible.
-function CartoonChip({
-  icon = null,
-  label,
-  color = 'blue',
-  animate = 'none',
-  ariaLabel,
-  onClick,
-  selected = true,
-  role,
-  ariaChecked,
-  asButton = false,
-  size = 'sm',
-}) {
-  const palettes = {
-    blue:    { bg: 'linear-gradient(135deg, #60a5fa 0%, #2563eb 100%)', text: '#0d1024', glow: 'rgba(59,130,246,0.55)' },
-    cyan:    { bg: 'linear-gradient(135deg, #22d3ee 0%, #0891b2 100%)', text: '#04212a', glow: 'rgba(6,182,212,0.55)' },
-    emerald: { bg: 'linear-gradient(135deg, #34d399 0%, #059669 100%)', text: '#022c1f', glow: 'rgba(16,185,129,0.55)' },
-    orange:  { bg: 'linear-gradient(135deg, #fbbf24 0%, #f97316 100%)', text: '#2a1404', glow: 'rgba(249,115,22,0.55)' },
-  };
-  const p = palettes[color] || palettes.blue;
-  const animClass = animate === 'bounce'
-    ? 'cartoon-chip-bounce'
-    : animate === 'wobble'
-    ? 'cartoon-chip-wobble'
-    : '';
-  const Tag = asButton ? 'button' : 'span';
-  const padding = size === 'lg' ? '4px 10px 4px 9px' : '3px 9px 3px 8px';
-  const fontSize = size === 'lg' ? 11 : 10;
-  return (
-    <Tag
-      type={asButton ? 'button' : undefined}
-      onClick={onClick}
-      role={role}
-      aria-checked={ariaChecked}
-      aria-label={ariaLabel}
-      className={`cartoon-chip ${animClass}`.trim()}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 4,
-        padding,
-        borderRadius: 999,
-        background: selected ? p.bg : 'rgba(20,20,20,0.85)',
-        border: '1.5px solid #0d0d0d',
-        color: selected ? p.text : 'rgba(229,231,235,0.7)',
-        fontSize,
-        fontWeight: 800,
-        letterSpacing: '0.04em',
-        textTransform: 'uppercase',
-        whiteSpace: 'nowrap',
-        boxShadow: selected
-          ? `0 2px 0 rgba(0,0,0,0.55), 0 0 10px ${p.glow}`
-          : '0 2px 0 rgba(0,0,0,0.55)',
-        cursor: asButton ? 'pointer' : 'default',
-        transformOrigin: 'center',
-        flexShrink: 0,
-        lineHeight: 1.1,
-      }}
-    >
-      {icon ? (
-        <span aria-hidden="true" style={{ fontSize: fontSize + 1, lineHeight: 1 }}>
-          {icon}
-        </span>
-      ) : null}
-      <span style={{ lineHeight: 1.1 }}>{label}</span>
-    </Tag>
-  );
-}
-
-// Global keyframes / classes for the shared cartoon info chip
-// primitive used by both the live battle cards and the
-// "Your Battle" card. Defined as a module-level string so we can
-// emit it from every render path that mounts cartoon chips
-// (compact homepage carousel, full Active Battles page, etc.) —
-// keeping the animation classes available everywhere chips render
-// and ensuring reduced-motion users get static chips on every
-// surface.
-const CARTOON_CHIP_STYLES = `
-  @keyframes cartoonChipBounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-1.5px); }
-  }
-  @keyframes cartoonChipWobble {
-    0%, 100% { transform: rotate(-1.5deg); }
-    50% { transform: rotate(1.5deg); }
-  }
-  .cartoon-chip {
-    font-family: inherit;
-  }
-  .cartoon-chip-bounce {
-    animation: cartoonChipBounce 2.4s ease-in-out infinite;
-  }
-  .cartoon-chip-wobble {
-    animation: cartoonChipWobble 2s ease-in-out infinite;
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .cartoon-chip-bounce,
-    .cartoon-chip-wobble {
-      animation: none !important;
-    }
-  }
-`;
-
-// Mode metadata shared between the live battle chips (which read
-// `battle.challengeType`) and the "Your Battle" mode chooser. Keys
-// match the lower-cased identifiers used elsewhere in this file.
-const CARTOON_MODE_META = {
-  rush:       { label: 'Rush',       icon: '⚡', color: 'orange'  },
-  original:   { label: 'Original',   icon: '🏆', color: 'cyan'    },
-  tournament: { label: 'Tournament', icon: '👑', color: 'emerald' },
-};
 
 function BattleCard({ battle, compact, focused, isExpanded = false, onToggle = null }) {
   const router = useRouter();
@@ -2836,11 +2718,13 @@ export default function LiveBattlesSection({ compact = false, focusBattleId = nu
     const featuredCount = compactBattles.length + (youVsState && youVsState.status !== 'idle' ? 1 : 0);
     return (
       <div className="mb-4">
-        {/* Shared cartoon chip animation styles — kept centralized in
-            CARTOON_CHIP_STYLES so every render branch that mounts
-            cartoon chips picks up the same keyframes and the
-            reduced-motion override. */}
-        <style>{CARTOON_CHIP_STYLES}</style>
+        {/* Global keyframes / classes for the shared cartoon info chip
+            primitive used by both the live battle cards and the
+            "Your Battle" card. Emitted from the shared CartoonChip
+            module so every consumer (including QuickMatchModal) gets
+            consistent animations. Reduced-motion users get static
+            chips per the homepage-wide pattern. */}
+        <CartoonChipStyles />
         <div className="flex items-center justify-between mb-2 px-1">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold uppercase tracking-wider text-gray-500">Featured Battles</span>
