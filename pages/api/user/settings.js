@@ -6,7 +6,7 @@ import { eq, and, ne } from 'drizzle-orm';
 
 const ALLOWED_ODDS_FORMATS = ['american', 'decimal'];
 const ALLOWED_NOTIF_KEYS = ['betResults', 'challengeUpdates', 'promotions', 'weeklyReports'];
-const ALLOWED_PRIVACY_KEYS = ['profileVisible', 'showStats', 'showInLeaderboard'];
+const ALLOWED_PRIVACY_KEYS = ['profileVisible', 'showStats', 'showInLeaderboard', 'analyticsOptOut'];
 const ALLOWED_NOTIF_FILTERS = ['all', 'invite', 'rematch', 'result', 'friend'];
 
 const DEFAULT_NOTIFS = {
@@ -19,6 +19,7 @@ const DEFAULT_PRIVACY = {
   profileVisible: true,
   showStats: true,
   showInLeaderboard: true,
+  analyticsOptOut: false,
 };
 
 function sanitizeInstagramHandle(value) {

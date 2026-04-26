@@ -1,9 +1,11 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
+import { isAnalyticsOptedOut } from '../lib/promoTracking';
 
 const generateVisitorId = () => {
   if (typeof window === 'undefined') return null;
-  
+  if (isAnalyticsOptedOut()) return null;
+
   let visitorId = localStorage.getItem('piks_visitor_id');
   if (!visitorId) {
     visitorId = 'v_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
@@ -14,7 +16,8 @@ const generateVisitorId = () => {
 
 const generateSessionId = () => {
   if (typeof window === 'undefined') return null;
-  
+  if (isAnalyticsOptedOut()) return null;
+
   let sessionId = sessionStorage.getItem('piks_session_id');
   if (!sessionId) {
     sessionId = 's_' + Math.random().toString(36).substring(2, 15) + Date.now().toString(36);
@@ -37,6 +40,11 @@ export function useEventTracking() {
 
   const flushEvents = useCallback(async () => {
     if (eventQueue.current.length === 0) return;
+    if (isAnalyticsOptedOut()) {
+      // Drop any queued events the moment opt-out becomes true.
+      eventQueue.current = [];
+      return;
+    }
 
     const events = [...eventQueue.current];
     eventQueue.current = [];
@@ -55,6 +63,7 @@ export function useEventTracking() {
 
   const trackEvent = useCallback((type, data = {}) => {
     if (typeof window === 'undefined') return;
+    if (isAnalyticsOptedOut()) return;
 
     eventsCount.current++;
 
@@ -85,6 +94,7 @@ export function useEventTracking() {
 
   const trackPageView = useCallback(async (pageUrl, pageTitle) => {
     if (typeof window === 'undefined') return;
+    if (isAnalyticsOptedOut()) return;
 
     pagesViewed.current++;
 
@@ -107,6 +117,7 @@ export function useEventTracking() {
   }, [userId, visitorId, sessionId]);
 
   const trackDemoBet = useCallback(async (betData) => {
+    if (isAnalyticsOptedOut()) return;
     try {
       await fetch('/api/analytics/demo-bet', {
         method: 'POST',
@@ -124,6 +135,7 @@ export function useEventTracking() {
   }, [userId, visitorId, sessionId]);
 
   const trackUnplacedBet = useCallback(async (action, betData) => {
+    if (isAnalyticsOptedOut()) return null;
     try {
       const res = await fetch('/api/analytics/unplaced-bet', {
         method: 'POST',
@@ -146,6 +158,7 @@ export function useEventTracking() {
 
   useEffect(() => {
     if (typeof window === 'undefined' || !sessionId) return;
+    if (isAnalyticsOptedOut()) return;
 
     fetch('/api/analytics/session', {
       method: 'POST',
@@ -159,8 +172,9 @@ export function useEventTracking() {
     }).catch(console.error);
 
     const handleBeforeUnload = () => {
+      if (isAnalyticsOptedOut()) return;
       const duration = Math.floor((Date.now() - pageStartTime.current) / 1000);
-      
+
       navigator.sendBeacon('/api/analytics/session', JSON.stringify({
         action: 'end',
         sessionId,
@@ -171,6 +185,7 @@ export function useEventTracking() {
     };
 
     const heartbeatInterval = setInterval(() => {
+      if (isAnalyticsOptedOut()) return;
       fetch('/api/analytics/session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

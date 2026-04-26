@@ -46,6 +46,7 @@ const DEFAULTS = {
     profileVisible: true,
     showStats: true,
     showInLeaderboard: true,
+    analyticsOptOut: false,
   },
 };
 
@@ -94,7 +95,7 @@ export default function Settings() {
   const router = useRouter();
   const { data: session, status } = useSession();
   const { betSlip, showBetSlip, setShowBetSlip } = useBetSlip();
-  const { setOddsFormat, refresh: refreshPrefs } = useUserPreferences();
+  const { setOddsFormat, setAnalyticsOptOut, refresh: refreshPrefs } = useUserPreferences();
 
   const [loading, setLoading] = useState(true);
   const [savingSection, setSavingSection] = useState(null);
@@ -190,6 +191,9 @@ export default function Settings() {
       }
       if (data?.settings) setForm({ ...DEFAULTS, ...data.settings });
       if (payload.oddsFormat) setOddsFormat(payload.oddsFormat);
+      if (payload.privacy && typeof payload.privacy.analyticsOptOut === 'boolean') {
+        setAnalyticsOptOut(payload.privacy.analyticsOptOut);
+      }
       refreshPrefs();
       showToast('Saved');
       return true;
@@ -599,6 +603,23 @@ export default function Settings() {
                   />
                 </div>
               ))}
+              <div className="flex items-center justify-between py-3 border-b border-[#1a1a1a] last:border-0">
+                <div className="pr-4">
+                  <div className="text-white font-medium">Don&apos;t track my activity</div>
+                  <div className="text-gray-400 text-sm">
+                    Stops page views, clicks, and promo impressions/clicks from
+                    being sent for analytics. Your bets and account activity are
+                    not affected.
+                  </div>
+                </div>
+                <Toggle
+                  value={!!form.privacy.analyticsOptOut}
+                  onChange={(v) => {
+                    updateNested('privacy', 'analyticsOptOut', v);
+                    setAnalyticsOptOut(v);
+                  }}
+                />
+              </div>
               <div className="flex justify-end pt-2">
                 <button
                   type="button"
