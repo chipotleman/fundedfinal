@@ -34,10 +34,11 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
   const { data: session, status } = useSession();
   const { hasActiveMatchup, myBalance: matchupBalance, matchup: activeMatchup, opponent: activeOpponent } = useMatchup();
   const notificationsCtx = useNotifications();
-  const { counts: notifCounts } = notificationsCtx;
+  const { counts: notifCounts, unviewedAchievementCount } = notificationsCtx;
   const notifAlerts = (notifCounts?.battleInvites || 0) + (notifCounts?.friendRequests || 0) + (notifCounts?.gameResults || 0);
   const notifMessages = notifCounts?.unreadMessages || 0;
   const notifTotal = notifAlerts;
+  const hasUnviewedAchievements = (unviewedAchievementCount || 0) > 0;
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const notifBellRef = useRef(null);
   const [showMsgDropdown, setShowMsgDropdown] = useState(false);
@@ -726,18 +727,32 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                   <div className="relative">
                     <button
                       onClick={() => setShowUserMenu(!showUserMenu)}
-                      aria-label="Open user menu"
-                      className="flex items-center justify-center w-10 h-10 hover:bg-[#1a1a1a] rounded-full transition-all duration-300 overflow-hidden"
+                      aria-label={
+                        hasUnviewedAchievements
+                          ? 'Open user menu (you have new achievements)'
+                          : 'Open user menu'
+                      }
+                      className="relative flex items-center justify-center w-10 h-10 hover:bg-[#1a1a1a] rounded-full transition-all duration-300"
                     >
-                      <UserAvatar
-                        user={{
-                          id: userProfile?.id || currentUser?.id || session?.user?.id,
-                          username: userProfile?.username || currentUser?.username || currentUser?.name || session?.user?.username || session?.user?.name,
-                          avatar: userProfile?.avatar ?? currentUser?.avatar ?? currentUser?.image ?? session?.user?.avatar ?? session?.user?.image ?? null,
-                          frameId: userProfile?.equippedFrame ?? userProfile?.frameId ?? currentUser?.equippedFrame ?? null,
-                        }}
-                        size={40}
-                      />
+                      <span className="block w-10 h-10 rounded-full overflow-hidden">
+                        <UserAvatar
+                          user={{
+                            id: userProfile?.id || currentUser?.id || session?.user?.id,
+                            username: userProfile?.username || currentUser?.username || currentUser?.name || session?.user?.username || session?.user?.name,
+                            avatar: userProfile?.avatar ?? currentUser?.avatar ?? currentUser?.image ?? session?.user?.avatar ?? session?.user?.image ?? null,
+                            frameId: userProfile?.equippedFrame ?? userProfile?.frameId ?? currentUser?.equippedFrame ?? null,
+                          }}
+                          size={40}
+                        />
+                      </span>
+                      {hasUnviewedAchievements && (
+                        <span
+                          className="absolute top-0 right-0 w-2.5 h-2.5 bg-blue-500 rounded-full border-2 border-black pointer-events-none"
+                          style={{ boxShadow: '0 0 6px rgba(59,130,246,0.8)' }}
+                          aria-hidden="true"
+                          data-testid="profile-tab-unviewed-achievements-dot"
+                        />
+                      )}
                     </button>
 
                     {/* Dropdown Menu */}
@@ -767,7 +782,14 @@ export default function TopNavbar({ betSlipCount, onBetSlipClick }) {
                                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                   <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                                 </svg>
-                                <span className="font-medium">My Profile</span>
+                                <span className="font-medium flex-1">My Profile</span>
+                                {hasUnviewedAchievements && (
+                                  <span
+                                    className="w-2 h-2 bg-blue-500 rounded-full"
+                                    style={{ boxShadow: '0 0 6px rgba(59,130,246,0.8)' }}
+                                    aria-label="New achievements to view"
+                                  />
+                                )}
                               </Link>
                             )}
 

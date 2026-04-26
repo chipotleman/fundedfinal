@@ -17,10 +17,12 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
   const [cashRevealed, setCashRevealed] = useState(false);
   const router = useRouter();
   const { data: session, status } = useSession();
-  const { counts: notifCounts } = useNotifications();
+  const { counts: notifCounts, unviewedAchievementCount } = useNotifications();
   const alertsBadge = (notifCounts?.battleInvites || 0) + (notifCounts?.friendRequests || 0);
   const notificationsBadge = (notifCounts?.battleInvites || 0) + (notifCounts?.friendRequests || 0) + (notifCounts?.gameResults || 0);
   const messagesBadge = notifCounts?.unreadMessages || 0;
+  const hasUnviewedAchievements = (unviewedAchievementCount || 0) > 0;
+  const profileHref = session?.user?.id ? `/profile/${session.user.id}` : null;
   
   // Use session directly for login state - more reliable than prop
   const isLoggedIn = status === 'authenticated' && !!session?.user;
@@ -269,6 +271,28 @@ export default function MobileNavMenu({ isOpen, onClose, currentUser: propCurren
                 </div>
               )}
 
+              {profileHref && (
+                <Link
+                  href={profileHref}
+                  onClick={onClose}
+                  className="flex items-center justify-between text-gray-300 font-light text-base uppercase tracking-wider py-3"
+                  aria-label={
+                    hasUnviewedAchievements
+                      ? 'My Profile (you have new achievements)'
+                      : 'My Profile'
+                  }
+                >
+                  <span>My Profile</span>
+                  {hasUnviewedAchievements && (
+                    <span
+                      className="ml-2 w-2.5 h-2.5 bg-blue-500 rounded-full"
+                      style={{ boxShadow: '0 0 6px rgba(59,130,246,0.8)' }}
+                      aria-hidden="true"
+                      data-testid="mobile-nav-profile-unviewed-achievements-dot"
+                    />
+                  )}
+                </Link>
+              )}
               <Link
                 href="/dashboard"
                 onClick={onClose}

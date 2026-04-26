@@ -5,7 +5,7 @@ import { messages, friendships, battleInvites, profiles, users, matchups, fakeOp
 import { eq, and, or, desc, lt, inArray, gte, isNotNull, isNull } from 'drizzle-orm';
 const { sendPushToUsers } = require('../../../lib/web-push');
 const { publishBattleEvent } = require('../../../lib/battle-events');
-import { getUncelebratedAchievements } from '../../../lib/achievements';
+import { getUncelebratedAchievements, getUnviewedAchievementCount } from '../../../lib/achievements';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -495,6 +495,15 @@ export default async function handler(req, res) {
       pendingAchievementUnlocks = await getUncelebratedAchievements(userId);
     } catch (_e) {}
 
+    // Lingering "unread" signal for the Profile tab + Achievements section
+    // header. Independent of pendingAchievementUnlocks so a player who
+    // dismissed the celebration popup quickly still sees the dot until they
+    // actually open the section.
+    let unviewedAchievementCount = 0;
+    try {
+      unviewedAchievementCount = await getUnviewedAchievementCount(userId);
+    } catch (_e) {}
+
     return res.status(200).json({
       battleInvites: battleInvitesOut,
       outgoingBattleInvites: outgoingPendingInvites,
@@ -503,6 +512,7 @@ export default async function handler(req, res) {
       gameResults,
       pendingRematches,
       pendingAchievementUnlocks,
+      unviewedAchievementCount,
       counts: { ...counts, gameResults: gameResults.length, pendingRematches: pendingRematches.length, total: counts.total + gameResults.length + pendingRematches.length },
       recentForfeitWin,
       // Backwards-compat fields kept for any older callers.

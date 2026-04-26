@@ -58,6 +58,11 @@ const EMPTY = {
   unreadMessages: [],
   gameResults: [],
   pendingRematches: [],
+  // Lingering "you've earned new badges you haven't seen yet" signal,
+  // independent of the pop-up celebration queue. Drives the small unread
+  // dot on the Profile tab + Achievements section header until the user
+  // actually opens the section (see markAchievementsViewed below).
+  unviewedAchievementCount: 0,
   counts: { battleInvites: 0, friendRequests: 0, unreadMessages: 0, gameResults: 0, pendingRematches: 0, total: 0 },
 };
 
@@ -287,6 +292,9 @@ export function NotificationsProvider({ children }) {
       const pendingAchievementUnlocks = Array.isArray(json.pendingAchievementUnlocks)
         ? json.pendingAchievementUnlocks
         : [];
+      const unviewedAchievementCount = Number.isFinite(json.unviewedAchievementCount)
+        ? Math.max(0, Math.floor(json.unviewedAchievementCount))
+        : 0;
       const counts = {
         battleInvites: battleInvites.length,
         friendRequests: friendRequests.length,
@@ -295,7 +303,7 @@ export function NotificationsProvider({ children }) {
         pendingRematches: pendingRematches.length,
         total: battleInvites.length + friendRequests.length + unreadMessages.length + gameResults.length + pendingRematches.length,
       };
-      setData({ battleInvites, outgoingBattleInvites, friendRequests, unreadMessages, gameResults, pendingRematches, counts });
+      setData({ battleInvites, outgoingBattleInvites, friendRequests, unreadMessages, gameResults, pendingRematches, unviewedAchievementCount, counts });
 
       // Catch-up path: if the API found a recent forfeit win that the SSE push
       // may have missed, dispatch it so MatchupContext can surface the modal.
@@ -755,6 +763,34 @@ export function NotificationsProvider({ children }) {
     }
   }, [refresh]);
 
+  // Optimistically zero the unread-achievements counter and tell the server
+  // to flip every currently-unviewed entry's `viewedAt` flag. Called by the
+  // profile page once the Achievements section actually scrolls into view
+  // (NOT when the celebration popup is dismissed). Idempotent server-side,
+  // so a stray double-fire is safe.
+  const markAchievementsViewed = useCallback(async () => {
+    if (!isAuthed) return;
+    let hadUnviewed = false;
+    setData((prev) => {
+      if (!prev.unviewedAchievementCount) return prev;
+      hadUnviewed = true;
+      return { ...prev, unviewedAchievementCount: 0 };
+    });
+    if (!hadUnviewed) return;
+    try {
+      const res = await fetch('/api/me/achievements/view', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        // Server rejected — re-sync so the dot reflects the truth.
+        refresh();
+      }
+    } catch {
+      refresh();
+    }
+  }, [isAuthed, refresh]);
+
   const declineFriend = useCallback(async (id) => {
     try {
       await fetch(`/api/friends/${id}`, {
@@ -785,6 +821,7 @@ export function NotificationsProvider({ children }) {
     declineRematch,
     ackGameResult,
     markMessagesRead,
+    markAchievementsViewed,
     typingSenderIds,
     notifyTyping,
     notifyStoppedTyping,
@@ -821,6 +858,7 @@ export function useNotifications() {
       declineFriend: async () => {},
       declineRematch: async () => {},
       markMessagesRead: async () => 0,
+      markAchievementsViewed: async () => {},
       typingSenderIds: new Set(),
       notifyTyping: async () => {},
       notifyStoppedTyping: async () => {},

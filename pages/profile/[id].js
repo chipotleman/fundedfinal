@@ -37,12 +37,14 @@ export default function PublicProfile() {
   const router = useRouter();
   const { id, badge: badgeQuery } = router.query;
   const notificationsCtx = useNotifications();
+  const { unviewedAchievementCount, markAchievementsViewed } = notificationsCtx;
   const [messageOpen, setMessageOpen] = useState(false);
   const [selectedAchievement, setSelectedAchievement] = useState(null);
   // Track which ?badge=<id> we've auto-opened so closing the modal doesn't
   // immediately reopen it (and so navigating to a fresh badge link still
   // triggers the auto-open the next time around).
   const autoOpenedBadgeRef = useRef(null);
+  const achievementsSectionRef = useRef(null);
 
   const cachedProfileEntry = id ? cache.getProfile(id) : null;
   const cachedHistoryEntry = id ? cache.getHistory(id) : null;
@@ -232,6 +234,47 @@ export default function PublicProfile() {
       { shallow: true, scroll: false },
     );
   }, [id, router.isReady, router.query.ref, router.query.b]);
+
+  // Mark uncelebrated/unviewed achievements as viewed once the section is
+  // actually visible on the user's own profile. This is what clears the
+  // unread dot on the Profile tab + Achievements header — distinct from
+  // dismissing the celebration popup, which only flips celebratedAt.
+  // Using IntersectionObserver so simply landing on the page (e.g. above
+  // the fold) doesn't count if the user never scrolled to the section.
+  // Pre-feature badges have viewedAt === undefined and are excluded server
+  // side, so the dot only fires for genuinely-new unlocks.
+  useEffect(() => {
+    if (!isOwnProfile) return;
+    if (!unviewedAchievementCount) return;
+    const node = achievementsSectionRef.current;
+    if (!node) return;
+    if (typeof window === 'undefined') return;
+
+    // Some browsers / SSR shims don't expose IntersectionObserver — fall
+    // back to firing once on mount so the dot still clears.
+    if (typeof IntersectionObserver === 'undefined') {
+      markAchievementsViewed?.();
+      return;
+    }
+
+    let fired = false;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (fired) return;
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            fired = true;
+            markAchievementsViewed?.();
+            observer.disconnect();
+            break;
+          }
+        }
+      },
+      { threshold: 0.25 }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [isOwnProfile, unviewedAchievementCount, markAchievementsViewed]);
 
   // Trigger background refresh on every navigation.
   useEffect(() => {
@@ -1071,6 +1114,7 @@ export default function PublicProfile() {
 
         {Array.isArray(profile.frames) && profile.frames.length > 0 && (
           <div
+            ref={achievementsSectionRef}
             className="rounded-2xl p-5 mb-6"
             style={{
               backgroundColor: '#0d0d0d',
@@ -1079,8 +1123,16 @@ export default function PublicProfile() {
             }}
           >
             <div className="flex items-baseline justify-between mb-4">
-              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
-                Achievements
+              <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                <span>Achievements</span>
+                {isOwnProfile && unviewedAchievementCount > 0 && (
+                  <span
+                    className="inline-block w-2 h-2 bg-blue-500 rounded-full"
+                    style={{ boxShadow: '0 0 6px rgba(59,130,246,0.8)' }}
+                    aria-label={`${unviewedAchievementCount} new achievement${unviewedAchievementCount === 1 ? '' : 's'}`}
+                    data-testid="achievements-section-unviewed-dot"
+                  />
+                )}
               </h2>
               <span className="text-xs text-gray-500">
                 {profile.frames.filter((f) => f.unlocked).length} / {profile.frames.length}
