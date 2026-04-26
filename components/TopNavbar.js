@@ -561,6 +561,46 @@ export default function TopNavbar({
       >
         <div className="px-3 sm:px-6 h-[70px] sm:h-auto sm:py-1 sm:-mb-6 flex items-center">
           <div className="flex items-center justify-between w-full sm:justify-between min-h-[70px] sm:min-h-[48px] relative">
+            {/* Logo - absolutely positioned on mobile to not affect bar height */}
+            <div className="absolute left-[-35px] top-1/2 -translate-y-1/2 sm:relative sm:left-0 sm:top-auto sm:translate-y-0 sm:-mt-[5.75px]">
+              <a
+                href="/"
+                onClick={(e) => {
+                  if (window.location.pathname === '/') {
+                    e.preventDefault();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }
+                }}
+                className="flex items-center"
+              >
+                <img
+                  src="/pikslogotransparent.png"
+                  alt="Piks"
+                  className="h-[140px] sm:h-[230px] w-auto brightness-100 hover:brightness-125 transition-all duration-300 hover:drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]"
+                  style={{
+                    filter: 'hue-rotate(0deg) saturate(1.2) brightness(1.1)',
+                    animation: 'logoRedYellowGlow 4s infinite ease-in-out'
+                  }}
+                  onLoad={(e) => {
+                    console.log('Logo loaded successfully');
+                    e.target.style.display = 'block';
+                    e.target.nextElementSibling.style.display = 'none';
+                  }}
+                  onError={(e) => {
+                    console.log('Logo failed to load, showing text fallback');
+                    e.target.style.display = 'none';
+                    e.target.nextElementSibling.style.display = 'block';
+                  }}
+                />
+                <span
+                  className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-green-400 to-blue-500 bg-clip-text text-transparent"
+                  style={{ display: 'none' }}
+                >
+                  Piks
+                </span>
+              </a>
+            </div>
+
             {/* Desktop Navigation - Show different links based on auth status */}
             <div className="hidden lg:flex items-center space-x-8">
               {isLoggedIn ? (
@@ -1153,6 +1193,12 @@ export default function TopNavbar({
       />
 
       <style jsx>{`
+        @keyframes logoRedYellowGlow {
+          0% { filter: hue-rotate(-30deg) saturate(1.2) brightness(1.1); }
+          50% { filter: hue-rotate(30deg) saturate(1.3) brightness(1.2); }
+          100% { filter: hue-rotate(-30deg) saturate(1.2) brightness(1.1); }
+        }
+
         .snake-border-container {
           position: relative;
           border-radius: 8px;
